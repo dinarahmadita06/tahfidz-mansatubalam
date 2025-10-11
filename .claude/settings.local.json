@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(node -e \"console.log(require(''crypto'').randomBytes(32).toString(''base64''))\")",
+      "Bash(npx prisma:*)",
+      "Bash(dir:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(node -e \"const fs = require(''fs''); const content = fs.readFileSync(''src/app/admin/validasi-siswa/page.js'', ''utf-8''); const lines = content.split(''\\n''); for(let i = 144; i < 170; i++) { console.log(i + 1 + '': '' + lines[i]); }\")",
+      "Bash(node -e \"const fs = require(''fs''); const content = fs.readFileSync(''src/app/admin/validasi-siswa/page.js'', ''utf-8''); const lines = content.split(''\\n''); let openBraces = 0; for(let i = 145; i < 165; i++) { const line = lines[i]; const open = (line.match(/{/g) || []).length; const close = (line.match(/}/g) || []).length; openBraces += open - close; console.log((i+1) + '' ['' + openBraces + '']: '' + line); }\")",
+      "Bash(node:*)",
+      "Bash(tasklist)",
+      "Bash(timeout 5 bash -c \"while true; do sleep 1; done\")",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(powershell:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
