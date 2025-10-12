@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-eslint: {
+  output: 'standalone',
+  
+  eslint: {
     ignoreDuringBuilds: true,  
   },
-  // Set the workspace root to fix the lockfile warning  
-  outputFileTracingRoot: 'd:/tahfidz/tahfidz',
-  
+   
   // Experimental settings to optimize imports
   experimental: {
     optimizePackageImports: ['lucide-react'],
