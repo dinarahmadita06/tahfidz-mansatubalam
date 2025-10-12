@@ -1,50 +1,43 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request) {
-  const session = await auth();
+  const token = await getToken({ 
+    req: request, 
+    secret: process.env.NEXTAUTH_SECRET 
+  });
+
   const { pathname } = request.nextUrl;
 
-  // Public routes
-  const publicRoutes = ["/login", "/register"];
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
-
-  // Redirect to login if not authenticated and trying to access protected route
-  if (!session && !isPublicRoute && pathname !== "/") {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Public routes yang tidak perlu auth
+  const publicRoutes = ['/login', '/register', '/api/auth'];
+  if (publicRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
   }
 
-  // Redirect to dashboard if authenticated and trying to access login/register
-  if (session && isPublicRoute) {
-    const role = session.user.role;
-    const dashboardMap = {
-      ADMIN: "/admin",
-      GURU: "/guru",
-      SISWA: "/dashboard",
-      ORANG_TUA: "/orangtua",
-    };
-    return NextResponse.redirect(new URL(dashboardMap[role] || "/", request.url));
+  // Redirect ke login jika belum login
+  if (!token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Role-based access control
-  if (session) {
-    const role = session.user.role;
+  const role = token.role;
 
-    if (pathname.startsWith("/admin") && role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  // Admin routes
+  if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
 
-    if (pathname.startsWith("/guru") && role !== "GURU") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  // Guru routes
+  if (pathname.startsWith('/guru') && role !== 'GURU') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
 
-    if (pathname.startsWith("/dashboard") && role !== "SISWA") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
-    if (pathname.startsWith("/orangtua") && role !== "ORANG_TUA") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  // Orangtua routes
+  if (pathname.startsWith('/orangtua') && role !== 'ORANGTUA') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();
@@ -52,13 +45,6 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (all API routes - they handle auth internally)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 };
