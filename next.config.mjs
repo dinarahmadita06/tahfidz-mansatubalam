@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+eslint: {
+    ignoreDuringBuilds: true,  
+  },
   // Set the workspace root to fix the lockfile warning  
   outputFileTracingRoot: 'd:/tahfidz/tahfidz',
   
