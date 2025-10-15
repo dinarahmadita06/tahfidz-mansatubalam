@@ -21,10 +21,15 @@ export default function SiswaDashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-    } else if (status === 'authenticated' && session?.user?.siswaId) {
-      fetchHafalan();
+    } else if (status === 'authenticated') {
+      if (session?.user?.siswaId) {
+        fetchHafalan();
+      } else {
+        // Jika user tidak punya siswaId, set loading false
+        setLoading(false);
+      }
     }
-  }, [status, session, router]);
+  }, [status, session?.user?.siswaId, router]);
 
   const fetchHafalan = async () => {
     try {

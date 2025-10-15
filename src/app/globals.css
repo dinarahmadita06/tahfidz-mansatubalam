@@ -5,6 +5,29 @@
   --foreground: #171717;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Islamic Modern Design Colors */
+  --sage-50: #f6f7f6;
+  --sage-100: #e8ebe9;
+  --sage-200: #d1d7d3;
+  --sage-300: #a8b5ad;
+  --sage-400: #7d9087;
+  --sage-500: #5c7267;
+  --sage-600: #475a51;
+  --sage-700: #3a4a42;
+  --sage-800: #2f3d37;
+  --sage-900: #29332e;
+
+  --cream-50: #fdfcfb;
+  --cream-100: #faf7f4;
+  --cream-200: #f5efe8;
+  --cream-300: #ebe0d5;
+  --cream-400: #ddc9b8;
+  --cream-500: #cfb29b;
+  --cream-600: #b89577;
+  --cream-700: #9a7a5f;
+  --cream-800: #7d6350;
+  --cream-900: #675244;
 }
 
 @media (prefers-color-scheme: dark) {
