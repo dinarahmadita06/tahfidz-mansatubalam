@@ -95,14 +95,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-cream-50 to-emerald-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Islamic Geometric Pattern Background */}
+      <div className="absolute inset-0 opacity-5">
+        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="islamic-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+              <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="1"/>
+              <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="1"/>
+              <path d="M50,20 L65,35 L50,50 L35,35 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
+              <path d="M50,50 L65,65 L50,80 L35,65 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
+              <path d="M20,50 L35,65 L50,50 L35,35 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
+              <path d="M50,50 L65,35 L80,50 L65,65 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#islamic-pattern)" className="text-emerald-600"/>
+        </svg>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-600 rounded-full mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-full mb-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
             <BookOpen size={36} className="text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent mb-2">
             Tahfidz Management
           </h1>
           <p className="text-gray-600 text-lg">
@@ -111,7 +128,7 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl hover:shadow-2xl transition-shadow duration-300 p-8 border border-sage-100">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">Login</h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -127,14 +144,14 @@ export default function LoginPage() {
                 Email
               </label>
               <div className="relative">
-                <User size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <User size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-600" />
                 <input
                   type="email"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 border border-sage-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent hover:border-emerald-300 transition-colors bg-sage-50/30"
                   placeholder="nama@example.com"
                 />
               </div>
@@ -146,20 +163,20 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
-                <Lock size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Lock size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-600" />
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-12 pr-12 py-3 border border-sage-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent hover:border-emerald-300 transition-colors bg-sage-50/30"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-600"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -170,7 +187,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 rounded-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -184,42 +201,42 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Login */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center font-medium mb-3">
+          <div className="mt-8 pt-6 border-t border-sage-100">
+            <p className="text-sm text-gray-600 text-center font-medium mb-4">
               Quick Login (Klik untuk auto-fill):
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => quickLogin('ADMIN')}
-                className="p-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium transition"
+                className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 rounded-2xl text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md border border-blue-200"
               >
                 🔧 Admin
               </button>
               <button
                 type="button"
                 onClick={() => quickLogin('GURU')}
-                className="p-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-medium transition"
+                className="p-3 bg-gradient-to-br from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 text-emerald-700 rounded-2xl text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md border border-emerald-200"
               >
                 👨‍🏫 Guru
               </button>
               <button
                 type="button"
                 onClick={() => quickLogin('SISWA')}
-                className="p-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-sm font-medium transition"
+                className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-700 rounded-2xl text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md border border-purple-200"
               >
                 🎓 Siswa
               </button>
               <button
                 type="button"
                 onClick={() => quickLogin('ORANG_TUA')}
-                className="p-3 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg text-sm font-medium transition"
+                className="p-3 bg-gradient-to-br from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 text-amber-700 rounded-2xl text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md border border-amber-200"
               >
                 👨‍👩‍👧 Orang Tua
               </button>
             </div>
 
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="mt-4 p-4 bg-gradient-to-r from-sage-50 to-cream-50 rounded-2xl border border-sage-100">
               <p className="text-xs text-gray-600 text-center">
                 💡 <strong>Tip:</strong> Klik tombol role di atas untuk otomatis mengisi email & password
               </p>
@@ -229,7 +246,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-6">
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm backdrop-blur-sm bg-white/50 rounded-full px-4 py-2 inline-block">
             © 2025 Tahfidz Management System
           </p>
         </div>
