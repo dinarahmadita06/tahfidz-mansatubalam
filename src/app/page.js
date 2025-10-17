@@ -30,7 +30,7 @@ function PublicNavbar() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">MAN 1 Bandar Lampung</h1>
-              <p className="text-xs text-[#874D14] dark:text-[#FFB030]">Program Tahfidz Al-Qur&apos;an</p>
+              <p className="text-xs text-[#874D14] dark:text-[#FFB030]">Program Tahfidz Al-Qur'an</p>
             </div>
           </div>
 
@@ -111,11 +111,11 @@ function HeroSection() {
               MAN 1 <span className="text-[#FFB030]">Bandar Lampung</span>
             </h1>
             <h2 className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-6">
-              Program Tahfidz Al-Qur&apos;an
+              Program Tahfidz Al-Qur'an
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-              Membentuk generasi Qur&apos;ani yang berakhlak mulia, berprestasi akademik, dan siap menghadapi tantangan global 
-              dengan berlandaskan nilai-nilai Al-Qur&apos;an dan As-Sunnah.
+              Membentuk generasi Qur'ani yang berakhlak mulia, berprestasi akademik, dan siap menghadapi tantangan global
+              dengan berlandaskan nilai-nilai Al-Qur'an dan As-Sunnah.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -220,7 +220,7 @@ function AboutSection() {
             <div className="text-gray-600 dark:text-gray-400 text-left">
               <ul className="space-y-2">
                 <li>• Menyelenggarakan pendidikan berkualitas</li>
-                <li>• Mengembangkan program tahfidz Al-Qur&apos;an</li>
+                <li>• Mengembangkan program tahfidz Al-Qur'an</li>
                 <li>• Membina akhlak mulia siswa</li>
                 <li>• Mengintegrasikan IPTEK dan IMTAQ</li>
                 <li>• Mempersiapkan siswa menghadapi era global</li>
@@ -235,7 +235,7 @@ function AboutSection() {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Tujuan</h3>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Menghasilkan lulusan yang hafal Al-Qur&apos;an, unggul dalam prestasi akademik, 
+              Menghasilkan lulusan yang hafal Al-Qur'an, unggul dalam prestasi akademik, 
               berkarakter Islami, dan siap melanjutkan ke perguruan tinggi terbaik.
             </p>
           </div>
@@ -461,12 +461,12 @@ function Footer() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">MAN 1 Bandar Lampung</h3>
-                <p className="text-[#FFB030] text-sm">Program Tahfidz Al-Qur&apos;an</p>
+                <p className="text-[#FFB030] text-sm">Program Tahfidz Al-Qur'an</p>
               </div>
             </div>
             <p className="text-gray-300 mb-4 leading-relaxed">
-              Mendidik generasi Qur&apos;ani yang berakhlak mulia, berprestasi akademik, 
-              dan siap menghadapi tantangan global dengan landasan Al-Qur&apos;an dan As-Sunnah.
+              Mendidik generasi Qur'ani yang berakhlak mulia, berprestasi akademik,
+              dan siap menghadapi tantangan global dengan landasan Al-Qur'an dan As-Sunnah.
             </p>
             <div className="flex gap-4">
               <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[#FFB030] transition-colors">
@@ -497,7 +497,7 @@ function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Program</h4>
             <div className="space-y-2">
-              <div className="text-gray-300">Tahfidz Al-Qur&apos;an</div>
+              <div className="text-gray-300">Tahfidz Al-Qur'an</div>
               <div className="text-gray-300">Pembelajaran Akademik</div>
               <div className="text-gray-300">Pembinaan Karakter</div>
               <div className="text-gray-300">Ekstrakurikuler</div>
