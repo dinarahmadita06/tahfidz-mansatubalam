@@ -459,7 +459,7 @@ export default function UploadHafalanForm({ onSubmit, onCancel }) {
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• Pastikan suara jelas dan tidak ada noise berlebihan</li>
             <li>• Rekam dalam ruangan yang tenang</li>
-            <li>• Bacaan dimulai dengan &quot;A&apos;uzu billahi...&quot; dan &quot;Bismillah...&quot;</li>
+            <li>• Bacaan dimulai dengan "A'uzu billahi..." dan "Bismillah..."</li>
             <li>• Durasi maksimal rekaman adalah 10 menit</li>
             <li>• File akan otomatis tersimpan setelah upload berhasil</li>
           </ul>

@@ -2,14 +2,8 @@
 
 import { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import {
-  DataTable,
-  DataTableFilters,
-  DataTablePagination,
-  DataPageHeader,
-  StatusBadge
-} from '@/components/ui-islamic';
-import { UserPlus, Download } from 'lucide-react';
+import { Badge, PageHeader, Card, CardContent } from '@/components/ui-islamic';
+import { UserPlus, Download, Search } from 'lucide-react';
 
 // Sample data
 const sampleData = [

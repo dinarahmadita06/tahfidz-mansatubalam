@@ -648,7 +648,7 @@ export default function EvaluasiHafalan() {
             >
               <option value="">Semua Tipe</option>
               <option value="hafalan_baru">Hafalan Baru</option>
-              <option value="muraja">Muraja&apos;ah</option>
+              <option value="muraja">Muraja'ah</option>
               <option value="tilawah">Tilawah</option>
               <option value="tartil">Tartil</option>
             </select>
