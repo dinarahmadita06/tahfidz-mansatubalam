@@ -1,331 +1,916 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Users, BookOpen, TrendingUp, Search, UserPlus, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 import GuruLayout from '@/components/layout/GuruLayout';
+import {
+  Users,
+  UserCheck,
+  UserPlus,
+  Award,
+  Search,
+  RefreshCw,
+  Filter,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  BookOpen,
+  TrendingUp
+} from 'lucide-react';
 
-export default function KelolaSiswaPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+// Islamic Modern Color Palette
+const colors = {
+  emerald: {
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    200: '#A7F3D0',
+    300: '#6EE7B7',
+    400: '#34D399',
+    500: '#1A936F',
+    600: '#059669',
+    700: '#047857',
+  },
+  amber: {
+    50: '#FEF3C7',
+    100: '#FDE68A',
+    200: '#FCD34D',
+    300: '#FBBF24',
+    400: '#F7C873',
+    500: '#F59E0B',
+    600: '#D97706',
+  },
+  violet: {
+    50: '#F5F3FF',
+    100: '#E9D5FF',
+    200: '#DDD6FE',
+    300: '#C4B5FD',
+    400: '#A78BFA',
+    500: '#8B5CF6',
+  },
+  white: '#FFFFFF',
+  gray: {
+    50: '#F9FAFB',
+    100: '#F3F4F6',
+    200: '#E5E7EB',
+    300: '#D1D5DB',
+    400: '#9CA3AF',
+    500: '#6B7280',
+    600: '#4B5563',
+  },
+  text: {
+    primary: '#1B1B1B',
+    secondary: '#444444',
+    tertiary: '#6B7280',
+  },
+  success: '#1A936F',
+  warning: '#F7C873',
+  info: '#3B82F6',
+};
 
-  const [siswaList, setSiswaList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+// Mock data siswa
+const mockStudents = [
+  {
+    id: 1,
+    nama: "Ahmad Fadli Rahman",
+    kelas: "XI IPA 1",
+    status: "aktif",
+    totalJuz: 15,
+    totalAyat: 450,
+    nilai: 85,
+    setoranBulanIni: 8,
+    totalSetoran: 45
+  },
+  {
+    id: 2,
+    nama: "Siti Nurhaliza",
+    kelas: "XI IPA 2",
+    status: "aktif",
+    totalJuz: 12,
+    totalAyat: 360,
+    nilai: 92,
+    setoranBulanIni: 6,
+    totalSetoran: 38
+  },
+  {
+    id: 3,
+    nama: "Muhammad Rizki",
+    kelas: "X IPA 1",
+    status: "menunggu_validasi",
+    totalJuz: 8,
+    totalAyat: 240,
+    nilai: 78,
+    setoranBulanIni: 4,
+    totalSetoran: 22
+  },
+  {
+    id: 4,
+    nama: "Fatimah Zahra",
+    kelas: "XII IPA 1",
+    status: "aktif",
+    totalJuz: 18,
+    totalAyat: 540,
+    nilai: 88,
+    setoranBulanIni: 7,
+    totalSetoran: 52
+  },
+  {
+    id: 5,
+    nama: "Abdullah Hasan",
+    kelas: "XI IPS 1",
+    status: "aktif",
+    totalJuz: 10,
+    totalAyat: 300,
+    nilai: 75,
+    setoranBulanIni: 5,
+    totalSetoran: 28
+  },
+  {
+    id: 6,
+    nama: "Khadijah Aisyah",
+    kelas: "X IPA 2",
+    status: "menunggu_validasi",
+    totalJuz: 14,
+    totalAyat: 420,
+    nilai: 90,
+    setoranBulanIni: 6,
+    totalSetoran: 40
+  },
+  {
+    id: 7,
+    nama: "Umar Faruq",
+    kelas: "XII IPA 2",
+    status: "aktif",
+    totalJuz: 25,
+    totalAyat: 750,
+    nilai: 95,
+    setoranBulanIni: 9,
+    totalSetoran: 68
+  },
+  {
+    id: 8,
+    nama: "Maryam Salsabila",
+    kelas: "X IPS 1",
+    status: "aktif",
+    totalJuz: 6,
+    totalAyat: 180,
+    nilai: 70,
+    setoranBulanIni: 3,
+    totalSetoran: 18
+  },
+];
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated') {
-      fetchSiswa();
+const mockStats = {
+  totalSiswa: 142,
+  siswaAktif: 136,
+  menungguValidasi: 6,
+  rataRataNilai: 85.4,
+};
 
-      // Auto-refresh setiap 30 detik untuk melihat perubahan status validasi
-      const interval = setInterval(() => {
-        fetchSiswa(true);
-      }, 30000);
-
-      return () => clearInterval(interval);
-    }
-  }, [status, router]);
-
-  const fetchSiswa = async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const res = await fetch('/api/siswa');
-      const data = await res.json();
-
-      // Fetch hafalan stats for each siswa
-      const siswaWithStats = await Promise.all(
-        data.map(async (siswa) => {
-          const hafalanRes = await fetch(`/api/hafalan?siswaId=${siswa.id}`);
-          const hafalanData = await hafalanRes.json();
-
-          // Calculate stats
-          const uniqueJuz = [...new Set(hafalanData.map(h => h.juz))];
-          const totalAyat = hafalanData.reduce((sum, h) => sum + (h.ayatSelesai - h.ayatMulai + 1), 0);
-          const avgNilai = hafalanData.length > 0
-            ? hafalanData.reduce((sum, h) => sum + (h.nilaiAkhir || 0), 0) / hafalanData.length
-            : 0;
-
-          const now = new Date();
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          const setoranBulanIni = hafalanData.filter(h => new Date(h.tanggalSetor) >= startOfMonth).length;
-
-          return {
-            ...siswa,
-            stats: {
-              totalJuz: uniqueJuz.length,
-              totalAyat,
-              nilaiRataRata: avgNilai.toFixed(1),
-              setoranBulanIni,
-              totalSetoran: hafalanData.length,
-            },
-          };
-        })
-      );
-
-      setSiswaList(siswaWithStats);
-    } catch (error) {
-      console.error('Error fetching siswa:', error);
-    } finally {
-      if (isRefresh) {
-        setRefreshing(false);
-      } else {
-        setLoading(false);
-      }
-    }
+// Komponen StatCard
+function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
+  const colorMap = {
+    emerald: {
+      bg: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
+      iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+      value: colors.emerald[700],
+      border: colors.emerald[200],
+    },
+    amber: {
+      bg: `linear-gradient(135deg, ${colors.amber[50]} 0%, ${colors.amber[100]} 100%)`,
+      iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
+      value: colors.amber[600],
+      border: colors.amber[200],
+    },
+    violet: {
+      bg: `linear-gradient(135deg, ${colors.violet[100]} 0%, ${colors.violet[200]} 100%)`,
+      iconBg: `linear-gradient(135deg, ${colors.violet[500]} 0%, ${colors.violet[600]} 100%)`,
+      value: colors.violet[700],
+      border: colors.violet[200],
+    },
+    blue: {
+      bg: `linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)`,
+      iconBg: `linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)`,
+      value: '#1E40AF',
+      border: '#BFDBFE',
+    },
   };
 
-  const handleRefresh = () => {
-    fetchSiswa(true);
-  };
-
-  const filteredSiswa = siswaList.filter((siswa) =>
-    siswa.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    siswa.kelas.nama.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const scheme = colorMap[color];
 
   return (
-    <GuruLayout>
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Kelola Siswa</h1>
-            <p className="text-sm text-gray-600">
-              Daftar siswa dan statistik hafalan
+    <div style={{
+      background: scheme.bg,
+      borderRadius: '18px',
+      padding: '24px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+      border: `2px solid ${scheme.border}`,
+      transition: 'all 0.3s ease',
+    }}
+    className="stats-card-small">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{
+          width: '52px',
+          height: '52px',
+          borderRadius: '14px',
+          background: scheme.iconBg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+        }}>
+          {icon}
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{
+            fontSize: '13px',
+            fontWeight: 600,
+            color: colors.text.secondary,
+            marginBottom: '4px',
+            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+          }}>
+            {title}
+          </p>
+          <p style={{
+            fontSize: '26px',
+            fontWeight: 700,
+            color: scheme.value,
+            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+            lineHeight: '1.1',
+            marginBottom: subtitle ? '3px' : '0',
+          }}>
+            {value}
+          </p>
+          {subtitle && (
+            <p style={{
+              fontSize: '11px',
+              color: colors.text.tertiary,
+              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+            }}>
+              {subtitle}
             </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
-            >
-              <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
-              {refreshing ? 'Memuat...' : 'Refresh'}
-            </button>
-            <button
-              onClick={() => router.push('/guru/tambah-siswa')}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              <UserPlus size={18} />
-              Tambah Siswa
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Siswa</p>
-                <p className="text-2xl font-bold text-gray-900">{siswaList.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users size={24} className="text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Siswa Aktif</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {siswaList.filter(s => s.status === 'active' || s.status === 'approved').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Users size={24} className="text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Menunggu Validasi</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {siswaList.filter(s => s.status === 'pending').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Users size={24} className="text-yellow-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Rata-rata Nilai</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {siswaList.length > 0
-                    ? (siswaList.reduce((sum, s) => sum + parseFloat(s.stats.nilaiRataRata), 0) / siswaList.length).toFixed(1)
-                    : '-'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <TrendingUp size={24} className="text-purple-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Cari nama siswa atau kelas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* Siswa List */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          {filteredSiswa.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Users size={48} className="mx-auto mb-3 opacity-50" />
-              <p>
-                {searchQuery
-                  ? 'Tidak ada siswa yang sesuai dengan pencarian'
-                  : 'Belum ada siswa terdaftar'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nama Siswa
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Kelas
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Juz
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Ayat
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nilai Rata-rata
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Setoran Bulan Ini
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Setoran
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredSiswa.map((siswa) => (
-                    <tr key={siswa.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-green-600 font-semibold">
-                              {siswa.user.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="ml-3">
-                            <p className="text-sm font-medium text-gray-900">
-                              {siswa.user.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {siswa.user.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {siswa.kelas.nama}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          siswa.status === 'active' || siswa.status === 'approved'
-                            ? 'bg-green-100 text-green-800'
-                            : siswa.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : siswa.status === 'rejected'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {siswa.status === 'active' || siswa.status === 'approved'
-                            ? 'Aktif'
-                            : siswa.status === 'pending'
-                            ? 'Pending'
-                            : siswa.status === 'rejected'
-                            ? 'Ditolak'
-                            : siswa.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm font-semibold text-gray-900">
-                          {siswa.stats.totalJuz}
-                        </span>
-                        <span className="text-xs text-gray-500"> / 30</span>
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-900">
-                        {siswa.stats.totalAyat}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`text-sm font-semibold ${
-                          siswa.stats.nilaiRataRata >= 90 ? 'text-green-600' :
-                          siswa.stats.nilaiRataRata >= 80 ? 'text-blue-600' :
-                          siswa.stats.nilaiRataRata >= 70 ? 'text-yellow-600' :
-                          siswa.stats.nilaiRataRata > 0 ? 'text-red-600' : 'text-gray-400'
-                        }`}>
-                          {siswa.stats.nilaiRataRata > 0 ? siswa.stats.nilaiRataRata : '-'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-900">
-                        {siswa.stats.setoranBulanIni}
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-900">
-                        {siswa.stats.totalSetoran}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function KelolaSiswaPage() {
+  const [students, setStudents] = useState(mockStudents);
+  const [stats, setStats] = useState(mockStats);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Filter students based on search
+  const filteredStudents = students.filter(student =>
+    student.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.kelas.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedStudents = filteredStudents.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
+  const getStatusConfig = (status) => {
+    const configs = {
+      aktif: {
+        bg: `${colors.emerald[500]}20`,
+        text: colors.emerald[700],
+        label: 'Aktif',
+        icon: CheckCircle2,
+      },
+      menunggu_validasi: {
+        bg: `${colors.amber[400]}20`,
+        text: colors.amber[700],
+        label: 'Menunggu Validasi',
+        icon: Clock,
+      },
+      tidak_aktif: {
+        bg: `${colors.gray[400]}20`,
+        text: colors.gray[700],
+        label: 'Tidak Aktif',
+        icon: AlertCircle,
+      },
+    };
+    return configs[status] || configs.aktif;
+  };
+
+  return (
+    <GuruLayout>
+      <div style={{
+        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
+        minHeight: '100vh',
+        position: 'relative',
+      }}>
+        {/* Subtle Pattern Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%231A936F' stroke-width='0.5' opacity='0.05'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%23F7C873' stroke-width='0.5' opacity='0.05'/%3E%3C/svg%3E")`,
+          backgroundSize: '60px 60px',
+          pointerEvents: 'none',
+          opacity: 0.3,
+          zIndex: 0,
+        }} />
+
+        {/* Header */}
+        <div style={{
+          position: 'relative',
+          padding: '32px 48px 24px',
+          borderBottom: `1px solid ${colors.gray[200]}`,
+          background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
+          backdropFilter: 'blur(10px)',
+          zIndex: 2,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{
+                fontSize: '32px',
+                fontWeight: 700,
+                background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                marginBottom: '6px',
+                fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+              }}>
+                Kelola Siswa
+              </h1>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: colors.text.secondary,
+                fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+              }}>
+                Manajemen data siswa dan monitoring progress hafalan
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: refreshing ? colors.gray[300] : colors.white,
+                  border: `2px solid ${colors.gray[300]}`,
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.text.primary,
+                  cursor: refreshing ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                }}
+                className="action-btn-secondary"
+              >
+                <RefreshCw size={18} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+                Refresh
+              </button>
+
+              <button
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.white,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.3)',
+                }}
+                className="action-btn-primary"
+              >
+                <UserPlus size={18} />
+                Tambah Siswa
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Stats Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '20px',
+            }}>
+              <StatCard
+                icon={<Users size={22} color={colors.white} />}
+                title="Total Siswa"
+                value={stats.totalSiswa}
+                subtitle="Siswa terdaftar"
+                color="emerald"
+              />
+              <StatCard
+                icon={<UserCheck size={22} color={colors.white} />}
+                title="Siswa Aktif"
+                value={stats.siswaAktif}
+                subtitle="Siswa aktif belajar"
+                color="blue"
+              />
+              <StatCard
+                icon={<Clock size={22} color={colors.white} />}
+                title="Menunggu Validasi"
+                value={stats.menungguValidasi}
+                subtitle="Perlu persetujuan"
+                color="amber"
+              />
+              <StatCard
+                icon={<Award size={22} color={colors.white} />}
+                title="Rata-rata Nilai"
+                value={stats.rataRataNilai}
+                subtitle="Nilai keseluruhan"
+                color="violet"
+              />
+            </div>
+
+            {/* Search and Filter */}
+            <div style={{
+              background: colors.white,
+              borderRadius: '20px',
+              padding: '24px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: `2px solid ${colors.gray[200]}`,
+            }}>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                {/* Search Input */}
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <Search
+                    size={20}
+                    style={{
+                      position: 'absolute',
+                      left: '16px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: colors.text.tertiary,
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Cari nama siswa atau kelas..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px 14px 48px',
+                      border: `2px solid ${colors.gray[200]}`,
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                    className="search-input"
+                  />
+                </div>
+
+                {/* Filter Buttons */}
+                <button
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '14px 20px',
+                    background: colors.white,
+                    border: `2px solid ${colors.gray[300]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: colors.text.primary,
+                    cursor: 'pointer',
+                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  }}
+                  className="filter-btn"
+                >
+                  <Filter size={18} />
+                  Filter
+                </button>
+
+                <button
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '14px 20px',
+                    background: colors.white,
+                    border: `2px solid ${colors.gray[300]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: colors.text.primary,
+                    cursor: 'pointer',
+                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  }}
+                  className="filter-btn"
+                >
+                  <Download size={18} />
+                  Export
+                </button>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div style={{
+              background: colors.white,
+              borderRadius: '20px',
+              padding: '28px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              border: `2px solid ${colors.gray[200]}`,
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'separate',
+                  borderSpacing: '0',
+                }}>
+                  <thead>
+                    <tr style={{
+                      background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
+                    }}>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'left',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Nama Siswa
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Kelas
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Status
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Total Juz
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Total Ayat
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Nilai
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Setoran Bulan Ini
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Total Setoran
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedStudents.map((student, index) => {
+                      const statusConfig = getStatusConfig(student.status);
+                      const StatusIcon = statusConfig.icon;
+
+                      return (
+                        <tr
+                          key={student.id}
+                          style={{
+                            borderBottom: index < paginatedStudents.length - 1 ? `1px solid ${colors.gray[100]}` : 'none',
+                            transition: 'background 0.2s ease',
+                          }}
+                          className="table-row"
+                        >
+                          <td style={{
+                            padding: '18px 16px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: colors.text.primary,
+                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          }}>
+                            {student.nama}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            color: colors.text.secondary,
+                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          }}>
+                            {student.kelas}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                          }}>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              background: statusConfig.bg,
+                              color: statusConfig.text,
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            }}>
+                              <StatusIcon size={14} />
+                              {statusConfig.label}
+                            </span>
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: colors.emerald[700],
+                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          }}>
+                            {student.totalJuz}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            color: colors.text.secondary,
+                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          }}>
+                            {student.totalAyat}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                          }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              background: student.nilai >= 85
+                                ? `${colors.emerald[500]}20`
+                                : student.nilai >= 70
+                                ? `${colors.amber[400]}20`
+                                : `${colors.gray[400]}20`,
+                              color: student.nilai >= 85
+                                ? colors.emerald[700]
+                                : student.nilai >= 70
+                                ? colors.amber[700]
+                                : colors.gray[700],
+                              fontSize: '14px',
+                              fontWeight: 700,
+                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            }}>
+                              {student.nilai}
+                            </span>
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: colors.text.primary,
+                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          }}>
+                            {student.setoranBulanIni}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: colors.text.secondary,
+                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          }}>
+                            {student.totalSetoran}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '24px',
+                paddingTop: '24px',
+                borderTop: `1px solid ${colors.gray[200]}`,
+              }}>
+                <p style={{
+                  fontSize: '13px',
+                  color: colors.text.tertiary,
+                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                }}>
+                  Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredStudents.length)} dari {filteredStudents.length} siswa
+                </p>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '10px 14px',
+                      background: currentPage === 1 ? colors.gray[100] : colors.white,
+                      border: `2px solid ${colors.gray[300]}`,
+                      borderRadius: '10px',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    className="pagination-btn"
+                  >
+                    <ChevronLeft size={18} color={currentPage === 1 ? colors.gray[400] : colors.text.primary} />
+                  </button>
+
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      style={{
+                        padding: '10px 16px',
+                        background: currentPage === i + 1
+                          ? `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+                          : colors.white,
+                        border: `2px solid ${currentPage === i + 1 ? colors.emerald[500] : colors.gray[300]}`,
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: currentPage === i + 1 ? colors.white : colors.text.primary,
+                        cursor: 'pointer',
+                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        transition: 'all 0.2s ease',
+                      }}
+                      className="pagination-btn"
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      padding: '10px 14px',
+                      background: currentPage === totalPages ? colors.gray[100] : colors.white,
+                      border: `2px solid ${colors.gray[300]}`,
+                      borderRadius: '10px',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    className="pagination-btn"
+                  >
+                    <ChevronRight size={18} color={currentPage === totalPages ? colors.gray[400] : colors.text.primary} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+        /* Stats Card Animations */
+        .stats-card-small {
+          transition: all 0.3s ease;
+        }
+
+        .stats-card-small:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 20px rgba(26, 147, 111, 0.12);
+        }
+
+        /* Search Input */
+        .search-input:focus {
+          border-color: ${colors.emerald[500]};
+          box-shadow: 0 0 0 3px ${colors.emerald[100]};
+        }
+
+        /* Filter Buttons */
+        .filter-btn:hover {
+          background: ${colors.gray[50]};
+          border-color: ${colors.emerald[500]};
+        }
+
+        /* Action Buttons */
+        .action-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(26, 147, 111, 0.4);
+        }
+
+        .action-btn-secondary:hover {
+          background: ${colors.gray[50]};
+          border-color: ${colors.emerald[500]};
+        }
+
+        /* Table Row Hover */
+        .table-row:hover {
+          background: ${colors.emerald[50]}40;
+        }
+
+        /* Pagination Buttons */
+        .pagination-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Spin Animation */
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .stats-card-small {
+            min-width: 100%;
+          }
+        }
+      `}</style>
     </GuruLayout>
   );
 }
