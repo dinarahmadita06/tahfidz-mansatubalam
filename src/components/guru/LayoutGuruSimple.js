@@ -119,7 +119,7 @@ export default function LayoutGuruSimple({ children }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
       </div>
     );
   }
@@ -133,7 +133,7 @@ export default function LayoutGuruSimple({ children }) {
         {/* Header Sidebar */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-xl font-bold text-gray-900">Tahfidz App</h1>
@@ -159,11 +159,11 @@ export default function LayoutGuruSimple({ children }) {
                 onClick={() => setIsSidebarOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                    ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-emerald-600' : 'text-gray-500'}`} />
                 {item.label}
               </Link>
             );
@@ -227,7 +227,7 @@ export default function LayoutGuruSimple({ children }) {
             <Menu className="w-5 h-5 text-gray-600" />
           </button>
           <div className="flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-blue-600" />
+            <BookOpen className="w-6 h-6 text-emerald-600" />
             <h1 className="text-lg font-semibold text-gray-900">Tahfidz App</h1>
           </div>
           <div className="w-9"> {/* Spacer for centering */}</div>
