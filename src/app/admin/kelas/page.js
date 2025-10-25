@@ -1,31 +1,169 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, UserPlus, UserMinus, Shield, ShieldCheck, ArrowRight } from 'lucide-react';
+import {
+  Users, Plus, Edit, Trash2, Shield, ShieldCheck,
+  ArrowRight, Search, Download, BookOpen, GraduationCap,
+  UserCheck, Clock
+} from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter } from 'next/navigation';
+
+// Islamic Modern Color Palette
+const colors = {
+  emerald: {
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    200: '#A7F3D0',
+    300: '#6EE7B7',
+    400: '#34D399',
+    500: '#1A936F',
+    600: '#059669',
+    700: '#047857',
+    soft: '#C7F2C3', // Custom untuk kelas aktif
+  },
+  amber: {
+    50: '#FEF3C7',
+    100: '#FDE68A',
+    200: '#FCD34D',
+    300: '#FBBF24',
+    400: '#F7C873',
+    500: '#F59E0B',
+    600: '#D97706',
+    soft: '#FFE6A7', // Custom untuk kelas nonaktif
+  },
+  gold: {
+    500: '#EAB308',
+    600: '#CA8A04',
+  },
+  white: '#FFFFFF',
+  gray: {
+    50: '#F9FAFB',
+    100: '#F3F4F6',
+    200: '#E5E7EB',
+    300: '#D1D5DB',
+    400: '#9CA3AF',
+    500: '#6B7280',
+    600: '#4B5563',
+  },
+  text: {
+    primary: '#1B1B1B',
+    secondary: '#444444',
+    tertiary: '#6B7280',
+  },
+};
+
+// Komponen StatCard
+function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
+  const colorMap = {
+    emerald: {
+      bg: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
+      iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+      value: colors.emerald[700],
+      border: colors.emerald[200],
+    },
+    amber: {
+      bg: `linear-gradient(135deg, ${colors.amber[100]} 0%, ${colors.amber[200]} 100%)`,
+      iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
+      value: colors.amber[600],
+      border: colors.amber[200],
+    },
+    blue: {
+      bg: `linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)`,
+      iconBg: `linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)`,
+      value: '#1E40AF',
+      border: '#BFDBFE',
+    },
+  };
+
+  const scheme = colorMap[color];
+
+  return (
+    <div style={{
+      background: scheme.bg,
+      borderRadius: '20px',
+      padding: '28px',
+      boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
+      border: `2px solid ${scheme.border}`,
+      transition: 'all 0.3s ease',
+      animation: 'fadeInUp 0.6s ease-out',
+    }}
+    className="stats-card">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '18px',
+          background: scheme.iconBg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }}>
+          {icon}
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: colors.text.secondary,
+            marginBottom: '6px',
+            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+            letterSpacing: '0.3px',
+          }}>
+            {title}
+          </p>
+          <p style={{
+            fontSize: '32px',
+            fontWeight: 700,
+            color: scheme.value,
+            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+            lineHeight: '1.1',
+            marginBottom: subtitle ? '4px' : '0',
+          }}>
+            {value}
+          </p>
+          {subtitle && (
+            <p style={{
+              fontSize: '12px',
+              color: colors.text.tertiary,
+              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+            }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminKelasPage() {
   const router = useRouter();
   const [kelas, setKelas] = useState([]);
   const [tahunAjaran, setTahunAjaran] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedKelas, setSelectedKelas] = useState(null);
-  const [showGuruModal, setShowGuruModal] = useState(false);
-  const [showKelasModal, setShowKelasModal] = useState(false);
-  const [editingKelas, setEditingKelas] = useState(null);
   const [guruList, setGuruList] = useState([]);
-  const [kelasGuru, setKelasGuru] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterGuru, setFilterGuru] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all'); // all, active, inactive
+  const [showKelasModal, setShowKelasModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedKelas, setSelectedKelas] = useState(null);
+  const [editingKelas, setEditingKelas] = useState(null);
   const [kelasFormData, setKelasFormData] = useState({
-    nama: '',
+    namaKelas: '',
     tingkat: 1,
     tahunAjaranId: '',
-    targetJuz: 1
+    targetJuz: 1,
+    isActive: true,
   });
 
   useEffect(() => {
     fetchKelas();
     fetchTahunAjaran();
+    fetchGuruList();
   }, []);
 
   const fetchKelas = async () => {
@@ -57,100 +195,6 @@ export default function AdminKelasPage() {
       setGuruList(data);
     } catch (error) {
       console.error('Error fetching guru:', error);
-    }
-  };
-
-  const fetchKelasGuru = async (kelasId) => {
-    try {
-      const response = await fetch(`/api/kelas/${kelasId}/guru`);
-      const data = await response.json();
-      setKelasGuru(data);
-    } catch (error) {
-      console.error('Error fetching kelas guru:', error);
-    }
-  };
-
-  const handleManageGuru = async (kelasItem) => {
-    setSelectedKelas(kelasItem);
-    setShowGuruModal(true);
-    await fetchGuruList();
-    await fetchKelasGuru(kelasItem.id);
-  };
-
-  const handleAddGuru = async (guruId, peran) => {
-    try {
-      const response = await fetch(`/api/kelas/${selectedKelas.id}/add-guru`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          guruId,
-          peran,
-          isActive: true
-        }),
-      });
-
-      if (response.ok) {
-        await fetchKelasGuru(selectedKelas.id);
-        await fetchKelas();
-        alert('Guru berhasil ditambahkan');
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menambahkan guru');
-      }
-    } catch (error) {
-      console.error('Error adding guru:', error);
-      alert('Gagal menambahkan guru');
-    }
-  };
-
-  const handleUpdateGuruStatus = async (guruId, isActive) => {
-    try {
-      const response = await fetch(`/api/kelas/${selectedKelas.id}/update-guru`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          guruId,
-          isActive
-        }),
-      });
-
-      if (response.ok) {
-        await fetchKelasGuru(selectedKelas.id);
-        await fetchKelas();
-        alert(`Guru berhasil ${isActive ? 'diaktifkan' : 'dinonaktifkan'}`);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal mengubah status guru');
-      }
-    } catch (error) {
-      console.error('Error updating guru status:', error);
-      alert('Gagal mengubah status guru');
-    }
-  };
-
-  const handleRemoveGuru = async (guruId) => {
-    if (!confirm('Yakin ingin menghapus guru dari kelas ini?')) return;
-
-    try {
-      const response = await fetch(`/api/kelas/${selectedKelas.id}/guru?guruId=${guruId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await fetchKelasGuru(selectedKelas.id);
-        await fetchKelas();
-        alert('Guru berhasil dihapus dari kelas');
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menghapus guru');
-      }
-    } catch (error) {
-      console.error('Error removing guru:', error);
-      alert('Gagal menghapus guru');
     }
   };
 
@@ -187,10 +231,11 @@ export default function AdminKelasPage() {
   const handleEditKelas = (kelasItem) => {
     setEditingKelas(kelasItem);
     setKelasFormData({
-      nama: kelasItem.nama,
+      namaKelas: kelasItem.namaKelas,
       tingkat: kelasItem.tingkat,
       tahunAjaranId: kelasItem.tahunAjaranId,
-      targetJuz: kelasItem.targetJuz || 1
+      targetJuz: kelasItem.targetJuz || 1,
+      isActive: kelasItem.isActive !== false,
     });
     setShowKelasModal(true);
   };
@@ -216,21 +261,69 @@ export default function AdminKelasPage() {
     }
   };
 
+  const handleViewDetail = (kelasItem) => {
+    setSelectedKelas(kelasItem);
+    setShowDetailModal(true);
+  };
+
+  const handleExport = () => {
+    const csvContent = [
+      ['Nama Kelas', 'Tingkat', 'Tahun Ajaran', 'Guru Tahfidz', 'Jumlah Siswa', 'Status'],
+      ...filteredKelas.map(k => [
+        k.namaKelas,
+        k.tingkat,
+        k.tahunAjaran?.nama || '-',
+        k.kelasGuru?.filter(kg => kg.peran === 'utama').map(kg => kg.guru.user.name).join(', ') || '-',
+        k._count?.siswa || 0,
+        k.isActive !== false ? 'Aktif' : 'Tidak Aktif'
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `data-kelas-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
   const resetKelasForm = () => {
     setKelasFormData({
-      nama: '',
+      namaKelas: '',
       tingkat: 1,
       tahunAjaranId: '',
-      targetJuz: 1
+      targetJuz: 1,
+      isActive: true,
     });
     setEditingKelas(null);
+  };
+
+  // Filter data
+  const filteredKelas = kelas.filter(k => {
+    const matchSearch = k.namaKelas.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchStatus = filterStatus === 'all' ||
+      (filterStatus === 'active' && k.isActive !== false) ||
+      (filterStatus === 'inactive' && k.isActive === false);
+
+    const hasGuru = k.kelasGuru && k.kelasGuru.length > 0;
+    const matchGuru = filterGuru === 'all' ||
+      (hasGuru && k.kelasGuru.some(kg => kg.guruId.toString() === filterGuru));
+
+    return matchSearch && matchStatus && matchGuru;
+  });
+
+  // Statistics
+  const stats = {
+    total: kelas.length,
+    active: kelas.filter(k => k.isActive !== false).length,
+    inactive: kelas.filter(k => k.isActive === false).length,
   };
 
   if (loading) {
     return (
       <AdminLayout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
         </div>
       </AdminLayout>
     );
@@ -238,248 +331,964 @@ export default function AdminKelasPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Manajemen Kelas</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Kelola kelas dan guru pengampu</p>
+      <div style={{
+        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
+        minHeight: '100vh',
+        position: 'relative',
+      }}>
+        {/* Geometris Islamic Pattern Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%231A936F' stroke-width='1' opacity='0.08'%3E%3Ccircle cx='40' cy='40' r='30'/%3E%3Cpath d='M40 10 L70 40 L40 70 L10 40 Z'/%3E%3Cpath d='M40 25 L55 40 L40 55 L25 40 Z'/%3E%3Ccircle cx='40' cy='40' r='5' fill='%23F59E0B'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: '80px 80px',
+          pointerEvents: 'none',
+          opacity: 0.4,
+          zIndex: 0,
+        }} />
+
+        {/* Header with Islamic Pattern */}
+        <div style={{
+          position: 'relative',
+          padding: '32px 48px 24px',
+          borderBottom: `1px solid ${colors.gray[200]}`,
+          background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
+          backdropFilter: 'blur(10px)',
+          zIndex: 2,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+            <div>
+              <h1 style={{
+                fontSize: '36px',
+                fontWeight: 700,
+                background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.gold[600]} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                marginBottom: '8px',
+                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              }}>
+                Manajemen Kelas
+              </h1>
+              <p style={{
+                fontSize: '15px',
+                fontWeight: 500,
+                color: colors.text.secondary,
+                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              }}>
+                Kelola kelas tahfidz, wali kelas, dan siswa dengan mudah
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={handleExport}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: colors.white,
+                  color: colors.emerald[600],
+                  border: `2px solid ${colors.emerald[500]}`,
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                }}
+                className="export-btn"
+              >
+                <Download size={18} />
+                Export Data
+              </button>
+              <button
+                onClick={() => {
+                  resetKelasForm();
+                  setShowKelasModal(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                }}
+                className="add-btn"
+              >
+                <Plus size={18} />
+                Tambah Kelas
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => {
-              resetKelasForm();
-              setShowKelasModal(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            <Plus size={20} />
-            Tambah Kelas
-          </button>
         </div>
 
-        {/* Kelas List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {kelas.map((kelasItem) => (
-            <div key={kelasItem.id} className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-gray-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{kelasItem.nama}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{kelasItem.tahunAjaran?.nama}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full text-sm font-medium">
-                    Tingkat {kelasItem.tingkat}
-                  </span>
-                  <button
-                    onClick={() => handleEditKelas(kelasItem)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteKelas(kelasItem.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
+        {/* Main Content */}
+        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-              {/* Guru Info */}
-              <div className="space-y-2 mb-4">
-                {kelasItem.guruKelas && kelasItem.guruKelas.length > 0 ? (
-                  kelasItem.guruKelas.map((gk) => (
-                    <div key={gk.id} className="flex items-center gap-2 text-sm">
-                      {gk.peran === 'utama' ? (
-                        <ShieldCheck size={16} className="text-orange-500" />
-                      ) : (
-                        <Shield size={16} className="text-gray-400" />
-                      )}
-                      <span className="text-gray-700 dark:text-gray-300">
-                        {gk.guru.user.name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        ({gk.peran})
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Belum ada guru</p>
-                )}
-              </div>
+            {/* Stats Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '24px',
+            }}>
+              <StatCard
+                icon={<BookOpen size={24} color={colors.white} />}
+                title="Total Kelas"
+                value={stats.total}
+                subtitle="Semua kelas terdaftar"
+                color="blue"
+              />
+              <StatCard
+                icon={<GraduationCap size={24} color={colors.white} />}
+                title="Aktif"
+                value={stats.active}
+                subtitle="Kelas yang sedang berjalan"
+                color="emerald"
+              />
+              <StatCard
+                icon={<Clock size={24} color={colors.white} />}
+                title="Tidak Aktif"
+                value={stats.inactive}
+                subtitle="Kelas nonaktif"
+                color="amber"
+              />
+            </div>
 
-              {/* Stats and Actions */}
-              <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-neutral-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Users size={18} />
-                    <span className="text-sm">{kelasItem._count?.siswa || 0} siswa</span>
+            {/* Search & Filter Section */}
+            <div style={{
+              background: colors.white,
+              borderRadius: '20px',
+              padding: '24px',
+              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
+              border: `2px solid ${colors.emerald[100]}`,
+              animation: 'fadeInUp 0.6s ease-out 0.1s both',
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr 1fr',
+                gap: '16px',
+                alignItems: 'end',
+              }}>
+                {/* Search Input */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    marginBottom: '8px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
+                    Cari Kelas
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Search
+                      style={{
+                        position: 'absolute',
+                        left: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: colors.text.tertiary
+                      }}
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Cari berdasarkan nama kelas..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        paddingLeft: '44px',
+                        paddingRight: '16px',
+                        paddingTop: '12px',
+                        paddingBottom: '12px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="search-input"
+                    />
                   </div>
-                  <button
-                    onClick={() => handleManageGuru(kelasItem)}
-                    className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 text-sm font-medium"
-                  >
-                    Kelola Guru
-                  </button>
                 </div>
-                <button
-                  onClick={() => router.push(`/admin/kelas/${kelasItem.id}`)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                >
-                  <Users size={18} />
-                  Kelola Siswa
-                  <ArrowRight size={18} />
-                </button>
+
+                {/* Filter Guru */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    marginBottom: '8px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
+                    Filter Guru
+                  </label>
+                  <select
+                    value={filterGuru}
+                    onChange={(e) => setFilterGuru(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `2px solid ${colors.gray[200]}`,
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                    className="filter-select"
+                  >
+                    <option value="all">Semua Guru</option>
+                    {guruList.map(g => (
+                      <option key={g.id} value={g.id}>{g.user.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Filter Status */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    marginBottom: '8px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
+                    Filter Status
+                  </label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `2px solid ${colors.gray[200]}`,
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                    className="filter-select"
+                  >
+                    <option value="all">Semua Status</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Tidak Aktif</option>
+                  </select>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Guru Management Modal */}
-        {showGuruModal && selectedKelas && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Kelola Guru - {selectedKelas.nama}
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {selectedKelas.tahunAjaran?.nama}
+            {/* Grid Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '24px',
+              animation: 'slideUp 0.6s ease-out 0.2s both',
+            }}>
+              {filteredKelas.length === 0 ? (
+                <div style={{
+                  gridColumn: '1 / -1',
+                  background: colors.white,
+                  borderRadius: '20px',
+                  padding: '48px 24px',
+                  textAlign: 'center',
+                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
+                  border: `2px solid ${colors.gray[100]}`,
+                }}>
+                  <BookOpen size={48} color={colors.gray[400]} style={{ margin: '0 auto 16px' }} />
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.text.tertiary,
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
+                    Tidak ada kelas yang ditemukan
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowGuruModal(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  ✕
-                </button>
-              </div>
+              ) : (
+                filteredKelas.map((kelasItem, index) => {
+                  const isActive = kelasItem.isActive !== false;
+                  const guruUtama = kelasItem.kelasGuru?.find(kg => kg.peran === 'utama');
+                  const jumlahSiswa = kelasItem._count?.siswa || 0;
 
-              {/* Current Guru */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Guru Saat Ini</h3>
-                <div className="space-y-3">
-                  {kelasGuru.length > 0 ? (
-                    kelasGuru.map((gk) => (
-                      <div key={gk.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          {gk.peran === 'utama' ? (
-                            <ShieldCheck size={20} className="text-orange-500" />
-                          ) : (
-                            <Shield size={20} className="text-gray-400" />
-                          )}
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {gk.guru.user.name}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {gk.peran} • {gk.isActive ? 'Aktif' : 'Nonaktif'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleUpdateGuruStatus(gk.guruId, !gk.isActive)}
-                            className={`px-3 py-1 rounded text-sm ${
-                              gk.isActive
-                                ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-200'
-                                : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-200'
-                            }`}
-                          >
-                            {gk.isActive ? 'Nonaktifkan' : 'Aktifkan'}
-                          </button>
-                          <button
-                            onClick={() => handleRemoveGuru(gk.guruId)}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
+                  return (
+                    <div
+                      key={kelasItem.id}
+                      onClick={() => handleViewDetail(kelasItem)}
+                      style={{
+                        background: isActive ?
+                          `linear-gradient(135deg, ${colors.emerald.soft}40 0%, ${colors.emerald.soft}80 100%)` :
+                          `linear-gradient(135deg, ${colors.amber.soft}40 0%, ${colors.amber.soft}80 100%)`,
+                        borderRadius: '20px',
+                        padding: '24px',
+                        border: `2px solid ${isActive ? colors.emerald.soft : colors.amber.soft}`,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        animation: `slideUp 0.4s ease-out ${0.3 + (index * 0.05)}s both`,
+                        position: 'relative',
+                        overflow: 'hidden',
+                      }}
+                      className="kelas-card"
+                    >
+                      {/* Icon Background */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '-20px',
+                        right: '-20px',
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '50%',
+                        background: isActive ?
+                          `${colors.emerald[500]}15` :
+                          `${colors.amber[500]}15`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <GraduationCap size={60} color={isActive ? colors.emerald[300] : colors.amber[300]} />
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                      Belum ada guru di kelas ini
-                    </p>
-                  )}
-                </div>
-              </div>
 
-              {/* Add Guru */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tambah Guru</h3>
-                <div className="space-y-3">
-                  {guruList
-                    .filter(guru => !kelasGuru.find(kg => kg.guruId === guru.id))
-                    .map((guru) => (
-                      <div key={guru.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                      {/* Header */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'start',
+                        marginBottom: '16px',
+                        position: 'relative',
+                        zIndex: 1,
+                      }}>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {guru.user.name}
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {guru.user.email}
+                          <h3 style={{
+                            fontSize: '20px',
+                            fontWeight: 700,
+                            color: colors.text.primary,
+                            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                            marginBottom: '4px',
+                          }}>
+                            {kelasItem.namaKelas}
+                          </h3>
+                          <p style={{
+                            fontSize: '12px',
+                            color: colors.text.tertiary,
+                            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                          }}>
+                            Tingkat {kelasItem.tingkat} • {kelasItem.tahunAjaran?.nama || 'Belum ada tahun ajaran'}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div style={{
+                          display: 'flex',
+                          gap: '4px',
+                        }}>
                           <button
-                            onClick={() => handleAddGuru(guru.id, 'utama')}
-                            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditKelas(kelasItem);
+                            }}
+                            style={{
+                              padding: '8px',
+                              borderRadius: '10px',
+                              border: 'none',
+                              background: `${colors.emerald[500]}15`,
+                              color: colors.emerald[600],
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                            }}
+                            className="action-btn-edit"
                           >
-                            Tambah sebagai Utama
+                            <Edit size={16} />
                           </button>
                           <button
-                            onClick={() => handleAddGuru(guru.id, 'pengganti')}
-                            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteKelas(kelasItem.id);
+                            }}
+                            style={{
+                              padding: '8px',
+                              borderRadius: '10px',
+                              border: 'none',
+                              background: '#FEE2E2',
+                              color: '#DC2626',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                            }}
+                            className="action-btn-delete"
                           >
-                            Tambah sebagai Pengganti
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </div>
-                    ))}
-                </div>
-              </div>
+
+                      {/* Guru Tahfidz */}
+                      <div style={{
+                        background: colors.white,
+                        borderRadius: '12px',
+                        padding: '12px',
+                        marginBottom: '12px',
+                        position: 'relative',
+                        zIndex: 1,
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginBottom: '4px',
+                        }}>
+                          <ShieldCheck size={16} color={colors.emerald[600]} />
+                          <span style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            color: colors.text.tertiary,
+                            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}>
+                            Guru Tahfidz
+                          </span>
+                        </div>
+                        <p style={{
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: colors.text.primary,
+                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        }}>
+                          {guruUtama ? guruUtama.guru.user.name : 'Belum ada guru'}
+                        </p>
+                      </div>
+
+                      {/* Stats Row */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '12px',
+                        marginBottom: '16px',
+                        position: 'relative',
+                        zIndex: 1,
+                      }}>
+                        <div style={{
+                          background: colors.white,
+                          borderRadius: '12px',
+                          padding: '12px',
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginBottom: '4px',
+                          }}>
+                            <Users size={16} color={colors.emerald[600]} />
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              color: colors.text.tertiary,
+                              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                              textTransform: 'uppercase',
+                            }}>
+                              Siswa
+                            </span>
+                          </div>
+                          <p style={{
+                            fontSize: '20px',
+                            fontWeight: 700,
+                            color: colors.text.primary,
+                            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                          }}>
+                            {jumlahSiswa}
+                          </p>
+                        </div>
+
+                        <div style={{
+                          background: colors.white,
+                          borderRadius: '12px',
+                          padding: '12px',
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginBottom: '4px',
+                          }}>
+                            <UserCheck size={16} color={isActive ? colors.emerald[600] : colors.amber[600]} />
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              color: colors.text.tertiary,
+                              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                              textTransform: 'uppercase',
+                            }}>
+                              Status
+                            </span>
+                          </div>
+                          <p style={{
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            color: isActive ? colors.emerald[700] : colors.amber[700],
+                            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                          }}>
+                            {isActive ? 'Aktif' : 'Nonaktif'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/admin/kelas/${kelasItem.id}`);
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          padding: '12px',
+                          background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                          color: colors.white,
+                          border: 'none',
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                          position: 'relative',
+                          zIndex: 1,
+                        }}
+                        className="view-detail-btn"
+                      >
+                        Kelola Siswa
+                        <ArrowRight size={18} />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Kelas Add/Edit Modal */}
-        {showKelasModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 max-w-md w-full">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {editingKelas ? 'Edit Kelas' : 'Tambah Kelas'}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowKelasModal(false);
-                    resetKelasForm();
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  ✕
-                </button>
+      {/* Modal Detail Kelas */}
+      {showDetailModal && selectedKelas && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50,
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: colors.white,
+            borderRadius: '24px',
+            padding: '32px',
+            maxWidth: '640px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: `2px solid ${colors.emerald[100]}`,
+            animation: 'modalSlideIn 0.3s ease-out',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                color: colors.text.primary,
+                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              }}>
+                Detail Kelas
+              </h2>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  color: colors.text.tertiary,
+                  cursor: 'pointer',
+                  padding: '4px',
+                  transition: 'all 0.2s ease',
+                }}
+                className="close-btn"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: colors.text.tertiary,
+                  marginBottom: '4px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textTransform: 'uppercase',
+                }}>
+                  Nama Kelas
+                </label>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.text.primary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  {selectedKelas.namaKelas}
+                </p>
               </div>
 
-              <form onSubmit={handleKelasSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nama Kelas *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={kelasFormData.nama}
-                    onChange={(e) => setKelasFormData({ ...kelasFormData, nama: e.target.value })}
-                    placeholder="Contoh: Kelas 1A"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                  />
-                </div>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: colors.text.tertiary,
+                  marginBottom: '4px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textTransform: 'uppercase',
+                }}>
+                  Tingkat
+                </label>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.text.primary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  Tingkat {selectedKelas.tingkat}
+                </p>
+              </div>
 
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: colors.text.tertiary,
+                  marginBottom: '4px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textTransform: 'uppercase',
+                }}>
+                  Tahun Ajaran
+                </label>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.text.primary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  {selectedKelas.tahunAjaran?.nama || '-'}
+                </p>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: colors.text.tertiary,
+                  marginBottom: '4px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textTransform: 'uppercase',
+                }}>
+                  Target Juz
+                </label>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.text.primary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  {selectedKelas.targetJuz || 1} Juz
+                </p>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: colors.text.tertiary,
+                  marginBottom: '4px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textTransform: 'uppercase',
+                }}>
+                  Jumlah Siswa
+                </label>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.text.primary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  {selectedKelas._count?.siswa || 0} Siswa
+                </p>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: colors.text.tertiary,
+                  marginBottom: '4px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textTransform: 'uppercase',
+                }}>
+                  Status
+                </label>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: selectedKelas.isActive !== false ? colors.emerald[700] : colors.amber[700],
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  {selectedKelas.isActive !== false ? 'Aktif' : 'Tidak Aktif'}
+                </p>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: colors.text.tertiary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textTransform: 'uppercase',
+                }}>
+                  Guru Pengampu
+                </label>
+                {selectedKelas.kelasGuru && selectedKelas.kelasGuru.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedKelas.kelasGuru.map(kg => (
+                      <div key={kg.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        background: colors.gray[50],
+                        borderRadius: '8px',
+                      }}>
+                        {kg.peran === 'utama' ? (
+                          <ShieldCheck size={16} color={colors.emerald[600]} />
+                        ) : (
+                          <Shield size={16} color={colors.gray[400]} />
+                        )}
+                        <span style={{
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: colors.text.primary,
+                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        }}>
+                          {kg.guru.user.name}
+                        </span>
+                        <span style={{
+                          fontSize: '12px',
+                          color: colors.text.tertiary,
+                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        }}>
+                          ({kg.peran})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.text.tertiary,
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
+                    Belum ada guru pengampu
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px',
+              marginTop: '24px'
+            }}>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                style={{
+                  padding: '12px 24px',
+                  border: `2px solid ${colors.gray[300]}`,
+                  borderRadius: '12px',
+                  background: colors.white,
+                  color: colors.text.secondary,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                className="cancel-btn"
+              >
+                Tutup
+              </button>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  router.push(`/admin/kelas/${selectedKelas.id}`);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  color: colors.white,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                }}
+                className="submit-btn"
+              >
+                Kelola Siswa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Tambah/Edit Kelas */}
+      {showKelasModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50,
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: colors.white,
+            borderRadius: '24px',
+            padding: '32px',
+            maxWidth: '540px',
+            width: '100%',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: `2px solid ${colors.emerald[100]}`,
+            animation: 'modalSlideIn 0.3s ease-out',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                color: colors.text.primary,
+                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              }}>
+                {editingKelas ? 'Edit Kelas' : 'Tambah Kelas Baru'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowKelasModal(false);
+                  resetKelasForm();
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  color: colors.text.tertiary,
+                  cursor: 'pointer',
+                  padding: '4px',
+                  transition: 'all 0.2s ease',
+                }}
+                className="close-btn"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleKelasSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text.secondary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  Nama Kelas *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Kelas 1A"
+                  value={kelasFormData.namaKelas}
+                  onChange={(e) => setKelasFormData({ ...kelasFormData, namaKelas: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `2px solid ${colors.gray[200]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                  }}
+                  className="form-input"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    marginBottom: '8px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
                     Tingkat *
                   </label>
                   <input
@@ -489,31 +1298,29 @@ export default function AdminKelasPage() {
                     max="12"
                     value={kelasFormData.tingkat}
                     onChange={(e) => setKelasFormData({ ...kelasFormData, tingkat: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `2px solid ${colors.gray[200]}`,
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      outline: 'none',
+                      transition: 'all 0.3s ease',
+                    }}
+                    className="form-input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tahun Ajaran *
-                  </label>
-                  <select
-                    required
-                    value={kelasFormData.tahunAjaranId}
-                    onChange={(e) => setKelasFormData({ ...kelasFormData, tahunAjaranId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                  >
-                    <option value="">Pilih Tahun Ajaran</option>
-                    {tahunAjaran.map((ta) => (
-                      <option key={ta.id} value={ta.id}>
-                        {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    marginBottom: '8px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
                     Target Juz
                   </label>
                   <input
@@ -522,36 +1329,246 @@ export default function AdminKelasPage() {
                     max="30"
                     value={kelasFormData.targetJuz}
                     onChange={(e) => setKelasFormData({ ...kelasFormData, targetJuz: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Target hafalan untuk kelas ini (opsional)
-                  </p>
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowKelasModal(false);
-                      resetKelasForm();
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `2px solid ${colors.gray[200]}`,
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      outline: 'none',
+                      transition: 'all 0.3s ease',
                     }}
-                    className="px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                  >
-                    {editingKelas ? 'Update' : 'Simpan'}
-                  </button>
+                    className="form-input"
+                  />
                 </div>
-              </form>
-            </div>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text.secondary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  Tahun Ajaran *
+                </label>
+                <select
+                  required
+                  value={kelasFormData.tahunAjaranId}
+                  onChange={(e) => setKelasFormData({ ...kelasFormData, tahunAjaranId: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `2px solid ${colors.gray[200]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                  className="form-input"
+                >
+                  <option value="">Pilih Tahun Ajaran</option>
+                  {tahunAjaran.map((ta) => (
+                    <option key={ta.id} value={ta.id}>
+                      {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px',
+                background: colors.gray[50],
+                borderRadius: '12px',
+              }}>
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={kelasFormData.isActive}
+                  onChange={(e) => setKelasFormData({ ...kelasFormData, isActive: e.target.checked })}
+                  style={{ cursor: 'pointer' }}
+                />
+                <label htmlFor="isActive" style={{
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: colors.text.secondary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                }}>
+                  Kelas Aktif
+                </label>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                marginTop: '8px'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowKelasModal(false);
+                    resetKelasForm();
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    border: `2px solid ${colors.gray[300]}`,
+                    borderRadius: '12px',
+                    background: colors.white,
+                    color: colors.text.secondary,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                  className="cancel-btn"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 24px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                    color: colors.white,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                  }}
+                  className="submit-btn"
+                >
+                  {editingKelas ? 'Update Kelas' : 'Simpan Kelas'}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+        /* Keyframe Animations */
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        /* Stats Card Hover */
+        .stats-card:hover {
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 12px 28px rgba(26, 147, 111, 0.15);
+        }
+
+        /* Kelas Card Hover with Golden-Green Glow */
+        .kelas-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 16px 40px rgba(26, 147, 111, 0.2), 0 0 30px rgba(234, 179, 8, 0.15);
+          border-color: ${colors.emerald[400]} !important;
+        }
+
+        /* Button Hover Effects */
+        .export-btn:hover {
+          background: ${colors.emerald[50]} !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(26, 147, 111, 0.15) !important;
+        }
+
+        .add-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(26, 147, 111, 0.3) !important;
+        }
+
+        /* Input Focus */
+        .search-input:focus,
+        .filter-select:focus,
+        .form-input:focus {
+          border-color: ${colors.emerald[500]} !important;
+          box-shadow: 0 0 0 3px ${colors.emerald[500]}20 !important;
+        }
+
+        /* Action Button Hover */
+        .action-btn-edit:hover {
+          background: ${colors.emerald[500]}30 !important;
+          transform: scale(1.1);
+        }
+
+        .action-btn-delete:hover {
+          background: #FEE2E2 !important;
+          transform: scale(1.1);
+        }
+
+        .view-detail-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(26, 147, 111, 0.3) !important;
+        }
+
+        /* Modal Close Button Hover */
+        .close-btn:hover {
+          color: ${colors.text.primary} !important;
+          transform: rotate(90deg);
+        }
+
+        /* Form Button Hover */
+        .cancel-btn:hover {
+          background: ${colors.gray[50]} !important;
+        }
+
+        .submit-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(26, 147, 111, 0.3) !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .stats-card {
+            min-width: 100%;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }
