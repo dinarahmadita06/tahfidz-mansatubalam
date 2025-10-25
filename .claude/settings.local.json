@@ -19,7 +19,8 @@
       "Bash(curl:*)",
       "Bash(if exist .next rmdir /s /q .next)",
       "Bash(powershell:*)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(if not exist \"src\\app\\admin\\guru\" mkdir \"src\\app\\admin\\guru\")"
     ],
     "deny": [],
     "ask": []
