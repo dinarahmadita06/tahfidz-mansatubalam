@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import LayoutGuruSimple from '@/components/guru/LayoutGuruSimple';
+import GuruLayout from '@/components/layout/GuruLayout';
 import {
   BookOpen,
   Calendar,
@@ -448,7 +448,7 @@ export default function MateriMingguan() {
 
   if (loading) {
     return (
-      <LayoutGuruSimple>
+      <GuruLayout>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -476,12 +476,12 @@ export default function MateriMingguan() {
             </p>
           </div>
         </div>
-      </LayoutGuruSimple>
+      </GuruLayout>
     );
   }
 
   return (
-    <LayoutGuruSimple>
+    <GuruLayout>
       <div style={{
         background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
         minHeight: '100vh',
@@ -792,6 +792,6 @@ export default function MateriMingguan() {
           }
         }
       `}</style>
-    </LayoutGuruSimple>
+    </GuruLayout>
   );
 }
