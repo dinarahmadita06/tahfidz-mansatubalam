@@ -19,7 +19,6 @@ import {
   UsersRound,
   Activity,
   User,
-  Settings,
   Megaphone
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
@@ -70,11 +69,6 @@ const menuItems = [
     title: 'Profil',
     icon: User,
     href: '/admin/profile',
-  },
-  {
-    title: 'Pengaturan',
-    icon: Settings,
-    href: '/admin/pengaturan',
   },
 ];
 
