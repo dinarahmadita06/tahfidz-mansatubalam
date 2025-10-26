@@ -1,0 +1,272 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+
+// GET - Mengambil data profil admin
+export async function GET(request) {
+  try {
+    const session = await auth();
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Ambil data admin dari database
+    const admin = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phoneNumber: true,
+        nip: true,
+        jabatan: true,
+        alamat: true,
+        createdAt: true,
+        lastLogin: true
+      }
+    });
+
+    if (!admin) {
+      return NextResponse.json({ error: 'Admin tidak ditemukan' }, { status: 404 });
+    }
+
+    // Format data profil
+    const profileData = {
+      nama: admin.name,
+      email: admin.email,
+      role: 'Administrator',
+      phoneNumber: admin.phoneNumber || '0812-3456-7890',
+      jabatan: admin.jabatan || 'Koordinator Tahfidz',
+      nip: admin.nip || 'ADM.2024.001',
+      alamat: admin.alamat || 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
+      tanggalBergabung: admin.createdAt ? new Date(admin.createdAt).toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }) : '15 Agustus 2024',
+      lastLogin: admin.lastLogin ? new Date(admin.lastLogin).toLocaleString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) + ' WIB' : new Date().toLocaleString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) + ' WIB'
+    };
+
+    return NextResponse.json({ profile: profileData });
+  } catch (error) {
+    console.error('Error fetching admin profile:', error);
+    return NextResponse.json(
+      { error: 'Gagal mengambil data profil' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update data profil admin
+export async function PUT(request) {
+  try {
+    console.log('===== PUT /api/admin/profile called =====');
+
+    const session = await auth();
+    console.log('Session:', session ? { id: session.user.id, role: session.user.role } : 'No session');
+
+    if (!session || session.user.role !== 'ADMIN') {
+      console.log('Unauthorized: No session or not admin');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    console.log('Request body:', body);
+
+    const { nama, email, phoneNumber, jabatan, nip, alamat } = body;
+
+    // Validasi data
+    if (!nama || !email) {
+      console.log('Validation failed: nama or email missing');
+      return NextResponse.json(
+        { error: 'Nama dan email harus diisi' },
+        { status: 400 }
+      );
+    }
+
+    // Cek apakah email sudah digunakan oleh user lain
+    if (email !== session.user.email) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email,
+          id: { not: session.user.id }
+        }
+      });
+
+      if (existingUser) {
+        console.log('Email already exists:', email);
+        return NextResponse.json(
+          { error: 'Email sudah digunakan oleh user lain' },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.log('Updating user with ID:', session.user.id);
+
+    // Update data admin
+    const updatedAdmin = await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        name: nama,
+        email,
+        phoneNumber: phoneNumber || null,
+        jabatan: jabatan || null,
+        nip: nip || null,
+        alamat: alamat || null
+      }
+    });
+
+    console.log('User updated successfully:', updatedAdmin.id);
+
+    // Log aktivitas
+    try {
+      await prisma.activityLog.create({
+        data: {
+          userId: session.user.id,
+          userName: session.user.name,
+          userRole: session.user.role,
+          action: 'UPDATE',
+          module: 'USER',
+          description: 'Mengupdate profil admin',
+          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+          userAgent: request.headers.get('user-agent') || 'Unknown'
+        }
+      });
+      console.log('Activity log created');
+    } catch (logError) {
+      console.error('Failed to create activity log:', logError);
+      // Continue even if logging fails
+    }
+
+    console.log('Returning success response');
+    return NextResponse.json({
+      success: true,
+      message: 'Profil berhasil diperbarui',
+      profile: {
+        nama: updatedAdmin.name,
+        email: updatedAdmin.email,
+        phoneNumber: updatedAdmin.phoneNumber,
+        jabatan: updatedAdmin.jabatan,
+        nip: updatedAdmin.nip,
+        alamat: updatedAdmin.alamat
+      }
+    });
+  } catch (error) {
+    console.error('===== Error updating admin profile =====');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    return NextResponse.json(
+      { error: `Gagal memperbarui profil: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Update password admin
+export async function PATCH(request) {
+  try {
+    const session = await auth();
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { oldPassword, newPassword, confirmPassword } = body;
+
+    // Validasi input
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return NextResponse.json(
+        { error: 'Semua field harus diisi' },
+        { status: 400 }
+      );
+    }
+
+    if (newPassword !== confirmPassword) {
+      return NextResponse.json(
+        { error: 'Password baru dan konfirmasi tidak cocok' },
+        { status: 400 }
+      );
+    }
+
+    // Validasi panjang password
+    if (newPassword.length < 8) {
+      return NextResponse.json(
+        { error: 'Password minimal 8 karakter' },
+        { status: 400 }
+      );
+    }
+
+    // Ambil data user dari database
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    // Verifikasi password lama
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { error: 'Password lama tidak sesuai' },
+        { status: 400 }
+      );
+    }
+
+    // Hash password baru
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { password: hashedPassword }
+    });
+
+    // Log aktivitas
+    await prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        userName: session.user.name,
+        userRole: session.user.role,
+        action: 'UPDATE',
+        module: 'AUTH',
+        description: 'Mengubah password akun',
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+        userAgent: request.headers.get('user-agent') || 'Unknown'
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Password berhasil diubah'
+    });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    return NextResponse.json(
+      { error: 'Gagal mengubah password' },
+      { status: 500 }
+    );
+  }
+}

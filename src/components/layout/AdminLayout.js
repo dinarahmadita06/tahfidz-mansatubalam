@@ -10,7 +10,6 @@ import {
   School,
   Calendar,
   BarChart3,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -60,9 +59,9 @@ const menuItems = [
     href: '/admin/activity-logs',
   },
   {
-    title: 'Pengaturan',
-    icon: Settings,
-    href: '/admin/pengaturan',
+    title: 'Profil',
+    icon: Users,
+    href: '/admin/profile',
   },
 ];
 
