@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import PageWrapper from '@/components/PageWrapper';
 import {
@@ -8,645 +9,494 @@ import {
   ChevronRight,
   Megaphone,
   Plus,
-  Search,
-  Edit,
-  Trash2,
-  Eye,
   X,
   Calendar,
-  Tag,
-  FileText,
+  Users,
+  AlertCircle,
+  Trash2,
   CheckCircle,
-  Archive
+  Loader
 } from 'lucide-react';
 
 export default function PengumumanPage() {
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [pengumumanList, setPengumumanList] = useState([]);
+  const [siswaWisudaList, setSiswaWisudaList] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [selectedPengumuman, setSelectedPengumuman] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterKategori, setFilterKategori] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
+    tipePengumuman: 'UMUM',
     judul: '',
     isi: '',
-    kategori: 'umum',
-    tanggalPublikasi: '',
-    status: 'aktif'
+    isPenting: false,
+    targetRole: [],
+    siswaIds: []
   });
 
-  // Dummy data
-  const [pengumumanList, setPengumumanList] = useState([
-    {
-      id: 1,
-      judul: 'Wisuda Tahfidz Angkatan 2024',
-      isi: 'Wisuda tahfidz akan dilaksanakan pada hari Sabtu, 15 Februari 2025 di Aula MAN 1 Bandar Lampung. Seluruh santri yang telah menyelesaikan 30 juz diharapkan hadir.',
-      kategori: 'wisuda',
-      tanggalPublikasi: '2025-01-20',
-      status: 'aktif',
-      createdAt: '2025-01-15'
-    },
-    {
-      id: 2,
-      judul: 'Setoran Sabtu - Pekan Ini',
-      isi: 'Setoran tahfidz hari Sabtu akan dimulai pukul 07.00 WIB. Mohon santri hadir tepat waktu dan membawa mushaf.',
-      kategori: 'setoran',
-      tanggalPublikasi: '2025-01-25',
-      status: 'aktif',
-      createdAt: '2025-01-22'
-    },
-    {
-      id: 3,
-      judul: 'Libur Semester Genap',
-      isi: 'Libur semester genap akan dimulai tanggal 1 Maret 2025. Kegiatan tahfidz tetap berjalan sesuai jadwal.',
-      kategori: 'umum',
-      tanggalPublikasi: '2025-02-01',
-      status: 'aktif',
-      createdAt: '2025-01-18'
-    },
-    {
-      id: 4,
-      judul: 'Tahsin Intensif Bulan Ramadhan',
-      isi: 'Program tahsin intensif akan diadakan selama bulan Ramadhan. Pendaftaran dibuka mulai 10 Februari 2025.',
-      kategori: 'umum',
-      tanggalPublikasi: '2025-02-10',
-      status: 'arsip',
-      createdAt: '2025-01-10'
-    }
-  ]);
+  useEffect(() => {
+    fetchPengumuman();
+  }, []);
 
-  const kategoriConfig = {
-    wisuda: {
-      label: 'Wisuda Tahfidz',
-      color: '#E5D4FF',
-      textColor: '#6B21A8',
-      icon: '🎓'
-    },
-    setoran: {
-      label: 'Setoran Sabtu',
-      color: '#D1FAE5',
-      textColor: '#065F46',
-      icon: '📖'
-    },
-    umum: {
-      label: 'Umum',
-      color: '#FFEFC1',
-      textColor: '#92400E',
-      icon: '📢'
+  useEffect(() => {
+    if (showModal && formData.tipePengumuman === 'WISUDA') {
+      fetchSiswaWisuda();
+    }
+  }, [showModal, formData.tipePengumuman]);
+
+  const fetchPengumuman = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/admin/pengumuman');
+      if (res.ok) {
+        const data = await res.json();
+        setPengumumanList(data.pengumuman || []);
+      }
+    } catch (error) {
+      console.error('Error fetching pengumuman:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
+  const fetchSiswaWisuda = async () => {
+    try {
+      const res = await fetch('/api/admin/siswa-wisuda');
+      if (res.ok) {
+        const data = await res.json();
+        setSiswaWisudaList(data.siswa || []);
+      }
+    } catch (error) {
+      console.error('Error fetching siswa wisuda:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (selectedPengumuman) {
-      // Update
-      setPengumumanList(pengumumanList.map(item =>
-        item.id === selectedPengumuman.id
-          ? { ...item, ...formData }
-          : item
-      ));
-    } else {
-      // Create new
-      const newPengumuman = {
-        id: Date.now(),
-        ...formData,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setPengumumanList([newPengumuman, ...pengumumanList]);
+    setError('');
+    setSuccess('');
+    setSubmitting(true);
+
+    try {
+      // Validasi
+      if (formData.targetRole.length === 0) {
+        setError('Pilih minimal satu target penerima');
+        setSubmitting(false);
+        return;
+      }
+
+      if (formData.tipePengumuman !== 'WISUDA') {
+        if (!formData.judul || !formData.isi) {
+          setError('Judul dan isi harus diisi');
+          setSubmitting(false);
+          return;
+        }
+      } else {
+        if (formData.siswaIds.length === 0) {
+          setError('Pilih minimal satu siswa untuk wisuda');
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      const res = await fetch('/api/admin/pengumuman', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess('Pengumuman berhasil dibuat!');
+        setTimeout(() => {
+          setShowModal(false);
+          setSuccess('');
+          resetForm();
+          fetchPengumuman();
+        }, 2000);
+      } else {
+        setError(data.error || 'Gagal membuat pengumuman');
+      }
+    } catch (error) {
+      console.error('Error creating pengumuman:', error);
+      setError('Terjadi kesalahan saat membuat pengumuman');
+    } finally {
+      setSubmitting(false);
     }
-    handleCloseModal();
   };
 
-  const handleEdit = (pengumuman) => {
-    setSelectedPengumuman(pengumuman);
-    setFormData({
-      judul: pengumuman.judul,
-      isi: pengumuman.isi,
-      kategori: pengumuman.kategori,
-      tanggalPublikasi: pengumuman.tanggalPublikasi,
-      status: pengumuman.status
-    });
-    setShowModal(true);
-  };
+  const handleDelete = async (id) => {
+    if (!confirm('Yakin ingin menghapus pengumuman ini?')) return;
 
-  const handleDelete = (id) => {
-    if (confirm('Apakah Anda yakin ingin menghapus pengumuman ini?')) {
-      setPengumumanList(pengumumanList.filter(item => item.id !== id));
+    try {
+      const res = await fetch(`/api/admin/pengumuman?id=${id}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        setSuccess('Pengumuman berhasil dihapus');
+        setTimeout(() => setSuccess(''), 3000);
+        fetchPengumuman();
+      } else {
+        setError('Gagal menghapus pengumuman');
+      }
+    } catch (error) {
+      console.error('Error deleting pengumuman:', error);
+      setError('Terjadi kesalahan');
     }
   };
 
-  const handlePreview = (pengumuman) => {
-    setSelectedPengumuman(pengumuman);
-    setShowPreview(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedPengumuman(null);
+  const resetForm = () => {
     setFormData({
+      tipePengumuman: 'UMUM',
       judul: '',
       isi: '',
-      kategori: 'umum',
-      tanggalPublikasi: '',
-      status: 'aktif'
+      isPenting: false,
+      targetRole: [],
+      siswaIds: []
     });
   };
 
-  const filteredPengumuman = pengumumanList.filter(item => {
-    const matchSearch = item.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                       item.isi.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchKategori = filterKategori === 'all' || item.kategori === filterKategori;
-    const matchStatus = filterStatus === 'all' || item.status === filterStatus;
-    return matchSearch && matchKategori && matchStatus;
-  });
+  const toggleTargetRole = (role) => {
+    setFormData(prev => ({
+      ...prev,
+      targetRole: prev.targetRole.includes(role)
+        ? prev.targetRole.filter(r => r !== role)
+        : [...prev.targetRole, role]
+    }));
+  };
+
+  const toggleSiswa = (siswaId) => {
+    setFormData(prev => ({
+      ...prev,
+      siswaIds: prev.siswaIds.includes(siswaId)
+        ? prev.siswaIds.filter(id => id !== siswaId)
+        : [...prev.siswaIds, siswaId]
+    }));
+  };
+
+  const tipeBadgeStyle = {
+    UMUM: { bg: '#FFEFC1', text: '#92400E', icon: '📢' },
+    WISUDA: { bg: '#E5D4FF', text: '#6B21A8', icon: '🎓' },
+    KEGIATAN: { bg: '#D1FAE5', text: '#065F46', icon: '📅' },
+    LIBUR: { bg: '#FEE2E2', text: '#991B1B', icon: '🏖️' }
+  };
 
   return (
     <AdminLayout>
       <PageWrapper>
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm mb-6">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-emerald-100/50 shadow-sm">
-            <Home size={16} className="text-emerald-600" strokeWidth={1.5} />
-            <ChevronRight size={14} className="text-gray-400" strokeWidth={2} />
-            <span className="font-semibold text-emerald-700">Pengumuman Tahfidz</span>
-          </div>
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
+          <Home size={16} />
+          <ChevronRight size={14} />
+          <span className="font-medium text-emerald-700">Pengumuman</span>
         </div>
 
-        {/* Header Section */}
-        <div className="page-header mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-start gap-5">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <div className="flex items-start gap-4">
+            <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-3 rounded-xl shadow-lg">
+              <Megaphone className="text-white" size={28} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Pengumuman</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Kelola pengumuman untuk guru, siswa, dan orang tua
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
+          >
+            <Plus size={20} />
+            Buat Pengumuman
+          </button>
+        </div>
+
+        {/* Success/Error Message */}
+        {success && (
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <CheckCircle size={20} />
+            <span className="font-medium">{success}</span>
+          </div>
+        )}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <AlertCircle size={20} />
+            <span className="font-medium">{error}</span>
+          </div>
+        )}
+
+        {/* List Pengumuman */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader className="animate-spin text-emerald-600" size={40} />
+          </div>
+        ) : pengumumanList.length === 0 ? (
+          <div className="text-center py-12">
+            <Megaphone className="mx-auto text-gray-300 mb-4" size={64} />
+            <p className="text-gray-500 text-lg">Belum ada pengumuman</p>
+            <p className="text-gray-400 text-sm">Klik tombol "Buat Pengumuman" untuk memulai</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {pengumumanList.map((item) => (
               <div
-                className="p-4 rounded-2xl shadow-lg"
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                }}
-              >
-                <Megaphone className="text-white" size={32} strokeWidth={1.5} />
-              </div>
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-2" style={{ color: '#064E3B' }}>
-                  📢 Pengumuman Tahfidz
-                </h1>
-                <p className="text-sm font-medium text-gray-600">
-                  Kelola seluruh pengumuman rutin dan acara tahfidz dalam satu tempat
-                </p>
-                <div className="flex items-center gap-2 mt-3">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium text-emerald-700">
-                    {pengumumanList.filter(p => p.status === 'aktif').length} Pengumuman Aktif
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md hover:shadow-xl transition-all duration-200 hover:scale-105"
-              style={{
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-              }}
-            >
-              <Plus size={20} strokeWidth={2} />
-              Tambah Pengumuman
-            </button>
-          </div>
-        </div>
-
-        {/* Search & Filter */}
-        <div className="page-card p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            {/* Search */}
-            <div className="md:col-span-5 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} strokeWidth={1.5} />
-              <input
-                type="text"
-                placeholder="Cari pengumuman..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              />
-            </div>
-
-            {/* Filter Kategori */}
-            <div className="md:col-span-3">
-              <select
-                value={filterKategori}
-                onChange={(e) => setFilterKategori(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
-                <option value="all">Semua Kategori</option>
-                <option value="wisuda">🎓 Wisuda Tahfidz</option>
-                <option value="setoran">📖 Setoran Sabtu</option>
-                <option value="umum">📢 Umum</option>
-              </select>
-            </div>
-
-            {/* Filter Status */}
-            <div className="md:col-span-3">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
-                <option value="all">Semua Status</option>
-                <option value="aktif">✅ Aktif</option>
-                <option value="arsip">📁 Arsip</option>
-              </select>
-            </div>
-
-            {/* Reset */}
-            <div className="md:col-span-1">
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setFilterKategori('all');
-                  setFilterStatus('all');
-                }}
-                className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Pengumuman List */}
-        <div className="space-y-4">
-          {filteredPengumuman.length === 0 ? (
-            <div className="page-card p-12 text-center">
-              <Megaphone className="mx-auto mb-4 text-gray-300" size={64} strokeWidth={1.5} />
-              <p className="text-gray-500 font-medium">Tidak ada pengumuman ditemukan</p>
-            </div>
-          ) : (
-            filteredPengumuman.map((pengumuman) => (
-              <div
-                key={pengumuman.id}
-                className="page-card p-6 hover:shadow-lg transition-all duration-300"
+                key={item.id}
+                className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-start gap-3 mb-3">
-                      <span className="text-3xl">{kategoriConfig[pengumuman.kategori].icon}</span>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          {pengumuman.judul}
-                        </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
-                          {pengumuman.isi}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {/* Kategori Badge */}
+                    <div className="flex items-center gap-3 mb-3">
                       <span
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
                         style={{
-                          background: kategoriConfig[pengumuman.kategori].color,
-                          color: kategoriConfig[pengumuman.kategori].textColor
+                          background: tipeBadgeStyle[item.tipePengumuman]?.bg,
+                          color: tipeBadgeStyle[item.tipePengumuman]?.text
                         }}
                       >
-                        <Tag size={14} strokeWidth={2} />
-                        {kategoriConfig[pengumuman.kategori].label}
+                        {tipeBadgeStyle[item.tipePengumuman]?.icon} {item.tipePengumuman}
                       </span>
-
-                      {/* Status Badge */}
-                      <span
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                          pengumuman.status === 'aktif'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {pengumuman.status === 'aktif' ? (
-                          <>
-                            <CheckCircle size={14} strokeWidth={2} />
-                            Aktif
-                          </>
-                        ) : (
-                          <>
-                            <Archive size={14} strokeWidth={2} />
-                            Arsip
-                          </>
-                        )}
-                      </span>
-
-                      {/* Tanggal */}
-                      <span className="inline-flex items-center gap-2 text-xs text-gray-500">
-                        <Calendar size={14} strokeWidth={1.5} />
-                        Publikasi: {new Date(pengumuman.tanggalPublikasi).toLocaleDateString('id-ID', {
-                          day: '2-digit',
+                      {item.isPenting && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                          <AlertCircle size={14} /> Penting
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{item.judul}</h3>
+                    <p className="text-gray-600 text-sm mb-4 whitespace-pre-line line-clamp-3">
+                      {item.isi}
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Calendar size={14} />
+                        {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                          day: 'numeric',
                           month: 'long',
                           year: 'numeric'
                         })}
                       </span>
+                      <span className="flex items-center gap-1">
+                        <Users size={14} />
+                        Target: {item.targetRole.join(', ')}
+                      </span>
                     </div>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handlePreview(pengumuman)}
-                      className="p-2.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all duration-200"
-                      title="Pratinjau"
-                    >
-                      <Eye size={18} strokeWidth={2} />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(pengumuman)}
-                      className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all duration-200"
-                      title="Edit"
-                    >
-                      <Edit size={18} strokeWidth={2} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(pengumuman.id)}
-                      className="p-2.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all duration-200"
-                      title="Hapus"
-                    >
-                      <Trash2 size={18} strokeWidth={2} />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+                  >
+                    <Trash2 size={20} />
+                  </button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {/* Add/Edit Modal */}
+        {/* Modal Create */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div
-              className="rounded-2xl p-8 max-w-3xl w-full shadow-2xl max-h-[90vh] overflow-y-auto animate-slide-up"
-              style={{
-                background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
-                border: '2px solid rgba(16, 185, 129, 0.2)',
-                animation: 'slideUp 0.3s ease-out'
-              }}
-            >
-              <style jsx>{`
-                @keyframes slideUp {
-                  from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                  }
-                  to {
-                    opacity: 1;
-                    transform: translateY(0);
-                  }
-                }
-                @keyframes fadeIn {
-                  from { opacity: 0; }
-                  to { opacity: 1; }
-                }
-                .animate-fade-in {
-                  animation: fadeIn 0.3s ease-in-out;
-                }
-              `}</style>
-
-              {/* Modal Header */}
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="p-3 rounded-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                    }}
-                  >
-                    <FileText size={24} className="text-white" strokeWidth={2} />
-                  </div>
-                  <h2 className="text-2xl font-bold" style={{ color: '#064E3B' }}>
-                    {selectedPengumuman ? 'Edit Pengumuman' : 'Tambah Pengumuman Baru'}
-                  </h2>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Buat Pengumuman Baru</h2>
                 <button
-                  onClick={handleCloseModal}
-                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                    setError('');
+                  }}
+                  className="p-2 rounded-lg hover:bg-gray-100"
                 >
-                  <X size={24} strokeWidth={2} />
+                  <X size={24} />
                 </button>
               </div>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Judul */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Judul Pengumuman <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.judul}
-                    onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
-                    required
-                    placeholder="Masukkan judul pengumuman"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                    style={{ fontFamily: 'Poppins, sans-serif' }}
-                  />
+              {error && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
                 </div>
-
-                {/* Isi */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Isi Pengumuman <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.isi}
-                    onChange={(e) => setFormData({ ...formData, isi: e.target.value })}
-                    required
-                    rows={6}
-                    placeholder="Masukkan detail pengumuman"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none transition-all"
-                    style={{ fontFamily: 'Poppins, sans-serif' }}
-                  />
+              )}
+              {success && (
+                <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm">
+                  {success}
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Kategori */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Kategori <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={formData.kategori}
-                      onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      <option value="umum">📢 Umum</option>
-                      <option value="wisuda">🎓 Wisuda Tahfidz</option>
-                      <option value="setoran">📖 Setoran Sabtu</option>
-                    </select>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Tipe Pengumuman */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Tipe Pengumuman
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {['UMUM', 'WISUDA', 'KEGIATAN', 'LIBUR'].map((tipe) => (
+                      <button
+                        key={tipe}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, tipePengumuman: tipe })}
+                        className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+                          formData.tipePengumuman === tipe
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300'
+                        }`}
+                      >
+                        {tipeBadgeStyle[tipe]?.icon} {tipe}
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  {/* Tanggal Publikasi */}
+                {/* Target Role */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Target Penerima
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['GURU', 'SISWA', 'ORANG_TUA'].map((role) => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => toggleTargetRole(role)}
+                        className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+                          formData.targetRole.includes(role)
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300'
+                        }`}
+                      >
+                        {role.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Conditional Fields */}
+                {formData.tipePengumuman === 'WISUDA' ? (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Tanggal Publikasi <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Pilih Siswa Wisuda (Hafal 30 Juz)
                     </label>
-                    <input
-                      type="date"
-                      value={formData.tanggalPublikasi}
-                      onChange={(e) => setFormData({ ...formData, tanggalPublikasi: e.target.value })}
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
+                    <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4 space-y-2">
+                      {siswaWisudaList.length === 0 ? (
+                        <p className="text-gray-500 text-sm text-center py-4">
+                          Tidak ada siswa yang eligible untuk wisuda
+                        </p>
+                      ) : (
+                        siswaWisudaList.map((siswa) => (
+                          <label
+                            key={siswa.id}
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.siswaIds.includes(siswa.id)}
+                              onChange={() => toggleSiswa(siswa.id)}
+                              className="w-4 h-4 text-emerald-600"
+                            />
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{siswa.nama}</p>
+                              <p className="text-xs text-gray-500">
+                                Kelas {siswa.kelas.tingkat} {siswa.kelas.nama} • {siswa.totalJuzLancar} Juz
+                              </p>
+                            </div>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      ⚠️ Template akan di-generate otomatis berdasarkan siswa yang dipilih
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Judul Pengumuman
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.judul}
+                        onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        placeholder="Masukkan judul pengumuman..."
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Isi Pengumuman
+                      </label>
+                      <textarea
+                        rows={8}
+                        value={formData.isi}
+                        onChange={(e) => setFormData({ ...formData, isi: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                        placeholder="Masukkan isi pengumuman..."
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Toggle Penting */}
+                <div className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">Tandai sebagai Penting</p>
+                    <p className="text-xs text-amber-700 mt-1">Pengumuman akan ditampilkan dengan highlight merah</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isPenting: !formData.isPenting })}
+                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+                      formData.isPenting ? 'bg-red-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                        formData.isPenting ? 'translate-x-6' : ''
+                      }`}
                     />
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="aktif"
-                        checked={formData.status === 'aktif'}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Aktif (Ditampilkan)</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="arsip"
-                        checked={formData.status === 'arsip'}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-4 h-4 text-gray-600 focus:ring-gray-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Arsip</span>
-                    </label>
-                  </div>
+                  </button>
                 </div>
 
                 {/* Buttons */}
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
-                    onClick={handleCloseModal}
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-sm"
-                    style={{
-                      background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-                      color: '#92400E',
-                      border: '1px solid #F59E0B'
+                    onClick={() => {
+                      setShowModal(false);
+                      resetForm();
+                      setError('');
                     }}
+                    disabled={submitting}
+                    className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 disabled:opacity-50"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:scale-105 shadow-md"
-                    style={{
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                    }}
+                    disabled={submitting}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {selectedPengumuman ? 'Simpan Perubahan' : 'Simpan Pengumuman'}
+                    {submitting ? (
+                      <>
+                        <Loader className="animate-spin" size={20} />
+                        Menyimpan...
+                      </>
+                    ) : (
+                      'Publikasikan'
+                    )}
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
-
-        {/* Preview Modal */}
-        {showPreview && selectedPengumuman && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div
-              className="rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
-              style={{
-                background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
-                border: '2px solid rgba(16, 185, 129, 0.2)'
-              }}
-            >
-              {/* Preview Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="p-3 rounded-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-                    }}
-                  >
-                    <Eye size={24} className="text-white" strokeWidth={2} />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Pratinjau Pengumuman</h2>
-                </div>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
-                >
-                  <X size={24} strokeWidth={2} />
-                </button>
-              </div>
-
-              {/* Preview Content */}
-              <div
-                className="p-6 rounded-xl border-2"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.5)',
-                  borderColor: kategoriConfig[selectedPengumuman.kategori].color
-                }}
-              >
-                {/* Kategori Badge */}
-                <div className="mb-4">
-                  <span
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
-                    style={{
-                      background: kategoriConfig[selectedPengumuman.kategori].color,
-                      color: kategoriConfig[selectedPengumuman.kategori].textColor
-                    }}
-                  >
-                    <span className="text-lg">{kategoriConfig[selectedPengumuman.kategori].icon}</span>
-                    {kategoriConfig[selectedPengumuman.kategori].label}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {selectedPengumuman.judul}
-                </h3>
-
-                {/* Date */}
-                <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                  <Calendar size={16} strokeWidth={1.5} />
-                  <span>
-                    {new Date(selectedPengumuman.tanggalPublikasi).toLocaleDateString('id-ID', {
-                      weekday: 'long',
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </span>
-                </div>
-
-                {/* Content */}
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {selectedPengumuman.isi}
-                  </p>
-                </div>
-              </div>
-
-              {/* Preview Info */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <p className="text-xs text-blue-800">
-                  <span className="font-semibold">ℹ️ Info:</span> Ini adalah tampilan pratinjau pengumuman yang akan dilihat oleh guru, siswa, dan orang tua.
-                </p>
-              </div>
             </div>
           </div>
         )}
