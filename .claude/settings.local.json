@@ -20,7 +20,9 @@
       "Bash(if exist .next rmdir /s /q .next)",
       "Bash(powershell:*)",
       "Bash(npm run build)",
-      "Bash(if not exist \"src\\app\\admin\\guru\" mkdir \"src\\app\\admin\\guru\")"
+      "Bash(if not exist \"src\\app\\admin\\guru\" mkdir \"src\\app\\admin\\guru\")",
+      "Bash(if not exist \"src\\app\\api\\admin\\kelas\" mkdir \"src\\app\\api\\admin\\kelas\")",
+      "Bash(if not exist \"src\\app\\api\\admin\\tahun-ajaran\\[id]\\activate\" mkdir \"src\\app\\api\\admin\\tahun-ajaran\\[id]\\activate\")"
     ],
     "deny": [],
     "ask": []
