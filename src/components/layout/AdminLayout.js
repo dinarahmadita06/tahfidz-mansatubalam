@@ -19,7 +19,8 @@ import {
   UsersRound,
   Activity,
   User,
-  Settings
+  Settings,
+  Megaphone
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
 
@@ -54,6 +55,11 @@ const menuItems = [
       { title: 'Laporan Hafalan', href: '/admin/laporan/hafalan', icon: BookOpen },
       { title: 'Laporan Kehadiran', href: '/admin/laporan/kehadiran', icon: UserCheck },
     ]
+  },
+  {
+    title: 'Pengumuman',
+    icon: Megaphone,
+    href: '/admin/pengumuman',
   },
   {
     title: 'Log Activity',
