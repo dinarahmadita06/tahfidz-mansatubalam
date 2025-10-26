@@ -8,18 +8,23 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  password  String
-  name      String
-  role      Role
-  image     String?
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  guru      Guru?
-  orangTua  OrangTua?
-  siswa     Siswa?
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        Role
+  image       String?
+  phoneNumber String?
+  nip         String?
+  jabatan     String?
+  alamat      String?
+  lastLogin   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  guru        Guru?
+  orangTua    OrangTua?
+  siswa       Siswa?
 
   @@map("users")
 }

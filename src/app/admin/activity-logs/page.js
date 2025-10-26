@@ -1,10 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Activity, Filter, RotateCcw, FileDown, TrendingUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import AdminLayout from '@/components/layout/AdminLayout';
 
@@ -13,10 +10,11 @@ export default function ActivityLogsPage() {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 50,
+    limit: 25,
     totalCount: 0,
     totalPages: 0
   });
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Filters
   const [filters, setFilters] = useState({
@@ -50,6 +48,7 @@ export default function ActivityLogsPage() {
       if (res.ok) {
         setLogs(data.logs);
         setPagination(data.pagination);
+        setLastUpdated(new Date());
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
@@ -99,12 +98,12 @@ export default function ActivityLogsPage() {
 
   const getRoleBadgeClass = (role) => {
     const classes = {
-      ADMIN: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-      GURU: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      SISWA: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      ORANG_TUA: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+      ADMIN: 'bg-purple-50 text-purple-700 border border-purple-200',
+      GURU: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      SISWA: 'bg-sky-50 text-sky-700 border border-sky-200',
+      ORANG_TUA: 'bg-amber-50 text-amber-700 border border-amber-200'
     };
-    return classes[role] || 'bg-gray-100 text-gray-800';
+    return classes[role] || 'bg-gray-50 text-gray-700 border border-gray-200';
   };
 
   const getActionIcon = (action) => {
@@ -112,273 +111,364 @@ export default function ActivityLogsPage() {
       LOGIN: '🔑',
       LOGOUT: '🚪',
       CREATE: '➕',
-      UPDATE: '✏️',
+      UPDATE: '📝',
       DELETE: '🗑️',
       VIEW: '👁️',
-      EXPORT: '📥',
+      EXPORT: '📤',
       APPROVE: '✅',
       REJECT: '❌',
-      IMPORT: '📤'
+      IMPORT: '📥'
     };
-    return icons[action] || '📝';
+    return icons[action] || '📋';
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
   };
 
   return (
     <AdminLayout>
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Log Activity</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Tracking semua aktivitas yang dilakukan oleh user
-          </p>
-        </div>
-      </div>
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4">Filter & Pencarian</h2>
+        body {
+          font-family: 'Poppins', sans-serif;
+        }
+      `}</style>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* Role Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Role
-            </label>
-            <Select value={filters.role} onValueChange={(value) => setFilters({...filters, role: value})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Semua Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Role</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="GURU">Guru</SelectItem>
-                <SelectItem value="SISWA">Siswa</SelectItem>
-                <SelectItem value="ORANG_TUA">Orang Tua</SelectItem>
-              </SelectContent>
-            </Select>
+      <div
+        className="min-h-screen p-8"
+        style={{
+          background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
+          fontFamily: 'Poppins, sans-serif'
+        }}
+      >
+        {/* Header with Badge */}
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-start gap-4">
+            <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-3 rounded-xl shadow-lg">
+              <Activity className="text-white" size={28} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                Log Activity
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Tracking semua aktivitas yang dilakukan oleh pengguna sistem Tahfidz
+              </p>
+            </div>
           </div>
 
-          {/* Action Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Aktivitas
-            </label>
-            <Select value={filters.action} onValueChange={(value) => setFilters({...filters, action: value})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Semua Aktivitas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Aktivitas</SelectItem>
-                <SelectItem value="LOGIN">Login</SelectItem>
-                <SelectItem value="LOGOUT">Logout</SelectItem>
-                <SelectItem value="CREATE">Create</SelectItem>
-                <SelectItem value="UPDATE">Update</SelectItem>
-                <SelectItem value="DELETE">Delete</SelectItem>
-                <SelectItem value="VIEW">View</SelectItem>
-                <SelectItem value="EXPORT">Export</SelectItem>
-                <SelectItem value="APPROVE">Approve</SelectItem>
-                <SelectItem value="REJECT">Reject</SelectItem>
-                <SelectItem value="IMPORT">Import</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Module Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Modul
-            </label>
-            <Select value={filters.module} onValueChange={(value) => setFilters({...filters, module: value})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Semua Modul" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Modul</SelectItem>
-                <SelectItem value="USER">User</SelectItem>
-                <SelectItem value="SISWA">Siswa</SelectItem>
-                <SelectItem value="GURU">Guru</SelectItem>
-                <SelectItem value="ORANG_TUA">Orang Tua</SelectItem>
-                <SelectItem value="KELAS">Kelas</SelectItem>
-                <SelectItem value="HAFALAN">Hafalan</SelectItem>
-                <SelectItem value="PRESENSI">Presensi</SelectItem>
-                <SelectItem value="LAPORAN">Laporan</SelectItem>
-                <SelectItem value="PENGUMUMAN">Pengumuman</SelectItem>
-                <SelectItem value="AGENDA">Agenda</SelectItem>
-                <SelectItem value="WISUDA">Wisuda</SelectItem>
-                <SelectItem value="TARGET_HAFALAN">Target Hafalan</SelectItem>
-                <SelectItem value="TAHUN_AJARAN">Tahun Ajaran</SelectItem>
-                <SelectItem value="STATISTIK">Statistik</SelectItem>
-                <SelectItem value="SETTINGS">Settings</SelectItem>
-                <SelectItem value="AUTH">Auth</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Date Range */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tanggal Mulai
-            </label>
-            <Input
-              type="date"
-              value={filters.tanggalMulai}
-              onChange={(e) => setFilters({...filters, tanggalMulai: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tanggal Selesai
-            </label>
-            <Input
-              type="date"
-              value={filters.tanggalSelesai}
-              onChange={(e) => setFilters({...filters, tanggalSelesai: e.target.value})}
-            />
+          {/* Realtime Badge */}
+          <div className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-full shadow-lg animate-pulse">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+            <span className="text-sm font-semibold">Realtime Tracking ON</span>
           </div>
         </div>
 
-        {/* Search Box */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Pencarian
-          </label>
-          <Input
-            type="text"
-            placeholder="Cari berdasarkan deskripsi aktivitas atau nama user..."
-            value={filters.search}
-            onChange={(e) => setFilters({...filters, search: e.target.value})}
-            onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
-          />
-        </div>
+        {/* Filter Card */}
+        <div
+          className="bg-white rounded-2xl p-8 mb-6"
+          style={{
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          <h2 className="font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <Filter size={20} className="text-emerald-600" />
+            Filter & Pencarian
+          </h2>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <Button onClick={handleFilter}>
-            Filter
-          </Button>
-          <Button variant="outline" onClick={handleReset}>
-            Reset
-          </Button>
-          <Button variant="secondary" onClick={handleExport} disabled={logs.length === 0}>
-            Export Excel
-          </Button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="mt-4 text-gray-500 dark:text-gray-400">Memuat data...</p>
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Tidak ada data log aktivitas</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">No</TableHead>
-                    <TableHead>Tanggal & Waktu</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Aktivitas</TableHead>
-                    <TableHead>Modul</TableHead>
-                    <TableHead className="min-w-[300px]">Detail/Deskripsi</TableHead>
-                    <TableHead>IP Address</TableHead>
-                    <TableHead>Device</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log, index) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-medium">
-                        {(pagination.page - 1) * pagination.limit + index + 1}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {new Date(log.createdAt).toLocaleString('id-ID', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit'
-                        })}
-                      </TableCell>
-                      <TableCell className="font-medium">{log.userName}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleBadgeClass(log.userRole)}`}>
-                          {log.userRole}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="flex items-center gap-2">
-                          <span>{getActionIcon(log.action)}</span>
-                          <span>{log.action}</span>
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium">
-                          {log.module}
-                        </span>
-                      </TableCell>
-                      <TableCell className="max-w-md">
-                        <div className="line-clamp-2" title={log.description}>
-                          {log.description}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-gray-500">
-                        {log.ipAddress || '-'}
-                      </TableCell>
-                      <TableCell className="text-xs text-gray-500">
-                        {log.deviceInfo}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            {/* Role Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Role
+              </label>
+              <select
+                value={filters.role}
+                onChange={(e) => setFilters({...filters, role: e.target.value})}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-900"
+              >
+                <option value="all">Semua Role</option>
+                <option value="ADMIN">Admin</option>
+                <option value="GURU">Guru</option>
+                <option value="SISWA">Siswa</option>
+                <option value="ORANG_TUA">Orang Tua</option>
+              </select>
             </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Menampilkan {(pagination.page - 1) * pagination.limit + 1} - {Math.min(pagination.page * pagination.limit, pagination.totalCount)} dari {pagination.totalCount} data
+            {/* Action Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Aktivitas
+              </label>
+              <select
+                value={filters.action}
+                onChange={(e) => setFilters({...filters, action: e.target.value})}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-900"
+              >
+                <option value="all">Semua Aktivitas</option>
+                <option value="LOGIN">Login</option>
+                <option value="UPDATE">Update</option>
+                <option value="DELETE">Delete</option>
+                <option value="CREATE">Tambah</option>
+                <option value="EXPORT">Export</option>
+              </select>
+            </div>
+
+            {/* Module Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Modul
+              </label>
+              <select
+                value={filters.module}
+                onChange={(e) => setFilters({...filters, module: e.target.value})}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-900"
+              >
+                <option value="all">Semua Modul</option>
+                <option value="USER">User</option>
+                <option value="KELAS">Kelas</option>
+                <option value="TAHUN_AJARAN">Tahun Ajaran</option>
+                <option value="HAFALAN">Hafalan</option>
+                <option value="LAPORAN">Laporan</option>
+              </select>
+            </div>
+
+            {/* Date Range */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tanggal Mulai
+              </label>
+              <input
+                type="date"
+                value={filters.tanggalMulai}
+                onChange={(e) => setFilters({...filters, tanggalMulai: e.target.value})}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tanggal Selesai
+              </label>
+              <input
+                type="date"
+                value={filters.tanggalSelesai}
+                onChange={(e) => setFilters({...filters, tanggalSelesai: e.target.value})}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-900"
+              />
+            </div>
+          </div>
+
+          {/* Search Box */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pencarian
+            </label>
+            <input
+              type="text"
+              placeholder="Cari berdasarkan deskripsi aktivitas atau nama user..."
+              value={filters.search}
+              onChange={(e) => setFilters({...filters, search: e.target.value})}
+              onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-400"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleFilter}
+              className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 hover:shadow-lg transition-all duration-200"
+            >
+              <Filter size={18} />
+              Filter
+            </button>
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 hover:shadow-md transition-all duration-200"
+            >
+              <RotateCcw size={18} />
+              Reset
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={logs.length === 0}
+              className="flex items-center gap-2 px-6 py-2.5 bg-amber-100 text-amber-700 rounded-lg font-medium hover:bg-amber-200 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileDown size={18} />
+              Export Excel
+            </button>
+          </div>
+        </div>
+
+        {/* Table Card */}
+        <div
+          className="bg-white rounded-2xl overflow-hidden"
+          style={{
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200 border-t-emerald-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600 font-medium">Memuat data log aktivitas...</p>
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📋</div>
+              <p className="text-gray-600 font-medium">Tidak ada data log aktivitas</p>
+              <p className="text-sm text-gray-500 mt-2">Coba ubah filter pencarian Anda</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-emerald-50 to-amber-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        No
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Tanggal & Waktu
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Aktivitas
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Modul
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider min-w-[300px]">
+                        Detail/Deskripsi
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        IP Address
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Device
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {logs.map((log, index) => (
+                      <tr
+                        key={log.id}
+                        className="hover:bg-emerald-50/30 transition-colors duration-150"
+                        style={{ borderSpacing: '0 20px' }}
+                      >
+                        <td className="px-6 py-5 whitespace-nowrap text-sm font-semibold text-gray-900">
+                          {(pagination.page - 1) * pagination.limit + index + 1}
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatDate(log.createdAt)}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {formatTime(log.createdAt)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-gray-900">{log.userName}</div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getRoleBadgeClass(log.userRole)}`}
+                          >
+                            {log.userRole}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{getActionIcon(log.action)}</span>
+                            <span className="text-sm font-medium text-gray-900">{log.action}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium border border-gray-200">
+                            {log.module}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="text-sm text-gray-700 max-w-md line-clamp-2" title={log.description}>
+                            {log.description}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span className="text-xs text-gray-600 font-mono">
+                            {log.ipAddress || '-'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span className="text-xs text-gray-600">
+                            {log.deviceInfo}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchLogs(pagination.page - 1)}
-                  disabled={pagination.page === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Halaman {pagination.page} dari {pagination.totalPages}
-                  </span>
+
+              {/* Footer Info & Pagination */}
+              <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-amber-50/30 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <TrendingUp size={16} className="text-emerald-600" />
+                    <span className="font-medium">
+                      Menampilkan {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.totalCount)} - {Math.min(pagination.page * pagination.limit, pagination.totalCount)} dari {pagination.totalCount} log aktivitas
+                    </span>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-xs text-gray-500">
+                      Diperbarui {lastUpdated.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => fetchLogs(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:shadow-none"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm font-medium text-gray-700 px-3">
+                      Halaman {pagination.page} dari {pagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => fetchLogs(pagination.page + 1)}
+                      disabled={pagination.page === pagination.totalPages}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:shadow-none"
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchLogs(pagination.page + 1)}
-                  disabled={pagination.page === pagination.totalPages}
-                >
-                  Next
-                </Button>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
     </AdminLayout>
   );
 }
