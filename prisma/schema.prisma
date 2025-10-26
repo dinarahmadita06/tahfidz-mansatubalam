@@ -215,15 +215,20 @@ model Presensi {
 }
 
 model Pengumuman {
-  id         String   @id @default(cuid())
-  guruId     String
-  judul      String
-  isi        String
-  isPenting  Boolean  @default(false)
-  targetRole Role[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  guru       Guru     @relation(fields: [guruId], references: [id])
+  id              String            @id @default(cuid())
+  guruId          String
+  judul           String
+  isi             String
+  isPenting       Boolean           @default(false)
+  targetRole      Role[]
+  tipePengumuman  TipePengumuman    @default(UMUM)
+  wisudaId        String?
+  createdBy       String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  publishedAt     DateTime?
+  guru            Guru              @relation(fields: [guruId], references: [id])
+  wisuda          Wisuda?           @relation(fields: [wisudaId], references: [id])
 
   @@map("pengumuman")
 }
@@ -285,6 +290,7 @@ model Wisuda {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   siswa         WisudaSiswa[]
+  pengumuman    Pengumuman[]
 
   @@map("wisuda")
 }
@@ -373,4 +379,11 @@ enum ActivityModule {
   SETTINGS
   AUTH
   QURAN_REFERENCE
+}
+
+enum TipePengumuman {
+  UMUM
+  WISUDA
+  KEGIATAN
+  LIBUR
 }
