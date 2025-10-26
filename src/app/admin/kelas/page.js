@@ -153,11 +153,12 @@ export default function AdminKelasPage() {
   const [selectedKelas, setSelectedKelas] = useState(null);
   const [editingKelas, setEditingKelas] = useState(null);
   const [kelasFormData, setKelasFormData] = useState({
-    namaKelas: '',
+    nama: '', // Menggunakan field 'nama' sesuai schema
     tingkat: 1,
     tahunAjaranId: '',
     targetJuz: 1,
-    isActive: true,
+    guruUtamaId: '', // Guru utama/wali kelas
+    guruPendampingIds: [], // Array ID guru pendamping
   });
 
   useEffect(() => {
@@ -230,12 +231,18 @@ export default function AdminKelasPage() {
 
   const handleEditKelas = (kelasItem) => {
     setEditingKelas(kelasItem);
+
+    // Extract guru utama dan pendamping dari kelasGuru
+    const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
+    const guruPendamping = kelasItem.guruKelas?.filter(kg => kg.peran === 'pendamping') || [];
+
     setKelasFormData({
-      namaKelas: kelasItem.namaKelas,
+      nama: kelasItem.nama,
       tingkat: kelasItem.tingkat,
       tahunAjaranId: kelasItem.tahunAjaranId,
       targetJuz: kelasItem.targetJuz || 1,
-      isActive: kelasItem.isActive !== false,
+      guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
+      guruPendampingIds: guruPendamping.map(gp => gp.guruId.toString()),
     });
     setShowKelasModal(true);
   };
@@ -268,14 +275,13 @@ export default function AdminKelasPage() {
 
   const handleExport = () => {
     const csvContent = [
-      ['Nama Kelas', 'Tingkat', 'Tahun Ajaran', 'Guru Tahfidz', 'Jumlah Siswa', 'Status'],
+      ['Nama Kelas', 'Tingkat', 'Tahun Ajaran', 'Guru Tahfidz', 'Jumlah Siswa'],
       ...filteredKelas.map(k => [
-        k.namaKelas,
+        k.nama,
         k.tingkat,
         k.tahunAjaran?.nama || '-',
-        k.kelasGuru?.filter(kg => kg.peran === 'utama').map(kg => kg.guru.user.name).join(', ') || '-',
-        k._count?.siswa || 0,
-        k.isActive !== false ? 'Aktif' : 'Tidak Aktif'
+        k.guruKelas?.filter(kg => kg.peran === 'utama').map(kg => kg.guru.user.name).join(', ') || '-',
+        k._count?.siswa || 0
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -288,35 +294,36 @@ export default function AdminKelasPage() {
 
   const resetKelasForm = () => {
     setKelasFormData({
-      namaKelas: '',
+      nama: '',
       tingkat: 1,
       tahunAjaranId: '',
       targetJuz: 1,
-      isActive: true,
+      guruUtamaId: '',
+      guruPendampingIds: [],
     });
     setEditingKelas(null);
   };
 
   // Filter data
   const filteredKelas = kelas.filter(k => {
-    const matchSearch = k.namaKelas.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'active' && k.isActive !== false) ||
-      (filterStatus === 'inactive' && k.isActive === false);
+      (filterStatus === 'active' && k.guruKelas && k.guruKelas.some(kg => kg.isActive)) ||
+      (filterStatus === 'inactive' && (!k.guruKelas || !k.guruKelas.some(kg => kg.isActive)));
 
-    const hasGuru = k.kelasGuru && k.kelasGuru.length > 0;
+    const hasGuru = k.guruKelas && k.guruKelas.length > 0;
     const matchGuru = filterGuru === 'all' ||
-      (hasGuru && k.kelasGuru.some(kg => kg.guruId.toString() === filterGuru));
+      (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
 
-    return matchSearch && matchStatus && matchGuru;
+    return matchSearch && matchGuru;
   });
 
   // Statistics
   const stats = {
     total: kelas.length,
-    active: kelas.filter(k => k.isActive !== false).length,
-    inactive: kelas.filter(k => k.isActive === false).length,
+    active: kelas.filter(k => k.guruKelas && k.guruKelas.some(kg => kg.isActive)).length,
+    inactive: kelas.filter(k => !k.guruKelas || !k.guruKelas.some(kg => kg.isActive)).length,
   };
 
   if (loading) {
@@ -630,8 +637,8 @@ export default function AdminKelasPage() {
                 </div>
               ) : (
                 filteredKelas.map((kelasItem, index) => {
-                  const isActive = kelasItem.isActive !== false;
-                  const guruUtama = kelasItem.kelasGuru?.find(kg => kg.peran === 'utama');
+                  const isActive = kelasItem.guruKelas && kelasItem.guruKelas.some(kg => kg.isActive);
+                  const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
                   const jumlahSiswa = kelasItem._count?.siswa || 0;
 
                   return (
@@ -688,7 +695,7 @@ export default function AdminKelasPage() {
                             fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                             marginBottom: '4px',
                           }}>
-                            {kelasItem.namaKelas}
+                            {kelasItem.nama}
                           </h3>
                           <p style={{
                             fontSize: '12px',
@@ -967,7 +974,7 @@ export default function AdminKelasPage() {
                   color: colors.text.primary,
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}>
-                  {selectedKelas.namaKelas}
+                  {selectedKelas.nama}
                 </p>
               </div>
 
@@ -1263,8 +1270,8 @@ export default function AdminKelasPage() {
                   type="text"
                   required
                   placeholder="Contoh: Kelas 1A"
-                  value={kelasFormData.namaKelas}
-                  onChange={(e) => setKelasFormData({ ...kelasFormData, namaKelas: e.target.value })}
+                  value={kelasFormData.nama}
+                  onChange={(e) => setKelasFormData({ ...kelasFormData, nama: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -1381,30 +1388,122 @@ export default function AdminKelasPage() {
                 </select>
               </div>
 
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px',
-                background: colors.gray[50],
-                borderRadius: '12px',
-              }}>
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={kelasFormData.isActive}
-                  onChange={(e) => setKelasFormData({ ...kelasFormData, isActive: e.target.checked })}
-                  style={{ cursor: 'pointer' }}
-                />
-                <label htmlFor="isActive" style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
                   color: colors.text.secondary,
+                  marginBottom: '8px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
                 }}>
-                  Kelas Aktif
+                  Guru Utama (Wali Kelas)
                 </label>
+                <select
+                  value={kelasFormData.guruUtamaId}
+                  onChange={(e) => setKelasFormData({ ...kelasFormData, guruUtamaId: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `2px solid ${colors.gray[200]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                  className="form-input"
+                >
+                  <option value="">Pilih Guru Utama (Opsional)</option>
+                  {guruList.map((guru) => (
+                    <option key={guru.id} value={guru.id}>
+                      {guru.user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text.secondary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  Guru Pendamping (Opsional)
+                </label>
+                <div style={{
+                  border: `2px solid ${colors.gray[200]}`,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  maxHeight: '150px',
+                  overflowY: 'auto',
+                }}>
+                  {guruList.length > 0 ? (
+                    guruList.map((guru) => (
+                      <div key={guru.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px',
+                        marginBottom: '4px',
+                      }}>
+                        <input
+                          type="checkbox"
+                          id={`guru-${guru.id}`}
+                          checked={kelasFormData.guruPendampingIds.includes(guru.id.toString())}
+                          disabled={kelasFormData.guruUtamaId === guru.id.toString()}
+                          onChange={(e) => {
+                            const guruId = guru.id.toString();
+                            if (e.target.checked) {
+                              setKelasFormData({
+                                ...kelasFormData,
+                                guruPendampingIds: [...kelasFormData.guruPendampingIds, guruId]
+                              });
+                            } else {
+                              setKelasFormData({
+                                ...kelasFormData,
+                                guruPendampingIds: kelasFormData.guruPendampingIds.filter(id => id !== guruId)
+                              });
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <label htmlFor={`guru-${guru.id}`} style={{
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: kelasFormData.guruUtamaId === guru.id.toString() ? colors.text.tertiary : colors.text.secondary,
+                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                          cursor: 'pointer',
+                        }}>
+                          {guru.user.name}
+                          {kelasFormData.guruUtamaId === guru.id.toString() && ' (Guru Utama)'}
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{
+                      fontSize: '13px',
+                      color: colors.text.tertiary,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      textAlign: 'center',
+                      padding: '8px',
+                    }}>
+                      Tidak ada guru tersedia
+                    </p>
+                  )}
+                </div>
+                <p style={{
+                  fontSize: '11px',
+                  color: colors.text.tertiary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  marginTop: '6px',
+                }}>
+                  Pilih guru pendamping jika diperlukan (bisa lebih dari 1)
+                </p>
               </div>
 
               <div style={{

@@ -14,11 +14,19 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { nama, tingkat, tahunAjaranId, targetJuz } = body;
+    const { nama, tingkat, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds } = body;
+
+    // Validate required fields
+    if (!nama || !tingkat || !tahunAjaranId) {
+      return NextResponse.json(
+        { error: 'Data tidak lengkap' },
+        { status: 400 }
+      );
+    }
 
     // Check if kelas exists
     const kelas = await prisma.kelas.findUnique({
-      where: { id }
+      where: { id: parseInt(id) }
     });
 
     if (!kelas) {
@@ -28,42 +36,84 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Check if tahun ajaran exists if provided
-    if (tahunAjaranId) {
-      const tahunAjaran = await prisma.tahunAjaran.findUnique({
-        where: { id: tahunAjaranId }
+    // Update kelas dengan guru menggunakan transaction
+    const updatedKelas = await prisma.$transaction(async (tx) => {
+      // 1. Update kelas data
+      const updated = await tx.kelas.update({
+        where: { id: parseInt(id) },
+        data: {
+          nama,
+          tingkat: parseInt(tingkat),
+          tahunAjaranId: parseInt(tahunAjaranId),
+          targetJuz: targetJuz ? parseInt(targetJuz) : 1,
+        }
       });
 
-      if (!tahunAjaran) {
-        return NextResponse.json(
-          { error: 'Tahun ajaran tidak ditemukan' },
-          { status: 404 }
-        );
-      }
-    }
+      // 2. Remove all existing guru assignments
+      await tx.guruKelas.deleteMany({
+        where: { kelasId: parseInt(id) }
+      });
 
-    // Update kelas
-    const updatedKelas = await prisma.kelas.update({
-      where: { id },
-      data: {
-        nama,
-        tingkat,
-        tahunAjaranId,
-        targetJuz
-      },
-      include: {
-        tahunAjaran: {
-          select: {
-            nama: true,
-            semester: true
-          }
-        },
-        _count: {
-          select: {
-            siswa: true
+      // 3. Add guru utama if provided
+      if (guruUtamaId) {
+        await tx.guruKelas.create({
+          data: {
+            kelasId: parseInt(id),
+            guruId: parseInt(guruUtamaId),
+            peran: 'utama',
+            isActive: true,
+          },
+        });
+      }
+
+      // 4. Add guru pendamping if provided
+      if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
+        const guruPendampingData = guruPendampingIds.map((guruId) => ({
+          kelasId: parseInt(id),
+          guruId: parseInt(guruId),
+          peran: 'pendamping',
+          isActive: true,
+        }));
+
+        await tx.guruKelas.createMany({
+          data: guruPendampingData,
+        });
+      }
+
+      // 5. Fetch complete kelas data
+      const kelasWithRelations = await tx.kelas.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          tahunAjaran: {
+            select: {
+              nama: true,
+              semester: true
+            }
+          },
+          guruKelas: {
+            include: {
+              guru: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              siswa: true
+            }
           }
         }
-      }
+      });
+
+      return kelasWithRelations;
     });
 
     // Log activity
@@ -77,7 +127,9 @@ export async function PUT(request, { params }) {
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
-        kelasId: updatedKelas.id
+        kelasId: updatedKelas.id,
+        guruUtamaId: guruUtamaId || null,
+        guruPendampingCount: guruPendampingIds?.length || 0
       }
     });
 
@@ -85,7 +137,7 @@ export async function PUT(request, { params }) {
   } catch (error) {
     console.error('Error updating kelas:', error);
     return NextResponse.json(
-      { error: 'Gagal mengupdate kelas' },
+      { error: 'Gagal mengupdate kelas', details: error.message },
       { status: 500 }
     );
   }

@@ -12,7 +12,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { nama, tingkat, tahunAjaranId, targetJuz } = body;
+    const { nama, tingkat, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds } = body;
 
     // Validate required fields
     if (!nama || !tingkat || !tahunAjaranId) {
@@ -24,7 +24,7 @@ export async function POST(request) {
 
     // Check if tahun ajaran exists
     const tahunAjaran = await prisma.tahunAjaran.findUnique({
-      where: { id: tahunAjaranId }
+      where: { id: parseInt(tahunAjaranId) }
     });
 
     if (!tahunAjaran) {
@@ -34,27 +34,78 @@ export async function POST(request) {
       );
     }
 
-    // Create kelas
-    const kelas = await prisma.kelas.create({
-      data: {
-        nama,
-        tingkat,
-        tahunAjaranId,
-        targetJuz: targetJuz || 1
-      },
-      include: {
-        tahunAjaran: {
-          select: {
-            nama: true,
-            semester: true
-          }
-        },
-        _count: {
-          select: {
-            siswa: true
+    // Create kelas dengan guru menggunakan transaction
+    const kelas = await prisma.$transaction(async (tx) => {
+      // 1. Create kelas
+      const newKelas = await tx.kelas.create({
+        data: {
+          nama,
+          tingkat: parseInt(tingkat),
+          tahunAjaranId: parseInt(tahunAjaranId),
+          targetJuz: targetJuz ? parseInt(targetJuz) : 1,
+        }
+      });
+
+      // 2. Add guru utama if provided
+      if (guruUtamaId) {
+        await tx.guruKelas.create({
+          data: {
+            kelasId: newKelas.id,
+            guruId: parseInt(guruUtamaId),
+            peran: 'utama',
+            isActive: true,
+          },
+        });
+      }
+
+      // 3. Add guru pendamping if provided
+      if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
+        const guruPendampingData = guruPendampingIds.map((guruId) => ({
+          kelasId: newKelas.id,
+          guruId: parseInt(guruId),
+          peran: 'pendamping',
+          isActive: true,
+        }));
+
+        await tx.guruKelas.createMany({
+          data: guruPendampingData,
+        });
+      }
+
+      // 4. Fetch complete kelas data
+      const kelasWithRelations = await tx.kelas.findUnique({
+        where: { id: newKelas.id },
+        include: {
+          tahunAjaran: {
+            select: {
+              nama: true,
+              semester: true
+            }
+          },
+          guruKelas: {
+            include: {
+              guru: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              siswa: true
+            }
           }
         }
-      }
+      });
+
+      return kelasWithRelations;
     });
 
     // Log activity
@@ -69,7 +120,9 @@ export async function POST(request) {
       userAgent: getUserAgent(request),
       metadata: {
         kelasId: kelas.id,
-        tahunAjaranId: kelas.tahunAjaranId
+        tahunAjaranId: kelas.tahunAjaranId,
+        guruUtamaId: guruUtamaId || null,
+        guruPendampingCount: guruPendampingIds?.length || 0
       }
     });
 
@@ -77,7 +130,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error creating kelas:', error);
     return NextResponse.json(
-      { error: 'Gagal membuat kelas' },
+      { error: 'Gagal membuat kelas', details: error.message },
       { status: 500 }
     );
   }
