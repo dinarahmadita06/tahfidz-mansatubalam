@@ -213,48 +213,130 @@ export default function ProfileAdminPage() {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-        body {
+        body, * {
           font-family: 'Poppins', sans-serif;
+        }
+
+        /* Islamic ornament pattern */
+        .islamic-ornament-topleft {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 300px;
+          height: 300px;
+          background-image:
+            radial-gradient(circle at center, rgba(16, 185, 129, 0.04) 0%, transparent 70%),
+            repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(16, 185, 129, 0.03) 20px, rgba(16, 185, 129, 0.03) 40px);
+          filter: blur(1px);
+          pointer-events: none;
+          opacity: 0.8;
+        }
+
+        .islamic-ornament-bottomright {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 400px;
+          height: 400px;
+          background-image:
+            radial-gradient(circle at center, rgba(245, 158, 11, 0.05) 0%, transparent 70%),
+            repeating-linear-gradient(-45deg, transparent, transparent 25px, rgba(245, 158, 11, 0.04) 25px, rgba(245, 158, 11, 0.04) 50px);
+          filter: blur(2px);
+          pointer-events: none;
+          opacity: 0.7;
+        }
+
+        /* Card with enhanced shadow */
+        .profile-card {
+          box-shadow:
+            0 4px 20px rgba(0, 0, 0, 0.06),
+            0 1px 3px rgba(0, 0, 0, 0.03),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .profile-card-hover {
+          transition: all 0.3s ease;
+        }
+
+        .profile-card-hover:hover {
+          transform: translateY(-2px);
+          box-shadow:
+            0 8px 30px rgba(0, 0, 0, 0.08),
+            0 2px 6px rgba(0, 0, 0, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
       `}</style>
 
       <div
-        className="min-h-screen p-8"
+        className="min-h-screen p-8 relative overflow-hidden"
         style={{
           background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
           fontFamily: 'Poppins, sans-serif'
         }}
       >
+        {/* Islamic Ornaments */}
+        <div className="islamic-ornament-topleft"></div>
+        <div className="islamic-ornament-bottomright"></div>
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-          <Home size={16} />
-          <ChevronRight size={14} />
-          <span className="font-medium text-emerald-700">Profil Admin</span>
+        <div className="flex items-center gap-2 text-sm mb-6 relative z-10">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-emerald-100/50 shadow-sm">
+            <Home size={16} className="text-emerald-600" strokeWidth={1.5} />
+            <ChevronRight size={14} className="text-gray-400" strokeWidth={2} />
+            <span className="font-semibold text-emerald-700">Profil Admin</span>
+          </div>
         </div>
 
-        {/* Header */}
-        <div className="flex items-start gap-4 mb-8">
-          <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-3 rounded-xl shadow-lg">
-            <User className="text-white" size={28} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Profil Admin</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Lihat dan kelola informasi akun Anda
-            </p>
+        {/* Header Section */}
+        <div
+          className="relative z-10 mb-8 p-8 profile-card"
+          style={{
+            background: 'linear-gradient(135deg, #FDFCF8 0%, #FFF9F0 100%)',
+            borderTop: '3px solid #10B981'
+          }}
+        >
+          <div className="flex items-start gap-5">
+            <div
+              className="p-4 rounded-2xl shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+              }}
+            >
+              <User className="text-white" size={32} strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold mb-2" style={{ color: '#064E3B' }}>
+                Profil Admin
+              </h1>
+              <p className="text-sm font-medium" style={{ color: '#374151' }}>
+                Lihat dan kelola informasi akun administrator Anda
+              </p>
+              <div className="flex items-center gap-2 mt-3">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-emerald-700">Status: Aktif</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Main Profile Card */}
         <div
-          className="bg-white rounded-2xl p-8 mb-6 max-w-4xl mx-auto"
-          style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}
+          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
+          style={{
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.1)'
+          }}
         >
           <div className="flex flex-col md:flex-row items-start gap-6">
             {/* Profile Picture */}
             <div className="flex-shrink-0">
-              <div className="w-28 h-28 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg ring-4 ring-emerald-100">
-                <User className="text-white" size={56} />
+              <div
+                className="w-28 h-28 rounded-full flex items-center justify-center shadow-xl ring-4 ring-white"
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)'
+                }}
+              >
+                <User className="text-white" size={56} strokeWidth={1.5} />
               </div>
             </div>
 
@@ -269,8 +351,15 @@ export default function ProfileAdminPage() {
               </div>
 
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold border border-emerald-200 mb-4">
-                <Shield size={16} />
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border mb-4 shadow-sm"
+                style={{
+                  background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
+                  borderColor: '#10B981',
+                  color: '#065F46'
+                }}
+              >
+                <Shield size={16} strokeWidth={2} />
                 {profileData?.role}
               </div>
 
@@ -290,16 +379,24 @@ export default function ProfileAdminPage() {
               <div className="flex flex-wrap gap-3 mt-6">
                 <button
                   onClick={handleEditProfile}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 hover:shadow-lg transition-all duration-200"
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  }}
                 >
-                  <Edit size={18} />
+                  <Edit size={18} strokeWidth={2} />
                   Edit Profil
                 </button>
                 <button
                   onClick={handleChangePassword}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-amber-100 text-amber-700 rounded-lg font-medium hover:bg-amber-200 hover:shadow-md transition-all duration-200"
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+                    color: '#92400E',
+                    border: '1px solid #F59E0B'
+                  }}
                 >
-                  <Lock size={18} />
+                  <Lock size={18} strokeWidth={2} />
                   Ganti Password
                 </button>
               </div>
@@ -309,55 +406,92 @@ export default function ProfileAdminPage() {
 
         {/* Biodata Section */}
         <div
-          className="bg-white rounded-2xl p-8 mb-6 max-w-4xl mx-auto"
-          style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}
+          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
+          style={{
+            background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+            border: '1px solid rgba(245, 158, 11, 0.2)'
+          }}
         >
-          <h3 className="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-            Biodata Lengkap
-          </h3>
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-200/50">
+            <div
+              className="p-2 rounded-lg"
+              style={{
+                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+              }}
+            >
+              <IdCard size={20} className="text-white" strokeWidth={2} />
+            </div>
+            <h3 className="text-lg font-bold" style={{ color: '#92400E' }}>
+              Biodata Lengkap
+            </h3>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nomor Telepon */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-600">
-                <Phone size={16} className="text-emerald-600" />
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+                <Phone size={16} className="text-amber-600" strokeWidth={2} />
                 Nomor Telepon
               </label>
-              <div className="px-4 py-3 bg-gray-50 rounded-lg border-b-2 border-gray-200">
-                <p className="text-gray-900 font-medium">{profileData?.phoneNumber}</p>
+              <div
+                className="px-4 py-3 rounded-xl border shadow-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderColor: '#FCD34D'
+                }}
+              >
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.phoneNumber}</p>
               </div>
             </div>
 
             {/* Jabatan */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-600">
-                <Briefcase size={16} className="text-emerald-600" />
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+                <Briefcase size={16} className="text-amber-600" strokeWidth={2} />
                 Jabatan
               </label>
-              <div className="px-4 py-3 bg-gray-50 rounded-lg border-b-2 border-gray-200">
-                <p className="text-gray-900 font-medium">{profileData?.jabatan}</p>
+              <div
+                className="px-4 py-3 rounded-xl border shadow-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderColor: '#FCD34D'
+                }}
+              >
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.jabatan}</p>
               </div>
             </div>
 
             {/* NIP/ID Admin */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-600">
-                <IdCard size={16} className="text-emerald-600" />
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+                <IdCard size={16} className="text-amber-600" strokeWidth={2} />
                 NIP / ID Admin
               </label>
-              <div className="px-4 py-3 bg-gray-50 rounded-lg border-b-2 border-gray-200">
-                <p className="text-gray-900 font-medium font-mono">{profileData?.nip}</p>
+              <div
+                className="px-4 py-3 rounded-xl border shadow-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderColor: '#FCD34D'
+                }}
+              >
+                <p className="font-semibold font-mono" style={{ color: '#374151' }}>{profileData?.nip}</p>
               </div>
             </div>
 
             {/* Alamat Kantor */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-600">
-                <MapPin size={16} className="text-emerald-600" />
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+                <MapPin size={16} className="text-amber-600" strokeWidth={2} />
                 Alamat Kantor
               </label>
-              <div className="px-4 py-3 bg-gray-50 rounded-lg border-b-2 border-gray-200">
-                <p className="text-gray-900 font-medium">{profileData?.alamat}</p>
+              <div
+                className="px-4 py-3 rounded-xl border shadow-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderColor: '#FCD34D'
+                }}
+              >
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat}</p>
               </div>
             </div>
           </div>
@@ -365,38 +499,68 @@ export default function ProfileAdminPage() {
 
         {/* Informasi Akun Card */}
         <div
-          className="bg-gradient-to-r from-emerald-50 to-amber-50 rounded-2xl p-6 max-w-4xl mx-auto border border-emerald-200"
-          style={{ boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)' }}
+          className="relative z-10 rounded-2xl p-6 max-w-4xl mx-auto border profile-card"
+          style={{
+            background: 'linear-gradient(135deg, #D1FAE5 0%, #FEF3C7 100%)',
+            borderColor: 'rgba(16, 185, 129, 0.3)'
+          }}
         >
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 mt-1">
-              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                <Lock size={20} className="text-emerald-700" />
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                }}
+              >
+                <Shield size={22} className="text-white" strokeWidth={2} />
               </div>
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 mb-1">Informasi Akun</h4>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Akun ini memiliki hak akses penuh terhadap sistem Tahfidz MAN 1 Bandar Lampung.
+              <h4 className="font-bold text-base mb-2" style={{ color: '#065F46' }}>
+                Informasi Keamanan Akun
+              </h4>
+              <p className="text-sm leading-relaxed" style={{ color: '#374151' }}>
+                Akun ini memiliki hak akses <span className="font-semibold text-emerald-700">penuh</span> terhadap sistem Tahfidz MAN 1 Bandar Lampung.
                 Pastikan untuk menjaga kerahasiaan kredensial login Anda dan segera laporkan
                 jika ada aktivitas mencurigakan.
               </p>
+              <div className="flex items-center gap-2 mt-3 text-xs font-semibold" style={{ color: '#047857' }}>
+                <Lock size={14} strokeWidth={2} />
+                <span>Login terenkripsi • Sesi aman</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Edit Profile Modal */}
         {showEditModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div
+              className="rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
+              style={{
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
+                border: '2px solid rgba(16, 185, 129, 0.2)'
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Edit Profil</h3>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="p-2 rounded-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                    }}
+                  >
+                    <Edit size={20} className="text-white" strokeWidth={2} />
+                  </div>
+                  <h3 className="text-2xl font-bold" style={{ color: '#064E3B' }}>Edit Profil</h3>
+                </div>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
@@ -498,14 +662,21 @@ export default function ProfileAdminPage() {
                 <button
                   onClick={() => setShowEditModal(false)}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
+                  style={{
+                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+                    color: '#374151'
+                  }}
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleSaveProfile}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  }}
                 >
                   {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </button>
@@ -516,16 +687,32 @@ export default function ProfileAdminPage() {
 
         {/* Change Password Modal */}
         {showPasswordModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div
+              className="rounded-2xl p-8 max-w-md w-full shadow-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+                border: '2px solid rgba(245, 158, 11, 0.3)'
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Ganti Password</h3>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="p-2 rounded-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                    }}
+                  >
+                    <Lock size={20} className="text-white" strokeWidth={2} />
+                  </div>
+                  <h3 className="text-2xl font-bold" style={{ color: '#92400E' }}>Ganti Password</h3>
+                </div>
                 <button
                   onClick={() => setShowPasswordModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
@@ -601,14 +788,21 @@ export default function ProfileAdminPage() {
                 <button
                   onClick={() => setShowPasswordModal(false)}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
+                  style={{
+                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+                    color: '#374151'
+                  }}
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleChangePasswordSubmit}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
+                  style={{
+                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                  }}
                 >
                   {saveLoading ? 'Mengubah...' : 'Ubah Password'}
                 </button>

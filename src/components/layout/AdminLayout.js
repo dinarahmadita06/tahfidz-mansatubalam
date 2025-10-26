@@ -17,7 +17,8 @@ import {
   BookOpen,
   UserCheck,
   UsersRound,
-  Activity
+  Activity,
+  User
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
 
@@ -60,7 +61,7 @@ const menuItems = [
   },
   {
     title: 'Profil',
-    icon: Users,
+    icon: User,
     href: '/admin/profile',
   },
 ];
@@ -150,119 +151,248 @@ export default function AdminLayout({ children }) {
     return submenu.some(item => pathname === item.href);
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50 dark:bg-neutral-950">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-neutral-800 transition-all duration-300 flex flex-col`}
-      >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-neutral-800">
-          {sidebarOpen && (
-            <div className="flex items-center gap-2">
-              <BookOpen className="text-orange-500" size={24} />
-              <span className="font-bold text-lg text-gray-900 dark:text-white">Tahfidz Admin</span>
-            </div>
-          )}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-600 dark:text-gray-400"
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
+  // Auto-expand menu yang aktif
+  useEffect(() => {
+    menuItems.forEach((item) => {
+      if (item.submenu && isSubmenuActive(item.submenu)) {
+        setExpandedMenus(prev => ({
+          ...prev,
+          [item.title]: true
+        }));
+      }
+    });
+  }, [pathname]);
 
-        {/* Menu Items */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2">
-          <div className="space-y-1">
-            {menuItems.map((item) => (
-              <div key={item.title}>
-                {item.submenu ? (
-                  <div>
-                    <button
-                      onClick={() => toggleSubmenu(item.title)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
-                        isSubmenuActive(item.submenu)
-                          ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <item.icon size={20} />
-                        {sidebarOpen && <span className="font-medium">{item.title}</span>}
-                      </div>
-                      {sidebarOpen && (
-                        <ChevronDown
-                          size={16}
-                          className={`transition-transform ${
-                            expandedMenus[item.title] ? 'rotate-180' : ''
+  return (
+    <>
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+          font-family: 'Poppins', sans-serif;
+        }
+
+        /* Islamic pattern background for sidebar */
+        .islamic-pattern {
+          background-image:
+            repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(16, 185, 129, 0.06) 35px, rgba(16, 185, 129, 0.06) 70px),
+            repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(245, 158, 11, 0.04) 35px, rgba(245, 158, 11, 0.04) 70px);
+        }
+
+        /* Islamic star ornament at bottom of sidebar */
+        .islamic-star-ornament {
+          position: absolute;
+          bottom: 100px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 150px;
+          height: 150px;
+          background-image:
+            radial-gradient(circle at center, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+            conic-gradient(from 0deg, rgba(16, 185, 129, 0.05) 0deg, transparent 45deg, rgba(16, 185, 129, 0.05) 90deg, transparent 135deg, rgba(16, 185, 129, 0.05) 180deg, transparent 225deg, rgba(16, 185, 129, 0.05) 270deg, transparent 315deg);
+          filter: blur(1px);
+          pointer-events: none;
+          opacity: 0.6;
+        }
+      `}</style>
+
+      <div className="flex h-screen" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }}>
+        {/* Sidebar */}
+        <aside
+          className={`${
+            sidebarOpen ? 'w-72' : 'w-20'
+          } transition-all duration-300 flex flex-col relative islamic-pattern`}
+          style={{
+            background: 'linear-gradient(180deg, #E8FFF3 0%, #FFF9E7 100%)',
+            boxShadow: '4px 0px 12px rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          {/* Islamic Star Ornament */}
+          <div className="islamic-star-ornament"></div>
+          {/* Logo Section */}
+          <div className="h-20 flex items-center justify-between px-5 border-b border-emerald-100/60">
+            {sidebarOpen ? (
+              <div
+                className="flex items-center gap-3 transition-all duration-200 cursor-pointer group"
+                onClick={() => router.push('/admin/dashboard')}
+              >
+                <div
+                  className="p-2.5 rounded-full shadow-lg group-hover:shadow-xl transition-all duration-200"
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  }}
+                >
+                  <BookOpen className="text-white" size={24} strokeWidth={2} />
+                </div>
+                <span className="font-bold text-lg" style={{ color: '#064E3B', letterSpacing: '0.02em' }}>
+                  Tahfidz Admin
+                </span>
+              </div>
+            ) : (
+              <div
+                className="p-2.5 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200"
+                onClick={() => router.push('/admin/dashboard')}
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                }}
+              >
+                <BookOpen className="text-white" size={24} strokeWidth={2} />
+              </div>
+            )}
+
+            {/* Toggle Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-lg hover:bg-emerald-50/60 text-gray-500 hover:text-emerald-700 transition-all duration-200"
+              title={sidebarOpen ? 'Sembunyikan Sidebar' : 'Tampilkan Sidebar'}
+            >
+              {sidebarOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
+            </button>
+          </div>
+
+          {/* Menu Navigation */}
+          <nav className="flex-1 overflow-y-auto py-5 px-4">
+            <div className="space-y-2">
+              {menuItems.map((item, index) => {
+                const isMenuActive = item.submenu ? isSubmenuActive(item.submenu) : isActive(item.href);
+                const showDivider = index === 0 || index === 3 || index === 4; // Divider after Dashboard, Monitoring, Activity
+
+                return (
+                  <div key={item.title}>
+                    {showDivider && index !== 0 && (
+                      <div className="my-4 border-t border-gray-200/30"></div>
+                    )}
+
+                    {item.submenu ? (
+                      <div>
+                        <button
+                          onClick={() => sidebarOpen ? toggleSubmenu(item.title) : setSidebarOpen(true)}
+                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'} py-3 rounded-xl transition-all duration-200 group relative ${
+                            isMenuActive
+                              ? 'bg-emerald-50/80 text-emerald-800'
+                              : 'text-gray-700 hover:bg-emerald-50/40 hover:text-emerald-700'
                           }`}
-                        />
-                      )}
-                    </button>
-                    {sidebarOpen && expandedMenus[item.title] && (
-                      <div className="ml-4 mt-1 space-y-1">
-                        {item.submenu.map((subitem) => (
-                          <button
-                            key={subitem.href}
-                            onClick={() => router.push(subitem.href)}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                              isActive(subitem.href)
-                                ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
-                            }`}
-                          >
-                            <subitem.icon size={18} />
-                            <span>{subitem.title}</span>
-                          </button>
-                        ))}
+                          title={!sidebarOpen ? item.title : ''}
+                        >
+                          {isMenuActive && sidebarOpen && (
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-600 rounded-r-full"></div>
+                          )}
+                          <div className="flex items-center gap-3">
+                            <item.icon
+                              size={20}
+                              strokeWidth={1.5}
+                              className={isMenuActive ? 'text-emerald-700' : 'text-gray-600 group-hover:text-emerald-700'}
+                            />
+                            {sidebarOpen && (
+                              <span className="font-medium text-sm">{item.title}</span>
+                            )}
+                          </div>
+                          {sidebarOpen && (
+                            <ChevronDown
+                              size={16}
+                              strokeWidth={2}
+                              className={`transition-transform duration-200 ${
+                                expandedMenus[item.title] ? 'rotate-180' : ''
+                              }`}
+                            />
+                          )}
+                        </button>
+
+                        {sidebarOpen && expandedMenus[item.title] && (
+                          <div className="ml-6 mt-2 space-y-1 border-l-2 border-emerald-100 pl-4">
+                            {item.submenu.map((subitem) => (
+                              <button
+                                key={subitem.href}
+                                onClick={() => router.push(subitem.href)}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
+                                  isActive(subitem.href)
+                                    ? 'bg-amber-50 text-amber-900'
+                                    : 'text-gray-600 hover:bg-emerald-50/40 hover:text-emerald-700'
+                                }`}
+                              >
+                                {isActive(subitem.href) && (
+                                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
+                                )}
+                                <subitem.icon
+                                  size={18}
+                                  strokeWidth={1.5}
+                                  className={isActive(subitem.href) ? 'text-amber-700' : 'text-gray-500 group-hover:text-emerald-600'}
+                                />
+                                <span className="font-medium">{subitem.title}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
+                    ) : (
+                      <button
+                        onClick={() => router.push(item.href)}
+                        className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} py-3 rounded-xl transition-all duration-200 group relative ${
+                          isActive(item.href)
+                            ? 'text-amber-900 shadow-inner'
+                            : 'text-gray-700 hover:bg-emerald-50/40 hover:text-emerald-700'
+                        }`}
+                        style={isActive(item.href) ? {
+                          background: 'linear-gradient(135deg, #FFF5DA 0%, #FFEAA7 100%)',
+                          boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.15)'
+                        } : {}}
+                        title={!sidebarOpen ? item.title : ''}
+                      >
+                        {isActive(item.href) && sidebarOpen && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-amber-500 rounded-r-full"></div>
+                        )}
+                        <item.icon
+                          size={20}
+                          strokeWidth={1.5}
+                          className={isActive(item.href) ? 'text-amber-700' : 'text-gray-600 group-hover:text-emerald-700'}
+                        />
+                        {sidebarOpen && (
+                          <span className="font-medium text-sm">{item.title}</span>
+                        )}
+                      </button>
                     )}
                   </div>
-                ) : (
-                  <button
-                    onClick={() => router.push(item.href)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                      isActive(item.href)
-                        ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800'
-                    }`}
-                  >
-                    <item.icon size={20} />
-                    {sidebarOpen && <span className="font-medium">{item.title}</span>}
-                  </button>
-                )}
-              </div>
-            ))}
+                );
+              })}
+            </div>
+          </nav>
+
+          {/* Footer Section - Logout */}
+          <div className="p-4 border-t border-gray-200/50">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group hover:bg-red-50/60 text-red-600 hover:text-red-700"
+            >
+              <LogOut
+                size={20}
+                strokeWidth={1.5}
+                className="group-hover:scale-105 transition-transform duration-200"
+              />
+              {sidebarOpen && (
+                <div className="flex-1 text-left">
+                  <span className="font-semibold text-sm block">Logout</span>
+                  <span className="text-xs text-red-500/70 block mt-0.5">
+                    Keluar dari akun administrator
+                  </span>
+                </div>
+              )}
+            </button>
           </div>
-        </nav>
+        </aside>
 
-        {/* Logout Button */}
-        <div className="p-2 border-t border-gray-200 dark:border-neutral-800">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-          >
-            <LogOut size={20} />
-            {sidebarOpen && <span className="font-medium">Logout</span>}
-          </button>
-        </div>
-      </aside>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            {children}
+          </div>
+        </main>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          {children}
-        </div>
-      </main>
-
-      <NotificationPopup
-        notification={currentNotification}
-        onClose={handleCloseNotification}
-        onMarkAsRead={handleMarkAsRead}
-      />
-    </div>
+        <NotificationPopup
+          notification={currentNotification}
+          onClose={handleCloseNotification}
+          onMarkAsRead={handleMarkAsRead}
+        />
+      </div>
+    </>
   );
 }
