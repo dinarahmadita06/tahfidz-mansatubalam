@@ -52,7 +52,6 @@ const menuItems = [
     submenu: [
       { title: 'Laporan Hafalan', href: '/admin/laporan/hafalan', icon: BookOpen },
       { title: 'Laporan Kehadiran', href: '/admin/laporan/kehadiran', icon: UserCheck },
-      { title: 'Statistik Sekolah', href: '/admin/laporan/statistik', icon: BarChart3 },
     ]
   },
   {
