@@ -26,7 +26,8 @@
       "Bash(if not exist \"src\\app\\api\\admin\\settings\" mkdir \"src\\app\\api\\admin\\settings\")",
       "Bash(del RESTART_INSTRUCTIONS.md)",
       "Bash(if not exist \"src\\app\\admin\\pengumuman\" mkdir \"src\\app\\admin\\pengumuman\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
