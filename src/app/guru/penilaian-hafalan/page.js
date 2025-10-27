@@ -39,85 +39,94 @@ export default function PenilaianHafalanIndexPage() {
       </div>
 
       {/* Grid Card Kelas */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '20px',
-        marginBottom: '40px',
-      }}
-        className="sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      <div
+        style={{
+          maxWidth: '1152px',
+          margin: '0 auto',
+          padding: '0 16px',
+          marginBottom: '40px',
+        }}
       >
-        {kelasList.map((kelas) => (
-          <Link
-            key={kelas.id}
-            href={`/guru/penilaian-hafalan/${kelas.id}`}
-            style={{ textDecoration: 'none' }}
-          >
-            <div
-              style={{
-                width: '100%',
-                aspectRatio: '1',
-                background: 'white',
-                border: '2px solid #E5E7EB',
-                borderRadius: '12px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease-in-out',
-                padding: '20px',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#D1FAE5';
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'white';
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-              }}
+        <div
+          style={{
+            display: 'grid',
+            gap: '24px',
+            justifyItems: 'center',
+          }}
+          className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+        >
+          {kelasList.map((kelas) => (
+            <Link
+              key={kelas.id}
+              href={`/guru/penilaian-hafalan/${kelas.id}`}
+              style={{ textDecoration: 'none' }}
             >
-              {/* Ikon Buku */}
-              <div style={{
-                width: '60px',
-                height: '60px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px',
-              }}>
-                <BookOpen size={32} style={{ color: 'white' }} />
+              <div
+                style={{
+                  width: '220px',
+                  height: '160px',
+                  background: 'white',
+                  border: '2px solid #E5E7EB',
+                  borderRadius: '12px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  padding: '20px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#D1FAE5';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'white';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                }}
+              >
+                {/* Ikon Buku */}
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '12px',
+                }}>
+                  <BookOpen size={28} style={{ color: 'white' }} />
+                </div>
+
+                {/* Nama Kelas */}
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: '#059669',
+                  margin: 0,
+                  marginBottom: '8px',
+                  textAlign: 'center',
+                }}>
+                  {kelas.nama}
+                </h3>
+
+                {/* Link Text */}
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#F59E0B',
+                  margin: 0,
+                }}>
+                  Lihat Kelas →
+                </p>
               </div>
-
-              {/* Nama Kelas */}
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: '700',
-                color: '#059669',
-                margin: 0,
-                marginBottom: '8px',
-                textAlign: 'center',
-              }}>
-                {kelas.nama}
-              </h3>
-
-              {/* Link Text */}
-              <p style={{
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#F59E0B',
-                margin: 0,
-              }}>
-                Lihat Kelas →
-              </p>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Catatan UX */}

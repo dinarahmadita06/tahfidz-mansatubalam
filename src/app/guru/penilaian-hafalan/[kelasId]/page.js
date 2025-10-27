@@ -361,15 +361,13 @@ export default function PenilaianHafalanKelasPage() {
         nilaiAdab: parseInt(formData.nilaiAdab),
       };
 
-      setPenilaianList([...penilaianList, newPenilaian]);
+      const updatedPenilaianList = [...penilaianList, newPenilaian];
+      setPenilaianList(updatedPenilaianList);
 
-      // Add to filtered if applicable
-      if (filteredPenilaian.length > 0) {
-        const shouldInclude = !siswaId || parseInt(formData.siswaId) === parseInt(siswaId);
-
-        if (shouldInclude) {
-          setFilteredPenilaian([...filteredPenilaian, newPenilaian]);
-        }
+      // Always update filtered list to auto-refresh table
+      const shouldInclude = !siswaId || parseInt(formData.siswaId) === parseInt(siswaId);
+      if (shouldInclude) {
+        setFilteredPenilaian([...filteredPenilaian, newPenilaian]);
       }
 
       toast.success('Penilaian berhasil ditambahkan!');
