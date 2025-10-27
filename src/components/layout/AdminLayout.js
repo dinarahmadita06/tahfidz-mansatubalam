@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState, memo } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import {
   LayoutDashboard,
@@ -22,6 +23,7 @@ import {
   Megaphone
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
+import PageTransition from '@/components/PageTransition';
 
 const menuItems = [
   {
@@ -72,13 +74,12 @@ const menuItems = [
   },
 ];
 
-export default function AdminLayout({ children }) {
+function AdminLayout({ children }) {
   const [currentNotification, setCurrentNotification] = useState(null);
   const [notificationQueue, setNotificationQueue] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState({});
   const pathname = usePathname();
-  const router = useRouter();
 
   // Polling for new notifications every 10 seconds
   useEffect(() => {
@@ -218,9 +219,9 @@ export default function AdminLayout({ children }) {
           {/* Logo Section */}
           <div className="h-20 flex items-center justify-between px-5 border-b border-emerald-100/60">
             {sidebarOpen ? (
-              <div
+              <Link
+                href="/admin/dashboard"
                 className="flex items-center gap-3 transition-all duration-200 cursor-pointer group"
-                onClick={() => router.push('/admin/dashboard')}
               >
                 <div
                   className="p-2.5 rounded-full shadow-lg group-hover:shadow-xl transition-all duration-200"
@@ -233,17 +234,17 @@ export default function AdminLayout({ children }) {
                 <span className="font-bold text-lg" style={{ color: '#064E3B', letterSpacing: '0.02em' }}>
                   Tahfidz Admin
                 </span>
-              </div>
+              </Link>
             ) : (
-              <div
-                className="p-2.5 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200"
-                onClick={() => router.push('/admin/dashboard')}
+              <Link
+                href="/admin/dashboard"
+                className="p-2.5 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 block"
                 style={{
                   background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
                 }}
               >
                 <BookOpen className="text-white" size={24} strokeWidth={2} />
-              </div>
+              </Link>
             )}
 
             {/* Toggle Button */}
@@ -307,9 +308,10 @@ export default function AdminLayout({ children }) {
                         {sidebarOpen && expandedMenus[item.title] && (
                           <div className="ml-6 mt-2 space-y-1 border-l-2 border-emerald-100 pl-4">
                             {item.submenu.map((subitem) => (
-                              <button
+                              <Link
                                 key={subitem.href}
-                                onClick={() => router.push(subitem.href)}
+                                href={subitem.href}
+                                prefetch={true}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
                                   isActive(subitem.href)
                                     ? 'bg-amber-50 text-amber-900'
@@ -325,14 +327,15 @@ export default function AdminLayout({ children }) {
                                   className={isActive(subitem.href) ? 'text-amber-700' : 'text-gray-500 group-hover:text-emerald-600'}
                                 />
                                 <span className="font-medium">{subitem.title}</span>
-                              </button>
+                              </Link>
                             ))}
                           </div>
                         )}
                       </div>
                     ) : (
-                      <button
-                        onClick={() => router.push(item.href)}
+                      <Link
+                        href={item.href}
+                        prefetch={true}
                         className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} py-3 rounded-xl transition-all duration-200 group relative ${
                           isActive(item.href)
                             ? 'text-amber-900 shadow-inner'
@@ -355,7 +358,7 @@ export default function AdminLayout({ children }) {
                         {sidebarOpen && (
                           <span className="font-medium text-sm">{item.title}</span>
                         )}
-                      </button>
+                      </Link>
                     )}
                   </div>
                 );
@@ -389,7 +392,9 @@ export default function AdminLayout({ children }) {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">
-            {children}
+            <PageTransition>
+              {children}
+            </PageTransition>
           </div>
         </main>
 
@@ -402,3 +407,6 @@ export default function AdminLayout({ children }) {
     </>
   );
 }
+
+// Memoize untuk mencegah unnecessary re-render
+export default memo(AdminLayout);
