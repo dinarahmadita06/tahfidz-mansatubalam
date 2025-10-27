@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import ImportExportToolbar from '@/components/ImportExportToolbar';
 
 // Islamic Modern Color Palette (sama dengan Dashboard)
 const colors = {
@@ -264,25 +265,6 @@ export default function AdminGuruPage() {
     setEditingGuru(null);
   };
 
-  const handleExport = () => {
-    // Implementasi export data
-    const csvContent = [
-      ['Nama Lengkap', 'Email', 'Kelas Binaan', 'Status', 'Tanggal Bergabung'],
-      ...filteredGuru.map(g => [
-        g.user.name,
-        g.user.email,
-        g.kelasGuru?.map(kg => kg.kelas.namaKelas).join(', ') || '-',
-        g.user.isActive ? 'Aktif' : 'Non-Aktif',
-        new Date(g.user.createdAt).toLocaleDateString('id-ID')
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `data-guru-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-  };
 
   // Filter data
   const filteredGuru = guru.filter(g => {
@@ -367,31 +349,16 @@ export default function AdminGuruPage() {
               </p>
             </div>
 
+            {/* Import/Export Toolbar */}
+            <ImportExportToolbar
+              kategori="guru"
+              data={filteredGuru}
+              onImportSuccess={fetchGuru}
+            />
+
             {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={handleExport}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: colors.white,
-                  color: colors.emerald[600],
-                  border: `2px solid ${colors.emerald[500]}`,
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                }}
-                className="export-btn"
-              >
-                <Download size={18} />
-                Export Data
-              </button>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              {/* Tambah Guru Button */}
               <button
                 onClick={() => {
                   resetForm();
@@ -405,7 +372,7 @@ export default function AdminGuruPage() {
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   color: colors.white,
                   border: 'none',
-                  borderRadius: '12px',
+                  borderRadius: '0.75rem',
                   fontWeight: 600,
                   fontSize: '14px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -413,7 +380,14 @@ export default function AdminGuruPage() {
                   transition: 'all 0.3s ease',
                   boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
                 }}
-                className="add-btn"
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.2)';
+                }}
               >
                 <UserPlus size={18} />
                 Tambah Guru
