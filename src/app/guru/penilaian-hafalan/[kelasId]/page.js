@@ -24,6 +24,33 @@ import {
 import { toast, Toaster } from 'react-hot-toast';
 import Link from 'next/link';
 
+// Daftar 114 Surah Al-Quran
+const surahList = [
+  'Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa', 'Al-Ma\'idah',
+  'Al-An\'am', 'Al-A\'raf', 'Al-Anfal', 'At-Taubah', 'Yunus',
+  'Hud', 'Yusuf', 'Ar-Ra\'d', 'Ibrahim', 'Al-Hijr',
+  'An-Nahl', 'Al-Isra', 'Al-Kahf', 'Maryam', 'Taha',
+  'Al-Anbiya', 'Al-Hajj', 'Al-Mu\'minun', 'An-Nur', 'Al-Furqan',
+  'Asy-Syu\'ara', 'An-Naml', 'Al-Qasas', 'Al-Ankabut', 'Ar-Rum',
+  'Luqman', 'As-Sajdah', 'Al-Ahzab', 'Saba\'', 'Fatir',
+  'Yasin', 'As-Saffat', 'Sad', 'Az-Zumar', 'Ghafir',
+  'Fussilat', 'Asy-Syura', 'Az-Zukhruf', 'Ad-Dukhan', 'Al-Jasiyah',
+  'Al-Ahqaf', 'Muhammad', 'Al-Fath', 'Al-Hujurat', 'Qaf',
+  'Az-Zariyat', 'At-Tur', 'An-Najm', 'Al-Qamar', 'Ar-Rahman',
+  'Al-Waqi\'ah', 'Al-Hadid', 'Al-Mujadilah', 'Al-Hasyr', 'Al-Mumtahanah',
+  'As-Saff', 'Al-Jumu\'ah', 'Al-Munafiqun', 'At-Taghabun', 'At-Talaq',
+  'At-Tahrim', 'Al-Mulk', 'Al-Qalam', 'Al-Haqqah', 'Al-Ma\'arij',
+  'Nuh', 'Al-Jinn', 'Al-Muzzammil', 'Al-Muddassir', 'Al-Qiyamah',
+  'Al-Insan', 'Al-Mursalat', 'An-Naba', 'An-Nazi\'at', 'Abasa',
+  'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Insyiqaq', 'Al-Buruj',
+  'At-Tariq', 'Al-A\'la', 'Al-Ghasyiyah', 'Al-Fajr', 'Al-Balad',
+  'Asy-Syams', 'Al-Lail', 'Ad-Duha', 'Asy-Syarh', 'At-Tin',
+  'Al-Alaq', 'Al-Qadr', 'Al-Bayyinah', 'Az-Zalzalah', 'Al-Adiyat',
+  'Al-Qari\'ah', 'At-Takasur', 'Al-Asr', 'Al-Humazah', 'Al-Fil',
+  'Quraisy', 'Al-Ma\'un', 'Al-Kausar', 'Al-Kafirun', 'An-Nasr',
+  'Al-Lahab', 'Al-Ikhlas', 'Al-Falaq', 'An-Nas'
+];
+
 // Mock Data Siswa per Kelas
 const mockSiswaByKelas = {
   'x-a1': [
@@ -141,8 +168,52 @@ export default function PenilaianHafalanKelasPage() {
 
   const [errors, setErrors] = useState({});
 
+  // State untuk searchable surah
+  const [surahQuery, setSurahQuery] = useState('');
+  const [showSurahDropdown, setShowSurahDropdown] = useState(false);
+  const [isWajibNilai, setIsWajibNilai] = useState(true);
+
   // Get siswa untuk kelas ini
   const siswaList = mockSiswaByKelas[kelasId] || [];
+
+  // Filter surah berdasarkan query
+  const filteredSurahList = surahList.filter(surah =>
+    surah.toLowerCase().includes(surahQuery.toLowerCase())
+  );
+
+  // Effect untuk mengatur isWajibNilai berdasarkan statusHafalan
+  useEffect(() => {
+    if (formData.statusHafalan === 'Hafal') {
+      setIsWajibNilai(true);
+    } else if (formData.statusHafalan === 'Kurang Hafal') {
+      setIsWajibNilai(false);
+      // Clear nilai jika sudah terisi
+    } else if (formData.statusHafalan === 'Tidak Hafal') {
+      setIsWajibNilai(false);
+      // Clear semua nilai dan disable input
+      setFormData(prev => ({
+        ...prev,
+        nilaiTajwid: '',
+        nilaiKelancaran: '',
+        nilaiMakhraj: '',
+        nilaiAdab: '',
+      }));
+    }
+  }, [formData.statusHafalan]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSurahDropdown && !event.target.closest('.surah-input-container')) {
+        setShowSurahDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSurahDropdown]);
 
   // Handle Tampilkan Data
   const handleTampilkanData = () => {
@@ -236,6 +307,8 @@ export default function PenilaianHafalanKelasPage() {
       catatan: '',
     });
     setErrors({});
+    setSurahQuery('');
+    setShowSurahDropdown(false);
     setShowModal(true);
   };
 
@@ -254,6 +327,8 @@ export default function PenilaianHafalanKelasPage() {
       catatan: penilaian.catatan,
     });
     setErrors({});
+    setSurahQuery(penilaian.surah);
+    setShowSurahDropdown(false);
     setShowModal(true);
   };
 
@@ -273,6 +348,8 @@ export default function PenilaianHafalanKelasPage() {
       catatan: '',
     });
     setErrors({});
+    setSurahQuery('');
+    setShowSurahDropdown(false);
   };
 
   // Form Validation
@@ -282,12 +359,16 @@ export default function PenilaianHafalanKelasPage() {
     if (!formData.siswaId) newErrors.siswaId = 'Pilih siswa terlebih dahulu';
     if (!formData.surah) newErrors.surah = 'Surah wajib diisi';
     if (!formData.ayat) newErrors.ayat = 'Ayat wajib diisi';
-    if (!formData.nilaiTajwid) newErrors.nilaiTajwid = 'Nilai Tajwid wajib diisi';
-    if (!formData.nilaiKelancaran) newErrors.nilaiKelancaran = 'Nilai Kelancaran wajib diisi';
-    if (!formData.nilaiMakhraj) newErrors.nilaiMakhraj = 'Nilai Makhraj wajib diisi';
-    if (!formData.nilaiAdab) newErrors.nilaiAdab = 'Nilai Adab wajib diisi';
 
-    // Validate range 1-100
+    // Validasi nilai hanya wajib jika status = 'Hafal'
+    if (formData.statusHafalan === 'Hafal') {
+      if (!formData.nilaiTajwid) newErrors.nilaiTajwid = 'Nilai Tajwid wajib diisi';
+      if (!formData.nilaiKelancaran) newErrors.nilaiKelancaran = 'Nilai Kelancaran wajib diisi';
+      if (!formData.nilaiMakhraj) newErrors.nilaiMakhraj = 'Nilai Makhraj wajib diisi';
+      if (!formData.nilaiAdab) newErrors.nilaiAdab = 'Nilai Adab wajib diisi';
+    }
+
+    // Validate range 1-100 untuk field yang terisi
     ['nilaiTajwid', 'nilaiKelancaran', 'nilaiMakhraj', 'nilaiAdab'].forEach(field => {
       const val = parseInt(formData[field]);
       if (formData[field] && (val < 1 || val > 100)) {
@@ -1507,24 +1588,69 @@ export default function PenilaianHafalanKelasPage() {
                   />
                 </div>
 
-                {/* Surah */}
+                {/* Surah - Searchable Dropdown */}
                 <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
                     Surah <span style={{ color: '#DC2626' }}>*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={formData.surah}
-                    onChange={(e) => setFormData({ ...formData, surah: e.target.value })}
-                    placeholder="Contoh: Al-Baqarah"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: errors.surah ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                    }}
-                  />
+                  <div className="surah-input-container" style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={surahQuery || formData.surah}
+                      onChange={(e) => {
+                        setSurahQuery(e.target.value);
+                        setShowSurahDropdown(true);
+                        setFormData({ ...formData, surah: e.target.value });
+                      }}
+                      onFocus={() => setShowSurahDropdown(true)}
+                      placeholder="Ketik atau pilih nama surah..."
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.surah ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                      }}
+                    />
+                    {showSurahDropdown && filteredSurahList.length > 0 && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        background: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        marginTop: '4px',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                        zIndex: 1000,
+                      }}>
+                        {filteredSurahList.slice(0, 10).map((surah, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              setFormData({ ...formData, surah });
+                              setSurahQuery(surah);
+                              setShowSurahDropdown(false);
+                            }}
+                            style={{
+                              padding: '10px 12px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              borderBottom: idx < filteredSurahList.slice(0, 10).length - 1 ? '1px solid #f3f4f6' : 'none',
+                              transition: 'background 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#F0FDF4'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                          >
+                            {surah}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {errors.surah && (
                     <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.surah}</p>
                   )}
@@ -1580,7 +1706,8 @@ export default function PenilaianHafalanKelasPage() {
                   {/* Nilai Tajwid */}
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Tajwid (1-100) <span style={{ color: '#DC2626' }}>*</span>
+                      Nilai Tajwid (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
+                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
                     </label>
                     <input
                       type="number"
@@ -1588,12 +1715,15 @@ export default function PenilaianHafalanKelasPage() {
                       max="100"
                       value={formData.nilaiTajwid}
                       onChange={(e) => setFormData({ ...formData, nilaiTajwid: e.target.value })}
+                      disabled={formData.statusHafalan === 'Tidak Hafal'}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
                         border: errors.nilaiTajwid ? '1px solid #DC2626' : '1px solid #e5e7eb',
                         borderRadius: '8px',
                         fontSize: '14px',
+                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
+                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
                       }}
                     />
                     {errors.nilaiTajwid && (
@@ -1604,7 +1734,8 @@ export default function PenilaianHafalanKelasPage() {
                   {/* Nilai Kelancaran */}
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Kelancaran (1-100) <span style={{ color: '#DC2626' }}>*</span>
+                      Nilai Kelancaran (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
+                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
                     </label>
                     <input
                       type="number"
@@ -1612,12 +1743,15 @@ export default function PenilaianHafalanKelasPage() {
                       max="100"
                       value={formData.nilaiKelancaran}
                       onChange={(e) => setFormData({ ...formData, nilaiKelancaran: e.target.value })}
+                      disabled={formData.statusHafalan === 'Tidak Hafal'}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
                         border: errors.nilaiKelancaran ? '1px solid #DC2626' : '1px solid #e5e7eb',
                         borderRadius: '8px',
                         fontSize: '14px',
+                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
+                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
                       }}
                     />
                     {errors.nilaiKelancaran && (
@@ -1628,7 +1762,8 @@ export default function PenilaianHafalanKelasPage() {
                   {/* Nilai Makhraj */}
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Makhrajul Huruf (1-100) <span style={{ color: '#DC2626' }}>*</span>
+                      Nilai Makhrajul Huruf (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
+                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
                     </label>
                     <input
                       type="number"
@@ -1636,12 +1771,15 @@ export default function PenilaianHafalanKelasPage() {
                       max="100"
                       value={formData.nilaiMakhraj}
                       onChange={(e) => setFormData({ ...formData, nilaiMakhraj: e.target.value })}
+                      disabled={formData.statusHafalan === 'Tidak Hafal'}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
                         border: errors.nilaiMakhraj ? '1px solid #DC2626' : '1px solid #e5e7eb',
                         borderRadius: '8px',
                         fontSize: '14px',
+                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
+                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
                       }}
                     />
                     {errors.nilaiMakhraj && (
@@ -1652,7 +1790,8 @@ export default function PenilaianHafalanKelasPage() {
                   {/* Nilai Adab */}
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Adab (1-100) <span style={{ color: '#DC2626' }}>*</span>
+                      Nilai Adab (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
+                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
                     </label>
                     <input
                       type="number"
@@ -1660,12 +1799,15 @@ export default function PenilaianHafalanKelasPage() {
                       max="100"
                       value={formData.nilaiAdab}
                       onChange={(e) => setFormData({ ...formData, nilaiAdab: e.target.value })}
+                      disabled={formData.statusHafalan === 'Tidak Hafal'}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
                         border: errors.nilaiAdab ? '1px solid #DC2626' : '1px solid #e5e7eb',
                         borderRadius: '8px',
                         fontSize: '14px',
+                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
+                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
                       }}
                     />
                     {errors.nilaiAdab && (
@@ -1693,6 +1835,28 @@ export default function PenilaianHafalanKelasPage() {
                       resize: 'vertical',
                     }}
                   />
+                  {formData.statusHafalan === 'Tidak Hafal' && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '12px',
+                      background: '#FFFBEB',
+                      border: '1px solid #FDE68A',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                    }}>
+                      <span style={{ fontSize: '16px' }}>⚠️</span>
+                      <p style={{
+                        fontSize: '13px',
+                        color: '#B45309',
+                        margin: 0,
+                        lineHeight: '1.5',
+                      }}>
+                        Siswa belum menguasai hafalan ini. Mohon berikan catatan pembinaan yang detail untuk membantu perkembangan siswa.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
