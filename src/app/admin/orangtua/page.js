@@ -431,13 +431,6 @@ export default function AdminOrangTuaPage() {
               />
             </div>
 
-            {/* Import/Export Toolbar */}
-            <ImportExportToolbar
-              kategori="orangtua"
-              data={filteredOrangTua}
-              onImportSuccess={fetchOrangTua}
-            />
-
             {/* Search & Filter Section */}
             <div style={{
               background: colors.white,
