@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/providers/SessionProvider";
+import SWRProvider from "@/components/providers/SWRProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,7 +15,9 @@ export default function RootLayout({ children }) {
     <html lang="id">
       <body className={`${inter.className} antialiased`}>
         <SessionProvider>
-          {children}
+          <SWRProvider>
+            {children}
+          </SWRProvider>
         </SessionProvider>
       </body>
     </html>

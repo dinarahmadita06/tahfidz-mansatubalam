@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
-// GET - Mengambil daftar siswa yang eligible untuk wisuda (hafal 30 juz)
+// GET - Mengambil daftar siswa yang eligible untuk wisuda (lulus ujian juz 1 dan juz 2)
 export async function GET(request) {
   try {
     const session = await auth();
@@ -38,7 +38,7 @@ export async function GET(request) {
       }
     });
 
-    // Filter siswa yang sudah hafal 30 juz
+    // Filter siswa yang sudah lulus ujian juz 1 dan juz 2
     const siswaEligible = siswaWithHafalan
       .map(siswa => {
         // Hitung juz unique yang sudah LANCAR
@@ -48,13 +48,16 @@ export async function GET(request) {
             .map(h => h.juz)
         );
 
+        // Cek apakah juz 1 dan juz 2 sudah LANCAR
+        const lulusJuz1Dan2 = juzLancar.has(1) && juzLancar.has(2);
+
         return {
           id: siswa.id,
           nama: siswa.user.name,
           email: siswa.user.email,
           kelas: siswa.kelas,
           totalJuzLancar: juzLancar.size,
-          eligible: juzLancar.size >= 30
+          eligible: lulusJuz1Dan2
         };
       })
       .filter(s => s.eligible)

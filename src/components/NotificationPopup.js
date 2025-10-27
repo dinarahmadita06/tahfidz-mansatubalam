@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { X, Bell, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function NotificationPopup({ notification, onClose, onMarkAsRead }) {
+function NotificationPopup({ notification, onClose, onMarkAsRead }) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
 
@@ -84,3 +84,5 @@ export default function NotificationPopup({ notification, onClose, onMarkAsRead 
     </div>
   );
 }
+
+export default memo(NotificationPopup);

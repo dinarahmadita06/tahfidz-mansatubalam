@@ -1,10 +1,12 @@
 'use client';
 
+import { memo } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { LogOut } from 'lucide-react';
 import Sidebar from './Sidebar';
+import PageTransition from '@/components/PageTransition';
 
-export default function GuruLayout({ children }) {
+function GuruLayout({ children }) {
   const { data: session } = useSession();
 
   const handleLogout = async () => {
@@ -34,9 +36,13 @@ export default function GuruLayout({ children }) {
 
         {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
       </div>
     </div>
   );
 }
+
+export default memo(GuruLayout);

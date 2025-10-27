@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -75,7 +75,7 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar({ userName = 'Guru' }) {
+function Sidebar({ userName = 'Guru' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
@@ -148,6 +148,7 @@ export default function Sidebar({ userName = 'Guru' }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      prefetch={true}
                       onClick={() => setIsOpen(false)}
                       className={`
                         flex items-center gap-3 px-3 py-3 rounded-lg transition-all
@@ -189,3 +190,5 @@ export default function Sidebar({ userName = 'Guru' }) {
     </>
   );
 }
+
+export default memo(Sidebar);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
@@ -15,8 +15,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import PageTransition from '@/components/PageTransition';
 
-export default function SiswaLayout({ children }) {
+function SiswaLayout({ children }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -240,8 +241,14 @@ export default function SiswaLayout({ children }) {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-8">
+          <PageTransition>
+            {children}
+          </PageTransition>
+        </main>
       </div>
     </div>
   );
 }
+
+export default memo(SiswaLayout);
