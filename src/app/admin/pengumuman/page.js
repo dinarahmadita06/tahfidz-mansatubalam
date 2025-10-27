@@ -382,7 +382,7 @@ export default function PengumumanPage() {
                 {formData.tipePengumuman === 'WISUDA' ? (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Pilih Siswa Wisuda (Hafal 30 Juz)
+                      Pilih Siswa Wisuda (Lulus Ujian Juz 1 & 2)
                     </label>
                     <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4 space-y-2">
                       {siswaWisudaList.length === 0 ? (

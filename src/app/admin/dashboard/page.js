@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import AdminLayout from '@/components/layout/AdminLayout';
 import {
   BookOpen,
@@ -17,29 +18,68 @@ import {
   Sparkles,
   Bell,
   ArrowRight,
-  BarChart3,
+  BarChart3 as BarChart3Icon,
   FileText,
-  PieChart,
+  PieChart as PieChartIcon,
   TrendingDown,
   School,
   UserCog,
   Target
 } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
+
+// Dynamic import untuk Recharts - mengurangi bundle size dan mempercepat initial load
+const LineChart = dynamic(
+  () => import('recharts').then(mod => mod.LineChart),
+  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
+);
+const Line = dynamic(
+  () => import('recharts').then(mod => mod.Line),
+  { ssr: false }
+);
+const BarChart = dynamic(
+  () => import('recharts').then(mod => mod.BarChart),
+  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
+);
+const Bar = dynamic(
+  () => import('recharts').then(mod => mod.Bar),
+  { ssr: false }
+);
+const RechartsPieChart = dynamic(
+  () => import('recharts').then(mod => mod.PieChart),
+  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
+);
+const Pie = dynamic(
+  () => import('recharts').then(mod => mod.Pie),
+  { ssr: false }
+);
+const Cell = dynamic(
+  () => import('recharts').then(mod => mod.Cell),
+  { ssr: false }
+);
+const XAxis = dynamic(
+  () => import('recharts').then(mod => mod.XAxis),
+  { ssr: false }
+);
+const YAxis = dynamic(
+  () => import('recharts').then(mod => mod.YAxis),
+  { ssr: false }
+);
+const CartesianGrid = dynamic(
+  () => import('recharts').then(mod => mod.CartesianGrid),
+  { ssr: false }
+);
+const Tooltip = dynamic(
+  () => import('recharts').then(mod => mod.Tooltip),
+  { ssr: false }
+);
+const Legend = dynamic(
+  () => import('recharts').then(mod => mod.Legend),
+  { ssr: false }
+);
+const ResponsiveContainer = dynamic(
+  () => import('recharts').then(mod => mod.ResponsiveContainer),
+  { ssr: false }
+);
 
 // Islamic Modern Color Palette - Emerald & Amber Pastel
 const colors = {
@@ -424,7 +464,7 @@ function DistribusiKehadiranChart({ data }) {
           justifyContent: 'center',
           boxShadow: '0 2px 6px rgba(251, 191, 36, 0.2)',
         }}>
-          <PieChart size={20} color={colors.white} />
+          <PieChartIcon size={20} color={colors.white} />
         </div>
         <h3 style={{
           fontSize: '18px',
@@ -527,7 +567,7 @@ function ProgressKelasChart({ data }) {
             justifyContent: 'center',
             boxShadow: '0 2px 6px rgba(139, 92, 246, 0.15)',
           }}>
-            <BarChart3 size={20} color={colors.white} />
+            <BarChart3Icon size={20} color={colors.white} />
           </div>
           <h3 style={{
             fontSize: '18px',
