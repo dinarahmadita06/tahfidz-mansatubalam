@@ -162,9 +162,9 @@ const mockData = {
     { bulan: 'Okt', aktual: 1847, target: 1860 },
   ],
   distribusiKehadiran: [
-    { name: 'Hadir', value: 128, color: colors.emerald[500], percent: 90.1 },
-    { name: 'Izin', value: 8, color: colors.amber[400], percent: 5.6 },
-    { name: 'Absen', value: 6, color: colors.coral[400], percent: 4.3 },
+    { name: 'Hadir', value: 128, color: '#059669', percent: 90.1 }, // Emerald utama
+    { name: 'Izin', value: 8, color: '#FBBF24', percent: 5.6 }, // Amber
+    { name: 'Absen', value: 6, color: '#EF4444', percent: 4.3 }, // Red lembut
   ],
   progressKelas: [
     { kelas: 'X IPA 1', progress: 45, target: 15, change: -2 },
@@ -494,10 +494,12 @@ function DistribusiKehadiranChart({ data }) {
           <Tooltip
             contentStyle={{
               background: colors.white,
-              border: `1px solid ${colors.amber[200]}`,
+              border: `1px solid ${colors.gray[200]}`,
               borderRadius: '8px',
               fontFamily: '"Poppins", system-ui, sans-serif',
               fontSize: '12px',
+              color: '#374151',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
             }}
           />
         </RechartsPieChart>
@@ -715,21 +717,26 @@ function KinerjaGuruChart({ data }) {
           <Tooltip
             contentStyle={{
               background: colors.white,
-              border: `1px solid ${colors.mint[100]}`,
+              border: `1px solid ${colors.gray[200]}`,
               borderRadius: '8px',
               fontFamily: '"Poppins", system-ui, sans-serif',
               fontSize: '12px',
+              color: '#374151',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
             }}
             formatter={(value) => [`${value} Juz`, 'Rata-rata Hafalan']}
           />
-          <Bar dataKey="rataJuz" radius={[8, 8, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={entry.rataJuz >= 15 ? colors.emerald[500] : colors.amber[400]}
-              />
-            ))}
-          </Bar>
+          <defs>
+            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
+              <stop offset="100%" stopColor="#FBBF24" stopOpacity={1} />
+            </linearGradient>
+          </defs>
+          <Bar
+            dataKey="rataJuz"
+            radius={[8, 8, 0, 0]}
+            fill="url(#barGradient)"
+          />
         </BarChart>
       </ResponsiveContainer>
 
@@ -1587,6 +1594,34 @@ export default function DashboardTahfidz() {
         /* Recharts Tooltip Custom */
         .recharts-tooltip-wrapper {
           outline: none;
+        }
+
+        /* Chart Fade In Animation */
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .recharts-wrapper {
+          animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Recharts Bar Hover - Microinteraction */
+        .recharts-bar-rectangle:hover {
+          opacity: 0.9;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+          transform: scale(1.05);
+          transition: all 0.2s ease-in-out;
+        }
+
+        /* Recharts Pie Sector Hover */
+        .recharts-pie-sector:hover {
+          filter: brightness(1.1);
+          transition: all 0.2s ease-in-out;
         }
       `}</style>
     </AdminLayout>
