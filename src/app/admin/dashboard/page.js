@@ -436,11 +436,7 @@ function TrendHafalanChart({ data }) {
 
 // Komponen Distribusi Kehadiran Chart
 function DistribusiKehadiranChart({ data }) {
-  // Warna sesuai tema Tahfidz: Emerald, Amber, Red
-  const COLORS = ['#059669', '#FBBF24', '#EF4444'];
-
-  console.log('🎨 Donut Chart Colors:', COLORS);
-  console.log('📊 Donut Chart Data:', data);
+  const COLORS = data.map(item => item.color);
 
   return (
     <div style={{
