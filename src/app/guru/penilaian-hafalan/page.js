@@ -1,1112 +1,1752 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
   BookOpen,
-  Search,
+  ChevronDown,
   Plus,
   Edit2,
   Trash2,
+  Printer,
   X,
-  Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  FileText,
   TrendingUp,
   Award,
-  Calendar,
-  FileText,
-  BarChart3,
+  Star,
+  Mic,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
-// Color Palette - Emerald & Amber dengan variasi
-const colors = {
-  emerald: {
-    50: '#ECFDF5',
-    100: '#D1FAE5',
-    500: '#10B981',
-    600: '#059669',
-    700: '#047857',
-  },
-  amber: {
-    50: '#FFFBEB',
-    100: '#FEF3C7',
-    400: '#FBBF24',
-    500: '#F59E0B',
-    600: '#D97706',
-  },
-  teal: {
-    50: '#F0FDFA',
-    100: '#CCFBF1',
-    500: '#14B8A6',
-    600: '#0D9488',
-  },
-  rose: {
-    50: '#FFF1F2',
-    400: '#FB7185',
-    500: '#F43F5E',
-  },
-  violet: {
-    50: '#FAF5FF',
-    500: '#8B5CF6',
-  },
-  red: {
-    400: '#EF4444',
-    500: '#DC2626',
-  },
-  gray: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#374151',
-    800: '#1F2937',
-  },
-  white: '#FFFFFF',
-};
-
 // Mock Data
 const mockKelas = [
-  { id: 1, nama: 'X IPA 1' },
-  { id: 2, nama: 'X IPA 2' },
-  { id: 3, nama: 'XI IPA 1' },
+  { id: 1, nama: 'Kelas 1A' },
+  { id: 2, nama: 'Kelas 2B' },
+  { id: 3, nama: 'Kelas 3C' },
 ];
 
 const mockSiswa = [
-  { id: 1, nama: 'Ahmad Fadli', kelasId: 1 },
-  { id: 2, nama: 'Siti Fatimah', kelasId: 1 },
-  { id: 3, nama: 'Muhammad Rizki', kelasId: 2 },
+  { id: 1, nama: 'Ahmad Fauzan', kelasId: 1 },
+  { id: 2, nama: 'Fatimah Zahra', kelasId: 1 },
+  { id: 3, nama: 'Muhammad Rizki', kelasId: 1 },
   { id: 4, nama: 'Aisyah Nur', kelasId: 2 },
+  { id: 5, nama: 'Umar Abdullah', kelasId: 2 },
+  { id: 6, nama: 'Khadijah Amira', kelasId: 3 },
 ];
 
-const mockPenilaian = [
+const initialPenilaian = [
   {
     id: 1,
     siswaId: 1,
-    tanggal: '2025-10-25',
+    namaSiswa: 'Ahmad Fauzan',
+    tanggal: '2025-01-15',
     surah: 'Al-Baqarah',
     ayat: '1-5',
-    nilaiTajwid: 85,
-    nilaiKelancaran: 90,
+    statusHafalan: 'Hafal',
+    nilaiTajwid: 90,
+    nilaiKelancaran: 88,
+    nilaiMakhraj: 92,
     nilaiAdab: 95,
-    catatan: 'Bacaan sudah bagus, perlu lebih lancar',
+    catatan: 'Sangat baik, pertahankan',
   },
   {
     id: 2,
-    siswaId: 1,
-    tanggal: '2025-10-24',
-    surah: 'Al-Fatihah',
-    ayat: '1-7',
-    nilaiTajwid: 90,
-    nilaiKelancaran: 85,
+    siswaId: 2,
+    namaSiswa: 'Fatimah Zahra',
+    tanggal: '2025-01-14',
+    surah: 'Ali Imran',
+    ayat: '10-15',
+    statusHafalan: 'Hafal',
+    nilaiTajwid: 85,
+    nilaiKelancaran: 82,
+    nilaiMakhraj: 88,
     nilaiAdab: 90,
-    catatan: 'Makhraj sudah benar',
+    catatan: 'Perlu perbaikan di mad lazim',
+  },
+  {
+    id: 3,
+    siswaId: 1,
+    namaSiswa: 'Ahmad Fauzan',
+    tanggal: '2025-01-10',
+    surah: 'An-Nisa',
+    ayat: '1-3',
+    statusHafalan: 'Kurang Hafal',
+    nilaiTajwid: 75,
+    nilaiKelancaran: 70,
+    nilaiMakhraj: 78,
+    nilaiAdab: 85,
+    catatan: 'Perlu muraja\'ah lebih intensif',
+  },
+  {
+    id: 4,
+    siswaId: 3,
+    namaSiswa: 'Muhammad Rizki',
+    tanggal: '2025-01-12',
+    surah: 'Al-Maidah',
+    ayat: '5-10',
+    statusHafalan: 'Hafal',
+    nilaiTajwid: 92,
+    nilaiKelancaran: 90,
+    nilaiMakhraj: 95,
+    nilaiAdab: 93,
+    catatan: 'Luar biasa!',
   },
 ];
 
 export default function PenilaianHafalanPage() {
-  const [selectedKelas, setSelectedKelas] = useState('');
-  const [selectedSiswa, setSelectedSiswa] = useState('');
-  const [siswaList, setSiswaList] = useState([]);
-  const [penilaianList, setPenilaianList] = useState([]);
+  // State Management
+  const [kelasId, setKelasId] = useState('');
+  const [siswaId, setSiswaId] = useState('');
+  const [penilaianList, setPenilaianList] = useState(initialPenilaian);
   const [filteredPenilaian, setFilteredPenilaian] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editingPenilaian, setEditingPenilaian] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Sorting
+  const [sortField, setSortField] = useState('tanggal');
+  const [sortDirection, setSortDirection] = useState('desc');
+
+  // Form State
   const [formData, setFormData] = useState({
+    siswaId: '',
     tanggal: new Date().toISOString().split('T')[0],
     surah: '',
     ayat: '',
+    statusHafalan: 'Hafal',
     nilaiTajwid: '',
     nilaiKelancaran: '',
+    nilaiMakhraj: '',
     nilaiAdab: '',
     catatan: '',
   });
 
-  useEffect(() => {
-    // Load initial data
-    setPenilaianList(mockPenilaian);
-  }, []);
+  const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    if (selectedKelas) {
-      const filtered = mockSiswa.filter(s => s.kelasId === parseInt(selectedKelas));
-      setSiswaList(filtered);
-      setSelectedSiswa('');
-      setFilteredPenilaian([]);
-    }
-  }, [selectedKelas]);
+  // Filter siswa berdasarkan kelas
+  const filteredSiswa = siswaId ? mockSiswa : mockSiswa.filter(s => !kelasId || s.kelasId === parseInt(kelasId));
 
+  // Handle Tampilkan Data
   const handleTampilkanData = () => {
-    if (!selectedSiswa) {
-      toast.error('Pilih siswa terlebih dahulu!');
-      return;
+    let filtered = penilaianList;
+
+    if (kelasId) {
+      const siswaIds = mockSiswa
+        .filter(s => s.kelasId === parseInt(kelasId))
+        .map(s => s.id);
+      filtered = filtered.filter(p => siswaIds.includes(p.siswaId));
     }
 
-    const filtered = penilaianList.filter(p => p.siswaId === parseInt(selectedSiswa));
+    if (siswaId) {
+      filtered = filtered.filter(p => p.siswaId === parseInt(siswaId));
+    }
+
     setFilteredPenilaian(filtered);
-
-    if (filtered.length === 0) {
-      toast('Belum ada data penilaian untuk siswa ini');
-    }
+    setCurrentPage(1);
+    toast.success('Data berhasil ditampilkan!');
   };
 
-  const handleOpenModal = (penilaian = null) => {
-    if (penilaian) {
-      setEditingPenilaian(penilaian);
-      setFormData({
-        tanggal: penilaian.tanggal,
-        surah: penilaian.surah,
-        ayat: penilaian.ayat,
-        nilaiTajwid: penilaian.nilaiTajwid,
-        nilaiKelancaran: penilaian.nilaiKelancaran,
-        nilaiAdab: penilaian.nilaiAdab,
-        catatan: penilaian.catatan,
-      });
-    } else {
-      setEditingPenilaian(null);
-      setFormData({
-        tanggal: new Date().toISOString().split('T')[0],
-        surah: '',
-        ayat: '',
-        nilaiTajwid: '',
-        nilaiKelancaran: '',
-        nilaiAdab: '',
-        catatan: '',
-      });
-    }
-    setShowModal(true);
+  // Sorting Function
+  const handleSort = (field) => {
+    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortField(field);
+    setSortDirection(newDirection);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingPenilaian(null);
+  // Apply sorting
+  const sortedData = [...filteredPenilaian].sort((a, b) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+
+    if (sortField === 'tanggal') {
+      aVal = new Date(aVal);
+      bVal = new Date(bVal);
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
+
+  // Calculate Statistics
+  const calculateStats = () => {
+    if (filteredPenilaian.length === 0) {
+      return {
+        total: 0,
+        rataTajwid: 0,
+        rataKelancaran: 0,
+        rataMakhraj: 0,
+        rataAdab: 0,
+      };
+    }
+
+    const total = filteredPenilaian.length;
+    const sumTajwid = filteredPenilaian.reduce((acc, p) => acc + p.nilaiTajwid, 0);
+    const sumKelancaran = filteredPenilaian.reduce((acc, p) => acc + p.nilaiKelancaran, 0);
+    const sumMakhraj = filteredPenilaian.reduce((acc, p) => acc + p.nilaiMakhraj, 0);
+    const sumAdab = filteredPenilaian.reduce((acc, p) => acc + p.nilaiAdab, 0);
+
+    return {
+      total,
+      rataTajwid: (sumTajwid / total).toFixed(1),
+      rataKelancaran: (sumKelancaran / total).toFixed(1),
+      rataMakhraj: (sumMakhraj / total).toFixed(1),
+      rataAdab: (sumAdab / total).toFixed(1),
+    };
+  };
+
+  const stats = calculateStats();
+
+  // Grade Badge Color
+  const getGradeBadgeColor = (nilai) => {
+    if (nilai >= 90) return { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' };
+    if (nilai >= 75) return { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' };
+    return { bg: '#FEE2E2', text: '#DC2626', border: '#FECACA' };
+  };
+
+  // Modal Handlers
+  const openAddModal = () => {
+    setEditingId(null);
     setFormData({
+      siswaId: siswaId || '',
       tanggal: new Date().toISOString().split('T')[0],
       surah: '',
       ayat: '',
+      statusHafalan: 'Hafal',
       nilaiTajwid: '',
       nilaiKelancaran: '',
+      nilaiMakhraj: '',
       nilaiAdab: '',
       catatan: '',
     });
+    setErrors({});
+    setShowModal(true);
   };
 
+  const openEditModal = (penilaian) => {
+    setEditingId(penilaian.id);
+    setFormData({
+      siswaId: penilaian.siswaId,
+      tanggal: penilaian.tanggal,
+      surah: penilaian.surah,
+      ayat: penilaian.ayat,
+      statusHafalan: penilaian.statusHafalan,
+      nilaiTajwid: penilaian.nilaiTajwid,
+      nilaiKelancaran: penilaian.nilaiKelancaran,
+      nilaiMakhraj: penilaian.nilaiMakhraj,
+      nilaiAdab: penilaian.nilaiAdab,
+      catatan: penilaian.catatan,
+    });
+    setErrors({});
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setFormData({
+      siswaId: '',
+      tanggal: new Date().toISOString().split('T')[0],
+      surah: '',
+      ayat: '',
+      statusHafalan: 'Hafal',
+      nilaiTajwid: '',
+      nilaiKelancaran: '',
+      nilaiMakhraj: '',
+      nilaiAdab: '',
+      catatan: '',
+    });
+    setErrors({});
+  };
+
+  // Form Validation
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.siswaId) newErrors.siswaId = 'Pilih siswa terlebih dahulu';
+    if (!formData.surah) newErrors.surah = 'Surah wajib diisi';
+    if (!formData.ayat) newErrors.ayat = 'Ayat wajib diisi';
+    if (!formData.nilaiTajwid) newErrors.nilaiTajwid = 'Nilai Tajwid wajib diisi';
+    if (!formData.nilaiKelancaran) newErrors.nilaiKelancaran = 'Nilai Kelancaran wajib diisi';
+    if (!formData.nilaiMakhraj) newErrors.nilaiMakhraj = 'Nilai Makhraj wajib diisi';
+    if (!formData.nilaiAdab) newErrors.nilaiAdab = 'Nilai Adab wajib diisi';
+
+    // Validate range 1-100
+    ['nilaiTajwid', 'nilaiKelancaran', 'nilaiMakhraj', 'nilaiAdab'].forEach(field => {
+      const val = parseInt(formData[field]);
+      if (formData[field] && (val < 1 || val > 100)) {
+        newErrors[field] = 'Nilai harus antara 1-100';
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle Submit
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validasi
-    if (!selectedSiswa) {
-      toast.error('Pilih siswa terlebih dahulu!');
+    if (!validateForm()) {
+      toast.error('Mohon lengkapi semua field yang wajib diisi');
       return;
     }
 
-    if (!formData.surah || !formData.ayat) {
-      toast.error('Surah dan Ayat harus diisi!');
-      return;
-    }
+    const siswa = mockSiswa.find(s => s.id === parseInt(formData.siswaId));
 
-    if (!formData.nilaiTajwid || !formData.nilaiKelancaran || !formData.nilaiAdab) {
-      toast.error('Semua nilai harus diisi!');
-      return;
-    }
-
-    const newPenilaian = {
-      id: editingPenilaian ? editingPenilaian.id : Date.now(),
-      siswaId: parseInt(selectedSiswa),
-      ...formData,
-      nilaiTajwid: parseInt(formData.nilaiTajwid),
-      nilaiKelancaran: parseInt(formData.nilaiKelancaran),
-      nilaiAdab: parseInt(formData.nilaiAdab),
-    };
-
-    if (editingPenilaian) {
-      // Update
-      setPenilaianList(prev =>
-        prev.map(p => (p.id === editingPenilaian.id ? newPenilaian : p))
+    if (editingId) {
+      // Update existing
+      const updated = penilaianList.map(p =>
+        p.id === editingId
+          ? {
+              ...p,
+              ...formData,
+              siswaId: parseInt(formData.siswaId),
+              namaSiswa: siswa.nama,
+              nilaiTajwid: parseInt(formData.nilaiTajwid),
+              nilaiKelancaran: parseInt(formData.nilaiKelancaran),
+              nilaiMakhraj: parseInt(formData.nilaiMakhraj),
+              nilaiAdab: parseInt(formData.nilaiAdab),
+            }
+          : p
       );
-      setFilteredPenilaian(prev =>
-        prev.map(p => (p.id === editingPenilaian.id ? newPenilaian : p))
-      );
-      toast.success('Penilaian berhasil diupdate!');
+      setPenilaianList(updated);
+
+      // Update filtered
+      if (filteredPenilaian.length > 0) {
+        const updatedFiltered = filteredPenilaian.map(p =>
+          p.id === editingId
+            ? {
+                ...p,
+                ...formData,
+                siswaId: parseInt(formData.siswaId),
+                namaSiswa: siswa.nama,
+                nilaiTajwid: parseInt(formData.nilaiTajwid),
+                nilaiKelancaran: parseInt(formData.nilaiKelancaran),
+                nilaiMakhraj: parseInt(formData.nilaiMakhraj),
+                nilaiAdab: parseInt(formData.nilaiAdab),
+              }
+            : p
+        );
+        setFilteredPenilaian(updatedFiltered);
+      }
+
+      toast.success('Penilaian berhasil diperbarui!');
     } else {
-      // Tambah
-      setPenilaianList(prev => [...prev, newPenilaian]);
-      setFilteredPenilaian(prev => [...prev, newPenilaian]);
-      toast.success('Penilaian berhasil disimpan!');
+      // Add new
+      const newPenilaian = {
+        id: penilaianList.length + 1,
+        ...formData,
+        siswaId: parseInt(formData.siswaId),
+        namaSiswa: siswa.nama,
+        nilaiTajwid: parseInt(formData.nilaiTajwid),
+        nilaiKelancaran: parseInt(formData.nilaiKelancaran),
+        nilaiMakhraj: parseInt(formData.nilaiMakhraj),
+        nilaiAdab: parseInt(formData.nilaiAdab),
+      };
+
+      setPenilaianList([...penilaianList, newPenilaian]);
+
+      // Add to filtered if applicable
+      if (filteredPenilaian.length > 0) {
+        const shouldInclude =
+          (!kelasId || mockSiswa.find(s => s.id === parseInt(formData.siswaId))?.kelasId === parseInt(kelasId)) &&
+          (!siswaId || parseInt(formData.siswaId) === parseInt(siswaId));
+
+        if (shouldInclude) {
+          setFilteredPenilaian([...filteredPenilaian, newPenilaian]);
+        }
+      }
+
+      toast.success('Penilaian berhasil ditambahkan!');
     }
 
-    handleCloseModal();
+    closeModal();
   };
 
+  // Handle Delete
   const handleDelete = (id) => {
-    if (confirm('Yakin ingin menghapus penilaian ini?')) {
-      setPenilaianList(prev => prev.filter(p => p.id !== id));
-      setFilteredPenilaian(prev => prev.filter(p => p.id !== id));
+    if (confirm('Apakah Anda yakin ingin menghapus penilaian ini?')) {
+      setPenilaianList(penilaianList.filter(p => p.id !== id));
+      setFilteredPenilaian(filteredPenilaian.filter(p => p.id !== id));
       toast.success('Penilaian berhasil dihapus!');
     }
   };
 
-  // Calculate statistics
-  const stats = {
-    totalPenilaian: filteredPenilaian.length,
-    rataTajwid:
-      filteredPenilaian.length > 0
-        ? (
-            filteredPenilaian.reduce((sum, p) => sum + p.nilaiTajwid, 0) /
-            filteredPenilaian.length
-          ).toFixed(1)
-        : 0,
-    rataKelancaran:
-      filteredPenilaian.length > 0
-        ? (
-            filteredPenilaian.reduce((sum, p) => sum + p.nilaiKelancaran, 0) /
-            filteredPenilaian.length
-          ).toFixed(1)
-        : 0,
-    rataAdab:
-      filteredPenilaian.length > 0
-        ? (
-            filteredPenilaian.reduce((sum, p) => sum + p.nilaiAdab, 0) /
-            filteredPenilaian.length
-          ).toFixed(1)
-        : 0,
+  // Print Functions
+  const handlePrintIndividu = (penilaian) => {
+    const siswa = mockSiswa.find(s => s.id === penilaian.siswaId);
+    const kelas = mockSiswa.find(s => s.id === penilaian.siswaId);
+    const kelasInfo = mockKelas.find(k => k.id === kelas?.kelasId);
+
+    // Get all penilaian for this student
+    const siswaData = filteredPenilaian.filter(p => p.siswaId === penilaian.siswaId);
+
+    // Calculate averages
+    const avgTajwid = (siswaData.reduce((acc, p) => acc + p.nilaiTajwid, 0) / siswaData.length).toFixed(1);
+    const avgKelancaran = (siswaData.reduce((acc, p) => acc + p.nilaiKelancaran, 0) / siswaData.length).toFixed(1);
+    const avgMakhraj = (siswaData.reduce((acc, p) => acc + p.nilaiMakhraj, 0) / siswaData.length).toFixed(1);
+    const avgAdab = (siswaData.reduce((acc, p) => acc + p.nilaiAdab, 0) / siswaData.length).toFixed(1);
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Laporan Penilaian Hafalan - ${siswa?.nama}</title>
+        <style>
+          @page { margin: 2cm; }
+          body {
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            color: #1f2937;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #059669;
+            padding-bottom: 15px;
+          }
+          .header h1 {
+            color: #059669;
+            margin: 0;
+            font-size: 24px;
+          }
+          .header p {
+            margin: 5px 0;
+            color: #6b7280;
+          }
+          .info-box {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          .info-box p {
+            margin: 5px 0;
+            font-size: 14px;
+          }
+          .info-box strong {
+            color: #059669;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+          }
+          th {
+            background: #059669;
+            color: white;
+            font-weight: 600;
+          }
+          tr:nth-child(even) {
+            background: #f9fafb;
+          }
+          .stats {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+          }
+          .stats h3 {
+            color: #d97706;
+            margin-top: 0;
+          }
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+          }
+          .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+          }
+          .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #059669;
+          }
+          .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+          }
+          .signature {
+            margin-top: 50px;
+            text-align: right;
+          }
+          .signature-line {
+            width: 200px;
+            border-top: 1px solid #000;
+            margin: 50px 0 5px auto;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 11px;
+          }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📗 Laporan Penilaian Hafalan</h1>
+          <p>Sistem Manajemen Tahfidz Al-Qur'an</p>
+        </div>
+
+        <div class="info-box">
+          <p><strong>Nama Siswa:</strong> ${siswa?.nama}</p>
+          <p><strong>Kelas:</strong> ${kelasInfo?.nama || '-'}</p>
+          <p><strong>Periode:</strong> ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}</p>
+          <p><strong>Total Penilaian:</strong> ${siswaData.length} kali setoran</p>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal</th>
+              <th>Surah</th>
+              <th>Ayat</th>
+              <th>Status</th>
+              <th>Tajwid</th>
+              <th>Kelancaran</th>
+              <th>Makhraj</th>
+              <th>Adab</th>
+              <th>Catatan</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${siswaData.map((p, idx) => `
+              <tr>
+                <td>${idx + 1}</td>
+                <td>${new Date(p.tanggal).toLocaleDateString('id-ID')}</td>
+                <td>${p.surah}</td>
+                <td>${p.ayat}</td>
+                <td>${p.statusHafalan}</td>
+                <td>${p.nilaiTajwid}</td>
+                <td>${p.nilaiKelancaran}</td>
+                <td>${p.nilaiMakhraj}</td>
+                <td>${p.nilaiAdab}</td>
+                <td>${p.catatan}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="stats">
+          <h3>📊 Rata-rata Nilai</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value">${avgTajwid}</div>
+              <div class="stat-label">Tajwid</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${avgKelancaran}</div>
+              <div class="stat-label">Kelancaran</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${avgMakhraj}</div>
+              <div class="stat-label">Makhraj</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${avgAdab}</div>
+              <div class="stat-label">Adab</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="signature">
+          <p>Guru Pembimbing</p>
+          <div class="signature-line"></div>
+          <p>(...........................)</p>
+        </div>
+
+        <div class="footer">
+          <p>Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+          <p>© 2025 Sistem Manajemen Tahfidz Al-Qur'an</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
   };
 
-  const getNilaiColor = (nilai) => {
-    if (nilai >= 85) return colors.emerald[600];
-    if (nilai >= 70) return colors.amber[500];
-    return colors.red[400];
+  const handlePrintKelas = () => {
+    if (!kelasId) {
+      toast.error('Pilih kelas terlebih dahulu!');
+      return;
+    }
+
+    const kelasInfo = mockKelas.find(k => k.id === parseInt(kelasId));
+    const siswaInKelas = mockSiswa.filter(s => s.kelasId === parseInt(kelasId));
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Laporan Kelas - ${kelasInfo?.nama}</title>
+        <style>
+          @page { margin: 2cm; }
+          body {
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            color: #1f2937;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #059669;
+            padding-bottom: 15px;
+          }
+          .header h1 {
+            color: #059669;
+            margin: 0;
+            font-size: 24px;
+          }
+          .header p {
+            margin: 5px 0;
+            color: #6b7280;
+          }
+          .info-box {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+          }
+          th {
+            background: #059669;
+            color: white;
+            font-weight: 600;
+          }
+          tr:nth-child(even) {
+            background: #f9fafb;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 11px;
+          }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📗 Rekap Penilaian Hafalan Kelas</h1>
+          <p>Sistem Manajemen Tahfidz Al-Qur'an</p>
+        </div>
+
+        <div class="info-box">
+          <p><strong>Kelas:</strong> ${kelasInfo?.nama}</p>
+          <p><strong>Periode:</strong> ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}</p>
+          <p><strong>Total Siswa:</strong> ${siswaInKelas.length} siswa</p>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama Siswa</th>
+              <th>Total Setoran</th>
+              <th>Rata-rata Tajwid</th>
+              <th>Rata-rata Kelancaran</th>
+              <th>Rata-rata Makhraj</th>
+              <th>Rata-rata Adab</th>
+              <th>Rata-rata Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${siswaInKelas.map((siswa, idx) => {
+              const siswaPenilaian = filteredPenilaian.filter(p => p.siswaId === siswa.id);
+              const count = siswaPenilaian.length;
+
+              if (count === 0) {
+                return `
+                  <tr>
+                    <td>${idx + 1}</td>
+                    <td>${siswa.nama}</td>
+                    <td colspan="6" style="text-align: center; color: #9ca3af;">Belum ada penilaian</td>
+                  </tr>
+                `;
+              }
+
+              const avgTajwid = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiTajwid, 0) / count).toFixed(1);
+              const avgKelancaran = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiKelancaran, 0) / count).toFixed(1);
+              const avgMakhraj = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiMakhraj, 0) / count).toFixed(1);
+              const avgAdab = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiAdab, 0) / count).toFixed(1);
+              const avgTotal = ((parseFloat(avgTajwid) + parseFloat(avgKelancaran) + parseFloat(avgMakhraj) + parseFloat(avgAdab)) / 4).toFixed(1);
+
+              return `
+                <tr>
+                  <td>${idx + 1}</td>
+                  <td>${siswa.nama}</td>
+                  <td>${count}</td>
+                  <td>${avgTajwid}</td>
+                  <td>${avgKelancaran}</td>
+                  <td>${avgMakhraj}</td>
+                  <td>${avgAdab}</td>
+                  <td><strong>${avgTotal}</strong></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+          <p>© 2025 Sistem Manajemen Tahfidz Al-Qur'an</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div
-        style={{
-          minHeight: '100vh',
-          background: `linear-gradient(to bottom right, ${colors.emerald[50]}, ${colors.teal[50]}, ${colors.amber[50]})`,
-          padding: '32px',
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            background: colors.white,
-            borderRadius: '16px',
-            padding: '28px',
-            marginBottom: '24px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-            border: `1px solid ${colors.gray[200]}`,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
-            <div
+      {/* Header */}
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <BookOpen size={24} style={{ color: 'white' }} />
+          </div>
+          <div>
+            <h1 style={{
+              fontSize: '28px',
+              fontWeight: '700',
+              margin: 0,
+              background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              Penilaian Hafalan
+            </h1>
+            <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+              Nilai & catatan hasil setoran siswa
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter & Actions */}
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+          {/* Pilih Kelas */}
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+              Pilih Kelas
+            </label>
+            <select
+              value={kelasId}
+              onChange={(e) => {
+                setKelasId(e.target.value);
+                setSiswaId('');
+              }}
               style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '14px',
-                background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.teal[600]} 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: 'white',
+                cursor: 'pointer',
               }}
             >
-              <BookOpen size={28} color={colors.white} />
-            </div>
-            <div>
-              <h1
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  color: colors.gray[800],
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", sans-serif',
-                }}
-              >
-                Penilaian Hafalan
-              </h1>
-              <p
-                style={{
-                  fontSize: '14px',
-                  color: colors.gray[600],
-                  fontFamily: '"Poppins", sans-serif',
-                }}
-              >
-                Nilai & catatan hasil setoran siswa
-              </p>
-            </div>
+              <option value="">Semua Kelas</option>
+              {mockKelas.map(k => (
+                <option key={k.id} value={k.id}>{k.nama}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Filter Section */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px',
-              marginTop: '24px',
-            }}
-          >
-            {/* Dropdown Kelas */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.gray[700],
-                  marginBottom: '8px',
-                  fontFamily: '"Poppins", sans-serif',
-                }}
-              >
-                Pilih Kelas
-              </label>
-              <select
-                value={selectedKelas}
-                onChange={(e) => setSelectedKelas(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  border: `2px solid ${colors.gray[200]}`,
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", sans-serif',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  cursor: 'pointer',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = colors.emerald[500])}
-                onBlur={(e) => (e.target.style.borderColor = colors.gray[200])}
-              >
-                <option value="">-- Pilih Kelas --</option>
-                {mockKelas.map((kelas) => (
-                  <option key={kelas.id} value={kelas.id}>
-                    {kelas.nama}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Dropdown Siswa */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.gray[700],
-                  marginBottom: '8px',
-                  fontFamily: '"Poppins", sans-serif',
-                }}
-              >
-                Pilih Siswa
-              </label>
-              <select
-                value={selectedSiswa}
-                onChange={(e) => setSelectedSiswa(e.target.value)}
-                disabled={!selectedKelas}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  border: `2px solid ${colors.gray[200]}`,
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", sans-serif',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  cursor: selectedKelas ? 'pointer' : 'not-allowed',
-                  opacity: selectedKelas ? 1 : 0.6,
-                }}
-                onFocus={(e) => (e.target.style.borderColor = colors.emerald[500])}
-                onBlur={(e) => (e.target.style.borderColor = colors.gray[200])}
-              >
-                <option value="">-- Pilih Siswa --</option>
-                {siswaList.map((siswa) => (
-                  <option key={siswa.id} value={siswa.id}>
-                    {siswa.nama}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Tombol Tampilkan & Tambah */}
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-              <button
-                onClick={handleTampilkanData}
-                disabled={!selectedSiswa}
-                style={{
-                  flex: 1,
-                  padding: '12px 20px',
-                  background: selectedSiswa
-                    ? `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.teal[600]} 100%)`
-                    : colors.gray[300],
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", sans-serif',
-                  cursor: selectedSiswa ? 'pointer' : 'not-allowed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: selectedSiswa ? '0 4px 12px rgba(5, 150, 105, 0.2)' : 'none',
-                  transition: 'all 0.3s',
-                }}
-                onMouseOver={(e) => {
-                  if (selectedSiswa) {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(5, 150, 105, 0.3)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = selectedSiswa
-                    ? '0 4px 12px rgba(5, 150, 105, 0.2)'
-                    : 'none';
-                }}
-              >
-                <Search size={18} />
-                Tampilkan Data
-              </button>
-
-              <button
-                onClick={() => handleOpenModal()}
-                disabled={!selectedSiswa}
-                style={{
-                  flex: 1,
-                  padding: '12px 20px',
-                  background: selectedSiswa
-                    ? `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`
-                    : colors.gray[300],
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", sans-serif',
-                  cursor: selectedSiswa ? 'pointer' : 'not-allowed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: selectedSiswa ? '0 4px 12px rgba(251, 191, 36, 0.2)' : 'none',
-                  transition: 'all 0.3s',
-                }}
-                onMouseOver={(e) => {
-                  if (selectedSiswa) {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(251, 191, 36, 0.3)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = selectedSiswa
-                    ? '0 4px 12px rgba(251, 191, 36, 0.2)'
-                    : 'none';
-                }}
-              >
-                <Plus size={18} />
-                Tambah Penilaian
-              </button>
-            </div>
+          {/* Pilih Siswa */}
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+              Pilih Siswa
+            </label>
+            <select
+              value={siswaId}
+              onChange={(e) => setSiswaId(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: 'white',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">Semua Siswa</option>
+              {filteredSiswa.map(s => (
+                <option key={s.id} value={s.id}>{s.nama}</option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        {filteredPenilaian.length > 0 && (
-          <div
+        {/* Buttons Row */}
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleTampilkanData}
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '16px',
-              marginBottom: '24px',
+              padding: '10px 20px',
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
             }}
+            onMouseEnter={(e) => e.target.style.background = '#047857'}
+            onMouseLeave={(e) => e.target.style.background = '#059669'}
           >
-            <StatCard
-              icon={<FileText size={24} color={colors.white} />}
-              title="Total Penilaian"
-              value={stats.totalPenilaian}
-              color="emerald"
-            />
-            <StatCard
-              icon={<Award size={24} color={colors.white} />}
-              title="Rata-rata Tajwid"
-              value={stats.rataTajwid}
-              color="teal"
-            />
-            <StatCard
-              icon={<TrendingUp size={24} color={colors.white} />}
-              title="Rata-rata Kelancaran"
-              value={stats.rataKelancaran}
-              color="amber"
-            />
-            <StatCard
-              icon={<BarChart3 size={24} color={colors.white} />}
-              title="Rata-rata Adab"
-              value={stats.rataAdab}
-              color="violet"
-            />
-          </div>
-        )}
+            Tampilkan Data
+          </button>
 
-        {/* Table Data Penilaian */}
-        <div
-          style={{
-            background: colors.white,
-            borderRadius: '16px',
-            padding: '24px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-            border: `1px solid ${colors.gray[200]}`,
-            overflowX: 'auto',
-          }}
-        >
-          <h2
+          <button
+            onClick={openAddModal}
             style={{
-              fontSize: '18px',
-              fontWeight: 600,
-              color: colors.gray[800],
-              marginBottom: '20px',
-              fontFamily: '"Poppins", sans-serif',
+              padding: '10px 20px',
+              background: '#F59E0B',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
             }}
+            onMouseEnter={(e) => e.target.style.background = '#D97706'}
+            onMouseLeave={(e) => e.target.style.background = '#F59E0B'}
           >
-            Data Penilaian Hafalan
-          </h2>
+            <Plus size={18} />
+            Tambah Penilaian
+          </button>
 
-          {filteredPenilaian.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                color: colors.gray[500],
-              }}
-            >
-              <BookOpen size={48} color={colors.gray[300]} style={{ margin: '0 auto 16px' }} />
-              <p style={{ fontSize: '15px', fontFamily: '"Poppins", sans-serif' }}>
-                Pilih kelas dan siswa untuk menampilkan data penilaian
-              </p>
-            </div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={tableHeaderStyle}>Tanggal</th>
-                  <th style={tableHeaderStyle}>Surah / Ayat</th>
-                  <th style={tableHeaderStyle}>Tajwid</th>
-                  <th style={tableHeaderStyle}>Kelancaran</th>
-                  <th style={tableHeaderStyle}>Adab</th>
-                  <th style={tableHeaderStyle}>Catatan</th>
-                  <th style={tableHeaderStyle}>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPenilaian.map((penilaian, index) => (
-                  <tr
-                    key={penilaian.id}
-                    style={{
-                      borderBottom: `1px solid ${colors.gray[100]}`,
-                      transition: 'all 0.2s',
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = colors.emerald[50];
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    <td style={tableCellStyle}>{penilaian.tanggal}</td>
-                    <td style={tableCellStyle}>
-                      <span style={{ fontWeight: 600 }}>{penilaian.surah}</span>
-                      <br />
-                      <span style={{ fontSize: '12px', color: colors.gray[500] }}>
-                        Ayat {penilaian.ayat}
-                      </span>
-                    </td>
-                    <td style={tableCellStyle}>
-                      <span
-                        style={{
-                          ...badgeStyle,
-                          background: getNilaiColor(penilaian.nilaiTajwid) + '20',
-                          color: getNilaiColor(penilaian.nilaiTajwid),
-                        }}
-                      >
-                        {penilaian.nilaiTajwid}
-                      </span>
-                    </td>
-                    <td style={tableCellStyle}>
-                      <span
-                        style={{
-                          ...badgeStyle,
-                          background: getNilaiColor(penilaian.nilaiKelancaran) + '20',
-                          color: getNilaiColor(penilaian.nilaiKelancaran),
-                        }}
-                      >
-                        {penilaian.nilaiKelancaran}
-                      </span>
-                    </td>
-                    <td style={tableCellStyle}>
-                      <span
-                        style={{
-                          ...badgeStyle,
-                          background: getNilaiColor(penilaian.nilaiAdab) + '20',
-                          color: getNilaiColor(penilaian.nilaiAdab),
-                        }}
-                      >
-                        {penilaian.nilaiAdab}
-                      </span>
-                    </td>
-                    <td style={tableCellStyle}>
-                      <div
-                        style={{
-                          maxWidth: '200px',
-                          fontSize: '13px',
-                          color: colors.gray[600],
-                        }}
-                      >
-                        {penilaian.catatan}
-                      </div>
-                    </td>
-                    <td style={tableCellStyle}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        <button
-                          onClick={() => handleOpenModal(penilaian)}
-                          style={{
-                            ...actionButtonStyle,
-                            background: colors.teal[50],
-                            color: colors.teal[600],
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.background = colors.teal[100];
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.background = colors.teal[50];
-                          }}
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(penilaian.id)}
-                          style={{
-                            ...actionButtonStyle,
-                            background: colors.rose[50],
-                            color: colors.rose[500],
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.background = colors.rose[100];
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.background = colors.rose[50];
-                          }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <button
+            onClick={handlePrintKelas}
+            style={{
+              padding: '10px 20px',
+              background: '#6366F1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s',
+              marginLeft: 'auto',
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#4F46E5'}
+            onMouseLeave={(e) => e.target.style.background = '#6366F1'}
+          >
+            <Printer size={18} />
+            Print Kelas
+          </button>
         </div>
+      </div>
 
-        {/* Modal Tambah / Edit */}
-        {showModal && (
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(4px)',
+      {/* Statistics Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        {/* Total Penilaian */}
+        <div style={{
+          background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #A7F3D0',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#059669',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 9999,
-              padding: '20px',
-            }}
-            onClick={handleCloseModal}
-          >
-            <div
+            }}>
+              <FileText size={20} style={{ color: 'white' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '12px', color: '#047857', fontWeight: '500' }}>Total Penilaian</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#059669' }}>{stats.total}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Rata-rata Tajwid */}
+        <div style={{
+          background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #99F6E4',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#14B8A6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <TrendingUp size={20} style={{ color: 'white' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '12px', color: '#0D9488', fontWeight: '500' }}>Rata-rata Tajwid</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#14B8A6' }}>{stats.rataTajwid}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Rata-rata Kelancaran */}
+        <div style={{
+          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #FDE68A',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#F59E0B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Star size={20} style={{ color: 'white' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '12px', color: '#D97706', fontWeight: '500' }}>Rata-rata Kelancaran</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#F59E0B' }}>{stats.rataKelancaran}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Rata-rata Makhraj */}
+        <div style={{
+          background: 'linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #93C5FD',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#3B82F6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Mic size={20} style={{ color: 'white' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '12px', color: '#1D4ED8', fontWeight: '500' }}>Rata-rata Makhraj</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#3B82F6' }}>{stats.rataMakhraj}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Rata-rata Adab */}
+        <div style={{
+          background: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '1px solid #E9D5FF',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#8B5CF6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Award size={20} style={{ color: 'white' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '12px', color: '#7C3AED', fontWeight: '500' }}>Rata-rata Adab</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#8B5CF6' }}>{stats.rataAdab}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <th
+                  onClick={() => handleSort('namaSiswa')}
+                  style={{
+                    padding: '12px',
+                    textAlign: 'left',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Nama Siswa
+                    {sortField === 'namaSiswa' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('tanggal')}
+                  style={{
+                    padding: '12px',
+                    textAlign: 'left',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    Tanggal
+                    {sortField === 'tanggal' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>
+                  Surah / Ayat
+                </th>
+                <th
+                  onClick={() => handleSort('nilaiTajwid')}
+                  style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    Tajwid
+                    {sortField === 'nilaiTajwid' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('nilaiKelancaran')}
+                  style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    Kelancaran
+                    {sortField === 'nilaiKelancaran' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('nilaiMakhraj')}
+                  style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    Makhraj
+                    {sortField === 'nilaiMakhraj' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('nilaiAdab')}
+                  style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    Adab
+                    {sortField === 'nilaiAdab' && (
+                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </div>
+                </th>
+                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>
+                  Catatan
+                </th>
+                <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151' }}>
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan="9" style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+                    Tidak ada data penilaian. Klik "Tampilkan Data" untuk melihat data.
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((p) => {
+                  const tajwidColor = getGradeBadgeColor(p.nilaiTajwid);
+                  const kelancaranColor = getGradeBadgeColor(p.nilaiKelancaran);
+                  const makhrajColor = getGradeBadgeColor(p.nilaiMakhraj);
+                  const adabColor = getGradeBadgeColor(p.nilaiAdab);
+
+                  return (
+                    <tr
+                      key={p.id}
+                      style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0fdf4'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                    >
+                      <td style={{ padding: '12px', fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>
+                        {p.namaSiswa}
+                      </td>
+                      <td style={{ padding: '12px', fontSize: '14px', color: '#6b7280' }}>
+                        {new Date(p.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td style={{ padding: '12px', fontSize: '14px', color: '#1f2937' }}>
+                        {p.surah} <span style={{ color: '#9ca3af' }}>({p.ayat})</span>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 12px',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          background: tajwidColor.bg,
+                          color: tajwidColor.text,
+                          border: `1px solid ${tajwidColor.border}`,
+                        }}>
+                          {p.nilaiTajwid}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 12px',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          background: kelancaranColor.bg,
+                          color: kelancaranColor.text,
+                          border: `1px solid ${kelancaranColor.border}`,
+                        }}>
+                          {p.nilaiKelancaran}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 12px',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          background: makhrajColor.bg,
+                          color: makhrajColor.text,
+                          border: `1px solid ${makhrajColor.border}`,
+                        }}>
+                          {p.nilaiMakhraj}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 12px',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          background: adabColor.bg,
+                          color: adabColor.text,
+                          border: `1px solid ${adabColor.border}`,
+                        }}>
+                          {p.nilaiAdab}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', fontSize: '14px', color: '#6b7280', maxWidth: '200px' }}>
+                        {p.catatan}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => handlePrintIndividu(p)}
+                            title="Print Individu"
+                            style={{
+                              padding: '6px',
+                              background: '#3B82F6',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = '#2563EB'}
+                            onMouseLeave={(e) => e.target.style.background = '#3B82F6'}
+                          >
+                            <Printer size={16} style={{ color: 'white' }} />
+                          </button>
+                          <button
+                            onClick={() => openEditModal(p)}
+                            title="Edit"
+                            style={{
+                              padding: '6px',
+                              background: '#F59E0B',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = '#D97706'}
+                            onMouseLeave={(e) => e.target.style.background = '#F59E0B'}
+                          >
+                            <Edit2 size={16} style={{ color: 'white' }} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p.id)}
+                            title="Hapus"
+                            style={{
+                              padding: '6px',
+                              background: '#EF4444',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = '#DC2626'}
+                            onMouseLeave={(e) => e.target.style.background = '#EF4444'}
+                          >
+                            <Trash2 size={16} style={{ color: 'white' }} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{
+            marginTop: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+          }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
               style={{
-                background: colors.white,
-                borderRadius: '20px',
-                padding: '32px',
-                maxWidth: '600px',
-                width: '100%',
-                maxHeight: '90vh',
-                overflowY: 'auto',
-                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
+                padding: '8px 12px',
+                background: currentPage === 1 ? '#f3f4f6' : '#059669',
+                color: currentPage === 1 ? '#9ca3af' : 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
-              onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Header */}
-              <div
+              <ChevronLeft size={16} />
+              Sebelumnya
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '24px',
+                  padding: '8px 12px',
+                  background: currentPage === page ? '#059669' : 'white',
+                  color: currentPage === page ? 'white' : '#374151',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  minWidth: '40px',
                 }}
               >
-                <h2
-                  style={{
-                    fontSize: '22px',
-                    fontWeight: 700,
-                    color: colors.gray[800],
-                    fontFamily: '"Poppins", sans-serif',
-                  }}
-                >
-                  {editingPenilaian ? 'Edit Penilaian' : 'Tambah Penilaian'}
-                </h2>
-                <button
-                  onClick={handleCloseModal}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    color: colors.gray[400],
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseOver={(e) => (e.currentTarget.style.color = colors.gray[600])}
-                  onMouseOut={(e) => (e.currentTarget.style.color = colors.gray[400])}
-                >
-                  <X size={24} />
-                </button>
-              </div>
+                {page}
+              </button>
+            ))}
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '8px 12px',
+                background: currentPage === totalPages ? '#f3f4f6' : '#059669',
+                color: currentPage === totalPages ? '#9ca3af' : 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              Berikutnya
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Form */}
+      {showModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          padding: '20px',
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '20px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <h2 style={{
+                margin: 0,
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#059669',
+              }}>
+                {editingId ? 'Edit Penilaian Hafalan' : 'Form Penilaian Hafalan'}
+              </h2>
+              <button
+                onClick={closeModal}
+                style={{
+                  padding: '6px',
+                  background: '#f3f4f6',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={20} style={{ color: '#6b7280' }} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
+              <div style={{ display: 'grid', gap: '16px' }}>
+                {/* Pilih Siswa */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                    Pilih Siswa <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <select
+                    value={formData.siswaId}
+                    onChange={(e) => setFormData({ ...formData, siswaId: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: errors.siswaId ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    }}
+                  >
+                    <option value="">-- Pilih Siswa --</option>
+                    {mockSiswa.map(s => (
+                      <option key={s.id} value={s.id}>{s.nama}</option>
+                    ))}
+                  </select>
+                  {errors.siswaId && (
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.siswaId}</p>
+                  )}
+                </div>
+
                 {/* Tanggal */}
                 <div>
-                  <label style={labelStyle}>
-                    Tanggal Setoran <span style={{ color: colors.red[500] }}>*</span>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                    Tanggal <span style={{ color: '#DC2626' }}>*</span>
                   </label>
                   <input
                     type="date"
                     value={formData.tanggal}
                     onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
-                    required
-                    style={inputStyle}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    }}
                   />
                 </div>
 
                 {/* Surah */}
                 <div>
-                  <label style={labelStyle}>
-                    Surah <span style={{ color: colors.red[500] }}>*</span>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                    Surah <span style={{ color: '#DC2626' }}>*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.surah}
                     onChange={(e) => setFormData({ ...formData, surah: e.target.value })}
                     placeholder="Contoh: Al-Baqarah"
-                    required
-                    style={inputStyle}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: errors.surah ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    }}
                   />
+                  {errors.surah && (
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.surah}</p>
+                  )}
                 </div>
 
-                {/* Ayat */}
+                {/* Rentang Ayat */}
                 <div>
-                  <label style={labelStyle}>
-                    Ayat <span style={{ color: colors.red[500] }}>*</span>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                    Rentang Ayat <span style={{ color: '#DC2626' }}>*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.ayat}
                     onChange={(e) => setFormData({ ...formData, ayat: e.target.value })}
                     placeholder="Contoh: 1-5"
-                    required
-                    style={inputStyle}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: errors.ayat ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    }}
                   />
+                  {errors.ayat && (
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.ayat}</p>
+                  )}
                 </div>
 
-                {/* Grid 3 Kolom untuk Nilai */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {/* Status Hafalan */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                    Status Hafalan <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    {['Hafal', 'Kurang Hafal', 'Tidak Hafal'].map(status => (
+                      <label key={status} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <input
+                          type="radio"
+                          name="statusHafalan"
+                          value={status}
+                          checked={formData.statusHafalan === status}
+                          onChange={(e) => setFormData({ ...formData, statusHafalan: e.target.value })}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '14px', color: '#374151' }}>{status}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Grid 2 columns for nilai */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   {/* Nilai Tajwid */}
                   <div>
-                    <label style={labelStyle}>
-                      Tajwid <span style={{ color: colors.red[500] }}>*</span>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                      Nilai Tajwid (1-100) <span style={{ color: '#DC2626' }}>*</span>
                     </label>
                     <input
                       type="number"
-                      min="0"
+                      min="1"
                       max="100"
                       value={formData.nilaiTajwid}
-                      onChange={(e) =>
-                        setFormData({ ...formData, nilaiTajwid: e.target.value })
-                      }
-                      placeholder="0-100"
-                      required
-                      style={inputStyle}
+                      onChange={(e) => setFormData({ ...formData, nilaiTajwid: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.nilaiTajwid ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                      }}
                     />
+                    {errors.nilaiTajwid && (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiTajwid}</p>
+                    )}
                   </div>
 
                   {/* Nilai Kelancaran */}
                   <div>
-                    <label style={labelStyle}>
-                      Kelancaran <span style={{ color: colors.red[500] }}>*</span>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                      Nilai Kelancaran (1-100) <span style={{ color: '#DC2626' }}>*</span>
                     </label>
                     <input
                       type="number"
-                      min="0"
+                      min="1"
                       max="100"
                       value={formData.nilaiKelancaran}
-                      onChange={(e) =>
-                        setFormData({ ...formData, nilaiKelancaran: e.target.value })
-                      }
-                      placeholder="0-100"
-                      required
-                      style={inputStyle}
+                      onChange={(e) => setFormData({ ...formData, nilaiKelancaran: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.nilaiKelancaran ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                      }}
                     />
+                    {errors.nilaiKelancaran && (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiKelancaran}</p>
+                    )}
+                  </div>
+
+                  {/* Nilai Makhraj */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                      Nilai Makhrajul Huruf (1-100) <span style={{ color: '#DC2626' }}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={formData.nilaiMakhraj}
+                      onChange={(e) => setFormData({ ...formData, nilaiMakhraj: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.nilaiMakhraj ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                      }}
+                    />
+                    {errors.nilaiMakhraj && (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiMakhraj}</p>
+                    )}
                   </div>
 
                   {/* Nilai Adab */}
                   <div>
-                    <label style={labelStyle}>
-                      Adab <span style={{ color: colors.red[500] }}>*</span>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                      Nilai Adab (1-100) <span style={{ color: '#DC2626' }}>*</span>
                     </label>
                     <input
                       type="number"
-                      min="0"
+                      min="1"
                       max="100"
                       value={formData.nilaiAdab}
-                      onChange={(e) =>
-                        setFormData({ ...formData, nilaiAdab: e.target.value })
-                      }
-                      placeholder="0-100"
-                      required
-                      style={inputStyle}
+                      onChange={(e) => setFormData({ ...formData, nilaiAdab: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.nilaiAdab ? '1px solid #DC2626' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                      }}
                     />
+                    {errors.nilaiAdab && (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiAdab}</p>
+                    )}
                   </div>
                 </div>
 
                 {/* Catatan */}
                 <div>
-                  <label style={labelStyle}>Catatan Guru</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                    Catatan/Komentar Guru
+                  </label>
                   <textarea
                     value={formData.catatan}
                     onChange={(e) => setFormData({ ...formData, catatan: e.target.value })}
-                    placeholder="Catatan atau feedback untuk siswa..."
-                    rows={4}
-                    style={{ ...inputStyle, resize: 'vertical' }}
+                    rows="3"
+                    placeholder="Masukkan catatan atau komentar..."
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                    }}
                   />
                 </div>
+              </div>
 
-                {/* Buttons */}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      background: colors.gray[100],
-                      color: colors.gray[700],
-                      border: 'none',
-                      borderRadius: '10px',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      fontFamily: '"Poppins", sans-serif',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = colors.gray[200];
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = colors.gray[100];
-                    }}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.teal[600]} 100%)`,
-                      color: colors.white,
-                      border: 'none',
-                      borderRadius: '10px',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      fontFamily: '"Poppins", sans-serif',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
-                      transition: 'all 0.3s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(5, 150, 105, 0.35)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(5, 150, 105, 0.25)';
-                    }}
-                  >
-                    <Check size={18} />
-                    Simpan
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* Modal Footer */}
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                marginTop: '24px',
+                paddingTop: '20px',
+                borderTop: '1px solid #e5e7eb',
+              }}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  style={{
+                    flex: 1,
+                    padding: '10px 20px',
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    padding: '10px 20px',
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Simpan Penilaian
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </GuruLayout>
   );
 }
-
-// Stat Card Component
-function StatCard({ icon, title, value, color }) {
-  const colorMap = {
-    emerald: {
-      bg: colors.emerald[100],
-      iconBg: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.teal[600]} 100%)`,
-      value: colors.emerald[700],
-    },
-    teal: {
-      bg: colors.teal[100],
-      iconBg: `linear-gradient(135deg, ${colors.teal[600]} 0%, ${colors.teal[500]} 100%)`,
-      value: colors.teal[600],
-    },
-    amber: {
-      bg: colors.amber[100],
-      iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-      value: colors.amber[600],
-    },
-    violet: {
-      bg: colors.violet[50],
-      iconBg: `linear-gradient(135deg, ${colors.violet[500]} 0%, #7C3AED 100%)`,
-      value: colors.violet[500],
-    },
-  };
-
-  const scheme = colorMap[color];
-
-  return (
-    <div
-      style={{
-        background: scheme.bg,
-        borderRadius: '14px',
-        padding: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px',
-        border: `1px solid ${colors.gray[100]}`,
-        transition: 'all 0.3s',
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.08)';
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-    >
-      <div
-        style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: '12px',
-          background: scheme.iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </div>
-      <div>
-        <p
-          style={{
-            fontSize: '12px',
-            color: colors.gray[600],
-            marginBottom: '4px',
-            fontFamily: '"Poppins", sans-serif',
-          }}
-        >
-          {title}
-        </p>
-        <p
-          style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: scheme.value,
-            fontFamily: '"Poppins", sans-serif',
-          }}
-        >
-          {value}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// Styles
-const tableHeaderStyle = {
-  textAlign: 'left',
-  padding: '12px 16px',
-  fontSize: '13px',
-  fontWeight: 600,
-  color: colors.gray[700],
-  borderBottom: `2px solid ${colors.gray[200]}`,
-  fontFamily: '"Poppins", sans-serif',
-};
-
-const tableCellStyle = {
-  padding: '16px',
-  fontSize: '14px',
-  color: colors.gray[700],
-  fontFamily: '"Poppins", sans-serif',
-};
-
-const badgeStyle = {
-  display: 'inline-block',
-  padding: '4px 12px',
-  borderRadius: '6px',
-  fontSize: '13px',
-  fontWeight: 600,
-  fontFamily: '"Poppins", sans-serif',
-};
-
-const actionButtonStyle = {
-  padding: '8px',
-  border: 'none',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  transition: 'all 0.2s',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const labelStyle = {
-  display: 'block',
-  fontSize: '13px',
-  fontWeight: 600,
-  color: colors.gray[700],
-  marginBottom: '8px',
-  fontFamily: '"Poppins", sans-serif',
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '12px 14px',
-  border: `2px solid ${colors.gray[200]}`,
-  borderRadius: '10px',
-  fontSize: '14px',
-  fontFamily: '"Poppins", sans-serif',
-  outline: 'none',
-  transition: 'all 0.2s',
-};
