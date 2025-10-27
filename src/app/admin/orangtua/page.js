@@ -383,57 +383,18 @@ export default function AdminOrangTuaPage() {
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={handleExport}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: colors.white,
-                  color: colors.violet[600],
-                  border: `2px solid ${colors.violet[500]}`,
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                }}
-                className="export-btn"
-              >
-                <Download size={18} />
-                Export Data
-              </button>
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowModal(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: `linear-gradient(135deg, ${colors.violet[500]} 0%, ${colors.violet[600]} 100%)`,
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
-                }}
-                className="add-btn"
-              >
-                <UserPlus size={18} />
-                Tambah Orang Tua
-              </button>
-            </div>
+            <ImportExportToolbar
+              kategori="orangtua"
+              data={filteredOrangTua}
+              onImportSuccess={fetchOrangTua}
+              showAddButton
+              onAddClick={() => {
+                resetForm();
+                setShowModal(true);
+              }}
+              addButtonLabel="Tambah Orang Tua"
+              addButtonIcon={<UserPlus size={18} />}
+            />
           </div>
         </div>
 
