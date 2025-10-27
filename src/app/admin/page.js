@@ -12,10 +12,10 @@ export default function AdminPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-amber-50">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">Redirecting...</p>
+        <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ animation: 'spin 1s ease-in-out infinite' }}></div>
+        <p className="text-emerald-700 font-medium">Redirecting...</p>
       </div>
     </div>
   );
