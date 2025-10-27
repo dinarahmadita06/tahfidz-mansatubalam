@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Upload, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import SmartImport from '@/components/SmartImport';
+import * as XLSX from 'xlsx';
 
 // Islamic Modern Color Palette (sama dengan Dashboard & Guru)
 const colors = {
@@ -159,9 +161,11 @@ export default function AdminSiswaPage() {
     try {
       const response = await fetch('/api/admin/siswa');
       const data = await response.json();
-      setSiswa(data);
+      // Ensure data is always an array
+      setSiswa(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching siswa:', error);
+      setSiswa([]);
     } finally {
       setLoading(false);
     }
@@ -189,6 +193,59 @@ export default function AdminSiswaPage() {
     // TODO: Implement import CSV
     alert('Fitur import CSV akan segera tersedia.');
     setShowImportModal(false);
+  };
+
+  const handleExportData = () => {
+    try {
+      // Prepare data for export
+      const exportData = filteredSiswa.map(s => ({
+        'NIS': s.nis || '-',
+        'NISN': s.nisn || '-',
+        'Nama Lengkap': s.user.name,
+        'Email': s.user.email,
+        'Jenis Kelamin': s.jenisKelamin || '-',
+        'Tempat Lahir': s.tempatLahir || '-',
+        'Tanggal Lahir': s.tanggalLahir ? new Date(s.tanggalLahir).toLocaleDateString('id-ID') : '-',
+        'Alamat': s.alamat || '-',
+        'No. HP': s.noHP || '-',
+        'Kelas': s.kelas?.nama || '-',
+        'Status': s.user.isActive ? 'Aktif' : 'Tidak Aktif',
+        'Validasi': s.status === 'approved' ? 'Tervalidasi' : s.status === 'rejected' ? 'Ditolak' : 'Pending'
+      }));
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 12 }, // NIS
+        { wch: 15 }, // NISN
+        { wch: 25 }, // Nama
+        { wch: 30 }, // Email
+        { wch: 15 }, // Jenis Kelamin
+        { wch: 20 }, // Tempat Lahir
+        { wch: 15 }, // Tanggal Lahir
+        { wch: 35 }, // Alamat
+        { wch: 15 }, // No HP
+        { wch: 15 }, // Kelas
+        { wch: 12 }, // Status
+        { wch: 15 }  // Validasi
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Data Siswa');
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `Data_Siswa_${timestamp}.xlsx`;
+
+      // Download file
+      XLSX.writeFile(wb, filename);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Gagal export data: ' + error.message);
+    }
   };
 
   const handleEdit = (siswaItem) => {
@@ -316,6 +373,7 @@ export default function AdminSiswaPage() {
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', gap: '12px' }}>
+              {/* Import Data Button */}
               <button
                 onClick={() => setShowImportModal(true)}
                 style={{
@@ -323,22 +381,67 @@ export default function AdminSiswaPage() {
                   alignItems: 'center',
                   gap: '8px',
                   padding: '12px 20px',
-                  background: colors.white,
-                  color: colors.emerald[600],
-                  border: `2px solid ${colors.emerald[500]}`,
-                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: '0.75rem',
                   fontWeight: 600,
                   fontSize: '14px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
                 }}
-                className="import-btn"
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.2)';
+                }}
               >
                 <Upload size={18} />
-                Import dari CSV
+                Import Data
               </button>
+
+              {/* Export Data Button */}
+              <button
+                onClick={handleExportData}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.2)';
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export Data
+              </button>
+
+              {/* Tambah Siswa Button */}
               <button
                 onClick={() => {
                   resetForm();
@@ -352,7 +455,7 @@ export default function AdminSiswaPage() {
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   color: colors.white,
                   border: 'none',
-                  borderRadius: '12px',
+                  borderRadius: '0.75rem',
                   fontWeight: 600,
                   fontSize: '14px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -360,7 +463,14 @@ export default function AdminSiswaPage() {
                   transition: 'all 0.3s ease',
                   boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
                 }}
-                className="add-btn"
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.2)';
+                }}
               >
                 <UserPlus size={18} />
                 Tambah Siswa
@@ -951,100 +1061,26 @@ export default function AdminSiswaPage() {
         </div>
       )}
 
-      {/* Modal Import CSV */}
+      {/* Smart Import Modal */}
       {showImportModal && (
         <div style={{
           position: 'fixed',
           inset: 0,
           background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
-          backdropFilter: 'blur(4px)',
+          zIndex: 9999,
+          padding: '20px'
         }}>
-          <div style={{
-            background: colors.white,
-            borderRadius: '24px',
-            padding: '32px',
-            maxWidth: '540px',
-            width: '100%',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            border: `2px solid ${colors.emerald[100]}`,
-            animation: 'modalSlideIn 0.3s ease-out',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px'
-            }}>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: colors.text.primary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Import Data Siswa dari CSV
-              </h2>
-              <button
-                onClick={() => setShowImportModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  color: colors.text.tertiary,
-                  cursor: 'pointer',
-                  padding: '4px',
-                  transition: 'all 0.2s ease',
-                }}
-                className="close-btn"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{
-              background: colors.amber[50],
-              border: `2px solid ${colors.amber[200]}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '20px',
-            }}>
-              <p style={{
-                fontSize: '14px',
-                color: colors.text.secondary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Fitur import CSV akan segera tersedia. Saat ini, silakan tambahkan siswa satu per satu
-                melalui menu <strong>Kelas → Kelola Siswa</strong>.
-              </p>
-            </div>
-
-            <form onSubmit={handleImport}>
-              <button
-                type="button"
-                onClick={() => setShowImportModal(false)}
-                style={{
-                  width: '100%',
-                  padding: '12px 24px',
-                  border: `2px solid ${colors.gray[300]}`,
-                  borderRadius: '12px',
-                  background: colors.white,
-                  color: colors.text.secondary,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                className="cancel-btn"
-              >
-                Tutup
-              </button>
-            </form>
-          </div>
+          <SmartImport
+            onSuccess={() => {
+              setShowImportModal(false);
+              fetchSiswa();
+            }}
+            onClose={() => setShowImportModal(false)}
+          />
         </div>
       )}
 
