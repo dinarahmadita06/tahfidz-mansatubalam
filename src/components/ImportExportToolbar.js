@@ -34,7 +34,11 @@ export default function ImportExportToolbar({
   kategori = 'guru', // 'guru' | 'siswa' | 'orangtua'
   data = [],
   onImportSuccess,
-  onGenerateAccounts
+  onGenerateAccounts,
+  showAddButton = false,
+  onAddClick,
+  addButtonLabel = 'Tambah',
+  addButtonIcon
 }) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -196,7 +200,6 @@ export default function ImportExportToolbar({
       <div style={{
         display: 'flex',
         gap: '12px',
-        marginBottom: '24px',
         flexWrap: 'wrap'
       }}>
         {/* Import Button */}
@@ -298,6 +301,40 @@ export default function ImportExportToolbar({
           >
             <Settings size={18} />
             <span>⚙️ Generate Akun Otomatis</span>
+          </button>
+        )}
+
+        {/* Add Button (Custom) */}
+        {showAddButton && onAddClick && (
+          <button
+            onClick={onAddClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 24px',
+              background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+              color: colors.white,
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(26, 147, 111, 0.25)',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Poppins', sans-serif"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.35)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.25)';
+            }}
+          >
+            {addButtonIcon}
+            <span>{addButtonLabel}</span>
           </button>
         )}
       </div>
