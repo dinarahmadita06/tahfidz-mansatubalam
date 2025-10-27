@@ -349,50 +349,19 @@ export default function AdminGuruPage() {
               </p>
             </div>
 
-            {/* Import/Export Toolbar */}
+            {/* Action Buttons */}
             <ImportExportToolbar
               kategori="guru"
               data={filteredGuru}
               onImportSuccess={fetchGuru}
+              showAddButton
+              onAddClick={() => {
+                resetForm();
+                setShowModal(true);
+              }}
+              addButtonLabel="Tambah Guru"
+              addButtonIcon={<UserPlus size={18} />}
             />
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-              {/* Tambah Guru Button */}
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowModal(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '0.75rem',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.3)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.2)';
-                }}
-              >
-                <UserPlus size={18} />
-                Tambah Guru
-              </button>
-            </div>
           </div>
         </div>
 
