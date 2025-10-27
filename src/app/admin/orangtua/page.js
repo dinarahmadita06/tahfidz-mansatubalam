@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Download, Search, Edit, Trash2, Users, UserCheck, UserX, Heart } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import ImportExportToolbar from '@/components/ImportExportToolbar';
 
 // Islamic Modern Color Palette dengan variasi Violet & Gold
 const colors = {
@@ -468,6 +469,13 @@ export default function AdminOrangTuaPage() {
                 color="gold"
               />
             </div>
+
+            {/* Import/Export Toolbar */}
+            <ImportExportToolbar
+              kategori="orangtua"
+              data={filteredOrangTua}
+              onImportSuccess={fetchOrangTua}
+            />
 
             {/* Search & Filter Section */}
             <div style={{
