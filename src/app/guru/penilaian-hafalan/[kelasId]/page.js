@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -153,6 +153,8 @@ export default function PenilaianHafalanKelasPage() {
 
   // State Management
   const [siswaId, setSiswaId] = useState('');
+  const isInitialMount = useRef(true);
+
   const [penilaianList, setPenilaianList] = useState(() => {
     // Load dari localStorage atau fallback ke initial data
     if (typeof window !== 'undefined') {
@@ -166,12 +168,12 @@ export default function PenilaianHafalanKelasPage() {
             return allData[kelasId];
           }
         } catch (e) {
-          console.error('Error parsing localStorage:', e);
+          console.error('❌ Error parsing localStorage:', e);
         }
       }
-      // Jika belum ada di localStorage, gunakan initial data
-      console.log(`📁 Using initial data for ${kelasId}: ${(initialPenilaianByKelas[kelasId] || []).length} items`);
     }
+    // Jika belum ada di localStorage, gunakan initial data
+    console.log(`📁 Using initial data for ${kelasId}: ${(initialPenilaianByKelas[kelasId] || []).length} items`);
     return initialPenilaianByKelas[kelasId] || [];
   });
   const [filteredPenilaian, setFilteredPenilaian] = useState([]);
@@ -215,8 +217,15 @@ export default function PenilaianHafalanKelasPage() {
     surah.toLowerCase().includes(surahQuery.toLowerCase())
   );
 
-  // Simpan penilaianList ke localStorage setiap kali berubah
+  // Simpan penilaianList ke localStorage setiap kali berubah (kecuali initial mount)
   useEffect(() => {
+    // Skip pada initial mount untuk mencegah overwrite localStorage dengan initial data
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      console.log('⏭️ Skipping initial save to prevent overwrite');
+      return;
+    }
+
     if (typeof window !== 'undefined' && penilaianList !== undefined) {
       const saved = localStorage.getItem('penilaianHafalan');
       const allData = saved ? JSON.parse(saved) : {};
