@@ -895,7 +895,9 @@ export default function PenilaianHafalanKelasPage() {
     <GuruLayout>
       <Toaster position="top-right" />
 
-      {/* Back Button & Header */}
+      {/* Background Gradient Container */}
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-amber-50" style={{ margin: '-32px', padding: '32px' }}>
+        {/* Back Button & Header */}
       <div style={{ marginBottom: '24px' }}>
         <Link
           href="/guru/penilaian-hafalan"
@@ -963,10 +965,10 @@ export default function PenilaianHafalanKelasPage() {
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-          {/* Pilih Siswa (Opsional) */}
+          {/* Pilih Siswa */}
           <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-              Pilih Siswa (Opsional)
+              Pilih Siswa
             </label>
             <select
               value={siswaId}
@@ -1708,7 +1710,7 @@ export default function PenilaianHafalanKelasPage() {
                         top: '100%',
                         left: 0,
                         right: 0,
-                        maxHeight: '200px',
+                        maxHeight: '300px',
                         overflowY: 'auto',
                         background: 'white',
                         border: '1px solid #e5e7eb',
@@ -1717,7 +1719,7 @@ export default function PenilaianHafalanKelasPage() {
                         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                         zIndex: 1000,
                       }}>
-                        {filteredSurahList.slice(0, 10).map((surah, idx) => (
+                        {filteredSurahList.map((surah, idx) => (
                           <div
                             key={idx}
                             onClick={() => {
@@ -1729,7 +1731,7 @@ export default function PenilaianHafalanKelasPage() {
                               padding: '10px 12px',
                               cursor: 'pointer',
                               fontSize: '14px',
-                              borderBottom: idx < filteredSurahList.slice(0, 10).length - 1 ? '1px solid #f3f4f6' : 'none',
+                              borderBottom: idx < filteredSurahList.length - 1 ? '1px solid #f3f4f6' : 'none',
                               transition: 'background 0.2s',
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.background = '#F0FDF4'}
@@ -1996,6 +1998,9 @@ export default function PenilaianHafalanKelasPage() {
           </div>
         </div>
       )}
+
+      {/* Close Background Gradient Container */}
+      </div>
     </GuruLayout>
   );
 }
