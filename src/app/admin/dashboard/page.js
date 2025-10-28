@@ -1187,6 +1187,7 @@ function QuickActionCard({ icon, title, description, href, color = 'emerald' }) 
       className="quick-action-card">
         <div style={{
           width: '64px',
+
           height: '64px',
           borderRadius: '16px',
           background: scheme.iconBg,
