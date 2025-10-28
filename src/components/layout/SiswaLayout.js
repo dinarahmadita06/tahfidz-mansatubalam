@@ -1,252 +1,257 @@
 'use client';
 
 import { useState, memo } from 'react';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
+  BookUp,
+  Star,
+  Book,
   BookOpen,
-  Calendar,
+  Brain,
+  CalendarCheck,
+  TrendingUp,
   UserCircle,
-  LogOut,
   Menu,
   X,
   ChevronLeft,
-  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
-import PageTransition from '@/components/PageTransition';
 
-function SiswaLayout({ children }) {
-  const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+const menuItems = [
+  {
+    title: 'Dashboard',
+    icon: LayoutDashboard,
+    href: '/siswa',
+    description: 'Ringkasan hafalan & nilai',
+    color: 'emerald'
+  },
+  {
+    title: 'Setor Hafalan',
+    icon: BookUp,
+    href: '/siswa/setor-hafalan',
+    description: 'Submit hafalan baru',
+    color: 'emerald'
+  },
+  {
+    title: 'Penilaian Hafalan',
+    icon: Star,
+    href: '/siswa/penilaian-hafalan',
+    description: 'Lihat nilai dari guru',
+    color: 'amber'
+  },
+  {
+    title: 'Buku Digital',
+    icon: Book,
+    href: '/siswa/buku-digital',
+    description: 'Materi pembelajaran',
+    color: 'sky'
+  },
+  {
+    title: 'Referensi Al-Qur\'an',
+    icon: BookOpen,
+    href: '/siswa/referensi',
+    description: 'Baca & dengar Qur\'an',
+    color: 'emerald'
+  },
+  {
+    title: 'Mode Latihan',
+    icon: Brain,
+    href: '/siswa/latihan',
+    description: 'Latihan mandiri',
+    color: 'purple'
+  },
+  {
+    title: 'Presensi',
+    icon: CalendarCheck,
+    href: '/siswa/presensi',
+    description: 'Riwayat kehadiran',
+    color: 'sky'
+  },
+  {
+    title: 'Laporan Hafalan',
+    icon: TrendingUp,
+    href: '/siswa/laporan',
+    description: 'Progress & statistik',
+    color: 'amber'
+  },
+  {
+    title: 'Profil',
+    icon: UserCircle,
+    href: '/siswa/profil',
+    description: 'Pengaturan akun',
+    color: 'gray'
+  },
+];
+
+function SiswaSidebar({ userName = 'Siswa' }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
 
-  const menuItems = [
-    {
-      title: 'Dashboard',
-      icon: LayoutDashboard,
-      href: '/dashboard',
-      description: 'Ringkasan & statistik',
-    },
-    {
-      title: 'Hafalan Saya',
-      icon: BookOpen,
-      href: '/hafalan',
-      description: 'Riwayat hafalan',
-    },
-    {
-      title: 'Referensi Al-Qur\'an',
-      icon: BookOpen,
-      href: '/referensi',
-      description: 'Teks & audio Qur\'an',
-    },
-    {
-      title: 'Jadwal & Agenda',
-      icon: Calendar,
-      href: '/jadwal',
-      description: 'Jadwal setoran',
-    },
-    {
-      title: 'Profil',
-      icon: UserCircle,
-      href: '/profil',
-      description: 'Pengaturan profil',
-    },
-  ];
+  const toggleSidebar = () => setIsOpen(!isOpen);
+  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
+  const getColorClasses = (color, isActive) => {
+    const colors = {
+      emerald: {
+        active: 'bg-emerald-50 text-emerald-700',
+        icon: 'text-emerald-600',
+        hover: 'hover:bg-emerald-50/50'
+      },
+      amber: {
+        active: 'bg-amber-50 text-amber-700',
+        icon: 'text-amber-600',
+        hover: 'hover:bg-amber-50/50'
+      },
+      sky: {
+        active: 'bg-sky-50 text-sky-700',
+        icon: 'text-sky-600',
+        hover: 'hover:bg-sky-50/50'
+      },
+      purple: {
+        active: 'bg-purple-50 text-purple-700',
+        icon: 'text-purple-600',
+        hover: 'hover:bg-purple-50/50'
+      },
+      gray: {
+        active: 'bg-gray-50 text-gray-700',
+        icon: 'text-gray-600',
+        hover: 'hover:bg-gray-50/50'
+      }
+    };
+
+    return colors[color] || colors.gray;
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar - Desktop */}
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={toggleSidebar}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={toggleSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ${
-          isCollapsed ? 'w-20' : 'w-64'
-        } bg-white border-r border-gray-200 hidden lg:block`}
+        className={`
+          fixed top-0 left-0 h-full bg-gradient-to-b from-white via-emerald-50/30 to-amber-50/30 shadow-xl z-40 transition-all duration-300 border-r border-emerald-100/50
+          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isCollapsed ? 'lg:w-20' : 'lg:w-72'}
+          w-72
+        `}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            {!isCollapsed && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
-                  <BookOpen size={20} className="text-white" />
+          {/* Header */}
+          <div className="p-4 border-b border-emerald-100/50 bg-white/80 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              {!isCollapsed && (
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl blur opacity-40 animate-pulse"></div>
+                    <div className="relative w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Sparkles size={24} className="text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-gray-900 text-lg">Tahfidz App</h2>
+                    <p className="text-xs text-emerald-600 font-medium">{userName}</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="font-bold text-gray-900">Tahfidz App</h1>
-                  <p className="text-xs text-gray-500">Siswa</p>
-                </div>
-              </div>
-            )}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition"
-            >
-              {isCollapsed ? (
-                <ChevronRight size={20} className="text-gray-600" />
-              ) : (
-                <ChevronLeft size={20} className="text-gray-600" />
               )}
-            </button>
+              <button
+                onClick={toggleCollapse}
+                className="hidden lg:block p-1.5 hover:bg-emerald-50 rounded-lg transition"
+              >
+                <ChevronLeft
+                  size={20}
+                  className={`transform transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Menu Items */}
           <nav className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-1">
+            <ul className="space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                const colorClasses = getColorClasses(item.color, isActive);
 
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition group ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon
-                      size={20}
-                      className={isActive ? 'text-blue-600' : 'text-gray-500'}
-                    />
-                    {!isCollapsed && (
-                      <div className="flex-1">
-                        <p className={`text-sm font-medium ${isActive ? 'text-blue-600' : ''}`}>
-                          {item.title}
-                        </p>
-                        <p className="text-xs text-gray-500">{item.description}</p>
-                      </div>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
-
-          {/* Logout Button */}
-          <div className="p-4 border-t border-gray-200">
-            <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition w-full"
-            >
-              <LogOut size={20} />
-              {!isCollapsed && <span className="text-sm font-medium">Keluar</span>}
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Sidebar - Mobile */}
-      {isMobileMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <aside className="fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-200 lg:hidden">
-            <div className="flex flex-col h-full">
-              {/* Logo */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
-                    <BookOpen size={20} className="text-white" />
-                  </div>
-                  <div>
-                    <h1 className="font-bold text-gray-900">Tahfidz App</h1>
-                    <p className="text-xs text-gray-500">Siswa</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition"
-                >
-                  <X size={20} className="text-gray-600" />
-                </button>
-              </div>
-
-              {/* Menu Items */}
-              <nav className="flex-1 overflow-y-auto p-4">
-                <div className="space-y-1">
-                  {menuItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
-
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition ${
-                          isActive
-                            ? 'bg-blue-50 text-blue-600'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <Icon
-                          size={20}
-                          className={isActive ? 'text-blue-600' : 'text-gray-500'}
-                        />
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      prefetch={true}
+                      onClick={() => setIsOpen(false)}
+                      className={`
+                        flex items-center gap-3 px-3 py-3 rounded-xl transition-all
+                        ${isActive
+                          ? `${colorClasses.active} font-semibold shadow-sm`
+                          : `text-gray-700 ${colorClasses.hover}`
+                        }
+                        ${isCollapsed ? 'justify-center' : ''}
+                      `}
+                      title={isCollapsed ? item.title : ''}
+                    >
+                      <Icon
+                        size={20}
+                        className={isActive ? colorClasses.icon : 'text-gray-500'}
+                      />
+                      {!isCollapsed && (
                         <div className="flex-1">
-                          <p className={`text-sm font-medium ${isActive ? 'text-blue-600' : ''}`}>
-                            {item.title}
-                          </p>
+                          <p className="text-sm font-medium">{item.title}</p>
                           <p className="text-xs text-gray-500">{item.description}</p>
                         </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </nav>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
 
-              {/* Logout Button */}
-              <div className="p-4 border-t border-gray-200">
-                <button
-                  onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition w-full"
-                >
-                  <LogOut size={20} />
-                  <span className="text-sm font-medium">Keluar</span>
-                </button>
+          {/* Footer Tips */}
+          {!isCollapsed && (
+            <div className="p-4 border-t border-emerald-100/50 bg-gradient-to-br from-emerald-50 to-amber-50">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles size={14} className="text-amber-500" />
+                  <p className="text-xs font-bold text-emerald-900">Tips Hari Ini</p>
+                </div>
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  Setor hafalan secara rutin setiap hari untuk hasil maksimal!
+                </p>
               </div>
             </div>
-          </aside>
-        </>
-      )}
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
 
-      {/* Main Content */}
-      <div
-        className={`transition-all duration-300 ${
-          isCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-        }`}
-      >
-        {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition"
-            >
-              <Menu size={24} className="text-gray-600" />
-            </button>
-            <div className="flex-1" />
-            <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="lg:hidden flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition"
-            >
-              <LogOut size={16} />
-              Keluar
-            </button>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </main>
-      </div>
+function SiswaLayout({ children }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-cream-50 to-amber-50/30">
+      <SiswaSidebar userName="Ahmad" />
+      <main className="lg:ml-72 transition-all duration-300">
+        <div className="p-6 lg:p-8">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
