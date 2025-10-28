@@ -158,11 +158,19 @@ export default function PenilaianHafalanKelasPage() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('penilaianHafalan');
       if (saved) {
-        const allData = JSON.parse(saved);
-        if (allData[kelasId] && allData[kelasId].length > 0) {
-          return allData[kelasId];
+        try {
+          const allData = JSON.parse(saved);
+          // Cek apakah key kelasId ada (even jika array kosong, tetap gunakan dari localStorage)
+          if (allData.hasOwnProperty(kelasId)) {
+            console.log(`📖 Loaded ${allData[kelasId].length} penilaian from localStorage for ${kelasId}`);
+            return allData[kelasId];
+          }
+        } catch (e) {
+          console.error('Error parsing localStorage:', e);
         }
       }
+      // Jika belum ada di localStorage, gunakan initial data
+      console.log(`📁 Using initial data for ${kelasId}: ${(initialPenilaianByKelas[kelasId] || []).length} items`);
     }
     return initialPenilaianByKelas[kelasId] || [];
   });
@@ -209,11 +217,12 @@ export default function PenilaianHafalanKelasPage() {
 
   // Simpan penilaianList ke localStorage setiap kali berubah
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && penilaianList !== undefined) {
       const saved = localStorage.getItem('penilaianHafalan');
       const allData = saved ? JSON.parse(saved) : {};
       allData[kelasId] = penilaianList;
       localStorage.setItem('penilaianHafalan', JSON.stringify(allData));
+      console.log(`💾 Saved ${penilaianList.length} penilaian to localStorage for ${kelasId}`);
     }
   }, [penilaianList, kelasId]);
 
