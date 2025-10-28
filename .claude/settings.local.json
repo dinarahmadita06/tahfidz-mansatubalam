@@ -28,7 +28,18 @@
       "Bash(if not exist \"src\\app\\admin\\pengumuman\" mkdir \"src\\app\\admin\\pengumuman\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(if not exist \"src\\app\\api\\admin\\pengumuman\" mkdir \"src\\app\\api\\admin\\pengumuman\")"
+      "Bash(if not exist \"src\\app\\api\\admin\\pengumuman\" mkdir \"src\\app\\api\\admin\\pengumuman\")",
+      "Bash(Select-String -Pattern \"(Creating|Compiled|Generating|Build error|Error:|✓|✗)\")",
+      "Bash(Select-Object -First 30)",
+      "Bash(git log:*)",
+      "Bash(Select-String -Pattern \"(Compiled|Error|warn|✓ Generating)\")",
+      "Bash(Select-Object -First 20)",
+      "Bash(if not exist \"src\\app\\guru\\presensi\" mkdir \"src\\app\\guru\\presensi\")",
+      "Bash(cmd /c \"if not exist src\\app\\guru\\presensi mkdir src\\app\\guru\\presensi\")",
+      "Bash(Select-String -Pattern \"(error|Error)\")",
+      "Bash(Select-Object -First 5)",
+      "Bash(if not exist \"src\\app\\guru\\buku-digital\" mkdir \"src\\app\\guru\\buku-digital\")",
+      "Bash(cmd /c \"if not exist src\\app\\guru\\buku-digital mkdir src\\app\\guru\\buku-digital\")"
     ],
     "deny": [],
     "ask": []

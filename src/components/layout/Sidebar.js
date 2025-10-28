@@ -6,8 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Users,
-  ClipboardCheck,
-  GraduationCap,
   FileText,
   Bell,
   UserCircle,
@@ -15,7 +13,9 @@ import {
   X,
   ChevronLeft,
   BookOpen,
-  Star
+  Star,
+  CalendarCheck2,
+  Book
 } from 'lucide-react';
 
 const menuItems = [
@@ -32,16 +32,16 @@ const menuItems = [
     description: 'Daftar & data siswa'
   },
   {
-    title: 'Verifikasi Hafalan',
-    icon: ClipboardCheck,
-    href: '/guru/input-hafalan',
-    description: 'Input & verifikasi'
+    title: 'Penilaian Hafalan',
+    icon: Star,
+    href: '/guru/penilaian-hafalan',
+    description: 'Nilai hafalan siswa'
   },
   {
-    title: 'Mode Latihan',
-    icon: GraduationCap,
-    href: '/guru/latihan',
-    description: 'Latihan & muroja\'ah'
+    title: 'Presensi',
+    icon: CalendarCheck2,
+    href: '/guru/presensi',
+    description: 'Catat kehadiran siswa'
   },
   {
     title: 'Referensi Al-Qur\'an',
@@ -50,10 +50,10 @@ const menuItems = [
     description: 'Teks & audio Qur\'an'
   },
   {
-    title: 'Materi Mingguan',
-    icon: Star,
-    href: '/guru/materi-mingguan',
-    description: 'Kelola materi hafalan'
+    title: 'Buku Digital',
+    icon: Book,
+    href: '/guru/buku-digital',
+    description: 'Materi pembelajaran & panduan Tahfidz'
   },
   {
     title: 'Laporan',
@@ -180,7 +180,7 @@ function Sidebar({ userName = 'Guru' }) {
               <div className="bg-green-50 rounded-lg p-3">
                 <p className="text-xs font-medium text-green-900 mb-1">💡 Tips</p>
                 <p className="text-xs text-green-700">
-                  Gunakan Mode Latihan untuk muroja'ah bersama siswa
+                  Gunakan Penilaian Hafalan untuk mencatat progress siswa
                 </p>
               </div>
             </div>
