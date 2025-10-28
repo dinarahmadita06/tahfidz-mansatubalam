@@ -26,6 +26,14 @@ export async function GET(request, { params }) {
 
     const data = await response.json();
 
+    // Fetch tajweed text (color-coded)
+    const tajweedResponse = await fetch(
+      `https://api.quran.com/api/v4/quran/verses/uthmani_tajweed?chapter_number=${number}`,
+      { cache: 'force-cache' }
+    );
+
+    const tajweedData = tajweedResponse.ok ? await tajweedResponse.json() : null;
+
     // Fetch Indonesian translation (ID 134 = Indonesian Ministry of Religious Affairs)
     const translationResponse = await fetch(
       `https://api.quran.com/api/v4/quran/translations/134?chapter_number=${number}`,
@@ -39,12 +47,14 @@ export async function GET(request, { params }) {
     const combinedAyahs = data.verses.map((ayah, index) => {
       // Get translation by matching index
       const translation = translationData.translations[index];
+      const tajweedVerse = tajweedData?.verses?.[index];
 
       return {
         number: ayah.id,
         numberInSurah: ayah.verse_number,
         verseKey: ayah.verse_key,
         text: ayah.text_uthmani,
+        textTajweed: tajweedVerse?.text_uthmani_tajweed || null, // Add tajweed text
         translation: translation?.text?.replace(/<[^>]*>/g, '') || '', // Remove HTML tags
         juz: ayah.juz_number,
         page: ayah.page_number,
