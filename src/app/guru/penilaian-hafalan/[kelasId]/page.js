@@ -24,6 +24,18 @@ import {
 import { toast, Toaster } from 'react-hot-toast';
 import Link from 'next/link';
 
+// Helper function untuk menangani NaN
+const safeValue = (value) => {
+  if (value === null || value === undefined || isNaN(value) || value === '') return '';
+  return value;
+};
+
+const safeNumber = (value) => {
+  const num = parseFloat(value);
+  if (isNaN(num)) return 0;
+  return num;
+};
+
 // Daftar 114 Surah Al-Quran
 const surahList = [
   'Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa', 'Al-Ma\'idah',
@@ -260,25 +272,32 @@ export default function PenilaianHafalanKelasPage() {
     if (filteredPenilaian.length === 0) {
       return {
         total: 0,
-        rataTajwid: 0,
-        rataKelancaran: 0,
-        rataMakhraj: 0,
-        rataAdab: 0,
+        rataTajwid: '',
+        rataKelancaran: '',
+        rataMakhraj: '',
+        rataAdab: '',
       };
     }
 
     const total = filteredPenilaian.length;
-    const sumTajwid = filteredPenilaian.reduce((acc, p) => acc + p.nilaiTajwid, 0);
-    const sumKelancaran = filteredPenilaian.reduce((acc, p) => acc + p.nilaiKelancaran, 0);
-    const sumMakhraj = filteredPenilaian.reduce((acc, p) => acc + p.nilaiMakhraj, 0);
-    const sumAdab = filteredPenilaian.reduce((acc, p) => acc + p.nilaiAdab, 0);
+
+    // Filter hanya nilai yang valid (bukan null/undefined/NaN)
+    const validTajwid = filteredPenilaian.filter(p => p.nilaiTajwid != null && !isNaN(p.nilaiTajwid));
+    const validKelancaran = filteredPenilaian.filter(p => p.nilaiKelancaran != null && !isNaN(p.nilaiKelancaran));
+    const validMakhraj = filteredPenilaian.filter(p => p.nilaiMakhraj != null && !isNaN(p.nilaiMakhraj));
+    const validAdab = filteredPenilaian.filter(p => p.nilaiAdab != null && !isNaN(p.nilaiAdab));
+
+    const sumTajwid = validTajwid.reduce((acc, p) => acc + safeNumber(p.nilaiTajwid), 0);
+    const sumKelancaran = validKelancaran.reduce((acc, p) => acc + safeNumber(p.nilaiKelancaran), 0);
+    const sumMakhraj = validMakhraj.reduce((acc, p) => acc + safeNumber(p.nilaiMakhraj), 0);
+    const sumAdab = validAdab.reduce((acc, p) => acc + safeNumber(p.nilaiAdab), 0);
 
     return {
       total,
-      rataTajwid: (sumTajwid / total).toFixed(1),
-      rataKelancaran: (sumKelancaran / total).toFixed(1),
-      rataMakhraj: (sumMakhraj / total).toFixed(1),
-      rataAdab: (sumAdab / total).toFixed(1),
+      rataTajwid: validTajwid.length > 0 ? (sumTajwid / validTajwid.length).toFixed(1) : '',
+      rataKelancaran: validKelancaran.length > 0 ? (sumKelancaran / validKelancaran.length).toFixed(1) : '',
+      rataMakhraj: validMakhraj.length > 0 ? (sumMakhraj / validMakhraj.length).toFixed(1) : '',
+      rataAdab: validAdab.length > 0 ? (sumAdab / validAdab.length).toFixed(1) : '',
     };
   };
 
@@ -286,8 +305,12 @@ export default function PenilaianHafalanKelasPage() {
 
   // Grade Badge Color
   const getGradeBadgeColor = (nilai) => {
-    if (nilai >= 90) return { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' };
-    if (nilai >= 75) return { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' };
+    const safeNilai = safeNumber(nilai);
+    if (safeNilai === 0 || nilai === null || nilai === undefined || nilai === '') {
+      return { bg: '#F3F4F6', text: '#9CA3AF', border: '#E5E7EB' };
+    }
+    if (safeNilai >= 90) return { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' };
+    if (safeNilai >= 75) return { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' };
     return { bg: '#FEE2E2', text: '#DC2626', border: '#FECACA' };
   };
 
@@ -1047,7 +1070,9 @@ export default function PenilaianHafalanKelasPage() {
             </div>
             <div>
               <p style={{ margin: 0, fontSize: '12px', color: '#0D9488', fontWeight: '500' }}>Rata-rata Tajwid</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#14B8A6' }}>{stats.rataTajwid}</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#14B8A6' }}>
+                {stats.rataTajwid || '-'}
+              </p>
             </div>
           </div>
         </div>
@@ -1073,7 +1098,9 @@ export default function PenilaianHafalanKelasPage() {
             </div>
             <div>
               <p style={{ margin: 0, fontSize: '12px', color: '#D97706', fontWeight: '500' }}>Rata-rata Kelancaran</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#F59E0B' }}>{stats.rataKelancaran}</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#F59E0B' }}>
+                {stats.rataKelancaran || '-'}
+              </p>
             </div>
           </div>
         </div>
@@ -1099,7 +1126,9 @@ export default function PenilaianHafalanKelasPage() {
             </div>
             <div>
               <p style={{ margin: 0, fontSize: '12px', color: '#1D4ED8', fontWeight: '500' }}>Rata-rata Makhraj</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#3B82F6' }}>{stats.rataMakhraj}</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#3B82F6' }}>
+                {stats.rataMakhraj || '-'}
+              </p>
             </div>
           </div>
         </div>
@@ -1125,7 +1154,9 @@ export default function PenilaianHafalanKelasPage() {
             </div>
             <div>
               <p style={{ margin: 0, fontSize: '12px', color: '#7C3AED', fontWeight: '500' }}>Rata-rata Adab</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#8B5CF6' }}>{stats.rataAdab}</p>
+              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#8B5CF6' }}>
+                {stats.rataAdab || '-'}
+              </p>
             </div>
           </div>
         </div>
@@ -1298,60 +1329,76 @@ export default function PenilaianHafalanKelasPage() {
                         {p.surah} <span style={{ color: '#9ca3af' }}>({p.ayat})</span>
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 12px',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          background: tajwidColor.bg,
-                          color: tajwidColor.text,
-                          border: `1px solid ${tajwidColor.border}`,
-                        }}>
-                          {p.nilaiTajwid}
-                        </span>
+                        {safeValue(p.nilaiTajwid) !== '' ? (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            background: tajwidColor.bg,
+                            color: tajwidColor.text,
+                            border: `1px solid ${tajwidColor.border}`,
+                          }}>
+                            {safeValue(p.nilaiTajwid)}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
+                        )}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 12px',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          background: kelancaranColor.bg,
-                          color: kelancaranColor.text,
-                          border: `1px solid ${kelancaranColor.border}`,
-                        }}>
-                          {p.nilaiKelancaran}
-                        </span>
+                        {safeValue(p.nilaiKelancaran) !== '' ? (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            background: kelancaranColor.bg,
+                            color: kelancaranColor.text,
+                            border: `1px solid ${kelancaranColor.border}`,
+                          }}>
+                            {safeValue(p.nilaiKelancaran)}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
+                        )}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 12px',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          background: makhrajColor.bg,
-                          color: makhrajColor.text,
-                          border: `1px solid ${makhrajColor.border}`,
-                        }}>
-                          {p.nilaiMakhraj}
-                        </span>
+                        {safeValue(p.nilaiMakhraj) !== '' ? (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            background: makhrajColor.bg,
+                            color: makhrajColor.text,
+                            border: `1px solid ${makhrajColor.border}`,
+                          }}>
+                            {safeValue(p.nilaiMakhraj)}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
+                        )}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 12px',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          background: adabColor.bg,
-                          color: adabColor.text,
-                          border: `1px solid ${adabColor.border}`,
-                        }}>
-                          {p.nilaiAdab}
-                        </span>
+                        {safeValue(p.nilaiAdab) !== '' ? (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            background: adabColor.bg,
+                            color: adabColor.text,
+                            border: `1px solid ${adabColor.border}`,
+                          }}>
+                            {safeValue(p.nilaiAdab)}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
+                        )}
                       </td>
                       <td style={{ padding: '12px', fontSize: '14px', color: '#6b7280', maxWidth: '200px' }}>
                         {p.catatan}
