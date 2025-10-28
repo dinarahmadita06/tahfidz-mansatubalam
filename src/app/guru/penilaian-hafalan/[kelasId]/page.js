@@ -26,7 +26,9 @@ import Link from 'next/link';
 
 // Helper function untuk menangani NaN
 const safeValue = (value) => {
-  if (value === null || value === undefined || isNaN(value) || value === '') return '';
+  // Jika null, undefined, NaN, atau empty string, return kosong (tampilkan "-")
+  if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) return '';
+  // Kembalikan nilai aslinya (termasuk 0 jika ada)
   return value;
 };
 
@@ -151,7 +153,19 @@ export default function PenilaianHafalanKelasPage() {
 
   // State Management
   const [siswaId, setSiswaId] = useState('');
-  const [penilaianList, setPenilaianList] = useState(initialPenilaianByKelas[kelasId] || []);
+  const [penilaianList, setPenilaianList] = useState(() => {
+    // Load dari localStorage atau fallback ke initial data
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('penilaianHafalan');
+      if (saved) {
+        const allData = JSON.parse(saved);
+        if (allData[kelasId] && allData[kelasId].length > 0) {
+          return allData[kelasId];
+        }
+      }
+    }
+    return initialPenilaianByKelas[kelasId] || [];
+  });
   const [filteredPenilaian, setFilteredPenilaian] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -192,6 +206,16 @@ export default function PenilaianHafalanKelasPage() {
   const filteredSurahList = surahList.filter(surah =>
     surah.toLowerCase().includes(surahQuery.toLowerCase())
   );
+
+  // Simpan penilaianList ke localStorage setiap kali berubah
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('penilaianHafalan');
+      const allData = saved ? JSON.parse(saved) : {};
+      allData[kelasId] = penilaianList;
+      localStorage.setItem('penilaianHafalan', JSON.stringify(allData));
+    }
+  }, [penilaianList, kelasId]);
 
   // Effect untuk mengatur isWajibNilai berdasarkan statusHafalan
   useEffect(() => {
@@ -423,10 +447,10 @@ export default function PenilaianHafalanKelasPage() {
               ...formData,
               siswaId: parseInt(formData.siswaId),
               namaSiswa: siswa.nama,
-              nilaiTajwid: parseInt(formData.nilaiTajwid),
-              nilaiKelancaran: parseInt(formData.nilaiKelancaran),
-              nilaiMakhraj: parseInt(formData.nilaiMakhraj),
-              nilaiAdab: parseInt(formData.nilaiAdab),
+              nilaiTajwid: formData.nilaiTajwid ? parseInt(formData.nilaiTajwid) : null,
+              nilaiKelancaran: formData.nilaiKelancaran ? parseInt(formData.nilaiKelancaran) : null,
+              nilaiMakhraj: formData.nilaiMakhraj ? parseInt(formData.nilaiMakhraj) : null,
+              nilaiAdab: formData.nilaiAdab ? parseInt(formData.nilaiAdab) : null,
             }
           : p
       );
@@ -441,10 +465,10 @@ export default function PenilaianHafalanKelasPage() {
                 ...formData,
                 siswaId: parseInt(formData.siswaId),
                 namaSiswa: siswa.nama,
-                nilaiTajwid: parseInt(formData.nilaiTajwid),
-                nilaiKelancaran: parseInt(formData.nilaiKelancaran),
-                nilaiMakhraj: parseInt(formData.nilaiMakhraj),
-                nilaiAdab: parseInt(formData.nilaiAdab),
+                nilaiTajwid: formData.nilaiTajwid ? parseInt(formData.nilaiTajwid) : null,
+                nilaiKelancaran: formData.nilaiKelancaran ? parseInt(formData.nilaiKelancaran) : null,
+                nilaiMakhraj: formData.nilaiMakhraj ? parseInt(formData.nilaiMakhraj) : null,
+                nilaiAdab: formData.nilaiAdab ? parseInt(formData.nilaiAdab) : null,
               }
             : p
         );
@@ -453,16 +477,17 @@ export default function PenilaianHafalanKelasPage() {
 
       toast.success('Penilaian berhasil diperbarui!');
     } else {
-      // Add new
+      // Add new - Generate unique ID dengan timestamp
+      const newId = Date.now();
       const newPenilaian = {
-        id: penilaianList.length + 1,
+        id: newId,
         ...formData,
         siswaId: parseInt(formData.siswaId),
         namaSiswa: siswa.nama,
-        nilaiTajwid: parseInt(formData.nilaiTajwid),
-        nilaiKelancaran: parseInt(formData.nilaiKelancaran),
-        nilaiMakhraj: parseInt(formData.nilaiMakhraj),
-        nilaiAdab: parseInt(formData.nilaiAdab),
+        nilaiTajwid: formData.nilaiTajwid ? parseInt(formData.nilaiTajwid) : null,
+        nilaiKelancaran: formData.nilaiKelancaran ? parseInt(formData.nilaiKelancaran) : null,
+        nilaiMakhraj: formData.nilaiMakhraj ? parseInt(formData.nilaiMakhraj) : null,
+        nilaiAdab: formData.nilaiAdab ? parseInt(formData.nilaiAdab) : null,
       };
 
       const updatedPenilaianList = [...penilaianList, newPenilaian];
