@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'react-hot-toast';
+import MotivationalCard from '@/components/MotivationalCard';
 
 const CATEGORIES = [
   'Semua',
@@ -199,11 +200,21 @@ export default function BukuDigitalSiswaPage() {
         </div>
       </motion.div>
 
+      {/* Motivational Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="mb-8"
+      >
+        <MotivationalCard theme="sky" />
+      </motion.div>
+
       {/* Search & Filter Bar */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.2 }}
         className="mb-8 flex flex-col sm:flex-row gap-4"
       >
         {/* Search */}

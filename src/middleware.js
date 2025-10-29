@@ -25,19 +25,51 @@ export async function middleware(request) {
   // Role-based access control
   const role = token.role;
 
+  // Debug logging
+  console.log('🔍 Middleware - Path:', pathname, '| Role:', role);
+
+  // Helper function to get dashboard URL based on role
+  const getDashboardUrl = (userRole) => {
+    switch (userRole) {
+      case 'ADMIN':
+        return '/admin';
+      case 'GURU':
+        return '/guru';
+      case 'ORANGTUA':
+      case 'ORANG_TUA': // Support underscore format
+        return '/orangtua';
+      case 'SISWA':
+        return '/siswa';
+      default:
+        return '/dashboard';
+    }
+  };
+
   // Admin routes
   if (pathname.startsWith('/admin') && role !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
   }
 
   // Guru routes
   if (pathname.startsWith('/guru') && role !== 'GURU') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
   }
 
   // Orangtua routes
-  if (pathname.startsWith('/orangtua') && role !== 'ORANGTUA') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  if (pathname.startsWith('/orangtua') && role !== 'ORANGTUA' && role !== 'ORANG_TUA') {
+    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
+  }
+
+  // Siswa routes
+  if (pathname.startsWith('/siswa') && role !== 'SISWA') {
+    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
+  }
+
+  // Redirect root and /dashboard to role-specific dashboard
+  if (pathname === '/' || pathname === '/dashboard') {
+    const targetUrl = getDashboardUrl(role);
+    console.log('🔄 Redirecting from', pathname, 'to', targetUrl, '(Role:', role + ')');
+    return NextResponse.redirect(new URL(targetUrl, request.url));
   }
 
   return NextResponse.next();

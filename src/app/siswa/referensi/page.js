@@ -517,7 +517,7 @@ export default function ReferensiQuranPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-gradient-to-br from-[#FEFCE8] via-white to-[#ECFDF5] islamic-pattern">
+      <div className="min-h-screen bg-gradient-referensi islamic-pattern animate-fade-in">
 
         {/* Header */}
         <div className="bg-gradient-to-r from-[#ECFDF5] via-[#DBEAFE] to-[#E9D5FF] py-8 px-8 border-b border-emerald-100/50">

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import MotivationalCard from '@/components/MotivationalCard';
 
 // Line Chart Component
 function LineChart({ data, color = 'emerald' }) {
@@ -260,11 +261,21 @@ export default function LaporanHafalanPage() {
         </div>
       </motion.div>
 
+      {/* Motivational Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="mb-8"
+      >
+        <MotivationalCard theme="amber" />
+      </motion.div>
+
       {/* Period Filter */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.2 }}
         className="mb-6 flex items-center gap-3"
       >
         <button

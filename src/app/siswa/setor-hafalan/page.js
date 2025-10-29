@@ -255,15 +255,10 @@ export default function SetorHafalanPage() {
 
   return (
     <SiswaLayout>
-      <Toaster position="top-right" />
+      <div className="min-h-screen bg-gradient-setor animate-fade-in">
+        <Toaster position="top-right" />
 
-      {/* Background Decorations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 right-10 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-10 left-10 w-96 h-96 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-      </div>
-
-      {/* Header */}
+        {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -614,6 +609,7 @@ export default function SetorHafalanPage() {
           animation-delay: 2s;
         }
       `}</style>
+      </div>
     </SiswaLayout>
   );
 }

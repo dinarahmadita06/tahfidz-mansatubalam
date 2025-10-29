@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import MotivationalCard from '@/components/MotivationalCard';
 
 export default function ModeLatihanPage() {
   const [activeMode, setActiveMode] = useState(null);
@@ -218,20 +219,14 @@ export default function ModeLatihanPage() {
 
   return (
     <SiswaLayout>
-      {/* Background Decorations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-latihan animate-fade-in">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-gradient-to-r from-purple-500 via-lilac-200 to-emerald-400 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
@@ -252,6 +247,18 @@ export default function ModeLatihanPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Motivational Card */}
+      {!activeMode && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8"
+        >
+          <MotivationalCard theme="purple" />
+        </motion.div>
+      )}
 
       <AnimatePresence mode="wait">
         {!activeMode ? (
@@ -644,6 +651,7 @@ export default function ModeLatihanPage() {
           font-family: 'Amiri', serif;
         }
       `}</style>
+      </div>
     </SiswaLayout>
   );
 }
