@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import MotivationalCard from '@/components/MotivationalCard';
 
 // Komponen Progress Ring untuk statistik
 function ProgressRing({ progress = 75, color = 'emerald', size = 120, strokeWidth = 8 }) {
@@ -145,20 +146,14 @@ export default function DashboardSiswa() {
 
   return (
     <SiswaLayout>
-      {/* Background Decorations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-20 left-1/3 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
-      {/* Greeting Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-dashboard animate-fade-in">
+        {/* Greeting Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
@@ -187,6 +182,16 @@ export default function DashboardSiswa() {
             </div>
           </div>
         </div>
+      </motion.div>
+
+      {/* Motivational Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-8"
+      >
+        <MotivationalCard theme="emerald" />
       </motion.div>
 
       {/* Statistics Cards - 4 Columns */}
@@ -472,6 +477,7 @@ export default function DashboardSiswa() {
           animation-delay: 4s;
         }
       `}</style>
+      </div>
     </SiswaLayout>
   );
 }
