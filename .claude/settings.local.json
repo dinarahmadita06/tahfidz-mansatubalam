@@ -46,7 +46,13 @@
       "Bash(cmd /c \"taskkill /F /PID 6280 && taskkill /F /PID 2844 && taskkill /F /PID 10616 && taskkill /F /PID 21964\")",
       "WebSearch",
       "WebFetch(domain:api-docs.quran.foundation)",
-      "WebFetch(domain:alquran.cloud)"
+      "WebFetch(domain:alquran.cloud)",
+      "Bash(cmd /c \"if not exist src\\app\\orangtua mkdir src\\app\\orangtua\")",
+      "Bash(cmd /c \"if not exist src\\app\\orangtua\\hafalan-anak mkdir src\\app\\orangtua\\hafalan-anak\")",
+      "Bash(cmd /c \"if not exist src\\app\\api\\orangtua\\hafalan-anak mkdir src\\app\\api\\orangtua\\hafalan-anak\")",
+      "Bash(cmd /c \"if exist .next rmdir /s /q .next\")",
+      "Bash(cmd /c \"if not exist src\\app\\orangtua\\penilaian mkdir src\\app\\orangtua\\penilaian\")",
+      "Bash(cmd /c:*)"
     ],
     "deny": [],
     "ask": []

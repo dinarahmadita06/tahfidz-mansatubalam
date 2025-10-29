@@ -75,6 +75,11 @@ export const authConfig = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Get the token to check user role
+      // This will be called after successful sign in
+      return baseUrl; // Let middleware handle the role-based redirect
+    },
   },
   pages: {
     signIn: "/login",
