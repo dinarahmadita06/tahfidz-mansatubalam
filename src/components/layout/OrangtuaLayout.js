@@ -15,6 +15,7 @@ import {
   X,
   ChevronLeft,
   Heart,
+  ChartBar,
 } from 'lucide-react';
 
 const menuItems = [
@@ -52,6 +53,13 @@ const menuItems = [
     href: '/orangtua/komunikasi',
     description: 'Chat dengan guru',
     color: 'purple'
+  },
+  {
+    title: 'Laporan Hafalan',
+    icon: ChartBar,
+    href: '/orangtua/laporan-hafalan',
+    description: 'Statistik & laporan',
+    color: 'emerald'
   },
   {
     title: 'Profil',
