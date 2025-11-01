@@ -1,8 +1,6 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "./src/lib/prisma.js";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
 
 export const authConfig = {
   providers: [
@@ -28,8 +26,17 @@ export const authConfig = {
           },
         });
 
-        if (!user || !user.isActive) {
+        if (!user) {
           throw new Error("Email atau password salah");
+        }
+
+        // Check if user account is active based on role
+        if (user.role === 'SISWA' && user.siswa?.status !== 'approved') {
+          throw new Error("Akun Anda belum disetujui oleh admin");
+        }
+
+        if (user.role === 'ORANG_TUA' && user.orangTua?.status !== 'approved') {
+          throw new Error("Akun Anda belum disetujui oleh admin");
         }
 
         const isPasswordValid = await bcrypt.compare(

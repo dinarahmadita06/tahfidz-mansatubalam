@@ -7,328 +7,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  password    String
-  name        String
-  role        Role
-  image       String?
-  phoneNumber String?
-  nip         String?
-  jabatan     String?
-  alamat      String?
-  lastLogin   DateTime?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  guru        Guru?
-  orangTua    OrangTua?
-  siswa       Siswa?
-
-  @@map("users")
-}
-
-model Siswa {
-  id              String          @id @default(cuid())
-  userId          String          @unique
-  nisn            String          @unique
-  nis             String          @unique
-  kelasId         String
-  jenisKelamin    String
-  tempatLahir     String
-  tanggalLahir    DateTime
-  alamat          String?
-  noHP            String?
-  orangTuaId      String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  approvedAt      DateTime?
-  approvedBy      String?
-  createdBy       String?
-  rejectedAt      DateTime?
-  rejectedBy      String?
-  rejectionReason String?
-  status          String          @default("pending")
-  hafalan         Hafalan[]
-  presensi        Presensi[]
-  kelas           Kelas           @relation(fields: [kelasId], references: [id])
-  orangTua        OrangTua?       @relation(fields: [orangTuaId], references: [id])
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  targetHafalan   TargetHafalan[]
-  wisudaSiswa     WisudaSiswa[]
-
-  @@map("siswa")
-}
-
-model Guru {
-  id           String       @id @default(cuid())
-  userId       String       @unique
-  nip          String?      @unique
-  jenisKelamin String
-  noHP         String?
-  alamat       String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  agenda       Agenda[]
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  guruKelas    GuruKelas[]
-  hafalan      Hafalan[]
-  pengumuman   Pengumuman[]
-
-  @@map("guru")
-}
-
-model OrangTua {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  pekerjaan String?
-  noHP      String?
-  alamat    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  siswa     Siswa[]
-
-  @@map("orang_tua")
-}
-
-model TahunAjaran {
-  id             String   @id @default(cuid())
-  nama           String
-  semester       Int
-  tanggalMulai   DateTime
-  tanggalSelesai DateTime
-  isActive       Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  kelas          Kelas[]
-
-  @@map("tahun_ajaran")
-}
-
-model Kelas {
-  id             String           @id @default(cuid())
-  nama           String
-  tingkat        Int
-  tahunAjaranId  String
-  targetJuz      Int?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  agenda         Agenda[]
-  guruKelas      GuruKelas[]
-  tahunAjaran    TahunAjaran      @relation(fields: [tahunAjaranId], references: [id])
-  siswa          Siswa[]
-  targetHafalan  TargetHafalan[]
-  weeklyMaterial WeeklyMaterial[]
-
-  @@map("kelas")
-}
-
-model GuruKelas {
-  id             String    @id @default(cuid())
-  guruId         String
-  kelasId        String
-  peran          String    @default("pengganti")
-  isActive       Boolean   @default(true)
-  tanggalMulai   DateTime  @default(now())
-  tanggalSelesai DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  guru           Guru      @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  kelas          Kelas     @relation(fields: [kelasId], references: [id], onDelete: Cascade)
-
-  @@unique([guruId, kelasId])
-  @@map("guru_kelas")
-}
-
-model Surah {
-  id          String    @id @default(cuid())
-  nomor       Int       @unique
-  nama        String
-  namaLatin   String
-  jumlahAyat  Int
-  tempatTurun String
-  juz         Int[]
-  hafalan     Hafalan[]
-
-  @@map("surah")
-}
-
-model Hafalan {
-  id              String        @id @default(cuid())
-  siswaId         String
-  guruId          String
-  surahId         String
-  ayatMulai       Int
-  ayatSelesai     Int
-  juz             Int
-  halaman         Int?
-  tanggalSetor    DateTime      @default(now())
-  status          StatusHafalan @default(LANCAR)
-  nilaiTartil     Int?
-  nilaiTajwid     Int?
-  nilaiMakhraj    Int?
-  nilaiKelancaran Int?
-  nilaiAkhir      Float?
-  predikat        String?
-  catatan         String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  guru            Guru          @relation(fields: [guruId], references: [id])
-  siswa           Siswa         @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  surah           Surah         @relation(fields: [surahId], references: [id])
-
-  @@map("hafalan")
-}
-
-model TargetHafalan {
-  id          String    @id @default(cuid())
-  siswaId     String?
-  kelasId     String?
-  targetJuz   Int
-  targetSurah String?
-  targetAyat  Int?
-  bulan       Int
-  tahun       Int
-  deadline    DateTime?
-  keterangan  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  kelas       Kelas?    @relation(fields: [kelasId], references: [id], onDelete: Cascade)
-  siswa       Siswa?    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-
-  @@map("target_hafalan")
-}
-
-model Presensi {
-  id         String          @id @default(cuid())
-  siswaId    String
-  tanggal    DateTime        @default(now())
-  status     StatusKehadiran
-  keterangan String?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  siswa      Siswa           @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-
-  @@map("presensi")
-}
-
-model Pengumuman {
-  id              String            @id @default(cuid())
-  guruId          String
-  judul           String
-  isi             String
-  isPenting       Boolean           @default(false)
-  targetRole      Role[]
-  tipePengumuman  TipePengumuman    @default(UMUM)
-  wisudaId        String?
-  createdBy       String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  publishedAt     DateTime?
-  guru            Guru              @relation(fields: [guruId], references: [id])
-  wisuda          Wisuda?           @relation(fields: [wisudaId], references: [id])
-
-  @@map("pengumuman")
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  message   String
-  type      String
-  isRead    Boolean  @default(false)
-  link      String?
-  createdAt DateTime @default(now())
-
-  @@map("notifications")
-}
-
-model ActivityLog {
-  id          String         @id @default(cuid())
-  userId      String
-  userName    String
-  userRole    Role
-  action      ActivityAction
-  module      ActivityModule
-  description String
-  ipAddress   String?
-  userAgent   String?
-  metadata    String?
-  createdAt   DateTime       @default(now())
-
-  @@map("activity_logs")
-}
-
-model Agenda {
-  id           String   @id @default(cuid())
-  guruId       String
-  kelasId      String?
-  judul        String
-  deskripsi    String?
-  tanggal      DateTime
-  waktuMulai   String
-  waktuSelesai String?
-  status       String   @default("upcoming")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  guru         Guru     @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  kelas        Kelas?   @relation(fields: [kelasId], references: [id])
-
-  @@map("agenda")
-}
-
-model Wisuda {
-  id            String        @id @default(cuid())
-  guruId        String
-  tanggalWisuda DateTime
-  lokasiWisuda  String
-  keterangan    String?
-  status        String        @default("upcoming")
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  siswa         WisudaSiswa[]
-  pengumuman    Pengumuman[]
-
-  @@map("wisuda")
-}
-
-model WisudaSiswa {
-  id        String   @id @default(cuid())
-  wisudaId  String
-  siswaId   String
-  totalJuz  Int
-  createdAt DateTime @default(now())
-  siswa     Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  wisuda    Wisuda   @relation(fields: [wisudaId], references: [id], onDelete: Cascade)
-
-  @@unique([wisudaId, siswaId])
-  @@map("wisuda_siswa")
-}
-
 enum Role {
-  SISWA
-  GURU
-  ORANG_TUA
   ADMIN
+  GURU
+  SISWA
+  ORANG_TUA
 }
 
-enum StatusHafalan {
-  LANCAR
-  PERLU_PERBAIKAN
-  DITOLAK
+enum StatusAkun {
+  pending
+  approved
+  rejected
+  suspended
 }
 
-enum StatusKehadiran {
+enum JenisKelamin {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+enum StatusPresensi {
   HADIR
-  SAKIT
   IZIN
-  ALPA
+  SAKIT
+  ALFA
 }
 
-enum ActivityAction {
+enum KategoriPengumuman {
+  UMUM
+  AKADEMIK
+  KEGIATAN
+  PENTING
+}
+
+enum KategoriBuku {
+  TAJWID
+  TAFSIR
+  HADITS
+  FIQIH
+  AKHLAK
+  UMUM
+}
+
+enum JenisAktivitas {
   LOGIN
   LOGOUT
   CREATE
@@ -336,54 +57,302 @@ enum ActivityAction {
   DELETE
   VIEW
   EXPORT
-  APPROVE
-  REJECT
   IMPORT
 }
 
-model WeeklyMaterial {
-  id          String   @id @default(cuid())
-  surahNumber Int
+enum StatusKelas {
+  AKTIF
+  NONAKTIF
+}
+
+model User {
+  id               String        @id @default(cuid())
+  name             String
+  email            String        @unique
+  password         String
+  role             Role
+  image            String?
+  emailVerified    DateTime?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  guru             Guru?
+  siswa            Siswa?
+  orangTua         OrangTua?
+  logActivity      LogActivity[]
+  pengumuman       Pengumuman[]
+}
+
+model Guru {
+  id             String       @id @default(cuid())
+  userId         String       @unique
+  nip            String       @unique
+  jabatan        String?
+  bidangKeahlian String?
+  alamat         String?
+  noTelepon      String?
+  tanggalLahir   DateTime?
+  jenisKelamin   JenisKelamin
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guruKelas      GuruKelas[]
+  hafalan        Hafalan[]
+  penilaian      Penilaian[]
+  presensi       Presensi[]
+  bukuDigital    BukuDigital[]
+}
+
+model Siswa {
+  id             String         @id @default(cuid())
+  userId         String         @unique
+  nis            String         @unique
+  kelasId        String?
+  alamat         String?
+  noTelepon      String?
+  tanggalLahir   DateTime?
+  jenisKelamin   JenisKelamin
+  status         StatusAkun     @default(pending)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kelas          Kelas?         @relation(fields: [kelasId], references: [id], onDelete: SetNull)
+  orangTuaSiswa  OrangTuaSiswa[]
+  hafalan        Hafalan[]
+  penilaian      Penilaian[]
+  presensi       Presensi[]
+  targetHafalan  TargetHafalan[]
+
+  @@index([status])
+  @@index([kelasId])
+}
+
+model OrangTua {
+  id             String         @id @default(cuid())
+  userId         String         @unique
+  nik            String         @unique
+  pekerjaan      String?
+  alamat         String?
+  noTelepon      String?
+  tanggalLahir   DateTime?
+  jenisKelamin   JenisKelamin
+  status         StatusAkun     @default(pending)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orangTuaSiswa  OrangTuaSiswa[]
+
+  @@index([status])
+}
+
+model OrangTuaSiswa {
+  id         String   @id @default(cuid())
+  orangTuaId String
+  siswaId    String
+  hubungan   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  orangTua   OrangTua @relation(fields: [orangTuaId], references: [id], onDelete: Cascade)
+  siswa      Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@unique([orangTuaId, siswaId])
+  @@index([orangTuaId])
+  @@index([siswaId])
+}
+
+model TahunAjaran {
+  id            String          @id @default(cuid())
+  nama          String
+  tanggalMulai  DateTime
+  tanggalSelesai DateTime
+  isActive      Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  kelas         Kelas[]
+  targetHafalan TargetHafalan[]
+
+  @@index([isActive])
+}
+
+model Kelas {
+  id            String          @id @default(cuid())
+  nama          String
+  tahunAjaranId String
+  kapasitas     Int?
+  targetJuz     Int?
+  status        StatusKelas     @default(AKTIF)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  tahunAjaran   TahunAjaran     @relation(fields: [tahunAjaranId], references: [id], onDelete: Cascade)
+  guruKelas     GuruKelas[]
+  siswa         Siswa[]
+  targetHafalan TargetHafalan[]
+
+  @@index([status])
+  @@index([tahunAjaranId])
+}
+
+model GuruKelas {
+  id           String    @id @default(cuid())
+  guruId       String
+  kelasId      String
+  tanggalMulai DateTime  @default(now())
+  tanggalSelesai DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  guru         Guru      @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  kelas        Kelas     @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+
+  @@unique([guruId, kelasId])
+  @@index([guruId])
+  @@index([kelasId])
+  @@index([isActive])
+}
+
+model TargetHafalan {
+  id            String      @id @default(cuid())
+  siswaId       String
+  kelasId       String?
+  tahunAjaranId String?
+  targetJuz     Int
+  targetSurah   String?
+  targetAyat    String?
+  deadline      DateTime?
+  keterangan    String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  siswa         Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  kelas         Kelas?      @relation(fields: [kelasId], references: [id], onDelete: SetNull)
+  tahunAjaran   TahunAjaran? @relation(fields: [tahunAjaranId], references: [id], onDelete: SetNull)
+
+  @@index([siswaId])
+  @@index([kelasId])
+  @@index([deadline])
+}
+
+model Hafalan {
+  id          String      @id @default(cuid())
+  siswaId     String
+  guruId      String
+  tanggal     DateTime    @default(now())
+  juz         Int
+  surah       String
   ayatMulai   Int
   ayatSelesai Int
-  judul       String?
   keterangan  String?
-  createdBy   String
-  kelasId     String?
-  targetRole  Role[]
-  weekStart   DateTime
-  weekEnd     DateTime
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  kelas       Kelas?   @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  siswa       Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru        Guru        @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  penilaian   Penilaian[]
 
-  @@map("weekly_material")
+  @@index([siswaId])
+  @@index([tanggal(sort: Desc)])
+  @@index([guruId])
 }
 
-enum ActivityModule {
-  USER
-  SISWA
-  GURU
-  ORANG_TUA
-  KELAS
-  HAFALAN
-  PRESENSI
-  LAPORAN
-  PENGUMUMAN
-  AGENDA
-  WISUDA
-  TARGET_HAFALAN
-  TAHUN_AJARAN
-  STATISTIK
-  SETTINGS
-  AUTH
-  QURAN_REFERENCE
+model Penilaian {
+  id         String   @id @default(cuid())
+  hafalanId  String
+  siswaId    String
+  guruId     String
+  tajwid     Int
+  kelancaran Int
+  makhraj    Int
+  adab       Int
+  nilaiAkhir Float
+  catatan    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  hafalan    Hafalan  @relation(fields: [hafalanId], references: [id], onDelete: Cascade)
+  siswa      Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru       Guru     @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  @@index([siswaId])
+  @@index([guruId])
+  @@index([hafalanId])
 }
 
-enum TipePengumuman {
-  UMUM
-  WISUDA
-  KEGIATAN
-  LIBUR
+model Presensi {
+  id        String          @id @default(cuid())
+  siswaId   String
+  guruId    String
+  tanggal   DateTime        @default(now())
+  status    StatusPresensi
+  keterangan String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  siswa     Siswa           @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru      Guru            @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  @@unique([siswaId, tanggal])
+  @@index([tanggal(sort: Desc)])
+  @@index([status])
+}
+
+model Pengumuman {
+  id          String              @id @default(cuid())
+  userId      String
+  judul       String
+  isi         String
+  kategori    KategoriPengumuman
+  tanggalMulai DateTime           @default(now())
+  tanggalSelesai DateTime?
+  isPinned    Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isPinned])
+  @@index([tanggalMulai(sort: Desc)])
+  @@index([kategori])
+}
+
+model BukuDigital {
+  id          String       @id @default(cuid())
+  guruId      String
+  judul       String
+  deskripsi   String?
+  kategori    KategoriBuku
+  fileUrl     String
+  fileName    String
+  fileSize    Int
+  downloadCount Int        @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  guru        Guru         @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  @@index([guruId])
+  @@index([kategori])
+  @@index([createdAt(sort: Desc)])
+}
+
+model LogActivity {
+  id          String         @id @default(cuid())
+  userId      String
+  role        Role
+  aktivitas   JenisAktivitas
+  modul       String
+  deskripsi   String?
+  ipAddress   String?
+  device      String?
+  createdAt   DateTime       @default(now())
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@index([aktivitas])
+}
+
+model Motivasi {
+  id        String   @id @default(cuid())
+  isi       String
+  author    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
 }
