@@ -17,6 +17,7 @@ import {
   X,
   ChevronLeft,
   Sparkles,
+  Target,
 } from 'lucide-react';
 
 const menuItems = [
@@ -68,6 +69,13 @@ const menuItems = [
     href: '/siswa/presensi',
     description: 'Riwayat kehadiran',
     color: 'sky'
+  },
+  {
+    title: 'Target Hafalanku',
+    icon: Target,
+    href: '/siswa/target-hafalan',
+    description: 'Target & capaian pribadi',
+    color: 'amber'
   },
   {
     title: 'Laporan Hafalan',
@@ -194,7 +202,7 @@ function SiswaSidebar({ userName = 'Siswa' }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      prefetch={true}
+                      prefetch={false}
                       onClick={() => setIsOpen(false)}
                       className={`
                         flex items-center gap-3 px-3 py-3 rounded-xl transition-all

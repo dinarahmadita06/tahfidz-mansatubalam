@@ -155,27 +155,7 @@ export default function PenilaianHafalanKelasPage() {
   const [siswaId, setSiswaId] = useState('');
   const isInitialMount = useRef(true);
 
-  const [penilaianList, setPenilaianList] = useState(() => {
-    // Load dari localStorage atau fallback ke initial data
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('penilaianHafalan');
-      if (saved) {
-        try {
-          const allData = JSON.parse(saved);
-          // Cek apakah key kelasId ada (even jika array kosong, tetap gunakan dari localStorage)
-          if (allData.hasOwnProperty(kelasId)) {
-            console.log(`📖 Loaded ${allData[kelasId].length} penilaian from localStorage for ${kelasId}`);
-            return allData[kelasId];
-          }
-        } catch (e) {
-          console.error('❌ Error parsing localStorage:', e);
-        }
-      }
-    }
-    // Jika belum ada di localStorage, gunakan initial data
-    console.log(`📁 Using initial data for ${kelasId}: ${(initialPenilaianByKelas[kelasId] || []).length} items`);
-    return initialPenilaianByKelas[kelasId] || [];
-  });
+  const [penilaianList, setPenilaianList] = useState([]);
   const [filteredPenilaian, setFilteredPenilaian] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -209,31 +189,62 @@ export default function PenilaianHafalanKelasPage() {
   const [showSurahDropdown, setShowSurahDropdown] = useState(false);
   const [isWajibNilai, setIsWajibNilai] = useState(true);
 
-  // Get siswa untuk kelas ini
-  const siswaList = mockSiswaByKelas[kelasId] || [];
+  // State untuk loading & siswa dari database
+  const [siswaList, setSiswaList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Filter surah berdasarkan query
   const filteredSurahList = surahList.filter(surah =>
     surah.toLowerCase().includes(surahQuery.toLowerCase())
   );
 
-  // Simpan penilaianList ke localStorage setiap kali berubah (kecuali initial mount)
+  // Load data siswa dan penilaian dari database
   useEffect(() => {
-    // Skip pada initial mount untuk mencegah overwrite localStorage dengan initial data
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      console.log('⏭️ Skipping initial save to prevent overwrite');
-      return;
-    }
+    loadSiswaAndPenilaian();
+  }, [kelasId]);
 
-    if (typeof window !== 'undefined' && penilaianList !== undefined) {
-      const saved = localStorage.getItem('penilaianHafalan');
-      const allData = saved ? JSON.parse(saved) : {};
-      allData[kelasId] = penilaianList;
-      localStorage.setItem('penilaianHafalan', JSON.stringify(allData));
-      console.log(`💾 Saved ${penilaianList.length} penilaian to localStorage for ${kelasId}`);
+  const loadSiswaAndPenilaian = async () => {
+    try {
+      setLoading(true);
+
+      // Load siswa berdasarkan kelasId
+      const siswaResponse = await fetch(`/api/admin/siswa?kelasId=${kelasId}`);
+      if (siswaResponse.ok) {
+        const siswaData = await siswaResponse.json();
+        setSiswaList(siswaData);
+      }
+
+      // Load penilaian untuk kelas ini
+      const penilaianResponse = await fetch(`/api/guru/penilaian?kelasId=${kelasId}`);
+      if (penilaianResponse.ok) {
+        const penilaianData = await penilaianResponse.json();
+        // Transform data agar sesuai dengan format UI
+        const transformed = penilaianData.map(p => ({
+          id: p.id,
+          siswaId: p.siswaId,
+          namaSiswa: p.siswa.user.name,
+          tanggal: p.hafalan.tanggal.split('T')[0],
+          surah: p.hafalan.surah,
+          ayat: `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}`,
+          juz: p.hafalan.juz,
+          ayatMulai: p.hafalan.ayatMulai,
+          ayatSelesai: p.hafalan.ayatSelesai,
+          statusHafalan: 'Hafal', // Default karena penilaian hanya untuk yang hafal
+          nilaiTajwid: p.tajwid,
+          nilaiKelancaran: p.kelancaran,
+          nilaiMakhraj: p.makhraj,
+          nilaiAdab: p.adab,
+          catatan: p.catatan || '',
+        }));
+        setPenilaianList(transformed);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Gagal memuat data');
+    } finally {
+      setLoading(false);
     }
-  }, [penilaianList, kelasId]);
+  };
 
   // Effect untuk mengatur isWajibNilai berdasarkan statusHafalan
   useEffect(() => {
@@ -446,7 +457,7 @@ export default function PenilaianHafalanKelasPage() {
   };
 
   // Handle Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -454,81 +465,93 @@ export default function PenilaianHafalanKelasPage() {
       return;
     }
 
-    const siswa = siswaList.find(s => s.id === parseInt(formData.siswaId));
+    try {
+      // Parse ayat range (e.g., "1-5" => ayatMulai: 1, ayatSelesai: 5)
+      const ayatRange = formData.ayat.split('-').map(x => x.trim());
+      const ayatMulai = parseInt(ayatRange[0]);
+      const ayatSelesai = parseInt(ayatRange[1] || ayatRange[0]);
 
-    if (editingId) {
-      // Update existing
-      const updated = penilaianList.map(p =>
-        p.id === editingId
-          ? {
-              ...p,
-              ...formData,
-              siswaId: parseInt(formData.siswaId),
-              namaSiswa: siswa.nama,
-              nilaiTajwid: formData.nilaiTajwid ? parseInt(formData.nilaiTajwid) : null,
-              nilaiKelancaran: formData.nilaiKelancaran ? parseInt(formData.nilaiKelancaran) : null,
-              nilaiMakhraj: formData.nilaiMakhraj ? parseInt(formData.nilaiMakhraj) : null,
-              nilaiAdab: formData.nilaiAdab ? parseInt(formData.nilaiAdab) : null,
-            }
-          : p
-      );
-      setPenilaianList(updated);
+      if (editingId) {
+        // Update existing - menggunakan API PUT
+        const response = await fetch('/api/guru/penilaian', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingId,
+            tajwid: parseInt(formData.nilaiTajwid),
+            kelancaran: parseInt(formData.nilaiKelancaran),
+            makhraj: parseInt(formData.nilaiMakhraj),
+            adab: parseInt(formData.nilaiAdab),
+            catatan: formData.catatan || null,
+          }),
+        });
 
-      // Update filtered
-      if (filteredPenilaian.length > 0) {
-        const updatedFiltered = filteredPenilaian.map(p =>
-          p.id === editingId
-            ? {
-                ...p,
-                ...formData,
-                siswaId: parseInt(formData.siswaId),
-                namaSiswa: siswa.nama,
-                nilaiTajwid: formData.nilaiTajwid ? parseInt(formData.nilaiTajwid) : null,
-                nilaiKelancaran: formData.nilaiKelancaran ? parseInt(formData.nilaiKelancaran) : null,
-                nilaiMakhraj: formData.nilaiMakhraj ? parseInt(formData.nilaiMakhraj) : null,
-                nilaiAdab: formData.nilaiAdab ? parseInt(formData.nilaiAdab) : null,
-              }
-            : p
-        );
-        setFilteredPenilaian(updatedFiltered);
+        if (response.ok) {
+          toast.success('Penilaian berhasil diperbarui!');
+          await loadSiswaAndPenilaian(); // Reload data
+          closeModal();
+        } else {
+          const error = await response.json();
+          toast.error(error.error || 'Gagal mengupdate penilaian');
+        }
+      } else {
+        // Add new - menggunakan API POST dengan hafalan + penilaian sekaligus
+        const response = await fetch('/api/guru/penilaian', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // Data Hafalan
+            siswaId: parseInt(formData.siswaId),
+            tanggal: formData.tanggal,
+            juz: 1, // TODO: Tambahkan input juz di form jika diperlukan
+            surah: formData.surah,
+            ayatMulai: ayatMulai,
+            ayatSelesai: ayatSelesai,
+            keterangan: formData.catatan || null,
+            // Data Penilaian
+            tajwid: parseInt(formData.nilaiTajwid),
+            kelancaran: parseInt(formData.nilaiKelancaran),
+            makhraj: parseInt(formData.nilaiMakhraj),
+            adab: parseInt(formData.nilaiAdab),
+            catatan: formData.catatan || null,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          toast.success(`Penilaian berhasil disimpan! Nilai Akhir: ${result.nilaiAkhir}`);
+          await loadSiswaAndPenilaian(); // Reload data
+          closeModal();
+        } else {
+          const error = await response.json();
+          toast.error(error.error || 'Gagal menyimpan penilaian');
+        }
       }
-
-      toast.success('Penilaian berhasil diperbarui!');
-    } else {
-      // Add new - Generate unique ID dengan timestamp
-      const newId = Date.now();
-      const newPenilaian = {
-        id: newId,
-        ...formData,
-        siswaId: parseInt(formData.siswaId),
-        namaSiswa: siswa.nama,
-        nilaiTajwid: formData.nilaiTajwid ? parseInt(formData.nilaiTajwid) : null,
-        nilaiKelancaran: formData.nilaiKelancaran ? parseInt(formData.nilaiKelancaran) : null,
-        nilaiMakhraj: formData.nilaiMakhraj ? parseInt(formData.nilaiMakhraj) : null,
-        nilaiAdab: formData.nilaiAdab ? parseInt(formData.nilaiAdab) : null,
-      };
-
-      const updatedPenilaianList = [...penilaianList, newPenilaian];
-      setPenilaianList(updatedPenilaianList);
-
-      // Always update filtered list to auto-refresh table
-      const shouldInclude = !siswaId || parseInt(formData.siswaId) === parseInt(siswaId);
-      if (shouldInclude) {
-        setFilteredPenilaian([...filteredPenilaian, newPenilaian]);
-      }
-
-      toast.success('Penilaian berhasil ditambahkan!');
+    } catch (error) {
+      console.error('Error submitting penilaian:', error);
+      toast.error('Terjadi kesalahan saat menyimpan penilaian');
     }
-
-    closeModal();
   };
 
   // Handle Delete
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Apakah Anda yakin ingin menghapus penilaian ini?')) {
-      setPenilaianList(penilaianList.filter(p => p.id !== id));
-      setFilteredPenilaian(filteredPenilaian.filter(p => p.id !== id));
-      toast.success('Penilaian berhasil dihapus!');
+      try {
+        const response = await fetch(`/api/guru/penilaian?id=${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          toast.success('Penilaian berhasil dihapus!');
+          await loadSiswaAndPenilaian(); // Reload data
+        } else {
+          const error = await response.json();
+          toast.error(error.error || 'Gagal menghapus penilaian');
+        }
+      } catch (error) {
+        console.error('Error deleting penilaian:', error);
+        toast.error('Terjadi kesalahan saat menghapus penilaian');
+      }
     }
   };
 

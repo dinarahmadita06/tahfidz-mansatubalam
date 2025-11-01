@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { BookOpen, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
             Buat Password Baru
           </h1>
           <p className="text-gray-600 text-lg">
-            Sistem Manajemen Hafalan Al-Quran
+            Sistem Informasi Manajemen Tahfidz Qur'an
           </p>
         </div>
 
@@ -205,10 +205,25 @@ export default function ResetPasswordPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-gray-600 text-sm">
-            © 2025 Tahfidz Management System
+            © 2025 SIMTAQ
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

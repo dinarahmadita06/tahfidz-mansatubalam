@@ -266,4 +266,4 @@ Update pages in this order for maximum visual impact:
 
 **Remember**: The goal is consistency. Once you have the pattern down, each page should take 10-15 minutes to update.
 
-**Made with ❤️ for Tahfidz Management System**
+**Made with ❤️ for SIMTAQ (Sistem Informasi Manajemen Tahfidz Qur'an)**

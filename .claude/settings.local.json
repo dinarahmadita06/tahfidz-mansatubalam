@@ -52,7 +52,11 @@
       "Bash(cmd /c \"if not exist src\\app\\api\\orangtua\\hafalan-anak mkdir src\\app\\api\\orangtua\\hafalan-anak\")",
       "Bash(cmd /c \"if exist .next rmdir /s /q .next\")",
       "Bash(cmd /c \"if not exist src\\app\\orangtua\\penilaian mkdir src\\app\\orangtua\\penilaian\")",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(cat:*)",
+      "Bash(Select-String -Pattern \"(Compiled|Error|warn|✓|✗|Build)\")",
+      "Bash(del /f /q \"src\\app\\admin\\data-siswa-example\\page.js\")",
+      "Bash(npm run db:seed:*)"
     ],
     "deny": [],
     "ask": []

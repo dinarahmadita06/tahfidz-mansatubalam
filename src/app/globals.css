@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -252,8 +253,6 @@ select:focus-visible {
 }
 
 /* Arabic font support */
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap');
-
 .font-arabic {
   font-family: 'Amiri', 'Scheherazade New', serif;
   direction: rtl;

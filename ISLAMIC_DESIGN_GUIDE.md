@@ -348,4 +348,4 @@ className="hover:shadow-2xl transition-shadow duration-500"
 
 ---
 
-**Made with ❤️ for Tahfidz Management System**
+**Made with ❤️ for SIMTAQ (Sistem Informasi Manajemen Tahfidz Qur'an)**

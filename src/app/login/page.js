@@ -16,10 +16,10 @@ export default function LoginPage() {
 
   const quickLogin = (role) => {
     const credentials = {
-      ADMIN: { email: 'admin@tahfidz.sch.id', password: 'admin123' },
-      GURU: { email: 'guru@tahfidz.sch.id', password: 'guru123' },
-      SISWA: { email: 'siswa@example.com', password: 'siswa123' },
-      ORANG_TUA: { email: 'orangtua@example.com', password: 'orangtua123' },
+      ADMIN: { email: 'admin@tahfidz.sch.id', password: 'password123' },
+      GURU: { email: 'ahmad.fauzi@tahfidz.sch.id', password: 'password123' },
+      SISWA: { email: 'abdullah.rahman@siswa.tahfidz.sch.id', password: 'password123' },
+      ORANG_TUA: { email: 'ortu.24001@parent.tahfidz.sch.id', password: 'password123' },
     };
 
     const cred = credentials[role];
@@ -121,10 +121,10 @@ export default function LoginPage() {
             <BookOpen size={36} className="text-white" />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent mb-2">
-            Tahfidz Management
+            SIMTAQ
           </h1>
           <p className="text-gray-600 text-lg">
-            Sistem Manajemen Hafalan Al-Quran
+            Sistem Informasi Manajemen Tahfidz Qur'an
           </p>
         </div>
 
@@ -275,7 +275,7 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-gray-600 text-sm">
-            © 2025 Tahfidz Management System
+            © 2025 SIMTAQ
           </p>
         </div>
       </div>

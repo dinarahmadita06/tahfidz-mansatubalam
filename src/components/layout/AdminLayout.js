@@ -20,7 +20,9 @@ import {
   UsersRound,
   Activity,
   User,
-  Megaphone
+  Megaphone,
+  Target,
+  Key
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
 import PageTransition from '@/components/PageTransition';
@@ -47,6 +49,7 @@ const menuItems = [
     submenu: [
       { title: 'Kelas', href: '/admin/kelas', icon: School },
       { title: 'Tahun Ajaran', href: '/admin/tahun-ajaran', icon: Calendar },
+      { title: 'Target Hafalan', href: '/admin/target-hafalan', icon: Target },
     ]
   },
   {
@@ -61,6 +64,11 @@ const menuItems = [
     title: 'Pengumuman',
     icon: Megaphone,
     href: '/admin/pengumuman',
+  },
+  {
+    title: 'Reset Password User',
+    icon: Key,
+    href: '/admin/reset-password-user',
   },
   {
     title: 'Log Activity',
@@ -78,7 +86,11 @@ function AdminLayout({ children }) {
   const [currentNotification, setCurrentNotification] = useState(null);
   const [notificationQueue, setNotificationQueue] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expandedMenus, setExpandedMenus] = useState({});
+  const [expandedMenus, setExpandedMenus] = useState({
+    'Manajemen Pengguna': true,
+    'Kelas & Tahun Ajaran': true,
+    'Monitoring & Laporan': true
+  });
   const pathname = usePathname();
 
   // Polling for new notifications every 10 seconds
@@ -311,7 +323,7 @@ function AdminLayout({ children }) {
                               <Link
                                 key={subitem.href}
                                 href={subitem.href}
-                                prefetch={true}
+                                prefetch={false}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
                                   isActive(subitem.href)
                                     ? 'bg-amber-50 text-amber-900'
@@ -335,7 +347,7 @@ function AdminLayout({ children }) {
                     ) : (
                       <Link
                         href={item.href}
-                        prefetch={true}
+                        prefetch={false}
                         className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} py-3 rounded-xl transition-all duration-200 group relative ${
                           isActive(item.href)
                             ? 'text-amber-900 shadow-inner'

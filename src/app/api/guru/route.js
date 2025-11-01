@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
@@ -19,8 +19,7 @@ export async function GET(request) {
             id: true,
             name: true,
             email: true,
-            image: true,
-            isActive: true
+            image: true
           }
         },
         _count: {
@@ -85,8 +84,7 @@ export async function POST(request) {
             name,
             email,
             password: hashedPassword,
-            role: 'GURU',
-            isActive: true
+            role: 'GURU'
           }
         }
       },
@@ -95,8 +93,7 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
-            email: true,
-            isActive: true
+            email: true
           }
         }
       }

@@ -102,6 +102,7 @@ export default function DashboardOrangTua() {
   const router = useRouter();
   const [selectedChild, setSelectedChild] = useState(null);
   const [showChildSelector, setShowChildSelector] = useState(false);
+  const [greeting, setGreeting] = useState('');
 
   // Check authentication
   useEffect(() => {
@@ -187,7 +188,20 @@ export default function DashboardOrangTua() {
     },
   ];
 
+  // Ambil nama depan dari nama user (mengambil kata pertama)
+  const getFirstName = (fullName) => {
+    if (!fullName) return 'Orang Tua';
+    return fullName.split(' ')[0];
+  };
+
   useEffect(() => {
+    // Set greeting based on time
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Selamat Pagi');
+    else if (hour < 15) setGreeting('Selamat Siang');
+    else if (hour < 18) setGreeting('Selamat Sore');
+    else setGreeting('Selamat Malam');
+
     // Set anak pertama sebagai default
     if (children.length > 0) {
       setSelectedChild(children[0]);
@@ -234,7 +248,7 @@ export default function DashboardOrangTua() {
                   <div className="flex items-center gap-3 mb-2">
                     <Heart className="text-white flex-shrink-0" size={28} />
                     <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
-                      Assalamu'alaikum, {session?.user?.name || 'Ibu/Bapak'}! 👋
+                      {greeting}, {getFirstName(session?.user?.name)}! 👋
                     </h1>
                   </div>
                   <p className="text-emerald-50 text-base md:text-lg">
