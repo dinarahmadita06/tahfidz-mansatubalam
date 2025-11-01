@@ -19,15 +19,23 @@ function getDashboardUrl(userRole) {
 }
 
 export async function middleware(request) {
-  const token = await getToken({
+  // Try to get token with both v4 and v5 cookie names
+  let token = await getToken({
     req: request,
-    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === 'production',
   });
 
   const { pathname } = request.nextUrl;
 
   // Debug logging
   console.log('🔍 [MIDDLEWARE] Path:', pathname, '| Has Token:', !!token, '| Role:', token?.role);
+
+  // Additional debug for production
+  if (process.env.NODE_ENV === 'production') {
+    const cookies = request.cookies.getAll();
+    console.log('🍪 [MIDDLEWARE] Cookies:', cookies.map(c => c.name).join(', '));
+  }
 
   // Public routes yang tidak perlu auth
   const publicRoutes = ['/register', '/lupa-password', '/reset-password', '/registrasi-orang-tua'];
