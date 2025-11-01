@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+// Helper function to get dashboard URL based on role
+function getDashboardUrl(userRole) {
+  switch (userRole) {
+    case 'ADMIN':
+      return '/admin';
+    case 'GURU':
+      return '/guru';
+    case 'ORANGTUA':
+    case 'ORANG_TUA': // Support underscore format
+      return '/orangtua';
+    case 'SISWA':
+      return '/siswa';
+    default:
+      return '/siswa'; // Default to siswa dashboard
+  }
+}
+
 export async function middleware(request) {
   const token = await getToken({
     req: request,
@@ -9,9 +26,34 @@ export async function middleware(request) {
 
   const { pathname } = request.nextUrl;
 
+  // Debug logging
+  console.log('🔍 [MIDDLEWARE] Path:', pathname, '| Has Token:', !!token, '| Role:', token?.role);
+
   // Public routes yang tidak perlu auth
-  const publicRoutes = ['/login', '/register', '/api/auth'];
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  const publicRoutes = ['/register', '/lupa-password', '/reset-password', '/registrasi-orang-tua'];
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  const isAuthApiRoute = pathname.startsWith('/api/auth');
+  const isLoginPage = pathname === '/login';
+
+  // Allow auth API routes
+  if (isAuthApiRoute) {
+    return NextResponse.next();
+  }
+
+  // If user is already logged in and trying to access login page, redirect to their dashboard
+  if (isLoginPage && token) {
+    const dashboardUrl = getDashboardUrl(token.role);
+    console.log('🔄 [MIDDLEWARE] User already logged in, redirecting from /login to:', dashboardUrl);
+    return NextResponse.redirect(new URL(dashboardUrl, request.url));
+  }
+
+  // Allow public routes
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+
+  // Allow login page for non-authenticated users
+  if (isLoginPage) {
     return NextResponse.next();
   }
 
@@ -19,58 +61,49 @@ export async function middleware(request) {
   if (!token) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
+    console.log('❌ [MIDDLEWARE] No token, redirecting to login');
     return NextResponse.redirect(loginUrl);
   }
 
   // Role-based access control
   const role = token.role;
 
-  // Debug logging
-  console.log('🔍 Middleware - Path:', pathname, '| Role:', role);
-
-  // Helper function to get dashboard URL based on role
-  const getDashboardUrl = (userRole) => {
-    switch (userRole) {
-      case 'ADMIN':
-        return '/admin';
-      case 'GURU':
-        return '/guru';
-      case 'ORANGTUA':
-      case 'ORANG_TUA': // Support underscore format
-        return '/orangtua';
-      case 'SISWA':
-        return '/siswa';
-      default:
-        return '/dashboard';
-    }
-  };
-
   // Admin routes
   if (pathname.startsWith('/admin') && role !== 'ADMIN') {
-    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
+    const redirectUrl = getDashboardUrl(role);
+    console.log('🚫 [MIDDLEWARE] Access denied to /admin, redirecting to:', redirectUrl);
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Guru routes
   if (pathname.startsWith('/guru') && role !== 'GURU') {
-    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
+    const redirectUrl = getDashboardUrl(role);
+    console.log('🚫 [MIDDLEWARE] Access denied to /guru, redirecting to:', redirectUrl);
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Orangtua routes
   if (pathname.startsWith('/orangtua') && role !== 'ORANGTUA' && role !== 'ORANG_TUA') {
-    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
+    const redirectUrl = getDashboardUrl(role);
+    console.log('🚫 [MIDDLEWARE] Access denied to /orangtua, redirecting to:', redirectUrl);
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Siswa routes
   if (pathname.startsWith('/siswa') && role !== 'SISWA') {
-    return NextResponse.redirect(new URL(getDashboardUrl(role), request.url));
+    const redirectUrl = getDashboardUrl(role);
+    console.log('🚫 [MIDDLEWARE] Access denied to /siswa, redirecting to:', redirectUrl);
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Redirect root and /dashboard to role-specific dashboard
   if (pathname === '/' || pathname === '/dashboard') {
     const targetUrl = getDashboardUrl(role);
-    console.log('🔄 Redirecting from', pathname, 'to', targetUrl, '(Role:', role + ')');
+    console.log('🔄 [MIDDLEWARE] Redirecting from', pathname, 'to', targetUrl, '(Role:', role + ')');
     return NextResponse.redirect(new URL(targetUrl, request.url));
   }
+
+  console.log('✅ [MIDDLEWARE] Access granted to:', pathname);
 
   return NextResponse.next();
 }

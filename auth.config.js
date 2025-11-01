@@ -11,53 +11,78 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email dan password harus diisi");
+        try {
+          console.log('🔐 [AUTH] Authorize attempt for:', credentials?.email);
+
+          if (!credentials?.email || !credentials?.password) {
+            console.error('❌ [AUTH] Missing credentials');
+            throw new Error("Email dan password harus diisi");
+          }
+
+          console.log('🔍 [AUTH] Looking up user in database...');
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email.toLowerCase().trim(),
+            },
+            include: {
+              siswa: true,
+              guru: true,
+              orangTua: true,
+            },
+          });
+
+          if (!user) {
+            console.error('❌ [AUTH] User not found:', credentials.email);
+            throw new Error("Email atau password salah");
+          }
+
+          console.log('✅ [AUTH] User found:', { id: user.id, email: user.email, role: user.role });
+
+          // Check if user account is active based on role
+          if (user.role === 'SISWA' && user.siswa?.status !== 'approved') {
+            console.error('❌ [AUTH] Siswa account not approved');
+            throw new Error("Akun Anda belum disetujui oleh admin");
+          }
+
+          if (user.role === 'ORANG_TUA' && user.orangTua?.status !== 'approved') {
+            console.error('❌ [AUTH] Orang tua account not approved');
+            throw new Error("Akun Anda belum disetujui oleh admin");
+          }
+
+          console.log('🔑 [AUTH] Comparing password...');
+          console.log('🔑 [AUTH] Password hash exists:', !!user.password);
+          console.log('🔑 [AUTH] Password hash length:', user.password?.length);
+
+          // Ensure we're using bcryptjs compare properly
+          const isPasswordValid = await bcrypt.compare(
+            String(credentials.password),
+            String(user.password)
+          );
+
+          console.log('🔑 [AUTH] Password valid:', isPasswordValid);
+
+          if (!isPasswordValid) {
+            console.error('❌ [AUTH] Invalid password for:', credentials.email);
+            throw new Error("Email atau password salah");
+          }
+
+          console.log('✅ [AUTH] Authentication successful for:', user.email);
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            image: user.image,
+            siswaId: user.siswa?.id,
+            guruId: user.guru?.id,
+            orangTuaId: user.orangTua?.id,
+          };
+        } catch (error) {
+          console.error('💥 [AUTH] Error in authorize:', error.message);
+          console.error('💥 [AUTH] Error stack:', error.stack);
+          throw error;
         }
-
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
-          include: {
-            siswa: true,
-            guru: true,
-            orangTua: true,
-          },
-        });
-
-        if (!user) {
-          throw new Error("Email atau password salah");
-        }
-
-        // Check if user account is active based on role
-        if (user.role === 'SISWA' && user.siswa?.status !== 'approved') {
-          throw new Error("Akun Anda belum disetujui oleh admin");
-        }
-
-        if (user.role === 'ORANG_TUA' && user.orangTua?.status !== 'approved') {
-          throw new Error("Akun Anda belum disetujui oleh admin");
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error("Email atau password salah");
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          image: user.image,
-          siswaId: user.siswa?.id,
-          guruId: user.guru?.id,
-          orangTuaId: user.orangTua?.id,
-        };
       },
     }),
   ],
