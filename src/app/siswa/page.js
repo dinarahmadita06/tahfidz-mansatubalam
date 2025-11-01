@@ -151,36 +151,36 @@ export default function DashboardSiswa() {
 
   return (
     <SiswaLayout>
-      <div className="min-h-screen bg-gradient-dashboard animate-fade-in">
+      <div className="min-h-screen bg-gradient-dashboard animate-fade-in overflow-x-hidden max-w-full">
         {/* Greeting Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
           {/* Decorative Elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+          <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-3">
-              <Sparkles className="text-amber-300" size={28} />
-              <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <div className="flex items-center gap-2 md:gap-3 mb-3">
+              <Sparkles className="text-amber-300 flex-shrink-0" size={24} />
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
                 {greeting}, {getFirstName(session?.user?.name)}! 👋
               </h1>
             </div>
-            <p className="text-emerald-50 text-lg mb-4">{currentTime}</p>
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                <BookMarked className="text-white" size={18} />
-                <span className="text-white font-medium text-sm">
+            <p className="text-emerald-50 text-base md:text-lg mb-4">{currentTime}</p>
+            <div className="flex flex-wrap gap-3 md:gap-4 items-center">
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 rounded-full">
+                <BookMarked className="text-white flex-shrink-0" size={16} />
+                <span className="text-white font-medium text-xs md:text-sm">
                   {stats.hafalanSelesai} Hafalan Selesai
                 </span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                <Target className="text-white" size={18} />
-                <span className="text-white font-medium text-sm">
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 rounded-full">
+                <Target className="text-white flex-shrink-0" size={16} />
+                <span className="text-white font-medium text-xs md:text-sm">
                   Target: {stats.totalHafalan} Hafalan
                 </span>
               </div>

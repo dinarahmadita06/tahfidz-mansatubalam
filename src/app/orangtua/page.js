@@ -228,30 +228,30 @@ export default function DashboardOrangTua() {
 
   return (
     <OrangtuaLayout>
-      <div className="min-h-screen animate-fade-in">
+      <div className="min-h-screen animate-fade-in overflow-x-hidden max-w-full">
         {/* Header dengan Salam */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 relative"
         >
-          <div className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-visible">
+          <div className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
             {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
 
             <div className="relative z-10">
               {/* Header Content - Flexible Layout */}
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4">
                 {/* Left: Greeting */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Heart className="text-white flex-shrink-0" size={28} />
-                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2">
+                    <Heart className="text-white flex-shrink-0" size={24} />
+                    <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white break-words">
                       {greeting}, {getFirstName(session?.user?.name)}! 👋
                     </h1>
                   </div>
-                  <p className="text-emerald-50 text-base md:text-lg">
+                  <p className="text-emerald-50 text-sm md:text-base lg:text-lg">
                     Berikut perkembangan hafalan anak Anda.
                   </p>
                 </div>
