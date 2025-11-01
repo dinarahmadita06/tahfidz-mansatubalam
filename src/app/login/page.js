@@ -16,10 +16,10 @@ export default function LoginPage() {
 
   const quickLogin = (role) => {
     const credentials = {
-      ADMIN: { email: 'admin@tahfidz.sch.id', password: 'password123' },
-      GURU: { email: 'ahmad.fauzi@tahfidz.sch.id', password: 'password123' },
-      SISWA: { email: 'abdullah.rahman@siswa.tahfidz.sch.id', password: 'password123' },
-      ORANG_TUA: { email: 'ortu.24001@parent.tahfidz.sch.id', password: 'password123' },
+      ADMIN: { email: 'admin@tahfidz.sch.id', password: '123456' },
+      GURU: { email: 'ahmad.fauzi@tahfidz.sch.id', password: '123456' },
+      SISWA: { email: 'abdullah.rahman@siswa.tahfidz.sch.id', password: '123456' },
+      ORANG_TUA: { email: 'ortu.24001@parent.tahfidz.sch.id', password: '123456' },
     };
 
     const cred = credentials[role];
@@ -80,13 +80,16 @@ export default function LoginPage() {
         const dashboardMap = {
           ADMIN: '/admin',
           GURU: '/guru',
-          SISWA: '/dashboard',
+          SISWA: '/siswa',
           ORANG_TUA: '/orangtua',
         };
 
         const redirectPath = dashboardMap[session?.user?.role] || '/';
-        console.log('🔀 Redirecting to:', redirectPath);
-        window.location.href = redirectPath;
+        console.log('🔀 Redirecting to:', redirectPath, 'for role:', session?.user?.role);
+
+        // Use router.push instead of window.location.href to avoid full page reload
+        router.push(redirectPath);
+        router.refresh();
       }
     } catch (err) {
       console.error('💥 Login exception:', err);
