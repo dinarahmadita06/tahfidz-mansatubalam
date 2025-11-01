@@ -35,7 +35,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      console.log('🔐 Attempting login with email:', email);
+      console.log('🔐 [LOGIN] Attempting login with email:', email);
 
       const result = await signIn('credentials', {
         email,
@@ -43,10 +43,15 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      console.log('📝 Login result:', result);
+      console.log('📝 [LOGIN] SignIn result:', {
+        ok: result?.ok,
+        error: result?.error,
+        status: result?.status,
+        url: result?.url
+      });
 
       if (result?.error) {
-        console.error('❌ Login error:', result.error);
+        console.error('❌ [LOGIN] Login failed:', result.error);
 
         // Provide more specific error messages
         if (result.error === 'CredentialsSignin') {
@@ -57,42 +62,59 @@ export default function LoginPage() {
           setError(result.error);
         }
         setLoading(false);
-      } else {
-        console.log('✅ Login successful, fetching session...');
-        // Fetch session to get user role
-        const response = await fetch('/api/auth/session');
-        const session = await response.json();
-
-        console.log('👤 Session data:', session);
-
-        // Log login activity
-        try {
-          await fetch('/api/auth/log-activity', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'LOGIN' })
-          });
-        } catch (err) {
-          console.error('⚠️ Failed to log activity:', err);
-        }
-
-        // Redirect based on role
-        const dashboardMap = {
-          ADMIN: '/admin',
-          GURU: '/guru',
-          SISWA: '/siswa',
-          ORANG_TUA: '/orangtua',
-        };
-
-        const redirectPath = dashboardMap[session?.user?.role] || '/';
-        console.log('🔀 Redirecting to:', redirectPath, 'for role:', session?.user?.role);
-
-        // Use router.push instead of window.location.href to avoid full page reload
-        router.push(redirectPath);
-        router.refresh();
+        return;
       }
+
+      // Login successful
+      console.log('✅ [LOGIN] Login successful! Status:', result?.status);
+      console.log('🔄 [LOGIN] Fetching session...');
+
+      // Wait a bit for the session to be created
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Fetch session to get user role
+      const response = await fetch('/api/auth/session');
+      const session = await response.json();
+
+      console.log('👤 [LOGIN] Session fetched:', {
+        hasUser: !!session?.user,
+        role: session?.user?.role,
+        email: session?.user?.email
+      });
+
+      if (!session?.user) {
+        console.error('❌ [LOGIN] No session found after login!');
+        setError('Login berhasil tapi session tidak ditemukan. Silakan refresh halaman.');
+        setLoading(false);
+        return;
+      }
+
+      // Log login activity
+      try {
+        await fetch('/api/auth/log-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'LOGIN' })
+        });
+      } catch (err) {
+        console.error('⚠️ [LOGIN] Failed to log activity:', err);
+      }
+
+      // Redirect based on role
+      const dashboardMap = {
+        ADMIN: '/admin',
+        GURU: '/guru',
+        SISWA: '/siswa',
+        ORANG_TUA: '/orangtua',
+      };
+
+      const redirectPath = dashboardMap[session.user.role] || '/siswa';
+      console.log('🔀 [LOGIN] Redirecting to:', redirectPath, 'for role:', session.user.role);
+
+      // Force a full page navigation to ensure middleware processes the token
+      window.location.href = redirectPath;
     } catch (err) {
-      console.error('💥 Login exception:', err);
+      console.error('💥 [LOGIN] Login exception:', err);
       setError('Terjadi kesalahan saat login: ' + err.message);
       setLoading(false);
     }

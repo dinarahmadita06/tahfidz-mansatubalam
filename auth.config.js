@@ -89,6 +89,7 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log('🔑 [JWT] Creating token for user:', { id: user.id, role: user.role });
         token.id = user.id;
         token.role = user.role;
         token.siswaId = user.siswaId;
@@ -99,6 +100,7 @@ export const authConfig = {
     },
     async session({ session, token }) {
       if (token) {
+        console.log('📦 [SESSION] Creating session for token:', { id: token.id, role: token.role });
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.siswaId = token.siswaId;
@@ -108,9 +110,24 @@ export const authConfig = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Get the token to check user role
-      // This will be called after successful sign in
-      return baseUrl; // Let middleware handle the role-based redirect
+      console.log('🔄 [REDIRECT CALLBACK] url:', url, 'baseUrl:', baseUrl);
+
+      // If url is a relative path, prepend baseUrl
+      if (url.startsWith('/')) {
+        const fullUrl = `${baseUrl}${url}`;
+        console.log('🔄 [REDIRECT CALLBACK] Returning relative URL:', fullUrl);
+        return fullUrl;
+      }
+
+      // If url already contains the baseUrl, return it
+      if (url.startsWith(baseUrl)) {
+        console.log('🔄 [REDIRECT CALLBACK] Returning full URL:', url);
+        return url;
+      }
+
+      // Default: return baseUrl (will be handled by client-side redirect)
+      console.log('🔄 [REDIRECT CALLBACK] Returning baseUrl:', baseUrl);
+      return baseUrl;
     },
   },
   pages: {
