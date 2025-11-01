@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   BookOpen,
@@ -71,11 +72,15 @@ function ProgressRing({ progress = 75, color = 'emerald', size = 120, strokeWidt
 }
 
 export default function DashboardSiswa() {
+  const { data: session } = useSession();
   const [currentTime, setCurrentTime] = useState('');
   const [greeting, setGreeting] = useState('');
 
-  // Data dummy untuk dashboard
-  const siswaName = 'Ahmad Fauzan';
+  // Ambil nama depan dari nama user (mengambil kata pertama)
+  const getFirstName = (fullName) => {
+    if (!fullName) return 'Siswa';
+    return fullName.split(' ')[0];
+  };
   const stats = {
     hafalanSelesai: 15,
     totalHafalan: 30,
@@ -162,7 +167,7 @@ export default function DashboardSiswa() {
             <div className="flex items-center gap-3 mb-3">
               <Sparkles className="text-amber-300" size={28} />
               <h1 className="text-3xl md:text-4xl font-bold text-white">
-                {greeting}, {siswaName}! 👋
+                {greeting}, {getFirstName(session?.user?.name)}! 👋
               </h1>
             </div>
             <p className="text-emerald-50 text-lg mb-4">{currentTime}</p>

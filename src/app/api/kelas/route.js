@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 
 export async function GET(request) {
@@ -43,7 +43,7 @@ export async function GET(request) {
             },
           },
           orderBy: {
-            peran: 'asc' // utama dulu
+            tanggalMulai: 'asc'
           }
         },
         tahunAjaran: {

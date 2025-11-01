@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
-    if (!session || session.user.role !== 'ORANGTUA') {
+    if (!session || session.user.role !== 'ORANG_TUA') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -305,9 +304,9 @@ export async function GET(request) {
 // Export PDF endpoint
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
-    if (!session || session.user.role !== 'ORANGTUA') {
+    if (!session || session.user.role !== 'ORANG_TUA') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

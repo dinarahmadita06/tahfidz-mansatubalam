@@ -15,7 +15,8 @@ import {
   BookOpen,
   Star,
   CalendarCheck2,
-  Book
+  Book,
+  Target
 } from 'lucide-react';
 
 const menuItems = [
@@ -42,6 +43,12 @@ const menuItems = [
     icon: CalendarCheck2,
     href: '/guru/presensi',
     description: 'Catat kehadiran siswa'
+  },
+  {
+    title: 'Target Hafalan',
+    icon: Target,
+    href: '/guru/target-hafalan',
+    description: 'Target & progres siswa'
   },
   {
     title: 'Referensi Al-Qur\'an',
@@ -148,7 +155,7 @@ function Sidebar({ userName = 'Guru' }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      prefetch={true}
+                      prefetch={false}
                       onClick={() => setIsOpen(false)}
                       className={`
                         flex items-center gap-3 px-3 py-3 rounded-lg transition-all

@@ -63,6 +63,7 @@ const colors = {
 export default function GuruDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [greeting, setGreeting] = useState('');
 
   const [stats, setStats] = useState({
     jumlahKelas: 0,
@@ -85,6 +86,13 @@ export default function GuruDashboard() {
   });
 
   useEffect(() => {
+    // Set greeting based on time
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Selamat Pagi');
+    else if (hour < 15) setGreeting('Selamat Siang');
+    else if (hour < 18) setGreeting('Selamat Sore');
+    else setGreeting('Selamat Malam');
+
     if (status === 'authenticated' && session?.user?.role === 'GURU') {
       fetchDashboardData();
     } else if (status === 'unauthenticated') {
@@ -102,33 +110,37 @@ export default function GuruDashboard() {
     try {
       const kelasRes = await fetch('/api/kelas');
       const kelasData = await kelasRes.json();
-      setKelasList(kelasData);
+      setKelasList(Array.isArray(kelasData) ? kelasData : []);
 
       const siswaRes = await fetch('/api/siswa');
       const siswaData = await siswaRes.json();
+      const siswaArray = Array.isArray(siswaData) ? siswaData : [];
 
       const hafalanRes = await fetch('/api/hafalan');
       const hafalanData = await hafalanRes.json();
-      setAktivitasTerbaru(hafalanData.slice(0, 5));
+      const hafalanArray = Array.isArray(hafalanData) ? hafalanData : [];
+      setAktivitasTerbaru(hafalanArray.slice(0, 5));
 
-      if (siswaData.length > 0) {
+      if (siswaArray.length > 0) {
         let totalProgress = 0;
-        for (const siswa of siswaData) {
-          const siswaHafalan = hafalanData.filter(h => h.siswaId === siswa.id);
+        for (const siswa of siswaArray) {
+          const siswaHafalan = hafalanArray.filter(h => h.siswaId === siswa.id);
           const uniqueJuz = [...new Set(siswaHafalan.map(h => h.juz))];
           const progress = (uniqueJuz.length / 30) * 100;
           totalProgress += progress;
         }
-        const avgProgress = totalProgress / siswaData.length;
+        const avgProgress = totalProgress / siswaArray.length;
 
+        const kelasArray = Array.isArray(kelasData) ? kelasData : [];
         setStats({
-          jumlahKelas: kelasData.length,
-          jumlahSiswa: siswaData.length,
+          jumlahKelas: kelasArray.length,
+          jumlahSiswa: siswaArray.length,
           progressRataRata: avgProgress.toFixed(1),
         });
       } else {
+        const kelasArray = Array.isArray(kelasData) ? kelasData : [];
         setStats({
-          jumlahKelas: kelasData.length,
+          jumlahKelas: kelasArray.length,
           jumlahSiswa: 0,
           progressRataRata: 0,
         });
@@ -259,6 +271,12 @@ export default function GuruDashboard() {
     day: 'numeric',
   });
 
+  // Ambil nama depan dari nama user (mengambil kata pertama)
+  const getFirstName = (fullName) => {
+    if (!fullName) return 'Guru';
+    return fullName.split(' ')[0];
+  };
+
   return (
     <GuruLayout>
       <div style={{
@@ -327,7 +345,7 @@ export default function GuruDashboard() {
                 color: colors.text.secondary,
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}>
-                Selamat datang, {session?.user?.name} • {formattedDate}
+                {greeting}, {getFirstName(session?.user?.name)} • {formattedDate}
               </p>
             </div>
             <button

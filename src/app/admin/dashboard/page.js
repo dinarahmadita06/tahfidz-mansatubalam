@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -1235,8 +1236,25 @@ function QuickActionCard({ icon, title, description, href, color = 'emerald' }) 
 }
 
 export default function DashboardTahfidz() {
+  const { data: session } = useSession();
   const [data, setData] = useState(mockData);
   const [loading, setLoading] = useState(false);
+  const [greeting, setGreeting] = useState('');
+
+  // Ambil nama depan dari nama user (mengambil kata pertama)
+  const getFirstName = (fullName) => {
+    if (!fullName) return 'Admin';
+    return fullName.split(' ')[0];
+  };
+
+  useEffect(() => {
+    // Set greeting based on time
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Selamat Pagi');
+    else if (hour < 15) setGreeting('Selamat Siang');
+    else if (hour < 18) setGreeting('Selamat Sore');
+    else setGreeting('Selamat Malam');
+  }, []);
 
   return (
     <AdminLayout>
@@ -1279,11 +1297,11 @@ export default function DashboardTahfidz() {
             </h1>
             <p style={{
               fontSize: '14px',
-              fontWeight: 400,
+              fontWeight: 500,
               color: colors.text.secondary,
               fontFamily: '"Poppins", system-ui, sans-serif',
             }}>
-              Analisis dan Statistik Sistem Tahfidz Al-Qur&apos;an
+              {greeting}, {getFirstName(session?.user?.name)} • Analisis dan Statistik Sistem Tahfidz Al-Qur&apos;an
             </p>
           </div>
         </div>

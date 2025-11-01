@@ -17,6 +17,8 @@ export async function GET(request) {
     const status = searchParams.get('status');
     const kelasId = searchParams.get('kelasId');
     const search = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
 
     let whereClause = {};
 
@@ -37,8 +39,14 @@ export async function GET(request) {
       ];
     }
 
+    // Get total count for pagination
+    const totalCount = await prisma.siswa.count({ where: whereClause });
+    const totalPages = Math.ceil(totalCount / limit);
+
     const siswa = await prisma.siswa.findMany({
       where: whereClause,
+      skip: (page - 1) * limit,
+      take: limit,
       include: {
         user: {
           select: {
@@ -76,7 +84,15 @@ export async function GET(request) {
       }
     });
 
-    return NextResponse.json(siswa);
+    return NextResponse.json({
+      data: siswa,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error('Error fetching siswa:', error);
     return NextResponse.json(

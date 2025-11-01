@@ -229,27 +229,10 @@ export default function AdminGuruPage() {
     }
   };
 
+  // Note: isActive field is not available in User model
+  // Keeping this function for future implementation if needed
   const handleToggleActive = async (id, currentStatus) => {
-    try {
-      const response = await fetch(`/api/guru/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-
-      if (response.ok) {
-        alert(`Guru berhasil ${!currentStatus ? 'diaktifkan' : 'dinonaktifkan'}`);
-        fetchGuru();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal mengubah status guru');
-      }
-    } catch (error) {
-      console.error('Error toggling guru status:', error);
-      alert('Gagal mengubah status guru');
-    }
+    alert('Fitur aktivasi/nonaktifkan guru belum tersedia. Semua guru aktif secara default.');
   };
 
   const resetForm = () => {
@@ -267,23 +250,22 @@ export default function AdminGuruPage() {
 
 
   // Filter data
-  const filteredGuru = guru.filter(g => {
+  const filteredGuru = Array.isArray(guru) ? guru.filter(g => {
     const matchSearch = g.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       g.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (g.nip && g.nip.includes(searchTerm));
 
-    const matchFilter = filterStatus === 'all' ||
-      (filterStatus === 'active' && g.user.isActive) ||
-      (filterStatus === 'inactive' && !g.user.isActive);
+    // Since we don't have isActive field, treat all guru as active
+    const matchFilter = filterStatus === 'all' || filterStatus === 'active';
 
     return matchSearch && matchFilter;
-  });
+  }) : [];
 
   // Statistics
   const stats = {
-    total: guru.length,
-    active: guru.filter(g => g.user.isActive).length,
-    inactive: guru.filter(g => !g.user.isActive).length,
+    total: Array.isArray(guru) ? guru.length : 0,
+    active: Array.isArray(guru) ? guru.length : 0,
+    inactive: 0,
   };
 
   if (loading) {
@@ -696,25 +678,23 @@ export default function AdminGuruPage() {
                             )}
                           </td>
                           <td style={{ padding: '20px 24px' }}>
-                            <button
-                              onClick={() => handleToggleActive(guruItem.id, guruItem.user.isActive)}
+                            <span
                               style={{
                                 padding: '8px 16px',
                                 fontSize: '13px',
                                 fontWeight: 600,
                                 borderRadius: '100px',
                                 border: 'none',
-                                cursor: 'pointer',
-                                background: guruItem.user.isActive ? colors.emerald.light : colors.amber.light,
-                                color: guruItem.user.isActive ? colors.emerald[700] : colors.amber[700],
+                                background: colors.emerald.light,
+                                color: colors.emerald[700],
                                 fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                                transition: 'all 0.3s ease',
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                                display: 'inline-block',
                               }}
                               className="status-badge"
                             >
-                              {guruItem.user.isActive ? 'Aktif' : 'Non-Aktif'}
-                            </button>
+                              Aktif
+                            </span>
                           </td>
                           <td style={{
                             padding: '20px 24px',

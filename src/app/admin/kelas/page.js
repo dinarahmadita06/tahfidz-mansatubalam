@@ -305,25 +305,26 @@ export default function AdminKelasPage() {
   };
 
   // Filter data
-  const filteredKelas = kelas.filter(k => {
+  const filteredKelas = Array.isArray(kelas) ? kelas.filter(k => {
     const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
 
+    // Since isActive is not available, treat all kelas as active if they have guru assigned
     const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'active' && k.guruKelas && k.guruKelas.some(kg => kg.isActive)) ||
-      (filterStatus === 'inactive' && (!k.guruKelas || !k.guruKelas.some(kg => kg.isActive)));
+      (filterStatus === 'active' && k.guruKelas && k.guruKelas.length > 0) ||
+      (filterStatus === 'inactive' && (!k.guruKelas || k.guruKelas.length === 0));
 
     const hasGuru = k.guruKelas && k.guruKelas.length > 0;
     const matchGuru = filterGuru === 'all' ||
       (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
 
     return matchSearch && matchGuru;
-  });
+  }) : [];
 
   // Statistics
   const stats = {
-    total: kelas.length,
-    active: kelas.filter(k => k.guruKelas && k.guruKelas.some(kg => kg.isActive)).length,
-    inactive: kelas.filter(k => !k.guruKelas || !k.guruKelas.some(kg => kg.isActive)).length,
+    total: Array.isArray(kelas) ? kelas.length : 0,
+    active: Array.isArray(kelas) ? kelas.filter(k => k.guruKelas && k.guruKelas.length > 0).length : 0,
+    inactive: Array.isArray(kelas) ? kelas.filter(k => !k.guruKelas || k.guruKelas.length === 0).length : 0,
   };
 
   if (loading) {

@@ -129,7 +129,7 @@ export default function RegistrasiOrangTuaPage() {
             Registrasi Orang Tua
           </h1>
           <p className="text-gray-600 text-lg">
-            Sistem Manajemen Hafalan Al-Quran
+            Sistem Informasi Manajemen Tahfidz Qur'an
           </p>
         </div>
 
@@ -358,7 +358,7 @@ export default function RegistrasiOrangTuaPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-gray-600 text-sm">
-            © 2025 Tahfidz Management System
+            © 2025 SIMTAQ
           </p>
         </div>
       </div>

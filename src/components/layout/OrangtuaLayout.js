@@ -9,13 +9,14 @@ import {
   BookOpen,
   Star,
   CalendarCheck,
-  MessageSquare,
   Settings,
   Menu,
   X,
   ChevronLeft,
   Heart,
   ChartBar,
+  Megaphone,
+  Target,
 } from 'lucide-react';
 
 const menuItems = [
@@ -48,11 +49,11 @@ const menuItems = [
     color: 'sky'
   },
   {
-    title: 'Komunikasi Guru',
-    icon: MessageSquare,
-    href: '/orangtua/komunikasi',
-    description: 'Chat dengan guru',
-    color: 'purple'
+    title: 'Target Hafalan',
+    icon: Target,
+    href: '/orangtua/target-hafalan',
+    description: 'Target & progress anak',
+    color: 'amber'
   },
   {
     title: 'Laporan Hafalan',
@@ -60,6 +61,13 @@ const menuItems = [
     href: '/orangtua/laporan-hafalan',
     description: 'Statistik & laporan',
     color: 'emerald'
+  },
+  {
+    title: 'Pengumuman',
+    icon: Megaphone,
+    href: '/orangtua/pengumuman',
+    description: 'Kabar terbaru',
+    color: 'amber'
   },
   {
     title: 'Profil',
@@ -179,7 +187,7 @@ function OrangtuaSidebar({ userName = 'Orang Tua' }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      prefetch={true}
+                      prefetch={false}
                       onClick={() => setIsOpen(false)}
                       className={`
                         flex items-center gap-3 px-3 py-3 rounded-xl transition-all
