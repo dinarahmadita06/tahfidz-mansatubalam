@@ -283,6 +283,8 @@ export default function GuruDashboard() {
         background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
         minHeight: '100vh',
         position: 'relative',
+        overflowX: 'hidden',
+        maxWidth: '100%',
       }}>
         {/* Islamic Pattern Background */}
         <div style={{
@@ -320,31 +322,35 @@ export default function GuruDashboard() {
         {/* Header */}
         <div style={{
           position: 'relative',
-          padding: '32px 48px 24px',
+          padding: '24px 16px 16px',
           borderBottom: `1px solid ${colors.gray[200]}`,
           background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
           backdropFilter: 'blur(10px)',
           zIndex: 2,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-            <div>
+        }}
+        className="md:px-8 lg:px-12">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+          className="sm:flex-row sm:justify-between sm:items-start">
+            <div style={{ flex: 1, minWidth: 0 }}>
               <h1 style={{
-                fontSize: '36px',
+                fontSize: '24px',
                 fontWeight: 700,
                 background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 marginBottom: '8px',
                 fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
+              }}
+              className="md:text-3xl lg:text-4xl">
                 Dashboard Guru Tahfidz
               </h1>
               <p style={{
-                fontSize: '15px',
+                fontSize: '13px',
                 fontWeight: 500,
                 color: colors.text.secondary,
                 fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
+              }}
+              className="md:text-sm lg:text-base">
                 {greeting}, {getFirstName(session?.user?.name)} • {formattedDate}
               </p>
             </div>
@@ -354,11 +360,12 @@ export default function GuruDashboard() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '8px',
-                padding: '12px 24px',
+                padding: '10px 16px',
                 background: refreshing ? colors.gray[300] : `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
                 color: colors.white,
-                fontSize: '14px',
+                fontSize: '13px',
                 fontWeight: 600,
                 borderRadius: '12px',
                 border: 'none',
@@ -366,7 +373,9 @@ export default function GuruDashboard() {
                 transition: 'all 0.2s ease',
                 fontFamily: 'Poppins, system-ui, sans-serif',
                 boxShadow: '0 2px 8px rgba(247, 200, 115, 0.3)',
+                width: '100%',
               }}
+              className="sm:w-auto md:px-6 md:py-3 md:text-sm"
             >
               <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
               {refreshing ? 'Memuat...' : 'Refresh'}
@@ -377,47 +386,53 @@ export default function GuruDashboard() {
         {/* Motivasi Harian */}
         <div style={{
           position: 'relative',
-          padding: '24px 48px',
+          padding: '16px',
           zIndex: 2,
-        }}>
+        }}
+        className="md:px-8 lg:px-12">
           <div style={{
             background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-            borderRadius: '20px',
-            padding: '24px 28px',
+            borderRadius: '16px',
+            padding: '16px',
             boxShadow: '0 8px 24px rgba(26, 147, 111, 0.15)',
             border: `2px solid ${colors.emerald[400]}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'start', gap: '16px' }}>
+          }}
+          className="md:rounded-2xl md:p-6">
+            <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}
+            className="md:gap-4">
               <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '14px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
                 background: `${colors.white}20`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-              }}>
-                <Sparkles size={24} color={colors.amber[100]} />
+              }}
+              className="md:w-12 md:h-12">
+                <Sparkles size={20} color={colors.amber[100]} className="md:w-6 md:h-6" />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
-                  fontSize: '17px',
+                  fontSize: '14px',
                   fontWeight: 600,
                   color: colors.white,
                   fontFamily: 'Poppins, system-ui, sans-serif',
                   fontStyle: 'italic',
-                  marginBottom: '10px',
+                  marginBottom: '8px',
                   lineHeight: '1.6',
-                }}>
+                }}
+                className="md:text-base lg:text-lg">
                   "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
                 </p>
                 <p style={{
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: 500,
                   color: colors.amber[100],
                   fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
+                }}
+                className="md:text-sm">
                   — HR. Bukhari
                 </p>
               </div>
@@ -426,54 +441,60 @@ export default function GuruDashboard() {
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
+        <div style={{ position: 'relative', padding: '16px', zIndex: 2 }}
+        className="md:px-8 lg:px-12 md:py-8">
           {/* Stats Cards */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
-            marginBottom: '32px',
+            gridTemplateColumns: '1fr',
+            gap: '16px',
+            marginBottom: '24px',
           }}
-          className="stats-grid">
+          className="sm:grid-cols-2 lg:grid-cols-3 md:gap-6 stats-grid">
             {/* Kelas Card */}
             <div style={{
               background: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
-              borderRadius: '20px',
-              padding: '28px',
+              borderRadius: '16px',
+              padding: '20px',
               boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
               border: `2px solid ${colors.emerald[200]}`,
             }}
-            className="stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+            className="stats-card md:rounded-2xl md:p-7">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}
+              className="md:gap-5">
                 <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '18px',
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '14px',
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                }}>
-                  <GraduationCap size={24} color={colors.white} />
+                  flexShrink: 0,
+                }}
+                className="md:w-16 md:h-16">
+                  <GraduationCap size={20} color={colors.white} className="md:w-6 md:h-6" />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     color: colors.text.secondary,
-                    marginBottom: '6px',
+                    marginBottom: '4px',
                     fontFamily: 'Poppins, system-ui, sans-serif',
-                  }}>
+                  }}
+                  className="md:text-sm md:mb-2">
                     Kelas Diampu
                   </p>
                   <p style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     color: colors.emerald[700],
                     fontFamily: 'Poppins, system-ui, sans-serif',
                     lineHeight: '1.1',
-                  }}>
+                  }}
+                  className="md:text-3xl lg:text-4xl">
                     {stats.jumlahKelas}
                   </p>
                 </div>
@@ -483,42 +504,47 @@ export default function GuruDashboard() {
             {/* Siswa Card */}
             <div style={{
               background: `linear-gradient(135deg, ${colors.amber[50]} 0%, ${colors.amber[100]} 100%)`,
-              borderRadius: '20px',
-              padding: '28px',
+              borderRadius: '16px',
+              padding: '20px',
               boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
               border: `2px solid ${colors.amber[200]}`,
             }}
-            className="stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+            className="stats-card md:rounded-2xl md:p-7">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}
+              className="md:gap-5">
                 <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '18px',
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '14px',
                   background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                }}>
-                  <Users size={24} color={colors.white} />
+                  flexShrink: 0,
+                }}
+                className="md:w-16 md:h-16">
+                  <Users size={20} color={colors.white} className="md:w-6 md:h-6" />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     color: colors.text.secondary,
-                    marginBottom: '6px',
+                    marginBottom: '4px',
                     fontFamily: 'Poppins, system-ui, sans-serif',
-                  }}>
+                  }}
+                  className="md:text-sm md:mb-2">
                     Jumlah Siswa
                   </p>
                   <p style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     color: colors.amber[700],
                     fontFamily: 'Poppins, system-ui, sans-serif',
                     lineHeight: '1.1',
-                  }}>
+                  }}
+                  className="md:text-3xl lg:text-4xl">
                     {stats.jumlahSiswa}
                   </p>
                 </div>
@@ -528,42 +554,47 @@ export default function GuruDashboard() {
             {/* Progress Card */}
             <div style={{
               background: `linear-gradient(135deg, ${colors.violet[100]} 0%, ${colors.violet[200]} 100%)`,
-              borderRadius: '20px',
-              padding: '28px',
+              borderRadius: '16px',
+              padding: '20px',
               boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
               border: `2px solid ${colors.violet[200]}`,
             }}
-            className="stats-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+            className="stats-card md:rounded-2xl md:p-7">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}
+              className="md:gap-5">
                 <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '18px',
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '14px',
                   background: `linear-gradient(135deg, ${colors.violet[500]} 0%, ${colors.violet[600]} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                }}>
-                  <Award size={24} color={colors.white} />
+                  flexShrink: 0,
+                }}
+                className="md:w-16 md:h-16">
+                  <Award size={20} color={colors.white} className="md:w-6 md:h-6" />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     color: colors.text.secondary,
-                    marginBottom: '6px',
+                    marginBottom: '4px',
                     fontFamily: 'Poppins, system-ui, sans-serif',
-                  }}>
+                  }}
+                  className="md:text-sm md:mb-2">
                     Progress Rata-rata
                   </p>
                   <p style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     color: colors.violet[700],
                     fontFamily: 'Poppins, system-ui, sans-serif',
                     lineHeight: '1.1',
-                  }}>
+                  }}
+                  className="md:text-3xl lg:text-4xl">
                     {stats.progressRataRata}%
                   </p>
                 </div>
@@ -574,44 +605,48 @@ export default function GuruDashboard() {
           {/* Grid Layout */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '24px',
-            marginBottom: '24px',
+            gridTemplateColumns: '1fr',
+            gap: '16px',
+            marginBottom: '16px',
           }}
-          className="cards-grid">
+          className="lg:grid-cols-2 md:gap-6 md:mb-6 cards-grid">
             {/* Kelola Kelas Card */}
             <div style={{
               background: colors.white,
-              borderRadius: '24px',
-              padding: '28px',
+              borderRadius: '16px',
+              padding: '20px',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.06)',
               border: `2px solid ${colors.emerald[100]}`,
             }}
-            className="card-container">
+            className="card-container md:rounded-2xl md:p-7">
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '14px',
-                marginBottom: '24px',
-              }}>
+                gap: '12px',
+                marginBottom: '20px',
+              }}
+              className="md:gap-4 md:mb-6">
                 <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '14px',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                }}>
-                  <BookOpen size={22} color={colors.white} />
+                  flexShrink: 0,
+                }}
+                className="md:w-12 md:h-12">
+                  <BookOpen size={18} color={colors.white} className="md:w-6 md:h-6" />
                 </div>
                 <h3 style={{
-                  fontSize: '20px',
+                  fontSize: '17px',
                   fontWeight: 700,
                   color: colors.text.primary,
                   fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
+                }}
+                className="md:text-xl">
                   Kelola Kelas
                 </h3>
               </div>
@@ -676,36 +711,40 @@ export default function GuruDashboard() {
             {/* Aktivitas Terbaru Card */}
             <div style={{
               background: colors.white,
-              borderRadius: '24px',
-              padding: '28px',
+              borderRadius: '16px',
+              padding: '20px',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.06)',
               border: `2px solid ${colors.amber[100]}`,
             }}
-            className="card-container">
+            className="card-container md:rounded-2xl md:p-7">
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '14px',
-                marginBottom: '24px',
-              }}>
+                gap: '12px',
+                marginBottom: '20px',
+              }}
+              className="md:gap-4 md:mb-6">
                 <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '14px',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
                   background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 4px 12px rgba(247, 200, 115, 0.3)',
-                }}>
-                  <BookMarked size={22} color={colors.white} />
+                  flexShrink: 0,
+                }}
+                className="md:w-12 md:h-12">
+                  <BookMarked size={18} color={colors.white} className="md:w-6 md:h-6" />
                 </div>
                 <h3 style={{
-                  fontSize: '20px',
+                  fontSize: '17px',
                   fontWeight: 700,
                   color: colors.text.primary,
                   fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
+                }}
+                className="md:text-xl">
                   Aktivitas Terbaru
                 </h3>
               </div>
@@ -796,37 +835,42 @@ export default function GuruDashboard() {
           {/* Agenda Hari Ini - Full Width */}
           <div style={{
             background: colors.white,
-            borderRadius: '24px',
-            padding: '28px',
+            borderRadius: '16px',
+            padding: '20px',
             boxShadow: '0 6px 20px rgba(0, 0, 0, 0.06)',
             border: `2px solid ${colors.violet[100]}`,
           }}
-          className="card-container">
+          className="card-container md:rounded-2xl md:p-7">
             <div style={{
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '24px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              flexDirection: 'column',
+              gap: '16px',
+              marginBottom: '20px',
+            }}
+            className="sm:flex-row sm:items-center sm:justify-between md:mb-6">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+              className="md:gap-4">
                 <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '14px',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
                   background: `linear-gradient(135deg, ${colors.violet[500]} 0%, ${colors.violet[600]} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
-                }}>
-                  <Calendar size={22} color={colors.white} />
+                  flexShrink: 0,
+                }}
+                className="md:w-12 md:h-12">
+                  <Calendar size={18} color={colors.white} className="md:w-6 md:h-6" />
                 </div>
                 <h3 style={{
-                  fontSize: '20px',
+                  fontSize: '17px',
                   fontWeight: 700,
                   color: colors.text.primary,
                   fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
+                }}
+                className="md:text-xl">
                   Agenda Setoran Hari Ini
                 </h3>
               </div>
@@ -836,13 +880,15 @@ export default function GuruDashboard() {
                   padding: '8px 16px',
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   color: colors.white,
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: 600,
                   borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
                   fontFamily: 'Poppins, system-ui, sans-serif',
+                  width: '100%',
                 }}
+                className="sm:w-auto md:text-sm md:px-5 md:py-2.5"
               >
                 + Tambah
               </button>
@@ -942,27 +988,33 @@ export default function GuruDashboard() {
           justifyContent: 'center',
           zIndex: 50,
           padding: '16px',
+          overflowY: 'auto',
         }}>
           <div style={{
             background: colors.white,
-            borderRadius: '20px',
+            borderRadius: '16px',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
             maxWidth: '500px',
             width: '100%',
-          }}>
+            maxHeight: '90vh',
+            overflowY: 'auto',
+          }}
+          className="md:rounded-2xl">
             <div style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '24px',
+              padding: '16px',
               borderBottom: `1px solid ${colors.gray[200]}`,
-            }}>
+            }}
+            className="md:p-6">
               <h3 style={{
-                fontSize: '20px',
+                fontSize: '17px',
                 fontWeight: 700,
                 color: colors.text.primary,
                 fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
+              }}
+              className="md:text-xl">
                 Tambah Agenda Baru
               </h3>
               <button
@@ -973,13 +1025,15 @@ export default function GuruDashboard() {
                   border: 'none',
                   cursor: 'pointer',
                   borderRadius: '8px',
+                  flexShrink: 0,
                 }}
               >
                 <X size={20} color={colors.text.tertiary} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitAgenda} style={{ padding: '24px' }}>
+            <form onSubmit={handleSubmitAgenda} style={{ padding: '16px' }}
+            className="md:p-6">
               <div style={{ marginBottom: '16px' }}>
                 <label style={{
                   display: 'block',
@@ -1095,7 +1149,8 @@ export default function GuruDashboard() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '24px' }}
+              className="sm:grid-cols-2">
                 <div>
                   <label style={{
                     display: 'block',
@@ -1236,17 +1291,7 @@ export default function GuruDashboard() {
           box-shadow: 0 4px 12px rgba(26, 147, 111, 0.12);
         }
 
-        @media (max-width: 1024px) {
-          .cards-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .stats-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
+        /* Responsive styles handled by Tailwind classes */
       `}</style>
     </GuruLayout>
   );
