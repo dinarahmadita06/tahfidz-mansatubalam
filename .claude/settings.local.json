@@ -56,7 +56,13 @@
       "Bash(cat:*)",
       "Bash(Select-String -Pattern \"(Compiled|Error|warn|✓|✗|Build)\")",
       "Bash(del /f /q \"src\\app\\admin\\data-siswa-example\\page.js\")",
-      "Bash(npm run db:seed:*)"
+      "Bash(npm run db:seed:*)",
+      "Bash(git push:*)",
+      "Bash(vercel --version:*)",
+      "Bash(vercel --prod --yes:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel link:*)",
+      "Bash(vercel logs:*)"
     ],
     "deny": [],
     "ask": []
