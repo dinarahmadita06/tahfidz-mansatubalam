@@ -220,44 +220,48 @@ export default function ProfilPage() {
         {/* Header */}
         <div style={{
           position: 'relative',
-          padding: '32px 48px 24px',
+          padding: '20px',
           borderBottom: `1px solid ${colors.gray[200]}`,
           background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
           backdropFilter: 'blur(10px)',
           zIndex: 2,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        }}
+        className="md:px-8">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
-                width: '52px',
-                height: '52px',
-                borderRadius: '14px',
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
                 background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.teal[500]} 100%)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                flexShrink: 0,
               }}>
-                <UserCircle size={26} style={{ color: colors.white }} />
+                <UserCircle size={22} style={{ color: colors.white }} />
               </div>
               <div>
                 <h1 style={{
-                  fontSize: '32px',
+                  fontSize: '20px',
                   fontWeight: 700,
                   background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.teal[600]} 100%)`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  marginBottom: '6px',
+                  marginBottom: '4px',
                   fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
+                }}
+                className="md:text-2xl">
                   Profil Saya
                 </h1>
                 <p style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: 500,
                   color: colors.text.secondary,
                   fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
+                }}
+                className="md:text-sm">
                   Kelola informasi profil Anda
                 </p>
               </div>
@@ -268,12 +272,13 @@ export default function ProfilPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 24px',
+                  gap: '6px',
+                  padding: '10px 18px',
+                  minHeight: '44px',
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   color: colors.white,
-                  borderRadius: '12px',
-                  fontSize: '14px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
                   fontWeight: 600,
                   border: 'none',
                   cursor: 'pointer',
@@ -281,9 +286,9 @@ export default function ProfilPage() {
                   fontFamily: '"Poppins", system-ui, sans-serif',
                   boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
                 }}
-                className="edit-btn"
+                className="edit-btn md:text-sm md:px-5"
               >
-                <Edit2 size={18} />
+                <Edit2 size={16} />
                 Edit Profil
               </button>
             )}
@@ -293,11 +298,12 @@ export default function ProfilPage() {
         {/* Main Content */}
         <div style={{
           position: 'relative',
-          padding: '32px 48px 48px',
+          padding: '20px',
           zIndex: 2,
           maxWidth: '1024px',
           margin: '0 auto',
-        }}>
+        }}
+        className="md:px-8 md:py-8">
           {success && (
             <div style={{
               marginBottom: '24px',
@@ -317,71 +323,78 @@ export default function ProfilPage() {
           {/* Profile Card */}
           <div style={{
             background: colors.white,
-            borderRadius: '20px',
+            borderRadius: '16px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
             border: `2px solid ${colors.gray[200]}`,
             overflow: 'hidden',
-            marginBottom: '24px',
-          }}>
+            marginBottom: '20px',
+          }}
+          className="md:rounded-xl">
             {/* Header Section */}
             <div style={{
               background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.teal[500]} 100%)`,
-              padding: '40px 32px',
+              padding: '24px 20px',
               position: 'relative',
-            }}>
+            }}
+            className="md:p-8">
               {/* Islamic Pattern Decoration */}
               <div style={{
                 position: 'absolute',
                 top: 0,
                 right: 0,
-                width: '200px',
-                height: '200px',
+                width: '120px',
+                height: '120px',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E")`,
                 backgroundSize: '60px 60px',
                 opacity: 0.5,
-              }} />
+              }} className="md:w-48 md:h-48" />
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative', zIndex: 1 }}>
                 <div style={{
-                  width: '88px',
-                  height: '88px',
+                  width: '64px',
+                  height: '64px',
                   background: colors.white,
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
-                  border: `4px solid ${colors.white}`,
-                }}>
+                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)',
+                  border: `3px solid ${colors.white}`,
+                  flexShrink: 0,
+                }}
+                className="md:w-20 md:h-20">
                   <span style={{
-                    fontSize: '40px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.teal[600]} 100%)`,
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
+                  }}
+                  className="md:text-4xl">
                     {profileData.name?.charAt(0)?.toUpperCase() || 'G'}
                   </span>
                 </div>
-                <div style={{ color: colors.white }}>
+                <div style={{ color: colors.white, flex: 1, minWidth: 0 }}>
                   <h2 style={{
-                    fontSize: '28px',
+                    fontSize: '18px',
                     fontWeight: 700,
                     marginBottom: '6px',
                     fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
+                  }}
+                  className="md:text-2xl">
                     {profileData.name || 'Nama Guru'}
                   </h2>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '14px',
+                    gap: '6px',
+                    fontSize: '13px',
                     opacity: 0.95,
                     fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    <Shield size={16} />
+                  }}
+                  className="md:text-sm">
+                    <Shield size={14} />
                     <span>Guru Tahfidz</span>
                   </div>
                 </div>
@@ -389,28 +402,31 @@ export default function ProfilPage() {
             </div>
 
             {/* Form Section */}
-            <form onSubmit={handleSubmit} style={{ padding: '32px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <form onSubmit={handleSubmit} style={{ padding: '20px' }}
+            className="md:p-8">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Informasi Pribadi */}
                 <div>
                   <h3 style={{
-                    fontSize: '18px',
+                    fontSize: '16px',
                     fontWeight: 700,
                     color: colors.text.primary,
-                    marginBottom: '20px',
+                    marginBottom: '16px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    <UserCircle size={20} style={{ color: colors.emerald[600] }} />
+                  }}
+                  className="md:text-lg">
+                    <UserCircle size={18} style={{ color: colors.emerald[600] }} />
                     Informasi Pribadi
                   </h3>
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '20px',
-                  }}>
+                    gridTemplateColumns: '1fr',
+                    gap: '16px',
+                  }}
+                  className="md:grid-cols-2 md:gap-5">
                     {/* Nama Lengkap */}
                     <div>
                       <label style={{
