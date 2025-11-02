@@ -235,23 +235,23 @@ export default function DashboardOrangTua() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 relative"
         >
-          <div className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-lg relative overflow-hidden">
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+          <div className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 rounded-3xl md:rounded-3xl p-7 md:p-10 shadow-lg relative overflow-hidden">
+            {/* Decorative Elements - contained */}
+            <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-white/10 rounded-full -translate-y-1/3 translate-x-1/3 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 md:w-40 md:h-40 bg-white/10 rounded-full translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
 
             <div className="relative z-10">
               {/* Header Content - Flexible Layout */}
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 mb-5">
                 {/* Left: Greeting */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 md:gap-3 mb-2">
-                    <Heart className="text-white flex-shrink-0" size={24} />
+                  <div className="flex items-center gap-3 md:gap-4 mb-3">
+                    <Heart className="text-white flex-shrink-0" size={28} />
                     <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white break-words">
                       {greeting}, {getFirstName(session?.user?.name)}! 👋
                     </h1>
                   </div>
-                  <p className="text-emerald-50 text-sm md:text-base lg:text-lg">
+                  <p className="text-emerald-50 text-base md:text-lg lg:text-xl">
                     Berikut perkembangan hafalan anak Anda.
                   </p>
                 </div>
@@ -259,12 +259,12 @@ export default function DashboardOrangTua() {
                 {/* Right: Info Anak Card */}
                 {selectedChild && (
                   <div className="w-full lg:w-auto flex-shrink-0">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md hover:bg-white/25 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{selectedChild.avatar}</span>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 shadow-md hover:bg-white/25 transition-all duration-200">
+                      <div className="flex items-center gap-4">
+                        <span className="text-4xl">{selectedChild.avatar}</span>
                         <div>
-                          <p className="text-white font-bold text-lg">{selectedChild.name}</p>
-                          <p className="text-emerald-100 text-sm">Kelas {selectedChild.kelas}</p>
+                          <p className="text-white font-bold text-xl">{selectedChild.name}</p>
+                          <p className="text-emerald-100 text-base">Kelas {selectedChild.kelas}</p>
                         </div>
                       </div>
                     </div>
@@ -274,17 +274,17 @@ export default function DashboardOrangTua() {
 
               {/* Child Selector Dropdown (jika lebih dari 1 anak) */}
               {children.length > 1 && (
-                <div className="relative mt-4">
+                <div className="relative mt-5">
                   <button
                     onClick={() => setShowChildSelector(!showChildSelector)}
-                    className="flex items-center gap-2 px-5 py-3 bg-white/90 hover:bg-white hover:ring-2 hover:ring-emerald-400/60 backdrop-blur-sm rounded-xl transition-all duration-200 ease-in-out shadow-md min-w-[180px] max-w-[320px]"
+                    className="flex items-center gap-3 px-6 py-4 min-h-[56px] bg-white/90 hover:bg-white hover:ring-2 hover:ring-emerald-400/60 backdrop-blur-sm rounded-xl transition-all duration-200 ease-in-out shadow-md min-w-[200px] max-w-[340px]"
                   >
-                    <User size={18} className="text-emerald-600 flex-shrink-0" />
-                    <span className="text-emerald-900 font-semibold text-sm flex-1 truncate">
+                    <User size={20} className="text-emerald-600 flex-shrink-0" />
+                    <span className="text-emerald-900 font-semibold text-base flex-1 truncate">
                       {selectedChild ? selectedChild.name : 'Pilih Anak'}
                     </span>
                     <ChevronDown
-                      size={18}
+                      size={20}
                       className={`text-emerald-600 flex-shrink-0 transition-transform duration-200 ${showChildSelector ? 'rotate-180' : ''}`}
                     />
                   </button>
@@ -297,7 +297,7 @@ export default function DashboardOrangTua() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl overflow-hidden z-50 min-w-[280px] max-w-[400px] w-full md:w-auto border border-emerald-100"
+                        className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 min-w-[300px] max-w-[420px] w-full md:w-auto border-2 border-emerald-100"
                       >
                         {children.map((child) => (
                           <button
@@ -306,17 +306,17 @@ export default function DashboardOrangTua() {
                               setSelectedChild(child);
                               setShowChildSelector(false);
                             }}
-                            className={`w-full px-5 py-4 flex items-center gap-3 hover:bg-emerald-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0 ${
+                            className={`w-full px-6 py-5 min-h-[72px] flex items-center gap-4 hover:bg-emerald-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0 ${
                               selectedChild?.id === child.id ? 'bg-emerald-50' : 'bg-white'
                             }`}
                           >
-                            <span className="text-3xl flex-shrink-0">{child.avatar}</span>
+                            <span className="text-4xl flex-shrink-0">{child.avatar}</span>
                             <div className="text-left flex-1 min-w-0">
-                              <p className="font-bold text-gray-900 truncate">{child.name}</p>
+                              <p className="font-bold text-gray-900 truncate text-base">{child.name}</p>
                               <p className="text-sm text-gray-600">Kelas {child.kelas}</p>
                             </div>
                             {selectedChild?.id === child.id && (
-                              <CheckCircle size={20} className="text-emerald-600 flex-shrink-0" />
+                              <CheckCircle size={24} className="text-emerald-600 flex-shrink-0" />
                             )}
                           </button>
                         ))}
@@ -340,24 +340,24 @@ export default function DashboardOrangTua() {
         </motion.div>
 
         {/* Statistics Cards - 4 Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
           {/* Card 1: Hafalan Selesai */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.15 }}
             whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 shadow-sm border border-emerald-100 hover:shadow-md transition-all duration-300 ease-in-out"
+            className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-emerald-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-emerald-400 rounded-xl shadow-sm">
-                <BookOpen className="text-white" size={24} />
+            <div className="flex items-center justify-between mb-5">
+              <div className="p-4 bg-emerald-500 rounded-2xl shadow-md">
+                <BookOpen className="text-white" size={28} />
               </div>
-              <ProgressRing progress={hafalanProgress} color="emerald" size={70} strokeWidth={5} />
+              <ProgressRing progress={hafalanProgress} color="emerald" size={90} strokeWidth={7} />
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Hafalan Selesai</h3>
+            <h3 className="text-base font-semibold text-gray-600 mb-2">Hafalan Selesai</h3>
             <p className="text-3xl font-bold text-gray-900">{stats.hafalanSelesai}</p>
-            <p className="text-xs text-emerald-600 font-medium mt-1">dari {stats.totalHafalan} target</p>
+            <p className="text-sm text-emerald-600 font-medium mt-2">dari {stats.totalHafalan} target</p>
           </motion.div>
 
           {/* Card 2: Rata-rata Nilai */}
@@ -366,17 +366,17 @@ export default function DashboardOrangTua() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
             whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-sm border border-amber-100 hover:shadow-md transition-all duration-300 ease-in-out"
+            className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-amber-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-amber-400 rounded-xl shadow-sm">
-                <Star className="text-white" size={24} />
+            <div className="flex items-center justify-between mb-5">
+              <div className="p-4 bg-amber-500 rounded-2xl shadow-md">
+                <Star className="text-white" size={28} />
               </div>
-              <ProgressRing progress={stats.rataRataNilai} color="amber" size={70} strokeWidth={5} />
+              <ProgressRing progress={stats.rataRataNilai} color="amber" size={90} strokeWidth={7} />
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Rata-rata Nilai</h3>
+            <h3 className="text-base font-semibold text-gray-600 mb-2">Rata-rata Nilai</h3>
             <p className="text-3xl font-bold text-gray-900">{stats.rataRataNilai}</p>
-            <p className="text-xs text-amber-600 font-medium mt-1">dari 100</p>
+            <p className="text-sm text-amber-600 font-medium mt-2">dari 100</p>
           </motion.div>
 
           {/* Card 3: Kehadiran */}
@@ -385,17 +385,17 @@ export default function DashboardOrangTua() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.25 }}
             whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-6 shadow-sm border border-sky-100 hover:shadow-md transition-all duration-300 ease-in-out"
+            className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-sky-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-sky-400 rounded-xl shadow-sm">
-                <CalendarCheck className="text-white" size={24} />
+            <div className="flex items-center justify-between mb-5">
+              <div className="p-4 bg-sky-500 rounded-2xl shadow-md">
+                <CalendarCheck className="text-white" size={28} />
               </div>
-              <ProgressRing progress={kehadiranProgress} color="sky" size={70} strokeWidth={5} />
+              <ProgressRing progress={kehadiranProgress} color="sky" size={90} strokeWidth={7} />
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Kehadiran</h3>
+            <h3 className="text-base font-semibold text-gray-600 mb-2">Kehadiran</h3>
             <p className="text-3xl font-bold text-gray-900">{stats.kehadiran}</p>
-            <p className="text-xs text-sky-600 font-medium mt-1">dari {stats.totalHari} hari</p>
+            <p className="text-sm text-sky-600 font-medium mt-2">dari {stats.totalHari} hari</p>
           </motion.div>
 
           {/* Card 4: Catatan Guru */}
@@ -404,21 +404,21 @@ export default function DashboardOrangTua() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
             whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6 shadow-sm border border-purple-100 hover:shadow-md transition-all duration-300 ease-in-out"
+            className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-purple-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-400 rounded-xl shadow-sm">
-                <MessageSquare className="text-white" size={24} />
+            <div className="flex items-center justify-between mb-5">
+              <div className="p-4 bg-purple-500 rounded-2xl shadow-md">
+                <MessageSquare className="text-white" size={28} />
               </div>
-              <div className="flex items-center justify-center w-16 h-16">
+              <div className="flex items-center justify-center w-24 h-24">
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-gray-900">{stats.catatanGuru}</p>
-                  <p className="text-xs text-purple-600 font-medium">Catatan</p>
+                  <p className="text-5xl font-bold text-gray-900">{stats.catatanGuru}</p>
+                  <p className="text-sm text-purple-600 font-medium mt-1">Catatan</p>
                 </div>
               </div>
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Catatan Guru</h3>
-            <p className="text-sm text-purple-600 font-medium mt-2">Lihat detail →</p>
+            <h3 className="text-base font-semibold text-gray-600 mb-2">Catatan Guru</h3>
+            <p className="text-base text-purple-600 font-medium mt-2">Lihat detail →</p>
           </motion.div>
         </div>
 
