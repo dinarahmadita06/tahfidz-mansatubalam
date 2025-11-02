@@ -371,7 +371,7 @@ export default function ProfilPage() {
 
   return (
     <OrangtuaLayout>
-      <div className="min-h-screen animate-fade-in">
+      <div className="min-h-screen animate-fade-in md:px-8" style={{ padding: '20px' }}>
         {/* Notification */}
         <AnimatePresence>
           {showNotification && (
@@ -402,10 +402,10 @@ export default function ProfilPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="bg-gradient-to-r from-emerald-400 via-mint-400 to-amber-200 rounded-3xl p-6 md:p-8 shadow-lg">
+          <div className="bg-gradient-to-r from-emerald-400 via-mint-400 to-amber-200 rounded-3xl shadow-lg" style={{ padding: '20px' }}>
             <div className="flex items-center gap-3 mb-3">
-              <UserCircle className="text-white flex-shrink-0" size={32} />
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
+              <UserCircle className="text-white flex-shrink-0" size={42} style={{ minWidth: '42px', minHeight: '42px' }} />
+              <h1 className="font-bold text-white md:text-2xl" style={{ fontSize: '20px' }}>
                 Profil Orang Tua
               </h1>
             </div>
@@ -428,21 +428,21 @@ export default function ProfilPage() {
             transition={{ delay: 0.1 }}
             className="lg:col-span-1"
           >
-            <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6">
+            <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 md:rounded-xl" style={{ padding: '20px', borderRadius: '16px' }}>
               <div className="flex flex-col items-center gap-4">
                 {/* Avatar */}
-                <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-mint-400 rounded-full flex items-center justify-center text-4xl text-white shadow-lg">
-                  <UserCircle size={64} />
+                <div className="bg-gradient-to-br from-emerald-400 to-mint-400 rounded-full flex items-center justify-center text-white shadow-lg md:w-20 md:h-20" style={{ width: '64px', height: '64px' }}>
+                  <UserCircle size={44} />
                 </div>
 
                 {/* Info */}
                 <div className="text-center">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">{userData.namaLengkap}</h2>
-                  <p className="text-sm text-gray-600 mb-2 flex items-center gap-2 justify-center">
+                  <h2 className="font-bold text-gray-900 mb-2 md:text-2xl" style={{ fontSize: '18px' }}>{userData.namaLengkap}</h2>
+                  <p className="text-gray-600 mb-2 flex items-center gap-2 justify-center" style={{ fontSize: '13px' }}>
                     <Mail size={14} className="text-emerald-500" />
                     {userData.email}
                   </p>
-                  <span className="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  <span className="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-semibold md:text-sm" style={{ fontSize: '13px' }}>
                     {userData.role}
                   </span>
                 </div>
@@ -469,14 +469,16 @@ export default function ProfilPage() {
                 <div className="w-full space-y-2 mt-2">
                   <button
                     onClick={() => setIsEditModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors md:px-5 md:text-sm"
+                    style={{ padding: '10px 18px', minHeight: '44px', fontSize: '13px' }}
                   >
                     <Edit size={18} />
                     <span>Edit Profil</span>
                   </button>
                   <button
                     onClick={() => setIsPasswordModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-500 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="w-full flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-500 text-white rounded-lg transition-colors md:px-5 md:text-sm"
+                    style={{ padding: '10px 18px', minHeight: '44px', fontSize: '13px' }}
                   >
                     <Lock size={18} />
                     <span>Ganti Password</span>
@@ -493,14 +495,15 @@ export default function ProfilPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6"
+              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 md:rounded-xl md:p-8 md:gap-5"
+              style={{ padding: '20px', borderRadius: '16px' }}
             >
-              <h3 className="text-lg font-semibold text-emerald-700 border-b border-gray-200 pb-3 mb-4 flex items-center gap-2">
+              <h3 className="font-semibold text-emerald-700 border-b border-gray-200 pb-3 mb-4 flex items-center gap-2 md:text-lg" style={{ fontSize: '16px' }}>
                 <BookOpen size={22} />
                 Biodata Lengkap
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '16px' }}>
                 {/* Kolom Kiri */}
                 <div className="space-y-4">
                   <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
@@ -546,14 +549,15 @@ export default function ProfilPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6"
+              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 md:rounded-xl md:p-8"
+              style={{ padding: '20px', borderRadius: '16px' }}
             >
-              <h3 className="text-lg font-semibold text-emerald-700 border-b border-gray-200 pb-3 mb-4 flex items-center gap-2">
+              <h3 className="font-semibold text-emerald-700 border-b border-gray-200 pb-3 mb-4 flex items-center gap-2 md:text-lg" style={{ fontSize: '16px' }}>
                 <UserCircle size={22} />
                 Anak yang Terhubung dengan Akun Anda
               </h3>
 
-              <div className="space-y-4">
+              <div style={{ gap: '16px' }} className="space-y-4">
                 {anakData.map((anak) => {
                   const percentage = Math.round((anak.progressHafalan / anak.targetHafalan) * 100);
 
@@ -600,7 +604,8 @@ export default function ProfilPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-emerald-50 border border-emerald-200 rounded-xl p-5"
+              className="bg-emerald-50 border border-emerald-200 rounded-lg md:rounded-xl"
+              style={{ padding: '20px', borderRadius: '16px' }}
             >
               <div className="flex items-start gap-3">
                 <ShieldCheck size={22} className="text-emerald-600 flex-shrink-0" />
