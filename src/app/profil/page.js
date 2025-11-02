@@ -149,23 +149,25 @@ export default function ProfilPage() {
   return (
     <SiswaLayout>
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
+      <div className="mb-6" style={{ padding: '20px' }}>
+        <div className="flex items-center justify-between md:px-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <UserCircle size={24} className="text-white" />
+            <div className="bg-blue-600 rounded-lg flex items-center justify-center" style={{ width: '42px', height: '42px' }}>
+              <UserCircle size={20} className="text-white md:block hidden" />
+              <UserCircle size={18} className="text-white md:hidden" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Profil Saya</h1>
+              <h1 className="font-bold text-gray-900 md:text-2xl" style={{ fontSize: '20px' }}>Profil Saya</h1>
               <p className="text-sm text-gray-600">Kelola informasi profil Anda</p>
             </div>
           </div>
           {!editMode && (
             <button
               onClick={() => setEditMode(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="flex items-center gap-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition md:px-4 md:py-2"
+              style={{ padding: '10px 18px', minHeight: '44px', fontSize: '13px' }}
             >
-              <Edit2 size={18} />
+              <Edit2 size={16} />
               Edit Profil
             </button>
           )}
@@ -181,32 +183,32 @@ export default function ProfilPage() {
         )}
 
         {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div className="bg-white shadow-sm border border-gray-200 overflow-hidden mb-6 md:rounded-lg" style={{ borderRadius: '16px' }}>
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-green-600 px-6 py-8">
+          <div className="bg-gradient-to-r from-blue-600 to-green-600 md:px-8" style={{ padding: '24px 20px' }}>
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-                <span className="text-3xl font-bold text-blue-600">
+              <div className="bg-white rounded-full flex items-center justify-center md:w-20 md:h-20" style={{ width: '64px', height: '64px' }}>
+                <span className="font-bold text-blue-600 md:text-4xl" style={{ fontSize: '28px' }}>
                   {profileData.name?.charAt(0)?.toUpperCase() || 'S'}
                 </span>
               </div>
               <div className="text-white">
-                <h2 className="text-2xl font-bold">{profileData.name || 'Nama Siswa'}</h2>
-                <p className="text-blue-100">Siswa {siswaInfo?.kelas?.nama || ''}</p>
+                <h2 className="font-bold md:text-2xl" style={{ fontSize: '18px' }}>{profileData.name || 'Nama Siswa'}</h2>
+                <p className="text-blue-100 md:text-sm" style={{ fontSize: '13px' }}>Siswa {siswaInfo?.kelas?.nama || ''}</p>
               </div>
             </div>
           </div>
 
           {/* Form Section */}
-          <form onSubmit={handleSubmit} className="p-6">
+          <form onSubmit={handleSubmit} className="md:p-8 md:px-8" style={{ padding: '20px' }}>
             <div className="space-y-6">
               {/* Informasi Pribadi */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <UserCircle size={20} className="text-blue-600" />
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 md:text-lg" style={{ fontSize: '16px' }}>
+                  <UserCircle size={18} className="text-blue-600" />
                   Informasi Pribadi
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 md:gap-5" style={{ gap: '16px' }}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Nama Lengkap <span className="text-red-500">*</span>
@@ -314,9 +316,9 @@ export default function ProfilPage() {
         </div>
 
         {/* Security Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Lock size={20} className="text-blue-600" />
+        <div className="bg-white shadow-sm border border-gray-200 md:rounded-lg md:p-8" style={{ padding: '20px', borderRadius: '16px' }}>
+          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 md:text-lg" style={{ fontSize: '16px' }}>
+            <Lock size={18} className="text-blue-600" />
             Keamanan
           </h3>
           <div className="flex items-center justify-between">
@@ -334,7 +336,7 @@ export default function ProfilPage() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mt-6 bg-blue-50 border border-blue-200 md:rounded-lg" style={{ padding: '16px', borderRadius: '16px' }}>
           <p className="text-sm text-blue-900">
             <strong>💡 Tips:</strong> Pastikan informasi profil Anda selalu ter-update.
             Jika ada perubahan data seperti nomor telepon atau alamat, segera perbarui profil Anda.
@@ -345,9 +347,9 @@ export default function ProfilPage() {
       {/* Password Change Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Ubah Password</h3>
+          <div className="bg-white shadow-xl max-w-md w-full md:rounded-lg" style={{ borderRadius: '16px' }}>
+            <div className="flex items-center justify-between border-b md:p-6" style={{ padding: '20px' }}>
+              <h3 className="font-semibold text-gray-900 md:text-lg" style={{ fontSize: '16px' }}>Ubah Password</h3>
               <button
                 onClick={() => {
                   setShowPasswordModal(false);
@@ -363,7 +365,7 @@ export default function ProfilPage() {
               </button>
             </div>
 
-            <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
+            <form onSubmit={handlePasswordChange} className="space-y-4 md:p-6" style={{ padding: '20px' }}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password Lama <span className="text-red-500">*</span>
