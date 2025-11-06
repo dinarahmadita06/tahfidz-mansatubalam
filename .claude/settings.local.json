@@ -62,7 +62,8 @@
       "Bash(vercel --prod --yes:*)",
       "Bash(vercel ls:*)",
       "Bash(vercel link:*)",
-      "Bash(vercel logs:*)"
+      "Bash(vercel logs:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
