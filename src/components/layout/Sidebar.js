@@ -16,7 +16,8 @@ import {
   Star,
   CalendarCheck2,
   Book,
-  Target
+  Target,
+  Volume2
 } from 'lucide-react';
 
 const menuItems = [
@@ -37,6 +38,12 @@ const menuItems = [
     icon: Star,
     href: '/guru/penilaian-hafalan',
     description: 'Nilai hafalan siswa'
+  },
+  {
+    title: 'Tahsin',
+    icon: Volume2,
+    href: '/guru/tahsin',
+    description: 'Penilaian bacaan & tajwid'
   },
   {
     title: 'Presensi',
