@@ -102,6 +102,7 @@ model Guru {
   penilaian      Penilaian[]
   presensi       Presensi[]
   bukuDigital    BukuDigital[]
+  tahsin         Tahsin[]
 }
 
 model Siswa {
@@ -123,6 +124,7 @@ model Siswa {
   penilaian      Penilaian[]
   presensi       Presensi[]
   targetHafalan  TargetHafalan[]
+  tahsin         Tahsin[]
 
   @@index([status])
   @@index([kelasId])
@@ -273,6 +275,28 @@ model Penilaian {
   @@index([siswaId])
   @@index([guruId])
   @@index([hafalanId])
+}
+
+model Tahsin {
+  id         String   @id @default(cuid())
+  siswaId    String
+  guruId     String
+  tanggal    DateTime @default(now())
+  surah      String
+  ayat       Int
+  tajwid     Int
+  makhraj    Int
+  kelancaran Int
+  rataRata   Float
+  catatan    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  siswa      Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru       Guru     @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  @@index([siswaId])
+  @@index([guruId])
+  @@index([tanggal(sort: Desc)])
 }
 
 model Presensi {
