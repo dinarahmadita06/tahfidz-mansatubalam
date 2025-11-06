@@ -60,6 +60,13 @@ enum JenisAktivitas {
   IMPORT
 }
 
+enum StatusTasmi {
+  MENUNGGU
+  DISETUJUI
+  DITOLAK
+  SELESAI
+}
+
 enum StatusKelas {
   AKTIF
   NONAKTIF
@@ -103,6 +110,8 @@ model Guru {
   presensi       Presensi[]
   bukuDigital    BukuDigital[]
   tahsin         Tahsin[]
+  tasmiVerifikasi Tasmi[] @relation("GuruVerifikasi")
+  tasmiPenguji    Tasmi[] @relation("GuruPenguji")
 }
 
 model Siswa {
@@ -125,6 +134,7 @@ model Siswa {
   presensi       Presensi[]
   targetHafalan  TargetHafalan[]
   tahsin         Tahsin[]
+  tasmi          Tasmi[]
 
   @@index([status])
   @@index([kelasId])
@@ -379,4 +389,29 @@ model Motivasi {
   updatedAt DateTime @updatedAt
 
   @@index([isActive])
+}
+
+model Tasmi {
+  id                String      @id @default(cuid())
+  siswaId           String
+  jumlahJuz         Int
+  statusPendaftaran StatusTasmi @default(MENUNGGU)
+  tanggalDaftar     DateTime    @default(now())
+  tanggalUjian      DateTime?
+  guruVerifikasiId  String?
+  guruPengujiId     String?
+  nilaiKelancaran   Int?
+  nilaiTajwid       Int?
+  nilaiKetepatan    Int?
+  nilaiAkhir        Float?
+  catatan           String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  siswa             Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guruVerifikasi    Guru?       @relation("GuruVerifikasi", fields: [guruVerifikasiId], references: [id], onDelete: SetNull)
+  guruPenguji       Guru?       @relation("GuruPenguji", fields: [guruPengujiId], references: [id], onDelete: SetNull)
+
+  @@index([siswaId])
+  @@index([statusPendaftaran])
+  @@index([tanggalUjian])
 }
