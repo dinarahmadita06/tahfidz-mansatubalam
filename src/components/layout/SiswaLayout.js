@@ -20,6 +20,7 @@ import {
   Sparkles,
   Target,
   LogOut,
+  Award,
 } from 'lucide-react';
 
 const menuItems = [
@@ -43,6 +44,13 @@ const menuItems = [
     href: '/siswa/penilaian-hafalan',
     description: 'Lihat nilai dari guru',
     color: 'amber'
+  },
+  {
+    title: 'Tasmi\'',
+    icon: Award,
+    href: '/siswa/tasmi',
+    description: 'Daftar ujian hafalan',
+    color: 'purple'
   },
   {
     title: 'Buku Digital',

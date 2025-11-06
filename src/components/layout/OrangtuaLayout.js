@@ -19,6 +19,7 @@ import {
   Megaphone,
   Target,
   LogOut,
+  Award,
 } from 'lucide-react';
 
 const menuItems = [
@@ -42,6 +43,13 @@ const menuItems = [
     href: '/orangtua/penilaian',
     description: 'Nilai dari guru',
     color: 'amber'
+  },
+  {
+    title: 'Tasmi\'',
+    icon: Award,
+    href: '/orangtua/tasmi',
+    description: 'Status ujian hafalan',
+    color: 'purple'
   },
   {
     title: 'Presensi',
