@@ -3,6 +3,7 @@
 import { useState, memo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import {
   LayoutDashboard,
   BookUp,
@@ -18,6 +19,7 @@ import {
   ChevronLeft,
   Sparkles,
   Target,
+  LogOut,
 } from 'lucide-react';
 
 const menuItems = [
@@ -252,14 +254,36 @@ function SiswaSidebar({ userName = 'Siswa' }) {
 }
 
 function SiswaLayout({ children }) {
+  const { data: session } = useSession();
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/login' });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-cream-50 to-amber-50/30">
-      <SiswaSidebar userName="Ahmad" />
-      <main className="lg:ml-72 transition-all duration-300">
-        <div className="p-6 lg:p-8">
+      <SiswaSidebar userName={session?.user?.name || "Siswa"} />
+
+      {/* Top Bar with Logout */}
+      <div className="lg:ml-72 transition-all duration-300">
+        <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20 border-b border-emerald-100/50">
+          <div className="px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex justify-end">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              >
+                <LogOut size={20} />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="p-6 lg:p-8">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
