@@ -200,111 +200,10 @@ export default function ImportExportToolbar({
       <div style={{
         display: 'flex',
         gap: '12px',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        alignItems: 'center'
       }}>
-        {/* Import Button */}
-        <button
-          onClick={() => setShowImportModal(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-            color: colors.white,
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '14px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(26, 147, 111, 0.25)',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Poppins', sans-serif"
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.35)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.25)';
-          }}
-        >
-          <Upload size={18} />
-          <span>📥 Import Data</span>
-        </button>
-
-        {/* Export Button */}
-        <button
-          onClick={handleExport}
-          disabled={data.length === 0}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 24px',
-            background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-            color: colors.white,
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '14px',
-            fontWeight: 600,
-            cursor: data.length === 0 ? 'not-allowed' : 'pointer',
-            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)',
-            transition: 'all 0.3s ease',
-            opacity: data.length === 0 ? 0.5 : 1,
-            fontFamily: "'Poppins', sans-serif"
-          }}
-          onMouseOver={(e) => {
-            if (data.length > 0) {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.35)';
-            }
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.25)';
-          }}
-        >
-          <Download size={18} />
-          <span>📤 Export Data</span>
-        </button>
-
-        {/* Generate Accounts Button */}
-        {onGenerateAccounts && (
-          <button
-            onClick={onGenerateAccounts}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 24px',
-              background: `linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)`,
-              color: colors.white,
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.25)',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Poppins', sans-serif"
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 92, 246, 0.35)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.25)';
-            }}
-          >
-            <Settings size={18} />
-            <span>⚙️ Generate Akun Otomatis</span>
-          </button>
-        )}
-
-        {/* Add Button (Custom) */}
+        {/* Add Button (Custom) - First Position */}
         {showAddButton && onAddClick && (
           <button
             onClick={onAddClick}
@@ -335,6 +234,129 @@ export default function ImportExportToolbar({
           >
             {addButtonIcon}
             <span>{addButtonLabel}</span>
+          </button>
+        )}
+
+        {/* Divider */}
+        {showAddButton && onAddClick && (
+          <div style={{
+            width: '1px',
+            height: '32px',
+            background: colors.gray[200]
+          }}></div>
+        )}
+
+        {/* Import Button */}
+        <button
+          onClick={() => setShowImportModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            background: colors.white,
+            color: colors.emerald[600],
+            border: `2px solid ${colors.emerald[200]}`,
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.3s ease',
+            fontFamily: "'Poppins', sans-serif"
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.background = colors.emerald[50];
+            e.currentTarget.style.borderColor = colors.emerald[300];
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.background = colors.white;
+            e.currentTarget.style.borderColor = colors.emerald[200];
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+          }}
+        >
+          <Upload size={16} />
+          <span>Import</span>
+        </button>
+
+        {/* Export Button */}
+        <button
+          onClick={handleExport}
+          disabled={data.length === 0}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            background: colors.white,
+            color: colors.amber[600],
+            border: `2px solid ${colors.amber[200]}`,
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: data.length === 0 ? 'not-allowed' : 'pointer',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.3s ease',
+            opacity: data.length === 0 ? 0.5 : 1,
+            fontFamily: "'Poppins', sans-serif"
+          }}
+          onMouseOver={(e) => {
+            if (data.length > 0) {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.background = colors.amber[50];
+              e.currentTarget.style.borderColor = colors.amber[300];
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.15)';
+            }
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.background = colors.white;
+            e.currentTarget.style.borderColor = colors.amber[200];
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+          }}
+        >
+          <Download size={16} />
+          <span>Export</span>
+        </button>
+
+        {/* Generate Accounts Button */}
+        {onGenerateAccounts && (
+          <button
+            onClick={onGenerateAccounts}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              background: colors.white,
+              color: '#8B5CF6',
+              border: '2px solid #DDD6FE',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Poppins', sans-serif"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.background = '#F5F3FF';
+              e.currentTarget.style.borderColor = '#C4B5FD';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.background = colors.white;
+              e.currentTarget.style.borderColor = '#DDD6FE';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+            }}
+          >
+            <Settings size={16} />
+            <span>Generate Akun</span>
           </button>
         )}
       </div>
