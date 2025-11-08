@@ -1,0 +1,457 @@
+/* ==========================================
+   RESPONSIVE UTILITIES FOR ADMIN DASHBOARD
+   ========================================== */
+
+/* Smooth Transitions */
+* {
+  transition: padding 0.3s ease, margin 0.3s ease;
+}
+
+/* ==========================================
+   CONTAINER RESPONSIVE
+   ========================================== */
+.responsive-container {
+  padding: 32px 40px 20px;
+}
+
+@media (max-width: 1024px) {
+  .responsive-container {
+    padding: 24px 24px 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-container {
+    padding: 20px 16px 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-container {
+    padding: 16px 12px 8px;
+  }
+}
+
+/* ==========================================
+   GRID LAYOUTS - RESPONSIVE
+   ========================================== */
+
+/* Stats Grid - 4 columns -> 2 columns -> 1 column */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1280px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Charts Grid - 2 columns -> 1 column */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .charts-grid {
+    gap: 16px;
+  }
+}
+
+/* 3-Column Grid */
+.three-col-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .three-col-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .three-col-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* ==========================================
+   STAT CARDS RESPONSIVE
+   ========================================== */
+.stats-card {
+  min-height: auto !important;
+}
+
+@media (max-width: 640px) {
+  .stats-card {
+    padding: 16px !important;
+  }
+
+  .stats-card .icon-wrapper {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .stats-card .stat-value {
+    font-size: 24px !important;
+  }
+
+  .stats-card .stat-title {
+    font-size: 11px !important;
+  }
+}
+
+/* ==========================================
+   CHART CONTAINERS RESPONSIVE
+   ========================================== */
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+}
+
+@media (max-width: 1024px) {
+  .chart-container {
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    min-height: 220px;
+  }
+}
+
+/* ==========================================
+   TABLE RESPONSIVE
+   ========================================== */
+.responsive-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+.responsive-table {
+  min-width: 600px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .responsive-table {
+    font-size: 14px;
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 12px 8px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-table {
+    font-size: 13px;
+    min-width: 500px;
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 10px 6px !important;
+  }
+}
+
+/* ==========================================
+   TYPOGRAPHY RESPONSIVE
+   ========================================== */
+.responsive-heading-xl {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+@media (max-width: 1024px) {
+  .responsive-heading-xl {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-heading-xl {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-heading-xl {
+    font-size: 22px;
+  }
+}
+
+.responsive-heading-lg {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .responsive-heading-lg {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-heading-lg {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-heading-lg {
+    font-size: 18px;
+  }
+}
+
+.responsive-text-base {
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .responsive-text-base {
+    font-size: 13px;
+  }
+}
+
+.responsive-text-sm {
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .responsive-text-sm {
+    font-size: 11px;
+  }
+}
+
+/* ==========================================
+   CARDS RESPONSIVE
+   ========================================== */
+.responsive-card {
+  border-radius: 16px;
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .responsive-card {
+    border-radius: 12px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-card {
+    border-radius: 12px;
+    padding: 16px;
+  }
+}
+
+/* ==========================================
+   FLEX UTILITIES RESPONSIVE
+   ========================================== */
+.responsive-flex-col-mobile {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .responsive-flex-col-mobile {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* ==========================================
+   BUTTON RESPONSIVE
+   ========================================== */
+.responsive-button {
+  padding: 12px 24px;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .responsive-button {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+/* ==========================================
+   MODAL RESPONSIVE
+   ========================================== */
+.responsive-modal {
+  max-width: 600px;
+  width: 90%;
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .responsive-modal {
+    max-width: 90%;
+    width: 95%;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-modal {
+    max-width: 95%;
+    width: 98%;
+    padding: 20px;
+    margin: 16px;
+  }
+}
+
+/* ==========================================
+   HIDE/SHOW ON BREAKPOINTS
+   ========================================== */
+.hide-on-mobile {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none;
+  }
+}
+
+.show-on-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .show-on-mobile {
+    display: block;
+  }
+}
+
+/* ==========================================
+   SPACING UTILITIES RESPONSIVE
+   ========================================== */
+.responsive-gap-lg {
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .responsive-gap-lg {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-gap-lg {
+    gap: 12px;
+  }
+}
+
+.responsive-gap-md {
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .responsive-gap-md {
+    gap: 12px;
+  }
+}
+
+/* ==========================================
+   ANIMATION & TRANSITIONS
+   ========================================== */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================
+   SCROLLBAR STYLING (OPTIONAL)
+   ========================================== */
+.responsive-table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.responsive-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.responsive-table-wrapper::-webkit-scrollbar-thumb {
+  background: #10B981;
+  border-radius: 4px;
+}
+
+.responsive-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #059669;
+}
+
+/* ==========================================
+   PRINT STYLES
+   ========================================== */
+@media print {
+  .hide-on-print {
+    display: none !important;
+  }
+
+  .responsive-container {
+    padding: 0 !important;
+  }
+
+  .stats-grid,
+  .charts-grid,
+  .three-col-grid {
+    gap: 12px !important;
+  }
+}
