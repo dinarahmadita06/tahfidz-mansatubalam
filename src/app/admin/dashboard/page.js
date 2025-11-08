@@ -1365,15 +1365,11 @@ export default function DashboardTahfidz() {
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', padding: '24px 40px 40px', zIndex: 2 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <div className="dashboard-container" style={{ position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
             {/* Stats Cards - 6 Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '16px',
-            }}>
+            <div className="dashboard-stats-grid">
               <StatCard
                 icon={<Users size={22} color={colors.white} />}
                 title="Total Siswa"
@@ -1425,11 +1421,7 @@ export default function DashboardTahfidz() {
             </div>
 
             {/* Grid 2 Kolom: Tren Hafalan & Distribusi Kehadiran */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
-              gap: '16px',
-            }}>
+            <div className="charts-responsive-grid">
               <TrendHafalanChart data={data.trendHafalan} />
               <DistribusiKehadiranChart data={data.distribusiKehadiran} />
             </div>
@@ -1438,21 +1430,13 @@ export default function DashboardTahfidz() {
             <ProgressKelasChart data={data.progressKelas} />
 
             {/* Grid 2 Kolom: Kinerja Guru & Leaderboard */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
-              gap: '16px',
-            }}>
+            <div className="charts-responsive-grid">
               <KinerjaGuruChart data={data.kinerjaguru} />
               <LeaderboardKelas data={data.leaderboardKelas} />
             </div>
 
             {/* Grid 2 Kolom: Jadwal & Pengumuman */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
-              gap: '16px',
-            }}>
+            <div className="charts-responsive-grid">
               <JadwalSetoranCard jadwalSetoran={data.jadwalSetoran} />
               <PengumumanCard pengumuman={data.pengumuman} />
             </div>
