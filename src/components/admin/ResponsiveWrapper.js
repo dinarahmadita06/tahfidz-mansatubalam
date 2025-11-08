@@ -245,9 +245,38 @@ export function ResponsiveChartContainer({ children, className = '', title }) {
           {title}
         </h3>
       )}
-      <div className="w-full h-64 sm:h-72 lg:h-80">
-        {children}
+      <div className="chart-responsive-container w-full">
+        <div className="chart-wrapper no-overflow">
+          {children}
+        </div>
       </div>
     </ResponsiveCard>
+  );
+}
+
+// Wrapper for Recharts ResponsiveContainer with proper sizing
+export function RechartsResponsive({ children, height }) {
+  return (
+    <div style={{ width: '100%', height: height || 300, maxWidth: '100%' }} className="no-overflow">
+      {children}
+    </div>
+  );
+}
+
+// Dashboard specific grid
+export function DashboardGrid({ children, className = '' }) {
+  return (
+    <div className={`dashboard-stats-grid ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// Dashboard section with charts
+export function DashboardSection({ children, className = '' }) {
+  return (
+    <div className={`dashboard-section-grid ${className}`}>
+      {children}
+    </div>
   );
 }

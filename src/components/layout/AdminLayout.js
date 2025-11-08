@@ -85,13 +85,31 @@ const menuItems = [
 function AdminLayout({ children }) {
   const [currentNotification, setCurrentNotification] = useState(null);
   const [notificationQueue, setNotificationQueue] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
+  const [isMobile, setIsMobile] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({
     'Manajemen Pengguna': true,
     'Kelas & Tahun Ajaran': true,
     'Monitoring & Laporan': true
   });
   const pathname = usePathname();
+
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024; // lg breakpoint
+      setIsMobile(mobile);
+      if (!mobile) {
+        setSidebarOpen(true); // Auto-open on desktop
+      } else {
+        setSidebarOpen(false); // Auto-close on mobile
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Polling for new notifications every 10 seconds
   useEffect(() => {
@@ -170,6 +188,13 @@ function AdminLayout({ children }) {
     return submenu.some(item => pathname === item.href);
   };
 
+  // Close sidebar on mobile when link is clicked
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   // Auto-expand menu yang aktif
   useEffect(() => {
     menuItems.forEach((item) => {
@@ -215,12 +240,28 @@ function AdminLayout({ children }) {
         }
       `}</style>
 
-      <div className="flex h-screen" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }}>
+      <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }}>
+        {/* Mobile Overlay */}
+        {isMobile && sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <aside
           className={`${
-            sidebarOpen ? 'w-72' : 'w-20'
-          } transition-all duration-300 flex flex-col relative islamic-pattern`}
+            isMobile
+              ? sidebarOpen
+                ? 'translate-x-0'
+                : '-translate-x-full'
+              : sidebarOpen
+                ? 'w-72'
+                : 'w-20'
+          } ${
+            isMobile ? 'fixed left-0 top-0 bottom-0 w-72 z-50' : 'relative'
+          } transition-all duration-300 flex flex-col islamic-pattern`}
           style={{
             background: 'linear-gradient(180deg, #E8FFF3 0%, #FFF9E7 100%)',
             boxShadow: '4px 0px 12px rgba(0, 0, 0, 0.06)'
@@ -259,14 +300,16 @@ function AdminLayout({ children }) {
               </Link>
             )}
 
-            {/* Toggle Button */}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-emerald-50/60 text-gray-500 hover:text-emerald-700 transition-all duration-200"
-              title={sidebarOpen ? 'Sembunyikan Sidebar' : 'Tampilkan Sidebar'}
-            >
-              {sidebarOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
-            </button>
+            {/* Toggle Button - Hidden on Mobile */}
+            {!isMobile && (
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-lg hover:bg-emerald-50/60 text-gray-500 hover:text-emerald-700 transition-all duration-200"
+                title={sidebarOpen ? 'Sembunyikan Sidebar' : 'Tampilkan Sidebar'}
+              >
+                {sidebarOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
+              </button>
+            )}
           </div>
 
           {/* Menu Navigation */}
@@ -324,6 +367,7 @@ function AdminLayout({ children }) {
                                 key={subitem.href}
                                 href={subitem.href}
                                 prefetch={false}
+                                onClick={handleLinkClick}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
                                   isActive(subitem.href)
                                     ? 'bg-amber-50 text-amber-900'
@@ -348,6 +392,7 @@ function AdminLayout({ children }) {
                       <Link
                         href={item.href}
                         prefetch={false}
+                        onClick={handleLinkClick}
                         className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} py-3 rounded-xl transition-all duration-200 group relative ${
                           isActive(item.href)
                             ? 'text-amber-900 shadow-inner'
@@ -402,8 +447,34 @@ function AdminLayout({ children }) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">
+        <main className="flex-1 overflow-y-auto flex flex-col">
+          {/* Mobile Header with Hamburger */}
+          <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Toggle menu"
+            >
+              <Menu size={24} className="text-gray-700" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div
+                className="p-1.5 rounded-full shadow-md"
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                }}
+              >
+                <BookOpen className="text-white" size={20} />
+              </div>
+              <span className="font-bold text-base text-emerald-900">
+                Tahfidz Admin
+              </span>
+            </div>
+            <div className="w-10" /> {/* Spacer for centering */}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 p-4 sm:p-6 lg:p-8">
             <PageTransition>
               {children}
             </PageTransition>
