@@ -14,20 +14,19 @@ import {
   Lock,
   Home,
   ChevronRight,
-  Briefcase,
   BookOpen
 } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
 
 export default function ProfilGuruPage() {
-  const { data: session } = useSession();
+  const { data: session, status, update } = useSession();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [passwordFormData, setPasswordFormData] = useState({
-    oldPassword: '',
+    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -36,67 +35,28 @@ export default function ProfilGuruPage() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    fetchProfileData();
-  }, []);
-
-  const fetchProfileData = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/guru/profile');
-
-      if (res.ok) {
-        const data = await res.json();
-        setProfileData(data.profile);
-      } else {
-        // Fallback to default data if API fails
-        setProfileData({
-          nama: session?.user?.name || 'Guru Tahfidz',
-          email: session?.user?.email || 'guru@tahfidz.com',
-          role: 'Guru',
-          phoneNumber: '0812-3456-7890',
-          bidangKeahlian: 'Tahfidz Al-Quran',
-          alamat: 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
-          mulaiMengajar: '15 Agustus 2024',
-          lastLogin: new Date().toLocaleString('id-ID', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          }) + ' WIB'
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      // Fallback to default data
+    if (status === 'authenticated') {
+      // Load profile data from session
       setProfileData({
-        nama: session?.user?.name || 'Guru Tahfidz',
-        email: session?.user?.email || 'guru@tahfidz.com',
-        role: 'Guru',
-        phoneNumber: '0812-3456-7890',
-        bidangKeahlian: 'Tahfidz Al-Quran',
-        alamat: 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
-        mulaiMengajar: '15 Agustus 2024',
-        lastLogin: new Date().toLocaleString('id-ID', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }) + ' WIB'
+        name: session.user.name || '',
+        email: session.user.email || '',
+        phone: session.user.phone || '',
+        alamat: session.user.alamat || '',
+        bidangKeahlian: session.user.bidangKeahlian || 'Tahfidz Al-Quran',
+        mulaiMengajar: session.user.mulaiMengajar || ''
       });
-    } finally {
       setLoading(false);
     }
-  };
+  }, [status, session]);
 
   const handleEditProfile = () => {
     setEditFormData({
-      nama: profileData.nama,
+      name: profileData.name,
       email: profileData.email,
-      phoneNumber: profileData.phoneNumber,
+      phone: profileData.phone,
+      alamat: profileData.alamat,
       bidangKeahlian: profileData.bidangKeahlian,
-      alamat: profileData.alamat
+      mulaiMengajar: profileData.mulaiMengajar
     });
     setError('');
     setSuccess('');
@@ -105,7 +65,7 @@ export default function ProfilGuruPage() {
 
   const handleChangePassword = () => {
     setPasswordFormData({
-      oldPassword: '',
+      currentPassword: '',
       newPassword: '',
       confirmPassword: ''
     });
@@ -114,73 +74,82 @@ export default function ProfilGuruPage() {
     setShowPasswordModal(true);
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
     try {
       setSaveLoading(true);
       setError('');
 
-      const res = await fetch('/api/guru/profile', {
-        method: 'PUT',
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editFormData)
+        body: JSON.stringify(editFormData),
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (response.ok) {
         setSuccess('Profil berhasil diperbarui!');
-        await fetchProfileData();
+        setProfileData(editFormData);
+        await update();
         setTimeout(() => {
           setShowEditModal(false);
           setSuccess('');
         }, 2000);
       } else {
-        setError(data.error || 'Gagal memperbarui profil');
+        const error = await response.json();
+        setError(error.error || 'Gagal memperbarui profil');
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      setError(`Terjadi kesalahan: ${error.message}`);
+      setError('Terjadi kesalahan saat memperbarui profil');
     } finally {
       setSaveLoading(false);
     }
   };
 
-  const handleChangePasswordSubmit = async () => {
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+
+    if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
+      setError('Password baru dan konfirmasi tidak cocok');
+      return;
+    }
+
+    if (passwordFormData.newPassword.length < 6) {
+      setError('Password minimal 6 karakter');
+      return;
+    }
+
     try {
       setSaveLoading(true);
       setError('');
 
-      if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
-        setError('Password baru dan konfirmasi tidak cocok');
-        setSaveLoading(false);
-        return;
-      }
-
-      const res = await fetch('/api/guru/profile', {
-        method: 'PATCH',
+      const response = await fetch('/api/user/change-password', {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(passwordFormData)
+        body: JSON.stringify({
+          currentPassword: passwordFormData.currentPassword,
+          newPassword: passwordFormData.newPassword,
+        }),
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (response.ok) {
         setSuccess('Password berhasil diubah!');
         setTimeout(() => {
           setShowPasswordModal(false);
           setSuccess('');
           setPasswordFormData({
-            oldPassword: '',
+            currentPassword: '',
             newPassword: '',
-            confirmPassword: ''
+            confirmPassword: '',
           });
         }, 2000);
       } else {
-        setError(data.error || 'Gagal mengubah password');
+        const error = await response.json();
+        setError(error.error || 'Gagal mengubah password');
       }
     } catch (error) {
       console.error('Error changing password:', error);
@@ -190,7 +159,7 @@ export default function ProfilGuruPage() {
     }
   };
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <GuruLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -269,12 +238,13 @@ export default function ProfilGuruPage() {
         {/* Islamic Ornaments */}
         <div className="islamic-ornament-topleft"></div>
         <div className="islamic-ornament-bottomright"></div>
+
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm mb-6 relative z-10">
           <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-emerald-100/50 shadow-sm">
             <Home size={16} className="text-emerald-600" strokeWidth={1.5} />
             <ChevronRight size={14} className="text-gray-400" strokeWidth={2} />
-            <span className="font-semibold text-emerald-700">Profil Guru</span>
+            <span className="font-semibold text-emerald-700">Profil Saya</span>
           </div>
         </div>
 
@@ -297,10 +267,10 @@ export default function ProfilGuruPage() {
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-2" style={{ color: '#064E3B' }}>
-                Profil Guru
+                Profil Saya
               </h1>
               <p className="text-sm font-medium" style={{ color: '#374151' }}>
-                Lihat dan kelola informasi profil Anda
+                Kelola informasi profil Anda
               </p>
               <div className="flex items-center gap-2 mt-3">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -309,6 +279,14 @@ export default function ProfilGuruPage() {
             </div>
           </div>
         </div>
+
+        {success && (
+          <div className="relative z-10 mb-6 max-w-4xl mx-auto">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+              ✓ {success}
+            </div>
+          </div>
+        )}
 
         {/* Main Profile Card */}
         <div
@@ -328,14 +306,16 @@ export default function ProfilGuruPage() {
                   boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)'
                 }}
               >
-                <User className="text-white" size={56} strokeWidth={1.5} />
+                <span className="text-white text-4xl font-bold">
+                  {profileData?.name?.charAt(0)?.toUpperCase() || 'G'}
+                </span>
               </div>
             </div>
 
             {/* Profile Info */}
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {profileData?.nama}
+                {profileData?.name || 'Nama Guru'}
               </h2>
               <div className="flex items-center gap-2 text-gray-600 mb-3">
                 <Mail size={16} />
@@ -352,19 +332,7 @@ export default function ProfilGuruPage() {
                 }}
               >
                 <Shield size={16} strokeWidth={2} />
-                {profileData?.role}
-              </div>
-
-              {/* Additional Info */}
-              <div className="space-y-2 mt-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar size={16} className="text-emerald-600" />
-                  <span>Mulai mengajar: <span className="font-medium text-gray-900">{profileData?.mulaiMengajar}</span></span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Clock size={16} className="text-amber-600" />
-                  <span>Terakhir login: <span className="font-medium text-gray-900">{profileData?.lastLogin}</span></span>
-                </div>
+                Guru Tahfidz
               </div>
 
               {/* Action Buttons */}
@@ -389,14 +357,14 @@ export default function ProfilGuruPage() {
                   }}
                 >
                   <Lock size={18} strokeWidth={2} />
-                  Ganti Password
+                  Ubah Password
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Biodata Section */}
+        {/* Informasi Pribadi Section */}
         <div
           className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
           style={{
@@ -411,14 +379,48 @@ export default function ProfilGuruPage() {
                 background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
               }}
             >
-              <Briefcase size={20} className="text-white" strokeWidth={2} />
+              <User size={20} className="text-white" strokeWidth={2} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#92400E' }}>
-              Biodata Lengkap
+              Informasi Pribadi
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Nama Lengkap */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+                <User size={16} className="text-amber-600" strokeWidth={2} />
+                Nama Lengkap
+              </label>
+              <div
+                className="px-4 py-3 rounded-xl border shadow-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderColor: '#FCD34D'
+                }}
+              >
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.name}</p>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+                <Mail size={16} className="text-amber-600" strokeWidth={2} />
+                Email
+              </label>
+              <div
+                className="px-4 py-3 rounded-xl border shadow-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderColor: '#FCD34D'
+                }}
+              >
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.email}</p>
+              </div>
+            </div>
+
             {/* Nomor Telepon */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
@@ -432,7 +434,7 @@ export default function ProfilGuruPage() {
                   borderColor: '#FCD34D'
                 }}
               >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.phoneNumber}</p>
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.phone || '-'}</p>
               </div>
             </div>
 
@@ -453,6 +455,23 @@ export default function ProfilGuruPage() {
               </div>
             </div>
 
+            {/* Mulai Mengajar */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+                <Calendar size={16} className="text-amber-600" strokeWidth={2} />
+                Mulai Mengajar
+              </label>
+              <div
+                className="px-4 py-3 rounded-xl border shadow-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderColor: '#FCD34D'
+                }}
+              >
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.mulaiMengajar || '-'}</p>
+              </div>
+            </div>
+
             {/* Alamat */}
             <div className="space-y-2 md:col-span-2">
               <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
@@ -466,7 +485,7 @@ export default function ProfilGuruPage() {
                   borderColor: '#FCD34D'
                 }}
               >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat}</p>
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat || '-'}</p>
               </div>
             </div>
           </div>
@@ -496,9 +515,8 @@ export default function ProfilGuruPage() {
                 Informasi Keamanan Akun
               </h4>
               <p className="text-sm leading-relaxed" style={{ color: '#374151' }}>
-                Akun ini memiliki hak akses sebagai <span className="font-semibold text-emerald-700">Guru Tahfidz</span> di sistem MAN 1 Bandar Lampung.
-                Pastikan untuk menjaga kerahasiaan kredensial login Anda dan segera laporkan
-                jika ada aktivitas mencurigakan.
+                💡 Tips: Pastikan informasi profil Anda selalu ter-update.
+                Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
               </p>
               <div className="flex items-center gap-2 mt-3 text-xs font-semibold" style={{ color: '#047857' }}>
                 <Lock size={14} strokeWidth={2} />
@@ -552,97 +570,118 @@ export default function ProfilGuruPage() {
                 </div>
               )}
 
-              <div className="space-y-5">
-                {/* Nama Lengkap */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nama Lengkap
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.nama || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, nama: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+              <form onSubmit={handleSaveProfile}>
+                <div className="space-y-5">
+                  {/* Nama Lengkap */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nama Lengkap <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormData.name || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      disabled
+                      value={editFormData.email || ''}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
+                  </div>
+
+                  {/* Nomor Telepon */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nomor Telepon
+                    </label>
+                    <input
+                      type="tel"
+                      value={editFormData.phone || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                      placeholder="08xx xxxx xxxx"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Bidang Keahlian */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bidang Keahlian
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.bidangKeahlian || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, bidangKeahlian: e.target.value })}
+                      placeholder="Contoh: Tahfidz Al-Quran, Tahsin, dll"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Mulai Mengajar */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mulai Mengajar
+                    </label>
+                    <input
+                      type="date"
+                      value={editFormData.mulaiMengajar || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, mulaiMengajar: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Alamat */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Alamat
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={editFormData.alamat || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
+                      placeholder="Alamat lengkap..."
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                    />
+                  </div>
                 </div>
 
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={editFormData.email || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                {/* Modal Actions */}
+                <div className="flex gap-3 mt-8">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    disabled={saveLoading}
+                    className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
+                    style={{
+                      background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+                      color: '#374151'
+                    }}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saveLoading}
+                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
+                    style={{
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                    }}
+                  >
+                    {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  </button>
                 </div>
-
-                {/* Nomor Telepon */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nomor Telepon
-                  </label>
-                  <input
-                    type="tel"
-                    value={editFormData.phoneNumber || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Bidang Keahlian */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bidang Keahlian
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.bidangKeahlian || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, bidangKeahlian: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Alamat */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Alamat
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={editFormData.alamat || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex gap-3 mt-8">
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-                    color: '#374151'
-                  }}
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                  }}
-                >
-                  {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </button>
-              </div>
+              </form>
             </div>
           </div>
         )}
@@ -667,7 +706,7 @@ export default function ProfilGuruPage() {
                   >
                     <Lock size={20} className="text-white" strokeWidth={2} />
                   </div>
-                  <h3 className="text-2xl font-bold" style={{ color: '#92400E' }}>Ganti Password</h3>
+                  <h3 className="text-2xl font-bold" style={{ color: '#92400E' }}>Ubah Password</h3>
                 </div>
                 <button
                   onClick={() => setShowPasswordModal(false)}
@@ -691,84 +730,90 @@ export default function ProfilGuruPage() {
                 </div>
               )}
 
-              <div className="space-y-5">
-                {/* Password Lama */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password Lama
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Masukkan password lama"
-                    value={passwordFormData.oldPassword}
-                    onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+              <form onSubmit={handleChangePasswordSubmit}>
+                <div className="space-y-5">
+                  {/* Password Lama */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password Lama <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Masukkan password lama"
+                      value={passwordFormData.currentPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Password Baru */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password Baru <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      placeholder="Minimal 6 karakter"
+                      value={passwordFormData.newPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Konfirmasi Password */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Konfirmasi Password Baru <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      placeholder="Ketik ulang password baru"
+                      value={passwordFormData.confirmPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
 
-                {/* Password Baru */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password Baru
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Masukkan password baru"
-                    value={passwordFormData.newPassword}
-                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                {/* Password Requirements */}
+                <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-xs font-medium text-amber-900 mb-2">Persyaratan Password:</p>
+                  <ul className="text-xs text-amber-800 space-y-1">
+                    <li>• Minimal 6 karakter</li>
+                  </ul>
                 </div>
 
-                {/* Konfirmasi Password */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Konfirmasi Password Baru
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Konfirmasi password baru"
-                    value={passwordFormData.confirmPassword}
-                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                {/* Modal Actions */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    disabled={saveLoading}
+                    className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
+                    style={{
+                      background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+                      color: '#374151'
+                    }}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saveLoading}
+                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
+                    style={{
+                      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                    }}
+                  >
+                    {saveLoading ? 'Menyimpan...' : 'Ubah Password'}
+                  </button>
                 </div>
-              </div>
-
-              {/* Password Requirements */}
-              <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p className="text-xs font-medium text-amber-900 mb-2">Persyaratan Password:</p>
-                <ul className="text-xs text-amber-800 space-y-1">
-                  <li>• Minimal 8 karakter</li>
-                  <li>• Mengandung huruf besar dan kecil</li>
-                  <li>• Mengandung angka dan simbol</li>
-                </ul>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setShowPasswordModal(false)}
-                  disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-                    color: '#374151'
-                  }}
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleChangePasswordSubmit}
-                  disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
-                  style={{
-                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                  }}
-                >
-                  {saveLoading ? 'Mengubah...' : 'Ubah Password'}
-                </button>
-              </div>
+              </form>
             </div>
           </div>
         )}
