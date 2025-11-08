@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, BookOpen, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
+import { Target, BookOpen, Calendar, TrendingUp, AlertCircle, Plus } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 
 export default function TargetHafalanPage() {
@@ -12,9 +12,20 @@ export default function TargetHafalanPage() {
     rataRataTarget: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [kelasList, setKelasList] = useState([]);
+  const [formData, setFormData] = useState({
+    kelasId: '',
+    targetJuz: 2,
+    bulan: new Date().getMonth() + 1,
+    tahun: new Date().getFullYear(),
+    deadline: '',
+    keterangan: ''
+  });
 
   useEffect(() => {
     fetchTargets();
+    fetchKelas();
   }, []);
 
   const fetchTargets = async () => {
@@ -38,6 +49,64 @@ export default function TargetHafalanPage() {
     }
   };
 
+  const fetchKelas = async () => {
+    try {
+      const response = await fetch('/api/kelas');
+      const data = await response.json();
+      if (data.success) {
+        setKelasList(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching kelas:', error);
+    }
+  };
+
+  const handleAddTarget = async (e) => {
+    e.preventDefault();
+
+    try {
+      const payload = {
+        kelasId: formData.kelasId,
+        targetJuz: parseInt(formData.targetJuz),
+        bulan: parseInt(formData.bulan),
+        tahun: parseInt(formData.tahun),
+        deadline: formData.deadline || null,
+        keterangan: formData.keterangan || null,
+      };
+
+      const response = await fetch('/api/admin/target-hafalan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Target hafalan berhasil ditambahkan!');
+        setShowAddModal(false);
+        resetForm();
+        fetchTargets();
+      } else {
+        alert(data.message || 'Gagal menambahkan target hafalan');
+      }
+    } catch (error) {
+      console.error('Error adding target:', error);
+      alert('Terjadi kesalahan saat menambahkan target');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      kelasId: '',
+      targetJuz: 2,
+      bulan: new Date().getMonth() + 1,
+      tahun: new Date().getFullYear(),
+      deadline: '',
+      keterangan: ''
+    });
+  };
+
   return (
     <AdminLayout>
       <div className="bg-gradient-to-br from-emerald-50/30 via-cream-50/30 to-amber-50/20 p-6 lg:p-8 rounded-2xl">
@@ -55,6 +124,14 @@ export default function TargetHafalanPage() {
               Target hafalan minimal sekolah: 2 juz per tahun
             </p>
           </div>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold hover:scale-105"
+          >
+            <Plus size={20} />
+            Tambah Target
+          </button>
         </div>
       </div>
 
@@ -185,6 +262,156 @@ export default function TargetHafalanPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Target Modal - Simplified for School Target Only */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl my-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+                <Plus className="text-white" size={20} />
+              </div>
+              Tambah Target Sekolah
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Tambahkan target hafalan sekolah untuk kelas tertentu
+            </p>
+
+            <form onSubmit={handleAddTarget} className="space-y-5">
+              {/* Pilih Kelas */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Kelas <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.kelasId}
+                  onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">-- Pilih Kelas --</option>
+                  {kelasList.map((kelas) => (
+                    <option key={kelas.id} value={kelas.id}>
+                      {kelas.nama} - {kelas.tahunAjaran?.nama || 'N/A'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Target Juz */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Target Juz <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0.5"
+                    max="30"
+                    step="0.5"
+                    value={formData.targetJuz}
+                    onChange={(e) => setFormData({ ...formData, targetJuz: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Default: 2 juz</p>
+                </div>
+
+                {/* Bulan */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Bulan <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.bulan}
+                    onChange={(e) => setFormData({ ...formData, bulan: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="1">Januari</option>
+                    <option value="2">Februari</option>
+                    <option value="3">Maret</option>
+                    <option value="4">April</option>
+                    <option value="5">Mei</option>
+                    <option value="6">Juni</option>
+                    <option value="7">Juli</option>
+                    <option value="8">Agustus</option>
+                    <option value="9">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Tahun */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Tahun <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="2020"
+                    max="2100"
+                    value={formData.tahun}
+                    onChange={(e) => setFormData({ ...formData, tahun: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                {/* Deadline (Opsional) */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Deadline (Opsional)
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.deadline}
+                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Keterangan */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Keterangan (Opsional)
+                </label>
+                <textarea
+                  value={formData.keterangan}
+                  onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
+                  rows="3"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                  placeholder="Catatan tambahan untuk target ini..."
+                ></textarea>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    resetForm();
+                  }}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                >
+                  Simpan Target
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       </div>
     </AdminLayout>
   );
