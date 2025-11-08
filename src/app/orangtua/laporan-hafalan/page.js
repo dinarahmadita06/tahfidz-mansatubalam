@@ -181,27 +181,67 @@ export default function LaporanHafalanPage() {
 
   // Default data jika belum ada data dari API - Dengan contoh data untuk demo
   const progressData = laporanData?.progressData || [
-    { bulan: 'Jan', hafalan: 2, murojaah: 5 },
-    { bulan: 'Feb', hafalan: 3, murojaah: 6 },
-    { bulan: 'Mar', hafalan: 2, murojaah: 7 },
-    { bulan: 'Apr', hafalan: 4, murojaah: 8 },
-    { bulan: 'Mei', hafalan: 3, murojaah: 6 },
-    { bulan: 'Jun', hafalan: 5, murojaah: 9 }
+    { minggu: 'Minggu 1', totalHafalan: 8, nilaiRataRata: 85, murojaah: 12 },
+    { minggu: 'Minggu 2', totalHafalan: 12, nilaiRataRata: 88, murojaah: 15 },
+    { minggu: 'Minggu 3', totalHafalan: 15, nilaiRataRata: 90, murojaah: 18 },
+    { minggu: 'Minggu 4', totalHafalan: 18, nilaiRataRata: 87, murojaah: 20 },
+    { minggu: 'Minggu 5', totalHafalan: 22, nilaiRataRata: 92, murojaah: 25 },
+    { minggu: 'Minggu 6', totalHafalan: 25, nilaiRataRata: 89, murojaah: 28 }
   ]
 
   const performanceData = laporanData?.performanceData || [
-    { kategori: 'Hafalan Baru', nilai: 85 },
-    { kategori: 'Murojaah', nilai: 90 },
     { kategori: 'Tajwid', nilai: 88 },
-    { kategori: 'Kelancaran', nilai: 87 }
+    { kategori: 'Kelancaran', nilai: 85 },
+    { kategori: 'Hafalan Baru', nilai: 90 },
+    { kategori: 'Murojaah', nilai: 87 }
   ]
 
   const detailHafalan = laporanData?.detailHafalan || [
-    { juz: 1, surah: 'Al-Fatihah', ayat: '1-7', nilai: 90, tanggal: '2024-01-15', status: 'Lulus' },
-    { juz: 1, surah: 'Al-Baqarah', ayat: '1-25', nilai: 85, tanggal: '2024-01-22', status: 'Lulus' },
-    { juz: 1, surah: 'Al-Baqarah', ayat: '26-50', nilai: 88, tanggal: '2024-02-05', status: 'Lulus' },
-    { juz: 1, surah: 'Al-Baqarah', ayat: '51-75', nilai: 92, tanggal: '2024-02-18', status: 'Lulus' },
-    { juz: 2, surah: 'Al-Baqarah', ayat: '142-163', nilai: 87, tanggal: '2024-03-10', status: 'Lulus' }
+    {
+      id: 1,
+      tanggal: '15 Jan 2024',
+      surah: 'Al-Fatihah (1-7)',
+      nilaiTajwid: 90,
+      nilaiKelancaran: 88,
+      nilaiMakhraj: 92,
+      catatan: 'Sangat baik, bacaan tartil dan jelas'
+    },
+    {
+      id: 2,
+      tanggal: '22 Jan 2024',
+      surah: 'Al-Baqarah (1-25)',
+      nilaiTajwid: 85,
+      nilaiKelancaran: 87,
+      nilaiMakhraj: 86,
+      catatan: 'Perlu perbaikan pada mad'
+    },
+    {
+      id: 3,
+      tanggal: '05 Feb 2024',
+      surah: 'Al-Baqarah (26-50)',
+      nilaiTajwid: 88,
+      nilaiKelancaran: 90,
+      nilaiMakhraj: 89,
+      catatan: 'Bacaan sudah lancar'
+    },
+    {
+      id: 4,
+      tanggal: '18 Feb 2024',
+      surah: 'Al-Baqarah (51-75)',
+      nilaiTajwid: 92,
+      nilaiKelancaran: 91,
+      nilaiMakhraj: 93,
+      catatan: 'Excellent! Semua aspek baik'
+    },
+    {
+      id: 5,
+      tanggal: '10 Mar 2024',
+      surah: 'Al-Baqarah (76-100)',
+      nilaiTajwid: 87,
+      nilaiKelancaran: 85,
+      nilaiMakhraj: 88,
+      catatan: 'Tingkatkan tempo bacaan'
+    }
   ]
 
   const statistik = laporanData?.statistik || {
