@@ -112,13 +112,6 @@ export async function POST(request) {
       );
     }
 
-    if (jumlahHafalan < 2) {
-      return NextResponse.json(
-        { message: 'Minimal hafalan 2 juz untuk mendaftar Tasmi\'' },
-        { status: 400 }
-      );
-    }
-
     if (jumlahHafalan > 30) {
       return NextResponse.json(
         { message: 'Jumlah hafalan maksimal 30 juz' },
