@@ -31,6 +31,15 @@ export async function GET(request) {
             },
           },
         },
+        guruPengampu: {
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
         guruVerifikasi: {
           include: {
             user: {
