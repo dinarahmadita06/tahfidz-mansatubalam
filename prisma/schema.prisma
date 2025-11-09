@@ -110,6 +110,7 @@ model Guru {
   presensi       Presensi[]
   bukuDigital    BukuDigital[]
   tahsin         Tahsin[]
+  tasmiPengampu   Tasmi[] @relation("GuruPengampu")
   tasmiVerifikasi Tasmi[] @relation("GuruVerifikasi")
   tasmiPenguji    Tasmi[] @relation("GuruPenguji")
 }
@@ -396,8 +397,14 @@ model Motivasi {
 model Tasmi {
   id                String      @id @default(cuid())
   siswaId           String
-  jumlahJuz         Int
+  jumlahHafalan     Int         // Jumlah hafalan yang sudah dimiliki
+  juzYangDitasmi    String      // Juz yang akan di tasmi' kan (contoh: "Juz 1, Juz 2")
+  jamTasmi          String?     // Jam yang diajukan untuk tasmi (contoh: "08:00-10:00")
+  tanggalTasmi      DateTime?   // Tanggal yang diajukan untuk tasmi
+  guruPengampuId    String?     // Guru pengampu dari kelas siswa
   statusPendaftaran StatusTasmi @default(MENUNGGU)
+  catatanPenolakan  String?     // Catatan jika ditolak oleh guru
+  catatan           String?     // Catatan umum
   tanggalDaftar     DateTime    @default(now())
   tanggalUjian      DateTime?
   guruVerifikasiId  String?
@@ -406,14 +413,16 @@ model Tasmi {
   nilaiTajwid       Int?
   nilaiKetepatan    Int?
   nilaiAkhir        Float?
-  catatan           String?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   siswa             Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guruPengampu      Guru?       @relation("GuruPengampu", fields: [guruPengampuId], references: [id], onDelete: SetNull)
   guruVerifikasi    Guru?       @relation("GuruVerifikasi", fields: [guruVerifikasiId], references: [id], onDelete: SetNull)
   guruPenguji       Guru?       @relation("GuruPenguji", fields: [guruPengujiId], references: [id], onDelete: SetNull)
 
   @@index([siswaId])
   @@index([statusPendaftaran])
   @@index([tanggalUjian])
+  @@index([tanggalTasmi])
+  @@index([guruPengampuId])
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
-import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function SiswaTasmiPage() {
@@ -14,8 +14,14 @@ export default function SiswaTasmiPage() {
   const [tasmiList, setTasmiList] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    jumlahJuz: 0,
+    jumlahHafalan: 0,
+    juzYangDitasmi: '',
+    jamTasmi: '',
+    tanggalTasmi: '',
+    catatan: '',
   });
+  const [editMode, setEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     if (session) {
@@ -25,10 +31,20 @@ export default function SiswaTasmiPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch siswa data & total juz
+      // Fetch siswa data & total juz with guruKelas info
       const siswaRes = await fetch('/api/siswa');
       if (siswaRes.ok) {
         const siswaJson = await siswaRes.json();
+
+        // Fetch kelas info with guru
+        if (siswaJson.siswa?.kelasId) {
+          const kelasRes = await fetch(`/api/admin/kelas/${siswaJson.siswa.kelasId}`);
+          if (kelasRes.ok) {
+            const kelasData = await kelasRes.json();
+            siswaJson.siswa.kelas = kelasData.kelas;
+          }
+        }
+
         setSiswaData(siswaJson.siswa);
 
         // Calculate total juz from hafalan
@@ -37,7 +53,7 @@ export default function SiswaTasmiPage() {
           if (hafalanRes.ok) {
             const hafalanData = await hafalanRes.json();
             setTotalJuz(hafalanData.totalJuz || 0);
-            setFormData({ jumlahJuz: hafalanData.totalJuz || 0 });
+            setFormData(prev => ({ ...prev, jumlahHafalan: hafalanData.totalJuz || 0 }));
           }
         }
       }
@@ -59,34 +75,108 @@ export default function SiswaTasmiPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation: minimum 2 juz
-    if (formData.jumlahJuz < 2) {
+    // Validation
+    if (formData.jumlahHafalan < 2) {
       toast.error('Minimal hafalan 2 juz untuk mendaftar Tasmi\'');
       return;
     }
 
+    if (!formData.juzYangDitasmi || !formData.jamTasmi || !formData.tanggalTasmi) {
+      toast.error('Semua field wajib diisi');
+      return;
+    }
+
     try {
-      const response = await fetch('/api/siswa/tasmi', {
-        method: 'POST',
+      const url = editMode ? `/api/siswa/tasmi/${editId}` : '/api/siswa/tasmi';
+      const method = editMode ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jumlahJuz: parseInt(formData.jumlahJuz),
+          jumlahHafalan: parseInt(formData.jumlahHafalan),
+          juzYangDitasmi: formData.juzYangDitasmi,
+          jamTasmi: formData.jamTasmi,
+          tanggalTasmi: formData.tanggalTasmi,
+          catatan: formData.catatan,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Pendaftaran Tasmi\' berhasil! Menunggu persetujuan guru.');
+        toast.success(editMode ? 'Pendaftaran Tasmi\' berhasil diupdate!' : 'Pendaftaran Tasmi\' berhasil! Menunggu persetujuan guru.');
         setShowModal(false);
+        setEditMode(false);
+        setEditId(null);
+        resetForm();
         fetchData();
       } else {
-        toast.error(data.message || 'Gagal mendaftar Tasmi\'');
+        toast.error(data.message || 'Gagal menyimpan pendaftaran Tasmi\'');
       }
     } catch (error) {
       console.error('Error submitting:', error);
-      toast.error('Terjadi kesalahan saat mendaftar');
+      toast.error('Terjadi kesalahan saat menyimpan data');
     }
+  };
+
+  const handleEdit = (tasmi) => {
+    if (tasmi.statusPendaftaran !== 'MENUNGGU' && tasmi.statusPendaftaran !== 'DITOLAK') {
+      toast.error('Tidak dapat mengedit tasmi yang sudah disetujui atau selesai');
+      return;
+    }
+
+    setEditMode(true);
+    setEditId(tasmi.id);
+    setFormData({
+      jumlahHafalan: tasmi.jumlahHafalan,
+      juzYangDitasmi: tasmi.juzYangDitasmi,
+      jamTasmi: tasmi.jamTasmi,
+      tanggalTasmi: tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toISOString().split('T')[0] : '',
+      catatan: tasmi.catatan || '',
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Yakin ingin menghapus pendaftaran Tasmi\' ini?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/siswa/tasmi/${id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Pendaftaran Tasmi\' berhasil dihapus');
+        fetchData();
+      } else {
+        toast.error(data.message || 'Gagal menghapus pendaftaran Tasmi\'');
+      }
+    } catch (error) {
+      console.error('Error deleting:', error);
+      toast.error('Terjadi kesalahan saat menghapus data');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      jumlahHafalan: totalJuz,
+      juzYangDitasmi: '',
+      jamTasmi: '',
+      tanggalTasmi: '',
+      catatan: '',
+    });
+    setEditMode(false);
+    setEditId(null);
+  };
+
+  const openNewModal = () => {
+    resetForm();
+    setShowModal(true);
   };
 
   const getStatusBadge = (status) => {
@@ -215,7 +305,7 @@ export default function SiswaTasmiPage() {
         {totalJuz >= 2 && (
           <div className="mb-6">
             <button
-              onClick={() => setShowModal(true)}
+              onClick={openNewModal}
               className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold"
             >
               <Plus size={20} />
@@ -235,18 +325,22 @@ export default function SiswaTasmiPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Tanggal Daftar</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jumlah Juz</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Nama Siswa</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Kelas</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jumlah Hafalan</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Juz Tasmi'</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Guru Pengampu</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jam</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Tanggal</th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Status</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jadwal Ujian</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Nilai Akhir</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Catatan</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {tasmiList.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
+                    <td colSpan="10" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <Award size={48} className="text-gray-300" />
                         <p className="text-gray-500">Belum ada pendaftaran Tasmi'</p>
@@ -260,23 +354,28 @@ export default function SiswaTasmiPage() {
                   tasmiList.map((tasmi) => (
                     <tr key={tasmi.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-900">
-                        {new Date(tasmi.tanggalDaftar).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
+                        {tasmi.siswa?.user?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {tasmi.siswa?.kelas?.nama || '-'}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className="inline-flex items-center justify-center w-10 h-10 bg-emerald-100 text-emerald-700 rounded-lg font-bold">
-                          {tasmi.jumlahJuz}
+                          {tasmi.jumlahHafalan}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        {getStatusBadge(tasmi.statusPendaftaran)}
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {tasmi.juzYangDitasmi || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {tasmi.guruPengampu?.user?.name || '-'}
                       </td>
                       <td className="px-6 py-4 text-center text-sm text-gray-600">
-                        {tasmi.tanggalUjian
-                          ? new Date(tasmi.tanggalUjian).toLocaleDateString('id-ID', {
+                        {tasmi.jamTasmi || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-center text-sm text-gray-600">
+                        {tasmi.tanggalTasmi
+                          ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID', {
                               day: 'numeric',
                               month: 'long',
                               year: 'numeric'
@@ -284,16 +383,42 @@ export default function SiswaTasmiPage() {
                           : '-'}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        {tasmi.nilaiAkhir ? (
-                          <span className="inline-flex items-center justify-center w-14 h-10 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
-                            {tasmi.nilaiAkhir.toFixed(0)}
-                          </span>
+                        {getStatusBadge(tasmi.statusPendaftaran)}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {tasmi.statusPendaftaran === 'DITOLAK' && tasmi.catatanPenolakan ? (
+                          <div className="max-w-xs">
+                            <p className="text-red-600 font-medium">Ditolak:</p>
+                            <p className="text-gray-600">{tasmi.catatanPenolakan}</p>
+                          </div>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-600">{tasmi.catatan || '-'}</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {tasmi.catatan || '-'}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          {(tasmi.statusPendaftaran === 'MENUNGGU' || tasmi.statusPendaftaran === 'DITOLAK') && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(tasmi)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(tasmi.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Hapus"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                          {(tasmi.statusPendaftaran === 'DISETUJUI' || tasmi.statusPendaftaran === 'SELESAI') && (
+                            <span className="text-gray-400 text-xs">-</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -304,43 +429,150 @@ export default function SiswaTasmiPage() {
         </div>
       </div>
 
-      {/* Modal Daftar */}
+      {/* Modal Daftar/Edit */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Daftar Tasmi' Baru</h2>
-              <p className="text-sm text-gray-600 mt-1">Konfirmasi jumlah juz yang telah Anda hafal</p>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-5 border-b border-gray-200 sticky top-0 bg-white">
+              <h2 className="text-xl font-bold text-gray-900">
+                {editMode ? 'Edit Pendaftaran Tasmi\'' : 'Daftar Tasmi\' Baru'}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Isi formulir pendaftaran dengan lengkap dan benar
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nama Siswa
+                  </label>
+                  <input
+                    type="text"
+                    value={siswaData?.user?.name || ''}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kelas
+                  </label>
+                  <input
+                    type="text"
+                    value={siswaData?.kelas?.nama || '-'}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Jumlah Hafalan <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.jumlahHafalan}
+                    onChange={(e) => setFormData({ ...formData, jumlahHafalan: parseInt(e.target.value) || 0 })}
+                    min="2"
+                    max="30"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Jumlah juz yang telah dihafal</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Juz yang Ditasmi' <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.juzYangDitasmi}
+                    onChange={(e) => setFormData({ ...formData, juzYangDitasmi: e.target.value })}
+                    placeholder="Contoh: Juz 1, Juz 2, Juz 3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Juz yang akan diuji</p>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Jumlah Juz Hafalan <span className="text-red-500">*</span>
+                  Guru Pengampu
                 </label>
                 <input
-                  type="number"
-                  value={formData.jumlahJuz}
-                  onChange={(e) => setFormData({ jumlahJuz: parseInt(e.target.value) || 0 })}
-                  min="2"
-                  max="30"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-center text-2xl font-bold"
-                  required
+                  type="text"
+                  value={siswaData?.kelas?.guruKelas?.[0]?.guru?.user?.name || '-'}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                 />
-                <p className="text-xs text-gray-500 mt-2">Minimal 2 juz, maksimal 30 juz</p>
+                <p className="text-xs text-gray-500 mt-1">Otomatis terisi sesuai kelas</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Jam Tasmi' <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.jamTasmi}
+                    onChange={(e) => setFormData({ ...formData, jamTasmi: e.target.value })}
+                    placeholder="Contoh: 08:00-10:00"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Jam yang diajukan</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Tasmi' <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.tanggalTasmi}
+                    onChange={(e) => setFormData({ ...formData, tanggalTasmi: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Tanggal yang diajukan</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Catatan (Opsional)
+                </label>
+                <textarea
+                  value={formData.catatan}
+                  onChange={(e) => setFormData({ ...formData, catatan: e.target.value })}
+                  rows="3"
+                  placeholder="Catatan tambahan jika ada"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                />
               </div>
 
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <p className="text-sm text-purple-800">
-                  <strong>Catatan:</strong> Pastikan jumlah juz yang Anda daftarkan sesuai dengan hafalan yang telah Anda kuasai.
-                  Guru akan memverifikasi pendaftaran Anda.
+                  <strong>Catatan:</strong> Pastikan semua data yang Anda masukkan sudah benar.
+                  Guru akan memverifikasi pendaftaran Anda dan dapat menolak jika terdapat kesalahan atau jadwal bentrok.
                 </p>
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                  }}
                   className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   Batal
@@ -349,7 +581,7 @@ export default function SiswaTasmiPage() {
                   type="submit"
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
                 >
-                  Daftar Sekarang
+                  {editMode ? 'Update Pendaftaran' : 'Daftar Sekarang'}
                 </button>
               </div>
             </form>
