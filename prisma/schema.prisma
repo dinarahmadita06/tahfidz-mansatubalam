@@ -404,15 +404,21 @@ model Tasmi {
   guruPengampuId    String?     // Guru pengampu dari kelas siswa
   statusPendaftaran StatusTasmi @default(MENUNGGU)
   catatanPenolakan  String?     // Catatan jika ditolak oleh guru
-  catatan           String?     // Catatan umum
+  catatan           String?     // Catatan umum dari siswa
   tanggalDaftar     DateTime    @default(now())
-  tanggalUjian      DateTime?
-  guruVerifikasiId  String?
-  guruPengujiId     String?
-  nilaiKelancaran   Int?
-  nilaiTajwid       Int?
-  nilaiKetepatan    Int?
-  nilaiAkhir        Float?
+  tanggalUjian      DateTime?   // Tanggal ujian yang dijadwalkan guru
+  guruVerifikasiId  String?     // Guru yang menyetujui jadwal
+  guruPengujiId     String?     // Guru yang menguji
+  // Penilaian Tasmi'
+  nilaiKelancaran   Int?        // Nilai kelancaran bacaan (0-100)
+  nilaiTajwid       Int?        // Nilai tajwid (0-100)
+  nilaiAdab         Int?        // Nilai adab & sikap (0-100)
+  nilaiIrama        Int?        // Nilai irama & lagu (0-100)
+  nilaiAkhir        Float?      // Nilai akhir (rata-rata otomatis)
+  predikat          String?     // Mumtaz, Jayyid Jiddan, Jayyid, Maqbul
+  catatanPenguji    String?     // Catatan dari guru penguji
+  pdfUrl            String?     // URL PDF hasil penilaian
+  publishedAt       DateTime?   // Tanggal hasil dipublish (null = belum publish)
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   siswa             Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)

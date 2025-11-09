@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
-import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2 } from 'lucide-react';
+import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2, FileText, Star } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function SiswaTasmiPage() {
@@ -329,22 +329,19 @@ export default function SiswaTasmiPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Nama Siswa</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Kelas</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jumlah Hafalan</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Juz Tasmi'</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Guru Pengampu</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jam</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Tanggal</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jadwal</th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Catatan</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Catatan Guru</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Hasil Penilaian</th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {tasmiList.length === 0 ? (
                   <tr>
-                    <td colSpan="10" className="px-6 py-12 text-center">
+                    <td colSpan="7" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <Award size={48} className="text-gray-300" />
                         <p className="text-gray-500">Belum ada pendaftaran Tasmi'</p>
@@ -355,48 +352,95 @@ export default function SiswaTasmiPage() {
                 ) : (
                   tasmiList.map((tasmi) => (
                     <tr key={tasmi.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {tasmi.siswa?.user?.name || '-'}
+                      {/* Juz Tasmi' */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <span className="text-purple-700 font-bold text-sm">{tasmi.jumlahHafalan}</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{tasmi.juzYangDitasmi}</p>
+                            <p className="text-xs text-gray-500">{tasmi.jumlahHafalan} Juz Hafalan</p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {tasmi.siswa?.kelas?.nama || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center w-10 h-10 bg-emerald-100 text-emerald-700 rounded-lg font-bold">
-                          {tasmi.jumlahHafalan}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {tasmi.juzYangDitasmi || '-'}
-                      </td>
+
+                      {/* Guru Pengampu */}
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {tasmi.guruPengampu?.user?.name || '-'}
                       </td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-600">
-                        {tasmi.jamTasmi || '-'}
+
+                      {/* Jadwal (Tanggal & Jam) */}
+                      <td className="px-6 py-4 text-center">
+                        <div className="text-sm">
+                          <p className="font-medium text-gray-900">
+                            {tasmi.tanggalUjian || tasmi.tanggalTasmi
+                              ? new Date(tasmi.tanggalUjian || tasmi.tanggalTasmi).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })
+                              : '-'}
+                          </p>
+                          <p className="text-gray-500">{tasmi.jamTasmi || '-'}</p>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-600">
-                        {tasmi.tanggalTasmi
-                          ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })
-                          : '-'}
-                      </td>
+
+                      {/* Status */}
                       <td className="px-6 py-4 text-center">
                         {getStatusBadge(tasmi.statusPendaftaran)}
                       </td>
+
+                      {/* Catatan Guru */}
                       <td className="px-6 py-4 text-sm">
                         {tasmi.statusPendaftaran === 'DITOLAK' && tasmi.catatanPenolakan ? (
                           <div className="max-w-xs">
-                            <p className="text-red-600 font-medium">Ditolak:</p>
-                            <p className="text-gray-600">{tasmi.catatanPenolakan}</p>
+                            <p className="text-red-600 font-semibold text-xs mb-1">Ditolak:</p>
+                            <p className="text-gray-700">{tasmi.catatanPenolakan}</p>
+                          </div>
+                        ) : tasmi.catatanPenguji ? (
+                          <div className="max-w-xs">
+                            <p className="text-gray-700">{tasmi.catatanPenguji}</p>
                           </div>
                         ) : (
-                          <span className="text-gray-600">{tasmi.catatan || '-'}</span>
+                          <span className="text-gray-400">-</span>
                         )}
                       </td>
+
+                      {/* Hasil Penilaian */}
+                      <td className="px-6 py-4 text-center">
+                        {tasmi.publishedAt && tasmi.nilaiAkhir ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              <Star size={16} className="text-yellow-500 fill-yellow-500" />
+                              <span className="font-bold text-lg text-gray-900">{tasmi.nilaiAkhir.toFixed(0)}</span>
+                            </div>
+                            <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                              tasmi.predikat === 'Mumtaz' ? 'bg-green-100 text-green-700' :
+                              tasmi.predikat === 'Jayyid Jiddan' ? 'bg-blue-100 text-blue-700' :
+                              tasmi.predikat === 'Jayyid' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {tasmi.predikat}
+                            </span>
+                            {tasmi.pdfUrl && (
+                              <button
+                                onClick={() => window.open(tasmi.pdfUrl, '_blank')}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
+                              >
+                                <FileText size={14} />
+                                Lihat PDF
+                              </button>
+                            )}
+                          </div>
+                        ) : tasmi.statusPendaftaran === 'SELESAI' ? (
+                          <span className="text-xs text-gray-500">Menunggu publikasi</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+
+                      {/* Aksi */}
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           {(tasmi.statusPendaftaran === 'MENUNGGU' || tasmi.statusPendaftaran === 'DITOLAK') && (
