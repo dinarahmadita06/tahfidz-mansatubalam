@@ -280,7 +280,7 @@ async function main() {
             alamat: 'Jl. Siswa No. 1',
             noHP: '081234567892',
             orangTuaId: orangTuaUser.orangTua.id,
-            status: 'active',
+            status: 'approved',
           },
         },
       },
