@@ -63,7 +63,8 @@
       "Bash(vercel ls:*)",
       "Bash(vercel link:*)",
       "Bash(vercel logs:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(\"src\\app\\api\\siswa\\tasmi\\[id]\\route.js\")"
     ],
     "deny": [],
     "ask": []

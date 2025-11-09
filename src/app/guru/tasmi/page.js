@@ -25,10 +25,12 @@ export default function GuruTasmiPage() {
   const [filterStatus, setFilterStatus] = useState('ALL');
 
   // Modals
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
   const [selectedTasmi, setSelectedTasmi] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   // Form states
   const [scheduleData, setScheduleData] = useState({
@@ -72,30 +74,64 @@ export default function GuruTasmiPage() {
     }
   };
 
-  const handleVerify = async (approve) => {
+  const handleApprove = async () => {
     if (!selectedTasmi) return;
 
     try {
-      const response = await fetch(`/api/guru/tasmi/${selectedTasmi.id}/verify`, {
+      const response = await fetch(`/api/guru/tasmi/${selectedTasmi.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          approve,
-          guruId,
+          tanggalUjian: selectedTasmi.tanggalTasmi, // Use tanggal from siswa's submission
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        toast.success(approve ? 'Pendaftaran disetujui' : 'Pendaftaran ditolak');
-        setShowVerifyModal(false);
+        toast.success('Pendaftaran Tasmi\' berhasil disetujui');
+        setShowApproveModal(false);
         setSelectedTasmi(null);
         fetchData();
       } else {
-        const data = await response.json();
-        toast.error(data.message || 'Gagal memverifikasi');
+        toast.error(data.message || 'Gagal menyetujui pendaftaran');
       }
     } catch (error) {
-      console.error('Error verifying:', error);
+      console.error('Error approving:', error);
+      toast.error('Terjadi kesalahan');
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedTasmi) return;
+
+    if (!rejectReason || rejectReason.trim() === '') {
+      toast.error('Catatan penolakan wajib diisi');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/guru/tasmi/${selectedTasmi.id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          catatanPenolakan: rejectReason.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Pendaftaran Tasmi\' berhasil ditolak');
+        setShowRejectModal(false);
+        setSelectedTasmi(null);
+        setRejectReason('');
+        fetchData();
+      } else {
+        toast.error(data.message || 'Gagal menolak pendaftaran');
+      }
+    } catch (error) {
+      console.error('Error rejecting:', error);
       toast.error('Terjadi kesalahan');
     }
   };
@@ -170,9 +206,15 @@ export default function GuruTasmiPage() {
     }
   };
 
-  const openVerifyModal = (tasmi) => {
+  const openApproveModal = (tasmi) => {
     setSelectedTasmi(tasmi);
-    setShowVerifyModal(true);
+    setShowApproveModal(true);
+  };
+
+  const openRejectModal = (tasmi) => {
+    setSelectedTasmi(tasmi);
+    setRejectReason('');
+    setShowRejectModal(true);
   };
 
   const openScheduleModal = (tasmi) => {
@@ -277,17 +319,19 @@ export default function GuruTasmiPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">No</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Nama Siswa</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Kelas</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Juz</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Jumlah Hafalan</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Juz Tasmi'</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Jam</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Tanggal</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Jadwal</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Nilai</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Catatan</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredTasmi.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-6 py-12 text-center">
+                    <td colSpan="10" className="px-6 py-12 text-center">
                       <Award size={48} className="mx-auto text-gray-300 mb-3" />
                       <p className="text-gray-500">Belum ada data Tasmi'</p>
                     </td>
@@ -309,45 +353,52 @@ export default function GuruTasmiPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="inline-flex items-center justify-center w-10 h-10 bg-emerald-100 text-emerald-700 rounded-lg font-bold">
-                          {tasmi.jumlahJuz}
+                          {tasmi.jumlahHafalan}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">{getStatusBadge(tasmi.statusPendaftaran)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {tasmi.juzYangDitasmi || '-'}
+                      </td>
                       <td className="px-4 py-3 text-center text-sm text-gray-600">
-                        {tasmi.tanggalUjian
-                          ? new Date(tasmi.tanggalUjian).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                        {tasmi.jamTasmi || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm text-gray-600">
+                        {tasmi.tanggalTasmi
+                          ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
                           : '-'}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        {tasmi.nilaiAkhir ? (
-                          <span className="inline-flex items-center justify-center w-12 h-10 bg-purple-100 text-purple-700 rounded-lg font-bold">
-                            {tasmi.nilaiAkhir.toFixed(0)}
-                          </span>
+                      <td className="px-4 py-3 text-center">{getStatusBadge(tasmi.statusPendaftaran)}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {tasmi.statusPendaftaran === 'DITOLAK' && tasmi.catatanPenolakan ? (
+                          <div className="max-w-xs">
+                            <p className="text-red-600 font-medium text-xs">Ditolak:</p>
+                            <p className="text-gray-600 text-xs">{tasmi.catatanPenolakan}</p>
+                          </div>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-600 text-xs">{tasmi.catatan || '-'}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
                           {tasmi.statusPendaftaran === 'MENUNGGU' && (
-                            <button
-                              onClick={() => openVerifyModal(tasmi)}
-                              className="px-2 py-1 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200"
-                              title="Verifikasi"
-                            >
-                              Verifikasi
-                            </button>
+                            <>
+                              <button
+                                onClick={() => openApproveModal(tasmi)}
+                                className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                title="Setujui"
+                              >
+                                Setujui
+                              </button>
+                              <button
+                                onClick={() => openRejectModal(tasmi)}
+                                className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                title="Tolak"
+                              >
+                                Tolak
+                              </button>
+                            </>
                           )}
-                          {tasmi.statusPendaftaran === 'DISETUJUI' && !tasmi.tanggalUjian && (
-                            <button
-                              onClick={() => openScheduleModal(tasmi)}
-                              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                              title="Jadwal"
-                            >
-                              Jadwal
-                            </button>
-                          )}
-                          {tasmi.statusPendaftaran === 'DISETUJUI' && tasmi.tanggalUjian && !tasmi.nilaiAkhir && (
+                          {tasmi.statusPendaftaran === 'DISETUJUI' && !tasmi.nilaiAkhir && (
                             <button
                               onClick={() => openGradeModal(tasmi)}
                               className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
@@ -355,6 +406,9 @@ export default function GuruTasmiPage() {
                             >
                               Input Nilai
                             </button>
+                          )}
+                          {tasmi.statusPendaftaran === 'SELESAI' && (
+                            <span className="text-gray-400 text-xs">-</span>
                           )}
                         </div>
                       </td>
@@ -367,38 +421,152 @@ export default function GuruTasmiPage() {
         </div>
       </div>
 
-      {/* Modal Verifikasi */}
-      {showVerifyModal && selectedTasmi && (
+      {/* Modal Approve */}
+      {showApproveModal && selectedTasmi && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div className="px-6 py-5 border-b">
-              <h2 className="text-xl font-bold text-gray-900">Verifikasi Pendaftaran</h2>
+              <h2 className="text-xl font-bold text-gray-900">Setujui Pendaftaran Tasmi'</h2>
+              <p className="text-sm text-gray-600 mt-1">Periksa detail pendaftaran sebelum menyetujui</p>
             </div>
             <div className="p-6">
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Nama Siswa</p>
-                <p className="font-semibold text-gray-900">{selectedTasmi.siswa?.user?.name}</p>
-                <p className="text-sm text-gray-600 mt-2 mb-1">Jumlah Juz</p>
-                <p className="font-semibold text-gray-900">{selectedTasmi.jumlahJuz} Juz</p>
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Nama Siswa</p>
+                    <p className="font-semibold text-gray-900">{selectedTasmi.siswa?.user?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Kelas</p>
+                    <p className="font-semibold text-gray-900">{selectedTasmi.siswa?.kelas?.nama || '-'}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Jumlah Hafalan</p>
+                    <p className="font-semibold text-gray-900">{selectedTasmi.jumlahHafalan} Juz</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Juz yang Ditasmi'</p>
+                    <p className="font-semibold text-gray-900">{selectedTasmi.juzYangDitasmi}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Jam Tasmi'</p>
+                    <p className="font-semibold text-gray-900">{selectedTasmi.jamTasmi}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Tanggal Tasmi'</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedTasmi.tanggalTasmi
+                        ? new Date(selectedTasmi.tanggalTasmi).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })
+                        : '-'}
+                    </p>
+                  </div>
+                </div>
+                {selectedTasmi.catatan && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Catatan Siswa</p>
+                    <p className="text-sm text-gray-700">{selectedTasmi.catatan}</p>
+                  </div>
+                )}
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800">
+                  Dengan menyetujui, jadwal ujian akan diatur sesuai tanggal dan jam yang diajukan siswa.
+                </p>
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowVerifyModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  onClick={() => setShowApproveModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
                 >
                   Batal
                 </button>
                 <button
-                  onClick={() => handleVerify(false)}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  onClick={handleApprove}
+                  className="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
                 >
-                  Tolak
+                  Setujui Pendaftaran
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Reject */}
+      {showRejectModal && selectedTasmi && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="px-6 py-5 border-b">
+              <h2 className="text-xl font-bold text-gray-900">Tolak Pendaftaran Tasmi'</h2>
+              <p className="text-sm text-gray-600 mt-1">Berikan alasan penolakan yang jelas</p>
+            </div>
+            <div className="p-6">
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-2">
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Nama Siswa</p>
+                  <p className="font-semibold text-gray-900">{selectedTasmi.siswa?.user?.name}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Jam yang Diajukan</p>
+                    <p className="font-semibold text-gray-900">{selectedTasmi.jamTasmi}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Tanggal yang Diajukan</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedTasmi.tanggalTasmi
+                        ? new Date(selectedTasmi.tanggalTasmi).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })
+                        : '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Catatan Penolakan <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows="4"
+                  placeholder="Contoh: Jadwal pendaftaran tasmi ditolak karena jam yang diajukan bentrok dengan jadwal guru mengajar di kelas lain"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Siswa akan melihat catatan ini dan dapat mengedit pendaftarannya</p>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-800">
+                  Siswa dapat mengedit dan mengajukan ulang pendaftaran setelah melihat catatan penolakan Anda.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectReason('');
+                  }}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                >
+                  Batal
                 </button>
                 <button
-                  onClick={() => handleVerify(true)}
-                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  onClick={handleReject}
+                  className="flex-1 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold"
                 >
-                  Setujui
+                  Tolak Pendaftaran
                 </button>
               </div>
             </div>
