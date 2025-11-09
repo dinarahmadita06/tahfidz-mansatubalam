@@ -34,7 +34,10 @@ export async function GET(request) {
       );
     }
 
-    console.log('📊 Checking hafalan for siswa:', siswa.user.name, '(ID:', siswa.id, ')');
+    console.log('📊 Session user ID:', session.user.id);
+    console.log('📊 Siswa user ID:', siswa.userId);
+    console.log('📊 Siswa ID:', siswa.id);
+    console.log('📊 Siswa name:', siswa.user.name);
 
     // Get all hafalan records
     const hafalanList = await prisma.hafalan.findMany({
