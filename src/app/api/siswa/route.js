@@ -23,13 +23,13 @@ export async function GET(request) {
     if (status) {
       whereClause.status = status;
     } else if (session.user.role === 'GURU') {
-      // Guru bisa melihat siswa active dan pending (yang mereka buat atau dari kelas mereka)
+      // Guru bisa melihat siswa approved dan pending (yang mereka buat atau dari kelas mereka)
       whereClause.status = {
-        in: ['active', 'pending']
+        in: ['approved', 'pending']
       };
     } else if (session.user.role === 'SISWA' || session.user.role === 'ORANG_TUA') {
-      // Siswa dan orang tua hanya lihat yang active
-      whereClause.status = 'active';
+      // Siswa dan orang tua hanya lihat yang approved
+      whereClause.status = 'approved';
     }
     // Admin bisa lihat semua status
 
