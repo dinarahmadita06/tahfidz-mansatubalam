@@ -101,11 +101,6 @@ export default function SiswaTasmiPage() {
     e.preventDefault();
 
     // Validation
-    if (formData.jumlahHafalan < 2) {
-      toast.error('Minimal hafalan 2 juz untuk mendaftar Tasmi\'');
-      return;
-    }
-
     if (!formData.juzYangDitasmi || !formData.jamTasmi || !formData.tanggalTasmi) {
       toast.error('Semua field wajib diisi');
       return;
@@ -266,7 +261,7 @@ export default function SiswaTasmiPage() {
               <div>
                 <h1 className="text-3xl font-bold mb-2">Tasmi' Al-Qur'an</h1>
                 <p className="text-purple-100">
-                  Ujian akhir hafalan Al-Qur'an untuk siswa yang telah menghafal minimal 2 juz
+                  Ujian akhir hafalan Al-Qur'an - Daftar dan ajukan jadwal Tasmi' Anda
                 </p>
               </div>
             </div>
@@ -299,48 +294,29 @@ export default function SiswaTasmiPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-amber-100">
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-blue-100">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <CheckCircle size={24} className="text-amber-600" />
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <CheckCircle size={24} className="text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Status Kelayakan</p>
-                <p className={`text-lg font-bold ${totalJuz >= 2 ? 'text-green-600' : 'text-red-600'}`}>
-                  {totalJuz >= 2 ? 'Memenuhi Syarat' : 'Belum Memenuhi'}
-                </p>
+                <p className="text-sm text-gray-600">Status Pendaftaran</p>
+                <p className="text-lg font-bold text-blue-600">Siap Mendaftar</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Alert Info */}
-        {totalJuz < 2 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-            <AlertCircle size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-amber-900 mb-1">Syarat Pendaftaran Tasmi'</p>
-              <p className="text-sm text-amber-700">
-                Anda harus menghafal minimal <strong>2 juz</strong> untuk dapat mendaftar ujian Tasmi'.
-                Saat ini Anda telah menghafal <strong>{totalJuz} juz</strong>.
-                {totalJuz < 2 && ` Masih kurang ${2 - totalJuz} juz lagi!`}
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Action Button */}
-        {totalJuz >= 2 && (
-          <div className="mb-6">
-            <button
-              onClick={openNewModal}
-              className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold"
-            >
-              <Plus size={20} />
-              <span>Daftar Tasmi' Baru</span>
-            </button>
-          </div>
-        )}
+        <div className="mb-6">
+          <button
+            onClick={openNewModal}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold"
+          >
+            <Plus size={20} />
+            <span>Daftar Tasmi' Baru</span>
+          </button>
+        </div>
 
         {/* Riwayat Tasmi */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -372,9 +348,7 @@ export default function SiswaTasmiPage() {
                       <div className="flex flex-col items-center gap-3">
                         <Award size={48} className="text-gray-300" />
                         <p className="text-gray-500">Belum ada pendaftaran Tasmi'</p>
-                        {totalJuz >= 2 && (
-                          <p className="text-sm text-gray-400">Klik tombol "Daftar Tasmi' Baru" untuk mendaftar</p>
-                        )}
+                        <p className="text-sm text-gray-400">Klik tombol "Daftar Tasmi' Baru" untuk mendaftar</p>
                       </div>
                     </td>
                   </tr>
