@@ -52,8 +52,11 @@ export default function SiswaTasmiPage() {
           const hafalanRes = await fetch(`/api/siswa/hafalan-summary`);
           if (hafalanRes.ok) {
             const hafalanData = await hafalanRes.json();
+            console.log('Hafalan Data:', hafalanData);
             setTotalJuz(hafalanData.totalJuz || 0);
             setFormData(prev => ({ ...prev, jumlahHafalan: hafalanData.totalJuz || 0 }));
+          } else {
+            console.error('Failed to fetch hafalan summary:', await hafalanRes.text());
           }
         }
       }

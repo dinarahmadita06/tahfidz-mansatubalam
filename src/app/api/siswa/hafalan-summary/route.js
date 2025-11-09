@@ -17,6 +17,14 @@ export async function GET(request) {
     // Get siswa data
     const siswa = await prisma.siswa.findUnique({
       where: { userId: session.user.id },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          }
+        }
+      }
     });
 
     if (!siswa) {
@@ -25,6 +33,8 @@ export async function GET(request) {
         { status: 404 }
       );
     }
+
+    console.log('📊 Checking hafalan for siswa:', siswa.user.name, '(ID:', siswa.id, ')');
 
     // Get all hafalan records
     const hafalanList = await prisma.hafalan.findMany({
@@ -36,6 +46,8 @@ export async function GET(request) {
       },
     });
 
+    console.log('📖 Found', hafalanList.length, 'hafalan records');
+
     // Calculate unique juz
     const uniqueJuz = new Set(hafalanList.map(h => h.juz));
     const totalJuz = uniqueJuz.size;
@@ -43,10 +55,13 @@ export async function GET(request) {
     // Get total hafalan count
     const totalHafalan = hafalanList.length;
 
+    const juzList = Array.from(uniqueJuz).sort((a, b) => a - b);
+    console.log('📚 Total Juz:', totalJuz, '- Juz list:', juzList);
+
     return NextResponse.json({
       totalJuz,
       totalHafalan,
-      juzList: Array.from(uniqueJuz).sort((a, b) => a - b),
+      juzList,
     });
   } catch (error) {
     console.error('Error fetching hafalan summary:', error);
