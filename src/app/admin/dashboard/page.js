@@ -1274,14 +1274,14 @@ export default function DashboardTahfidz() {
           backgroundSize: '40px 40px',
           pointerEvents: 'none',
           opacity: 0.5,
-          zIndex: 0,
+          zIndex: -1,
         }} />
 
         {/* Header */}
         <div style={{
           position: 'relative',
           padding: '32px 40px 20px',
-          zIndex: 2,
+          zIndex: 1,
         }}>
           <div>
             <h1 style={{
@@ -1310,7 +1310,7 @@ export default function DashboardTahfidz() {
         <div style={{
           position: 'relative',
           padding: '0 40px 20px',
-          zIndex: 2,
+          zIndex: 1,
         }}>
           <div style={{
             background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
@@ -1365,7 +1365,7 @@ export default function DashboardTahfidz() {
         </div>
 
         {/* Main Content */}
-        <div className="dashboard-container" style={{ position: 'relative', zIndex: 2 }}>
+        <div className="dashboard-container" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
             {/* Stats Cards - 6 Cards */}
@@ -1496,7 +1496,7 @@ export default function DashboardTahfidz() {
           padding: '20px 40px',
           borderTop: `1px solid ${colors.gray[200]}`,
           background: colors.white,
-          zIndex: 2,
+          zIndex: 1,
         }}>
           <p style={{
             fontSize: '11px',
