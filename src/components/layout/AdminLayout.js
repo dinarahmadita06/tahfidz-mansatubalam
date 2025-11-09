@@ -241,11 +241,12 @@ function AdminLayout({ children }) {
       `}</style>
 
       <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }}>
-        {/* Mobile Overlay */}
+        {/* Mobile Overlay - Only show when sidebar is open on mobile */}
         {isMobile && sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
+            style={{ pointerEvents: 'auto' }}
           />
         )}
 
