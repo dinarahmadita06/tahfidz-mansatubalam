@@ -32,13 +32,21 @@ export default function SiswaTasmiPage() {
   const fetchData = async () => {
     try {
       // Fetch siswa data & total juz with guruKelas info
-      const siswaRes = await fetch('/api/siswa');
+      const siswaRes = await fetch('/api/siswa', {
+        cache: 'no-store', // Disable cache
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
+
       if (siswaRes.ok) {
         const siswaJson = await siswaRes.json();
 
         // Fetch kelas info with guru
         if (siswaJson.siswa?.kelasId) {
-          const kelasRes = await fetch(`/api/admin/kelas/${siswaJson.siswa.kelasId}`);
+          const kelasRes = await fetch(`/api/admin/kelas/${siswaJson.siswa.kelasId}`, {
+            cache: 'no-store',
+          });
           if (kelasRes.ok) {
             const kelasData = await kelasRes.json();
             siswaJson.siswa.kelas = kelasData.kelas;
@@ -47,16 +55,30 @@ export default function SiswaTasmiPage() {
 
         setSiswaData(siswaJson.siswa);
 
-        // Calculate total juz from hafalan
+        // Calculate total juz from hafalan - with cache busting
         if (siswaJson.siswa?.id) {
-          const hafalanRes = await fetch(`/api/siswa/hafalan-summary`);
+          const timestamp = new Date().getTime();
+          const hafalanRes = await fetch(`/api/siswa/hafalan-summary?t=${timestamp}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+            }
+          });
+
           if (hafalanRes.ok) {
             const hafalanData = await hafalanRes.json();
-            console.log('Hafalan Data:', hafalanData);
-            setTotalJuz(hafalanData.totalJuz || 0);
-            setFormData(prev => ({ ...prev, jumlahHafalan: hafalanData.totalJuz || 0 }));
+            console.log('✅ Hafalan Data:', hafalanData);
+            console.log('✅ Total Juz:', hafalanData.totalJuz);
+
+            const juzCount = hafalanData.totalJuz || 0;
+            setTotalJuz(juzCount);
+            setFormData(prev => ({ ...prev, jumlahHafalan: juzCount }));
+
+            console.log('✅ State updated - totalJuz:', juzCount);
           } else {
-            console.error('Failed to fetch hafalan summary:', await hafalanRes.text());
+            console.error('❌ Failed to fetch hafalan summary:', await hafalanRes.text());
+            // Fallback: set to 0
+            setTotalJuz(0);
           }
         }
       }
@@ -215,6 +237,9 @@ export default function SiswaTasmiPage() {
       </div>
     );
   };
+
+  // Debug: log state setiap render
+  console.log('🔍 Render state - totalJuz:', totalJuz, '| formData.jumlahHafalan:', formData.jumlahHafalan);
 
   if (loading) {
     return (
