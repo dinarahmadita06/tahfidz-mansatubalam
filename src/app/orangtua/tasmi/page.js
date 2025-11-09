@@ -3,56 +3,43 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
-import { Award, Calendar, CheckCircle, XCircle, Clock, AlertCircle, BookOpen } from 'lucide-react';
+import { Award, Calendar, CheckCircle, XCircle, Clock, AlertCircle, BookOpen, Star, FileText } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function OrangtuaTasmiPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
-  const [anakList, setAnakList] = useState([]);
-  const [selectedAnak, setSelectedAnak] = useState(null);
+  const [childrenData, setChildrenData] = useState([]);
+  const [selectedChild, setSelectedChild] = useState(null);
   const [tasmiList, setTasmiList] = useState([]);
 
   useEffect(() => {
     if (session) {
-      fetchAnakData();
+      fetchChildrenData();
     }
   }, [session]);
 
   useEffect(() => {
-    if (selectedAnak) {
-      fetchTasmiData(selectedAnak.id);
+    if (selectedChild) {
+      setTasmiList(selectedChild.tasmi || []);
     }
-  }, [selectedAnak]);
+  }, [selectedChild]);
 
-  const fetchAnakData = async () => {
+  const fetchChildrenData = async () => {
     try {
-      const response = await fetch('/api/orangtua/anak');
+      const response = await fetch('/api/orangtua/tasmi');
       if (response.ok) {
         const data = await response.json();
-        setAnakList(data.anak || []);
-        if (data.anak && data.anak.length > 0) {
-          setSelectedAnak(data.anak[0]);
+        setChildrenData(data.children || []);
+        if (data.children && data.children.length > 0) {
+          setSelectedChild(data.children[0]);
         }
       }
     } catch (error) {
-      console.error('Error fetching anak:', error);
+      console.error('Error fetching children data:', error);
       toast.error('Gagal memuat data anak');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchTasmiData = async (anakId) => {
-    try {
-      const response = await fetch(`/api/orangtua/tasmi?anakId=${anakId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setTasmiList(data.tasmi || []);
-      }
-    } catch (error) {
-      console.error('Error fetching tasmi:', error);
-      toast.error('Gagal memuat data Tasmi\'');
     }
   };
 
@@ -90,6 +77,27 @@ export default function OrangtuaTasmiPage() {
     );
   };
 
+  const getPredikatBadge = (predikat) => {
+    if (!predikat) return <span className="text-gray-400">-</span>;
+
+    const badges = {
+      Mumtaz: 'bg-green-100 text-green-700 border-green-200',
+      'Jayyid Jiddan': 'bg-blue-100 text-blue-700 border-blue-200',
+      Jayyid: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      Maqbul: 'bg-gray-100 text-gray-700 border-gray-200',
+    };
+
+    return (
+      <span
+        className={`inline-block px-2 py-1 rounded-md text-xs font-semibold border ${
+          badges[predikat] || badges.Maqbul
+        }`}
+      >
+        {predikat}
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <OrangtuaLayout>
@@ -100,7 +108,7 @@ export default function OrangtuaTasmiPage() {
     );
   }
 
-  if (anakList.length === 0) {
+  if (childrenData.length === 0) {
     return (
       <OrangtuaLayout>
         <Toaster position="top-right" />
@@ -137,23 +145,23 @@ export default function OrangtuaTasmiPage() {
           </div>
         </div>
 
-        {/* Anak Selector */}
-        {anakList.length > 1 && (
+        {/* Child Selector */}
+        {childrenData.length > 1 && (
           <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Pilih Anak
             </label>
             <select
-              value={selectedAnak?.id || ''}
+              value={selectedChild?.siswaId || ''}
               onChange={(e) => {
-                const anak = anakList.find(a => a.id === e.target.value);
-                setSelectedAnak(anak);
+                const child = childrenData.find(c => c.siswaId === e.target.value);
+                setSelectedChild(child);
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
-              {anakList.map((anak) => (
-                <option key={anak.id} value={anak.id}>
-                  {anak.user.name} - {anak.kelas?.nama || 'Tidak ada kelas'}
+              {childrenData.map((child) => (
+                <option key={child.siswaId} value={child.siswaId}>
+                  {child.nama} - {child.kelas}
                 </option>
               ))}
             </select>
@@ -161,7 +169,7 @@ export default function OrangtuaTasmiPage() {
         )}
 
         {/* Info Card */}
-        {selectedAnak && (
+        {selectedChild && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-white rounded-xl shadow-sm p-6 border border-emerald-100">
               <div className="flex items-center gap-3">
@@ -170,7 +178,7 @@ export default function OrangtuaTasmiPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Nama Anak</p>
-                  <p className="text-xl font-bold text-gray-900">{selectedAnak.user.name}</p>
+                  <p className="text-xl font-bold text-gray-900">{selectedChild.nama}</p>
                 </div>
               </div>
             </div>
@@ -181,7 +189,7 @@ export default function OrangtuaTasmiPage() {
                   <Award size={24} className="text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Pendaftaran Tasmi'</p>
+                  <p className="text-sm text-gray-600">Total Pendaftaran Tasmi&apos;</p>
                   <p className="text-2xl font-bold text-gray-900">{tasmiList.length}</p>
                 </div>
               </div>
@@ -201,20 +209,21 @@ export default function OrangtuaTasmiPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Tanggal Daftar</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jumlah Juz</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Juz yang Ditasmi</th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Status</th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jadwal Ujian</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Nilai Akhir</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Catatan</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Nilai</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Predikat</th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Hasil</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {tasmiList.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
+                    <td colSpan="7" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <Award size={48} className="text-gray-300" />
-                        <p className="text-gray-500">Belum ada pendaftaran Tasmi'</p>
+                        <p className="text-gray-500">Belum ada pendaftaran Tasmi&apos;</p>
                       </div>
                     </td>
                   </tr>
@@ -228,10 +237,9 @@ export default function OrangtuaTasmiPage() {
                           year: 'numeric'
                         })}
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center w-10 h-10 bg-emerald-100 text-emerald-700 rounded-lg font-bold">
-                          {tasmi.jumlahJuz}
-                        </span>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="font-medium">{tasmi.juzYangDitasmi}</div>
+                        <div className="text-xs text-gray-500">Total: {tasmi.jumlahHafalan} Juz</div>
                       </td>
                       <td className="px-6 py-4 text-center">
                         {getStatusBadge(tasmi.statusPendaftaran)}
@@ -248,16 +256,38 @@ export default function OrangtuaTasmiPage() {
                           : '-'}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        {tasmi.nilaiAkhir ? (
-                          <span className="inline-flex items-center justify-center w-14 h-10 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
-                            {tasmi.nilaiAkhir.toFixed(0)}
-                          </span>
+                        {tasmi.publishedAt && tasmi.nilaiAkhir ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <Star size={16} className="text-yellow-500 fill-yellow-500" />
+                            <span className="font-bold text-lg">{tasmi.nilaiAkhir.toFixed(0)}</span>
+                          </div>
+                        ) : tasmi.statusPendaftaran === 'SELESAI' ? (
+                          <span className="text-xs text-gray-500">Menunggu publikasi</span>
                         ) : (
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {tasmi.catatan || '-'}
+                      <td className="px-6 py-4 text-center">
+                        {tasmi.publishedAt && tasmi.predikat ? (
+                          getPredikatBadge(tasmi.predikat)
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {tasmi.publishedAt && tasmi.pdfUrl ? (
+                          <button
+                            onClick={() => window.open(tasmi.pdfUrl, '_blank')}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            <FileText size={14} />
+                            Lihat PDF
+                          </button>
+                        ) : tasmi.statusPendaftaran === 'SELESAI' ? (
+                          <span className="text-xs text-gray-500">Belum tersedia</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                     </tr>
                   ))

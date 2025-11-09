@@ -17,21 +17,36 @@ export async function POST(request, { params }) {
     const { id } = await params;
     const body = await request.json();
     const {
-      guruPengujiId,
       nilaiKelancaran,
       nilaiTajwid,
-      nilaiKetepatan,
+      nilaiAdab,
+      nilaiIrama,
       nilaiAkhir,
-      catatan,
+      predikat,
+      catatanPenguji,
+      publish, // flag untuk publish hasil
     } = body;
+
+    // Get guru data
+    const guru = await prisma.guru.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    if (!guru) {
+      return NextResponse.json(
+        { message: 'Data guru tidak ditemukan' },
+        { status: 404 }
+      );
+    }
 
     // Validate input
     if (
-      !guruPengujiId ||
       nilaiKelancaran === undefined ||
       nilaiTajwid === undefined ||
-      nilaiKetepatan === undefined ||
-      nilaiAkhir === undefined
+      nilaiAdab === undefined ||
+      nilaiIrama === undefined ||
+      nilaiAkhir === undefined ||
+      !predikat
     ) {
       return NextResponse.json(
         { message: 'Data penilaian tidak lengkap' },
@@ -45,8 +60,10 @@ export async function POST(request, { params }) {
       nilaiKelancaran > 100 ||
       nilaiTajwid < 0 ||
       nilaiTajwid > 100 ||
-      nilaiKetepatan < 0 ||
-      nilaiKetepatan > 100
+      nilaiAdab < 0 ||
+      nilaiAdab > 100 ||
+      nilaiIrama < 0 ||
+      nilaiIrama > 100
     ) {
       return NextResponse.json(
         { message: 'Nilai harus antara 0-100' },
@@ -82,17 +99,26 @@ export async function POST(request, { params }) {
     }
 
     // Update with grades and mark as completed
+    const updateData = {
+      guruPengujiId: guru.id,
+      nilaiKelancaran: parseInt(nilaiKelancaran),
+      nilaiTajwid: parseInt(nilaiTajwid),
+      nilaiAdab: parseInt(nilaiAdab),
+      nilaiIrama: parseInt(nilaiIrama),
+      nilaiAkhir: parseFloat(nilaiAkhir),
+      predikat,
+      catatanPenguji: catatanPenguji || null,
+      statusPendaftaran: 'SELESAI',
+    };
+
+    // If publish flag is true, set publishedAt timestamp
+    if (publish) {
+      updateData.publishedAt = new Date();
+    }
+
     const updatedTasmi = await prisma.tasmi.update({
       where: { id },
-      data: {
-        guruPengujiId,
-        nilaiKelancaran: parseInt(nilaiKelancaran),
-        nilaiTajwid: parseInt(nilaiTajwid),
-        nilaiKetepatan: parseInt(nilaiKetepatan),
-        nilaiAkhir: parseFloat(nilaiAkhir),
-        catatan: catatan || null,
-        statusPendaftaran: 'SELESAI',
-      },
+      data: updateData,
       include: {
         siswa: {
           include: {
@@ -129,8 +155,12 @@ export async function POST(request, { params }) {
       },
     });
 
+    const message = publish
+      ? 'Penilaian Tasmi\' berhasil disimpan dan dipublikasikan'
+      : 'Penilaian Tasmi\' berhasil disimpan sebagai draft';
+
     return NextResponse.json({
-      message: 'Penilaian Tasmi\' berhasil disimpan',
+      message,
       tasmi: updatedTasmi,
     });
   } catch (error) {
