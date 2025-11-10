@@ -772,6 +772,14 @@ export default function PenilaianHafalanKelasPage() {
   };
 
   const handlePrintKelas = () => {
+    // Format tanggal untuk tanda tangan
+    const today = new Date();
+    const tanggalStr = today.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -785,37 +793,66 @@ export default function PenilaianHafalanKelasPage() {
             color: #1f2937;
           }
           .header {
-            text-align: center;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
             margin-bottom: 30px;
-            border-bottom: 3px solid #059669;
             padding-bottom: 15px;
+            border-bottom: 3px solid #059669;
           }
-          .header h1 {
+          .logo-placeholder {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #059669;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-align: center;
+            padding: 5px;
+            flex-shrink: 0;
+            background: #f0fdf4;
+          }
+          .header-text {
+            flex: 1;
+          }
+          .header-text h1 {
             color: #059669;
-            margin: 0;
+            margin: 0 0 5px 0;
             font-size: 24px;
           }
-          .header p {
-            margin: 5px 0;
+          .header-text p {
+            margin: 0;
             color: #6b7280;
+            font-size: 14px;
           }
           .info-box {
             background: #f0fdf4;
             border: 1px solid #86efac;
             border-radius: 8px;
-            padding: 15px;
+            padding: 15px 20px;
             margin-bottom: 20px;
+          }
+          .info-box p {
+            margin: 8px 0;
+            font-size: 13px;
+            line-height: 1.6;
+          }
+          .info-box strong {
+            color: #059669;
+            display: inline-block;
+            width: 120px;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
           }
           th, td {
             border: 1px solid #e5e7eb;
             padding: 10px;
             text-align: left;
-            font-size: 12px;
+            font-size: 11px;
           }
           th {
             background: #059669;
@@ -824,6 +861,42 @@ export default function PenilaianHafalanKelasPage() {
           }
           tr:nth-child(even) {
             background: #f9fafb;
+          }
+          .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+          }
+          .signature-box {
+            text-align: center;
+            min-width: 250px;
+          }
+          .signature-location {
+            text-align: right;
+            margin-bottom: 5px;
+            font-size: 13px;
+          }
+          .signature-title {
+            text-align: center;
+            margin-bottom: 60px;
+            font-size: 13px;
+          }
+          .signature-placeholder {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+          }
+          .signature-line {
+            border-top: 1px solid #000;
+            margin: 0 auto;
+            width: 200px;
+          }
+          .signature-name {
+            margin-top: 5px;
+            font-size: 13px;
+            text-align: center;
           }
           .footer {
             text-align: center;
@@ -840,14 +913,21 @@ export default function PenilaianHafalanKelasPage() {
       </head>
       <body>
         <div class="header">
-          <h1>📗 Rekap Penilaian Hafalan Kelas</h1>
-          <p>Sistem Manajemen Tahfidz Al-Qur'an</p>
+          <div class="logo-placeholder">
+            Logo MAN 1 Bandar Lampung
+          </div>
+          <div class="header-text">
+            <h1>Rekap Penilaian Hafalan Kelas</h1>
+            <p>Sistem Manajemen Tahfidz Al-Qur'an</p>
+          </div>
         </div>
 
         <div class="info-box">
-          <p><strong>Kelas:</strong> ${getNamaKelas(kelasId)}</p>
-          <p><strong>Periode:</strong> ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}</p>
-          <p><strong>Total Siswa:</strong> ${siswaList.length} siswa</p>
+          <p><strong>Guru Pembina</strong>: [Nama Guru]</p>
+          <p><strong>NIP</strong>: -</p>
+          <p><strong>Kelas</strong>: ${getNamaKelas(kelasId)}</p>
+          <p><strong>Periode</strong>: ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}</p>
+          <p><strong>Total Siswa</strong>: ${siswaList.length} siswa</p>
         </div>
 
         <table>
@@ -899,6 +979,19 @@ export default function PenilaianHafalanKelasPage() {
             }).join('')}
           </tbody>
         </table>
+
+        <div class="signature-section">
+          <div class="signature-box">
+            <div class="signature-location">Bandar Lampung, ${tanggalStr}</div>
+            <div class="signature-title">Guru Pengampu,</div>
+            <div class="signature-placeholder">
+              <!-- Area untuk tanda tangan digital akan ditampilkan di sini -->
+              <span style="color: #9ca3af; font-size: 11px;">[Tanda Tangan Digital]</span>
+            </div>
+            <div class="signature-line"></div>
+            <div class="signature-name">[Nama Guru]</div>
+          </div>
+        </div>
 
         <div class="footer">
           <p>Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
