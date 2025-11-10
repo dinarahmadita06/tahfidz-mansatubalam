@@ -85,7 +85,6 @@ export async function POST(request) {
       guruId,
       kelasId,
       judul,
-      level,
       jenisMateri,
       fileUrl,
       youtubeUrl,
@@ -93,18 +92,9 @@ export async function POST(request) {
     } = body;
 
     // Validation
-    if (!guruId || !judul || !level || !jenisMateri) {
+    if (!guruId || !judul || !jenisMateri) {
       return NextResponse.json(
         { message: 'Data tidak lengkap. Pastikan semua field wajib diisi.' },
-        { status: 400 }
-      );
-    }
-
-    // Validate level enum
-    const validLevels = ['DASAR', 'MENENGAH', 'LANJUTAN'];
-    if (!validLevels.includes(level)) {
-      return NextResponse.json(
-        { message: 'Level tidak valid' },
         { status: 400 }
       );
     }
@@ -153,7 +143,6 @@ export async function POST(request) {
         guruId,
         kelasId: kelasId || null,
         judul,
-        level,
         jenisMateri,
         fileUrl: fileUrl || null,
         youtubeUrl: youtubeUrl || null,

@@ -37,7 +37,6 @@ export default function TahsinDetailPage() {
 
   const [materiFormData, setMateriFormData] = useState({
     judul: '',
-    level: 'DASAR',
     jenisMateri: 'PDF',
     fileUrl: '',
     youtubeUrl: '',
@@ -130,7 +129,6 @@ export default function TahsinDetailPage() {
     const newErrors = {};
 
     if (!materiFormData.judul.trim()) newErrors.judul = 'Judul materi wajib diisi';
-    if (!materiFormData.level) newErrors.level = 'Pilih level';
     if (!materiFormData.jenisMateri) newErrors.jenisMateri = 'Pilih jenis materi';
 
     if (materiFormData.jenisMateri === 'YOUTUBE') {
@@ -217,7 +215,6 @@ export default function TahsinDetailPage() {
         guruId: guruData.id,
         kelasId: kelasId,
         judul: materiFormData.judul.trim(),
-        level: materiFormData.level,
         jenisMateri: materiFormData.jenisMateri,
         fileUrl: materiFormData.jenisMateri !== 'YOUTUBE' ? materiFormData.fileUrl : null,
         youtubeUrl: materiFormData.jenisMateri === 'YOUTUBE' ? materiFormData.youtubeUrl.trim() : null,
@@ -329,7 +326,6 @@ export default function TahsinDetailPage() {
   const resetMateriForm = () => {
     setMateriFormData({
       judul: '',
-      level: 'DASAR',
       jenisMateri: 'PDF',
       fileUrl: '',
       youtubeUrl: '',
@@ -795,9 +791,6 @@ export default function TahsinDetailPage() {
                             <h3 className="font-semibold text-slate-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
                               {materi.judul}
                             </h3>
-                            <p className="text-sm text-slate-500" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                              {materi.level === 'DASAR' ? 'Dasar' : materi.level === 'MENENGAH' ? 'Menengah' : 'Lanjutan'}
-                            </p>
                           </div>
                         </div>
                         <button
@@ -892,24 +885,6 @@ export default function TahsinDetailPage() {
                       {materiErrors.judul}
                     </p>
                   )}
-                </div>
-
-                {/* Level */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Level <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="level"
-                    value={materiFormData.level}
-                    onChange={handleMateriInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
-                    style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                  >
-                    <option value="DASAR">Dasar</option>
-                    <option value="MENENGAH">Menengah</option>
-                    <option value="LANJUTAN">Lanjutan</option>
-                  </select>
                 </div>
 
                 {/* Jenis Materi */}
