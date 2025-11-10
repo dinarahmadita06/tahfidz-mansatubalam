@@ -14,19 +14,34 @@ import {
 import { motion } from 'framer-motion';
 
 export default function PresensiSiswaPage() {
-  // Data presensi
-  const presensiData = [
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-28', hari: 'Senin', status: 'hadir', waktu: '07:45', keterangan: '-' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-27', hari: 'Minggu', status: 'hadir', waktu: '07:50', keterangan: '-' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-26', hari: 'Sabtu', status: 'hadir', waktu: '07:40', keterangan: '-' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-25', hari: 'Jumat', status: 'izin', waktu: null, keterangan: 'Keperluan keluarga' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-24', hari: 'Kamis', status: 'hadir', waktu: '07:48', keterangan: '-' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-23', hari: 'Rabu', status: 'hadir', waktu: '07:42', keterangan: '-' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-22', hari: 'Selasa', status: 'sakit', waktu: null, keterangan: 'Demam' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-21', hari: 'Senin', status: 'hadir', waktu: '07:55', keterangan: '-' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-20', hari: 'Minggu', status: 'hadir', waktu: '07:38', keterangan: '-' },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-19', hari: 'Sabtu', status: 'alfa', waktu: null, keterangan: 'Tidak ada keterangan' },
+  const [selectedMonth, setSelectedMonth] = useState(10); // Oktober = 10
+  const [selectedYear] = useState(2025);
+
+  // Data presensi lengkap (seminggu sekali = 4x per bulan)
+  const allPresensiData = [
+    // Oktober 2025
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-27', hari: 'Senin', status: 'hadir', waktu: '07:45', keterangan: '-', bulan: 10, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-20', hari: 'Senin', status: 'hadir', waktu: '07:50', keterangan: '-', bulan: 10, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-13', hari: 'Senin', status: 'izin', waktu: null, keterangan: 'Keperluan keluarga', bulan: 10, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-06', hari: 'Senin', status: 'hadir', waktu: '07:40', keterangan: '-', bulan: 10, tahun: 2025 },
+
+    // September 2025
+    { nama: 'Abdullah Rahman', tanggal: '2025-09-29', hari: 'Senin', status: 'hadir', waktu: '07:48', keterangan: '-', bulan: 9, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-09-22', hari: 'Senin', status: 'sakit', waktu: null, keterangan: 'Demam', bulan: 9, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-09-15', hari: 'Senin', status: 'hadir', waktu: '07:42', keterangan: '-', bulan: 9, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-09-08', hari: 'Senin', status: 'hadir', waktu: '07:55', keterangan: '-', bulan: 9, tahun: 2025 },
+
+    // Agustus 2025
+    { nama: 'Abdullah Rahman', tanggal: '2025-08-25', hari: 'Senin', status: 'hadir', waktu: '07:38', keterangan: '-', bulan: 8, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-08-18', hari: 'Senin', status: 'hadir', waktu: '07:45', keterangan: '-', bulan: 8, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-08-11', hari: 'Senin', status: 'alfa', waktu: null, keterangan: 'Tidak ada keterangan', bulan: 8, tahun: 2025 },
+    { nama: 'Abdullah Rahman', tanggal: '2025-08-04', hari: 'Senin', status: 'hadir', waktu: '07:50', keterangan: '-', bulan: 8, tahun: 2025 },
   ];
+
+  // Filter data berdasarkan bulan yang dipilih
+  const presensiData = allPresensiData.filter(
+    p => p.bulan === selectedMonth && p.tahun === selectedYear
+  );
 
   // Statistik
   const stats = {
@@ -60,6 +75,11 @@ export default function PresensiSiswaPage() {
     };
     return badges[status] || badges.hadir;
   };
+
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
 
   return (
     <SiswaLayout>
@@ -180,13 +200,31 @@ export default function PresensiSiswaPage() {
         className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
       >
         <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <Calendar className="text-emerald-600" size={24} />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <Calendar className="text-emerald-600" size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Riwayat Kehadiran</h2>
+                <p className="text-sm text-gray-600">Detail presensi harian</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Riwayat Kehadiran</h2>
-              <p className="text-sm text-gray-600">Detail presensi harian</p>
+
+            {/* Filter Bulan */}
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-gray-700">Filter Bulan:</label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              >
+                {monthNames.map((month, index) => (
+                  <option key={index} value={index + 1}>
+                    {month} {selectedYear}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
