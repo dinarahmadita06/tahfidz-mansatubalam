@@ -83,6 +83,12 @@ enum StatusPembelajaran {
   PERBAIKI
 }
 
+enum JenisMateri {
+  PDF
+  YOUTUBE
+  VIDEO
+}
+
 model User {
   id               String        @id @default(cuid())
   name             String
@@ -122,6 +128,7 @@ model Guru {
   presensi       Presensi[]
   bukuDigital    BukuDigital[]
   tahsin         Tahsin[]
+  materiTahsin   MateriTahsin[]
   tasmiPengampu   Tasmi[] @relation("GuruPengampu")
   tasmiVerifikasi Tasmi[] @relation("GuruVerifikasi")
   tasmiPenguji    Tasmi[] @relation("GuruPenguji")
@@ -326,6 +333,27 @@ model Tahsin {
   @@index([tanggal(sort: Desc)])
   @@index([level])
   @@index([statusPembelajaran])
+}
+
+model MateriTahsin {
+  id          String       @id @default(cuid())
+  guruId      String
+  kelasId     String?
+  judul       String
+  level       LevelTahsin
+  jenisMateri JenisMateri
+  fileUrl     String?      // For PDF and Video
+  youtubeUrl  String?      // For YouTube
+  deskripsi   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  guru        Guru         @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  @@index([guruId])
+  @@index([kelasId])
+  @@index([level])
+  @@index([jenisMateri])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Presensi {
