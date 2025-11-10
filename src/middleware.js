@@ -41,7 +41,7 @@ export async function middleware(request) {
   const publicRoutes = ['/register', '/lupa-password', '/reset-password', '/registrasi-orang-tua'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   const isAuthApiRoute = pathname.startsWith('/api/auth');
-  const isSeedApiRoute = pathname === '/api/seed-tasmi';
+  const isSeedApiRoute = pathname === '/api/seed-tasmi' || pathname === '/api/seed-users';
   const isLoginPage = pathname === '/login';
 
   // Allow auth API routes and seed API route
