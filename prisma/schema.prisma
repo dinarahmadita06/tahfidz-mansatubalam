@@ -297,11 +297,8 @@ model Tahsin {
   guruId     String
   tanggal    DateTime @default(now())
   surah      String
-  ayat       Int
-  tajwid     Int
-  makhraj    Int
-  kelancaran Int
-  rataRata   Float
+  ayatAwal   Int
+  ayatAkhir  Int
   catatan    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

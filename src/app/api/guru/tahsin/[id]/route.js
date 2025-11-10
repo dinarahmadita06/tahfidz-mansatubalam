@@ -19,11 +19,8 @@ export async function PUT(request, { params }) {
     const {
       tanggal,
       surah,
-      ayat,
-      tajwid,
-      makhraj,
-      kelancaran,
-      rataRata,
+      ayatAwal,
+      ayatAkhir,
       catatan,
     } = body;
 
@@ -58,22 +55,20 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Validation
-    if (
-      typeof tajwid !== 'number' ||
-      typeof makhraj !== 'number' ||
-      typeof kelancaran !== 'number' ||
-      tajwid < 0 ||
-      tajwid > 100 ||
-      makhraj < 0 ||
-      makhraj > 100 ||
-      kelancaran < 0 ||
-      kelancaran > 100
-    ) {
-      return NextResponse.json(
-        { message: 'Nilai harus antara 0-100' },
-        { status: 400 }
-      );
+    // Validation for ayat
+    if (ayatAwal && ayatAkhir) {
+      if (
+        typeof ayatAwal !== 'number' ||
+        typeof ayatAkhir !== 'number' ||
+        ayatAwal < 1 ||
+        ayatAkhir < 1 ||
+        ayatAkhir < ayatAwal
+      ) {
+        return NextResponse.json(
+          { message: 'Ayat tidak valid. Ayat akhir harus >= ayat awal' },
+          { status: 400 }
+        );
+      }
     }
 
     // Update tahsin
@@ -82,12 +77,9 @@ export async function PUT(request, { params }) {
       data: {
         tanggal: tanggal ? new Date(tanggal) : undefined,
         surah: surah || undefined,
-        ayat: ayat ? parseInt(ayat) : undefined,
-        tajwid,
-        makhraj,
-        kelancaran,
-        rataRata,
-        catatan,
+        ayatAwal: ayatAwal ? parseInt(ayatAwal) : undefined,
+        ayatAkhir: ayatAkhir ? parseInt(ayatAkhir) : undefined,
+        catatan: catatan !== undefined ? catatan : undefined,
       },
       include: {
         siswa: {
