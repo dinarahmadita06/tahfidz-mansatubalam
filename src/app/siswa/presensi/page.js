@@ -9,92 +9,23 @@ import {
   Thermometer,
   XCircle,
   Calendar,
-  TrendingUp,
   Sparkles,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Mini Chart Component untuk grafik bulanan
-function AttendanceChart({ data }) {
-  const maxValue = Math.max(...data.map(d => d.total));
-
-  return (
-    <div className="flex items-end gap-2 h-32">
-      {data.map((week, index) => {
-        const height = (week.total / maxValue) * 100;
-        const hadirHeight = (week.hadir / week.total) * 100;
-        const izinHeight = (week.izin / week.total) * 100;
-        const sakitHeight = (week.sakit / week.total) * 100;
-        const alfaHeight = (week.alfa / week.total) * 100;
-
-        return (
-          <div key={index} className="flex-1 flex flex-col items-center gap-2">
-            <div className="w-full flex flex-col-reverse h-24 gap-0.5 relative group">
-              {/* Hadir */}
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: `${hadirHeight}%` }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-emerald-500 rounded-t-sm relative"
-              >
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                  Hadir: {week.hadir}
-                </div>
-              </motion.div>
-              {/* Izin */}
-              {week.izin > 0 && (
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${izinHeight}%` }}
-                  transition={{ duration: 0.5, delay: index * 0.1 + 0.1 }}
-                  className="bg-amber-500"
-                />
-              )}
-              {/* Sakit */}
-              {week.sakit > 0 && (
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${sakitHeight}%` }}
-                  transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
-                  className="bg-sky-500"
-                />
-              )}
-              {/* Alfa */}
-              {week.alfa > 0 && (
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${alfaHeight}%` }}
-                  transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
-                  className="bg-rose-500"
-                />
-              )}
-            </div>
-            <span className="text-xs text-gray-600 font-medium">{week.label}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function PresensiSiswaPage() {
-  const [currentMonth, setCurrentMonth] = useState(9); // Oktober = 9 (0-indexed)
-  const [currentYear] = useState(2025);
-
   // Data presensi
   const presensiData = [
-    { tanggal: '2025-10-28', hari: 'Senin', status: 'hadir', waktu: '07:45', keterangan: null },
-    { tanggal: '2025-10-27', hari: 'Minggu', status: 'hadir', waktu: '07:50', keterangan: null },
-    { tanggal: '2025-10-26', hari: 'Sabtu', status: 'hadir', waktu: '07:40', keterangan: null },
-    { tanggal: '2025-10-25', hari: 'Jumat', status: 'izin', waktu: null, keterangan: 'Keperluan keluarga' },
-    { tanggal: '2025-10-24', hari: 'Kamis', status: 'hadir', waktu: '07:48', keterangan: null },
-    { tanggal: '2025-10-23', hari: 'Rabu', status: 'hadir', waktu: '07:42', keterangan: null },
-    { tanggal: '2025-10-22', hari: 'Selasa', status: 'sakit', waktu: null, keterangan: 'Demam' },
-    { tanggal: '2025-10-21', hari: 'Senin', status: 'hadir', waktu: '07:55', keterangan: null },
-    { tanggal: '2025-10-20', hari: 'Minggu', status: 'hadir', waktu: '07:38', keterangan: null },
-    { tanggal: '2025-10-19', hari: 'Sabtu', status: 'alfa', waktu: null, keterangan: 'Tidak ada keterangan' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-28', hari: 'Senin', status: 'hadir', waktu: '07:45', keterangan: '-' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-27', hari: 'Minggu', status: 'hadir', waktu: '07:50', keterangan: '-' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-26', hari: 'Sabtu', status: 'hadir', waktu: '07:40', keterangan: '-' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-25', hari: 'Jumat', status: 'izin', waktu: null, keterangan: 'Keperluan keluarga' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-24', hari: 'Kamis', status: 'hadir', waktu: '07:48', keterangan: '-' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-23', hari: 'Rabu', status: 'hadir', waktu: '07:42', keterangan: '-' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-22', hari: 'Selasa', status: 'sakit', waktu: null, keterangan: 'Demam' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-21', hari: 'Senin', status: 'hadir', waktu: '07:55', keterangan: '-' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-20', hari: 'Minggu', status: 'hadir', waktu: '07:38', keterangan: '-' },
+    { nama: 'Abdullah Rahman', tanggal: '2025-10-19', hari: 'Sabtu', status: 'alfa', waktu: null, keterangan: 'Tidak ada keterangan' },
   ];
 
   // Statistik
@@ -108,60 +39,27 @@ export default function PresensiSiswaPage() {
   const totalHari = presensiData.length;
   const persentaseHadir = Math.round((stats.hadir / totalHari) * 100);
 
-  // Data chart mingguan
-  const chartData = [
-    { label: 'Mg 1', hadir: 5, izin: 0, sakit: 0, alfa: 0, total: 5 },
-    { label: 'Mg 2', hadir: 4, izin: 1, sakit: 0, alfa: 0, total: 5 },
-    { label: 'Mg 3', hadir: 5, izin: 0, sakit: 1, alfa: 0, total: 6 },
-    { label: 'Mg 4', hadir: 4, izin: 0, sakit: 0, alfa: 1, total: 5 },
-  ];
-
-  const getStatusConfig = (status) => {
-    const configs = {
+  const getStatusBadge = (status) => {
+    const badges = {
       hadir: {
         label: 'Hadir',
-        icon: CheckCircle,
-        color: 'emerald',
-        bg: 'bg-emerald-50',
-        text: 'text-emerald-700',
-        badge: 'bg-emerald-500',
-        border: 'border-emerald-200',
+        className: 'bg-emerald-100 text-emerald-700 border border-emerald-300',
       },
       izin: {
         label: 'Izin',
-        icon: Clock,
-        color: 'amber',
-        bg: 'bg-amber-50',
-        text: 'text-amber-700',
-        badge: 'bg-amber-500',
-        border: 'border-amber-200',
+        className: 'bg-amber-100 text-amber-700 border border-amber-300',
       },
       sakit: {
         label: 'Sakit',
-        icon: Thermometer,
-        color: 'sky',
-        bg: 'bg-sky-50',
-        text: 'text-sky-700',
-        badge: 'bg-sky-500',
-        border: 'border-sky-200',
+        className: 'bg-sky-100 text-sky-700 border border-sky-300',
       },
       alfa: {
         label: 'Alfa',
-        icon: XCircle,
-        color: 'rose',
-        bg: 'bg-rose-50',
-        text: 'text-rose-700',
-        badge: 'bg-rose-500',
-        border: 'border-rose-200',
+        className: 'bg-rose-100 text-rose-700 border border-rose-300',
       },
     };
-    return configs[status] || configs.hadir;
+    return badges[status] || badges.hadir;
   };
-
-  const monthNames = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
 
   return (
     <SiswaLayout>
@@ -274,134 +172,81 @@ export default function PresensiSiswaPage() {
         </motion.div>
       </div>
 
-      {/* Chart Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <TrendingUp className="text-emerald-600" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Kehadiran Bulanan</h2>
-              <p className="text-sm text-gray-600">{monthNames[currentMonth]} {currentYear}</p>
-            </div>
-          </div>
-
-          {/* Month Navigator */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentMonth(Math.max(0, currentMonth - 1))}
-              disabled={currentMonth === 0}
-              className={`p-2 rounded-lg transition-colors ${
-                currentMonth === 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={() => setCurrentMonth(Math.min(11, currentMonth + 1))}
-              disabled={currentMonth === 11}
-              className={`p-2 rounded-lg transition-colors ${
-                currentMonth === 11
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </div>
-
-        <AttendanceChart data={chartData} />
-
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-6 mt-6 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-emerald-500 rounded"></div>
-            <span className="text-sm text-gray-600">Hadir</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-amber-500 rounded"></div>
-            <span className="text-sm text-gray-600">Izin</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-sky-500 rounded"></div>
-            <span className="text-sm text-gray-600">Sakit</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-rose-500 rounded"></div>
-            <span className="text-sm text-gray-600">Alfa</span>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Attendance Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+        transition={{ delay: 0.5 }}
+        className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
       >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <Calendar className="text-emerald-600" size={24} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Riwayat Kehadiran</h2>
-            <p className="text-sm text-gray-600">Detail presensi harian</p>
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <Calendar className="text-emerald-600" size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Riwayat Kehadiran</h2>
+              <p className="text-sm text-gray-600">Detail presensi harian</p>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-3">
-          {presensiData.map((presensi, index) => {
-            const statusConfig = getStatusConfig(presensi.status);
-            const StatusIcon = statusConfig.icon;
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                <th className="px-6 py-4 text-left text-sm font-bold text-emerald-900">No</th>
+                <th className="px-6 py-4 text-left text-sm font-bold text-emerald-900">Nama</th>
+                <th className="px-6 py-4 text-left text-sm font-bold text-emerald-900">Tanggal</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-emerald-900">Status Kehadiran</th>
+                <th className="px-6 py-4 text-left text-sm font-bold text-emerald-900">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {presensiData.map((presensi, index) => {
+                const statusBadge = getStatusBadge(presensi.status);
 
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + index * 0.03 }}
-                className={`flex items-center justify-between p-4 rounded-xl border-2 ${statusConfig.border} ${statusConfig.bg} hover:shadow-md transition-all`}
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className={`p-3 ${statusConfig.badge} rounded-xl`}>
-                    <StatusIcon className="text-white" size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <p className="font-bold text-gray-900">{presensi.hari}</p>
-                      <span className="text-gray-400">•</span>
-                      <p className="text-sm text-gray-600">{presensi.tanggal}</p>
-                    </div>
-                    {presensi.keterangan && (
-                      <p className="text-sm text-gray-600">{presensi.keterangan}</p>
-                    )}
-                  </div>
-                </div>
+                return (
+                  <motion.tr
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 + index * 0.03 }}
+                    className="border-b border-gray-100 hover:bg-emerald-50/30 transition-colors"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
+                      {presensi.nama}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{presensi.hari}</span>
+                        <span className="text-xs text-gray-500">{presensi.tanggal}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold ${statusBadge.className}`}>
+                        {statusBadge.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {presensi.keterangan}
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-                <div className="flex items-center gap-4">
-                  {presensi.waktu && (
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">Waktu</p>
-                      <p className="font-semibold text-gray-900">{presensi.waktu}</p>
-                    </div>
-                  )}
-                  <div className={`px-4 py-2 ${statusConfig.badge} text-white font-bold rounded-lg`}>
-                    {statusConfig.label}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+        {/* Table Footer - Total */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold text-gray-700">Total Data:</span>
+            <span className="font-bold text-emerald-600">{presensiData.length} hari</span>
+          </div>
         </div>
       </motion.div>
 
