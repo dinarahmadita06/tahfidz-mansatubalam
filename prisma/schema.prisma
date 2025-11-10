@@ -72,6 +72,17 @@ enum StatusKelas {
   NONAKTIF
 }
 
+enum LevelTahsin {
+  DASAR
+  MENENGAH
+  LANJUTAN
+}
+
+enum StatusPembelajaran {
+  LANJUT
+  PERBAIKI
+}
+
 model User {
   id               String        @id @default(cuid())
   name             String
@@ -292,22 +303,29 @@ model Penilaian {
 }
 
 model Tahsin {
-  id         String   @id @default(cuid())
-  siswaId    String
-  guruId     String
-  tanggal    DateTime @default(now())
-  surah      String
-  ayatAwal   Int
-  ayatAkhir  Int
-  catatan    String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  siswa      Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  guru       Guru     @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  id                   String              @id @default(cuid())
+  siswaId              String
+  guruId               String
+  tanggal              DateTime            @default(now())
+  level                LevelTahsin
+  materiHariIni        String
+  bacaanDipraktikkan   String
+  catatan              String?
+  statusPembelajaran   StatusPembelajaran
+  // Legacy fields (optional for backward compatibility)
+  surah                String?
+  ayatAwal             Int?
+  ayatAkhir            Int?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  siswa                Siswa               @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru                 Guru                @relation(fields: [guruId], references: [id], onDelete: Cascade)
 
   @@index([siswaId])
   @@index([guruId])
   @@index([tanggal(sort: Desc)])
+  @@index([level])
+  @@index([statusPembelajaran])
 }
 
 model Presensi {
