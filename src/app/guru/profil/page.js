@@ -14,7 +14,11 @@ import {
   Lock,
   Home,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  FileSignature,
+  Upload,
+  Trash2,
+  CheckCircle
 } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
 
@@ -33,6 +37,8 @@ export default function ProfilGuruPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [tandaTanganUrl, setTandaTanganUrl] = useState(null);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -46,8 +52,23 @@ export default function ProfilGuruPage() {
         mulaiMengajar: session.user.mulaiMengajar || ''
       });
       setLoading(false);
+
+      // Load tanda tangan
+      fetchTandaTangan();
     }
   }, [status, session]);
+
+  const fetchTandaTangan = async () => {
+    try {
+      const response = await fetch('/api/guru/upload-ttd');
+      if (response.ok) {
+        const data = await response.json();
+        setTandaTanganUrl(data.tandaTanganUrl);
+      }
+    } catch (error) {
+      console.error('Error fetching signature:', error);
+    }
+  };
 
   const handleEditProfile = () => {
     setEditFormData({
@@ -156,6 +177,80 @@ export default function ProfilGuruPage() {
       setError('Terjadi kesalahan saat mengubah password');
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const handleUploadSignature = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('File harus berupa gambar (PNG/JPG)');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Ukuran file maksimal 2MB');
+      return;
+    }
+
+    try {
+      setUploadingSignature(true);
+      setError('');
+
+      const formData = new FormData();
+      formData.append('tandaTangan', file);
+
+      const response = await fetch('/api/guru/upload-ttd', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTandaTanganUrl(data.tandaTanganUrl);
+        setSuccess('Tanda tangan berhasil diupload!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const error = await response.json();
+        setError(error.error || 'Gagal mengupload tanda tangan');
+      }
+    } catch (error) {
+      console.error('Error uploading signature:', error);
+      setError('Terjadi kesalahan saat mengupload tanda tangan');
+    } finally {
+      setUploadingSignature(false);
+    }
+  };
+
+  const handleDeleteSignature = async () => {
+    if (!confirm('Apakah Anda yakin ingin menghapus tanda tangan?')) {
+      return;
+    }
+
+    try {
+      setUploadingSignature(true);
+      setError('');
+
+      const response = await fetch('/api/guru/upload-ttd', {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setTandaTanganUrl(null);
+        setSuccess('Tanda tangan berhasil dihapus!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const error = await response.json();
+        setError(error.error || 'Gagal menghapus tanda tangan');
+      }
+    } catch (error) {
+      console.error('Error deleting signature:', error);
+      setError('Terjadi kesalahan saat menghapus tanda tangan');
+    } finally {
+      setUploadingSignature(false);
     }
   };
 
@@ -487,6 +582,169 @@ export default function ProfilGuruPage() {
               >
                 <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat || '-'}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tanda Tangan Digital Section */}
+        <div
+          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
+          style={{
+            background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+            border: '1px solid rgba(59, 130, 246, 0.2)'
+          }}
+        >
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-blue-200/50">
+            <div
+              className="p-2 rounded-lg"
+              style={{
+                background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+              }}
+            >
+              <FileSignature size={20} className="text-white" strokeWidth={2} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold" style={{ color: '#1E3A8A' }}>
+                Tanda Tangan Digital
+              </h3>
+              <p className="text-xs text-gray-600 mt-1">
+                Upload tanda tangan untuk ditampilkan otomatis di semua laporan
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Preview Tanda Tangan */}
+            {tandaTanganUrl ? (
+              <div className="space-y-4">
+                <div
+                  className="p-6 rounded-xl border-2 border-dashed bg-white/50"
+                  style={{ borderColor: '#3B82F6' }}
+                >
+                  <div className="flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="mb-3 flex justify-center">
+                        <CheckCircle size={32} className="text-emerald-600" strokeWidth={2} />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-700 mb-4">
+                        Tanda Tangan Aktif
+                      </p>
+                      <div className="bg-white p-4 rounded-lg border border-gray-200 inline-block">
+                        <img
+                          src={tandaTanganUrl}
+                          alt="Tanda Tangan"
+                          className="max-h-32 mx-auto"
+                          style={{ maxWidth: '300px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <label
+                    className="flex-1 cursor-pointer"
+                  >
+                    <div
+                      className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md hover:shadow-xl transition-all duration-200 hover:scale-105"
+                      style={{
+                        background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+                      }}
+                    >
+                      <Upload size={18} strokeWidth={2} />
+                      {uploadingSignature ? 'Mengupload...' : 'Ganti Tanda Tangan'}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={handleUploadSignature}
+                      disabled={uploadingSignature}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <button
+                    onClick={handleDeleteSignature}
+                    disabled={uploadingSignature}
+                    className="px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: 'linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)',
+                      color: '#991B1B',
+                      border: '1px solid #EF4444'
+                    }}
+                  >
+                    <Trash2 size={18} strokeWidth={2} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label
+                  className="block cursor-pointer"
+                >
+                  <div
+                    className="p-8 rounded-xl border-2 border-dashed transition-all duration-200 hover:border-blue-500 hover:bg-blue-50/30"
+                    style={{
+                      borderColor: '#93C5FD',
+                      background: 'rgba(255, 255, 255, 0.5)'
+                    }}
+                  >
+                    <div className="text-center">
+                      <div className="mb-4 flex justify-center">
+                        <div
+                          className="p-4 rounded-2xl"
+                          style={{
+                            background: 'linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)'
+                          }}
+                        >
+                          <Upload size={32} className="text-blue-600" strokeWidth={2} />
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900 mb-2">
+                        {uploadingSignature ? 'Mengupload...' : 'Klik untuk Upload Tanda Tangan'}
+                      </p>
+                      <p className="text-xs text-gray-500 mb-4">
+                        Format: PNG atau JPG • Maksimal 2MB
+                      </p>
+                      <div
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md"
+                        style={{
+                          background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+                        }}
+                      >
+                        <Upload size={18} strokeWidth={2} />
+                        Pilih File
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg"
+                    onChange={handleUploadSignature}
+                    disabled={uploadingSignature}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
+
+            {/* Info Box */}
+            <div
+              className="p-4 rounded-lg border"
+              style={{
+                background: 'rgba(239, 246, 255, 0.5)',
+                borderColor: '#BFDBFE'
+              }}
+            >
+              <p className="text-xs font-medium text-blue-900 mb-2">
+                💡 Informasi Penting:
+              </p>
+              <ul className="text-xs text-blue-800 space-y-1">
+                <li>• Tanda tangan akan otomatis muncul di semua laporan yang Anda buat</li>
+                <li>• Gunakan gambar dengan latar belakang transparan untuk hasil terbaik</li>
+                <li>• Pastikan tanda tangan jelas dan mudah dibaca</li>
+              </ul>
             </div>
           </div>
         </div>
