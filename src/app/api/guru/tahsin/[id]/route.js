@@ -18,10 +18,11 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const {
       tanggal,
-      surah,
-      ayatAwal,
-      ayatAkhir,
+      level,
+      materiHariIni,
+      bacaanDipraktikkan,
       catatan,
+      statusPembelajaran,
     } = body;
 
     // Get guru data
@@ -55,17 +56,23 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Validation for ayat
-    if (ayatAwal && ayatAkhir) {
-      if (
-        typeof ayatAwal !== 'number' ||
-        typeof ayatAkhir !== 'number' ||
-        ayatAwal < 1 ||
-        ayatAkhir < 1 ||
-        ayatAkhir < ayatAwal
-      ) {
+    // Validation for level if provided
+    if (level) {
+      const validLevels = ['DASAR', 'MENENGAH', 'LANJUTAN'];
+      if (!validLevels.includes(level)) {
         return NextResponse.json(
-          { message: 'Ayat tidak valid. Ayat akhir harus >= ayat awal' },
+          { message: 'Level tidak valid' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validation for status pembelajaran if provided
+    if (statusPembelajaran) {
+      const validStatus = ['LANJUT', 'PERBAIKI'];
+      if (!validStatus.includes(statusPembelajaran)) {
+        return NextResponse.json(
+          { message: 'Status pembelajaran tidak valid' },
           { status: 400 }
         );
       }
@@ -76,10 +83,11 @@ export async function PUT(request, { params }) {
       where: { id },
       data: {
         tanggal: tanggal ? new Date(tanggal) : undefined,
-        surah: surah || undefined,
-        ayatAwal: ayatAwal ? parseInt(ayatAwal) : undefined,
-        ayatAkhir: ayatAkhir ? parseInt(ayatAkhir) : undefined,
+        level: level || undefined,
+        materiHariIni: materiHariIni || undefined,
+        bacaanDipraktikkan: bacaanDipraktikkan || undefined,
         catatan: catatan !== undefined ? catatan : undefined,
+        statusPembelajaran: statusPembelajaran || undefined,
       },
       include: {
         siswa: {
