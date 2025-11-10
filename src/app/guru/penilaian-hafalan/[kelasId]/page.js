@@ -771,7 +771,7 @@ export default function PenilaianHafalanKelasPage() {
     printWindow.print();
   };
 
-  const handlePrintKelas = () => {
+  const handlePrintKelas = async () => {
     // Format tanggal untuk tanda tangan
     const today = new Date();
     const tanggalStr = today.toLocaleDateString('id-ID', {
@@ -779,6 +779,18 @@ export default function PenilaianHafalanKelasPage() {
       month: 'long',
       year: 'numeric'
     });
+
+    // Fetch tanda tangan guru dari API
+    let tandaTanganUrl = null;
+    try {
+      const response = await fetch('/api/guru/upload-ttd');
+      if (response.ok) {
+        const data = await response.json();
+        tandaTanganUrl = data.tandaTanganUrl;
+      }
+    } catch (error) {
+      console.error('Error fetching signature:', error);
+    }
 
     const printContent = `
       <!DOCTYPE html>
@@ -985,8 +997,11 @@ export default function PenilaianHafalanKelasPage() {
             <div class="signature-location">Bandar Lampung, ${tanggalStr}</div>
             <div class="signature-title">Guru Pengampu,</div>
             <div class="signature-placeholder">
-              <!-- Area untuk tanda tangan digital akan ditampilkan di sini -->
-              <span style="color: #9ca3af; font-size: 11px;">[Tanda Tangan Digital]</span>
+              ${tandaTanganUrl ? `
+                <img src="${window.location.origin}${tandaTanganUrl}" alt="Tanda Tangan" style="max-height: 60px; max-width: 200px;" />
+              ` : `
+                <span style="color: #9ca3af; font-size: 11px;">[Tanda Tangan Digital]</span>
+              `}
             </div>
             <div class="signature-line"></div>
             <div class="signature-name">[Nama Guru]</div>
