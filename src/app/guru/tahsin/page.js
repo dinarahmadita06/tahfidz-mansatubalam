@@ -95,7 +95,7 @@ export default function TahsinIndexPage() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Penilaian bacaan, tajwid, makhraj, dan kelancaran membaca Al-Qur'an siswa.
+                Pencatatan progres bacaan dan latihan tajwid siswa.
               </p>
             </div>
           </motion.div>

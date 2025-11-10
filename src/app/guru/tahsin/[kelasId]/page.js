@@ -64,10 +64,8 @@ export default function TahsinKelasPage() {
     siswaId: '',
     tanggal: new Date().toISOString().split('T')[0],
     surah: '',
-    ayat: 1,
-    tajwid: '',
-    makhraj: '',
-    kelancaran: '',
+    ayatAwal: 1,
+    ayatAkhir: 1,
     catatan: '',
   });
 
@@ -148,17 +146,14 @@ export default function TahsinKelasPage() {
     if (!formData.siswaId) newErrors.siswaId = 'Pilih siswa';
     if (!formData.tanggal) newErrors.tanggal = 'Tanggal wajib diisi';
     if (!formData.surah) newErrors.surah = 'Surah wajib diisi';
-    if (!formData.ayat || formData.ayat < 1) newErrors.ayat = 'Ayat wajib diisi (min 1)';
-
-    // Validasi nilai harus 0-100
-    if (formData.tajwid === '' || formData.tajwid < 0 || formData.tajwid > 100) {
-      newErrors.tajwid = 'Nilai tajwid 0-100';
+    if (!formData.ayatAwal || formData.ayatAwal < 1) {
+      newErrors.ayatAwal = 'Ayat awal wajib diisi (min 1)';
     }
-    if (formData.makhraj === '' || formData.makhraj < 0 || formData.makhraj > 100) {
-      newErrors.makhraj = 'Nilai makhraj 0-100';
+    if (!formData.ayatAkhir || formData.ayatAkhir < 1) {
+      newErrors.ayatAkhir = 'Ayat akhir wajib diisi (min 1)';
     }
-    if (formData.kelancaran === '' || formData.kelancaran < 0 || formData.kelancaran > 100) {
-      newErrors.kelancaran = 'Nilai kelancaran 0-100';
+    if (formData.ayatAwal && formData.ayatAkhir && parseInt(formData.ayatAkhir) < parseInt(formData.ayatAwal)) {
+      newErrors.ayatAkhir = 'Ayat akhir harus >= ayat awal';
     }
 
     setErrors(newErrors);
@@ -179,22 +174,13 @@ export default function TahsinKelasPage() {
     }
 
     try {
-      // Hitung rata-rata
-      const tajwid = parseFloat(formData.tajwid);
-      const makhraj = parseFloat(formData.makhraj);
-      const kelancaran = parseFloat(formData.kelancaran);
-      const rataRata = ((tajwid + makhraj + kelancaran) / 3).toFixed(2);
-
       const payload = {
         siswaId: formData.siswaId,
         guruId: guruId,
         tanggal: new Date(formData.tanggal).toISOString(),
         surah: formData.surah,
-        ayat: parseInt(formData.ayat),
-        tajwid,
-        makhraj,
-        kelancaran,
-        rataRata: parseFloat(rataRata),
+        ayatAwal: parseInt(formData.ayatAwal),
+        ayatAkhir: parseInt(formData.ayatAkhir),
         catatan: formData.catatan || null,
       };
 
@@ -231,10 +217,8 @@ export default function TahsinKelasPage() {
       siswaId: tahsin.siswaId,
       tanggal: new Date(tahsin.tanggal).toISOString().split('T')[0],
       surah: tahsin.surah,
-      ayat: tahsin.ayat,
-      tajwid: tahsin.tajwid,
-      makhraj: tahsin.makhraj,
-      kelancaran: tahsin.kelancaran,
+      ayatAwal: tahsin.ayatAwal,
+      ayatAkhir: tahsin.ayatAkhir,
       catatan: tahsin.catatan || '',
     });
     setShowModal(true);
@@ -265,10 +249,8 @@ export default function TahsinKelasPage() {
       siswaId: '',
       tanggal: new Date().toISOString().split('T')[0],
       surah: '',
-      ayat: 1,
-      tajwid: '',
-      makhraj: '',
-      kelancaran: '',
+      ayatAwal: 1,
+      ayatAkhir: 1,
       catatan: '',
     });
     setEditingId(null);
@@ -342,18 +324,15 @@ export default function TahsinKelasPage() {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nama Siswa</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Surah</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Ayat</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Tajwid</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Makhraj</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Kelancaran</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Rata-rata</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Catatan / Progres</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {tahsinList.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
-                      Belum ada data tahsin. Klik "Tambah Tahsin" untuk memulai.
+                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                      Belum ada data tahsin. Klik "Tambah Tahsin" untuk mencatat progres bacaan.
                     </td>
                   </tr>
                 ) : (
@@ -366,26 +345,13 @@ export default function TahsinKelasPage() {
                         {tahsin.siswa?.user?.name || '-'}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">{tahsin.surah}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{tahsin.ayat}</td>
-                      <td className="px-6 py-4 text-sm text-center">
-                        <span className="inline-flex items-center justify-center w-12 h-8 bg-blue-100 text-blue-700 rounded font-semibold">
-                          {tahsin.tajwid}
-                        </span>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {tahsin.ayatAwal === tahsin.ayatAkhir
+                          ? `Ayat ${tahsin.ayatAwal}`
+                          : `Ayat ${tahsin.ayatAwal} - ${tahsin.ayatAkhir}`}
                       </td>
-                      <td className="px-6 py-4 text-sm text-center">
-                        <span className="inline-flex items-center justify-center w-12 h-8 bg-green-100 text-green-700 rounded font-semibold">
-                          {tahsin.makhraj}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-center">
-                        <span className="inline-flex items-center justify-center w-12 h-8 bg-amber-100 text-amber-700 rounded font-semibold">
-                          {tahsin.kelancaran}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-center">
-                        <span className="inline-flex items-center justify-center w-12 h-8 bg-purple-100 text-purple-700 rounded font-bold">
-                          {tahsin.rataRata?.toFixed(1)}
-                        </span>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {tahsin.catatan || '-'}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
@@ -473,109 +439,72 @@ export default function TahsinKelasPage() {
                 {errors.tanggal && <p className="text-red-500 text-xs mt-1">{errors.tanggal}</p>}
               </div>
 
-              {/* Surah & Ayat */}
+              {/* Surah */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Surah <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="surah"
+                  value={formData.surah}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent ${
+                    errors.surah ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                >
+                  <option value="">Pilih Surah</option>
+                  {surahList.map((surah) => (
+                    <option key={surah} value={surah}>
+                      {surah}
+                    </option>
+                  ))}
+                </select>
+                {errors.surah && <p className="text-red-500 text-xs mt-1">{errors.surah}</p>}
+              </div>
+
+              {/* Ayat Awal & Akhir */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Surah <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="surah"
-                    value={formData.surah}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent ${
-                      errors.surah ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="">Pilih Surah</option>
-                    {surahList.map((surah) => (
-                      <option key={surah} value={surah}>
-                        {surah}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.surah && <p className="text-red-500 text-xs mt-1">{errors.surah}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ayat <span className="text-red-500">*</span>
+                    Ayat Awal <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
-                    name="ayat"
-                    value={formData.ayat}
+                    name="ayatAwal"
+                    value={formData.ayatAwal}
                     onChange={handleInputChange}
                     min="1"
+                    placeholder="Contoh: 1"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent ${
-                      errors.ayat ? 'border-red-500' : 'border-gray-300'
+                      errors.ayatAwal ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.ayat && <p className="text-red-500 text-xs mt-1">{errors.ayat}</p>}
-                </div>
-              </div>
-
-              {/* Nilai Tajwid, Makhraj, Kelancaran */}
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tajwid (0-100) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="tajwid"
-                    value={formData.tajwid}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="100"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent ${
-                      errors.tajwid ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.tajwid && <p className="text-red-500 text-xs mt-1">{errors.tajwid}</p>}
+                  {errors.ayatAwal && <p className="text-red-500 text-xs mt-1">{errors.ayatAwal}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Makhraj (0-100) <span className="text-red-500">*</span>
+                    Ayat Akhir <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
-                    name="makhraj"
-                    value={formData.makhraj}
+                    name="ayatAkhir"
+                    value={formData.ayatAkhir}
                     onChange={handleInputChange}
-                    min="0"
-                    max="100"
+                    min="1"
+                    placeholder="Contoh: 10"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent ${
-                      errors.makhraj ? 'border-red-500' : 'border-gray-300'
+                      errors.ayatAkhir ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.makhraj && <p className="text-red-500 text-xs mt-1">{errors.makhraj}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Kelancaran (0-100) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="kelancaran"
-                    value={formData.kelancaran}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="100"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent ${
-                      errors.kelancaran ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.kelancaran && <p className="text-red-500 text-xs mt-1">{errors.kelancaran}</p>}
+                  {errors.ayatAkhir && <p className="text-red-500 text-xs mt-1">{errors.ayatAkhir}</p>}
                 </div>
               </div>
 
               {/* Catatan */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Catatan
+                  Catatan / Keterangan
                 </label>
                 <textarea
                   name="catatan"
@@ -583,7 +512,7 @@ export default function TahsinKelasPage() {
                   onChange={handleInputChange}
                   rows="3"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                  placeholder="Tambahkan catatan (opsional)"
+                  placeholder="Contoh: Masih perlu perbaikan di tajwid huruf ra"
                 />
               </div>
 
@@ -604,7 +533,7 @@ export default function TahsinKelasPage() {
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition flex items-center justify-center gap-2"
                 >
                   <Save size={18} />
-                  <span>{editingId ? 'Update' : 'Simpan'}</span>
+                  <span>Simpan Progres</span>
                 </button>
               </div>
             </form>
