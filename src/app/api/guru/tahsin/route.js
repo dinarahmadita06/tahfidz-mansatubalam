@@ -103,16 +103,13 @@ export async function POST(request) {
       guruId,
       tanggal,
       surah,
-      ayat,
-      tajwid,
-      makhraj,
-      kelancaran,
-      rataRata,
+      ayatAwal,
+      ayatAkhir,
       catatan,
     } = body;
 
     // Validation
-    if (!siswaId || !guruId || !tanggal || !surah || !ayat) {
+    if (!siswaId || !guruId || !tanggal || !surah || !ayatAwal || !ayatAkhir) {
       return NextResponse.json(
         { message: 'Data tidak lengkap' },
         { status: 400 }
@@ -120,18 +117,14 @@ export async function POST(request) {
     }
 
     if (
-      typeof tajwid !== 'number' ||
-      typeof makhraj !== 'number' ||
-      typeof kelancaran !== 'number' ||
-      tajwid < 0 ||
-      tajwid > 100 ||
-      makhraj < 0 ||
-      makhraj > 100 ||
-      kelancaran < 0 ||
-      kelancaran > 100
+      typeof ayatAwal !== 'number' ||
+      typeof ayatAkhir !== 'number' ||
+      ayatAwal < 1 ||
+      ayatAkhir < 1 ||
+      ayatAkhir < ayatAwal
     ) {
       return NextResponse.json(
-        { message: 'Nilai harus antara 0-100' },
+        { message: 'Ayat tidak valid. Ayat akhir harus >= ayat awal' },
         { status: 400 }
       );
     }
@@ -155,11 +148,8 @@ export async function POST(request) {
         guruId,
         tanggal: new Date(tanggal),
         surah,
-        ayat: parseInt(ayat),
-        tajwid,
-        makhraj,
-        kelancaran,
-        rataRata,
+        ayatAwal: parseInt(ayatAwal),
+        ayatAkhir: parseInt(ayatAkhir),
         catatan,
       },
       include: {
