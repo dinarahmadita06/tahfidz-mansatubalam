@@ -65,7 +65,7 @@ export default function TahsinIndexPage() {
                 width: '56px',
                 height: '56px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)',
+                background: '#059669',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -79,20 +79,20 @@ export default function TahsinIndexPage() {
                 style={{
                   fontSize: '28px',
                   fontWeight: '700',
-                  color: '#5B21B6',
+                  color: '#047857',
                   margin: 0,
                   marginBottom: '4px',
                   fontFamily: 'Poppins, sans-serif',
                 }}
               >
-                Tahsin Al-Qur'an
+                Pencatatan Tahsin
               </h1>
               <p
                 style={{
                   fontSize: '14px',
                   color: '#6B7280',
                   margin: 0,
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                 }}
               >
                 Pencatatan progres bacaan dan latihan tajwid siswa.
@@ -215,8 +215,8 @@ export default function TahsinIndexPage() {
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = 'translateY(-4px)';
-                          e.currentTarget.style.boxShadow = '0 8px 16px rgba(139, 92, 246, 0.2)';
-                          e.currentTarget.style.borderColor = '#8B5CF6';
+                          e.currentTarget.style.boxShadow = '0 8px 16px rgba(5, 150, 105, 0.2)';
+                          e.currentTarget.style.borderColor = '#059669';
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.transform = 'translateY(0)';
@@ -230,7 +230,7 @@ export default function TahsinIndexPage() {
                             width: '48px',
                             height: '48px',
                             borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)',
+                            background: '#059669',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -262,12 +262,12 @@ export default function TahsinIndexPage() {
                             marginTop: '12px',
                           }}
                         >
-                          <Users size={16} style={{ color: '#8B5CF6' }} />
+                          <Users size={16} style={{ color: '#059669' }} />
                           <span
                             style={{
                               fontSize: '14px',
                               color: '#6B7280',
-                              fontFamily: 'Inter, sans-serif',
+                              fontFamily: 'Poppins, sans-serif',
                             }}
                           >
                             {kelas._count?.siswa || 0} Siswa

@@ -102,29 +102,35 @@ export async function POST(request) {
       siswaId,
       guruId,
       tanggal,
-      surah,
-      ayatAwal,
-      ayatAkhir,
+      level,
+      materiHariIni,
+      bacaanDipraktikkan,
       catatan,
+      statusPembelajaran,
     } = body;
 
     // Validation
-    if (!siswaId || !guruId || !tanggal || !surah || !ayatAwal || !ayatAkhir) {
+    if (!siswaId || !guruId || !tanggal || !level || !materiHariIni || !bacaanDipraktikkan || !statusPembelajaran) {
       return NextResponse.json(
-        { message: 'Data tidak lengkap' },
+        { message: 'Data tidak lengkap. Pastikan semua field wajib diisi.' },
         { status: 400 }
       );
     }
 
-    if (
-      typeof ayatAwal !== 'number' ||
-      typeof ayatAkhir !== 'number' ||
-      ayatAwal < 1 ||
-      ayatAkhir < 1 ||
-      ayatAkhir < ayatAwal
-    ) {
+    // Validate level enum
+    const validLevels = ['DASAR', 'MENENGAH', 'LANJUTAN'];
+    if (!validLevels.includes(level)) {
       return NextResponse.json(
-        { message: 'Ayat tidak valid. Ayat akhir harus >= ayat awal' },
+        { message: 'Level tidak valid' },
+        { status: 400 }
+      );
+    }
+
+    // Validate status pembelajaran enum
+    const validStatus = ['LANJUT', 'PERBAIKI'];
+    if (!validStatus.includes(statusPembelajaran)) {
+      return NextResponse.json(
+        { message: 'Status pembelajaran tidak valid' },
         { status: 400 }
       );
     }
@@ -147,10 +153,11 @@ export async function POST(request) {
         siswaId,
         guruId,
         tanggal: new Date(tanggal),
-        surah,
-        ayatAwal: parseInt(ayatAwal),
-        ayatAkhir: parseInt(ayatAkhir),
-        catatan,
+        level,
+        materiHariIni,
+        bacaanDipraktikkan,
+        catatan: catatan || null,
+        statusPembelajaran,
       },
       include: {
         siswa: {
