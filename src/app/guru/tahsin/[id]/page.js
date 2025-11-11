@@ -12,7 +12,7 @@ export default function TahsinDetailPage() {
   const { data: session } = useSession();
   const params = useParams();
   const router = useRouter();
-  const kelasId = params.kelasId;
+  const kelasId = params.id;
 
   const [activeTab, setActiveTab] = useState('pencatatan'); // 'pencatatan' or 'materi'
   const [loading, setLoading] = useState(true);
@@ -385,8 +385,8 @@ export default function TahsinDetailPage() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-6">
+        {/* Tab Navigation and Laporan Button */}
+        <div className="mb-6 flex justify-between items-center">
           <div className="bg-white rounded-xl p-2 shadow-sm inline-flex gap-2">
             <button
               onClick={() => setActiveTab('pencatatan')}
@@ -417,6 +417,30 @@ export default function TahsinDetailPage() {
               </div>
             </button>
           </div>
+
+          {/* Tombol Lihat Laporan Progres */}
+          {activeTab === 'pencatatan' && (
+            <button
+              onClick={() => router.push(`/guru/tahsin/${kelasId}/laporan`)}
+              className="flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-white transition-all shadow-md hover:shadow-lg"
+              style={{
+                backgroundColor: '#059669',
+                borderRadius: '10px',
+                fontFamily: 'Poppins, sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#047857';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#059669';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <span style={{ fontSize: '18px' }}>📄</span>
+              <span>Lihat Laporan Progres</span>
+            </button>
+          )}
         </div>
 
         {/* Content Based on Active Tab */}
