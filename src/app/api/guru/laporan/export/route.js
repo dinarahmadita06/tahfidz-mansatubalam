@@ -105,17 +105,25 @@ function generateCSV(data, viewMode) {
     });
   } else {
     // Header for bulanan/semesteran
-    csv += 'No,Nama Lengkap,Total Hadir,Total Tidak Hadir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Status Hafalan,Catatan Akhir\n';
+    csv += 'No,Nama Lengkap,Total Hadir,Total Tidak Hadir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Rata-rata Nilai,Status Hafalan,Catatan Akhir\n';
 
     // Rows
     data.forEach((siswa, idx) => {
+      const rataRataNilai = hitungRataRata(
+        siswa.rataRataTajwid,
+        siswa.rataRataKelancaran,
+        siswa.rataRataMakhraj,
+        siswa.rataRataImplementasi
+      );
+
       csv += `${idx + 1},"${siswa.namaLengkap}",`;
       csv += `${siswa.totalHadir},`;
       csv += `${siswa.totalTidakHadir},`;
-      csv += `${siswa.rataRataTajwid},`;
-      csv += `${siswa.rataRataKelancaran},`;
-      csv += `${siswa.rataRataMakhraj},`;
-      csv += `${siswa.rataRataImplementasi},`;
+      csv += `${formatNilai(siswa.rataRataTajwid)},`;
+      csv += `${formatNilai(siswa.rataRataKelancaran)},`;
+      csv += `${formatNilai(siswa.rataRataMakhraj)},`;
+      csv += `${formatNilai(siswa.rataRataImplementasi)},`;
+      csv += `${formatNilai(rataRataNilai)},`;
       csv += `"${siswa.statusHafalan}",`;
       csv += `"${siswa.catatanAkhir}"\n`;
     });
@@ -294,15 +302,16 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   } else {
     html += `
         <th style="width: 5%;">No</th>
-        <th style="width: 25%;">Nama Lengkap</th>
-        <th class="center" style="width: 8%;">Hadir</th>
-        <th class="center" style="width: 8%;">Tidak Hadir</th>
-        <th class="center" style="width: 8%;">Avg Tajwid</th>
-        <th class="center" style="width: 8%;">Avg Kelancaran</th>
-        <th class="center" style="width: 8%;">Avg Makhraj</th>
-        <th class="center" style="width: 8%;">Avg Impl.</th>
-        <th class="center" style="width: 8%;">Status</th>
-        <th style="width: 14%;">Catatan</th>`;
+        <th style="width: 22%;">Nama Lengkap</th>
+        <th class="center" style="width: 7%;">Hadir</th>
+        <th class="center" style="width: 7%;">Tidak Hadir</th>
+        <th class="center" style="width: 7%;">Avg Tajwid</th>
+        <th class="center" style="width: 7%;">Avg Kelancaran</th>
+        <th class="center" style="width: 7%;">Avg Makhraj</th>
+        <th class="center" style="width: 7%;">Avg Impl.</th>
+        <th class="center" style="width: 8%; background: #ECFDF5;">Rata-rata Nilai</th>
+        <th class="center" style="width: 7%;">Status</th>
+        <th style="width: 12%;">Catatan</th>`;
   }
 
   html += `
@@ -334,14 +343,22 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
       html += `<td class="center">${p?.statusHafalan || '-'}</td>`;
       html += `<td style="font-size: 10px;">${p?.catatan || '-'}</td>`;
     } else {
+      const rataRataNilai = hitungRataRata(
+        siswa.rataRataTajwid,
+        siswa.rataRataKelancaran,
+        siswa.rataRataMakhraj,
+        siswa.rataRataImplementasi
+      );
+
       html += `<td>${idx + 1}</td>`;
       html += `<td>${siswa.namaLengkap}</td>`;
       html += `<td class="center" style="color: #1A936F; font-weight: 700;">${siswa.totalHadir}</td>`;
       html += `<td class="center" style="color: #D97706; font-weight: 700;">${siswa.totalTidakHadir}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataTajwid)}">${siswa.rataRataTajwid.toFixed(1)}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataKelancaran)}">${siswa.rataRataKelancaran.toFixed(1)}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataMakhraj)}">${siswa.rataRataMakhraj.toFixed(1)}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataImplementasi)}">${siswa.rataRataImplementasi.toFixed(1)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataTajwid)}">${formatNilai(siswa.rataRataTajwid)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataKelancaran)}">${formatNilai(siswa.rataRataKelancaran)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataMakhraj)}">${formatNilai(siswa.rataRataMakhraj)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataImplementasi)}">${formatNilai(siswa.rataRataImplementasi)}</td>`;
+      html += `<td class="center ${getNilaiClass(rataRataNilai)}" style="background: #ECFDF5; font-weight: 700;">${formatNilai(rataRataNilai)}</td>`;
       html += `<td class="center">${siswa.statusHafalan}</td>`;
       html += `<td style="font-size: 10px;">${siswa.catatanAkhir}</td>`;
     }
@@ -358,9 +375,10 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   </div>
 
   <div class="signature">
-    <p>Guru Tahfidz</p>
+    <p style="margin-bottom: 8px;">Bandar Lampung, ${now}</p>
+    <p style="margin-bottom: 60px; font-weight: 600;">Guru Pembina Tahfidz</p>
     <div class="signature-line"></div>
-    <p style="margin-top: 5px;">( ${guru.user.name} )</p>
+    <p style="margin-top: 5px; font-weight: 600;">( ${guru.user.name} )</p>
   </div>
 </body>
 </html>`;
@@ -374,4 +392,23 @@ function getNilaiClass(nilai) {
   if (nilai >= 90) return 'nilai-excellent';
   if (nilai >= 80) return 'nilai-good';
   return 'nilai-fair';
+}
+
+// Helper function untuk format angka (bulat jika tidak pecahan, koma jika pecahan)
+function formatNilai(nilai) {
+  if (nilai == null) return '-';
+  const rounded = Math.round(nilai);
+  // Jika nilai sama dengan nilai bulatannya, tampilkan bulat
+  if (Math.abs(nilai - rounded) < 0.01) {
+    return rounded.toString();
+  }
+  // Jika ada pecahan, tampilkan dengan 1 desimal
+  return nilai.toFixed(1);
+}
+
+// Helper function untuk hitung rata-rata
+function hitungRataRata(tajwid, kelancaran, makhraj, implementasi) {
+  const values = [tajwid, kelancaran, makhraj, implementasi].filter(v => v != null);
+  if (values.length === 0) return null;
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
