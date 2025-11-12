@@ -224,6 +224,22 @@ export async function GET(request) {
             ? validPenilaian.reduce((sum, p) => sum + p.adab, 0) / validPenilaian.length
             : 0;
 
+          // IMPORTANT: Rata-rata Nilai Bulanan = rata-rata dari nilai mingguan (nilaiAkhir)
+          // NOT average of 4 aspects!
+          const rataRataNilaiBulanan = validPenilaian.length > 0
+            ? validPenilaian.reduce((sum, p) => sum + p.nilaiAkhir, 0) / validPenilaian.length
+            : 0;
+
+          // Get catatan bulanan
+          const catatanBulananRecord = await prisma.presensi.findFirst({
+            where: {
+              siswaId: siswa.id,
+              guruId: guru.id,
+              tanggal: dateRange.start,
+              status: 'CATATAN_BULANAN',
+            },
+          });
+
           return {
             siswaId: siswa.id,
             namaLengkap: siswa.user.name,
@@ -234,8 +250,9 @@ export async function GET(request) {
             rataRataKelancaran: parseFloat(rataRataKelancaran.toFixed(1)),
             rataRataMakhraj: parseFloat(rataRataMakhraj.toFixed(1)),
             rataRataImplementasi: parseFloat(rataRataImplementasi.toFixed(1)),
+            rataRataNilaiBulanan: parseFloat(rataRataNilaiBulanan.toFixed(1)),
             statusHafalan: validPenilaian.length > 0 ? 'LANJUT' : '-',
-            catatanAkhir: `Mengikuti ${validPenilaian.length} sesi penilaian dalam periode ini`,
+            catatanBulanan: catatanBulananRecord?.keterangan || '',
           };
         })
       );
@@ -249,7 +266,7 @@ export async function GET(request) {
       // Semesteran View - Aggregate semester data (6 months)
       const laporanData = await Promise.all(
         students.map(async (siswa) => {
-          // Get penilaian data
+          // Get penilaian data for entire semester
           const penilaianData = await prisma.penilaian.findMany({
             where: {
               siswaId: siswa.id,
@@ -258,6 +275,9 @@ export async function GET(request) {
                 gte: dateRange.start,
                 lte: dateRange.end,
               },
+            },
+            orderBy: {
+              createdAt: 'asc',
             },
           });
 
@@ -281,6 +301,28 @@ export async function GET(request) {
             p.tajwid != null && p.kelancaran != null && p.makhraj != null && p.adab != null
           );
 
+          // Calculate monthly averages first
+          const monthlyAverages = [];
+          const now = new Date(dateRange.end);
+
+          // Loop through each month in the semester (6 months)
+          for (let i = 0; i < 6; i++) {
+            const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+
+            const monthPenilaian = validPenilaian.filter(p => {
+              const createdAt = new Date(p.createdAt);
+              return createdAt >= monthStart && createdAt <= monthEnd;
+            });
+
+            if (monthPenilaian.length > 0) {
+              // Calculate monthly average from weekly averages (nilaiAkhir)
+              const monthlyAvg = monthPenilaian.reduce((sum, p) => sum + p.nilaiAkhir, 0) / monthPenilaian.length;
+              monthlyAverages.push(monthlyAvg);
+            }
+          }
+
+          // Calculate semester averages
           const rataRataTajwid = validPenilaian.length > 0
             ? validPenilaian.reduce((sum, p) => sum + p.tajwid, 0) / validPenilaian.length
             : 0;
@@ -297,9 +339,22 @@ export async function GET(request) {
             ? validPenilaian.reduce((sum, p) => sum + p.adab, 0) / validPenilaian.length
             : 0;
 
-          const performanceLevel = getPerformanceLevel(
-            (rataRataTajwid + rataRataKelancaran + rataRataMakhraj + rataRataImplementasi) / 4
-          );
+          // IMPORTANT: Rata-rata Nilai Semesteran = rata-rata dari nilai bulanan
+          const rataRataNilaiSemesteran = monthlyAverages.length > 0
+            ? monthlyAverages.reduce((sum, v) => sum + v, 0) / monthlyAverages.length
+            : 0;
+
+          const performanceLevel = getPerformanceLevel(rataRataNilaiSemesteran);
+
+          // Get catatan semesteran
+          const catatanSemesteranRecord = await prisma.presensi.findFirst({
+            where: {
+              siswaId: siswa.id,
+              guruId: guru.id,
+              tanggal: dateRange.start,
+              status: 'CATATAN_SEMESTERAN',
+            },
+          });
 
           return {
             siswaId: siswa.id,
@@ -311,8 +366,10 @@ export async function GET(request) {
             rataRataKelancaran: parseFloat(rataRataKelancaran.toFixed(1)),
             rataRataMakhraj: parseFloat(rataRataMakhraj.toFixed(1)),
             rataRataImplementasi: parseFloat(rataRataImplementasi.toFixed(1)),
+            rataRataNilaiSemesteran: parseFloat(rataRataNilaiSemesteran.toFixed(1)),
             statusHafalan: validPenilaian.length > 0 ? 'LANJUT' : '-',
-            catatanAkhir: `${performanceLevel} - Mengikuti ${validPenilaian.length} sesi selama semester`,
+            performanceLevel,
+            catatanSemesteran: catatanSemesteranRecord?.keterangan || '',
           };
         })
       );
