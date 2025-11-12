@@ -722,28 +722,28 @@ export default function LaporanGuruPage() {
                         {siswa.namaLengkap}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.emerald[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.totalHadir}
+                        {siswa.totalHadir || 0}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.totalTidakHadir}
+                        {siswa.totalTidakHadir || 0}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataTajwid), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataTajwid.toFixed(1)}
+                        {siswa.rataRataTajwid != null ? siswa.rataRataTajwid.toFixed(1) : '-'}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataKelancaran), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataKelancaran.toFixed(1)}
+                        {siswa.rataRataKelancaran != null ? siswa.rataRataKelancaran.toFixed(1) : '-'}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataMakhraj), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataMakhraj.toFixed(1)}
+                        {siswa.rataRataMakhraj != null ? siswa.rataRataMakhraj.toFixed(1) : '-'}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataImplementasi), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataImplementasi.toFixed(1)}
+                        {siswa.rataRataImplementasi != null ? siswa.rataRataImplementasi.toFixed(1) : '-'}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.statusHafalan}
+                        {siswa.statusHafalan || '-'}
                       </td>
                       <td style={{ padding: '16px', fontSize: '13px', color: colors.text.tertiary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.catatanAkhir}
+                        {siswa.catatanAkhir || '-'}
                       </td>
                     </tr>
                   ))}
@@ -799,7 +799,7 @@ export default function LaporanGuruPage() {
                 marginBottom: '8px',
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}>
-                {viewMode === 'harian' ? '-' : Math.round(laporanData.reduce((acc, s) => acc + s.totalHadir, 0) / laporanData.length)}
+                {viewMode === 'harian' ? '-' : (laporanData.length > 0 ? Math.round(laporanData.reduce((acc, s) => acc + (s.totalHadir || 0), 0) / laporanData.length) : 0)}
               </div>
               <div style={{
                 fontSize: '13px',
@@ -825,7 +825,7 @@ export default function LaporanGuruPage() {
                 marginBottom: '8px',
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}>
-                {viewMode === 'harian' ? '-' : ((laporanData.reduce((acc, s) => acc + s.rataRataTajwid + s.rataRataKelancaran + s.rataRataMakhraj + s.rataRataImplementasi, 0) / (laporanData.length * 4)).toFixed(1))}
+                {viewMode === 'harian' ? '-' : (laporanData.length > 0 ? ((laporanData.reduce((acc, s) => acc + (s.rataRataTajwid || 0) + (s.rataRataKelancaran || 0) + (s.rataRataMakhraj || 0) + (s.rataRataImplementasi || 0), 0) / (laporanData.length * 4)).toFixed(1)) : '0.0')}
               </div>
               <div style={{
                 fontSize: '13px',
