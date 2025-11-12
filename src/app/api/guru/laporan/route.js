@@ -58,11 +58,11 @@ export async function GET(request) {
     });
 
     if (viewMode === 'harian') {
-      // Harian/Mingguan View - Get individual sessions
+      // Harian/Mingguan View - Get first meeting data for each student (default view)
       const laporanData = await Promise.all(
         students.map(async (siswa) => {
-          // Get penilaian data
-          const penilaianData = await prisma.penilaian.findMany({
+          // Get first penilaian data within period
+          const firstPenilaian = await prisma.penilaian.findFirst({
             where: {
               siswaId: siswa.id,
               guruId: guru.id,
@@ -86,8 +86,8 @@ export async function GET(request) {
             },
           });
 
-          // Get presensi data
-          const presensiData = await prisma.presensi.findMany({
+          // Get first presensi data
+          const firstPresensi = await prisma.presensi.findFirst({
             where: {
               siswaId: siswa.id,
               guruId: guru.id,
@@ -101,48 +101,37 @@ export async function GET(request) {
             },
           });
 
-          // Merge penilaian and presensi data by date
-          const sesiMap = new Map();
+          let pertemuan = null;
 
-          // Add penilaian data
-          penilaianData.forEach((penilaian) => {
-            const dateKey = penilaian.hafalan.tanggal.toISOString().split('T')[0];
-            sesiMap.set(dateKey, {
-              tanggal: dateKey,
+          if (firstPenilaian) {
+            pertemuan = {
+              tanggal: firstPenilaian.hafalan.tanggal.toISOString().split('T')[0],
               statusKehadiran: 'HADIR',
-              nilaiTajwid: penilaian.tajwid,
-              nilaiKelancaran: penilaian.kelancaran,
-              nilaiMakhraj: penilaian.makhraj,
-              nilaiImplementasi: penilaian.adab,
+              nilaiTajwid: firstPenilaian.tajwid,
+              nilaiKelancaran: firstPenilaian.kelancaran,
+              nilaiMakhraj: firstPenilaian.makhraj,
+              nilaiImplementasi: firstPenilaian.adab,
               statusHafalan: 'LANJUT',
-              catatan: penilaian.catatan || '',
-            });
-          });
-
-          // Add presensi data (especially for absent days)
-          presensiData.forEach((presensi) => {
-            const dateKey = presensi.tanggal.toISOString().split('T')[0];
-            if (!sesiMap.has(dateKey) || presensi.status !== 'HADIR') {
-              sesiMap.set(dateKey, {
-                tanggal: dateKey,
-                statusKehadiran: presensi.status,
-                nilaiTajwid: null,
-                nilaiKelancaran: null,
-                nilaiMakhraj: null,
-                nilaiImplementasi: null,
-                statusHafalan: '-',
-                catatan: presensi.keterangan || '',
-              });
-            }
-          });
+              catatan: firstPenilaian.catatan || '',
+            };
+          } else if (firstPresensi) {
+            pertemuan = {
+              tanggal: firstPresensi.tanggal.toISOString().split('T')[0],
+              statusKehadiran: firstPresensi.status,
+              nilaiTajwid: null,
+              nilaiKelancaran: null,
+              nilaiMakhraj: null,
+              nilaiImplementasi: null,
+              statusHafalan: '-',
+              catatan: firstPresensi.keterangan || '',
+            };
+          }
 
           return {
             siswaId: siswa.id,
             namaLengkap: siswa.user.name,
             kelas: siswa.kelas?.nama,
-            sesi: Array.from(sesiMap.values()).sort((a, b) =>
-              new Date(a.tanggal) - new Date(b.tanggal)
-            ),
+            pertemuan,
           };
         })
       );

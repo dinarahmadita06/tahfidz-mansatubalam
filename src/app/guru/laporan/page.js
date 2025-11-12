@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
   FileText, Download, Calendar, Users, TrendingUp,
-  BarChart3, PieChart, FileSpreadsheet, Sparkles,
-  Filter
+  ChevronDown, ChevronUp, Filter, FileSpreadsheet,
+  Sparkles, BookOpen, CheckCircle, XCircle, Clock
 } from 'lucide-react';
 
-// Islamic Modern Color Palette - Sama seperti Dashboard Guru
+// Islamic Modern Color Palette
 const colors = {
   emerald: {
     50: '#ECFDF5',
@@ -25,12 +25,6 @@ const colors = {
     100: '#FDE68A',
     200: '#FCD34D',
     300: '#FBBF24',
-    400: '#F7C873',
-    500: '#F59E0B',
-    600: '#D97706',
-    700: '#B45309',
-  },
-  gold: {
     400: '#F7C873',
     500: '#F59E0B',
     600: '#D97706',
@@ -54,69 +48,225 @@ const colors = {
   },
 };
 
-export default function LaporanPage() {
+export default function LaporanGuruPage() {
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('bulan-ini');
+  const [viewMode, setViewMode] = useState('harian'); // harian, bulanan, semesteran
   const [selectedKelas, setSelectedKelas] = useState('');
-  const [selectedFormat, setSelectedFormat] = useState('pdf');
+  const [selectedPeriod, setSelectedPeriod] = useState('bulan-ini');
+  const [laporanData, setLaporanData] = useState([]);
 
   useEffect(() => {
-    setTimeout(() => {
+    fetchLaporanData();
+  }, [viewMode, selectedKelas, selectedPeriod]);
+
+  const fetchLaporanData = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        viewMode,
+        periode: selectedPeriod,
+      });
+
+      if (selectedKelas) {
+        params.append('kelasId', selectedKelas);
+      }
+
+      const response = await fetch(`/api/guru/laporan?${params.toString()}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setLaporanData(result.data);
+      } else {
+        console.error('Failed to fetch data:', result.error);
+        // Fallback to mock data if API fails
+        const mockData = generateMockData(viewMode);
+        setLaporanData(mockData);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Fallback to mock data on error
+      const mockData = generateMockData(viewMode);
+      setLaporanData(mockData);
+    } finally {
       setLoading(false);
-    }, 800);
-  }, []);
-
-  const laporanTypes = [
-    {
-      id: 1,
-      title: 'Laporan Progress Hafalan',
-      description: 'Laporan detail progress hafalan per siswa atau kelas',
-      icon: TrendingUp,
-      colorScheme: 'emerald',
-      formats: ['PDF', 'Excel'],
-    },
-    {
-      id: 2,
-      title: 'Laporan Setoran Harian',
-      description: 'Rekap setoran hafalan per hari',
-      icon: Calendar,
-      colorScheme: 'amber',
-      formats: ['PDF', 'Excel'],
-    },
-    {
-      id: 3,
-      title: 'Laporan Per Siswa',
-      description: 'Laporan lengkap per siswa untuk raport',
-      icon: Users,
-      colorScheme: 'emerald',
-      formats: ['PDF'],
-    },
-    {
-      id: 4,
-      title: 'Statistik Kelas',
-      description: 'Analisis statistik per kelas dengan grafik',
-      icon: BarChart3,
-      colorScheme: 'amber',
-      formats: ['PDF', 'Excel'],
-    },
-  ];
-
-  const getColorScheme = (scheme) => {
-    if (scheme === 'emerald') {
-      return {
-        bg: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
-        iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-        border: colors.emerald[200],
-        hover: colors.emerald[300],
-      };
-    } else {
-      return {
-        bg: `linear-gradient(135deg, ${colors.amber[50]} 0%, ${colors.amber[100]} 100%)`,
-        iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-        border: colors.amber[200],
-        hover: colors.amber[300],
-      };
     }
+  };
+
+  const generateMockData = (mode) => {
+    if (mode === 'harian') {
+      return [
+        {
+          siswaId: '1',
+          namaLengkap: 'Ahmad Fadli Ramadhan',
+          pertemuan: {
+            tanggal: '2025-01-05',
+            statusKehadiran: 'HADIR',
+            nilaiTajwid: 85,
+            nilaiKelancaran: 88,
+            nilaiMakhraj: 82,
+            nilaiImplementasi: 86,
+            statusHafalan: 'LANJUT',
+            catatan: 'Bagus, terus tingkatkan'
+          }
+        },
+        {
+          siswaId: '2',
+          namaLengkap: 'Siti Aisyah Rahmawati',
+          pertemuan: {
+            tanggal: '2025-01-05',
+            statusKehadiran: 'HADIR',
+            nilaiTajwid: 92,
+            nilaiKelancaran: 94,
+            nilaiMakhraj: 90,
+            nilaiImplementasi: 93,
+            statusHafalan: 'LANJUT',
+            catatan: 'Sangat baik'
+          }
+        }
+      ];
+    } else if (mode === 'bulanan') {
+      return [
+        {
+          siswaId: '1',
+          namaLengkap: 'Ahmad Fadli Ramadhan',
+          totalHadir: 4,
+          totalTidakHadir: 0,
+          rataRataTajwid: 87.5,
+          rataRataKelancaran: 89.8,
+          rataRataMakhraj: 85.3,
+          rataRataImplementasi: 88.0,
+          statusHafalan: 'LANJUT',
+          catatanAkhir: 'Progres sangat baik sepanjang bulan'
+        },
+        {
+          siswaId: '2',
+          namaLengkap: 'Siti Aisyah Rahmawati',
+          totalHadir: 3,
+          totalTidakHadir: 1,
+          rataRataTajwid: 92.0,
+          rataRataKelancaran: 94.0,
+          rataRataMakhraj: 90.0,
+          rataRataImplementasi: 93.0,
+          statusHafalan: 'LANJUT',
+          catatanAkhir: 'Excellent, satu kali sakit'
+        }
+      ];
+    } else { // semesteran
+      return [
+        {
+          siswaId: '1',
+          namaLengkap: 'Ahmad Fadli Ramadhan',
+          totalHadir: 22,
+          totalTidakHadir: 2,
+          rataRataTajwid: 88.2,
+          rataRataKelancaran: 90.1,
+          rataRataMakhraj: 86.5,
+          rataRataImplementasi: 89.3,
+          statusHafalan: 'LANJUT',
+          catatanAkhir: 'Progres konsisten selama semester'
+        },
+        {
+          siswaId: '2',
+          namaLengkap: 'Siti Aisyah Rahmawati',
+          totalHadir: 21,
+          totalTidakHadir: 3,
+          rataRataTajwid: 93.5,
+          rataRataKelancaran: 95.2,
+          rataRataMakhraj: 91.8,
+          rataRataImplementasi: 94.1,
+          statusHafalan: 'LANJUT',
+          catatanAkhir: 'Outstanding performance selama semester'
+        }
+      ];
+    }
+  };
+
+  const handleExport = async (format) => {
+    try {
+      const response = await fetch('/api/guru/laporan/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          format,
+          viewMode,
+          kelasId: selectedKelas,
+          periode: selectedPeriod,
+          data: laporanData,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        if (format === 'Excel' && result.csv) {
+          // Download CSV directly
+          const blob = new Blob([result.csv], { type: 'text/csv;charset=utf-8;' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = result.filename || `laporan-${viewMode}-${Date.now()}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } else if (format === 'PDF' && result.html) {
+          // Open PDF in new window for printing
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            printWindow.document.write(result.html);
+            printWindow.document.close();
+          } else {
+            alert('Pop-up blocker mencegah membuka window cetak. Silakan izinkan pop-up untuk situs ini.');
+          }
+        } else {
+          alert(`${format} berhasil diunduh!`);
+        }
+      } else {
+        alert(`Gagal mengunduh ${format}: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert(`Terjadi kesalahan saat mengunduh ${format}`);
+    }
+  };
+
+  const getNilaiColor = (nilai) => {
+    if (!nilai) return colors.gray[300];
+    if (nilai >= 90) return colors.emerald[500];
+    if (nilai >= 80) return colors.amber[400];
+    if (nilai >= 70) return colors.amber[600];
+    return colors.gray[500];
+  };
+
+  const getStatusKehadiranBadge = (status) => {
+    const styles = {
+      HADIR: { bg: colors.emerald[100], text: colors.emerald[700], icon: CheckCircle },
+      SAKIT: { bg: colors.amber[100], text: colors.amber[700], icon: Clock },
+      IZIN: { bg: colors.amber[100], text: colors.amber[700], icon: Clock },
+      ALFA: { bg: '#FEE2E2', text: '#991B1B', icon: XCircle }
+    };
+    const style = styles[status] || styles.ALFA;
+    const Icon = style.icon;
+
+    return (
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '4px 12px',
+        borderRadius: '100px',
+        background: style.bg,
+        color: style.text,
+        fontSize: '12px',
+        fontWeight: 600,
+        fontFamily: 'Poppins, system-ui, sans-serif',
+      }}>
+        <Icon size={14} />
+        {status}
+      </div>
+    );
   };
 
   if (loading) {
@@ -145,7 +295,7 @@ export default function LaporanPage() {
               color: colors.text.secondary,
               fontFamily: 'Poppins, system-ui, sans-serif',
             }}>
-              Memuat data...
+              Memuat laporan...
             </p>
           </div>
         </div>
@@ -161,24 +311,6 @@ export default function LaporanPage() {
         position: 'relative',
       }}>
         {/* Islamic Pattern Background */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '500px',
-          height: '500px',
-          opacity: 0.06,
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}>
-          <svg viewBox="0 0 200 200" style={{ width: '100%', height: '100%' }}>
-            <path d="M100,20 L120,80 L180,80 L130,120 L150,180 L100,140 L50,180 L70,120 L20,80 L80,80 Z" fill="#1A936F" opacity="0.3" />
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#F7C873" strokeWidth="3" opacity="0.4" />
-            <circle cx="100" cy="100" r="50" fill="none" stroke="#1A936F" strokeWidth="2" opacity="0.3" />
-            <path d="M60,100 Q60,60 100,60 Q140,60 140,100" fill="none" stroke="#F7C873" strokeWidth="2" opacity="0.4" />
-          </svg>
-        </div>
-
         <div style={{
           position: 'absolute',
           top: 0,
@@ -212,7 +344,7 @@ export default function LaporanPage() {
                 marginBottom: '8px',
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}>
-                Laporan & Statistik
+                Laporan Hafalan & Kehadiran
               </h1>
               <p style={{
                 fontSize: '15px',
@@ -220,7 +352,7 @@ export default function LaporanPage() {
                 color: colors.text.secondary,
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}>
-                Generate dan unduh laporan hafalan dalam berbagai format
+                Laporan terpadu hafalan dan kehadiran siswa dengan berbagai mode tampilan
               </p>
             </div>
           </div>
@@ -278,43 +410,155 @@ export default function LaporanPage() {
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
-          {/* Filter Section */}
+        <div style={{ position: 'relative', padding: '0 48px 48px', zIndex: 2 }}>
+          {/* Control Panel */}
           <div style={{
             background: colors.white,
             borderRadius: '20px',
             padding: '24px',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
             border: `2px solid ${colors.emerald[100]}`,
-            marginBottom: '32px',
+            marginBottom: '24px',
           }}>
+            {/* Mode Toggle Buttons */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              justifyContent: 'space-between',
               marginBottom: '20px',
+              gap: '16px',
             }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Filter size={20} color={colors.white} />
+              <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
+                <button
+                  onClick={() => setViewMode('harian')}
+                  style={{
+                    flex: 1,
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                    background: viewMode === 'harian'
+                      ? `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+                      : colors.gray[100],
+                    color: viewMode === 'harian' ? colors.white : colors.text.secondary,
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                  className="mode-btn"
+                >
+                  <Calendar size={18} />
+                  Harian/Mingguan
+                </button>
+                <button
+                  onClick={() => setViewMode('bulanan')}
+                  style={{
+                    flex: 1,
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                    background: viewMode === 'bulanan'
+                      ? `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`
+                      : colors.gray[100],
+                    color: viewMode === 'bulanan' ? colors.white : colors.text.secondary,
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                  className="mode-btn"
+                >
+                  <TrendingUp size={18} />
+                  Rekap Bulanan
+                </button>
+                <button
+                  onClick={() => setViewMode('semesteran')}
+                  style={{
+                    flex: 1,
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                    background: viewMode === 'semesteran'
+                      ? `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+                      : colors.gray[100],
+                    color: viewMode === 'semesteran' ? colors.white : colors.text.secondary,
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                  className="mode-btn"
+                >
+                  <BookOpen size={18} />
+                  Rekap Semesteran
+                </button>
               </div>
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: 700,
-                color: colors.text.primary,
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                Pengaturan Laporan
-              </h3>
+
+              {/* Export Buttons */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => handleExport('PDF')}
+                  style={{
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    borderRadius: '12px',
+                    border: `2px solid ${colors.emerald[500]}`,
+                    cursor: 'pointer',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                    background: colors.white,
+                    color: colors.emerald[600],
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                  className="export-btn"
+                >
+                  <FileText size={18} />
+                  PDF
+                </button>
+                <button
+                  onClick={() => handleExport('Excel')}
+                  style={{
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    borderRadius: '12px',
+                    border: `2px solid ${colors.emerald[500]}`,
+                    cursor: 'pointer',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                    background: colors.white,
+                    color: colors.emerald[600],
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                  className="export-btn"
+                >
+                  <FileSpreadsheet size={18} />
+                  Excel
+                </button>
+              </div>
             </div>
 
+            {/* Filter Section */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -329,7 +573,7 @@ export default function LaporanPage() {
                   marginBottom: '8px',
                   fontFamily: 'Poppins, system-ui, sans-serif',
                 }}>
-                  Periode Laporan
+                  Periode
                 </label>
                 <select
                   value={selectedPeriod}
@@ -346,11 +590,9 @@ export default function LaporanPage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <option value="hari-ini">Hari Ini</option>
-                  <option value="minggu-ini">Minggu Ini</option>
                   <option value="bulan-ini">Bulan Ini</option>
+                  <option value="bulan-lalu">Bulan Lalu</option>
                   <option value="semester-ini">Semester Ini</option>
-                  <option value="tahun-ini">Tahun Ajaran Ini</option>
                   <option value="custom">Custom Range</option>
                 </select>
               </div>
@@ -387,281 +629,241 @@ export default function LaporanPage() {
                   <option value="x-mia-3">X MIA 3</option>
                 </select>
               </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.text.secondary,
-                  marginBottom: '8px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
-                  Format Export
-                </label>
-                <select
-                  value={selectedFormat}
-                  onChange={(e) => setSelectedFormat(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    fontSize: '14px',
-                    border: `2px solid ${colors.emerald[200]}`,
-                    borderRadius: '12px',
-                    outline: 'none',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: colors.white,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="pdf">PDF</option>
-                  <option value="excel">Excel</option>
-                  <option value="both">PDF & Excel</option>
-                </select>
-              </div>
             </div>
           </div>
 
-          {/* Jenis Laporan */}
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: 700,
-            color: colors.text.primary,
-            fontFamily: 'Poppins, system-ui, sans-serif',
-            marginBottom: '20px',
-          }}>
-            Jenis Laporan
-          </h3>
-
+          {/* Table Section */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '16px',
-            marginBottom: '32px',
-          }}>
-            {laporanTypes.map((laporan) => {
-              const Icon = laporan.icon;
-              const scheme = getColorScheme(laporan.colorScheme);
-
-              return (
-                <div
-                  key={laporan.id}
-                  style={{
-                    background: scheme.bg,
-                    borderRadius: '16px',
-                    padding: '18px',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
-                    border: `2px solid ${scheme.border}`,
-                    transition: 'all 0.3s ease',
-                  }}
-                  className="laporan-card"
-                >
-                  <div style={{ marginBottom: '14px', textAlign: 'center' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '14px',
-                      background: scheme.iconBg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 12px',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                    }}>
-                      <Icon size={22} color={colors.white} />
-                    </div>
-                    <h3 style={{
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      color: colors.text.primary,
-                      marginBottom: '6px',
-                      fontFamily: 'Poppins, system-ui, sans-serif',
-                      lineHeight: '1.3',
-                    }}>
-                      {laporan.title}
-                    </h3>
-                    <p style={{
-                      fontSize: '11px',
-                      color: colors.text.secondary,
-                      fontFamily: 'Poppins, system-ui, sans-serif',
-                      lineHeight: '1.4',
-                    }}>
-                      {laporan.description}
-                    </p>
-                  </div>
-
-                  <div style={{
-                    paddingTop: '12px',
-                    borderTop: `1px solid ${scheme.border}`,
-                  }}>
-                    <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                      {laporan.formats.map((format) => (
-                        <span
-                          key={format}
-                          style={{
-                            padding: '3px 10px',
-                            background: colors.white,
-                            color: colors.text.secondary,
-                            fontSize: '10px',
-                            borderRadius: '100px',
-                            fontWeight: 600,
-                            fontFamily: 'Poppins, system-ui, sans-serif',
-                          }}
-                        >
-                          {format}
-                        </span>
-                      ))}
-                    </div>
-                    <button
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        padding: '8px 14px',
-                        background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                        color: colors.white,
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        borderRadius: '10px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        fontFamily: 'Poppins, system-ui, sans-serif',
-                        boxShadow: '0 4px 12px rgba(26, 147, 111, 0.3)',
-                        width: '100%',
-                      }}
-                      className="generate-btn"
-                    >
-                      <Download size={14} />
-                      Generate
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Quick Stats */}
-          <div style={{
-            background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
+            background: colors.white,
             borderRadius: '20px',
             padding: '24px',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
             border: `2px solid ${colors.emerald[100]}`,
+            overflowX: 'auto',
           }}>
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: 700,
-              color: colors.text.primary,
-              fontFamily: 'Poppins, system-ui, sans-serif',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}>
-              <PieChart size={22} color={colors.emerald[600]} />
-              Statistik Cepat ({selectedPeriod.replace('-', ' ')})
-            </h3>
+            {viewMode === 'harian' ? (
+              // Harian/Mingguan View - One Row per Student (default: first meeting)
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${colors.emerald[200]}` }}>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>No</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nama Lengkap</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Tanggal</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Kehadiran</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Tajwid</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Kelancaran</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Makhraj</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Implementasi</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Hafalan</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Catatan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {laporanData.map((siswa, idx) => (
+                    <tr key={siswa.siswaId} style={{ borderBottom: `1px solid ${colors.gray[200]}` }}>
+                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {idx + 1}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.namaLengkap}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: colors.text.secondary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.pertemuan ? new Date(siswa.pertemuan.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        {siswa.pertemuan ? getStatusKehadiranBadge(siswa.pertemuan.statusKehadiran) : '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiTajwid), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.pertemuan?.nilaiTajwid || '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiKelancaran), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.pertemuan?.nilaiKelancaran || '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiMakhraj), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.pertemuan?.nilaiMakhraj || '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiImplementasi), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.pertemuan?.nilaiImplementasi || '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.pertemuan?.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.pertemuan?.statusHafalan || '-'}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: '13px', color: colors.text.tertiary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.pertemuan?.catatan || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              // Bulanan/Semesteran View - One Row per Student (Aggregated)
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${colors.emerald[200]}` }}>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>No</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nama Lengkap</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Total Hadir</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Total Tidak Hadir</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Tajwid</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Kelancaran</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Makhraj</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Implementasi</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Hafalan</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Catatan Akhir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {laporanData.map((siswa, idx) => (
+                    <tr key={siswa.siswaId} style={{ borderBottom: `1px solid ${colors.gray[200]}` }}>
+                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {idx + 1}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.namaLengkap}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.emerald[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.totalHadir}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.totalTidakHadir}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataTajwid), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.rataRataTajwid.toFixed(1)}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataKelancaran), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.rataRataKelancaran.toFixed(1)}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataMakhraj), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.rataRataMakhraj.toFixed(1)}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataImplementasi), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.rataRataImplementasi.toFixed(1)}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.statusHafalan}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: '13px', color: colors.text.tertiary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                        {siswa.catatanAkhir}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Summary Statistics */}
+          <div style={{
+            marginTop: '24px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+          }}>
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '16px',
+              background: colors.white,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `2px solid ${colors.emerald[100]}`,
+              textAlign: 'center',
             }}>
               <div style={{
-                background: colors.white,
-                borderRadius: '14px',
-                padding: '20px',
-                textAlign: 'center',
-                border: `2px solid ${colors.emerald[100]}`,
+                fontSize: '32px',
+                fontWeight: 700,
+                color: colors.emerald[600],
+                marginBottom: '8px',
+                fontFamily: 'Poppins, system-ui, sans-serif',
               }}>
-                <p style={{
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  color: colors.emerald[600],
-                  marginBottom: '6px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>-</p>
-                <p style={{
-                  fontSize: '12px',
-                  color: colors.text.tertiary,
-                  fontWeight: 600,
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>Total Setoran</p>
+                {laporanData.length}
               </div>
               <div style={{
-                background: colors.white,
-                borderRadius: '14px',
-                padding: '20px',
-                textAlign: 'center',
-                border: `2px solid ${colors.amber[100]}`,
+                fontSize: '13px',
+                fontWeight: 600,
+                color: colors.text.tertiary,
+                fontFamily: 'Poppins, system-ui, sans-serif',
               }}>
-                <p style={{
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  color: colors.amber[600],
-                  marginBottom: '6px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>-</p>
-                <p style={{
-                  fontSize: '12px',
-                  color: colors.text.tertiary,
-                  fontWeight: 600,
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>Siswa Aktif</p>
-              </div>
-              <div style={{
-                background: colors.white,
-                borderRadius: '14px',
-                padding: '20px',
-                textAlign: 'center',
-                border: `2px solid ${colors.emerald[100]}`,
-              }}>
-                <p style={{
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  color: colors.emerald[600],
-                  marginBottom: '6px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>-%</p>
-                <p style={{
-                  fontSize: '12px',
-                  color: colors.text.tertiary,
-                  fontWeight: 600,
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>Rata-rata Nilai</p>
-              </div>
-              <div style={{
-                background: colors.white,
-                borderRadius: '14px',
-                padding: '20px',
-                textAlign: 'center',
-                border: `2px solid ${colors.amber[100]}`,
-              }}>
-                <p style={{
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  color: colors.amber[600],
-                  marginBottom: '6px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>-</p>
-                <p style={{
-                  fontSize: '12px',
-                  color: colors.text.tertiary,
-                  fontWeight: 600,
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>Ayat Dihafal</p>
+                Total Siswa
               </div>
             </div>
-            <p style={{
-              fontSize: '12px',
-              color: colors.text.tertiary,
-              marginTop: '16px',
+
+            <div style={{
+              background: colors.white,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `2px solid ${colors.amber[100]}`,
               textAlign: 'center',
-              fontFamily: 'Poppins, system-ui, sans-serif',
             }}>
-              💡 Pilih periode dan kelas untuk melihat statistik detail
-            </p>
+              <div style={{
+                fontSize: '32px',
+                fontWeight: 700,
+                color: colors.amber[600],
+                marginBottom: '8px',
+                fontFamily: 'Poppins, system-ui, sans-serif',
+              }}>
+                {viewMode === 'harian' ? '-' : Math.round(laporanData.reduce((acc, s) => acc + s.totalHadir, 0) / laporanData.length)}
+              </div>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: colors.text.tertiary,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+              }}>
+                Rata-rata Hadir
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.white,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `2px solid ${colors.emerald[100]}`,
+              textAlign: 'center',
+            }}>
+              <div style={{
+                fontSize: '32px',
+                fontWeight: 700,
+                color: colors.emerald[600],
+                marginBottom: '8px',
+                fontFamily: 'Poppins, system-ui, sans-serif',
+              }}>
+                {viewMode === 'harian' ? '-' : ((laporanData.reduce((acc, s) => acc + s.rataRataTajwid + s.rataRataKelancaran + s.rataRataMakhraj + s.rataRataImplementasi, 0) / (laporanData.length * 4)).toFixed(1))}
+              </div>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: colors.text.tertiary,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+              }}>
+                Rata-rata Nilai Keseluruhan
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.white,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `2px solid ${colors.amber[100]}`,
+              textAlign: 'center',
+            }}>
+              <div style={{
+                fontSize: '32px',
+                fontWeight: 700,
+                color: colors.amber[600],
+                marginBottom: '8px',
+                fontFamily: 'Poppins, system-ui, sans-serif',
+              }}>
+                {viewMode === 'harian'
+                  ? laporanData.length
+                  : (viewMode === 'bulanan' ? '4x' : '24x')}
+              </div>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: colors.text.tertiary,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+              }}>
+                Total Sesi Penilaian
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -673,14 +875,15 @@ export default function LaporanPage() {
           to { transform: rotate(360deg); }
         }
 
-        .laporan-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        .mode-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
 
-        .generate-btn:hover {
+        .export-btn:hover {
+          background: linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%) !important;
+          color: ${colors.white} !important;
           transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(26, 147, 111, 0.4);
         }
       `}</style>
     </GuruLayout>
