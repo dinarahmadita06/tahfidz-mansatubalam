@@ -7,46 +7,9 @@ import {
   ChevronDown, ChevronUp, Filter, FileSpreadsheet,
   Sparkles, BookOpen, CheckCircle, XCircle, Clock
 } from 'lucide-react';
-
-// Islamic Modern Color Palette
-const colors = {
-  emerald: {
-    50: '#ECFDF5',
-    100: '#D1FAE5',
-    200: '#A7F3D0',
-    300: '#6EE7B7',
-    400: '#34D399',
-    500: '#1A936F',
-    600: '#059669',
-    700: '#047857',
-  },
-  amber: {
-    50: '#FEF3C7',
-    100: '#FDE68A',
-    200: '#FCD34D',
-    300: '#FBBF24',
-    400: '#F7C873',
-    500: '#F59E0B',
-    600: '#D97706',
-  },
-  white: '#FFFFFF',
-  gray: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#374151',
-  },
-  text: {
-    primary: '#1B1B1B',
-    secondary: '#444444',
-    tertiary: '#6B7280',
-    muted: '#9CA3AF',
-  },
-};
+import TabelHarian from '@/components/laporan/TabelHarian';
+import PopupPenilaian from '@/components/laporan/PopupPenilaian';
+import { colors } from '@/components/laporan/constants';
 
 export default function LaporanGuruPage() {
   const [loading, setLoading] = useState(true);
@@ -55,6 +18,19 @@ export default function LaporanGuruPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('bulan-ini');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // For harian mode date picker
   const [laporanData, setLaporanData] = useState([]);
+
+  // State for editable harian mode
+  const [showPenilaianPopup, setShowPenilaianPopup] = useState(false);
+  const [selectedSiswa, setSelectedSiswa] = useState(null);
+  const [penilaianForm, setPenilaianForm] = useState({
+    surah: '',
+    ayatMulai: '',
+    ayatSelesai: '',
+    tajwid: '',
+    kelancaran: '',
+    makhraj: '',
+    implementasi: '',
+  });
 
   useEffect(() => {
     fetchLaporanData();
@@ -235,6 +211,127 @@ export default function LaporanGuruPage() {
     } catch (error) {
       console.error('Error exporting:', error);
       alert(`Terjadi kesalahan saat mengunduh ${format}`);
+    }
+  };
+
+  const handleStatusChange = async (siswaId, status) => {
+    try {
+      const response = await fetch('/api/guru/laporan/presensi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siswaId,
+          tanggal: selectedDate,
+          status,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        fetchLaporanData();
+        alert('Status kehadiran disimpan');
+      } else {
+        alert('Gagal menyimpan status kehadiran');
+      }
+    } catch (error) {
+      console.error('Error saving status:', error);
+      alert('Terjadi kesalahan');
+    }
+  };
+
+  const handlePenilaianClick = (siswa) => {
+    setSelectedSiswa(siswa);
+
+    // Load existing data if available
+    if (siswa.pertemuan) {
+      setPenilaianForm({
+        surah: siswa.pertemuan.surah || '',
+        ayatMulai: siswa.pertemuan.ayatMulai || '',
+        ayatSelesai: siswa.pertemuan.ayatSelesai || '',
+        tajwid: siswa.pertemuan.nilaiTajwid || '',
+        kelancaran: siswa.pertemuan.nilaiKelancaran || '',
+        makhraj: siswa.pertemuan.nilaiMakhraj || '',
+        implementasi: siswa.pertemuan.nilaiImplementasi || '',
+      });
+    } else {
+      setPenilaianForm({
+        surah: '',
+        ayatMulai: '',
+        ayatSelesai: '',
+        tajwid: '',
+        kelancaran: '',
+        makhraj: '',
+        implementasi: '',
+      });
+    }
+
+    setShowPenilaianPopup(true);
+  };
+
+  const handleSavePenilaian = async () => {
+    try {
+      // Validation
+      if (!penilaianForm.surah || !penilaianForm.ayatMulai || !penilaianForm.ayatSelesai) {
+        alert('Surah dan ayat harus diisi');
+        return;
+      }
+
+      if (!penilaianForm.tajwid || !penilaianForm.kelancaran || !penilaianForm.makhraj || !penilaianForm.implementasi) {
+        alert('Semua nilai penilaian harus diisi');
+        return;
+      }
+
+      const response = await fetch('/api/guru/laporan/penilaian', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siswaId: selectedSiswa.siswaId,
+          tanggal: selectedDate,
+          surah: penilaianForm.surah,
+          ayatMulai: parseInt(penilaianForm.ayatMulai),
+          ayatSelesai: parseInt(penilaianForm.ayatSelesai),
+          tajwid: parseInt(penilaianForm.tajwid),
+          kelancaran: parseInt(penilaianForm.kelancaran),
+          makhraj: parseInt(penilaianForm.makhraj),
+          implementasi: parseInt(penilaianForm.implementasi),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Penilaian berhasil disimpan');
+        setShowPenilaianPopup(false);
+        fetchLaporanData();
+      } else {
+        alert('Gagal menyimpan penilaian');
+      }
+    } catch (error) {
+      console.error('Error saving penilaian:', error);
+      alert('Terjadi kesalahan');
+    }
+  };
+
+  const handleCatatanChange = async (siswaId, catatan) => {
+    try {
+      const response = await fetch('/api/guru/laporan/catatan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siswaId,
+          tanggal: selectedDate,
+          catatan,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        fetchLaporanData();
+      }
+    } catch (error) {
+      console.error('Error saving catatan:', error);
     }
   };
 
@@ -699,59 +796,12 @@ export default function LaporanGuruPage() {
             overflowX: 'auto',
           }}>
             {viewMode === 'harian' ? (
-              // Harian/Mingguan View - One Row per Student (default: first meeting)
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: `2px solid ${colors.emerald[200]}` }}>
-                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>No</th>
-                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nama Lengkap</th>
-                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Tanggal</th>
-                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Kehadiran</th>
-                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Tajwid</th>
-                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Kelancaran</th>
-                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Makhraj</th>
-                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nilai Implementasi</th>
-                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Hafalan</th>
-                    <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Catatan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {laporanData.map((siswa, idx) => (
-                    <tr key={siswa.siswaId} style={{ borderBottom: `1px solid ${colors.gray[200]}` }}>
-                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {idx + 1}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.namaLengkap}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: colors.text.secondary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.pertemuan ? new Date(siswa.pertemuan.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        {siswa.pertemuan ? getStatusKehadiranBadge(siswa.pertemuan.statusKehadiran) : '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiTajwid), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.pertemuan?.nilaiTajwid || '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiKelancaran), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.pertemuan?.nilaiKelancaran || '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiMakhraj), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.pertemuan?.nilaiMakhraj || '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.pertemuan?.nilaiImplementasi), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.pertemuan?.nilaiImplementasi || '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.pertemuan?.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.pertemuan?.statusHafalan || '-'}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: '13px', color: colors.text.tertiary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.pertemuan?.catatan || '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <TabelHarian
+                data={laporanData}
+                onStatusChange={handleStatusChange}
+                onPenilaianClick={handlePenilaianClick}
+                onCatatanChange={handleCatatanChange}
+              />
             ) : (
               // Bulanan/Semesteran View - One Row per Student (Aggregated)
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -937,6 +987,16 @@ export default function LaporanGuruPage() {
           </div>
         </div>
       </div>
+
+      {/* Popup Penilaian */}
+      <PopupPenilaian
+        show={showPenilaianPopup}
+        onClose={() => setShowPenilaianPopup(false)}
+        siswa={selectedSiswa}
+        form={penilaianForm}
+        onFormChange={setPenilaianForm}
+        onSave={handleSavePenilaian}
+      />
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');

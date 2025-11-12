@@ -132,6 +132,9 @@ export async function GET(request) {
             pertemuan = {
               tanggal: firstPenilaian.hafalan.tanggal.toISOString().split('T')[0],
               statusKehadiran: 'HADIR',
+              surah: firstPenilaian.hafalan.surah,
+              ayatMulai: firstPenilaian.hafalan.ayatMulai,
+              ayatSelesai: firstPenilaian.hafalan.ayatSelesai,
               nilaiTajwid: firstPenilaian.tajwid,
               nilaiKelancaran: firstPenilaian.kelancaran,
               nilaiMakhraj: firstPenilaian.makhraj,
@@ -143,6 +146,9 @@ export async function GET(request) {
             pertemuan = {
               tanggal: firstPresensi.tanggal.toISOString().split('T')[0],
               statusKehadiran: firstPresensi.status,
+              surah: null,
+              ayatMulai: null,
+              ayatSelesai: null,
               nilaiTajwid: null,
               nilaiKelancaran: null,
               nilaiMakhraj: null,
