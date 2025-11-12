@@ -18,6 +18,7 @@ export async function GET(request) {
     const viewMode = searchParams.get('viewMode') || 'harian'; // harian, bulanan, semesteran
     const kelasId = searchParams.get('kelasId');
     const periode = searchParams.get('periode') || 'bulan-ini';
+    const tanggal = searchParams.get('tanggal'); // Specific date for harian mode
 
     // Get guru data
     const guru = await prisma.guru.findUnique({
@@ -58,19 +59,50 @@ export async function GET(request) {
     });
 
     if (viewMode === 'harian') {
-      // Harian/Mingguan View - Get first meeting data for each student (default view)
+      // Harian/Mingguan View - Get data for specific date or first meeting
       const laporanData = await Promise.all(
         students.map(async (siswa) => {
-          // Get first penilaian data within period
+          let penilaianWhere = {
+            siswaId: siswa.id,
+            guruId: guru.id,
+          };
+
+          let presensiWhere = {
+            siswaId: siswa.id,
+            guruId: guru.id,
+          };
+
+          // If specific date is provided, query for that date
+          if (tanggal) {
+            const selectedDate = new Date(tanggal);
+            const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
+
+            penilaianWhere.createdAt = {
+              gte: startOfDay,
+              lte: endOfDay,
+            };
+
+            presensiWhere.tanggal = {
+              gte: startOfDay,
+              lte: endOfDay,
+            };
+          } else {
+            // Default to first meeting in period
+            penilaianWhere.createdAt = {
+              gte: dateRange.start,
+              lte: dateRange.end,
+            };
+
+            presensiWhere.tanggal = {
+              gte: dateRange.start,
+              lte: dateRange.end,
+            };
+          }
+
+          // Get penilaian data
           const firstPenilaian = await prisma.penilaian.findFirst({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              createdAt: {
-                gte: dateRange.start,
-                lte: dateRange.end,
-              },
-            },
+            where: penilaianWhere,
             include: {
               hafalan: {
                 select: {
@@ -86,16 +118,9 @@ export async function GET(request) {
             },
           });
 
-          // Get first presensi data
+          // Get presensi data
           const firstPresensi = await prisma.presensi.findFirst({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              tanggal: {
-                gte: dateRange.start,
-                lte: dateRange.end,
-              },
-            },
+            where: presensiWhere,
             orderBy: {
               tanggal: 'asc',
             },
