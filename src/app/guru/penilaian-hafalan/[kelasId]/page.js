@@ -1,42 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { useParams, useRouter } from 'next/navigation';
 import {
   BookOpen,
-  Plus,
-  Edit2,
-  Trash2,
-  Printer,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  ChevronDown,
-  FileText,
-  TrendingUp,
-  Award,
-  Star,
-  Mic,
   ArrowLeft,
+  Save,
+  X,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import Link from 'next/link';
-
-// Helper function untuk menangani NaN
-const safeValue = (value) => {
-  // Jika null, undefined, NaN, atau empty string, return kosong (tampilkan "-")
-  if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) return '';
-  // Kembalikan nilai aslinya (termasuk 0 jika ada)
-  return value;
-};
-
-const safeNumber = (value) => {
-  const num = parseFloat(value);
-  if (isNaN(num)) return 0;
-  return num;
-};
 
 // Daftar 114 Surah Al-Quran
 const surahList = [
@@ -65,2073 +39,587 @@ const surahList = [
   'Al-Lahab', 'Al-Ikhlas', 'Al-Falaq', 'An-Nas'
 ];
 
-// Mock Data Siswa per Kelas
-const mockSiswaByKelas = {
-  'x-a1': [
-    { id: 1, nama: 'Ahmad Fauzan' },
-    { id: 2, nama: 'Fatimah Zahra' },
-    { id: 3, nama: 'Muhammad Rizki' },
-  ],
-  'x-a2': [
-    { id: 4, nama: 'Aisyah Nur' },
-    { id: 5, nama: 'Umar Abdullah' },
-  ],
-  'xi-a1': [
-    { id: 6, nama: 'Khadijah Amira' },
-    { id: 7, nama: 'Hasan Basri' },
-  ],
-  'xi-a2': [
-    { id: 8, nama: 'Zainab Husna' },
-    { id: 9, nama: 'Ali Akbar' },
-  ],
-  'xii-a1': [
-    { id: 10, nama: 'Maryam Siddiq' },
-    { id: 11, nama: 'Ibrahim Khalil' },
-  ],
-  'xii-a2': [
-    { id: 12, nama: 'Aminah Zahra' },
-    { id: 13, nama: 'Yusuf Hakim' },
-  ],
+// Helper function untuk format nilai
+const formatNilai = (nilai) => {
+  if (nilai == null) return '-';
+  const rounded = Math.round(nilai);
+  if (Math.abs(nilai - rounded) < 0.01) {
+    return rounded.toString();
+  }
+  return nilai.toFixed(1);
 };
 
-// Initial Penilaian Data
-const initialPenilaianByKelas = {
-  'x-a1': [
-    {
-      id: 1,
-      siswaId: 1,
-      namaSiswa: 'Ahmad Fauzan',
-      tanggal: '2025-01-15',
-      surah: 'Al-Baqarah',
-      ayat: '1-5',
-      statusHafalan: 'Hafal',
-      nilaiTajwid: 90,
-      nilaiKelancaran: 88,
-      nilaiMakhraj: 92,
-      nilaiAdab: 95,
-      catatan: 'Sangat baik, pertahankan',
-    },
-    {
-      id: 2,
-      siswaId: 2,
-      namaSiswa: 'Fatimah Zahra',
-      tanggal: '2025-01-14',
-      surah: 'Ali Imran',
-      ayat: '10-15',
-      statusHafalan: 'Hafal',
-      nilaiTajwid: 85,
-      nilaiKelancaran: 82,
-      nilaiMakhraj: 88,
-      nilaiAdab: 90,
-      catatan: 'Perlu perbaikan di mad lazim',
-    },
-  ],
-  'x-a2': [],
-  'xi-a1': [],
-  'xi-a2': [],
-  'xii-a1': [],
-  'xii-a2': [],
+// Helper function untuk hitung rata-rata
+const hitungRataRata = (tajwid, kelancaran, makhraj, implementasi) => {
+  const values = [tajwid, kelancaran, makhraj, implementasi].filter(v => v != null && v !== '');
+  if (values.length === 0) return null;
+  return values.reduce((sum, v) => sum + parseFloat(v), 0) / values.length;
 };
 
-export default function PenilaianHafalanKelasPage() {
+export default function PenilaianHafalanPage() {
   const params = useParams();
   const router = useRouter();
   const kelasId = params.kelasId;
 
-  // Mendapatkan nama kelas dari ID
-  const getNamaKelas = (id) => {
-    const kelasMap = {
-      'x-a1': 'Kelas X A1',
-      'x-a2': 'Kelas X A2',
-      'xi-a1': 'Kelas XI A1',
-      'xi-a2': 'Kelas XI A2',
-      'xii-a1': 'Kelas XII A1',
-      'xii-a2': 'Kelas XII A2',
-    };
-    return kelasMap[id] || 'Kelas Tidak Diketahui';
-  };
+  const [loading, setLoading] = useState(true);
+  const [siswaList, setSiswaList] = useState([]);
+  const [kelasInfo, setKelasInfo] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // State Management
-  const [siswaId, setSiswaId] = useState('');
-  const isInitialMount = useRef(true);
+  // State untuk data penilaian per siswa per tanggal
+  const [penilaianData, setPenilaianData] = useState({});
 
-  const [penilaianList, setPenilaianList] = useState([]);
-  const [filteredPenilaian, setFilteredPenilaian] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Sorting
-  const [sortField, setSortField] = useState('tanggal');
-  const [sortDirection, setSortDirection] = useState('desc');
-
-  // Form State
-  const [formData, setFormData] = useState({
-    siswaId: '',
-    tanggal: new Date().toISOString().split('T')[0],
+  // State untuk popup penilaian
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedSiswa, setSelectedSiswa] = useState(null);
+  const [popupForm, setPopupForm] = useState({
     surah: '',
-    ayat: '',
-    statusHafalan: 'Hafal',
-    nilaiTajwid: '',
-    nilaiKelancaran: '',
-    nilaiMakhraj: '',
-    nilaiAdab: '',
-    catatan: '',
+    ayatMulai: '',
+    ayatSelesai: '',
+    tajwid: '',
+    kelancaran: '',
+    makhraj: '',
+    implementasi: '',
   });
 
-  const [errors, setErrors] = useState({});
-
-  // State untuk searchable surah
-  const [surahQuery, setSurahQuery] = useState('');
-  const [showSurahDropdown, setShowSurahDropdown] = useState(false);
-  const [isWajibNilai, setIsWajibNilai] = useState(true);
-
-  // State untuk loading & siswa dari database
-  const [siswaList, setSiswaList] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Filter surah berdasarkan query
-  const filteredSurahList = surahList.filter(surah =>
-    surah.toLowerCase().includes(surahQuery.toLowerCase())
-  );
-
-  // Load data siswa dan penilaian dari database
+  // Fetch data siswa dan kelas
   useEffect(() => {
-    loadSiswaAndPenilaian();
+    fetchSiswaData();
   }, [kelasId]);
 
-  const loadSiswaAndPenilaian = async () => {
+  // Fetch penilaian data when date changes
+  useEffect(() => {
+    if (selectedDate && siswaList.length > 0) {
+      fetchPenilaianData();
+    }
+  }, [selectedDate, siswaList]);
+
+  const fetchSiswaData = async () => {
     try {
       setLoading(true);
+      const response = await fetch(`/api/guru/kelas/${kelasId}/siswa`);
+      const result = await response.json();
 
-      // Load siswa berdasarkan kelasId
-      const siswaResponse = await fetch(`/api/admin/siswa?kelasId=${kelasId}`);
-      if (siswaResponse.ok) {
-        const siswaData = await siswaResponse.json();
-        setSiswaList(siswaData);
-      }
-
-      // Load penilaian untuk kelas ini
-      const penilaianResponse = await fetch(`/api/guru/penilaian?kelasId=${kelasId}`);
-      if (penilaianResponse.ok) {
-        const penilaianData = await penilaianResponse.json();
-        // Transform data agar sesuai dengan format UI
-        const transformed = penilaianData.map(p => ({
-          id: p.id,
-          siswaId: p.siswaId,
-          namaSiswa: p.siswa.user.name,
-          tanggal: p.hafalan.tanggal.split('T')[0],
-          surah: p.hafalan.surah,
-          ayat: `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}`,
-          juz: p.hafalan.juz,
-          ayatMulai: p.hafalan.ayatMulai,
-          ayatSelesai: p.hafalan.ayatSelesai,
-          statusHafalan: 'Hafal', // Default karena penilaian hanya untuk yang hafal
-          nilaiTajwid: p.tajwid,
-          nilaiKelancaran: p.kelancaran,
-          nilaiMakhraj: p.makhraj,
-          nilaiAdab: p.adab,
-          catatan: p.catatan || '',
-        }));
-        setPenilaianList(transformed);
+      if (result.success) {
+        setSiswaList(result.siswa || []);
+        setKelasInfo(result.kelas || null);
+      } else {
+        toast.error('Gagal memuat data siswa');
       }
     } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Gagal memuat data');
+      console.error('Error fetching siswa:', error);
+      toast.error('Terjadi kesalahan saat memuat data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Effect untuk mengatur isWajibNilai berdasarkan statusHafalan
-  useEffect(() => {
-    if (formData.statusHafalan === 'Hafal') {
-      setIsWajibNilai(true);
-    } else if (formData.statusHafalan === 'Kurang Hafal') {
-      setIsWajibNilai(false);
-      // Clear nilai jika sudah terisi
-    } else if (formData.statusHafalan === 'Tidak Hafal') {
-      setIsWajibNilai(false);
-      // Clear semua nilai dan disable input
-      setFormData(prev => ({
-        ...prev,
-        nilaiTajwid: '',
-        nilaiKelancaran: '',
-        nilaiMakhraj: '',
-        nilaiAdab: '',
-      }));
-    }
-  }, [formData.statusHafalan]);
-
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showSurahDropdown && !event.target.closest('.surah-input-container')) {
-        setShowSurahDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showSurahDropdown]);
-
-  // Handle Tampilkan Data
-  const handleTampilkanData = () => {
-    let filtered = penilaianList;
-
-    if (siswaId) {
-      filtered = filtered.filter(p => p.siswaId === parseInt(siswaId));
-    }
-
-    setFilteredPenilaian(filtered);
-    setCurrentPage(1);
-    toast.success('Data berhasil ditampilkan!');
-  };
-
-  // Sorting Function
-  const handleSort = (field) => {
-    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
-    setSortField(field);
-    setSortDirection(newDirection);
-  };
-
-  // Apply sorting
-  const sortedData = [...filteredPenilaian].sort((a, b) => {
-    let aVal = a[sortField];
-    let bVal = b[sortField];
-
-    if (sortField === 'tanggal') {
-      aVal = new Date(aVal);
-      bVal = new Date(bVal);
-    }
-
-    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
-
-  // Calculate Statistics
-  const calculateStats = () => {
-    if (filteredPenilaian.length === 0) {
-      return {
-        total: 0,
-        rataTajwid: '',
-        rataKelancaran: '',
-        rataMakhraj: '',
-        rataAdab: '',
-      };
-    }
-
-    const total = filteredPenilaian.length;
-
-    // Filter hanya nilai yang valid (bukan null/undefined/NaN)
-    const validTajwid = filteredPenilaian.filter(p => p.nilaiTajwid != null && !isNaN(p.nilaiTajwid));
-    const validKelancaran = filteredPenilaian.filter(p => p.nilaiKelancaran != null && !isNaN(p.nilaiKelancaran));
-    const validMakhraj = filteredPenilaian.filter(p => p.nilaiMakhraj != null && !isNaN(p.nilaiMakhraj));
-    const validAdab = filteredPenilaian.filter(p => p.nilaiAdab != null && !isNaN(p.nilaiAdab));
-
-    const sumTajwid = validTajwid.reduce((acc, p) => acc + safeNumber(p.nilaiTajwid), 0);
-    const sumKelancaran = validKelancaran.reduce((acc, p) => acc + safeNumber(p.nilaiKelancaran), 0);
-    const sumMakhraj = validMakhraj.reduce((acc, p) => acc + safeNumber(p.nilaiMakhraj), 0);
-    const sumAdab = validAdab.reduce((acc, p) => acc + safeNumber(p.nilaiAdab), 0);
-
-    return {
-      total,
-      rataTajwid: validTajwid.length > 0 ? (sumTajwid / validTajwid.length).toFixed(1) : '',
-      rataKelancaran: validKelancaran.length > 0 ? (sumKelancaran / validKelancaran.length).toFixed(1) : '',
-      rataMakhraj: validMakhraj.length > 0 ? (sumMakhraj / validMakhraj.length).toFixed(1) : '',
-      rataAdab: validAdab.length > 0 ? (sumAdab / validAdab.length).toFixed(1) : '',
-    };
-  };
-
-  const stats = calculateStats();
-
-  // Grade Badge Color
-  const getGradeBadgeColor = (nilai) => {
-    const safeNilai = safeNumber(nilai);
-    if (safeNilai === 0 || nilai === null || nilai === undefined || nilai === '') {
-      return { bg: '#F3F4F6', text: '#9CA3AF', border: '#E5E7EB' };
-    }
-    if (safeNilai >= 90) return { bg: '#ECFDF5', text: '#059669', border: '#A7F3D0' };
-    if (safeNilai >= 75) return { bg: '#FFFBEB', text: '#D97706', border: '#FDE68A' };
-    return { bg: '#FEE2E2', text: '#DC2626', border: '#FECACA' };
-  };
-
-  // Modal Handlers
-  const openAddModal = () => {
-    setEditingId(null);
-    setFormData({
-      siswaId: siswaId || '',
-      tanggal: new Date().toISOString().split('T')[0],
-      surah: '',
-      ayat: '',
-      statusHafalan: 'Hafal',
-      nilaiTajwid: '',
-      nilaiKelancaran: '',
-      nilaiMakhraj: '',
-      nilaiAdab: '',
-      catatan: '',
-    });
-    setErrors({});
-    setSurahQuery('');
-    setShowSurahDropdown(false);
-    setShowModal(true);
-  };
-
-  const openEditModal = (penilaian) => {
-    setEditingId(penilaian.id);
-    setFormData({
-      siswaId: penilaian.siswaId,
-      tanggal: penilaian.tanggal,
-      surah: penilaian.surah,
-      ayat: penilaian.ayat,
-      statusHafalan: penilaian.statusHafalan,
-      nilaiTajwid: penilaian.nilaiTajwid,
-      nilaiKelancaran: penilaian.nilaiKelancaran,
-      nilaiMakhraj: penilaian.nilaiMakhraj,
-      nilaiAdab: penilaian.nilaiAdab,
-      catatan: penilaian.catatan,
-    });
-    setErrors({});
-    setSurahQuery(penilaian.surah);
-    setShowSurahDropdown(false);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingId(null);
-    setFormData({
-      siswaId: '',
-      tanggal: new Date().toISOString().split('T')[0],
-      surah: '',
-      ayat: '',
-      statusHafalan: 'Hafal',
-      nilaiTajwid: '',
-      nilaiKelancaran: '',
-      nilaiMakhraj: '',
-      nilaiAdab: '',
-      catatan: '',
-    });
-    setErrors({});
-    setSurahQuery('');
-    setShowSurahDropdown(false);
-  };
-
-  // Form Validation
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.siswaId) newErrors.siswaId = 'Pilih siswa terlebih dahulu';
-    if (!formData.surah) newErrors.surah = 'Surah wajib diisi';
-    if (!formData.ayat) newErrors.ayat = 'Ayat wajib diisi';
-
-    // Validasi nilai hanya wajib jika status = 'Hafal'
-    if (formData.statusHafalan === 'Hafal') {
-      if (!formData.nilaiTajwid) newErrors.nilaiTajwid = 'Nilai Tajwid wajib diisi';
-      if (!formData.nilaiKelancaran) newErrors.nilaiKelancaran = 'Nilai Kelancaran wajib diisi';
-      if (!formData.nilaiMakhraj) newErrors.nilaiMakhraj = 'Nilai Makhraj wajib diisi';
-      if (!formData.nilaiAdab) newErrors.nilaiAdab = 'Nilai Adab wajib diisi';
-    }
-
-    // Validate range 1-100 untuk field yang terisi
-    ['nilaiTajwid', 'nilaiKelancaran', 'nilaiMakhraj', 'nilaiAdab'].forEach(field => {
-      const val = parseInt(formData[field]);
-      if (formData[field] && (val < 1 || val > 100)) {
-        newErrors[field] = 'Nilai harus antara 1-100';
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      toast.error('Mohon lengkapi semua field yang wajib diisi');
-      return;
-    }
-
+  const fetchPenilaianData = async () => {
     try {
-      // Parse ayat range (e.g., "1-5" => ayatMulai: 1, ayatSelesai: 5)
-      const ayatRange = formData.ayat.split('-').map(x => x.trim());
-      const ayatMulai = parseInt(ayatRange[0]);
-      const ayatSelesai = parseInt(ayatRange[1] || ayatRange[0]);
+      const response = await fetch(
+        `/api/guru/penilaian-hafalan?kelasId=${kelasId}&tanggal=${selectedDate}`
+      );
+      const result = await response.json();
 
-      if (editingId) {
-        // Update existing - menggunakan API PUT
-        const response = await fetch('/api/guru/penilaian', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: editingId,
-            tajwid: parseInt(formData.nilaiTajwid),
-            kelancaran: parseInt(formData.nilaiKelancaran),
-            makhraj: parseInt(formData.nilaiMakhraj),
-            adab: parseInt(formData.nilaiAdab),
-            catatan: formData.catatan || null,
-          }),
+      if (result.success) {
+        // Convert array to object keyed by siswaId
+        const dataMap = {};
+        result.data.forEach((item) => {
+          dataMap[item.siswaId] = item;
         });
+        setPenilaianData(dataMap);
+      }
+    } catch (error) {
+      console.error('Error fetching penilaian data:', error);
+    }
+  };
 
-        if (response.ok) {
-          toast.success('Penilaian berhasil diperbarui!');
-          await loadSiswaAndPenilaian(); // Reload data
-          closeModal();
-        } else {
-          const error = await response.json();
-          toast.error(error.error || 'Gagal mengupdate penilaian');
-        }
+  const handleStatusChange = async (siswaId, status) => {
+    try {
+      const response = await fetch('/api/guru/penilaian-hafalan/presensi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siswaId,
+          tanggal: selectedDate,
+          status,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local state
+        setPenilaianData((prev) => ({
+          ...prev,
+          [siswaId]: {
+            ...prev[siswaId],
+            statusKehadiran: status,
+          },
+        }));
+        toast.success('Status kehadiran disimpan');
       } else {
-        // Add new - menggunakan API POST dengan hafalan + penilaian sekaligus
-        const response = await fetch('/api/guru/penilaian', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            // Data Hafalan
-            siswaId: parseInt(formData.siswaId),
-            tanggal: formData.tanggal,
-            juz: 1, // TODO: Tambahkan input juz di form jika diperlukan
-            surah: formData.surah,
-            ayatMulai: ayatMulai,
-            ayatSelesai: ayatSelesai,
-            keterangan: formData.catatan || null,
-            // Data Penilaian
-            tajwid: parseInt(formData.nilaiTajwid),
-            kelancaran: parseInt(formData.nilaiKelancaran),
-            makhraj: parseInt(formData.nilaiMakhraj),
-            adab: parseInt(formData.nilaiAdab),
-            catatan: formData.catatan || null,
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          toast.success(`Penilaian berhasil disimpan! Nilai Akhir: ${result.nilaiAkhir}`);
-          await loadSiswaAndPenilaian(); // Reload data
-          closeModal();
-        } else {
-          const error = await response.json();
-          toast.error(error.error || 'Gagal menyimpan penilaian');
-        }
+        toast.error(result.error || 'Gagal menyimpan status kehadiran');
       }
     } catch (error) {
-      console.error('Error submitting penilaian:', error);
-      toast.error('Terjadi kesalahan saat menyimpan penilaian');
+      console.error('Error saving status:', error);
+      toast.error('Terjadi kesalahan');
     }
   };
 
-  // Handle Delete
-  const handleDelete = async (id) => {
-    if (confirm('Apakah Anda yakin ingin menghapus penilaian ini?')) {
-      try {
-        const response = await fetch(`/api/guru/penilaian?id=${id}`, {
-          method: 'DELETE',
-        });
+  const openPenilaianPopup = (siswa) => {
+    setSelectedSiswa(siswa);
 
-        if (response.ok) {
-          toast.success('Penilaian berhasil dihapus!');
-          await loadSiswaAndPenilaian(); // Reload data
-        } else {
-          const error = await response.json();
-          toast.error(error.error || 'Gagal menghapus penilaian');
-        }
-      } catch (error) {
-        console.error('Error deleting penilaian:', error);
-        toast.error('Terjadi kesalahan saat menghapus penilaian');
-      }
+    // Load existing data if available
+    const existingData = penilaianData[siswa.id];
+    if (existingData && existingData.penilaian) {
+      setPopupForm({
+        surah: existingData.penilaian.surah || '',
+        ayatMulai: existingData.penilaian.ayatMulai || '',
+        ayatSelesai: existingData.penilaian.ayatSelesai || '',
+        tajwid: existingData.penilaian.tajwid || '',
+        kelancaran: existingData.penilaian.kelancaran || '',
+        makhraj: existingData.penilaian.makhraj || '',
+        implementasi: existingData.penilaian.implementasi || '',
+      });
+    } else {
+      // Reset form
+      setPopupForm({
+        surah: '',
+        ayatMulai: '',
+        ayatSelesai: '',
+        tajwid: '',
+        kelancaran: '',
+        makhraj: '',
+        implementasi: '',
+      });
     }
+
+    setShowPopup(true);
   };
 
-  // Print Functions
-  const handlePrintIndividu = (penilaian) => {
-    const siswa = siswaList.find(s => s.id === penilaian.siswaId);
-
-    // Get all penilaian for this student
-    const siswaData = filteredPenilaian.filter(p => p.siswaId === penilaian.siswaId);
-
-    // Calculate averages
-    const avgTajwid = (siswaData.reduce((acc, p) => acc + p.nilaiTajwid, 0) / siswaData.length).toFixed(1);
-    const avgKelancaran = (siswaData.reduce((acc, p) => acc + p.nilaiKelancaran, 0) / siswaData.length).toFixed(1);
-    const avgMakhraj = (siswaData.reduce((acc, p) => acc + p.nilaiMakhraj, 0) / siswaData.length).toFixed(1);
-    const avgAdab = (siswaData.reduce((acc, p) => acc + p.nilaiAdab, 0) / siswaData.length).toFixed(1);
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Laporan Penilaian Hafalan - ${siswa?.nama}</title>
-        <style>
-          @page { margin: 2cm; }
-          body {
-            font-family: 'Arial', sans-serif;
-            padding: 20px;
-            color: #1f2937;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #059669;
-            padding-bottom: 15px;
-          }
-          .header h1 {
-            color: #059669;
-            margin: 0;
-            font-size: 24px;
-          }
-          .header p {
-            margin: 5px 0;
-            color: #6b7280;
-          }
-          .info-box {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-          }
-          .info-box p {
-            margin: 5px 0;
-            font-size: 14px;
-          }
-          .info-box strong {
-            color: #059669;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-          }
-          th, td {
-            border: 1px solid #e5e7eb;
-            padding: 10px;
-            text-align: left;
-            font-size: 12px;
-          }
-          th {
-            background: #059669;
-            color: white;
-            font-weight: 600;
-          }
-          tr:nth-child(even) {
-            background: #f9fafb;
-          }
-          .stats {
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-          }
-          .stats h3 {
-            color: #d97706;
-            margin-top: 0;
-          }
-          .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-          }
-          .stat-item {
-            text-align: center;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-          }
-          .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #059669;
-          }
-          .stat-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 5px;
-          }
-          .signature {
-            margin-top: 50px;
-            text-align: right;
-          }
-          .signature-line {
-            width: 200px;
-            border-top: 1px solid #000;
-            margin: 50px 0 5px auto;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
-            color: #6b7280;
-            font-size: 11px;
-          }
-          @media print {
-            body { padding: 0; }
-            .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>📗 Laporan Penilaian Hafalan</h1>
-          <p>Sistem Manajemen Tahfidz Al-Qur'an</p>
-        </div>
-
-        <div class="info-box">
-          <p><strong>Nama Siswa:</strong> ${siswa?.nama}</p>
-          <p><strong>Kelas:</strong> ${getNamaKelas(kelasId)}</p>
-          <p><strong>Periode:</strong> ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}</p>
-          <p><strong>Total Penilaian:</strong> ${siswaData.length} kali setoran</p>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>Tanggal</th>
-              <th>Surah</th>
-              <th>Ayat</th>
-              <th>Status</th>
-              <th>Tajwid</th>
-              <th>Kelancaran</th>
-              <th>Makhraj</th>
-              <th>Adab</th>
-              <th>Catatan</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${siswaData.map((p, idx) => `
-              <tr>
-                <td>${idx + 1}</td>
-                <td>${new Date(p.tanggal).toLocaleDateString('id-ID')}</td>
-                <td>${p.surah}</td>
-                <td>${p.ayat}</td>
-                <td>${p.statusHafalan}</td>
-                <td>${p.nilaiTajwid}</td>
-                <td>${p.nilaiKelancaran}</td>
-                <td>${p.nilaiMakhraj}</td>
-                <td>${p.nilaiAdab}</td>
-                <td>${p.catatan}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <div class="stats">
-          <h3>📊 Rata-rata Nilai</h3>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-value">${avgTajwid}</div>
-              <div class="stat-label">Tajwid</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">${avgKelancaran}</div>
-              <div class="stat-label">Kelancaran</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">${avgMakhraj}</div>
-              <div class="stat-label">Makhraj</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">${avgAdab}</div>
-              <div class="stat-label">Adab</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="signature">
-          <p>Guru Pembimbing</p>
-          <div class="signature-line"></div>
-          <p>(...........................)</p>
-        </div>
-
-        <div class="footer">
-          <p>Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
-          <p>© 2025 Sistem Manajemen Tahfidz Al-Qur'an</p>
-        </div>
-      </body>
-      </html>
-    `;
-
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.print();
-  };
-
-  const handlePrintKelas = async () => {
-    // Format tanggal untuk tanda tangan
-    const today = new Date();
-    const tanggalStr = today.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-
-    // Fetch tanda tangan guru dari API
-    let tandaTanganUrl = null;
+  const handleSavePenilaian = async () => {
     try {
-      const response = await fetch('/api/guru/upload-ttd');
-      if (response.ok) {
-        const data = await response.json();
-        tandaTanganUrl = data.tandaTanganUrl;
+      // Validation
+      if (!popupForm.surah || !popupForm.ayatMulai || !popupForm.ayatSelesai) {
+        toast.error('Surah dan ayat harus diisi');
+        return;
+      }
+
+      if (!popupForm.tajwid || !popupForm.kelancaran || !popupForm.makhraj || !popupForm.implementasi) {
+        toast.error('Semua nilai penilaian harus diisi');
+        return;
+      }
+
+      const response = await fetch('/api/guru/penilaian-hafalan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siswaId: selectedSiswa.id,
+          tanggal: selectedDate,
+          surah: popupForm.surah,
+          ayatMulai: parseInt(popupForm.ayatMulai),
+          ayatSelesai: parseInt(popupForm.ayatSelesai),
+          tajwid: parseInt(popupForm.tajwid),
+          kelancaran: parseInt(popupForm.kelancaran),
+          makhraj: parseInt(popupForm.makhraj),
+          implementasi: parseInt(popupForm.implementasi),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Penilaian berhasil disimpan');
+        setShowPopup(false);
+        fetchPenilaianData(); // Refresh data
+      } else {
+        toast.error(result.error || 'Gagal menyimpan penilaian');
       }
     } catch (error) {
-      console.error('Error fetching signature:', error);
+      console.error('Error saving penilaian:', error);
+      toast.error('Terjadi kesalahan');
     }
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Laporan Kelas - ${getNamaKelas(kelasId)}</title>
-        <style>
-          @page { margin: 2cm; }
-          body {
-            font-family: 'Arial', sans-serif;
-            padding: 20px;
-            color: #1f2937;
-          }
-          .header {
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #059669;
-          }
-          .logo-placeholder {
-            width: 80px;
-            height: 80px;
-            border: 2px solid #059669;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            text-align: center;
-            padding: 5px;
-            flex-shrink: 0;
-            background: #f0fdf4;
-          }
-          .header-text {
-            flex: 1;
-          }
-          .header-text h1 {
-            color: #059669;
-            margin: 0 0 5px 0;
-            font-size: 24px;
-          }
-          .header-text p {
-            margin: 0;
-            color: #6b7280;
-            font-size: 14px;
-          }
-          .info-box {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-          }
-          .info-box p {
-            margin: 8px 0;
-            font-size: 13px;
-            line-height: 1.6;
-          }
-          .info-box strong {
-            color: #059669;
-            display: inline-block;
-            width: 120px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-          }
-          th, td {
-            border: 1px solid #e5e7eb;
-            padding: 10px;
-            text-align: left;
-            font-size: 11px;
-          }
-          th {
-            background: #059669;
-            color: white;
-            font-weight: 600;
-          }
-          tr:nth-child(even) {
-            background: #f9fafb;
-          }
-          .signature-section {
-            margin-top: 40px;
-            display: flex;
-            justify-content: flex-end;
-          }
-          .signature-box {
-            text-align: center;
-            min-width: 250px;
-          }
-          .signature-location {
-            text-align: right;
-            margin-bottom: 5px;
-            font-size: 13px;
-          }
-          .signature-title {
-            text-align: center;
-            margin-bottom: 60px;
-            font-size: 13px;
-          }
-          .signature-placeholder {
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 5px;
-          }
-          .signature-line {
-            border-top: 1px solid #000;
-            margin: 0 auto;
-            width: 200px;
-          }
-          .signature-name {
-            margin-top: 5px;
-            font-size: 13px;
-            text-align: center;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
-            color: #6b7280;
-            font-size: 11px;
-          }
-          @media print {
-            body { padding: 0; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="logo-placeholder">
-            Logo MAN 1 Bandar Lampung
-          </div>
-          <div class="header-text">
-            <h1>Rekap Penilaian Hafalan Kelas</h1>
-            <p>Sistem Manajemen Tahfidz Al-Qur'an</p>
-          </div>
-        </div>
-
-        <div class="info-box">
-          <p><strong>Guru Pembina</strong>: [Nama Guru]</p>
-          <p><strong>NIP</strong>: -</p>
-          <p><strong>Kelas</strong>: ${getNamaKelas(kelasId)}</p>
-          <p><strong>Periode</strong>: ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}</p>
-          <p><strong>Total Siswa</strong>: ${siswaList.length} siswa</p>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>Nama Siswa</th>
-              <th>Total Setoran</th>
-              <th>Rata-rata Tajwid</th>
-              <th>Rata-rata Kelancaran</th>
-              <th>Rata-rata Makhraj</th>
-              <th>Rata-rata Adab</th>
-              <th>Rata-rata Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${siswaList.map((siswa, idx) => {
-              const siswaPenilaian = filteredPenilaian.filter(p => p.siswaId === siswa.id);
-              const count = siswaPenilaian.length;
-
-              if (count === 0) {
-                return `
-                  <tr>
-                    <td>${idx + 1}</td>
-                    <td>${siswa.nama}</td>
-                    <td colspan="6" style="text-align: center; color: #9ca3af;">Belum ada penilaian</td>
-                  </tr>
-                `;
-              }
-
-              const avgTajwid = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiTajwid, 0) / count).toFixed(1);
-              const avgKelancaran = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiKelancaran, 0) / count).toFixed(1);
-              const avgMakhraj = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiMakhraj, 0) / count).toFixed(1);
-              const avgAdab = (siswaPenilaian.reduce((acc, p) => acc + p.nilaiAdab, 0) / count).toFixed(1);
-              const avgTotal = ((parseFloat(avgTajwid) + parseFloat(avgKelancaran) + parseFloat(avgMakhraj) + parseFloat(avgAdab)) / 4).toFixed(1);
-
-              return `
-                <tr>
-                  <td>${idx + 1}</td>
-                  <td>${siswa.nama}</td>
-                  <td>${count}</td>
-                  <td>${avgTajwid}</td>
-                  <td>${avgKelancaran}</td>
-                  <td>${avgMakhraj}</td>
-                  <td>${avgAdab}</td>
-                  <td><strong>${avgTotal}</strong></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-
-        <div class="signature-section">
-          <div class="signature-box">
-            <div class="signature-location">Bandar Lampung, ${tanggalStr}</div>
-            <div class="signature-title">Guru Pengampu,</div>
-            <div class="signature-placeholder">
-              ${tandaTanganUrl ? `
-                <img src="${window.location.origin}${tandaTanganUrl}" alt="Tanda Tangan" style="max-height: 60px; max-width: 200px;" />
-              ` : `
-                <span style="color: #9ca3af; font-size: 11px;">[Tanda Tangan Digital]</span>
-              `}
-            </div>
-            <div class="signature-line"></div>
-            <div class="signature-name">[Nama Guru]</div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
-          <p>© 2025 Sistem Manajemen Tahfidz Al-Qur'an</p>
-        </div>
-      </body>
-      </html>
-    `;
-
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.print();
   };
+
+  const handleCatatanChange = async (siswaId, catatan) => {
+    try {
+      const response = await fetch('/api/guru/penilaian-hafalan/catatan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siswaId,
+          tanggal: selectedDate,
+          catatan,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local state
+        setPenilaianData((prev) => ({
+          ...prev,
+          [siswaId]: {
+            ...prev[siswaId],
+            catatan,
+          },
+        }));
+        toast.success('Catatan disimpan');
+      }
+    } catch (error) {
+      console.error('Error saving catatan:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <GuruLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat data...</p>
+          </div>
+        </div>
+      </GuruLayout>
+    );
+  }
 
   return (
     <GuruLayout>
       <Toaster position="top-right" />
 
-      {/* Background Gradient Container */}
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-amber-50" style={{ margin: '-32px', padding: '32px' }}>
-        {/* Back Button & Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <Link
-          href="/guru/penilaian-hafalan"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            background: '#F3F4F6',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            color: '#374151',
-            fontSize: '14px',
-            fontWeight: '500',
-            marginBottom: '16px',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#E5E7EB';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#F3F4F6';
-          }}
-        >
-          <ArrowLeft size={16} />
-          Kembali ke Daftar Kelas
-        </Link>
+      <div className="p-6 max-w-[1400px] mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <Link
+            href="/guru/penilaian-hafalan"
+            className="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Kembali ke Daftar Kelas
+          </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <BookOpen size={24} style={{ color: 'white' }} />
-          </div>
-          <div>
-            <h1 style={{
-              fontSize: '28px',
-              fontWeight: '700',
-              margin: 0,
-              background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>
-              Penilaian Hafalan – {getNamaKelas(kelasId)}
-            </h1>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
-              Nilai & catatan hasil setoran siswa
-            </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Penilaian Hafalan - {kelasInfo?.nama || 'Kelas'}
+                </h1>
+                <p className="text-gray-600">
+                  Input penilaian hafalan per pertemuan
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Filter & Actions */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '24px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-          {/* Pilih Siswa */}
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-              Pilih Siswa
+        {/* Date Filter */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">
+              Tanggal Pertemuan:
             </label>
-            <select
-              value={siswaId}
-              onChange={(e) => setSiswaId(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                fontSize: '14px',
-                background: 'white',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="">Semua Siswa</option>
-              {siswaList.map(s => (
-                <option key={s.id} value={s.id}>{s.nama}</option>
-              ))}
-            </select>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+            <span className="text-sm text-gray-600">
+              {new Date(selectedDate).toLocaleDateString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </span>
           </div>
         </div>
 
-        {/* Buttons Row */}
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button
-            onClick={handleTampilkanData}
-            style={{
-              padding: '10px 20px',
-              background: '#059669',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => e.target.style.background = '#047857'}
-            onMouseLeave={(e) => e.target.style.background = '#059669'}
-          >
-            Tampilkan Data
-          </button>
-
-          <button
-            onClick={openAddModal}
-            style={{
-              padding: '10px 20px',
-              background: '#F59E0B',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => e.target.style.background = '#D97706'}
-            onMouseLeave={(e) => e.target.style.background = '#F59E0B'}
-          >
-            <Plus size={18} />
-            Tambah Penilaian
-          </button>
-
-          <button
-            onClick={handlePrintKelas}
-            style={{
-              padding: '10px 20px',
-              background: 'white',
-              color: '#374151',
-              border: '1px solid #E5E7EB',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = '#F9FAFB';
-              e.target.style.borderColor = '#D1D5DB';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'white';
-              e.target.style.borderColor = '#E5E7EB';
-            }}
-          >
-            <Printer size={18} />
-            Print Kelas
-          </button>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        {/* Total Penilaian */}
-        <div style={{
-          background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
-          borderRadius: '12px',
-          padding: '20px',
-          border: '1px solid #A7F3D0',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: '#059669',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <FileText size={20} style={{ color: 'white' }} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#047857', fontWeight: '500' }}>Total Penilaian</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#059669' }}>{stats.total}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Rata-rata Tajwid */}
-        <div style={{
-          background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
-          borderRadius: '12px',
-          padding: '20px',
-          border: '1px solid #99F6E4',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: '#14B8A6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <TrendingUp size={20} style={{ color: 'white' }} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#0D9488', fontWeight: '500' }}>Rata-rata Tajwid</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#14B8A6' }}>
-                {stats.rataTajwid || '-'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Rata-rata Kelancaran */}
-        <div style={{
-          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-          borderRadius: '12px',
-          padding: '20px',
-          border: '1px solid #FDE68A',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: '#F59E0B',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Star size={20} style={{ color: 'white' }} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#D97706', fontWeight: '500' }}>Rata-rata Kelancaran</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#F59E0B' }}>
-                {stats.rataKelancaran || '-'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Rata-rata Makhraj */}
-        <div style={{
-          background: 'linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)',
-          borderRadius: '12px',
-          padding: '20px',
-          border: '1px solid #93C5FD',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: '#3B82F6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Mic size={20} style={{ color: 'white' }} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#1D4ED8', fontWeight: '500' }}>Rata-rata Makhraj</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#3B82F6' }}>
-                {stats.rataMakhraj || '-'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Rata-rata Adab */}
-        <div style={{
-          background: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)',
-          borderRadius: '12px',
-          padding: '20px',
-          border: '1px solid #E9D5FF',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: '#8B5CF6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Award size={20} style={{ color: 'white' }} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#7C3AED', fontWeight: '500' }}>Rata-rata Adab</p>
-              <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#8B5CF6' }}>
-                {stats.rataAdab || '-'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                <th
-                  onClick={() => handleSort('namaSiswa')}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Nama Siswa
-                    {sortField === 'namaSiswa' && (
-                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('tanggal')}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Tanggal
-                    {sortField === 'tanggal' && (
-                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                    )}
-                  </div>
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>
-                  Surah / Ayat
-                </th>
-                <th
-                  onClick={() => handleSort('nilaiTajwid')}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'center',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    Tajwid
-                    {sortField === 'nilaiTajwid' && (
-                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('nilaiKelancaran')}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'center',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    Kelancaran
-                    {sortField === 'nilaiKelancaran' && (
-                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('nilaiMakhraj')}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'center',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    Makhraj
-                    {sortField === 'nilaiMakhraj' && (
-                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('nilaiAdab')}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'center',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    Adab
-                    {sortField === 'nilaiAdab' && (
-                      sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                    )}
-                  </div>
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>
-                  Catatan
-                </th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151' }}>
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-emerald-500 to-teal-600">
                 <tr>
-                  <td colSpan="9" style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-                    Tidak ada data penilaian. Klik "Tambah Penilaian" untuk menambahkan data.
-                  </td>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-white w-12">
+                    No
+                  </th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-white">
+                    Nama Siswa
+                  </th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-white w-40">
+                    Status Kehadiran
+                  </th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-white" style={{ minWidth: '300px' }}>
+                    Penilaian
+                  </th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-white w-32">
+                    Rata-rata Nilai
+                  </th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-white" style={{ minWidth: '200px' }}>
+                    Catatan
+                  </th>
                 </tr>
-              ) : (
-                paginatedData.map((p) => {
-                  const tajwidColor = getGradeBadgeColor(p.nilaiTajwid);
-                  const kelancaranColor = getGradeBadgeColor(p.nilaiKelancaran);
-                  const makhrajColor = getGradeBadgeColor(p.nilaiMakhraj);
-                  const adabColor = getGradeBadgeColor(p.nilaiAdab);
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {siswaList.map((siswa, index) => {
+                  const data = penilaianData[siswa.id] || {};
+                  const penilaian = data.penilaian || {};
+                  const rataRata = hitungRataRata(
+                    penilaian.tajwid,
+                    penilaian.kelancaran,
+                    penilaian.makhraj,
+                    penilaian.implementasi
+                  );
 
                   return (
-                    <tr
-                      key={p.id}
-                      style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.2s' }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0fdf4'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                    >
-                      <td style={{ padding: '12px', fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>
-                        {p.namaSiswa}
+                    <tr key={siswa.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {index + 1}
                       </td>
-                      <td style={{ padding: '12px', fontSize: '14px', color: '#6b7280' }}>
-                        {new Date(p.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                        {siswa.user?.name || siswa.nama}
                       </td>
-                      <td style={{ padding: '12px', fontSize: '14px', color: '#1f2937' }}>
-                        {p.surah} <span style={{ color: '#9ca3af' }}>({p.ayat})</span>
+                      <td className="px-4 py-4 text-center">
+                        <select
+                          value={data.statusKehadiran || 'HADIR'}
+                          onChange={(e) => handleStatusChange(siswa.id, e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        >
+                          <option value="HADIR">Hadir</option>
+                          <option value="SAKIT">Sakit</option>
+                          <option value="IZIN">Izin</option>
+                          <option value="ALFA">Alpa</option>
+                        </select>
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        {safeValue(p.nilaiTajwid) !== '' ? (
-                          <span style={{
-                            display: 'inline-block',
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            background: tajwidColor.bg,
-                            color: tajwidColor.text,
-                            border: `1px solid ${tajwidColor.border}`,
-                          }}>
-                            {safeValue(p.nilaiTajwid)}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
+                      <td className="px-4 py-4 text-center">
+                        <button
+                          onClick={() => openPenilaianPopup(siswa)}
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                        >
+                          {penilaian.surah ? 'Edit Penilaian' : 'Input Penilaian'}
+                        </button>
+                        {penilaian.surah && (
+                          <div className="mt-2 text-xs text-gray-600">
+                            {penilaian.surah} ({penilaian.ayatMulai}-{penilaian.ayatSelesai})
+                          </div>
                         )}
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        {safeValue(p.nilaiKelancaran) !== '' ? (
-                          <span style={{
-                            display: 'inline-block',
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            background: kelancaranColor.bg,
-                            color: kelancaranColor.text,
-                            border: `1px solid ${kelancaranColor.border}`,
-                          }}>
-                            {safeValue(p.nilaiKelancaran)}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
-                        )}
+                      <td className="px-4 py-4 text-center">
+                        <span className={`text-lg font-bold ${
+                          rataRata >= 90 ? 'text-emerald-600' :
+                          rataRata >= 80 ? 'text-yellow-600' :
+                          rataRata >= 70 ? 'text-orange-600' :
+                          'text-gray-400'
+                        }`}>
+                          {rataRata != null ? formatNilai(rataRata) : '-'}
+                        </span>
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        {safeValue(p.nilaiMakhraj) !== '' ? (
-                          <span style={{
-                            display: 'inline-block',
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            background: makhrajColor.bg,
-                            color: makhrajColor.text,
-                            border: `1px solid ${makhrajColor.border}`,
-                          }}>
-                            {safeValue(p.nilaiMakhraj)}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        {safeValue(p.nilaiAdab) !== '' ? (
-                          <span style={{
-                            display: 'inline-block',
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            background: adabColor.bg,
-                            color: adabColor.text,
-                            border: `1px solid ${adabColor.border}`,
-                          }}>
-                            {safeValue(p.nilaiAdab)}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '13px', color: '#d1d5db' }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px', fontSize: '14px', color: '#6b7280', maxWidth: '200px' }}>
-                        {p.catatan}
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button
-                            onClick={() => handlePrintIndividu(p)}
-                            title="Print Individu"
-                            style={{
-                              padding: '6px',
-                              background: '#3B82F6',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                            }}
-                            onMouseEnter={(e) => e.target.style.background = '#2563EB'}
-                            onMouseLeave={(e) => e.target.style.background = '#3B82F6'}
-                          >
-                            <Printer size={16} style={{ color: 'white' }} />
-                          </button>
-                          <button
-                            onClick={() => openEditModal(p)}
-                            title="Edit"
-                            style={{
-                              padding: '6px',
-                              background: '#F59E0B',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                            }}
-                            onMouseEnter={(e) => e.target.style.background = '#D97706'}
-                            onMouseLeave={(e) => e.target.style.background = '#F59E0B'}
-                          >
-                            <Edit2 size={16} style={{ color: 'white' }} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            title="Hapus"
-                            style={{
-                              padding: '6px',
-                              background: '#EF4444',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                            }}
-                            onMouseEnter={(e) => e.target.style.background = '#DC2626'}
-                            onMouseLeave={(e) => e.target.style.background = '#EF4444'}
-                          >
-                            <Trash2 size={16} style={{ color: 'white' }} />
-                          </button>
-                        </div>
+                      <td className="px-4 py-4">
+                        <input
+                          type="text"
+                          value={data.catatan || ''}
+                          onChange={(e) => {
+                            setPenilaianData((prev) => ({
+                              ...prev,
+                              [siswa.id]: {
+                                ...prev[siswa.id],
+                                catatan: e.target.value,
+                              },
+                            }));
+                          }}
+                          onBlur={(e) => handleCatatanChange(siswa.id, e.target.value)}
+                          placeholder="Tambahkan catatan..."
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        />
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div style={{
-            marginTop: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}>
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              style={{
-                padding: '8px 12px',
-                background: currentPage === 1 ? '#f3f4f6' : '#059669',
-                color: currentPage === 1 ? '#9ca3af' : 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              <ChevronLeft size={16} />
-              Sebelumnya
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                style={{
-                  padding: '8px 12px',
-                  background: currentPage === page ? '#059669' : 'white',
-                  color: currentPage === page ? 'white' : '#374151',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  minWidth: '40px',
-                }}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              style={{
-                padding: '8px 12px',
-                background: currentPage === totalPages ? '#f3f4f6' : '#059669',
-                color: currentPage === totalPages ? '#9ca3af' : 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              Berikutnya
-              <ChevronRight size={16} />
-            </button>
+                })}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {siswaList.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              Tidak ada data siswa di kelas ini
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Modal Form */}
-      {showModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          padding: '20px',
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            maxWidth: '600px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflow: 'auto',
-          }}>
-            {/* Modal Header */}
-            <div style={{
-              padding: '20px',
-              borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-              <h2 style={{
-                margin: 0,
-                fontSize: '20px',
-                fontWeight: '700',
-                color: '#059669',
-              }}>
-                {editingId ? 'Edit Penilaian Hafalan' : 'Form Penilaian Hafalan'}
-              </h2>
+      {/* Popup Penilaian */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white">
+                Form Penilaian - {selectedSiswa?.user?.name || selectedSiswa?.nama}
+              </h3>
               <button
-                onClick={closeModal}
-                style={{
-                  padding: '6px',
-                  background: '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                }}
+                onClick={() => setShowPopup(false)}
+                className="text-white hover:text-gray-200 transition-colors"
               >
-                <X size={20} style={{ color: '#6b7280' }} />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
-              <div style={{ display: 'grid', gap: '16px' }}>
-                {/* Pilih Siswa */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                    Pilih Siswa <span style={{ color: '#DC2626' }}>*</span>
-                  </label>
-                  <select
-                    value={formData.siswaId}
-                    onChange={(e) => setFormData({ ...formData, siswaId: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: errors.siswaId ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                    }}
-                  >
-                    <option value="">-- Pilih Siswa --</option>
-                    {siswaList.map(s => (
-                      <option key={s.id} value={s.id}>{s.nama}</option>
-                    ))}
-                  </select>
-                  {errors.siswaId && (
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.siswaId}</p>
-                  )}
-                </div>
+            <div className="p-6 space-y-4">
+              {/* Surah */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Surah <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={popupForm.surah}
+                  onChange={(e) => setPopupForm({ ...popupForm, surah: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="">Pilih Surah</option>
+                  {surahList.map((surah) => (
+                    <option key={surah} value={surah}>
+                      {surah}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                {/* Tanggal */}
+              {/* Ayat */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                    Tanggal <span style={{ color: '#DC2626' }}>*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ayat Mulai <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="date"
-                    value={formData.tanggal}
-                    onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                    }}
+                    type="number"
+                    min="1"
+                    value={popupForm.ayatMulai}
+                    onChange={(e) => setPopupForm({ ...popupForm, ayatMulai: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="1"
                   />
                 </div>
-
-                {/* Surah - Searchable Dropdown */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                    Surah <span style={{ color: '#DC2626' }}>*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ayat Selesai <span className="text-red-500">*</span>
                   </label>
-                  <div className="surah-input-container" style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    min="1"
+                    value={popupForm.ayatSelesai}
+                    onChange={(e) => setPopupForm({ ...popupForm, ayatSelesai: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="10"
+                  />
+                </div>
+              </div>
+
+              {/* Penilaian 4 Aspek */}
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h4 className="font-semibold text-gray-900 mb-4">Penilaian (0-100)</h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tajwid <span className="text-red-500">*</span>
+                    </label>
                     <input
-                      type="text"
-                      value={surahQuery || formData.surah}
-                      onChange={(e) => {
-                        setSurahQuery(e.target.value);
-                        setShowSurahDropdown(true);
-                        setFormData({ ...formData, surah: e.target.value });
-                      }}
-                      onFocus={() => setShowSurahDropdown(true)}
-                      placeholder="Ketik atau pilih nama surah..."
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: errors.surah ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                      }}
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={popupForm.tajwid}
+                      onChange={(e) => setPopupForm({ ...popupForm, tajwid: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="85"
                     />
-                    {showSurahDropdown && filteredSurahList.length > 0 && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        maxHeight: '300px',
-                        overflowY: 'auto',
-                        background: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        marginTop: '4px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        zIndex: 1000,
-                      }}>
-                        {filteredSurahList.map((surah, idx) => (
-                          <div
-                            key={idx}
-                            onClick={() => {
-                              setFormData({ ...formData, surah });
-                              setSurahQuery(surah);
-                              setShowSurahDropdown(false);
-                            }}
-                            style={{
-                              padding: '10px 12px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              borderBottom: idx < filteredSurahList.length - 1 ? '1px solid #f3f4f6' : 'none',
-                              transition: 'background 0.2s',
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#F0FDF4'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                          >
-                            {surah}
-                          </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Kelancaran <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={popupForm.kelancaran}
+                      onChange={(e) => setPopupForm({ ...popupForm, kelancaran: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="90"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Makhraj <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={popupForm.makhraj}
+                      onChange={(e) => setPopupForm({ ...popupForm, makhraj: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="88"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Implementasi/Adab <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={popupForm.implementasi}
+                      onChange={(e) => setPopupForm({ ...popupForm, implementasi: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="92"
+                    />
+                  </div>
+                </div>
+
+                {/* Preview Rata-rata */}
+                {popupForm.tajwid && popupForm.kelancaran && popupForm.makhraj && popupForm.implementasi && (
+                  <div className="mt-4 p-4 bg-emerald-50 rounded-lg">
+                    <div className="text-sm text-gray-700">
+                      Rata-rata Nilai:{' '}
+                      <span className="text-xl font-bold text-emerald-600">
+                        {formatNilai(hitungRataRata(
+                          parseFloat(popupForm.tajwid),
+                          parseFloat(popupForm.kelancaran),
+                          parseFloat(popupForm.makhraj),
+                          parseFloat(popupForm.implementasi)
                         ))}
-                      </div>
-                    )}
-                  </div>
-                  {errors.surah && (
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.surah}</p>
-                  )}
-                </div>
-
-                {/* Rentang Ayat */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                    Rentang Ayat <span style={{ color: '#DC2626' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ayat}
-                    onChange={(e) => setFormData({ ...formData, ayat: e.target.value })}
-                    placeholder="Contoh: 1-5"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: errors.ayat ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                    }}
-                  />
-                  {errors.ayat && (
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.ayat}</p>
-                  )}
-                </div>
-
-                {/* Status Hafalan */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                    Status Hafalan <span style={{ color: '#DC2626' }}>*</span>
-                  </label>
-                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                    {['Hafal', 'Kurang Hafal', 'Tidak Hafal'].map(status => (
-                      <label key={status} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                        <input
-                          type="radio"
-                          name="statusHafalan"
-                          value={status}
-                          checked={formData.statusHafalan === status}
-                          onChange={(e) => setFormData({ ...formData, statusHafalan: e.target.value })}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: '14px', color: '#374151' }}>{status}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Grid 2 columns for nilai */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {/* Nilai Tajwid */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Tajwid (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
-                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={formData.nilaiTajwid}
-                      onChange={(e) => setFormData({ ...formData, nilaiTajwid: e.target.value })}
-                      disabled={formData.statusHafalan === 'Tidak Hafal'}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: errors.nilaiTajwid ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
-                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
-                      }}
-                    />
-                    {errors.nilaiTajwid && (
-                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiTajwid}</p>
-                    )}
-                  </div>
-
-                  {/* Nilai Kelancaran */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Kelancaran (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
-                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={formData.nilaiKelancaran}
-                      onChange={(e) => setFormData({ ...formData, nilaiKelancaran: e.target.value })}
-                      disabled={formData.statusHafalan === 'Tidak Hafal'}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: errors.nilaiKelancaran ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
-                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
-                      }}
-                    />
-                    {errors.nilaiKelancaran && (
-                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiKelancaran}</p>
-                    )}
-                  </div>
-
-                  {/* Nilai Makhraj */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Makhrajul Huruf (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
-                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={formData.nilaiMakhraj}
-                      onChange={(e) => setFormData({ ...formData, nilaiMakhraj: e.target.value })}
-                      disabled={formData.statusHafalan === 'Tidak Hafal'}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: errors.nilaiMakhraj ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
-                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
-                      }}
-                    />
-                    {errors.nilaiMakhraj && (
-                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiMakhraj}</p>
-                    )}
-                  </div>
-
-                  {/* Nilai Adab */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                      Nilai Adab (1-100) {isWajibNilai && <span style={{ color: '#DC2626' }}>*</span>}
-                      {!isWajibNilai && <span style={{ color: '#9ca3af', fontSize: '12px' }}>(Opsional)</span>}
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={formData.nilaiAdab}
-                      onChange={(e) => setFormData({ ...formData, nilaiAdab: e.target.value })}
-                      disabled={formData.statusHafalan === 'Tidak Hafal'}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: errors.nilaiAdab ? '1px solid #DC2626' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        background: formData.statusHafalan === 'Tidak Hafal' ? '#f3f4f6' : 'white',
-                        cursor: formData.statusHafalan === 'Tidak Hafal' ? 'not-allowed' : 'text',
-                      }}
-                    />
-                    {errors.nilaiAdab && (
-                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#DC2626' }}>{errors.nilaiAdab}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Catatan */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                    Catatan/Komentar Guru
-                  </label>
-                  <textarea
-                    value={formData.catatan}
-                    onChange={(e) => setFormData({ ...formData, catatan: e.target.value })}
-                    rows="3"
-                    placeholder="Masukkan catatan atau komentar..."
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      resize: 'vertical',
-                    }}
-                  />
-                  {formData.statusHafalan === 'Tidak Hafal' && (
-                    <div style={{
-                      marginTop: '8px',
-                      padding: '12px',
-                      background: '#FFFBEB',
-                      border: '1px solid #FDE68A',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '8px',
-                    }}>
-                      <span style={{ fontSize: '16px' }}>⚠️</span>
-                      <p style={{
-                        fontSize: '13px',
-                        color: '#B45309',
-                        margin: 0,
-                        lineHeight: '1.5',
-                      }}>
-                        Siswa belum menguasai hafalan ini. Mohon berikan catatan pembinaan yang detail untuk membantu perkembangan siswa.
-                      </p>
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Modal Footer */}
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                marginTop: '24px',
-                paddingTop: '20px',
-                borderTop: '1px solid #e5e7eb',
-              }}>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  style={{
-                    flex: 1,
-                    padding: '10px 20px',
-                    background: '#f3f4f6',
-                    color: '#374151',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    flex: 1,
-                    padding: '10px 20px',
-                    background: '#059669',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Simpan Penilaian
-                </button>
-              </div>
-            </form>
+            {/* Footer */}
+            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-gray-200">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSavePenilaian}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Simpan Penilaian
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-      {/* Close Background Gradient Container */}
-      </div>
     </GuruLayout>
   );
 }
