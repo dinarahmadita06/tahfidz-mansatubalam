@@ -44,22 +44,25 @@ export async function POST(request) {
     }
 
     if (format === 'PDF') {
-      // Generate PDF
-      const pdfData = await generatePDF(data, viewMode, guru, periode, kelasId);
+      // Generate PDF HTML template
+      const pdfHtml = generatePDFTemplate(data, viewMode, guru, periode, kelasId);
 
       return NextResponse.json({
         success: true,
-        message: 'PDF generated successfully',
-        downloadUrl: pdfData.url, // Will be implemented with actual PDF generation
+        format: 'PDF',
+        html: pdfHtml,
+        filename: `laporan-${viewMode}-${new Date().toISOString().split('T')[0]}.pdf`,
       });
     } else if (format === 'Excel') {
-      // Generate Excel
-      const excelData = await generateExcel(data, viewMode, guru, periode, kelasId);
+      // Generate CSV (Excel compatible)
+      const csv = generateCSV(data, viewMode);
+      const filename = `laporan-${viewMode}-${new Date().toISOString().split('T')[0]}.csv`;
 
       return NextResponse.json({
         success: true,
-        message: 'Excel generated successfully',
-        downloadUrl: excelData.url, // Will be implemented with actual Excel generation
+        format: 'Excel',
+        csv,
+        filename,
       });
     }
 
@@ -76,53 +79,299 @@ export async function POST(request) {
   }
 }
 
-// Helper function to generate PDF (placeholder)
-async function generatePDF(data, viewMode, guru, periode, kelasId) {
-  // TODO: Implement actual PDF generation using libraries like:
-  // - jsPDF
-  // - pdfkit
-  // - puppeteer
-
-  // For now, return a mock URL
-  return {
-    url: '/mock/laporan.pdf',
-    filename: `laporan-${viewMode}-${Date.now()}.pdf`,
-  };
-}
-
-// Helper function to generate Excel (placeholder)
-async function generateExcel(data, viewMode, guru, periode, kelasId) {
-  // TODO: Implement actual Excel generation using libraries like:
-  // - exceljs
-  // - xlsx
-
-  // For now, return CSV data as a simple implementation
+// Generate CSV for Excel export
+function generateCSV(data, viewMode) {
   let csv = '';
 
   if (viewMode === 'harian') {
-    // CSV for harian view
-    csv = 'No,Nama Lengkap,Tanggal,Status Kehadiran,Nilai Tajwid,Nilai Kelancaran,Nilai Makhraj,Nilai Implementasi,Status Hafalan,Catatan\n';
+    // Header
+    csv += 'No,Nama Lengkap,Tanggal,Status Kehadiran,Nilai Tajwid,Nilai Kelancaran,Nilai Makhraj,Nilai Implementasi,Status Hafalan,Catatan\n';
 
+    // Rows
     data.forEach((siswa, idx) => {
-      siswa.sesi.forEach((sesi) => {
-        csv += `${idx + 1},"${siswa.namaLengkap}",${sesi.tanggal},${sesi.statusKehadiran},${sesi.nilaiTajwid || '-'},${sesi.nilaiKelancaran || '-'},${sesi.nilaiMakhraj || '-'},${sesi.nilaiImplementasi || '-'},${sesi.statusHafalan},"${sesi.catatan}"\n`;
-      });
+      if (siswa.pertemuan) {
+        csv += `${idx + 1},"${siswa.namaLengkap}",`;
+        csv += `"${siswa.pertemuan.tanggal}",`;
+        csv += `"${siswa.pertemuan.statusKehadiran}",`;
+        csv += `${siswa.pertemuan.nilaiTajwid || '-'},`;
+        csv += `${siswa.pertemuan.nilaiKelancaran || '-'},`;
+        csv += `${siswa.pertemuan.nilaiMakhraj || '-'},`;
+        csv += `${siswa.pertemuan.nilaiImplementasi || '-'},`;
+        csv += `"${siswa.pertemuan.statusHafalan}",`;
+        csv += `"${siswa.pertemuan.catatan}"\n`;
+      } else {
+        csv += `${idx + 1},"${siswa.namaLengkap}",-,-,-,-,-,-,-,-\n`;
+      }
     });
   } else {
-    // CSV for bulanan/semesteran view
-    csv = 'No,Nama Lengkap,Total Hadir,Total Tidak Hadir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Status Hafalan,Catatan Akhir\n';
+    // Header for bulanan/semesteran
+    csv += 'No,Nama Lengkap,Total Hadir,Total Tidak Hadir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Status Hafalan,Catatan Akhir\n';
 
+    // Rows
     data.forEach((siswa, idx) => {
-      csv += `${idx + 1},"${siswa.namaLengkap}",${siswa.totalHadir},${siswa.totalTidakHadir},${siswa.rataRataTajwid},${siswa.rataRataKelancaran},${siswa.rataRataMakhraj},${siswa.rataRataImplementasi},${siswa.statusHafalan},"${siswa.catatanAkhir}"\n`;
+      csv += `${idx + 1},"${siswa.namaLengkap}",`;
+      csv += `${siswa.totalHadir},`;
+      csv += `${siswa.totalTidakHadir},`;
+      csv += `${siswa.rataRataTajwid},`;
+      csv += `${siswa.rataRataKelancaran},`;
+      csv += `${siswa.rataRataMakhraj},`;
+      csv += `${siswa.rataRataImplementasi},`;
+      csv += `"${siswa.statusHafalan}",`;
+      csv += `"${siswa.catatanAkhir}"\n`;
     });
   }
 
-  // Convert CSV to base64 for download
-  const base64Data = Buffer.from(csv).toString('base64');
+  return csv;
+}
 
-  return {
-    url: `data:text/csv;base64,${base64Data}`,
-    filename: `laporan-${viewMode}-${Date.now()}.csv`,
-    csv,
-  };
+// Generate PDF HTML template
+function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
+  const now = new Date().toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  let modeTitle = '';
+  if (viewMode === 'harian') modeTitle = 'Laporan Harian/Mingguan';
+  else if (viewMode === 'bulanan') modeTitle = 'Laporan Rekap Bulanan';
+  else modeTitle = 'Laporan Rekap Semesteran';
+
+  let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${modeTitle} - ${now}</title>
+  <style>
+    @page { size: landscape; margin: 1cm; }
+    @media print {
+      body { margin: 0; }
+      .no-print { display: none; }
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #1B1B1B;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 3px solid #1A936F;
+      padding-bottom: 20px;
+    }
+    .header h1 {
+      color: #1A936F;
+      margin: 0 0 10px 0;
+      font-size: 24px;
+    }
+    .header h2 {
+      color: #444444;
+      margin: 0;
+      font-size: 18px;
+      font-weight: normal;
+    }
+    .meta-info {
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #6B7280;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 11px;
+    }
+    th {
+      background: linear-gradient(135deg, #1A936F 0%, #059669 100%);
+      color: white;
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #1A936F;
+    }
+    th.center, td.center {
+      text-align: center;
+    }
+    td {
+      padding: 10px 8px;
+      border: 1px solid #E5E7EB;
+    }
+    tr:nth-child(even) {
+      background-color: #F9FAFB;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .badge-hadir {
+      background: #D1FAE5;
+      color: #047857;
+    }
+    .badge-sakit, .badge-izin {
+      background: #FDE68A;
+      color: #B45309;
+    }
+    .badge-alfa {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+    .nilai-excellent {
+      color: #1A936F;
+      font-weight: 700;
+    }
+    .nilai-good {
+      color: #F7C873;
+      font-weight: 700;
+    }
+    .nilai-fair {
+      color: #D97706;
+      font-weight: 700;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: right;
+      font-size: 12px;
+    }
+    .signature {
+      margin-top: 60px;
+      text-align: right;
+    }
+    .signature-line {
+      border-top: 1px solid #1B1B1B;
+      width: 200px;
+      display: inline-block;
+      margin-top: 50px;
+    }
+    .button-print {
+      background: #1A936F;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .button-print:hover {
+      background: #047857;
+    }
+  </style>
+</head>
+<body>
+  <button class="button-print no-print" onclick="window.print()">Cetak PDF</button>
+
+  <div class="header">
+    <h1>TAHFIDZ QURAN - MAN SATU BALAM</h1>
+    <h2>${modeTitle}</h2>
+  </div>
+
+  <div class="meta-info">
+    <strong>Guru:</strong> ${guru.user.name} |
+    <strong>Periode:</strong> ${periode.replace('-', ' ').toUpperCase()} |
+    <strong>Tanggal Cetak:</strong> ${now}
+  </div>
+
+  <table>
+    <thead>
+      <tr>`;
+
+  if (viewMode === 'harian') {
+    html += `
+        <th style="width: 5%;">No</th>
+        <th style="width: 20%;">Nama Lengkap</th>
+        <th class="center" style="width: 10%;">Tanggal</th>
+        <th class="center" style="width: 10%;">Status Kehadiran</th>
+        <th class="center" style="width: 8%;">Tajwid</th>
+        <th class="center" style="width: 8%;">Kelancaran</th>
+        <th class="center" style="width: 8%;">Makhraj</th>
+        <th class="center" style="width: 8%;">Implementasi</th>
+        <th class="center" style="width: 8%;">Status</th>
+        <th style="width: 15%;">Catatan</th>`;
+  } else {
+    html += `
+        <th style="width: 5%;">No</th>
+        <th style="width: 25%;">Nama Lengkap</th>
+        <th class="center" style="width: 8%;">Hadir</th>
+        <th class="center" style="width: 8%;">Tidak Hadir</th>
+        <th class="center" style="width: 8%;">Avg Tajwid</th>
+        <th class="center" style="width: 8%;">Avg Kelancaran</th>
+        <th class="center" style="width: 8%;">Avg Makhraj</th>
+        <th class="center" style="width: 8%;">Avg Impl.</th>
+        <th class="center" style="width: 8%;">Status</th>
+        <th style="width: 14%;">Catatan</th>`;
+  }
+
+  html += `
+      </tr>
+    </thead>
+    <tbody>`;
+
+  data.forEach((siswa, idx) => {
+    html += '<tr>';
+
+    if (viewMode === 'harian') {
+      const p = siswa.pertemuan;
+      html += `<td>${idx + 1}</td>`;
+      html += `<td>${siswa.namaLengkap}</td>`;
+      html += `<td class="center">${p ? new Date(p.tanggal).toLocaleDateString('id-ID', {day: '2-digit', month: 'short'}) : '-'}</td>`;
+      html += `<td class="center">`;
+      if (p) {
+        const badgeClass = p.statusKehadiran === 'HADIR' ? 'badge-hadir' :
+                          (p.statusKehadiran === 'SAKIT' || p.statusKehadiran === 'IZIN') ? 'badge-sakit' : 'badge-alfa';
+        html += `<span class="badge ${badgeClass}">${p.statusKehadiran}</span>`;
+      } else {
+        html += '-';
+      }
+      html += `</td>`;
+      html += `<td class="center ${getNilaiClass(p?.nilaiTajwid)}">${p?.nilaiTajwid || '-'}</td>`;
+      html += `<td class="center ${getNilaiClass(p?.nilaiKelancaran)}">${p?.nilaiKelancaran || '-'}</td>`;
+      html += `<td class="center ${getNilaiClass(p?.nilaiMakhraj)}">${p?.nilaiMakhraj || '-'}</td>`;
+      html += `<td class="center ${getNilaiClass(p?.nilaiImplementasi)}">${p?.nilaiImplementasi || '-'}</td>`;
+      html += `<td class="center">${p?.statusHafalan || '-'}</td>`;
+      html += `<td style="font-size: 10px;">${p?.catatan || '-'}</td>`;
+    } else {
+      html += `<td>${idx + 1}</td>`;
+      html += `<td>${siswa.namaLengkap}</td>`;
+      html += `<td class="center" style="color: #1A936F; font-weight: 700;">${siswa.totalHadir}</td>`;
+      html += `<td class="center" style="color: #D97706; font-weight: 700;">${siswa.totalTidakHadir}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataTajwid)}">${siswa.rataRataTajwid.toFixed(1)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataKelancaran)}">${siswa.rataRataKelancaran.toFixed(1)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataMakhraj)}">${siswa.rataRataMakhraj.toFixed(1)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataImplementasi)}">${siswa.rataRataImplementasi.toFixed(1)}</td>`;
+      html += `<td class="center">${siswa.statusHafalan}</td>`;
+      html += `<td style="font-size: 10px;">${siswa.catatanAkhir}</td>`;
+    }
+
+    html += '</tr>';
+  });
+
+  html += `
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <p><strong>Total Siswa:</strong> ${data.length}</p>
+  </div>
+
+  <div class="signature">
+    <p>Guru Tahfidz</p>
+    <div class="signature-line"></div>
+    <p style="margin-top: 5px;">( ${guru.user.name} )</p>
+  </div>
+</body>
+</html>`;
+
+  return html;
+}
+
+// Helper function to get CSS class for nilai
+function getNilaiClass(nilai) {
+  if (!nilai) return '';
+  if (nilai >= 90) return 'nilai-excellent';
+  if (nilai >= 80) return 'nilai-good';
+  return 'nilai-fair';
 }
