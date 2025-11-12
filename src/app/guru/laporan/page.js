@@ -53,11 +53,12 @@ export default function LaporanGuruPage() {
   const [viewMode, setViewMode] = useState('harian'); // harian, bulanan, semesteran
   const [selectedKelas, setSelectedKelas] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('bulan-ini');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // For harian mode date picker
   const [laporanData, setLaporanData] = useState([]);
 
   useEffect(() => {
     fetchLaporanData();
-  }, [viewMode, selectedKelas, selectedPeriod]);
+  }, [viewMode, selectedKelas, selectedPeriod, selectedDate]);
 
   const fetchLaporanData = async () => {
     setLoading(true);
@@ -69,6 +70,11 @@ export default function LaporanGuruPage() {
 
       if (selectedKelas) {
         params.append('kelasId', selectedKelas);
+      }
+
+      // Add selected date for harian mode
+      if (viewMode === 'harian' && selectedDate) {
+        params.append('tanggal', selectedDate);
       }
 
       const response = await fetch(`/api/guru/laporan?${params.toString()}`);
@@ -238,6 +244,25 @@ export default function LaporanGuruPage() {
     if (nilai >= 80) return colors.amber[400];
     if (nilai >= 70) return colors.amber[600];
     return colors.gray[500];
+  };
+
+  // Helper function untuk format angka (bulat jika tidak pecahan, koma jika pecahan)
+  const formatNilai = (nilai) => {
+    if (nilai == null) return '-';
+    const rounded = Math.round(nilai);
+    // Jika nilai sama dengan nilai bulatannya, tampilkan bulat
+    if (Math.abs(nilai - rounded) < 0.01) {
+      return rounded.toString();
+    }
+    // Jika ada pecahan, tampilkan dengan 1 desimal
+    return nilai.toFixed(1);
+  };
+
+  // Helper function untuk hitung rata-rata
+  const hitungRataRata = (tajwid, kelancaran, makhraj, implementasi) => {
+    const values = [tajwid, kelancaran, makhraj, implementasi].filter(v => v != null);
+    if (values.length === 0) return null;
+    return values.reduce((sum, v) => sum + v, 0) / values.length;
   };
 
   const getStatusKehadiranBadge = (status) => {
@@ -561,9 +586,41 @@ export default function LaporanGuruPage() {
             {/* Filter Section */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridTemplateColumns: viewMode === 'harian' ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
               gap: '16px',
             }}>
+              {viewMode === 'harian' && (
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    marginBottom: '8px',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                  }}>
+                    Tanggal Pertemuan
+                  </label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      border: `2px solid ${colors.emerald[200]}`,
+                      borderRadius: '12px',
+                      outline: 'none',
+                      fontFamily: 'Poppins, system-ui, sans-serif',
+                      background: colors.white,
+                      cursor: 'pointer',
+                      color: colors.text.primary,
+                    }}
+                  />
+                </div>
+              )}
+
               <div>
                 <label style={{
                   display: 'block',
@@ -573,7 +630,7 @@ export default function LaporanGuruPage() {
                   marginBottom: '8px',
                   fontFamily: 'Poppins, system-ui, sans-serif',
                 }}>
-                  Periode
+                  {viewMode === 'harian' ? 'Bulan' : 'Periode'}
                 </label>
                 <select
                   value={selectedPeriod}
@@ -708,45 +765,58 @@ export default function LaporanGuruPage() {
                     <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Kelancaran</th>
                     <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Makhraj</th>
                     <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Implementasi</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', background: `${colors.emerald[50]}` }}>Rata-rata Nilai</th>
                     <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Hafalan</th>
                     <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Catatan Akhir</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {laporanData.map((siswa, idx) => (
-                    <tr key={siswa.siswaId} style={{ borderBottom: `1px solid ${colors.gray[200]}` }}>
-                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {idx + 1}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.namaLengkap}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.emerald[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.totalHadir || 0}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.totalTidakHadir || 0}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataTajwid), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataTajwid != null ? siswa.rataRataTajwid.toFixed(1) : '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataKelancaran), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataKelancaran != null ? siswa.rataRataKelancaran.toFixed(1) : '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataMakhraj), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataMakhraj != null ? siswa.rataRataMakhraj.toFixed(1) : '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataImplementasi), fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.rataRataImplementasi != null ? siswa.rataRataImplementasi.toFixed(1) : '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.statusHafalan || '-'}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: '13px', color: colors.text.tertiary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                        {siswa.catatanAkhir || '-'}
-                      </td>
-                    </tr>
-                  ))}
+                  {laporanData.map((siswa, idx) => {
+                    const rataRataNilai = hitungRataRata(
+                      siswa.rataRataTajwid,
+                      siswa.rataRataKelancaran,
+                      siswa.rataRataMakhraj,
+                      siswa.rataRataImplementasi
+                    );
+
+                    return (
+                      <tr key={siswa.siswaId} style={{ borderBottom: `1px solid ${colors.gray[200]}` }}>
+                        <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {idx + 1}
+                        </td>
+                        <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {siswa.namaLengkap}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.emerald[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {siswa.totalHadir || 0}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {siswa.totalTidakHadir || 0}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataTajwid), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {formatNilai(siswa.rataRataTajwid)}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataKelancaran), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {formatNilai(siswa.rataRataKelancaran)}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataMakhraj), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {formatNilai(siswa.rataRataMakhraj)}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataImplementasi), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {formatNilai(siswa.rataRataImplementasi)}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '15px', fontWeight: 700, color: getNilaiColor(rataRataNilai), fontFamily: 'Poppins, system-ui, sans-serif', background: `${colors.emerald[50]}` }}>
+                          {formatNilai(rataRataNilai)}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {siswa.statusHafalan || '-'}
+                        </td>
+                        <td style={{ padding: '16px', fontSize: '13px', color: colors.text.tertiary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                          {siswa.catatanAkhir || '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
