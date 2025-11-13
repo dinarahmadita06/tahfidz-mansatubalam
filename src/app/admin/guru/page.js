@@ -296,7 +296,7 @@ export default function AdminGuruPage() {
           backgroundSize: '60px 60px',
           pointerEvents: 'none',
           opacity: 0.3,
-          zIndex: 0,
+          zIndex: 'auto',
         }} />
 
         {/* Header */}
@@ -306,7 +306,7 @@ export default function AdminGuruPage() {
           borderBottom: `1px solid ${colors.gray[200]}`,
           background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
           backdropFilter: 'blur(10px)',
-          zIndex: 2,
+          zIndex: 1,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
@@ -348,7 +348,7 @@ export default function AdminGuruPage() {
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
+        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 1 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
             {/* Stats Cards */}
