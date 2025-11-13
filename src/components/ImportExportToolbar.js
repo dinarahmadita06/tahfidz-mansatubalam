@@ -371,7 +371,7 @@ export default function ImportExportToolbar({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 9999,
+          zIndex: 999999,
           padding: '20px',
           animation: 'fadeIn 0.3s ease-out'
         }}>
