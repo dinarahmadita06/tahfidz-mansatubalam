@@ -227,10 +227,11 @@ export default function ImportExportToolbar({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 999999,
+      zIndex: 2147483647,
       padding: '20px',
       animation: 'fadeIn 0.3s ease-out',
-      overflow: 'auto'
+      overflow: 'auto',
+      isolation: 'isolate'
     }}>
       <div style={{
         background: colors.white,
@@ -240,6 +241,7 @@ export default function ImportExportToolbar({
         width: '100%',
         boxShadow: '0 24px 60px rgba(0, 0, 0, 0.2)',
         position: 'relative',
+        zIndex: 2147483647,
         fontFamily: "'Poppins', sans-serif",
         animation: 'modalSlideUp 0.4s ease-out',
         maxHeight: '90vh',
