@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronLeft, Download, Search, TrendingUp, Users, BookOpen, Award } from 'lucide-react';
+import GuruLayout from '@/components/layout/GuruLayout';
 
 export default function LaporanProgresPage() {
   const router = useRouter();
@@ -142,17 +143,20 @@ export default function LaporanProgresPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f0fdf4' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-4 text-emerald-600 font-semibold">Memuat data...</p>
+      <GuruLayout>
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f0fdf4' }}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600 mx-auto"></div>
+            <p className="mt-4 text-emerald-600 font-semibold">Memuat data...</p>
+          </div>
         </div>
-      </div>
+      </GuruLayout>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f0fdf4', fontFamily: 'Poppins, sans-serif' }}>
+    <GuruLayout>
+      <div className="min-h-screen" style={{ backgroundColor: '#f0fdf4', fontFamily: 'Poppins, sans-serif' }}>
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -347,5 +351,6 @@ export default function LaporanProgresPage() {
         </div>
       </div>
     </div>
+    </GuruLayout>
   );
 }
