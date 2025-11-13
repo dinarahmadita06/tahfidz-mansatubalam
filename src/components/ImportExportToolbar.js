@@ -366,263 +366,674 @@ export default function ImportExportToolbar({
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(4px)',
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 9999,
-          padding: '20px'
+          padding: '20px',
+          animation: 'fadeIn 0.3s ease-out'
         }}>
           <div style={{
             background: colors.white,
             borderRadius: '24px',
-            padding: '32px',
-            maxWidth: '500px',
+            padding: '0',
+            maxWidth: '600px',
             width: '100%',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.2)',
             position: 'relative',
-            fontFamily: "'Poppins', sans-serif"
+            fontFamily: "'Poppins', sans-serif",
+            animation: 'modalSlideUp 0.4s ease-out',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
-            {/* Ornamen Islami */}
+            {/* Header dengan Gradient */}
             <div style={{
-              position: 'absolute',
-              bottom: '20px',
-              right: '20px',
-              width: '80px',
-              height: '80px',
-              background: `radial-gradient(circle, ${colors.emerald[100]} 0%, transparent 70%)`,
-              opacity: 0.4,
-              borderRadius: '50%',
-              pointerEvents: 'none'
-            }}></div>
-
-            {/* Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '24px'
+              background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+              padding: '28px 32px',
+              borderRadius: '24px 24px 0 0',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: colors.gray[600],
-                margin: 0
-              }}>
-                Import Data {kategoriDisplay}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowImportModal(false);
-                  setSelectedFile(null);
-                  setImportResult(null);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  color: colors.gray[400],
-                  transition: 'color 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.color = colors.gray[600]}
-                onMouseOut={(e) => e.currentTarget.style.color = colors.gray[400]}
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* File Input */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: colors.gray[600],
-                marginBottom: '8px'
-              }}>
-                File Excel (.xlsx, .csv)
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileSelect}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: `2px solid ${colors.gray[200]}`,
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontFamily: "'Poppins', sans-serif",
-                  cursor: 'pointer'
-                }}
-              />
-              {selectedFile && (
-                <p style={{
-                  marginTop: '8px',
-                  fontSize: '12px',
-                  color: colors.emerald[600],
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                  <CheckCircle size={14} />
-                  {selectedFile.name}
-                </p>
-              )}
-            </div>
-
-            {/* Checkbox */}
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: colors.gray[600]
-              }}>
-                <input
-                  type="checkbox"
-                  checked={autoCreateAccount}
-                  onChange={(e) => setAutoCreateAccount(e.target.checked)}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span>Buat akun otomatis setelah import</span>
-              </label>
-            </div>
-
-            {/* Import Result */}
-            {importResult && (
+              {/* Ornamen Pattern */}
               <div style={{
-                marginBottom: '20px',
-                padding: '16px',
-                borderRadius: '12px',
-                background: importResult.success ? colors.emerald[50] : '#FEE2E2',
-                border: `2px solid ${importResult.success ? colors.emerald[200] : '#FCA5A5'}`,
+                position: 'absolute',
+                top: '-20px',
+                right: '-20px',
+                width: '120px',
+                height: '120px',
+                background: `radial-gradient(circle, ${colors.white}15 0%, transparent 70%)`,
+                borderRadius: '50%',
+                pointerEvents: 'none'
+              }}></div>
+
+              <div style={{
                 display: 'flex',
                 alignItems: 'start',
-                gap: '12px'
+                justifyContent: 'space-between',
+                position: 'relative',
+                zIndex: 1
               }}>
-                {importResult.success ? (
-                  <CheckCircle size={20} color={colors.emerald[600]} />
-                ) : (
-                  <AlertCircle size={20} color="#DC2626" />
-                )}
-                <div style={{ flex: 1 }}>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: importResult.success ? colors.emerald[700] : '#DC2626'
+                <div style={{ flex: 1, paddingRight: '20px' }}>
+                  <h2 style={{
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    color: colors.white,
+                    margin: '0 0 8px 0',
+                    letterSpacing: '0.3px'
                   }}>
-                    {importResult.message}
+                    📥 Import Data {kategoriDisplay} dari Excel/CSV
+                  </h2>
+                  <p style={{
+                    fontSize: '14px',
+                    color: `${colors.white}90`,
+                    margin: 0,
+                    lineHeight: '1.6'
+                  }}>
+                    {kategori === 'guru' && 'Gunakan template Excel (.xlsx) atau CSV yang berisi nama, email, NIP, mata pelajaran, dan kelas binaan guru.'}
+                    {kategori === 'siswa' && 'Gunakan template Excel (.xlsx) atau CSV yang berisi nama, email, NIS, kelas, dan data siswa lainnya.'}
+                    {kategori === 'orangtua' && 'Gunakan template Excel (.xlsx) atau CSV yang berisi nama, email, no. telepon, dan hubungan dengan siswa.'}
                   </p>
-                  {importResult.stats && (
-                    <p style={{
-                      margin: '8px 0 0 0',
-                      fontSize: '12px',
-                      color: colors.gray[600]
-                    }}>
-                      Berhasil: {importResult.stats.success} | Gagal: {importResult.stats.failed}
-                    </p>
-                  )}
                 </div>
+                <button
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setSelectedFile(null);
+                    setImportResult(null);
+                  }}
+                  style={{
+                    background: `${colors.white}20`,
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    padding: '10px',
+                    color: colors.white,
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = `${colors.white}30`;
+                    e.currentTarget.style.transform = 'rotate(90deg)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = `${colors.white}20`;
+                    e.currentTarget.style.transform = 'rotate(0deg)';
+                  }}
+                >
+                  <X size={20} />
+                </button>
               </div>
-            )}
+            </div>
 
-            {/* Progress Bar */}
-            {importing && (
-              <div style={{ marginBottom: '20px' }}>
+            {/* Content Area */}
+            <div style={{ padding: '32px' }}>
+              {/* Download Template Button */}
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.amber[50]} 0%, ${colors.amber[100]} 100%)`,
+                border: `2px solid ${colors.amber[200]}`,
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px'
+              }}>
                 <div style={{
-                  width: '100%',
-                  height: '4px',
-                  background: colors.gray[200],
-                  borderRadius: '2px',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    width: '100%',
-                    height: '100%',
-                    background: `linear-gradient(90deg, ${colors.emerald[500]}, ${colors.emerald[600]})`,
-                    animation: 'progress 1.5s ease-in-out infinite'
-                  }}></div>
-                </div>
-              </div>
-            )}
-
-            {/* Buttons */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => {
-                  setShowImportModal(false);
-                  setSelectedFile(null);
-                  setImportResult(null);
-                }}
-                disabled={importing}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: colors.gray[100],
-                  color: colors.gray[600],
-                  border: 'none',
+                  width: '48px',
+                  height: '48px',
                   borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: importing ? 'not-allowed' : 'pointer',
-                  opacity: importing ? 0.5 : 1,
-                  fontFamily: "'Poppins', sans-serif"
-                }}
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleImport}
-                disabled={!selectedFile || importing}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: (!selectedFile || importing)
-                    ? colors.gray[200]
-                    : `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: (!selectedFile || importing) ? 'not-allowed' : 'pointer',
+                  background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  fontFamily: "'Poppins', sans-serif"
-                }}
-              >
-                {importing ? (
-                  <>
-                    <Loader size={16} className="animate-spin" />
-                    Mengimport...
-                  </>
-                ) : (
-                  <>
-                    <Upload size={16} />
-                    Upload
-                  </>
-                )}
-              </button>
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)'
+                }}>
+                  <Download size={24} color={colors.white} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: colors.amber[900],
+                    margin: '0 0 4px 0'
+                  }}>
+                    Belum punya template?
+                  </p>
+                  <p style={{
+                    fontSize: '12px',
+                    color: colors.amber[700],
+                    margin: 0
+                  }}>
+                    Download template Excel untuk format yang benar
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    // Generate template
+                    const templateData = kategori === 'guru'
+                      ? [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'guru@example.com', 'NIP': '1234567890', 'Mata Pelajaran': 'Tahfidz', 'No. Telepon': '08123456789' }]
+                      : kategori === 'siswa'
+                      ? [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'siswa@example.com', 'NIS': '1234567890', 'Kelas': '10A', 'Tanggal Lahir': '2005-01-01', 'Jenis Kelamin': 'L', 'Alamat': 'Alamat lengkap' }]
+                      : [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'orangtua@example.com', 'No. Telepon': '08123456789', 'Hubungan': 'Ayah', 'Nama Siswa': 'Nama Anak' }];
+
+                    const ws = XLSX.utils.json_to_sheet(templateData);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+                    XLSX.writeFile(wb, `Template_${kategoriDisplay}.xlsx`);
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    background: `linear-gradient(135deg, ${colors.amber[500]} 0%, ${colors.amber[600]} 100%)`,
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.2)';
+                  }}
+                >
+                  <Download size={16} />
+                  Download Template
+                </button>
+              </div>
+
+              {/* File Upload Area */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: colors.gray[600],
+                  marginBottom: '12px'
+                }}>
+                  📎 Pilih File Excel atau CSV
+                </label>
+
+                {/* Custom File Input */}
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    border: `2px dashed ${selectedFile ? colors.emerald[300] : colors.gray[300]}`,
+                    borderRadius: '16px',
+                    padding: '32px 24px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    background: selectedFile ? `${colors.emerald[50]}40` : colors.gray[50]
+                  }}
+                  onMouseOver={(e) => {
+                    if (!selectedFile) {
+                      e.currentTarget.style.borderColor = colors.emerald[400];
+                      e.currentTarget.style.background = `${colors.emerald[50]}30`;
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!selectedFile) {
+                      e.currentTarget.style.borderColor = colors.gray[300];
+                      e.currentTarget.style.background = colors.gray[50];
+                    }
+                  }}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                  />
+
+                  {selectedFile ? (
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}>
+                      <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '14px',
+                        background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 6px 16px rgba(26, 147, 111, 0.25)'
+                      }}>
+                        <CheckCircle size={28} color={colors.white} />
+                      </div>
+                      <div>
+                        <p style={{
+                          fontSize: '15px',
+                          fontWeight: 600,
+                          color: colors.emerald[700],
+                          margin: '0 0 4px 0'
+                        }}>
+                          {selectedFile.name}
+                        </p>
+                        <p style={{
+                          fontSize: '12px',
+                          color: colors.emerald[600],
+                          margin: 0
+                        }}>
+                          {(selectedFile.size / 1024).toFixed(2)} KB • Klik untuk mengganti file
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}>
+                      <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '14px',
+                        background: colors.gray[200],
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Upload size={28} color={colors.gray[500]} />
+                      </div>
+                      <div>
+                        <p style={{
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: colors.gray[700],
+                          margin: '0 0 4px 0'
+                        }}>
+                          Klik untuk memilih file
+                        </p>
+                        <p style={{
+                          fontSize: '12px',
+                          color: colors.gray[500],
+                          margin: 0
+                        }}>
+                          Format: .xlsx, .xls, atau .csv (Max. 5MB)
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Auto Create Account Checkbox */}
+              <div style={{
+                marginBottom: '24px',
+                padding: '16px',
+                background: colors.emerald[50],
+                border: `2px solid ${colors.emerald[200]}`,
+                borderRadius: '12px'
+              }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  color: colors.gray[700]
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={autoCreateAccount}
+                    onChange={(e) => setAutoCreateAccount(e.target.checked)}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      cursor: 'pointer',
+                      accentColor: colors.emerald[600]
+                    }}
+                  />
+                  <div>
+                    <span style={{ fontWeight: 600 }}>Buat akun otomatis setelah import</span>
+                    <p style={{
+                      fontSize: '12px',
+                      color: colors.emerald[700],
+                      margin: '4px 0 0 0'
+                    }}>
+                      Sistem akan otomatis membuat akun login untuk setiap data yang berhasil diimport
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Upload Progress */}
+              {importing && (
+                <div style={{
+                  marginBottom: '24px',
+                  padding: '20px',
+                  background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.emerald[100]} 100%)`,
+                  border: `2px solid ${colors.emerald[200]}`,
+                  borderRadius: '16px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '12px'
+                  }}>
+                    <Loader size={20} color={colors.emerald[600]} className="animate-spin" />
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: colors.emerald[700],
+                      margin: 0
+                    }}>
+                      File sedang diunggah dan diproses...
+                    </p>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '6px',
+                    background: colors.emerald[200],
+                    borderRadius: '3px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: `linear-gradient(90deg, ${colors.emerald[500]}, ${colors.emerald[600]}, ${colors.emerald[500]})`,
+                      backgroundSize: '200% 100%',
+                      animation: 'progressMove 1.5s ease-in-out infinite'
+                    }}></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Import Result */}
+              {importResult && (
+                <div style={{
+                  marginBottom: '24px',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  background: importResult.success
+                    ? `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.emerald[100]} 100%)`
+                    : 'linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)',
+                  border: `2px solid ${importResult.success ? colors.emerald[300] : '#FCA5A5'}`,
+                  boxShadow: importResult.success
+                    ? '0 4px 12px rgba(26, 147, 111, 0.15)'
+                    : '0 4px 12px rgba(220, 38, 38, 0.15)'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'start',
+                    gap: '16px'
+                  }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: importResult.success
+                        ? `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+                        : 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: importResult.success
+                        ? '0 4px 12px rgba(26, 147, 111, 0.25)'
+                        : '0 4px 12px rgba(220, 38, 38, 0.25)'
+                    }}>
+                      {importResult.success ? (
+                        <CheckCircle size={24} color={colors.white} />
+                      ) : (
+                        <AlertCircle size={24} color={colors.white} />
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{
+                        margin: '0 0 8px 0',
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        color: importResult.success ? colors.emerald[800] : '#991B1B'
+                      }}>
+                        {importResult.success ? '🎉 Import Berhasil!' : '⚠️ Import Gagal'}
+                      </p>
+                      <p style={{
+                        margin: '0 0 12px 0',
+                        fontSize: '14px',
+                        color: importResult.success ? colors.emerald[700] : '#DC2626',
+                        lineHeight: '1.5'
+                      }}>
+                        {importResult.message}
+                      </p>
+                      {importResult.stats && (
+                        <div style={{
+                          display: 'flex',
+                          gap: '16px',
+                          marginBottom: '12px'
+                        }}>
+                          <div style={{
+                            padding: '8px 12px',
+                            background: colors.white,
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                          }}>
+                            <p style={{
+                              fontSize: '11px',
+                              color: colors.gray[600],
+                              margin: '0 0 2px 0',
+                              textTransform: 'uppercase',
+                              fontWeight: 600,
+                              letterSpacing: '0.5px'
+                            }}>
+                              Berhasil
+                            </p>
+                            <p style={{
+                              fontSize: '18px',
+                              fontWeight: 700,
+                              color: colors.emerald[600],
+                              margin: 0
+                            }}>
+                              {importResult.stats.success}
+                            </p>
+                          </div>
+                          <div style={{
+                            padding: '8px 12px',
+                            background: colors.white,
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                          }}>
+                            <p style={{
+                              fontSize: '11px',
+                              color: colors.gray[600],
+                              margin: '0 0 2px 0',
+                              textTransform: 'uppercase',
+                              fontWeight: 600,
+                              letterSpacing: '0.5px'
+                            }}>
+                              Gagal
+                            </p>
+                            <p style={{
+                              fontSize: '18px',
+                              fontWeight: 700,
+                              color: '#DC2626',
+                              margin: 0
+                            }}>
+                              {importResult.stats.failed}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {importResult.success && (
+                        <button
+                          onClick={() => {
+                            setShowImportModal(false);
+                            setSelectedFile(null);
+                            setImportResult(null);
+                            if (onImportSuccess) onImportSuccess();
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                            color: colors.white,
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.3)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.2)';
+                          }}
+                        >
+                          <CheckCircle size={16} />
+                          Lihat Data {kategoriDisplay}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setSelectedFile(null);
+                    setImportResult(null);
+                  }}
+                  disabled={importing}
+                  style={{
+                    flex: 1,
+                    padding: '14px 24px',
+                    background: colors.white,
+                    color: colors.gray[700],
+                    border: `2px solid ${colors.gray[300]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: importing ? 'not-allowed' : 'pointer',
+                    opacity: importing ? 0.5 : 1,
+                    fontFamily: "'Poppins', sans-serif",
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    if (!importing) {
+                      e.currentTarget.style.background = colors.gray[50];
+                      e.currentTarget.style.borderColor = colors.gray[400];
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = colors.white;
+                    e.currentTarget.style.borderColor = colors.gray[300];
+                  }}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleImport}
+                  disabled={!selectedFile || importing}
+                  style={{
+                    flex: 1,
+                    padding: '14px 24px',
+                    background: (!selectedFile || importing)
+                      ? colors.gray[300]
+                      : `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: (!selectedFile || importing) ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontFamily: "'Poppins', sans-serif",
+                    transition: 'all 0.3s ease',
+                    boxShadow: (!selectedFile || importing)
+                      ? 'none'
+                      : '0 4px 12px rgba(26, 147, 111, 0.25)'
+                  }}
+                  onMouseOver={(e) => {
+                    if (selectedFile && !importing) {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.35)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.25)';
+                  }}
+                >
+                  {importing ? (
+                    <>
+                      <Loader size={18} className="animate-spin" />
+                      Mengimport Data...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={18} />
+                      Mulai Import
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* Style for progress animation */}
+            {/* Style for animations */}
             <style jsx>{`
-              @keyframes progress {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+
+              @keyframes modalSlideUp {
+                from {
+                  opacity: 0;
+                  transform: translateY(30px) scale(0.95);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0) scale(1);
+                }
+              }
+
+              @keyframes progressMove {
+                0% { background-position: 0% 0%; }
+                100% { background-position: 200% 0%; }
+              }
+
+              .animate-spin {
+                animation: spin 1s linear infinite;
+              }
+
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
               }
             `}</style>
           </div>
