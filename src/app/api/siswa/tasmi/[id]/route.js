@@ -92,12 +92,12 @@ export async function PUT(request, { params }) {
 
     const { id } = params;
     const body = await request.json();
-    const { jumlahHafalan, juzYangDitasmi, jamTasmi, tanggalTasmi, catatan } = body;
+    const { jumlahHafalan, juzYangDitasmi, guruId, jamTasmi, tanggalTasmi, catatan } = body;
 
     // Validation
-    if (!jumlahHafalan || !juzYangDitasmi || !jamTasmi || !tanggalTasmi) {
+    if (!jumlahHafalan || !juzYangDitasmi || !jamTasmi || !tanggalTasmi || !guruId) {
       return NextResponse.json(
-        { message: 'Semua field wajib diisi (jumlah hafalan, juz yang ditasmi, jam, dan tanggal)' },
+        { message: 'Semua field wajib diisi (jumlah hafalan, juz yang ditasmi, jam, tanggal, dan guru)' },
         { status: 400 }
       );
     }
@@ -160,8 +160,17 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Get guru pengampu dari kelas
-    const guruPengampuId = siswa.kelas?.guruKelas[0]?.guruId || null;
+    // Verify that the selected guru exists
+    const guruExists = await prisma.guru.findUnique({
+      where: { id: guruId },
+    });
+
+    if (!guruExists) {
+      return NextResponse.json(
+        { message: 'Guru yang dipilih tidak valid' },
+        { status: 400 }
+      );
+    }
 
     // Update tasmi
     const updatedTasmi = await prisma.tasmi.update({
@@ -171,7 +180,7 @@ export async function PUT(request, { params }) {
         juzYangDitasmi,
         jamTasmi,
         tanggalTasmi: new Date(tanggalTasmi),
-        guruPengampuId,
+        guruPengampuId: guruId,
         catatan,
         statusPendaftaran: 'MENUNGGU', // Reset status ke MENUNGGU saat diedit
         catatanPenolakan: null, // Clear catatan penolakan

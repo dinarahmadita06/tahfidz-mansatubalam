@@ -11,12 +11,12 @@ import {
   CheckCircle,
   Star,
   Sparkles,
-  Heart,
   BookMarked,
   Calendar,
   X
 } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import MotivationalCard from '@/components/MotivationalCard';
 
 export default function TargetHafalanSiswaPage() {
   const { data: session } = useSession();
@@ -144,15 +144,11 @@ export default function TargetHafalanSiswaPage() {
               </div>
               <h2 className="text-2xl font-bold text-white">Target Hafalanku</h2>
             </div>
-            <p className="text-white/90 text-lg leading-relaxed font-medium italic">
-              "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ"
-            </p>
-            <p className="text-white/80 mt-2">
-              "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya"
-            </p>
-            <p className="text-white/70 text-sm mt-1">— HR. Bukhari</p>
           </div>
         </div>
+
+        {/* Motivational Card - Slider */}
+        <MotivationalCard theme="emerald" className="mb-8" />
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -293,31 +289,6 @@ export default function TargetHafalanSiswaPage() {
                        targetData.progressPercentage >= 50 ? 'Tetap Semangat!' :
                        'Ayo Tingkatkan!'}
                     </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Motivational Card */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-3xl p-8 shadow-lg border border-purple-200/50">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Heart className="text-white" size={24} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-purple-900 mb-3 text-xl flex items-center gap-2">
-                    <Sparkles size={20} className="text-purple-600" />
-                    Terus Semangat!
-                  </h3>
-                  <p className="text-purple-800 leading-relaxed mb-4">
-                    Setiap ayat yang kamu hafal adalah investasi untuk akhirat. Konsisten sedikit demi sedikit
-                    lebih baik daripada banyak tapi tidak istiqomah. Semoga Allah mudahkan hafalanmu! 🤲
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-purple-700">
-                    <Award size={18} />
-                    <span className="font-semibold">
-                      Target tercapai {Math.round(targetData.progressPercentage)}% dari total target!
-                    </span>
                   </div>
                 </div>
               </div>

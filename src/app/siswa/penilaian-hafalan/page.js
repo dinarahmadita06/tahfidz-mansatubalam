@@ -69,7 +69,7 @@ export default function PenilaianHafalanPage() {
         tajwid: 90,
         kelancaran: 85,
         makhraj: 88,
-        adab: 95,
+        implementasi: 95,
       },
       nilaiTotal: 88,
       catatan: 'Masya Allah, bacaan tajwid sangat baik. Pertahankan kelancaran dan terus tingkatkan makhraj huruf hijaiyah. Semangat!',
@@ -85,7 +85,7 @@ export default function PenilaianHafalanPage() {
         tajwid: 85,
         kelancaran: 80,
         makhraj: 75,
-        adab: 90,
+        implementasi: 90,
       },
       nilaiTotal: 82,
       catatan: 'Bacaan sudah cukup baik. Perlu perbaikan pada makhraj huruf di ayat 3-4. Latihan lebih fokus pada huruf-huruf yang keluar dari tenggorokan.',
@@ -101,7 +101,7 @@ export default function PenilaianHafalanPage() {
         tajwid: 88,
         kelancaran: 90,
         makhraj: 85,
-        adab: 92,
+        implementasi: 92,
       },
       nilaiTotal: 89,
       catatan: 'Alhamdulillah, hafalan sangat lancar. Tajwid dan adab sudah bagus sekali. Tingkatkan lagi untuk hafalan berikutnya.',
@@ -117,7 +117,7 @@ export default function PenilaianHafalanPage() {
         tajwid: 82,
         kelancaran: 78,
         makhraj: 80,
-        adab: 88,
+        implementasi: 88,
       },
       nilaiTotal: 82,
       catatan: 'Bacaan cukup baik namun masih ada beberapa kesalahan kecil pada tajwid. Perlu latihan lebih rutin.',
@@ -150,8 +150,8 @@ export default function PenilaianHafalanPage() {
     penilaianData.reduce((sum, item) => sum + item.nilaiAspek.makhraj, 0) / penilaianData.length
   );
 
-  const rataRataAdab = Math.round(
-    penilaianData.reduce((sum, item) => sum + item.nilaiAspek.adab, 0) / penilaianData.length
+  const rataRataImplementasi = Math.round(
+    penilaianData.reduce((sum, item) => sum + item.nilaiAspek.implementasi, 0) / penilaianData.length
   );
 
   const getAspekColor = (aspek) => {
@@ -159,17 +159,19 @@ export default function PenilaianHafalanPage() {
       tajwid: { bg: 'bg-emerald-100', text: 'text-emerald-700', badge: 'bg-emerald-500' },
       kelancaran: { bg: 'bg-sky-100', text: 'text-sky-700', badge: 'bg-sky-500' },
       makhraj: { bg: 'bg-purple-100', text: 'text-purple-700', badge: 'bg-purple-500' },
-      adab: { bg: 'bg-amber-100', text: 'text-amber-700', badge: 'bg-amber-500' },
+      implementasi: { bg: 'bg-amber-100', text: 'text-amber-700', badge: 'bg-amber-500' },
     };
     return colors[aspek];
   };
 
-  const getNilaiGrade = (nilai) => {
-    if (nilai >= 90) return { grade: 'A', color: 'emerald', bg: 'bg-emerald-500' };
-    if (nilai >= 80) return { grade: 'B', color: 'sky', bg: 'bg-sky-500' };
-    if (nilai >= 70) return { grade: 'C', color: 'amber', bg: 'bg-amber-500' };
-    return { grade: 'D', color: 'red', bg: 'bg-red-500' };
+  const getNilaiColor = (nilai) => {
+    if (nilai >= 90) return 'bg-emerald-500';
+    if (nilai >= 80) return 'bg-sky-500';
+    if (nilai >= 70) return 'bg-amber-500';
+    return 'bg-red-500';
   };
+
+
 
   const filteredData = filterBulan === 'semua'
     ? penilaianData
@@ -240,9 +242,6 @@ export default function PenilaianHafalanPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <span className={`text-sm font-semibold ${getAspekColor('tajwid').text}`}>Tajwid</span>
-            <div className={`px-2 py-1 ${getAspekColor('tajwid').badge} text-white text-xs font-bold rounded-lg`}>
-              {getNilaiGrade(rataRataTajwid).grade}
-            </div>
           </div>
           <p className={`text-4xl font-bold ${getAspekColor('tajwid').text}`}>{rataRataTajwid}</p>
         </motion.div>
@@ -256,9 +255,6 @@ export default function PenilaianHafalanPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <span className={`text-sm font-semibold ${getAspekColor('kelancaran').text}`}>Kelancaran</span>
-            <div className={`px-2 py-1 ${getAspekColor('kelancaran').badge} text-white text-xs font-bold rounded-lg`}>
-              {getNilaiGrade(rataRataKelancaran).grade}
-            </div>
           </div>
           <p className={`text-4xl font-bold ${getAspekColor('kelancaran').text}`}>{rataRataKelancaran}</p>
         </motion.div>
@@ -272,27 +268,21 @@ export default function PenilaianHafalanPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <span className={`text-sm font-semibold ${getAspekColor('makhraj').text}`}>Makhraj</span>
-            <div className={`px-2 py-1 ${getAspekColor('makhraj').badge} text-white text-xs font-bold rounded-lg`}>
-              {getNilaiGrade(rataRataMakhraj).grade}
-            </div>
           </div>
           <p className={`text-4xl font-bold ${getAspekColor('makhraj').text}`}>{rataRataMakhraj}</p>
         </motion.div>
 
-        {/* Adab */}
+        {/* Implementasi */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
-          className={`${getAspekColor('adab').bg} rounded-2xl p-6 shadow-lg`}
+          className={`${getAspekColor('implementasi').bg} rounded-2xl p-6 shadow-lg`}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className={`text-sm font-semibold ${getAspekColor('adab').text}`}>Adab</span>
-            <div className={`px-2 py-1 ${getAspekColor('adab').badge} text-white text-xs font-bold rounded-lg`}>
-              {getNilaiGrade(rataRataAdab).grade}
-            </div>
+            <span className={`text-sm font-semibold ${getAspekColor('implementasi').text}`}>Implementasi</span>
           </div>
-          <p className={`text-4xl font-bold ${getAspekColor('adab').text}`}>{rataRataAdab}</p>
+          <p className={`text-4xl font-bold ${getAspekColor('implementasi').text}`}>{rataRataImplementasi}</p>
         </motion.div>
       </div>
 
@@ -364,7 +354,7 @@ export default function PenilaianHafalanPage() {
       {/* Tabel Penilaian */}
       <div className="space-y-4">
         {filteredData.map((penilaian, index) => {
-          const gradeInfo = getNilaiGrade(penilaian.nilaiTotal);
+          const gradeInfoBg = getNilaiColor(penilaian.nilaiTotal);
 
           return (
             <motion.div
@@ -391,12 +381,10 @@ export default function PenilaianHafalanPage() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <div className={`px-4 py-2 ${gradeInfo.bg} text-white rounded-xl`}>
+                  <div className={`px-4 py-2 ${gradeInfoBg} text-white rounded-xl`}>
                     <p className="text-3xl font-bold">{penilaian.nilaiTotal}</p>
                   </div>
-                  <div className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg">
-                    Grade {gradeInfo.grade}
-                  </div>
+
                 </div>
               </div>
 
@@ -411,9 +399,6 @@ export default function PenilaianHafalanPage() {
                       </p>
                       <div className="flex items-end gap-2">
                         <p className={`text-3xl font-bold ${color.text}`}>{nilai}</p>
-                        <span className={`text-sm ${color.text} mb-1 opacity-70`}>
-                          {getNilaiGrade(nilai).grade}
-                        </span>
                       </div>
                     </div>
                   );

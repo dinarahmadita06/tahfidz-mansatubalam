@@ -2,6 +2,27 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
+// Simple in-memory cache
+const cache = new Map();
+const CACHE_DURATION = 300000; // 5 minutes in milliseconds
+
+// Function to get cached data
+function getCachedData(key) {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+}
+
+// Function to set cached data
+function setCachedData(key, data) {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+}
+
 export async function GET(request) {
   try {
     const session = await auth();
@@ -9,6 +30,17 @@ export async function GET(request) {
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Check if we have cached data
+    const cacheKey = 'admin-dashboard-stats';
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached dashboard stats');
+      return NextResponse.json(cachedData);
+    }
+
+    console.log('Fetching fresh dashboard stats from database');
 
     // Get total counts
     const [
@@ -167,7 +199,7 @@ export async function GET(request) {
     const kelasWithRecentHafalanIds = new Set(kelasWithRecentHafalan.map(k => k.id));
     const kelasBelumUpdate = kelasWithHafalan.filter(k => !kelasWithRecentHafalanIds.has(k.id));
 
-    return NextResponse.json({
+    const responseData = {
       stats: {
         totalGuru,
         totalSiswa,
@@ -190,7 +222,12 @@ export async function GET(request) {
         status: s.status,
         count: s._count
       }))
-    });
+    };
+
+    // Cache the response
+    setCachedData(cacheKey, responseData);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
     return NextResponse.json(

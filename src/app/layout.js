@@ -1,15 +1,19 @@
-import { Inter, Poppins } from "next/font/google";
+import { Poppins, Amiri } from "next/font/google";
 import "./globals.css";
 import "@/styles/responsive.css";
 import "@/styles/charts-responsive.css";
 import SessionProvider from "@/components/providers/SessionProvider";
 import SWRProvider from "@/components/providers/SWRProvider";
 
-const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins"
+});
+const amiri = Amiri({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  variable: "--font-amiri"
 });
 
 export const metadata = {
@@ -20,7 +24,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
-      <body className={`${inter.className} ${poppins.variable} antialiased`}>
+      <body className={`${poppins.className} ${poppins.variable} ${amiri.variable} antialiased`}>
         <SessionProvider>
           <SWRProvider>
             {children}

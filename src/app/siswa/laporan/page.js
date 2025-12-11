@@ -10,10 +10,8 @@ import {
   Target,
   Award,
   Sparkles,
-  Download,
   Filter,
   ChevronDown,
-  Trophy,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -192,7 +190,7 @@ export default function LaporanHafalanPage() {
     { label: 'Tajwid', value: 92, color: 'bg-emerald-500' },
     { label: 'Kelancaran', value: 88, color: 'bg-amber-500' },
     { label: 'Makhraj', value: 85, color: 'bg-purple-500' },
-    { label: 'Adab', value: 95, color: 'bg-sky-500' },
+    { label: 'Implementasi', value: 95, color: 'bg-sky-500' },
   ];
 
   const monthlyStats = [
@@ -202,7 +200,7 @@ export default function LaporanHafalanPage() {
     { label: 'Hari Berturut', value: '12', subtitle: 'hari', icon: TrendingUp, color: 'sky', gradient: 'from-sky-400 to-blue-400' },
   ];
 
-  const recentAchievements = [
+  const recentAchievementsData = [
     { title: 'Hafal 1 Juz', date: '15 Okt 2025', icon: '🏆', color: 'emerald' },
     { title: 'Nilai Sempurna', date: '10 Okt 2025', icon: '⭐', color: 'amber' },
     { title: 'Konsisten 7 Hari', date: '5 Okt 2025', icon: '🔥', color: 'purple' },
@@ -232,31 +230,19 @@ export default function LaporanHafalanPage() {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-                    <BarChart3 className="text-white" size={32} />
-                  </div>
-                  <div>
-                    <h1 className="text-4xl font-bold text-white">Laporan Hafalan</h1>
-                    <div className="h-1 w-24 bg-white/30 rounded-full mt-2"></div>
-                  </div>
-                </div>
-                <p className="text-emerald-50 text-lg flex items-center gap-2">
-                  <Sparkles size={18} />
-                  Statistik dan progress hafalan Al-Qur'an
-                </p>
+            <div className="flex items-center gap-4 mb-3">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+                <BarChart3 className="text-white" size={32} />
               </div>
-
-              <button
-                onClick={handleDownloadReport}
-                className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-bold transition-colors flex items-center gap-2"
-              >
-                <Download size={20} />
-                Unduh Laporan
-              </button>
+              <div>
+                <h1 className="text-4xl font-bold text-white">Laporan Hafalan</h1>
+                <div className="h-1 w-24 bg-white/30 rounded-full mt-2"></div>
+              </div>
             </div>
+            <p className="text-emerald-50 text-lg flex items-center gap-2">
+              <Sparkles size={18} />
+              Statistik dan progress hafalan Al-Qur'an
+            </p>
           </div>
         </div>
       </motion.div>
@@ -409,13 +395,13 @@ export default function LaporanHafalanPage() {
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Aspect Scores */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
         >
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-purple-100 rounded-lg">
@@ -432,63 +418,12 @@ export default function LaporanHafalanPage() {
           <div className="mt-6 grid grid-cols-2 gap-4">
             <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
               <p className="text-sm text-emerald-700 font-semibold mb-1">Nilai Tertinggi</p>
-              <p className="text-2xl font-bold text-emerald-900">Adab (95)</p>
+              <p className="text-2xl font-bold text-emerald-900">Implementasi (95)</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl">
               <p className="text-sm text-purple-700 font-semibold mb-1">Perlu Ditingkatkan</p>
               <p className="text-2xl font-bold text-purple-900">Makhraj (85)</p>
             </div>
-          </div>
-        </motion.div>
-
-        {/* Recent Achievements */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Trophy className="text-amber-600" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Pencapaian</h2>
-              <p className="text-sm text-gray-600">Prestasi terbaru</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {recentAchievements.map((achievement, index) => {
-              const colorClasses = {
-                emerald: 'bg-emerald-50 border-emerald-200',
-                amber: 'bg-amber-50 border-amber-200',
-                purple: 'bg-purple-50 border-purple-200',
-              };
-
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1 + index * 0.1 }}
-                  className={`p-4 rounded-xl border-2 ${colorClasses[achievement.color]}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-3xl">{achievement.icon}</div>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900">{achievement.title}</p>
-                      <p className="text-xs text-gray-600">{achievement.date}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <div className="mt-6 p-4 bg-gradient-to-br from-amber-400 to-orange-400 rounded-xl text-center">
-            <p className="text-white font-bold text-lg mb-1">Total Badge</p>
-            <p className="text-4xl font-bold text-white">12</p>
           </div>
         </motion.div>
       </div>

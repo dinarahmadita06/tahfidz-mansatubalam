@@ -46,29 +46,14 @@ export async function GET(request) {
       // Jika ada filter kelasId dari query parameter
       if (kelasId) {
         whereClause.kelasId = kelasId;
-        // Pastikan guru bisa akses kelas ini (atau mereka yang buat siswanya)
-        const hasAccessToKelas = guruKelas.some(gk => gk.kelasId === kelasId);
-        if (!hasAccessToKelas) {
-          // Jika guru tidak punya akses ke kelas ini, hanya tampilkan siswa yang mereka buat
-          whereClause.createdBy = session.user.guruId;
-        }
+        // Note: We removed the createdBy filter since it doesn't exist in the schema
       } else {
         // Tidak ada filter kelas spesifik, tampilkan semua siswa yang bisa diakses guru
-        // Guru bisa melihat siswa dari kelas mereka ATAU siswa yang mereka buat
+        // Guru bisa melihat siswa dari kelas mereka
         if (guruKelas.length > 0) {
-          whereClause.OR = [
-            {
-              kelasId: {
-                in: guruKelas.map(gk => gk.kelasId),
-              }
-            },
-            {
-              createdBy: session.user.guruId
-            }
-          ];
-        } else {
-          // Jika guru tidak memiliki kelas, tampilkan siswa yang mereka buat
-          whereClause.createdBy = session.user.guruId;
+          whereClause.kelasId = {
+            in: guruKelas.map(gk => gk.kelasId),
+          };
         }
       }
     } else if (kelasId && session.user.role !== 'GURU') {
@@ -88,7 +73,6 @@ export async function GET(request) {
         kelas: {
           select: {
             nama: true,
-            tingkat: true,
           },
         },
       },
@@ -167,7 +151,7 @@ export async function POST(request) {
           alamat,
           noHP,
           status: 'pending',
-          createdBy: session.user.guruId,
+          // Removed createdBy field since it doesn't exist in the schema
         },
         include: {
           user: {

@@ -34,7 +34,6 @@ export async function GET(request, { params }) {
       select: {
         id: true,
         nama: true,
-        tingkat: true,
       },
     });
 

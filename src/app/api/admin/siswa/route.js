@@ -4,6 +4,33 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 
+// Simple in-memory cache
+const cache = new Map();
+const CACHE_DURATION = 180000; // 3 minutes in milliseconds
+
+// Function to get cached data
+function getCachedData(key) {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+}
+
+// Function to set cached data
+function setCachedData(key, data) {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+}
+
+// Function to generate cache key based on parameters
+function generateCacheKey(params) {
+  const { status, kelasId, search, page, limit } = params;
+  return `siswa-list-${status || 'all'}-${kelasId || 'all'}-${search || 'all'}-${page}-${limit}`;
+}
+
 // GET - List all siswa (Admin only)
 export async function GET(request) {
   try {
@@ -19,6 +46,19 @@ export async function GET(request) {
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
+
+    // Generate cache key
+    const cacheKey = generateCacheKey({ status, kelasId, search, page, limit });
+    
+    // Check if we have cached data
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log(`Returning cached siswa data for key: ${cacheKey}`);
+      return NextResponse.json(cachedData);
+    }
+
+    console.log(`Fetching fresh siswa data for key: ${cacheKey}`);
 
     let whereClause = {};
 
@@ -60,7 +100,6 @@ export async function GET(request) {
           select: {
             id: true,
             nama: true,
-            tingkat: true
           }
         },
         orangTua: {
@@ -84,7 +123,7 @@ export async function GET(request) {
       }
     });
 
-    return NextResponse.json({
+    const responseData = {
       data: siswa,
       pagination: {
         page,
@@ -92,7 +131,12 @@ export async function GET(request) {
         totalCount,
         totalPages
       }
-    });
+    };
+
+    // Cache the response
+    setCachedData(cacheKey, responseData);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching siswa:', error);
     return NextResponse.json(
@@ -211,6 +255,19 @@ export async function POST(request) {
         siswaId: siswa.id,
         kelasId: siswa.kelasId
       }
+    });
+
+    // Invalidate cache for siswa list
+    // Clear all siswa cache entries
+    const keysToDelete = [];
+    for (const key of cache.keys()) {
+      if (key.startsWith('siswa-list-')) {
+        keysToDelete.push(key);
+      }
+    }
+    keysToDelete.forEach(key => {
+      cache.delete(key);
+      console.log(`Invalidated cache key: ${key}`);
     });
 
     return NextResponse.json(siswa, { status: 201 });

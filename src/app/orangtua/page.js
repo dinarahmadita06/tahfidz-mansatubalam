@@ -11,8 +11,6 @@ import {
   CalendarCheck,
   MessageSquare,
   TrendingUp,
-  Award,
-  Clock,
   CheckCircle,
   AlertCircle,
   Heart,
@@ -64,7 +62,7 @@ function ProgressRing({ progress = 75, color = 'emerald', size = 100, strokeWidt
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className={`${colorClasses[color]} transition-all duration-1000 ease-out`}
+          className={`${colorClasses[color]} transition-all duration-500 ease-out`}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
@@ -86,7 +84,7 @@ function SimpleLineChart({ data }) {
             <motion.div
               initial={{ height: 0 }}
               animate={{ height: `${(item.value / maxValue) * 100}%` }}
-              transition={{ duration: 0.8, delay: index * 0.1 }}
+              transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
               className="absolute bottom-0 w-full bg-gradient-to-t from-emerald-500 to-teal-400 rounded-t-lg"
             />
           </div>
@@ -124,7 +122,6 @@ export default function DashboardOrangTua() {
     rataRataNilai: 88,
     kehadiran: 95,
     totalHari: 30,
-    catatanGuru: 5,
   };
 
   // Data progres bulanan
@@ -137,56 +134,6 @@ export default function DashboardOrangTua() {
     { label: 'Jun', value: 82 },
   ];
 
-  // Aktivitas terbaru
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'setor',
-      title: 'Setor Hafalan Al-Baqarah 10-15',
-      status: 'approved',
-      nilai: 90,
-      time: '2 jam yang lalu',
-      icon: BookOpen,
-      color: 'emerald',
-    },
-    {
-      id: 2,
-      type: 'nilai',
-      title: 'Nilai Hafalan: 88/100',
-      status: 'info',
-      time: '5 jam yang lalu',
-      icon: Star,
-      color: 'amber',
-    },
-    {
-      id: 3,
-      type: 'catatan',
-      title: 'Catatan dari Ustadz Yusuf',
-      catatan: 'Bacaan sangat baik, pertahankan!',
-      status: 'info',
-      time: '1 hari yang lalu',
-      icon: MessageSquare,
-      color: 'purple',
-    },
-  ];
-
-  // Catatan guru terbaru
-  const teacherNotes = [
-    {
-      id: 1,
-      guru: 'Ustadz Yusuf',
-      catatan: 'Ahmad sangat konsisten dalam muroja\'ah hafalan. Pertahankan semangat!',
-      tanggal: '27 Okt 2025',
-      type: 'positive',
-    },
-    {
-      id: 2,
-      guru: 'Ustadzah Aisyah',
-      catatan: 'Perlu lebih fokus pada tajwid, terutama pada mad dan qalqalah.',
-      tanggal: '25 Okt 2025',
-      type: 'improvement',
-    },
-  ];
 
   // Ambil nama depan dari nama user (mengambil kata pertama)
   const getFirstName = (fullName) => {
@@ -231,8 +178,9 @@ export default function DashboardOrangTua() {
       <div className="min-h-screen animate-fade-in overflow-x-hidden max-w-full">
         {/* Header dengan Salam */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="mb-8 relative"
         >
           <div className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 rounded-3xl md:rounded-3xl p-7 md:p-10 shadow-lg relative overflow-hidden">
@@ -293,10 +241,10 @@ export default function DashboardOrangTua() {
                   <AnimatePresence>
                     {showChildSelector && (
                       <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        initial={{ opacity: 0, y: -5, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        exit={{ opacity: 0, y: -5, scale: 0.98 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
                         className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 min-w-[300px] max-w-[420px] w-full md:w-auto border-2 border-emerald-100"
                       >
                         {children.map((child) => (
@@ -331,23 +279,23 @@ export default function DashboardOrangTua() {
 
         {/* Motivational Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.05, duration: 0.2, ease: "easeOut" }}
           className="mb-8"
         >
           <ParentingMotivationalCard theme="mint" />
         </motion.div>
 
-        {/* Statistics Cards - 4 Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
+        {/* Statistics Cards - 3 Columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
           {/* Card 1: Hafalan Selesai */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15 }}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-emerald-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
+            transition={{ delay: 0.075, duration: 0.2, ease: "easeOut" }}
+            whileHover={{ y: -3, scale: 1.01 }}
+            className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-emerald-100 hover:shadow-xl transition-all min-h-[180px]"
           >
             <div className="flex items-center justify-between mb-5">
               <div className="p-4 bg-emerald-500 rounded-2xl shadow-md">
@@ -362,11 +310,11 @@ export default function DashboardOrangTua() {
 
           {/* Card 2: Rata-rata Nilai */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-amber-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
+            transition={{ delay: 0.1, duration: 0.2, ease: "easeOut" }}
+            whileHover={{ y: -3, scale: 1.01 }}
+            className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-amber-100 hover:shadow-xl transition-all min-h-[180px]"
           >
             <div className="flex items-center justify-between mb-5">
               <div className="p-4 bg-amber-500 rounded-2xl shadow-md">
@@ -381,11 +329,11 @@ export default function DashboardOrangTua() {
 
           {/* Card 3: Kehadiran */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25 }}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-sky-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
+            transition={{ delay: 0.125, duration: 0.2, ease: "easeOut" }}
+            whileHover={{ y: -3, scale: 1.01 }}
+            className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-sky-100 hover:shadow-xl transition-all min-h-[180px]"
           >
             <div className="flex items-center justify-between mb-5">
               <div className="p-4 bg-sky-500 rounded-2xl shadow-md">
@@ -397,39 +345,16 @@ export default function DashboardOrangTua() {
             <p className="text-3xl font-bold text-gray-900">{stats.kehadiran}</p>
             <p className="text-sm text-sky-600 font-medium mt-2">dari {stats.totalHari} hari</p>
           </motion.div>
-
-          {/* Card 4: Catatan Guru */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-purple-100 hover:shadow-xl transition-all duration-300 ease-in-out min-h-[180px]"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div className="p-4 bg-purple-500 rounded-2xl shadow-md">
-                <MessageSquare className="text-white" size={28} />
-              </div>
-              <div className="flex items-center justify-center w-24 h-24">
-                <div className="text-center">
-                  <p className="text-5xl font-bold text-gray-900">{stats.catatanGuru}</p>
-                  <p className="text-sm text-purple-600 font-medium mt-1">Catatan</p>
-                </div>
-              </div>
-            </div>
-            <h3 className="text-base font-semibold text-gray-600 mb-2">Catatan Guru</h3>
-            <p className="text-base text-purple-600 font-medium mt-2">Lihat detail →</p>
-          </motion.div>
         </div>
 
         {/* Main Content Grid - 2 Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-6 mb-8">
           {/* Left: Progress Chart */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.35 }}
-            className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+            transition={{ delay: 0.175, duration: 0.2, ease: "easeOut" }}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-emerald-100 rounded-lg">
@@ -449,111 +374,7 @@ export default function DashboardOrangTua() {
               </p>
             </div>
           </motion.div>
-
-          {/* Right: Aktivitas Terbaru */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Clock className="text-amber-600" size={24} />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Aktivitas Terbaru</h2>
-                <p className="text-sm text-gray-600">Update hari ini</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {recentActivities.map((activity, index) => {
-                const Icon = activity.icon;
-                const statusColors = {
-                  approved: 'bg-emerald-100 text-emerald-700',
-                  info: 'bg-sky-100 text-sky-700',
-                };
-
-                return (
-                  <motion.div
-                    key={activity.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45 + index * 0.05 }}
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors duration-300 ease-in-out"
-                  >
-                    <div className={`p-2 rounded-lg ${statusColors[activity.status]}`}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {activity.title}
-                      </p>
-                      {activity.nilai && (
-                        <p className="text-xs text-emerald-600 font-semibold">
-                          Nilai: {activity.nilai}/100
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
         </div>
-
-        {/* Catatan Guru Terbaru */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-sm border border-amber-100"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-amber-200 rounded-lg">
-              <MessageSquare className="text-amber-700" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Catatan Guru Terbaru</h2>
-              <p className="text-sm text-gray-600">Feedback untuk perkembangan anak</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {teacherNotes.map((note, index) => (
-              <motion.div
-                key={note.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.55 + index * 0.05 }}
-                className={`p-4 rounded-xl border-l-4 transition-all duration-300 ease-in-out ${
-                  note.type === 'positive'
-                    ? 'bg-emerald-50 border-emerald-500'
-                    : 'bg-sky-50 border-sky-500'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {note.type === 'positive' ? (
-                      <CheckCircle size={18} className="text-emerald-600" />
-                    ) : (
-                      <AlertCircle size={18} className="text-sky-600" />
-                    )}
-                    <p className="font-bold text-gray-900">{note.guru}</p>
-                  </div>
-                  <span className="text-xs text-gray-600">{note.tanggal}</span>
-                </div>
-                <p className={`text-sm leading-relaxed ${
-                  note.type === 'positive' ? 'text-emerald-900' : 'text-sky-900'
-                }`}>
-                  {note.catatan}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </OrangtuaLayout>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
@@ -149,13 +149,20 @@ export default function DashboardSiswa() {
   const hafalanProgress = Math.round((stats.hafalanSelesai / stats.totalHafalan) * 100);
   const kehadiranProgress = Math.round((stats.kehadiran / stats.totalHari) * 100);
 
+  // Prevent hydration mismatch by only showing time-dependent content after hydration
+  const [isHydrated, setIsHydrated] = useState(false);
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   return (
     <SiswaLayout>
       <div className="min-h-screen bg-gradient-dashboard animate-fade-in overflow-x-hidden max-w-full">
         {/* Greeting Section */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="mb-8"
         >
           <div className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 rounded-3xl md:rounded-3xl p-7 md:p-10 shadow-2xl relative overflow-hidden">
@@ -166,11 +173,13 @@ export default function DashboardSiswa() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 md:gap-4 mb-4">
               <Sparkles className="text-amber-300 flex-shrink-0" size={28} />
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
-                {greeting}, {getFirstName(session?.user?.name)}! 👋
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white" suppressHydrationWarning>
+                {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
               </h1>
             </div>
-            <p className="text-emerald-50 text-base md:text-lg mb-5">{currentTime}</p>
+            <p className="text-emerald-50 text-base md:text-lg mb-5" suppressHydrationWarning>
+              {isHydrated ? currentTime : ''}
+            </p>
             <div className="flex flex-wrap gap-4 md:gap-5 items-center">
               <div className="flex items-center gap-2.5 bg-white/20 backdrop-blur-sm px-4 py-2.5 md:px-5 md:py-3 rounded-full">
                 <BookMarked className="text-white flex-shrink-0" size={18} />
@@ -191,9 +200,9 @@ export default function DashboardSiswa() {
 
       {/* Motivational Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1, duration: 0.2, ease: "easeOut" }}
         className="mb-8"
       >
         <MotivationalCard theme="emerald" />
@@ -222,10 +231,10 @@ export default function DashboardSiswa() {
 
         {/* Card 2: Rata-rata Nilai */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ y: -5, scale: 1.02 }}
+          transition={{ delay: 0.1, duration: 0.2, ease: "easeOut" }}
+          whileHover={{ y: -3, scale: 1.01 }}
           className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-amber-100 hover:shadow-xl transition-all min-h-[180px]"
         >
           <div className="flex items-center justify-between mb-5">
@@ -241,10 +250,10 @@ export default function DashboardSiswa() {
 
         {/* Card 3: Kehadiran */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ y: -5, scale: 1.02 }}
+          transition={{ delay: 0.15, duration: 0.2, ease: "easeOut" }}
+          whileHover={{ y: -3, scale: 1.01 }}
           className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-sky-100 hover:shadow-xl transition-all min-h-[180px]"
         >
           <div className="flex items-center justify-between mb-5">
@@ -260,10 +269,10 @@ export default function DashboardSiswa() {
 
         {/* Card 4: Catatan Guru */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4 }}
-          whileHover={{ y: -5, scale: 1.02 }}
+          transition={{ delay: 0.2, duration: 0.2, ease: "easeOut" }}
+          whileHover={{ y: -3, scale: 1.01 }}
           className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-purple-100 hover:shadow-xl transition-all min-h-[180px]"
         >
           <div className="flex items-center justify-between mb-5">
@@ -291,9 +300,9 @@ export default function DashboardSiswa() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
         {/* Progress Hafalan per Juz */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.25, duration: 0.2, ease: "easeOut" }}
           className="lg:col-span-2 bg-white rounded-3xl p-7 md:p-8 shadow-lg border-2 border-gray-100"
         >
           <div className="flex items-center gap-4 mb-7">
@@ -310,9 +319,9 @@ export default function DashboardSiswa() {
             {achievementData.map((item, index) => (
               <motion.div
                 key={item.label}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + index * 0.1 }}
+                transition={{ delay: 0.3 + index * 0.05, duration: 0.2, ease: "easeOut" }}
                 className="space-y-2.5"
               >
                 <div className="flex items-center justify-between">
@@ -323,7 +332,7 @@ export default function DashboardSiswa() {
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${item.progress}%` }}
-                    transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
+                    transition={{ duration: 0.5, delay: 0.4 + index * 0.05, ease: "easeOut" }}
                     className={`h-full rounded-full ${
                       item.color === 'emerald' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
                       item.color === 'amber' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
@@ -345,9 +354,9 @@ export default function DashboardSiswa() {
 
         {/* Recent Activities */}
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.25, duration: 0.2, ease: "easeOut" }}
           className="bg-white rounded-3xl p-7 md:p-8 shadow-lg border-2 border-gray-100"
         >
           <div className="flex items-center gap-4 mb-7">
@@ -372,9 +381,9 @@ export default function DashboardSiswa() {
               return (
                 <motion.div
                   key={activity.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 + index * 0.1 }}
+                  transition={{ delay: 0.35 + index * 0.05, duration: 0.2, ease: "easeOut" }}
                   className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <div className={`p-3 rounded-xl ${statusColors[activity.status]}`}>
@@ -397,89 +406,28 @@ export default function DashboardSiswa() {
         </motion.div>
       </div>
 
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="bg-gradient-to-br from-white to-emerald-50 rounded-2xl p-6 shadow-lg border border-emerald-100"
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <Award className="text-emerald-600" size={24} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Aksi Cepat</h2>
-            <p className="text-sm text-gray-600">Mulai aktivitas belajarmu</p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link
-            href="/siswa/setor-hafalan"
-            className="group flex items-center gap-3 p-4 bg-white hover:bg-emerald-50 rounded-xl border-2 border-gray-100 hover:border-emerald-300 transition-all shadow-sm hover:shadow-md"
-          >
-            <div className="p-2 bg-emerald-100 group-hover:bg-emerald-500 rounded-lg transition-colors">
-              <BookOpen className="text-emerald-600 group-hover:text-white transition-colors" size={20} />
-            </div>
-            <span className="font-semibold text-gray-900 text-sm">Setor Hafalan</span>
-          </Link>
-
-          <Link
-            href="/siswa/latihan"
-            className="group flex items-center gap-3 p-4 bg-white hover:bg-purple-50 rounded-xl border-2 border-gray-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md"
-          >
-            <div className="p-2 bg-purple-100 group-hover:bg-purple-500 rounded-lg transition-colors">
-              <Target className="text-purple-600 group-hover:text-white transition-colors" size={20} />
-            </div>
-            <span className="font-semibold text-gray-900 text-sm">Mode Latihan</span>
-          </Link>
-
-          <Link
-            href="/siswa/referensi"
-            className="group flex items-center gap-3 p-4 bg-white hover:bg-sky-50 rounded-xl border-2 border-gray-100 hover:border-sky-300 transition-all shadow-sm hover:shadow-md"
-          >
-            <div className="p-2 bg-sky-100 group-hover:bg-sky-500 rounded-lg transition-colors">
-              <BookMarked className="text-sky-600 group-hover:text-white transition-colors" size={20} />
-            </div>
-            <span className="font-semibold text-gray-900 text-sm">Baca Al-Qur'an</span>
-          </Link>
-
-          <Link
-            href="/siswa/buku-digital"
-            className="group flex items-center gap-3 p-4 bg-white hover:bg-amber-50 rounded-xl border-2 border-gray-100 hover:border-amber-300 transition-all shadow-sm hover:shadow-md"
-          >
-            <div className="p-2 bg-amber-100 group-hover:bg-amber-500 rounded-lg transition-colors">
-              <BookMarked className="text-amber-600 group-hover:text-white transition-colors" size={20} />
-            </div>
-            <span className="font-semibold text-gray-900 text-sm">Buku Digital</span>
-          </Link>
-        </div>
-      </motion.div>
 
       <style jsx>{`
         @keyframes blob {
           0%, 100% {
             transform: translate(0, 0) scale(1);
           }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
+          50% {
+            transform: translate(15px, -25px) scale(1.05);
           }
         }
 
         .animate-blob {
-          animation: blob 7s infinite;
+          animation: blob 3s infinite;
         }
 
         .animation-delay-2000 {
-          animation-delay: 2s;
+          animation-delay: 1s;
         }
 
         .animation-delay-4000 {
-          animation-delay: 4s;
+          animation-delay: 2s;
         }
       `}</style>
       </div>

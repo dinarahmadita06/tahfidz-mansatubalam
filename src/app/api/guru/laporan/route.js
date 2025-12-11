@@ -1,432 +1,77 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 
-// GET /api/guru/laporan - Get laporan data with various view modes
 export async function GET(request) {
   try {
     const session = await auth();
 
     if (!session || session.user.role !== 'GURU') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const viewMode = searchParams.get('viewMode') || 'harian'; // harian, bulanan, semesteran
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
     const kelasId = searchParams.get('kelasId');
-    const periode = searchParams.get('periode') || 'bulan-ini';
-    const tanggal = searchParams.get('tanggal'); // Specific date for harian mode
+    const siswaId = searchParams.get('siswaId');
 
-    // Get guru data
-    const guru = await prisma.guru.findUnique({
-      where: { userId: session.user.id },
-    });
+    // Build where clause
+    let whereClause = {
+      guruId: session.user.guruId
+    };
 
-    if (!guru) {
-      return NextResponse.json(
-        { error: 'Guru not found' },
-        { status: 404 }
-      );
+    // Add date filter if provided
+    if (startDate && endDate) {
+      whereClause.tanggal = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      };
     }
 
-    // Calculate date range based on periode
-    const dateRange = calculateDateRange(periode);
-
-    // Base query for students
-    let whereClause = {};
+    // Add kelas filter if provided
     if (kelasId) {
-      whereClause.kelasId = kelasId;
+      whereClause.siswa = {
+        kelasId: kelasId
+      };
     }
 
-    // Get students
-    const students = await prisma.siswa.findMany({
+    // Add siswa filter if provided
+    if (siswaId) {
+      whereClause.siswaId = siswaId;
+    }
+
+    const laporan = await prisma.hafalan.findMany({
       where: whereClause,
       include: {
-        user: {
-          select: {
-            name: true,
-          },
-        },
-        kelas: {
-          select: {
-            nama: true,
-          },
-        },
-      },
-    });
-
-    if (viewMode === 'harian') {
-      // Harian/Mingguan View - Get data for specific date or first meeting
-      const laporanData = await Promise.all(
-        students.map(async (siswa) => {
-          let penilaianWhere = {
-            siswaId: siswa.id,
-            guruId: guru.id,
-          };
-
-          let presensiWhere = {
-            siswaId: siswa.id,
-            guruId: guru.id,
-          };
-
-          // If specific date is provided, query for that date
-          if (tanggal) {
-            const selectedDate = new Date(tanggal);
-            const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
-            const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
-
-            penilaianWhere.createdAt = {
-              gte: startOfDay,
-              lte: endOfDay,
-            };
-
-            presensiWhere.tanggal = {
-              gte: startOfDay,
-              lte: endOfDay,
-            };
-          } else {
-            // Default to first meeting in period
-            penilaianWhere.createdAt = {
-              gte: dateRange.start,
-              lte: dateRange.end,
-            };
-
-            presensiWhere.tanggal = {
-              gte: dateRange.start,
-              lte: dateRange.end,
-            };
-          }
-
-          // Get penilaian data
-          const firstPenilaian = await prisma.penilaian.findFirst({
-            where: penilaianWhere,
-            include: {
-              hafalan: {
-                select: {
-                  tanggal: true,
-                  surah: true,
-                  ayatMulai: true,
-                  ayatSelesai: true,
-                },
-              },
+        siswa: {
+          include: {
+            user: {
+              select: {
+                name: true
+              }
             },
-            orderBy: {
-              createdAt: 'asc',
-            },
-          });
-
-          // Get presensi data
-          const firstPresensi = await prisma.presensi.findFirst({
-            where: presensiWhere,
-            orderBy: {
-              tanggal: 'asc',
-            },
-          });
-
-          let pertemuan = null;
-
-          if (firstPenilaian) {
-            pertemuan = {
-              tanggal: firstPenilaian.hafalan.tanggal.toISOString().split('T')[0],
-              statusKehadiran: 'HADIR',
-              surah: firstPenilaian.hafalan.surah,
-              ayatMulai: firstPenilaian.hafalan.ayatMulai,
-              ayatSelesai: firstPenilaian.hafalan.ayatSelesai,
-              nilaiTajwid: firstPenilaian.tajwid,
-              nilaiKelancaran: firstPenilaian.kelancaran,
-              nilaiMakhraj: firstPenilaian.makhraj,
-              nilaiImplementasi: firstPenilaian.adab,
-              statusHafalan: 'LANJUT',
-              catatan: firstPenilaian.catatan || '',
-            };
-          } else if (firstPresensi) {
-            pertemuan = {
-              tanggal: firstPresensi.tanggal.toISOString().split('T')[0],
-              statusKehadiran: firstPresensi.status,
-              surah: null,
-              ayatMulai: null,
-              ayatSelesai: null,
-              nilaiTajwid: null,
-              nilaiKelancaran: null,
-              nilaiMakhraj: null,
-              nilaiImplementasi: null,
-              statusHafalan: '-',
-              catatan: firstPresensi.keterangan || '',
-            };
-          }
-
-          return {
-            siswaId: siswa.id,
-            namaLengkap: siswa.user.name,
-            kelas: siswa.kelas?.nama,
-            pertemuan,
-          };
-        })
-      );
-
-      return NextResponse.json({
-        success: true,
-        viewMode: 'harian',
-        data: laporanData,
-      });
-    } else if (viewMode === 'bulanan') {
-      // Bulanan View - Aggregate monthly data
-      const laporanData = await Promise.all(
-        students.map(async (siswa) => {
-          // Get penilaian data
-          const penilaianData = await prisma.penilaian.findMany({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              createdAt: {
-                gte: dateRange.start,
-                lte: dateRange.end,
-              },
-            },
-          });
-
-          // Get presensi data
-          const presensiData = await prisma.presensi.findMany({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              tanggal: {
-                gte: dateRange.start,
-                lte: dateRange.end,
-              },
-            },
-          });
-
-          // Calculate aggregates
-          const totalHadir = presensiData.filter(p => p.status === 'HADIR').length;
-          const totalTidakHadir = presensiData.filter(p => p.status !== 'HADIR').length;
-
-          const validPenilaian = penilaianData.filter(p =>
-            p.tajwid != null && p.kelancaran != null && p.makhraj != null && p.adab != null
-          );
-
-          const rataRataTajwid = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.tajwid, 0) / validPenilaian.length
-            : 0;
-
-          const rataRataKelancaran = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.kelancaran, 0) / validPenilaian.length
-            : 0;
-
-          const rataRataMakhraj = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.makhraj, 0) / validPenilaian.length
-            : 0;
-
-          const rataRataImplementasi = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.adab, 0) / validPenilaian.length
-            : 0;
-
-          // IMPORTANT: Rata-rata Nilai Bulanan = rata-rata dari nilai mingguan (nilaiAkhir)
-          // NOT average of 4 aspects!
-          const rataRataNilaiBulanan = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.nilaiAkhir, 0) / validPenilaian.length
-            : 0;
-
-          // Get catatan bulanan
-          const catatanBulananRecord = await prisma.presensi.findFirst({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              tanggal: dateRange.start,
-              status: 'CATATAN_BULANAN',
-            },
-          });
-
-          return {
-            siswaId: siswa.id,
-            namaLengkap: siswa.user.name,
-            kelas: siswa.kelas?.nama,
-            totalHadir,
-            totalTidakHadir,
-            rataRataTajwid: parseFloat(rataRataTajwid.toFixed(1)),
-            rataRataKelancaran: parseFloat(rataRataKelancaran.toFixed(1)),
-            rataRataMakhraj: parseFloat(rataRataMakhraj.toFixed(1)),
-            rataRataImplementasi: parseFloat(rataRataImplementasi.toFixed(1)),
-            rataRataNilaiBulanan: parseFloat(rataRataNilaiBulanan.toFixed(1)),
-            statusHafalan: validPenilaian.length > 0 ? 'LANJUT' : '-',
-            catatanBulanan: catatanBulananRecord?.keterangan || '',
-          };
-        })
-      );
-
-      return NextResponse.json({
-        success: true,
-        viewMode: 'bulanan',
-        data: laporanData,
-      });
-    } else if (viewMode === 'semesteran') {
-      // Semesteran View - Aggregate semester data (6 months)
-      const laporanData = await Promise.all(
-        students.map(async (siswa) => {
-          // Get penilaian data for entire semester
-          const penilaianData = await prisma.penilaian.findMany({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              createdAt: {
-                gte: dateRange.start,
-                lte: dateRange.end,
-              },
-            },
-            orderBy: {
-              createdAt: 'asc',
-            },
-          });
-
-          // Get presensi data
-          const presensiData = await prisma.presensi.findMany({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              tanggal: {
-                gte: dateRange.start,
-                lte: dateRange.end,
-              },
-            },
-          });
-
-          // Calculate aggregates
-          const totalHadir = presensiData.filter(p => p.status === 'HADIR').length;
-          const totalTidakHadir = presensiData.filter(p => p.status !== 'HADIR').length;
-
-          const validPenilaian = penilaianData.filter(p =>
-            p.tajwid != null && p.kelancaran != null && p.makhraj != null && p.adab != null
-          );
-
-          // Calculate monthly averages first
-          const monthlyAverages = [];
-          const now = new Date(dateRange.end);
-
-          // Loop through each month in the semester (6 months)
-          for (let i = 0; i < 6; i++) {
-            const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-
-            const monthPenilaian = validPenilaian.filter(p => {
-              const createdAt = new Date(p.createdAt);
-              return createdAt >= monthStart && createdAt <= monthEnd;
-            });
-
-            if (monthPenilaian.length > 0) {
-              // Calculate monthly average from weekly averages (nilaiAkhir)
-              const monthlyAvg = monthPenilaian.reduce((sum, p) => sum + p.nilaiAkhir, 0) / monthPenilaian.length;
-              monthlyAverages.push(monthlyAvg);
+            kelas: {
+              select: {
+                nama: true
+              }
             }
           }
+        },
+        // Removed surah: true since surah is a string field, not a relation
+        penilaian: true
+      },
+      orderBy: {
+        tanggal: 'desc'
+      }
+    });
 
-          // Calculate semester averages
-          const rataRataTajwid = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.tajwid, 0) / validPenilaian.length
-            : 0;
-
-          const rataRataKelancaran = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.kelancaran, 0) / validPenilaian.length
-            : 0;
-
-          const rataRataMakhraj = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.makhraj, 0) / validPenilaian.length
-            : 0;
-
-          const rataRataImplementasi = validPenilaian.length > 0
-            ? validPenilaian.reduce((sum, p) => sum + p.adab, 0) / validPenilaian.length
-            : 0;
-
-          // IMPORTANT: Rata-rata Nilai Semesteran = rata-rata dari nilai bulanan
-          const rataRataNilaiSemesteran = monthlyAverages.length > 0
-            ? monthlyAverages.reduce((sum, v) => sum + v, 0) / monthlyAverages.length
-            : 0;
-
-          const performanceLevel = getPerformanceLevel(rataRataNilaiSemesteran);
-
-          // Get catatan semesteran
-          const catatanSemesteranRecord = await prisma.presensi.findFirst({
-            where: {
-              siswaId: siswa.id,
-              guruId: guru.id,
-              tanggal: dateRange.start,
-              status: 'CATATAN_SEMESTERAN',
-            },
-          });
-
-          return {
-            siswaId: siswa.id,
-            namaLengkap: siswa.user.name,
-            kelas: siswa.kelas?.nama,
-            totalHadir,
-            totalTidakHadir,
-            rataRataTajwid: parseFloat(rataRataTajwid.toFixed(1)),
-            rataRataKelancaran: parseFloat(rataRataKelancaran.toFixed(1)),
-            rataRataMakhraj: parseFloat(rataRataMakhraj.toFixed(1)),
-            rataRataImplementasi: parseFloat(rataRataImplementasi.toFixed(1)),
-            rataRataNilaiSemesteran: parseFloat(rataRataNilaiSemesteran.toFixed(1)),
-            statusHafalan: validPenilaian.length > 0 ? 'LANJUT' : '-',
-            performanceLevel,
-            catatanSemesteran: catatanSemesteranRecord?.keterangan || '',
-          };
-        })
-      );
-
-      return NextResponse.json({
-        success: true,
-        viewMode: 'semesteran',
-        data: laporanData,
-      });
-    }
-
-    return NextResponse.json(
-      { error: 'Invalid view mode' },
-      { status: 400 }
-    );
+    return NextResponse.json(laporan);
   } catch (error) {
     console.error('Error fetching laporan:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch laporan', details: error.message },
+      { error: 'Failed to fetch laporan' },
       { status: 500 }
     );
   }
-}
-
-// Helper function to calculate date range
-function calculateDateRange(periode) {
-  const now = new Date();
-  let start, end;
-
-  switch (periode) {
-    case 'bulan-ini':
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-      break;
-    case 'bulan-lalu':
-      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-      break;
-    case 'semester-ini':
-      // Assuming semester is 6 months
-      start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-      end = now;
-      break;
-    default:
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-  }
-
-  return { start, end };
-}
-
-// Helper function to determine performance level
-function getPerformanceLevel(avgScore) {
-  if (avgScore >= 90) return 'Outstanding performance';
-  if (avgScore >= 85) return 'Excellent performance';
-  if (avgScore >= 80) return 'Very good performance';
-  if (avgScore >= 75) return 'Good performance';
-  if (avgScore >= 70) return 'Satisfactory performance';
-  return 'Needs improvement';
 }

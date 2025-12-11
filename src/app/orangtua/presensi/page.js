@@ -213,7 +213,7 @@ export default function PresensiPage() {
     { id: 2, name: 'Fatimah Azzahra', kelas: '3B', avatar: '👧' },
   ];
 
-  // Data dummy presensi
+  // Data dummy presensi - hanya menampilkan Setoran Hafalan
   const presensiData = [
     {
       id: 1,
@@ -225,14 +225,6 @@ export default function PresensiPage() {
     },
     {
       id: 2,
-      tanggal: '27 Okt 2025',
-      kegiatan: 'Muroja\'ah',
-      status: 'Izin',
-      catatan: 'Ada kegiatan keluarga, sudah izin sejak kemarin',
-      jam: '-',
-    },
-    {
-      id: 3,
       tanggal: '26 Okt 2025',
       kegiatan: 'Setoran Hafalan',
       status: 'Alfa',
@@ -240,7 +232,7 @@ export default function PresensiPage() {
       jam: '-',
     },
     {
-      id: 4,
+      id: 3,
       tanggal: '25 Okt 2025',
       kegiatan: 'Setoran Hafalan',
       status: 'Hadir',
@@ -248,20 +240,20 @@ export default function PresensiPage() {
       jam: '08:15',
     },
     {
-      id: 5,
-      tanggal: '24 Okt 2025',
-      kegiatan: 'Muroja\'ah',
-      status: 'Hadir',
-      catatan: 'Aktif dalam muroja\'ah kelompok',
-      jam: '08:00',
-    },
-    {
-      id: 6,
+      id: 4,
       tanggal: '23 Okt 2025',
       kegiatan: 'Setoran Hafalan',
       status: 'Sakit',
       catatan: 'Demam, ada surat keterangan dokter',
       jam: '-',
+    },
+    {
+      id: 5,
+      tanggal: '21 Okt 2025',
+      kegiatan: 'Setoran Hafalan',
+      status: 'Hadir',
+      catatan: 'Baik, hafalan sudah lancar',
+      jam: '08:00',
     },
   ];
 

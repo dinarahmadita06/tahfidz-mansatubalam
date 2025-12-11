@@ -37,7 +37,6 @@ export async function GET(request) {
                     kelas: {
                       select: {
                         nama: true,
-                        tingkat: true
                       }
                     }
                   }
@@ -110,7 +109,6 @@ export async function POST(request) {
           kelas: {
             select: {
               nama: true,
-              tingkat: true
             }
           }
         }
@@ -121,7 +119,7 @@ export async function POST(request) {
 
       // Generate isi otomatis dengan format template
       const siswaList = siswaData
-        .map((s, idx) => `${idx + 1}. ${s.user.name} - Kelas ${s.kelas.tingkat} ${s.kelas.nama}`)
+        .map((s, idx) => `${idx + 1}. ${s.user.name} - Kelas ${s.kelas.nama}`)
         .join('\n');
 
       finalIsi = `بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم

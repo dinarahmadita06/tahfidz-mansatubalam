@@ -1,120 +1,75 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 
-// GET - Fetch penilaian data for a specific date and kelas
 export async function GET(request) {
   try {
     const session = await auth();
 
     if (!session || session.user.role !== 'GURU') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const kelasId = searchParams.get('kelasId');
-    const tanggal = searchParams.get('tanggal');
+    const siswaId = searchParams.get('siswaId');
 
-    if (!kelasId || !tanggal) {
-      return NextResponse.json(
-        { error: 'Missing required parameters' },
-        { status: 400 }
-      );
+    // Build where clause for hafalan
+    let whereClause = {
+      guruId: session.user.guruId
+    };
+
+    // Filter by kelas if provided
+    if (kelasId) {
+      whereClause.siswa = {
+        kelasId: kelasId
+      };
     }
 
-    // Get guru data
-    const guru = await prisma.guru.findUnique({
-      where: { userId: session.user.id },
-    });
-
-    if (!guru) {
-      return NextResponse.json(
-        { error: 'Guru not found' },
-        { status: 404 }
-      );
+    // Filter by specific siswa if provided
+    if (siswaId) {
+      whereClause.siswaId = siswaId;
     }
 
-    // Get all students in the class
-    const siswaList = await prisma.siswa.findMany({
-      where: { kelasId },
+    const hafalan = await prisma.hafalan.findMany({
+      where: whereClause,
       include: {
-        user: {
-          select: { name: true },
-        },
-      },
-    });
-
-    // Parse date range for the specific day
-    const selectedDate = new Date(tanggal);
-    const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
-
-    // Fetch data for each student
-    const data = await Promise.all(
-      siswaList.map(async (siswa) => {
-        // Get presensi for this date
-        const presensi = await prisma.presensi.findFirst({
-          where: {
-            siswaId: siswa.id,
-            guruId: guru.id,
-            tanggal: {
-              gte: startOfDay,
-              lte: endOfDay,
-            },
-          },
-        });
-
-        // Get penilaian for this date
-        const penilaian = await prisma.penilaian.findFirst({
-          where: {
-            siswaId: siswa.id,
-            guruId: guru.id,
-            createdAt: {
-              gte: startOfDay,
-              lte: endOfDay,
-            },
-          },
+        siswa: {
           include: {
-            hafalan: {
+            user: {
               select: {
-                surah: true,
-                ayatMulai: true,
-                ayatSelesai: true,
-              },
-            },
-          },
-        });
-
-        return {
-          siswaId: siswa.id,
-          statusKehadiran: presensi?.status || 'HADIR',
-          penilaian: penilaian
-            ? {
-                surah: penilaian.hafalan.surah,
-                ayatMulai: penilaian.hafalan.ayatMulai,
-                ayatSelesai: penilaian.hafalan.ayatSelesai,
-                tajwid: penilaian.tajwid,
-                kelancaran: penilaian.kelancaran,
-                makhraj: penilaian.makhraj,
-                implementasi: penilaian.adab,
+                name: true
               }
-            : null,
-          catatan: penilaian?.catatan || presensi?.keterangan || '',
-        };
-      })
-    );
-
-    return NextResponse.json({
-      success: true,
-      data,
+            },
+            kelas: {
+              select: {
+                nama: true
+              }
+            }
+          }
+        },
+        guru: {
+          include: {
+            user: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
+        penilaian: true
+        // Removed surah: true since surah is a string field, not a relation
+      },
+      orderBy: {
+        tanggal: 'desc'
+      }
     });
+
+    return NextResponse.json(hafalan);
   } catch (error) {
-    console.error('Error fetching penilaian data:', error);
+    console.error('Error fetching hafalan for penilaian:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch data', details: error.message },
+      { error: 'Failed to fetch hafalan' },
       { status: 500 }
     );
   }

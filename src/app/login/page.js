@@ -1,7 +1,7 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, BookOpen, Mail } from 'lucide-react';
 import Link from 'next/link';
@@ -70,7 +70,7 @@ export default function LoginPage() {
       console.log('🔄 [LOGIN] Fetching session...');
 
       // Wait a bit for the session to be created
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Fetch session to get user role
       const response = await fetch('/api/auth/session');
@@ -121,189 +121,194 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Islamic Geometric Pattern Background */}
-      <div className="absolute inset-0 opacity-5">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="islamic-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-              <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="1"/>
-              <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="1"/>
-              <path d="M50,20 L65,35 L50,50 L35,35 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
-              <path d="M50,50 L65,65 L50,80 L35,65 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
-              <path d="M20,50 L35,65 L50,50 L35,35 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
-              <path d="M50,50 L65,35 L80,50 L65,65 Z" fill="none" stroke="currentColor" strokeWidth="1"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#islamic-pattern)" className="text-emerald-600"/>
-        </svg>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
-
-      <div className="w-full max-w-md relative z-10">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-full mb-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <BookOpen size={36} className="text-white" />
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent mb-2">
-            SIMTAQ
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Sistem Informasi Manajemen Tahfidz Qur'an
-          </p>
+    }>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Islamic Geometric Pattern Background - Simplified */}
+        <div className="absolute inset-0 opacity-3">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="islamic-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <circle cx="30" cy="30" r="15" fill="none" stroke="currentColor" strokeWidth="0.5"/>
+                <path d="M30,15 L40,30 L30,45 L20,30 Z" fill="none" stroke="currentColor" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#islamic-pattern)" className="text-emerald-600"/>
+          </svg>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-xl shadow-md p-8">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">Login</h2>
+        <div className="w-full max-w-md relative z-10">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-full mb-3 shadow-md">
+              <BookOpen size={28} className="text-white" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent mb-1">
+              SIMTAQ
+            </h1>
+            <p className="text-gray-600 text-base">
+              Sistem Informasi Manajemen Tahfidz Qur'an
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
+          {/* Login Form */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-5">Login</h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Username/Email/HP Input */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Username / Email / No HP
+                </label>
+                <div className="relative">
+                  <Mail size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600" />
+                  <input
+                    type="text"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-300 focus:border-transparent transition-all"
+                    placeholder="contoh: admin@example.com"
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Username/Email/HP Input */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Username / Email / No HP
-              </label>
-              <div className="relative">
-                <Mail size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-600" />
-                <input
-                  type="text"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all"
-                  placeholder="contoh: admin@example.com atau 081234567890"
-                />
+              {/* Password Input */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-300 focus:border-transparent transition-all"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-emerald-600 text-white py-2.5 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm shadow-sm"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Loading...
+                  </div>
+                ) : (
+                  'Login'
+                )}
+              </button>
+
+              {/* Lupa Password Link */}
+              <div className="text-center">
+                <Link
+                  href="/lupa-password"
+                  className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline font-medium inline-flex items-center gap-1"
+                >
+                  🔗 Lupa Password?
+                </Link>
+              </div>
+            </form>
+
+            {/* Divider */}
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-white text-gray-500">atau</span>
               </div>
             </div>
 
-            {/* Password Input */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-600" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all"
-                  placeholder="••••••••"
-                />
+            {/* Registrasi Orang Tua Section */}
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-2">
+                Orang Tua Belum Punya Akun?
+              </p>
+              <Link
+                href="/registrasi-orang-tua"
+                className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline font-semibold inline-flex items-center gap-1"
+              >
+                🔗 Daftar di sini
+              </Link>
+            </div>
+
+            {/* Quick Login */}
+            <div className="mt-5 pt-5 border-t border-gray-100">
+              <p className="text-xs text-gray-500 text-center mb-2">
+                (Quick Login hanya untuk Testing/Demo)
+              </p>
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors"
+                  onClick={() => quickLogin('ADMIN')}
+                  className="px-2 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 rounded text-xs font-medium transition-colors border border-emerald-600"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => quickLogin('GURU')}
+                  className="px-2 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 rounded text-xs font-medium transition-colors border border-emerald-600"
+                >
+                  Guru
+                </button>
+                <button
+                  type="button"
+                  onClick={() => quickLogin('SISWA')}
+                  className="px-2 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 rounded text-xs font-medium transition-colors border border-emerald-600"
+                >
+                  Siswa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => quickLogin('ORANG_TUA')}
+                  className="px-2 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 rounded text-xs font-medium transition-colors border border-emerald-600"
+                >
+                  Orang Tua
                 </button>
               </div>
             </div>
-
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-sm"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Loading...
-                </div>
-              ) : (
-                'Login'
-              )}
-            </button>
-
-            {/* Lupa Password Link */}
-            <div className="text-center">
-              <Link
-                href="/lupa-password"
-                className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline font-medium inline-flex items-center gap-1"
-              >
-                🔗 Lupa Password?
-              </Link>
-            </div>
-          </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">atau</span>
-            </div>
           </div>
 
-          {/* Registrasi Orang Tua Section */}
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">
-              Orang Tua Belum Punya Akun?
+          {/* Footer */}
+          <div className="text-center mt-5">
+            <p className="text-gray-600 text-sm">
+              © 2025 SIMTAQ
             </p>
-            <Link
-              href="/registrasi-orang-tua"
-              className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline font-semibold inline-flex items-center gap-1"
-            >
-              🔗 Daftar di sini
-            </Link>
           </div>
-
-          {/* Quick Login */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-xs text-gray-500 text-center mb-3">
-              (Quick Login hanya untuk Testing/Demo)
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => quickLogin('ADMIN')}
-                className="px-3 py-2 bg-white hover:bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium transition-colors border border-emerald-600"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => quickLogin('GURU')}
-                className="px-3 py-2 bg-white hover:bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium transition-colors border border-emerald-600"
-              >
-                Guru
-              </button>
-              <button
-                type="button"
-                onClick={() => quickLogin('SISWA')}
-                className="px-3 py-2 bg-white hover:bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium transition-colors border border-emerald-600"
-              >
-                Siswa
-              </button>
-              <button
-                type="button"
-                onClick={() => quickLogin('ORANG_TUA')}
-                className="px-3 py-2 bg-white hover:bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium transition-colors border border-emerald-600"
-              >
-                Orang Tua
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-6">
-          <p className="text-gray-600 text-sm">
-            © 2025 SIMTAQ
-          </p>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 }
