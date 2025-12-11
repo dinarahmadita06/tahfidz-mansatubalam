@@ -132,6 +132,7 @@ model Guru {
   tasmiPengampu   Tasmi[] @relation("GuruPengampu")
   tasmiVerifikasi Tasmi[] @relation("GuruVerifikasi")
   tasmiPenguji    Tasmi[] @relation("GuruPenguji")
+  agenda         Agenda[]
 }
 
 model Siswa {
@@ -220,6 +221,7 @@ model Kelas {
   guruKelas     GuruKelas[]
   siswa         Siswa[]
   targetHafalan TargetHafalan[]
+  agenda        Agenda[]
 
   @@index([status])
   @@index([tahunAjaranId])
@@ -406,6 +408,26 @@ model BukuDigital {
   @@index([guruId])
   @@index([kategori])
   @@index([createdAt(sort: Desc)])
+}
+
+model Agenda {
+  id           String   @id @default(cuid())
+  guruId       String
+  kelasId      String?
+  judul        String
+  deskripsi    String?
+  tanggal      DateTime
+  waktuMulai   String
+  waktuSelesai String?
+  status       String   @default("upcoming") // upcoming, berlangsung, selesai
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  guru         Guru     @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  kelas        Kelas?   @relation(fields: [kelasId], references: [id], onDelete: SetNull)
+
+  @@index([guruId])
+  @@index([kelasId])
+  @@index([tanggal(sort: Desc)])
 }
 
 model LogActivity {

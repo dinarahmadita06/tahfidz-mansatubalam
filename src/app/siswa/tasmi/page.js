@@ -13,9 +13,11 @@ export default function SiswaTasmiPage() {
   const [totalJuz, setTotalJuz] = useState(0);
   const [tasmiList, setTasmiList] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [guruList, setGuruList] = useState([]);
   const [formData, setFormData] = useState({
     jumlahHafalan: 0,
     juzYangDitasmi: '',
+    guruId: '',
     jamTasmi: '',
     tanggalTasmi: '',
     catatan: '',
@@ -83,6 +85,23 @@ export default function SiswaTasmiPage() {
         }
       }
 
+      // Fetch guru tahfidz list
+      try {
+        const guruRes = await fetch('/api/guru', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          }
+        });
+
+        if (guruRes.ok) {
+          const guruData = await guruRes.json();
+          setGuruList(Array.isArray(guruData) ? guruData : []);
+        }
+      } catch (guruError) {
+        console.error('Error fetching guru list:', guruError);
+      }
+
       // Fetch tasmi history
       const tasmiRes = await fetch('/api/siswa/tasmi');
       if (tasmiRes.ok) {
@@ -101,7 +120,7 @@ export default function SiswaTasmiPage() {
     e.preventDefault();
 
     // Validation
-    if (!formData.juzYangDitasmi || !formData.jamTasmi || !formData.tanggalTasmi) {
+    if (!formData.juzYangDitasmi || !formData.jamTasmi || !formData.tanggalTasmi || !formData.guruId) {
       toast.error('Semua field wajib diisi');
       return;
     }
@@ -116,6 +135,7 @@ export default function SiswaTasmiPage() {
         body: JSON.stringify({
           jumlahHafalan: parseInt(formData.jumlahHafalan),
           juzYangDitasmi: formData.juzYangDitasmi,
+          guruId: formData.guruId,
           jamTasmi: formData.jamTasmi,
           tanggalTasmi: formData.tanggalTasmi,
           catatan: formData.catatan,
@@ -151,6 +171,7 @@ export default function SiswaTasmiPage() {
     setFormData({
       jumlahHafalan: tasmi.jumlahHafalan,
       juzYangDitasmi: tasmi.juzYangDitasmi,
+      guruId: tasmi.guruPengampu?.id || '',
       jamTasmi: tasmi.jamTasmi,
       tanggalTasmi: tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toISOString().split('T')[0] : '',
       catatan: tasmi.catatan || '',
@@ -186,6 +207,7 @@ export default function SiswaTasmiPage() {
     setFormData({
       jumlahHafalan: totalJuz,
       juzYangDitasmi: '',
+      guruId: '',
       jamTasmi: '',
       tanggalTasmi: '',
       catatan: '',
@@ -334,14 +356,13 @@ export default function SiswaTasmiPage() {
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Jadwal</th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Catatan Guru</th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Hasil Penilaian</th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {tasmiList.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
+                    <td colSpan="6" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <Award size={48} className="text-gray-300" />
                         <p className="text-gray-500">Belum ada pendaftaran Tasmi'</p>
@@ -407,39 +428,6 @@ export default function SiswaTasmiPage() {
                         )}
                       </td>
 
-                      {/* Hasil Penilaian */}
-                      <td className="px-6 py-4 text-center">
-                        {tasmi.publishedAt && tasmi.nilaiAkhir ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <Star size={16} className="text-yellow-500 fill-yellow-500" />
-                              <span className="font-bold text-lg text-gray-900">{tasmi.nilaiAkhir.toFixed(0)}</span>
-                            </div>
-                            <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                              tasmi.predikat === 'Mumtaz' ? 'bg-green-100 text-green-700' :
-                              tasmi.predikat === 'Jayyid Jiddan' ? 'bg-blue-100 text-blue-700' :
-                              tasmi.predikat === 'Jayyid' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {tasmi.predikat}
-                            </span>
-                            {tasmi.pdfUrl && (
-                              <button
-                                onClick={() => window.open(tasmi.pdfUrl, '_blank')}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
-                              >
-                                <FileText size={14} />
-                                Lihat PDF
-                              </button>
-                            )}
-                          </div>
-                        ) : tasmi.statusPendaftaran === 'SELESAI' ? (
-                          <span className="text-xs text-gray-500">Menunggu publikasi</span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-
                       {/* Aksi */}
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
@@ -496,7 +484,7 @@ export default function SiswaTasmiPage() {
                   </label>
                   <input
                     type="text"
-                    value={siswaData?.user?.name || ''}
+                    value={session?.user?.name || ''}
                     disabled
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                   />
@@ -550,15 +538,22 @@ export default function SiswaTasmiPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Guru Pengampu
+                  Guru Pengampu <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={siswaData?.kelas?.guruKelas?.[0]?.guru?.user?.name || '-'}
-                  disabled
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-                />
-                <p className="text-xs text-gray-500 mt-1">Otomatis terisi sesuai kelas</p>
+                <select
+                  value={formData.guruId}
+                  onChange={(e) => setFormData({ ...formData, guruId: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Pilih guru pengampu tahfidz</option>
+                  {guruList.map((guru) => (
+                    <option key={guru.id} value={guru.id}>
+                      {guru.user?.name || 'Guru Tanpa Nama'}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Pilih guru tahfidz yang akan menguji</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

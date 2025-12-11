@@ -140,7 +140,7 @@ function AdminLayout({ children }) {
     // Only start polling if we're on client side
     if (typeof window !== 'undefined') {
       checkNotifications();
-      const interval = setInterval(checkNotifications, 30000); // Increased to 30 seconds
+      const interval = setInterval(checkNotifications, 60000); // interval 60 detik
 
       return () => clearInterval(interval);
     }
@@ -234,8 +234,7 @@ function AdminLayout({ children }) {
           background-image:
             radial-gradient(circle at center, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
             conic-gradient(from 0deg, rgba(16, 185, 129, 0.05) 0deg, transparent 45deg, rgba(16, 185, 129, 0.05) 90deg, transparent 135deg, rgba(16, 185, 129, 0.05) 180deg, transparent 225deg, rgba(16, 185, 129, 0.05) 270deg, transparent 315deg);
-          filter: blur(1px);
-          pointer-events: none;
+          /* filter: blur(1px); removed for performance */
           opacity: 0.6;
         }
       `}</style>

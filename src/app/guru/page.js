@@ -203,14 +203,15 @@ export default function GuruDashboard() {
         });
         fetchDashboardData();
       } else {
-        alert('Gagal menambah agenda');
+        const errorData = await response.json();
+        console.error('Agenda API error:', errorData);
+        alert('Gagal menambah agenda: ' + (errorData.error || 'Terjadi kesalahan'));
       }
     } catch (error) {
       console.error('Error creating agenda:', error);
-      alert('Terjadi kesalahan');
+      alert('Terjadi kesalahan: ' + error.message);
     }
   };
-
   const getStatusBadge = (status) => {
     const badges = {
       LANCAR: { icon: CheckCircle, text: 'Lancar', bg: `${colors.success}15`, color: colors.success },
@@ -358,33 +359,6 @@ export default function GuruDashboard() {
                 {greeting}, {getFirstName(session?.user?.name)} • {formattedDate}
               </p>
             </div>
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '14px 20px',
-                minHeight: '48px',
-                background: refreshing ? colors.gray[300] : `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-                color: colors.white,
-                fontSize: '14px',
-                fontWeight: 600,
-                borderRadius: '12px',
-                border: 'none',
-                cursor: refreshing ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-                boxShadow: '0 2px 8px rgba(247, 200, 115, 0.3)',
-                width: '100%',
-              }}
-              className="sm:w-auto md:px-6 md:py-3 md:text-base"
-            >
-              <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-              {refreshing ? 'Memuat...' : 'Refresh'}
-            </button>
           </div>
         </div>
 
@@ -462,12 +436,12 @@ export default function GuruDashboard() {
           {/* Stats Cards */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '24px',
             marginBottom: '32px',
             width: '100%',
           }}
-          className="sm:grid-cols-2 lg:grid-cols-3 md:gap-8 stats-grid">
+          className="md:gap-8 stats-grid">
             {/* Kelas Card */}
             <div style={{
               background: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
@@ -628,11 +602,11 @@ export default function GuruDashboard() {
           {/* Grid Layout */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '24px',
             marginBottom: '24px',
           }}
-          className="lg:grid-cols-2 md:gap-8 md:mb-8 cards-grid">
+          className="md:gap-8 md:mb-8 cards-grid">
             {/* Kelola Kelas Card */}
             <div style={{
               background: colors.white,

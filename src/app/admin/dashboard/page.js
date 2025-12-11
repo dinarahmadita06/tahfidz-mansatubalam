@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -28,58 +28,28 @@ import {
   Target
 } from 'lucide-react';
 
-// Dynamic import untuk Recharts - mengurangi bundle size dan mempercepat initial load
-const LineChart = dynamic(
-  () => import('recharts').then(mod => mod.LineChart),
-  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
-);
-const Line = dynamic(
-  () => import('recharts').then(mod => mod.Line),
-  { ssr: false }
-);
-const BarChart = dynamic(
-  () => import('recharts').then(mod => mod.BarChart),
-  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
-);
-const Bar = dynamic(
-  () => import('recharts').then(mod => mod.Bar),
-  { ssr: false }
-);
-const RechartsPieChart = dynamic(
-  () => import('recharts').then(mod => mod.PieChart),
-  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
-);
-const Pie = dynamic(
-  () => import('recharts').then(mod => mod.Pie),
-  { ssr: false }
-);
-const Cell = dynamic(
-  () => import('recharts').then(mod => mod.Cell),
-  { ssr: false }
-);
-const XAxis = dynamic(
-  () => import('recharts').then(mod => mod.XAxis),
-  { ssr: false }
-);
-const YAxis = dynamic(
-  () => import('recharts').then(mod => mod.YAxis),
-  { ssr: false }
-);
-const CartesianGrid = dynamic(
-  () => import('recharts').then(mod => mod.CartesianGrid),
-  { ssr: false }
-);
-const Tooltip = dynamic(
-  () => import('recharts').then(mod => mod.Tooltip),
-  { ssr: false }
-);
-const Legend = dynamic(
-  () => import('recharts').then(mod => mod.Legend),
-  { ssr: false }
-);
-const ResponsiveContainer = dynamic(
-  () => import('recharts').then(mod => mod.ResponsiveContainer),
-  { ssr: false }
+// Optimized dynamic import untuk Recharts - mengurangi bundle size dan mempercepat initial load
+const RechartsComponents = dynamic(
+  () => import('recharts').then(mod => ({
+    LineChart: mod.LineChart,
+    Line: mod.Line,
+    BarChart: mod.BarChart,
+    Bar: mod.Bar,
+    PieChart: mod.PieChart,
+    Pie: mod.Pie,
+    Cell: mod.Cell,
+    XAxis: mod.XAxis,
+    YAxis: mod.YAxis,
+    CartesianGrid: mod.CartesianGrid,
+    Tooltip: mod.Tooltip,
+    Legend: mod.Legend,
+    ResponsiveContainer: mod.ResponsiveContainer
+  })),
+  { 
+    ssr: false, 
+    loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div>,
+    suspense: true
+  }
 );
 
 // Islamic Modern Color Palette - Emerald & Amber Pastel
@@ -289,7 +259,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
         border: `1px solid ${scheme.border}`,
         transition: 'all 0.3s ease',
-        animation: `slideUp 0.5s ease-out ${delay}s both`,
+        animation: `slideUp 0.3s ease-out ${delay}s both`,
       }}
       className="stats-card">
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -352,7 +322,7 @@ function TrendHafalanChart({ data }) {
       padding: '24px',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       border: `1px solid ${colors.emerald[200]}`,
-      animation: 'slideUp 0.5s ease-out 0.4s both',
+      animation: 'slideUp 0.3s ease-out 0.2s both',
     }}
     className="card-container">
       <div style={{
@@ -383,54 +353,57 @@ function TrendHafalanChart({ data }) {
         </h3>
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
-          <XAxis
-            dataKey="bulan"
-            stroke={colors.text.tertiary}
-            style={{ fontSize: '12px', fontFamily: '"Poppins", system-ui, sans-serif' }}
-          />
-          <YAxis
-            stroke={colors.text.tertiary}
-            style={{ fontSize: '12px', fontFamily: '"Poppins", system-ui, sans-serif' }}
-          />
-          <Tooltip
-            contentStyle={{
-              background: colors.white,
-              border: `1px solid ${colors.emerald[200]}`,
-              borderRadius: '8px',
-              fontFamily: '"Poppins", system-ui, sans-serif',
-              fontSize: '12px',
-            }}
-          />
-          <Legend
-            wrapperStyle={{
-              fontFamily: '"Poppins", system-ui, sans-serif',
-              fontSize: '12px',
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="aktual"
-            name="Hafalan Aktual"
-            stroke={colors.emerald[500]}
-            strokeWidth={3}
-            dot={{ fill: colors.emerald[500], r: 5 }}
-            activeDot={{ r: 7 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="target"
-            name="Target Sekolah"
-            stroke={colors.amber[400]}
-            strokeWidth={3}
-            dot={{ fill: colors.amber[400], r: 5 }}
-            activeDot={{ r: 7 }}
-            strokeDasharray="5 5"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
+        <RechartsComponents />
+        <RechartsComponents.ResponsiveContainer width="100%" height={240}>
+          <RechartsComponents.LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+            <RechartsComponents.CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
+            <RechartsComponents.XAxis
+              dataKey="bulan"
+              stroke={colors.text.tertiary}
+              style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
+            />
+            <RechartsComponents.YAxis
+              stroke={colors.text.tertiary}
+              style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
+            />
+            <RechartsComponents.Tooltip
+              contentStyle={{
+                background: colors.white,
+                border: `1px solid ${colors.emerald[200]}`,
+                borderRadius: '6px',
+                fontFamily: '"Poppins", system-ui, sans-serif',
+                fontSize: '11px',
+              }}
+            />
+            <RechartsComponents.Legend
+              wrapperStyle={{
+                fontFamily: '"Poppins", system-ui, sans-serif',
+                fontSize: '11px',
+              }}
+            />
+            <RechartsComponents.Line
+              type="monotone"
+              dataKey="aktual"
+              name="Hafalan Aktual"
+              stroke={colors.emerald[500]}
+              strokeWidth={2}
+              dot={{ fill: colors.emerald[500], r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <RechartsComponents.Line
+              type="monotone"
+              dataKey="target"
+              name="Target Sekolah"
+              stroke={colors.amber[400]}
+              strokeWidth={2}
+              dot={{ fill: colors.amber[400], r: 4 }}
+              activeDot={{ r: 6 }}
+              strokeDasharray="4 4"
+            />
+          </RechartsComponents.LineChart>
+        </RechartsComponents.ResponsiveContainer>
+      </Suspense>
     </div>
   );
 }
@@ -446,7 +419,7 @@ function DistribusiKehadiranChart({ data }) {
       padding: '24px',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       border: `1px solid ${colors.amber[200]}`,
-      animation: 'slideUp 0.5s ease-out 0.5s both',
+      animation: 'slideUp 0.3s ease-out 0.25s both',
     }}
     className="card-container">
       <div style={{
@@ -477,34 +450,37 @@ function DistribusiKehadiranChart({ data }) {
         </h3>
       </div>
 
-      <ResponsiveContainer width="100%" height={250}>
-        <RechartsPieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={90}
-            paddingAngle={3}
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index]} />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{
-              background: colors.white,
-              border: `1px solid ${colors.gray[200]}`,
-              borderRadius: '8px',
-              fontFamily: '"Poppins", system-ui, sans-serif',
-              fontSize: '12px',
-              color: '#374151',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            }}
-          />
-        </RechartsPieChart>
-      </ResponsiveContainer>
+      <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
+        <RechartsComponents />
+        <RechartsComponents.ResponsiveContainer width="100%" height={220}>
+          <RechartsComponents.PieChart>
+            <RechartsComponents.Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={50}
+              outerRadius={80}
+              paddingAngle={2}
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <RechartsComponents.Cell key={`cell-${index}`} fill={COLORS[index]} />
+              ))}
+            </RechartsComponents.Pie>
+            <RechartsComponents.Tooltip
+              contentStyle={{
+                background: colors.white,
+                border: `1px solid ${colors.gray[200]}`,
+                borderRadius: '6px',
+                fontFamily: '"Poppins", system-ui, sans-serif',
+                fontSize: '11px',
+                color: '#374151',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              }}
+            />
+          </RechartsComponents.PieChart>
+        </RechartsComponents.ResponsiveContainer>
+      </Suspense>
 
       {/* Legend */}
       <div style={{
@@ -550,7 +526,7 @@ function ProgressKelasChart({ data }) {
       padding: '24px',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       border: `1px solid ${colors.lavender[200]}`,
-      animation: 'slideUp 0.5s ease-out 0.6s both',
+      animation: 'slideUp 0.3s ease-out 0.3s both',
     }}
     className="card-container">
       <div style={{
@@ -672,7 +648,7 @@ function KinerjaGuruChart({ data }) {
       padding: '24px',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       border: `1px solid ${colors.mint[100]}`,
-      animation: 'slideUp 0.5s ease-out 0.7s both',
+      animation: 'slideUp 0.3s ease-out 0.35s both',
     }}
     className="card-container">
       <div style={{
@@ -703,43 +679,46 @@ function KinerjaGuruChart({ data }) {
         </h3>
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
-          <XAxis
-            dataKey="nama"
-            stroke={colors.text.tertiary}
-            style={{ fontSize: '12px', fontFamily: '"Poppins", system-ui, sans-serif' }}
-          />
-          <YAxis
-            stroke={colors.text.tertiary}
-            style={{ fontSize: '12px', fontFamily: '"Poppins", system-ui, sans-serif' }}
-          />
-          <Tooltip
-            contentStyle={{
-              background: colors.white,
-              border: `1px solid ${colors.gray[200]}`,
-              borderRadius: '8px',
-              fontFamily: '"Poppins", system-ui, sans-serif',
-              fontSize: '12px',
-              color: '#374151',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            }}
-            formatter={(value) => [`${value} Juz`, 'Rata-rata Hafalan']}
-          />
-          <defs>
-            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
-              <stop offset="100%" stopColor="#FBBF24" stopOpacity={1} />
-            </linearGradient>
-          </defs>
-          <Bar
-            dataKey="rataJuz"
-            radius={[8, 8, 0, 0]}
-            fill="url(#barGradient)"
-          />
-        </BarChart>
-      </ResponsiveContainer>
+      <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
+        <RechartsComponents />
+        <RechartsComponents.ResponsiveContainer width="100%" height={240}>
+          <RechartsComponents.BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <RechartsComponents.CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
+            <RechartsComponents.XAxis
+              dataKey="nama"
+              stroke={colors.text.tertiary}
+              style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
+            />
+            <RechartsComponents.YAxis
+              stroke={colors.text.tertiary}
+              style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
+            />
+            <RechartsComponents.Tooltip
+              contentStyle={{
+                background: colors.white,
+                border: `1px solid ${colors.gray[200]}`,
+                borderRadius: '6px',
+                fontFamily: '"Poppins", system-ui, sans-serif',
+                fontSize: '11px',
+                color: '#374151',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              }}
+              formatter={(value) => [`${value} Juz`, 'Rata-rata Hafalan']}
+            />
+            <defs>
+              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
+                <stop offset="100%" stopColor="#FBBF24" stopOpacity={1} />
+              </linearGradient>
+            </defs>
+            <RechartsComponents.Bar
+              dataKey="rataJuz"
+              radius={[6, 6, 0, 0]}
+              fill="url(#barGradient)"
+            />
+          </RechartsComponents.BarChart>
+        </RechartsComponents.ResponsiveContainer>
+      </Suspense>
 
       {/* Highlight Guru Terbaik */}
       <div style={{
@@ -771,7 +750,7 @@ function LeaderboardKelas({ data }) {
       padding: '24px',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       border: `1px solid ${colors.amber[200]}`,
-      animation: 'slideUp 0.5s ease-out 0.8s both',
+      animation: 'slideUp 0.3s ease-out 0.4s both',
     }}
     className="card-container">
       <div style={{
@@ -896,7 +875,7 @@ function JadwalSetoranCard({ jadwalSetoran }) {
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       border: `1px solid ${colors.emerald[200]}`,
       height: '100%',
-      animation: 'slideUp 0.5s ease-out 0.9s both',
+      animation: 'slideUp 0.3s ease-out 0.45s both',
     }}
     className="card-container">
       <div style={{
@@ -1049,7 +1028,7 @@ function PengumumanCard({ pengumuman }) {
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       border: `1px solid ${colors.amber[200]}`,
       height: '100%',
-      animation: 'slideUp 0.5s ease-out 1s both',
+      animation: 'slideUp 0.3s ease-out 0.5s both',
     }}
     className="card-container">
       <div style={{
@@ -1384,7 +1363,7 @@ export default function DashboardTahfidz() {
                 value={data.stats.totalGuru}
                 subtitle="Guru aktif mengajar"
                 color="amber"
-                delay={0.1}
+                delay={0.05}
               />
               <StatCard
                 icon={<BookOpen size={22} color={colors.white} />}
@@ -1392,7 +1371,7 @@ export default function DashboardTahfidz() {
                 value={`${data.stats.totalJuz} Juz`}
                 subtitle="Keseluruhan siswa"
                 color="lavender"
-                delay={0.2}
+                delay={0.1}
               />
               <StatCard
                 icon={<Award size={22} color={colors.white} />}
@@ -1400,7 +1379,7 @@ export default function DashboardTahfidz() {
                 value={data.stats.rataRataNilai}
                 subtitle="Nilai keseluruhan"
                 color="blue"
-                delay={0.1}
+                delay={0.05}
               />
               <StatCard
                 icon={<School size={22} color={colors.white} />}
@@ -1408,7 +1387,7 @@ export default function DashboardTahfidz() {
                 value={data.stats.totalKelas}
                 subtitle="Kelas tahfidz aktif"
                 color="mint"
-                delay={0.2}
+                delay={0.1}
               />
               <StatCard
                 icon={<CheckCircle2 size={22} color={colors.white} />}
@@ -1416,7 +1395,7 @@ export default function DashboardTahfidz() {
                 value={`${data.stats.rataRataKehadiran}%`}
                 subtitle="Kehadiran siswa"
                 color="sky"
-                delay={0.3}
+                delay={0.15}
               />
             </div>
 
@@ -1448,7 +1427,7 @@ export default function DashboardTahfidz() {
               padding: '24px',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
               border: `1px solid ${colors.gray[200]}`,
-              animation: 'slideUp 0.5s ease-out 1.1s both',
+              animation: 'slideUp 0.3s ease-out 0.5s both',
             }}>
               <h3 style={{
                 fontSize: '18px',
@@ -1516,7 +1495,7 @@ export default function DashboardTahfidz() {
         @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
@@ -1524,61 +1503,53 @@ export default function DashboardTahfidz() {
           }
         }
 
-        /* Stats Card Animations */
+        /* Simplified Stats Card Animations */
         .stats-card {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: box-shadow 0.2s ease;
         }
 
         .stats-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 16px rgba(16, 185, 129, 0.12);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
         }
 
-        /* Card Container Animations */
+        /* Simplified Card Container Animations */
         .card-container {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: box-shadow 0.2s ease;
         }
 
         .card-container:hover {
-          transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         }
 
-        /* Jadwal Item Hover */
+        /* Simplified Jadwal Item Hover */
         .jadwal-item {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: box-shadow 0.2s ease;
         }
 
         .jadwal-item:hover {
-          transform: translateX(2px);
           box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
-          background: ${colors.white} !important;
         }
 
-        /* Pengumuman Item Hover */
+        /* Simplified Pengumuman Item Hover */
         .pengumuman-item {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: box-shadow 0.2s ease;
         }
 
         .pengumuman-item:hover {
-          transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(251, 191, 36, 0.12);
-          border-color: ${colors.amber[300]} !important;
         }
 
-        /* Quick Action Card Hover */
+        /* Simplified Quick Action Card Hover */
         .quick-action-card {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: box-shadow 0.2s ease;
         }
 
         .quick-action-card:hover {
-          transform: translateX(4px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
-        /* Leaderboard Item Hover */
+        /* Simplified Leaderboard Item Hover */
         .leaderboard-item:hover {
-          transform: translateX(4px);
           box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
         }
 
@@ -1610,21 +1581,19 @@ export default function DashboardTahfidz() {
         }
 
         .recharts-wrapper {
-          animation: fadeIn 0.8s ease-out;
+          animation: fadeIn 0.3s ease-out;
         }
 
-        /* Recharts Bar Hover - Microinteraction */
+        /* Simplified Recharts Bar Hover */
         .recharts-bar-rectangle:hover {
           opacity: 0.9;
-          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-          transform: scale(1.05);
-          transition: all 0.2s ease-in-out;
+          transition: opacity 0.1s ease;
         }
 
-        /* Recharts Pie Sector Hover */
+        /* Simplified Recharts Pie Sector Hover */
         .recharts-pie-sector:hover {
-          filter: brightness(1.1);
-          transition: all 0.2s ease-in-out;
+          filter: brightness(1.05);
+          transition: filter 0.1s ease;
         }
       `}</style>
     </AdminLayout>

@@ -78,7 +78,7 @@ export default function PenilaianHafalanIndexPage() {
                   fontSize: '14px',
                   color: '#6B7280',
                   margin: 0,
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                 }}
               >
                 Pilih kelas untuk melihat dan menilai hafalan siswa.
@@ -120,7 +120,7 @@ export default function PenilaianHafalanIndexPage() {
                   border: '1px solid #D1D5DB',
                   borderRadius: '10px',
                   fontSize: '14px',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                   outline: 'none',
                   transition: 'all 0.2s',
@@ -158,7 +158,7 @@ export default function PenilaianHafalanIndexPage() {
                 }}
               >
                 <BookOpen size={48} style={{ color: '#D1D5DB', margin: '0 auto 16px' }} />
-                <p style={{ fontSize: '16px', color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+                <p style={{ fontSize: '16px', color: '#6B7280', fontFamily: 'Poppins, sans-serif' }}>
                   Tidak ada kelas yang ditemukan
                 </p>
               </motion.div>
@@ -260,7 +260,7 @@ export default function PenilaianHafalanIndexPage() {
                             fontWeight: '600',
                             color: '#F59E0B',
                             margin: 0,
-                            fontFamily: 'Inter, sans-serif',
+                            fontFamily: 'Poppins, sans-serif',
                             transition: 'all 0.3s',
                           }}
                           onMouseEnter={(e) => {
@@ -302,7 +302,7 @@ export default function PenilaianHafalanIndexPage() {
                 fontSize: '14px',
                 color: '#065F46',
                 margin: 0,
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Poppins, sans-serif',
               }}
             >
               💡 <strong>Tips:</strong> Klik salah satu kelas untuk membuka halaman penilaian

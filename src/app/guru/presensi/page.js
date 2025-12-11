@@ -156,7 +156,7 @@ export default function PresensiPage() {
                   margin: 0,
                   color: '#6B7280',
                   fontSize: '15px',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                 }}
               >
                 Pilih kelas untuk mencatat kehadiran siswa
@@ -184,7 +184,7 @@ export default function PresensiPage() {
               margin: 0,
               fontSize: '14px',
               color: '#1E40AF',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: 'Poppins, sans-serif',
             }}
           >
             <strong>Informasi:</strong> Pilih salah satu kelas di bawah untuk mulai mencatat presensi siswa.
@@ -208,7 +208,7 @@ export default function PresensiPage() {
                 fontSize: '16px',
                 color: '#6B7280',
                 margin: 0,
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Poppins, sans-serif',
               }}
             >
               Memuat data kelas...
@@ -248,7 +248,7 @@ export default function PresensiPage() {
                 fontSize: '15px',
                 color: '#9CA3AF',
                 margin: 0,
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Poppins, sans-serif',
               }}
             >
               Anda belum ditugaskan untuk mengampu kelas manapun.
@@ -282,7 +282,7 @@ export default function PresensiPage() {
                     fontSize: '14px',
                     color: '#6B7280',
                     margin: '4px 0 0 0',
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Poppins, sans-serif',
                   }}
                 >
                   Total {kelasList.length} kelas
@@ -363,7 +363,7 @@ export default function PresensiPage() {
                         borderRadius: '6px',
                         fontSize: '12px',
                         fontWeight: '600',
-                        fontFamily: 'Inter, sans-serif',
+                        fontFamily: 'Poppins, sans-serif',
                         border: kelas.status === 'AKTIF' ? '1px solid #A7F3D0' : '1px solid #FCA5A5',
                       }}
                     >
@@ -378,7 +378,7 @@ export default function PresensiPage() {
                         margin: 0,
                         fontSize: '14px',
                         color: '#6B7280',
-                        fontFamily: 'Inter, sans-serif',
+                        fontFamily: 'Poppins, sans-serif',
                       }}
                     >
                       {kelas._count?.siswa || 0} siswa
@@ -392,7 +392,7 @@ export default function PresensiPage() {
                         margin: 0,
                         fontSize: '14px',
                         color: '#6B7280',
-                        fontFamily: 'Inter, sans-serif',
+                        fontFamily: 'Poppins, sans-serif',
                       }}
                     >
                       {kelas.tahunAjaran?.nama || 'Tidak ada tahun ajaran'}

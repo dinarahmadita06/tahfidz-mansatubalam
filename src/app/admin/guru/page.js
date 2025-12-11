@@ -101,7 +101,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
             fontWeight: 600,
             color: colors.text.secondary,
             marginBottom: '6px',
-            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+            fontFamily: '"Poppins", system-ui, sans-serif',
             letterSpacing: '0.3px',
           }}>
             {title}
@@ -110,7 +110,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
             fontSize: '32px',
             fontWeight: 700,
             color: scheme.value,
-            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+            fontFamily: '"Poppins", system-ui, sans-serif',
             lineHeight: '1.1',
             marginBottom: subtitle ? '4px' : '0',
           }}>
@@ -120,7 +120,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
             <p style={{
               fontSize: '12px',
               color: colors.text.tertiary,
-              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              fontFamily: '"Poppins", system-ui, sans-serif',
             }}>
               {subtitle}
             </p>
@@ -317,7 +317,7 @@ export default function AdminGuruPage() {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 marginBottom: '8px',
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
                 Manajemen Guru
               </h1>
@@ -325,7 +325,7 @@ export default function AdminGuruPage() {
                 fontSize: '15px',
                 fontWeight: 500,
                 color: colors.text.secondary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
                 Kelola data guru tahfidz dengan mudah dan efisien
               </p>
@@ -403,7 +403,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     Cari Guru
                   </label>
@@ -432,7 +432,7 @@ export default function AdminGuruPage() {
                         border: `2px solid ${colors.gray[200]}`,
                         borderRadius: '12px',
                         fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         outline: 'none',
                         transition: 'all 0.3s ease',
                       }}
@@ -449,7 +449,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     Filter Status
                   </label>
@@ -461,7 +461,7 @@ export default function AdminGuruPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       cursor: 'pointer',
                       minWidth: '160px',
@@ -498,7 +498,7 @@ export default function AdminGuruPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}>
@@ -510,7 +510,7 @@ export default function AdminGuruPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}>
@@ -522,7 +522,7 @@ export default function AdminGuruPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}>
@@ -534,7 +534,7 @@ export default function AdminGuruPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}>
@@ -546,7 +546,7 @@ export default function AdminGuruPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}>
@@ -558,7 +558,7 @@ export default function AdminGuruPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}>
@@ -574,7 +574,7 @@ export default function AdminGuruPage() {
                           textAlign: 'center',
                           color: colors.text.tertiary,
                           fontSize: '14px',
-                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                          fontFamily: '"Poppins", system-ui, sans-serif',
                         }}>
                           Tidak ada data guru yang ditemukan
                         </td>
@@ -610,7 +610,7 @@ export default function AdminGuruPage() {
                                 color: colors.white,
                                 fontWeight: 700,
                                 fontSize: '16px',
-                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                fontFamily: '"Poppins", system-ui, sans-serif',
                               }}>
                                 {guruItem.user.name.charAt(0).toUpperCase()}
                               </div>
@@ -619,7 +619,7 @@ export default function AdminGuruPage() {
                                   fontSize: '14px',
                                   fontWeight: 600,
                                   color: colors.text.primary,
-                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                  fontFamily: '"Poppins", system-ui, sans-serif',
                                   marginBottom: '2px',
                                 }}>
                                   {guruItem.user.name}
@@ -628,7 +628,7 @@ export default function AdminGuruPage() {
                                   <div style={{
                                     fontSize: '12px',
                                     color: colors.text.tertiary,
-                                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                    fontFamily: '"Poppins", system-ui, sans-serif',
                                   }}>
                                     NIP: {guruItem.nip}
                                   </div>
@@ -640,7 +640,7 @@ export default function AdminGuruPage() {
                             padding: '20px 24px',
                             fontSize: '14px',
                             color: colors.text.secondary,
-                            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {guruItem.user.email}
                           </td>
@@ -659,7 +659,7 @@ export default function AdminGuruPage() {
                                       borderRadius: '8px',
                                       background: `${colors.emerald[500]}15`,
                                       color: colors.emerald[700],
-                                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                      fontFamily: '"Poppins", system-ui, sans-serif',
                                     }}
                                   >
                                     <GraduationCap size={12} style={{ display: 'inline', marginRight: '4px' }} />
@@ -671,7 +671,7 @@ export default function AdminGuruPage() {
                               <span style={{
                                 fontSize: '13px',
                                 color: colors.text.tertiary,
-                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                fontFamily: '"Poppins", system-ui, sans-serif',
                               }}>
                                 Belum ada kelas
                               </span>
@@ -687,7 +687,7 @@ export default function AdminGuruPage() {
                                 border: 'none',
                                 background: colors.emerald.light,
                                 color: colors.emerald[700],
-                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                fontFamily: '"Poppins", system-ui, sans-serif',
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
                                 display: 'inline-block',
                               }}
@@ -700,7 +700,7 @@ export default function AdminGuruPage() {
                             padding: '20px 24px',
                             fontSize: '14px',
                             color: colors.text.secondary,
-                            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
                               day: 'numeric',
@@ -799,7 +799,7 @@ export default function AdminGuruPage() {
                 fontSize: '24px',
                 fontWeight: 700,
                 color: colors.text.primary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
                 {editingGuru ? 'Edit Data Guru' : 'Tambah Guru Baru'}
               </h2>
@@ -832,7 +832,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     Nama Lengkap *
                   </label>
@@ -847,7 +847,7 @@ export default function AdminGuruPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       transition: 'all 0.3s ease',
                     }}
@@ -862,7 +862,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     Email *
                   </label>
@@ -877,7 +877,7 @@ export default function AdminGuruPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       transition: 'all 0.3s ease',
                     }}
@@ -892,7 +892,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     Password {editingGuru ? '(kosongkan jika tidak diubah)' : '*'}
                   </label>
@@ -907,7 +907,7 @@ export default function AdminGuruPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       transition: 'all 0.3s ease',
                     }}
@@ -922,7 +922,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     NIP
                   </label>
@@ -936,7 +936,7 @@ export default function AdminGuruPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       transition: 'all 0.3s ease',
                     }}
@@ -951,7 +951,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     Jenis Kelamin *
                   </label>
@@ -965,7 +965,7 @@ export default function AdminGuruPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       transition: 'all 0.3s ease',
                       cursor: 'pointer',
@@ -984,7 +984,7 @@ export default function AdminGuruPage() {
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}>
                     No. HP
                   </label>
@@ -998,7 +998,7 @@ export default function AdminGuruPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       transition: 'all 0.3s ease',
                     }}
@@ -1014,7 +1014,7 @@ export default function AdminGuruPage() {
                   fontWeight: 600,
                   color: colors.text.secondary,
                   marginBottom: '8px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                 }}>
                   Alamat
                 </label>
@@ -1028,7 +1028,7 @@ export default function AdminGuruPage() {
                     border: `2px solid ${colors.gray[200]}`,
                     borderRadius: '12px',
                     fontSize: '14px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                     outline: 'none',
                     transition: 'all 0.3s ease',
                     resize: 'vertical',
@@ -1057,7 +1057,7 @@ export default function AdminGuruPage() {
                     color: colors.text.secondary,
                     fontSize: '14px',
                     fontWeight: 600,
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                   }}
@@ -1075,7 +1075,7 @@ export default function AdminGuruPage() {
                     color: colors.white,
                     fontSize: '14px',
                     fontWeight: 600,
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',

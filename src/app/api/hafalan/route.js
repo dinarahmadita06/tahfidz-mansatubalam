@@ -3,6 +3,35 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 
+// Simple in-memory cache
+const cache = new Map();
+const CACHE_DURATION = 180000; // 3 minutes in milliseconds
+
+// Function to get cached data
+function getCachedData(key) {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+}
+
+// Function to set cached data
+function setCachedData(key, data) {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+}
+
+// Function to generate cache key based on parameters
+function generateCacheKey(session, siswaId, guruId) {
+  const role = session.user.role;
+  const userId = role === 'SISWA' ? session.user.siswaId : 
+                 role === 'GURU' ? session.user.guruId : 'admin';
+  return `hafalan-${role}-${userId}-${siswaId || 'all'}-${guruId || 'all'}`;
+}
+
 // GET - List hafalan
 export async function GET(request) {
   try {
@@ -15,6 +44,19 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const siswaId = searchParams.get('siswaId');
     const guruId = searchParams.get('guruId');
+
+    // Generate cache key
+    const cacheKey = generateCacheKey(session, siswaId, guruId);
+    
+    // Check if we have cached data
+    const cachedData = getCachedData(cacheKey);
+    
+    if (cachedData) {
+      console.log(`Returning cached hafalan data for key: ${cacheKey}`);
+      return NextResponse.json(cachedData);
+    }
+
+    console.log(`Fetching fresh hafalan data for key: ${cacheKey}`);
 
     let whereClause = {};
 
@@ -59,12 +101,15 @@ export async function GET(request) {
             },
           },
         },
-        surah: true,
+        // Removed surah relation since it's a string field, not a relation
       },
       orderBy: {
         tanggalSetor: 'desc',
       },
     });
+
+    // Cache the response
+    setCachedData(cacheKey, hafalan);
 
     return NextResponse.json(hafalan);
   } catch (error) {
@@ -149,7 +194,7 @@ export async function POST(request) {
             },
           },
         },
-        surah: true,
+        // Removed surah relation since it's a string field, not a relation
       },
     });
 
@@ -162,7 +207,7 @@ export async function POST(request) {
       userRole: session.user.role,
       action: 'CREATE',
       module: 'HAFALAN',
-      description: `Menambahkan hafalan ${hafalan.surah.namaLatin} ayat ${ayatMulai}-${ayatSelesai} untuk siswa ${hafalan.siswa.user.name}`,
+      description: `Menambahkan hafalan ${hafalan.surahId} ayat ${ayatMulai}-${ayatSelesai} untuk siswa ${hafalan.siswa.user.name}`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
@@ -174,6 +219,19 @@ export async function POST(request) {
     });
 
     console.log('🔵 Activity logging completed, returning response...');
+
+    // Invalidate cache for this user/siswa
+    const invalidateKeys = [
+      `hafalan-SISWA-${siswaId}-all-all`,
+      `hafalan-GURU-${session.user.guruId}-all-all`,
+      `hafalan-GURU-${session.user.guruId}-${siswaId}-all`,
+      `hafalan-ADMIN-all-all-all`
+    ];
+    
+    invalidateKeys.forEach(key => {
+      cache.delete(key);
+      console.log(`Invalidated cache key: ${key}`);
+    });
 
     return NextResponse.json(hafalan, { status: 201 });
   } catch (error) {

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
-// GET - Fetch penilaian
 export async function GET(request) {
   try {
     const session = await auth();
@@ -11,49 +10,12 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const hafalanId = searchParams.get('hafalanId');
-    const siswaId = searchParams.get('siswaId');
-    const kelasId = searchParams.get('kelasId');
-
-    let whereClause = {
-      guruId: session.user.guruId
-    };
-
-    if (hafalanId) {
-      whereClause.hafalanId = hafalanId;
-    }
-
-    if (siswaId) {
-      whereClause.siswaId = siswaId;
-    }
-
-    // Filter by kelasId if provided
-    if (kelasId) {
-      whereClause.siswa = {
-        kelasId: kelasId
-      };
-    }
-
     const penilaian = await prisma.penilaian.findMany({
-      where: whereClause,
+      where: {
+        guruId: session.user.guruId
+      },
       include: {
         siswa: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                email: true
-              }
-            },
-            kelas: {
-              select: {
-                nama: true
-              }
-            }
-          }
-        },
-        guru: {
           include: {
             user: {
               select: {
@@ -65,7 +27,7 @@ export async function GET(request) {
         hafalan: {
           select: {
             id: true,
-            surah: true,
+            // Removed surah: true since surah is a string field, not a relation
             juz: true,
             ayatMulai: true,
             ayatSelesai: true,
@@ -187,7 +149,7 @@ export async function POST(request) {
           hafalan: {
             select: {
               id: true,
-              surah: true,
+              // Removed surah: true since surah is a string field, not a relation
               juz: true,
               ayatMulai: true,
               ayatSelesai: true,
@@ -257,7 +219,7 @@ export async function PUT(request) {
     const penilaian = await prisma.penilaian.update({
       where: {
         id,
-        guruId: session.user.guruId // Ensure guru can only update their own penilaian
+        guruId: session.user.guruId
       },
       data: {
         tajwid: tajwidScore,
@@ -277,8 +239,12 @@ export async function PUT(request) {
         },
         hafalan: {
           select: {
-            surah: true,
-            juz: true
+            id: true,
+            // Removed surah: true since surah is a string field, not a relation
+            juz: true,
+            ayatMulai: true,
+            ayatSelesai: true,
+            tanggal: true
           }
         }
       }
@@ -313,10 +279,11 @@ export async function DELETE(request) {
       );
     }
 
+    // Delete penilaian
     await prisma.penilaian.delete({
       where: {
         id,
-        guruId: session.user.guruId // Ensure guru can only delete their own penilaian
+        guruId: session.user.guruId
       }
     });
 
