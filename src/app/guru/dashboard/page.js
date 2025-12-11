@@ -185,29 +185,36 @@ const fetchRiwayatPenilaianHariIni = () => {
   ];
 };
 
-// Stats Card Component
-function StatsCard({ icon, title, value, color = 'emerald' }) {
+// Stats Card Component - Compact Style (like Student Dashboard)
+function StatsCard({ icon, title, value, subtitle, color = 'emerald' }) {
   const colorMap = {
     emerald: {
-      bg: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-      text: colors.text.primary,
-      value: colors.emerald[700],
-      border: colors.emerald[200],
+      bgFrom: colors.emerald[50],
+      bgTo: '#D1FAE5',
+      iconBg: colors.emerald[500],
+      border: colors.emerald[100],
+      text: colors.emerald[600],
     },
     amber: {
-      bg: `linear-gradient(135deg, ${colors.amber[50]} 0%, ${colors.amber[100]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-      text: colors.text.primary,
-      value: colors.amber[700],
-      border: colors.amber[200],
+      bgFrom: colors.amber[50],
+      bgTo: '#FFEDD5',
+      iconBg: colors.amber[500],
+      border: colors.amber[100],
+      text: colors.amber[700],
+    },
+    sky: {
+      bgFrom: '#F0F9FF',
+      bgTo: '#E0F2FE',
+      iconBg: '#0EA5E9',
+      border: '#BAE6FD',
+      text: '#0284C7',
     },
     violet: {
-      bg: `linear-gradient(135deg, ${colors.violet[100]} 0%, ${colors.violet[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.violet[500]} 0%, ${colors.violet[600]} 100%)`,
-      text: colors.text.primary,
-      value: colors.violet[700],
-      border: colors.violet[200],
+      bgFrom: colors.violet[50],
+      bgTo: '#EDE9FE',
+      iconBg: colors.violet[500],
+      border: colors.violet[100],
+      text: colors.violet[700],
     },
   };
 
@@ -215,49 +222,68 @@ function StatsCard({ icon, title, value, color = 'emerald' }) {
 
   return (
     <div style={{
-      background: scheme.bg,
-      borderRadius: '20px',
-      padding: '28px',
-      boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
+      background: `linear-gradient(to bottom right, ${scheme.bgFrom} 0%, ${scheme.bgTo} 100%)`,
+      borderRadius: '24px',
+      padding: '32px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
       border: `2px solid ${scheme.border}`,
       transition: 'all 0.3s ease',
+      minHeight: '180px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
     }}
     className="stats-card">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '20px',
+      }}>
         <div style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '18px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '16px',
           background: scheme.iconBg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          flexShrink: 0,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
         }}>
           {icon}
         </div>
-        <div style={{ flex: 1 }}>
+      </div>
+      <div>
+        <h3 style={{
+          fontSize: '15px',
+          fontWeight: 600,
+          color: colors.text.secondary,
+          marginBottom: '8px',
+          fontFamily: 'Poppins, system-ui, sans-serif',
+        }}>
+          {title}
+        </h3>
+        <p style={{
+          fontSize: '36px',
+          fontWeight: 700,
+          color: colors.text.primary,
+          fontFamily: 'Poppins, system-ui, sans-serif',
+          lineHeight: '1',
+          marginBottom: '4px',
+        }}>
+          {value}
+        </p>
+        {subtitle && (
           <p style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: colors.text.secondary,
-            marginBottom: '6px',
+            fontSize: '13px',
+            fontWeight: 500,
+            color: scheme.text,
             fontFamily: 'Poppins, system-ui, sans-serif',
-            letterSpacing: '0.3px',
+            marginTop: '8px',
           }}>
-            {title}
+            {subtitle}
           </p>
-          <p style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: scheme.value,
-            fontFamily: 'Poppins, system-ui, sans-serif',
-            lineHeight: '1.1',
-          }}>
-            {value}
-          </p>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -1015,30 +1041,40 @@ export default function DashboardGuru() {
           className="main-content"
           style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Stats Cards */}
+            {/* Stats Cards - Compact 4 Column Grid */}
             <div
               className="stats-grid"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                 gap: '24px',
               }}>
               <StatsCard
-                icon={<GraduationCap size={24} color={colors.white} />}
+                icon={<GraduationCap size={28} color={colors.white} />}
                 title="Kelas Diampu"
                 value={stats?.kelasAjaran}
+                subtitle="kelas aktif"
                 color="emerald"
               />
               <StatsCard
-                icon={<Users size={24} color={colors.white} />}
+                icon={<Users size={28} color={colors.white} />}
                 title="Jumlah Siswa"
                 value={stats?.jumlahSiswa}
+                subtitle="siswa terdaftar"
                 color="amber"
               />
               <StatsCard
-                icon={<Award size={24} color={colors.white} />}
-                title="Progress Rata-rata"
+                icon={<Award size={28} color={colors.white} />}
+                title="Progres Rata-rata"
                 value={`${stats?.progressRataRata}%`}
+                subtitle="dari target"
+                color="sky"
+              />
+              <StatsCard
+                icon={<BookOpen size={28} color={colors.white} />}
+                title="Total Juz"
+                value={stats?.totalJuz}
+                subtitle="juz diampu"
                 color="violet"
               />
             </div>
@@ -1105,9 +1141,13 @@ export default function DashboardGuru() {
           animation-delay: 0.3s;
         }
 
+        .stats-card:nth-child(4) {
+          animation-delay: 0.4s;
+        }
+
         .stats-card:hover {
-          transform: translateY(-6px) scale(1.02);
-          box-shadow: 0 12px 28px rgba(26, 147, 111, 0.15);
+          transform: translateY(-5px) scale(1.02);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
         /* Card Container Animations */
@@ -1154,6 +1194,10 @@ export default function DashboardGuru() {
 
         /* Responsive Design */
         @media (max-width: 1024px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+
           .cards-grid {
             grid-template-columns: 1fr !important;
           }
@@ -1182,12 +1226,11 @@ export default function DashboardGuru() {
 
           .stats-grid {
             grid-template-columns: 1fr !important;
-            gap: 16px !important;
+            gap: 20px !important;
           }
 
           .stats-card {
             min-width: 100%;
-            padding: 20px !important;
           }
 
           .cards-grid {
