@@ -84,14 +84,14 @@ function DonutChart({ data, percentage }) {
       </div>
 
       {/* Legend */}
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-8 space-y-2 w-full">
         {data.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
+          <div key={index} className="flex items-center gap-3">
             <div
-              className="w-3 h-3 rounded-full"
+              className="w-4 h-4 rounded-full flex-shrink-0"
               style={{ backgroundColor: item.color }}
             ></div>
-            <span className="text-xs text-gray-700">
+            <span className="text-sm text-gray-700 font-medium flex-1">
               {item.label}: {item.value}
             </span>
           </div>
@@ -281,10 +281,12 @@ export default function PresensiPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50/30 via-cream-50/30 to-amber-50/20">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat...</p>
+          <div className="inline-flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-600 mt-4 font-medium">Memuat presensi...</p>
         </div>
       </div>
     );
