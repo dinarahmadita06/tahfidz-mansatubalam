@@ -70,7 +70,11 @@
       "Bash(git rm:*)",
       "Bash(git reset:*)",
       "Bash(vercel env:*)",
-      "Bash(\"src\\app\\guru\\tahsin\\[kelasId]\\laporan\\page.js\")"
+      "Bash(\"src\\app\\guru\\tahsin\\[kelasId]\\laporan\\page.js\")",
+      "Bash(if [ -d .vercel ])",
+      "Bash(then echo \"Project sudah terlink\")",
+      "Bash(else echo \"Project belum terlink\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

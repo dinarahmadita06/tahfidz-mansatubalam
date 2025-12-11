@@ -218,7 +218,7 @@ export default function PresensiDetailPage() {
               cursor: 'pointer',
               transition: 'all 0.2s',
               marginBottom: '16px',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: 'Poppins, sans-serif',
             }}
             onMouseEnter={(e) => {
               e.target.style.background = '#F9FAFB';
@@ -266,7 +266,7 @@ export default function PresensiDetailPage() {
                   margin: 0,
                   color: '#6B7280',
                   fontSize: '15px',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                 }}
               >
                 Catat kehadiran siswa untuk tanggal yang dipilih
@@ -295,7 +295,7 @@ export default function PresensiDetailPage() {
                   fontWeight: '600',
                   color: '#374151',
                   marginBottom: '8px',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                 }}
               >
                 Pilih Tanggal
@@ -310,7 +310,7 @@ export default function PresensiDetailPage() {
                   border: '1.5px solid #E5E7EB',
                   borderRadius: '10px',
                   fontSize: '14px',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                   transition: 'all 0.2s',
                 }}
                 onFocus={(e) => (e.target.style.borderColor = '#059669')}
@@ -340,7 +340,7 @@ export default function PresensiDetailPage() {
                     presensiData.length === 0 || saving
                       ? 'none'
                       : '0 2px 8px rgba(5, 150, 105, 0.2)',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -436,7 +436,7 @@ export default function PresensiDetailPage() {
                 fontSize: '16px',
                 color: '#6B7280',
                 margin: 0,
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Poppins, sans-serif',
               }}
             >
               Memuat data siswa...
@@ -520,7 +520,7 @@ export default function PresensiDetailPage() {
                     margin: '0 0 8px 0',
                     fontSize: '14px',
                     color: '#6B7280',
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Poppins, sans-serif',
                   }}
                 >
                   Bandar Lampung, {today}
@@ -531,7 +531,7 @@ export default function PresensiDetailPage() {
                     fontSize: '14px',
                     fontWeight: '600',
                     color: '#374151',
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Poppins, sans-serif',
                   }}
                 >
                   Guru Pengampu,
@@ -548,7 +548,7 @@ export default function PresensiDetailPage() {
                     fontSize: '14px',
                     fontWeight: '600',
                     color: '#1F2937',
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: 'Poppins, sans-serif',
                   }}
                 >
                   {session?.user?.name || '...'}
@@ -606,7 +606,7 @@ function StatCard({ icon: Icon, label, value, color, bgGradient, borderColor }) 
               fontSize: '13px',
               color: color,
               fontWeight: '600',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: 'Poppins, sans-serif',
             }}
           >
             {label}
@@ -700,7 +700,7 @@ function PresensiRow({ item, index, onStatusChange, onKeteranganChange }) {
                   fontSize: '14px',
                   fontWeight: item.status === option.value ? '600' : '500',
                   color: item.status === option.value ? option.color : '#6B7280',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                 }}
               >
                 {option.emoji} {option.label}
@@ -721,7 +721,7 @@ function PresensiRow({ item, index, onStatusChange, onKeteranganChange }) {
             border: '1.5px solid #E5E7EB',
             borderRadius: '8px',
             fontSize: '14px',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'Poppins, sans-serif',
             transition: 'all 0.2s',
           }}
           onFocus={(e) => {
@@ -744,7 +744,7 @@ const headerStyle = {
   fontSize: '13px',
   fontWeight: '700',
   color: '#374151',
-  fontFamily: 'Inter, sans-serif',
+  fontFamily: 'Poppins, sans-serif',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
 };
@@ -753,5 +753,5 @@ const cellStyle = {
   padding: '16px 14px',
   fontSize: '14px',
   color: '#1F2937',
-  fontFamily: 'Inter, sans-serif',
+  fontFamily: 'Poppins, sans-serif',
 };

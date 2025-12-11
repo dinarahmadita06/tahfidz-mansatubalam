@@ -411,7 +411,7 @@ export default function ReferensiQuran() {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   marginBottom: '6px',
-                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                 }}>
                   Referensi Al-Qur'an Digital
                 </h1>
@@ -419,7 +419,7 @@ export default function ReferensiQuran() {
                   fontSize: '14px',
                   fontWeight: 500,
                   color: colors.text.secondary,
-                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                 }}>
                   Teks Al-Qur'an dengan tajwid, terjemahan, dan audio
                 </p>
@@ -454,7 +454,7 @@ export default function ReferensiQuran() {
                     color: activeTab === 'quran' ? colors.purple[700] : colors.text.tertiary,
                     background: activeTab === 'quran' ? `${colors.purple[50]}80` : 'transparent',
                     transition: 'all 0.2s ease',
-                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                     cursor: 'pointer',
                     border: 'none',
                   }}
@@ -476,7 +476,7 @@ export default function ReferensiQuran() {
                     color: activeTab === 'tajwid' ? colors.green[700] : colors.text.tertiary,
                     background: activeTab === 'tajwid' ? `${colors.green[50]}80` : 'transparent',
                     transition: 'all 0.2s ease',
-                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                     cursor: 'pointer',
                     border: 'none',
                   }}
@@ -523,7 +523,7 @@ export default function ReferensiQuran() {
                               border: `2px solid ${colors.purple[200]}`,
                               borderRadius: '12px',
                               fontSize: '14px',
-                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                              fontFamily: '"Poppins", system-ui, sans-serif',
                               outline: 'none',
                               transition: 'all 0.2s ease',
                               background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.purple[50]} 100%)`,
@@ -549,7 +549,7 @@ export default function ReferensiQuran() {
                               fontSize: '13px',
                               fontWeight: 700,
                               color: colors.purple[900],
-                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                              fontFamily: '"Poppins", system-ui, sans-serif',
                             }}>
                               Materi Hafalan Minggu Ini
                             </span>
@@ -565,7 +565,7 @@ export default function ReferensiQuran() {
                                   fontSize: '12px',
                                   color: colors.purple[800],
                                   marginTop: '4px',
-                                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                                  fontFamily: '"Poppins", system-ui, sans-serif',
                                 }}
                               >
                                 {surah?.transliteration} ayat {material.ayatMulai}-{material.ayatSelesai}
@@ -598,7 +598,7 @@ export default function ReferensiQuran() {
                               transition: 'all 0.2s ease',
                               border: 'none',
                               cursor: 'pointer',
-                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                              fontFamily: '"Poppins", system-ui, sans-serif',
                             }}
                             className="surah-item"
                           >
@@ -618,7 +618,7 @@ export default function ReferensiQuran() {
                                   color: colors.white,
                                   fontSize: '12px',
                                   fontWeight: 700,
-                                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                                  fontFamily: '"Poppins", system-ui, sans-serif',
                                 }}>
                                   {surah.number}
                                 </span>
@@ -629,7 +629,7 @@ export default function ReferensiQuran() {
                                     fontSize: '14px',
                                     fontWeight: 700,
                                     color: colors.text.primary,
-                                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                                    fontFamily: '"Poppins", system-ui, sans-serif',
                                   }}>
                                     {surah.transliteration}
                                   </span>
@@ -647,7 +647,7 @@ export default function ReferensiQuran() {
                                   gap: '8px',
                                   fontSize: '12px',
                                   color: colors.text.tertiary,
-                                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                                  fontFamily: '"Poppins", system-ui, sans-serif',
                                 }}>
                                   <span>{surah.translation}</span>
                                   <span>•</span>
@@ -661,7 +661,7 @@ export default function ReferensiQuran() {
                             padding: '24px',
                             textAlign: 'center',
                             color: colors.text.tertiary,
-                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             <p>Tidak ada surah ditemukan</p>
                           </div>
@@ -687,7 +687,7 @@ export default function ReferensiQuran() {
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          fontFamily: '"Poppins", system-ui, sans-serif',
                         }}
                         className="lg:hidden back-button"
                       >
@@ -711,7 +711,7 @@ export default function ReferensiQuran() {
                         }} className="spinner" />
                         <p style={{
                           color: colors.text.secondary,
-                          fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                          fontFamily: '"Poppins", system-ui, sans-serif',
                         }}>
                           Memuat surah...
                         </p>
@@ -755,14 +755,14 @@ export default function ReferensiQuran() {
                               fontSize: '22px',
                               fontWeight: 700,
                               marginBottom: '8px',
-                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                              fontFamily: '"Poppins", system-ui, sans-serif',
                             }}>
                               {surahData.englishName}
                             </h3>
                             <p style={{
                               fontSize: '14px',
                               opacity: 0.95,
-                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                              fontFamily: '"Poppins", system-ui, sans-serif',
                             }}>
                               {surahData.englishNameTranslation} • {surahData.numberOfAyahs} Ayat • {surahData.revelationType}
                             </p>
@@ -826,7 +826,7 @@ export default function ReferensiQuran() {
                                     <span style={{
                                       fontSize: '12px',
                                       fontWeight: 700,
-                                      fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                                      fontFamily: '"Poppins", system-ui, sans-serif',
                                     }}>
                                       Materi Hafalan Minggu Ini
                                     </span>
@@ -870,7 +870,7 @@ export default function ReferensiQuran() {
                                         color: colors.white,
                                         fontSize: '14px',
                                         fontWeight: 700,
-                                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                                        fontFamily: '"Poppins", system-ui, sans-serif',
                                       }}>
                                         {ayahNumberInSurah}
                                       </span>
@@ -921,7 +921,7 @@ export default function ReferensiQuran() {
                                   fontSize: '14px',
                                   color: colors.text.secondary,
                                   lineHeight: '1.6',
-                                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                                  fontFamily: '"Poppins", system-ui, sans-serif',
                                 }}>
                                   {ayah.translation}
                                 </p>
@@ -969,7 +969,7 @@ export default function ReferensiQuran() {
                 fontWeight: 700,
                 color: colors.text.primary,
                 marginBottom: '12px',
-                fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
                 Pindah ke Ayat
               </h3>
@@ -977,7 +977,7 @@ export default function ReferensiQuran() {
                 fontSize: '14px',
                 color: colors.text.secondary,
                 marginBottom: '20px',
-                fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
                 {surahData ? `${surahData.englishName} memiliki ${surahData.numberOfAyahs} ayat` : 'Pilih nomor ayat yang ingin dituju'}
               </p>
@@ -1000,7 +1000,7 @@ export default function ReferensiQuran() {
                   borderRadius: '12px',
                   fontSize: '14px',
                   marginBottom: '20px',
-                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                   outline: 'none',
                 }}
                 className="modal-input"
@@ -1023,7 +1023,7 @@ export default function ReferensiQuran() {
                     fontWeight: 600,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}
                   className="modal-btn-cancel"
                 >
@@ -1042,7 +1042,7 @@ export default function ReferensiQuran() {
                     cursor: 'pointer',
                     border: 'none',
                     transition: 'all 0.2s ease',
-                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                     boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)',
                   }}
                   className="modal-btn-submit"
@@ -1056,8 +1056,6 @@ export default function ReferensiQuran() {
 
         {/* Global Styles */}
         <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
-
           /* Spinner Animation */
           .spinner {
             animation: spin 1s linear infinite;

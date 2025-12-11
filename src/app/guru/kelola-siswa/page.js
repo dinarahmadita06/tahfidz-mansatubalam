@@ -230,7 +230,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
             fontWeight: 600,
             color: colors.text.secondary,
             marginBottom: '4px',
-            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+            fontFamily: '"Poppins", system-ui, sans-serif',
           }}>
             {title}
           </p>
@@ -238,7 +238,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
             fontSize: '26px',
             fontWeight: 700,
             color: scheme.value,
-            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+            fontFamily: '"Poppins", system-ui, sans-serif',
             lineHeight: '1.1',
             marginBottom: subtitle ? '3px' : '0',
           }}>
@@ -248,7 +248,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
             <p style={{
               fontSize: '11px',
               color: colors.text.tertiary,
-              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+              fontFamily: '"Poppins", system-ui, sans-serif',
             }}>
               {subtitle}
             </p>
@@ -349,7 +349,7 @@ export default function KelolaSiswaPage() {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 marginBottom: '6px',
-                fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
                 Kelola Siswa
               </h1>
@@ -357,7 +357,7 @@ export default function KelolaSiswaPage() {
                 fontSize: '14px',
                 fontWeight: 500,
                 color: colors.text.secondary,
-                fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
                 Manajemen data siswa dan monitoring progress hafalan
               </p>
@@ -381,7 +381,7 @@ export default function KelolaSiswaPage() {
                   color: colors.text.primary,
                   cursor: refreshing ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                 }}
                 className="action-btn-secondary"
               >
@@ -403,7 +403,7 @@ export default function KelolaSiswaPage() {
                   color: colors.white,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                   boxShadow: '0 4px 12px rgba(26, 147, 111, 0.3)',
                 }}
                 className="action-btn-primary"
@@ -486,7 +486,7 @@ export default function KelolaSiswaPage() {
                       border: `2px solid ${colors.gray[200]}`,
                       borderRadius: '12px',
                       fontSize: '14px',
-                      fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
                       outline: 'none',
                       transition: 'all 0.2s ease',
                     }}
@@ -508,7 +508,7 @@ export default function KelolaSiswaPage() {
                     fontWeight: 600,
                     color: colors.text.primary,
                     cursor: 'pointer',
-                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}
                   className="filter-btn"
                 >
@@ -529,7 +529,7 @@ export default function KelolaSiswaPage() {
                     fontWeight: 600,
                     color: colors.text.primary,
                     cursor: 'pointer',
-                    fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
                   }}
                   className="filter-btn"
                 >
@@ -563,7 +563,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Nama Siswa
@@ -574,7 +574,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Kelas
@@ -585,7 +585,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Status
@@ -596,7 +596,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Total Juz
@@ -607,7 +607,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Total Ayat
@@ -618,7 +618,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Nilai
@@ -629,7 +629,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Setoran Bulan Ini
@@ -640,7 +640,7 @@ export default function KelolaSiswaPage() {
                         fontSize: '13px',
                         fontWeight: 700,
                         color: colors.text.primary,
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Total Setoran
@@ -666,7 +666,7 @@ export default function KelolaSiswaPage() {
                             fontSize: '14px',
                             fontWeight: 600,
                             color: colors.text.primary,
-                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.nama}
                           </td>
@@ -675,7 +675,7 @@ export default function KelolaSiswaPage() {
                             textAlign: 'center',
                             fontSize: '14px',
                             color: colors.text.secondary,
-                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.kelas}
                           </td>
@@ -693,7 +693,7 @@ export default function KelolaSiswaPage() {
                               color: statusConfig.text,
                               fontSize: '12px',
                               fontWeight: 600,
-                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                              fontFamily: '"Poppins", system-ui, sans-serif',
                             }}>
                               <StatusIcon size={14} />
                               {statusConfig.label}
@@ -705,7 +705,7 @@ export default function KelolaSiswaPage() {
                             fontSize: '14px',
                             fontWeight: 600,
                             color: colors.emerald[700],
-                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.totalJuz}
                           </td>
@@ -714,7 +714,7 @@ export default function KelolaSiswaPage() {
                             textAlign: 'center',
                             fontSize: '14px',
                             color: colors.text.secondary,
-                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.totalAyat}
                           </td>
@@ -738,7 +738,7 @@ export default function KelolaSiswaPage() {
                                 : colors.gray[700],
                               fontSize: '14px',
                               fontWeight: 700,
-                              fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                              fontFamily: '"Poppins", system-ui, sans-serif',
                             }}>
                               {student.nilai}
                             </span>
@@ -749,7 +749,7 @@ export default function KelolaSiswaPage() {
                             fontSize: '14px',
                             fontWeight: 600,
                             color: colors.text.primary,
-                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.setoranBulanIni}
                           </td>
@@ -759,7 +759,7 @@ export default function KelolaSiswaPage() {
                             fontSize: '14px',
                             fontWeight: 600,
                             color: colors.text.secondary,
-                            fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                            fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.totalSetoran}
                           </td>
@@ -782,7 +782,7 @@ export default function KelolaSiswaPage() {
                 <p style={{
                   fontSize: '13px',
                   color: colors.text.tertiary,
-                  fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                 }}>
                   Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredStudents.length)} dari {filteredStudents.length} siswa
                 </p>
@@ -819,7 +819,7 @@ export default function KelolaSiswaPage() {
                         fontWeight: 600,
                         color: currentPage === i + 1 ? colors.white : colors.text.primary,
                         cursor: 'pointer',
-                        fontFamily: '"Nunito", "Nunito Rounded", system-ui, sans-serif',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
                         transition: 'all 0.2s ease',
                       }}
                       className="pagination-btn"
@@ -851,8 +851,6 @@ export default function KelolaSiswaPage() {
       </div>
 
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
-
         /* Stats Card Animations */
         .stats-card-small {
           transition: all 0.3s ease;

@@ -316,7 +316,7 @@ export default function ProfilPage() {
     alamat: 'Jl. Pahlawan No. 23, Bandar Lampung',
     idWali: 'WLI.2024.013',
     bergabungSejak: '12 Oktober 2025',
-    terakhirLogin: '29 Oktober 2025 pukul 21.22 WIB',
+    terakhirLogin: '11 Desember 2025 pukul 21.13 WIB',
     status: 'Aktif',
   };
 
@@ -386,15 +386,6 @@ export default function ProfilPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Breadcrumb */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 flex items-center gap-2">
-            <Home size={16} />
-            <span>›</span>
-            <span className="text-emerald-600 font-medium">Profil Orang Tua</span>
-          </p>
-        </div>
 
         {/* Header */}
         <motion.div
@@ -596,31 +587,6 @@ export default function ProfilPage() {
                     </div>
                   );
                 })}
-              </div>
-            </motion.div>
-
-            {/* Informasi Keamanan */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-emerald-50 border border-emerald-200 rounded-lg md:rounded-xl"
-              style={{ padding: '20px', borderRadius: '16px' }}
-            >
-              <div className="flex items-start gap-3">
-                <ShieldCheck size={22} className="text-emerald-600 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-emerald-800 mb-2 text-sm">Informasi Keamanan Akun</h3>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-2">
-                    Akun ini digunakan untuk memantau perkembangan hafalan anak Anda di Tahfidz MAN 1
-                    Bandar Lampung. Pastikan untuk menjaga kerahasiaan kredensial dan segera hubungi
-                    admin jika ada aktivitas mencurigakan.
-                  </p>
-                  <div className="flex items-center gap-2 text-emerald-700">
-                    <Lock size={14} />
-                    <span className="text-xs font-medium">Login terenkripsi – Sesi aman</span>
-                  </div>
-                </div>
               </div>
             </motion.div>
           </div>

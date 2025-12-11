@@ -6,11 +6,9 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   LayoutDashboard,
-  BookUp,
   Star,
   Book,
   BookOpen,
-  Brain,
   CalendarCheck,
   TrendingUp,
   UserCircle,
@@ -29,13 +27,6 @@ const menuItems = [
     icon: LayoutDashboard,
     href: '/siswa',
     description: 'Ringkasan hafalan & nilai',
-    color: 'emerald'
-  },
-  {
-    title: 'Setor Hafalan',
-    icon: BookUp,
-    href: '/siswa/setor-hafalan',
-    description: 'Submit hafalan baru',
     color: 'emerald'
   },
   {
@@ -65,13 +56,6 @@ const menuItems = [
     href: '/siswa/referensi',
     description: 'Baca & dengar Qur\'an',
     color: 'emerald'
-  },
-  {
-    title: 'Mode Latihan',
-    icon: Brain,
-    href: '/siswa/latihan',
-    description: 'Latihan mandiri',
-    color: 'purple'
   },
   {
     title: 'Presensi',

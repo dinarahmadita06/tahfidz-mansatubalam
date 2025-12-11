@@ -134,7 +134,7 @@ export default function TahsinIndexPage() {
                   border: '1px solid #D1D5DB',
                   borderRadius: '10px',
                   fontSize: '14px',
-                  fontFamily: 'Inter, sans-serif',
+                  fontFamily: 'Poppins, sans-serif',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                   outline: 'none',
                   transition: 'all 0.2s',
@@ -284,7 +284,7 @@ export default function TahsinIndexPage() {
                               borderRadius: '6px',
                               fontSize: '12px',
                               color: '#7C3AED',
-                              fontFamily: 'Inter, sans-serif',
+                              fontFamily: 'Poppins, sans-serif',
                               fontWeight: '500',
                             }}
                           >

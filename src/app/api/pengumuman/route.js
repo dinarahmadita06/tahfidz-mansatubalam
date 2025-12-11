@@ -48,7 +48,6 @@ export async function GET(request) {
                     kelas: {
                       select: {
                         nama: true,
-                        tingkat: true
                       }
                     }
                   }

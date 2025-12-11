@@ -12,8 +12,6 @@ import {
   Shield,
   Edit,
   Lock,
-  Home,
-  ChevronRight,
   BookOpen,
   IdCard,
   UserCircle
@@ -241,15 +239,6 @@ export default function ProfileSiswaPage() {
         {/* Islamic Ornaments */}
         <div className="islamic-ornament-topleft"></div>
         <div className="islamic-ornament-bottomright"></div>
-
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm mb-6 relative z-10">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-emerald-100/50 shadow-sm">
-            <Home size={16} className="text-emerald-600" strokeWidth={1.5} />
-            <ChevronRight size={14} className="text-gray-400" strokeWidth={2} />
-            <span className="font-semibold text-emerald-700">Profil Siswa</span>
-          </div>
-        </div>
 
         {/* Header Section */}
         <div
