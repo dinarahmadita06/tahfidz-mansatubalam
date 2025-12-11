@@ -354,7 +354,6 @@ function TrendHafalanChart({ data }) {
       </div>
 
       <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
-        <RechartsComponents />
         <RechartsComponents.ResponsiveContainer width="100%" height={240}>
           <RechartsComponents.LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
             <RechartsComponents.CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
@@ -451,7 +450,6 @@ function DistribusiKehadiranChart({ data }) {
       </div>
 
       <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
-        <RechartsComponents />
         <RechartsComponents.ResponsiveContainer width="100%" height={220}>
           <RechartsComponents.PieChart>
             <RechartsComponents.Pie
@@ -680,7 +678,6 @@ function KinerjaGuruChart({ data }) {
       </div>
 
       <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
-        <RechartsComponents />
         <RechartsComponents.ResponsiveContainer width="100%" height={240}>
           <RechartsComponents.BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <RechartsComponents.CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
