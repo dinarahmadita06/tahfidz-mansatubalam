@@ -109,15 +109,45 @@ const mockData = {
 // StatCard Component
 function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
   const colorMap = {
-    emerald: { bg: colors.emerald[100], value: colors.emerald[700], border: colors.emerald[200] },
-    amber: { bg: colors.amber[100], value: colors.amber[600], border: colors.amber[200] },
-    blue: { bg: '#E1F2FF', value: '#1E40AF', border: '#BFDBFE' },
-    mint: { bg: '#D1FAE5', value: '#065F46', border: '#D1FAE5' },
-    lavender: { bg: '#E9E5FF', value: '#6D28D9', border: '#DDD6FE' },
-    sky: { bg: '#E0F2FE', value: '#075985', border: '#BAE6FD' },
+    emerald: { 
+      bg: colors.emerald[100], 
+      iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+      value: colors.emerald[700], 
+      border: colors.emerald[200] 
+    },
+    amber: { 
+      bg: colors.amber[100], 
+      iconBg: `linear-gradient(135deg, ${colors.amber[500]} 0%, ${colors.amber[600]} 100%)`,
+      value: colors.amber[600], 
+      border: colors.amber[200] 
+    },
+    blue: { 
+      bg: '#E1F2FF', 
+      iconBg: `linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)`,
+      value: '#1E40AF', 
+      border: '#BFDBFE' 
+    },
+    mint: { 
+      bg: '#D1FAE5', 
+      iconBg: `linear-gradient(135deg, #10B981 0%, #059669 100%)`,
+      value: '#065F46', 
+      border: '#D1FAE5' 
+    },
+    lavender: { 
+      bg: '#E9E5FF', 
+      iconBg: `linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)`,
+      value: '#6D28D9', 
+      border: '#DDD6FE' 
+    },
+    sky: { 
+      bg: '#E0F2FE', 
+      iconBg: `linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)`,
+      value: '#075985', 
+      border: '#BAE6FD' 
+    },
   };
 
-  const scheme = colorMap[color];
+  const scheme = colorMap[color] || colorMap.emerald;
 
   return (
     <div style={{
@@ -134,7 +164,7 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }
           width: '56px',
           height: '56px',
           borderRadius: '16px',
-          background: `linear-gradient(135deg, ${colors[color][500]} 0%, ${colors[color][600]} 100%)`,
+          background: scheme.iconBg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
