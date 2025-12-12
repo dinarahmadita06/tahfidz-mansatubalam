@@ -167,7 +167,7 @@ function SiswaSidebar({ userName = 'Siswa' }) {
                     </div>
                   </div>
                   <div>
-                    <h2 className="font-bold text-gray-900 text-lg">Tahfidz App</h2>
+                    <h2 className="font-bold text-gray-900 text-lg">SIMTAQ</h2>
                     <p className="text-xs text-emerald-600 font-medium">{userName}</p>
                   </div>
                 </div>
