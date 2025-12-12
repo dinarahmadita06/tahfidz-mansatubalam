@@ -11,42 +11,72 @@ import {
   Plus,
   X,
   Calendar,
-  Users,
-  AlertCircle,
+  Loader,
   Trash2,
+  Edit,
   CheckCircle,
-  Loader
+  AlertCircle,
+  FileText
 } from 'lucide-react';
+
+const colors = {
+  emerald: {
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    200: '#A7F3D0',
+    300: '#6EE7B7',
+    400: '#34D399',
+    500: '#10B981',
+    600: '#059669',
+    700: '#047857',
+  },
+  amber: {
+    50: '#FFFBEB',
+    100: '#FEF3C7',
+    200: '#FDE68A',
+    300: '#FCD34D',
+    400: '#FBBF24',
+    500: '#F59E0B',
+    600: '#D97706',
+  },
+  white: '#FFFFFF',
+  gray: {
+    50: '#F9FAFB',
+    100: '#F3F4F6',
+    200: '#E5E7EB',
+    300: '#D1D5DB',
+    400: '#9CA3AF',
+    500: '#6B7280',
+    600: '#4B5563',
+  },
+  text: {
+    primary: '#1F2937',
+    secondary: '#374151',
+    tertiary: '#6B7280',
+  },
+};
 
 export default function PengumumanPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [pengumumanList, setPengumumanList] = useState([]);
-  const [siswaWisudaList, setSiswaWisudaList] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Form state
+  // Form state - simplified
   const [formData, setFormData] = useState({
-    tipePengumuman: 'UMUM',
     judul: '',
     isi: '',
-    isPenting: false,
-    targetRole: [],
-    siswaIds: []
+    kategori: 'UMUM',
+    tanggalBerlaku: ''
   });
 
   useEffect(() => {
     fetchPengumuman();
   }, []);
-
-  useEffect(() => {
-    if (showModal && formData.tipePengumuman === 'WISUDA') {
-      fetchSiswaWisuda();
-    }
-  }, [showModal, formData.tipePengumuman]);
 
   const fetchPengumuman = async () => {
     try {
@@ -58,20 +88,9 @@ export default function PengumumanPage() {
       }
     } catch (error) {
       console.error('Error fetching pengumuman:', error);
+      setError('Gagal memuat pengumuman');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchSiswaWisuda = async () => {
-    try {
-      const res = await fetch('/api/admin/siswa-wisuda');
-      if (res.ok) {
-        const data = await res.json();
-        setSiswaWisudaList(data.siswa || []);
-      }
-    } catch (error) {
-      console.error('Error fetching siswa wisuda:', error);
     }
   };
 
@@ -83,28 +102,17 @@ export default function PengumumanPage() {
 
     try {
       // Validasi
-      if (formData.targetRole.length === 0) {
-        setError('Pilih minimal satu target penerima');
+      if (!formData.judul || !formData.isi) {
+        setError('Judul dan isi harus diisi');
         setSubmitting(false);
         return;
       }
 
-      if (formData.tipePengumuman !== 'WISUDA') {
-        if (!formData.judul || !formData.isi) {
-          setError('Judul dan isi harus diisi');
-          setSubmitting(false);
-          return;
-        }
-      } else {
-        if (formData.siswaIds.length === 0) {
-          setError('Pilih minimal satu siswa untuk wisuda');
-          setSubmitting(false);
-          return;
-        }
-      }
+      const url = editingId ? `/api/admin/pengumuman?id=${editingId}` : '/api/admin/pengumuman';
+      const method = editingId ? 'PUT' : 'POST';
 
-      const res = await fetch('/api/admin/pengumuman', {
-        method: 'POST',
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -114,7 +122,8 @@ export default function PengumumanPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess('Pengumuman berhasil dibuat!');
+        const message = editingId ? 'Pengumuman berhasil diperbarui!' : 'Pengumuman berhasil dibuat!';
+        setSuccess(message);
         setTimeout(() => {
           setShowModal(false);
           setSuccess('');
@@ -122,14 +131,25 @@ export default function PengumumanPage() {
           fetchPengumuman();
         }, 2000);
       } else {
-        setError(data.error || 'Gagal membuat pengumuman');
+        setError(data.error || 'Gagal menyimpan pengumuman');
       }
     } catch (error) {
-      console.error('Error creating pengumuman:', error);
-      setError('Terjadi kesalahan saat membuat pengumuman');
+      console.error('Error saving pengumuman:', error);
+      setError('Terjadi kesalahan saat menyimpan pengumuman');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEdit = (item) => {
+    setEditingId(item.id);
+    setFormData({
+      judul: item.judul,
+      isi: item.isi,
+      kategori: item.kategori || 'UMUM',
+      tanggalBerlaku: item.tanggalSelesai ? new Date(item.tanggalSelesai).toISOString().split('T')[0] : ''
+    });
+    setShowModal(true);
   };
 
   const handleDelete = async (id) => {
@@ -155,38 +175,39 @@ export default function PengumumanPage() {
 
   const resetForm = () => {
     setFormData({
-      tipePengumuman: 'UMUM',
       judul: '',
       isi: '',
-      isPenting: false,
-      targetRole: [],
-      siswaIds: []
+      kategori: 'UMUM',
+      tanggalBerlaku: ''
+    });
+    setEditingId(null);
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    resetForm();
+    setError('');
+  };
+
+  // Helper function untuk format tanggal
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
     });
   };
 
-  const toggleTargetRole = (role) => {
-    setFormData(prev => ({
-      ...prev,
-      targetRole: prev.targetRole.includes(role)
-        ? prev.targetRole.filter(r => r !== role)
-        : [...prev.targetRole, role]
-    }));
-  };
-
-  const toggleSiswa = (siswaId) => {
-    setFormData(prev => ({
-      ...prev,
-      siswaIds: prev.siswaIds.includes(siswaId)
-        ? prev.siswaIds.filter(id => id !== siswaId)
-        : [...prev.siswaIds, siswaId]
-    }));
-  };
-
-  const tipeBadgeStyle = {
-    UMUM: { bg: '#FFEFC1', text: '#92400E', icon: '📢' },
-    WISUDA: { bg: '#E5D4FF', text: '#6B21A8', icon: '🎓' },
-    KEGIATAN: { bg: '#D1FAE5', text: '#065F46', icon: '📅' },
-    LIBUR: { bg: '#FEE2E2', text: '#991B1B', icon: '🏖️' }
+  // Helper function untuk ringkasan teks
+  const truncateText = (text, length = 120) => {
+    if (text.length <= length) return text;
+    return text.substring(0, length) + '...';
   };
 
   return (
@@ -202,19 +223,27 @@ export default function PengumumanPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-8">
           <div className="flex items-start gap-4">
-            <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-3 rounded-xl shadow-lg">
+            <div
+              className="p-4 rounded-2xl shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+              }}
+            >
               <Megaphone className="text-white" size={28} />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Pengumuman</h1>
               <p className="text-sm text-gray-600 mt-1">
-                Kelola pengumuman untuk guru, siswa, dan orang tua
+                Kelola pengumuman untuk semua pengguna aplikasi
               </p>
             </div>
           </div>
           <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg"
+            style={{
+              background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+            }}
           >
             <Plus size={20} />
             Buat Pengumuman
@@ -223,13 +252,13 @@ export default function PengumumanPage() {
 
         {/* Success/Error Message */}
         {success && (
-          <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-4 rounded-xl flex items-center gap-3">
             <CheckCircle size={20} />
             <span className="font-medium">{success}</span>
           </div>
         )}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-4 rounded-xl flex items-center gap-3">
             <AlertCircle size={20} />
             <span className="font-medium">{error}</span>
           </div>
@@ -237,262 +266,205 @@ export default function PengumumanPage() {
 
         {/* List Pengumuman */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader className="animate-spin text-emerald-600" size={40} />
+          <div className="flex items-center justify-center py-16">
+            <Loader className="animate-spin text-emerald-600" size={48} />
           </div>
         ) : pengumumanList.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-16 bg-white rounded-2xl" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
             <Megaphone className="mx-auto text-gray-300 mb-4" size={64} />
-            <p className="text-gray-500 text-lg">Belum ada pengumuman</p>
-            <p className="text-gray-400 text-sm">Klik tombol "Buat Pengumuman" untuk memulai</p>
+            <p className="text-gray-500 text-lg font-medium">Belum ada pengumuman</p>
+            <p className="text-gray-400 text-sm mt-1">Klik tombol "Buat Pengumuman" untuk memulai</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-5">
             {pengumumanList.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
+                className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-all duration-300"
+                style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.03)' }}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
-                        style={{
-                          background: tipeBadgeStyle[item.tipePengumuman]?.bg,
-                          color: tipeBadgeStyle[item.tipePengumuman]?.text
-                        }}
-                      >
-                        {tipeBadgeStyle[item.tipePengumuman]?.icon} {item.tipePengumuman}
+                    {/* Judul */}
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">{item.judul}</h3>
+
+                    {/* Ringkasan Isi */}
+                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                      {truncateText(item.isi, 150)}
+                    </p>
+
+                    {/* Meta Info */}
+                    <div className="flex items-center gap-6 text-xs text-gray-500">
+                      <span className="flex items-center gap-2">
+                        <Calendar size={14} className="text-emerald-600" />
+                        {formatDate(item.createdAt)}
                       </span>
-                      {item.isPenting && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
-                          <AlertCircle size={14} /> Penting
+                      {item.tanggalSelesai && (
+                        <span className="flex items-center gap-2" style={{ color: colors.amber[600] }}>
+                          <Calendar size={14} />
+                          Berlaku hingga: {formatDate(item.tanggalSelesai)}
+                        </span>
+                      )}
+                      {item.lampiran && (
+                        <span className="flex items-center gap-2" style={{ color: colors.emerald[600] }}>
+                          <FileText size={14} />
+                          Ada lampiran
                         </span>
                       )}
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{item.judul}</h3>
-                    <p className="text-gray-600 text-sm mb-4 whitespace-pre-line line-clamp-3">
-                      {item.isi}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={14} />
-                        {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users size={14} />
-                        Target: {item.targetRole.join(', ')}
-                      </span>
-                    </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
-                  >
-                    <Trash2 size={20} />
-                  </button>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="p-3 rounded-lg transition-all duration-200 hover:bg-emerald-50 text-emerald-600"
+                      title="Edit"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="p-3 rounded-lg transition-all duration-200 hover:bg-red-50 text-red-600"
+                      title="Hapus"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Modal Create */}
+        {/* Modal Create/Edit */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Buat Pengumuman Baru</h2>
+          <div
+            className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+          >
+            <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)' }}>
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    {editingId ? 'Edit Pengumuman' : 'Buat Pengumuman Baru'}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {editingId ? 'Perbarui informasi pengumuman' : 'Buat pengumuman baru untuk semua pengguna'}
+                  </p>
+                </div>
                 <button
-                  onClick={() => {
-                    setShowModal(false);
-                    resetForm();
-                    setError('');
-                  }}
-                  className="p-2 rounded-lg hover:bg-gray-100"
+                  onClick={closeModal}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <X size={24} />
+                  <X size={24} className="text-gray-600" />
                 </button>
               </div>
 
+              {/* Error/Success dalam Modal */}
               {error && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                  <AlertCircle size={18} />
                   {error}
                 </div>
               )}
               {success && (
-                <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm">
+                <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                  <CheckCircle size={18} />
                   {success}
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Tipe Pengumuman */}
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-7">
+                {/* Judul Pengumuman */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Tipe Pengumuman
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Judul Pengumuman
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {['UMUM', 'WISUDA', 'KEGIATAN', 'LIBUR'].map((tipe) => (
-                      <button
-                        key={tipe}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, tipePengumuman: tipe })}
-                        className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
-                          formData.tipePengumuman === tipe
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300'
-                        }`}
-                      >
-                        {tipeBadgeStyle[tipe]?.icon} {tipe}
-                      </button>
-                    ))}
-                  </div>
+                  <input
+                    type="text"
+                    value={formData.judul}
+                    onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
+                    placeholder="Masukkan judul pengumuman..."
+                    required
+                  />
                 </div>
 
-                {/* Target Role */}
+                {/* Isi Pengumuman */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Target Penerima
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Isi Pengumuman
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {['GURU', 'SISWA', 'ORANG_TUA'].map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => toggleTargetRole(role)}
-                        className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
-                          formData.targetRole.includes(role)
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-300'
-                        }`}
-                      >
-                        {role.replace('_', ' ')}
-                      </button>
-                    ))}
-                  </div>
+                  <textarea
+                    rows={8}
+                    value={formData.isi}
+                    onChange={(e) => setFormData({ ...formData, isi: e.target.value })}
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 resize-none"
+                    placeholder="Masukkan isi pengumuman..."
+                    required
+                  />
                 </div>
 
-                {/* Conditional Fields */}
-                {formData.tipePengumuman === 'WISUDA' ? (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Pilih Siswa Wisuda (Lulus Ujian Juz 1 & 2)
-                    </label>
-                    <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4 space-y-2">
-                      {siswaWisudaList.length === 0 ? (
-                        <p className="text-gray-500 text-sm text-center py-4">
-                          Tidak ada siswa yang eligible untuk wisuda
-                        </p>
-                      ) : (
-                        siswaWisudaList.map((siswa) => (
-                          <label
-                            key={siswa.id}
-                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={formData.siswaIds.includes(siswa.id)}
-                              onChange={() => toggleSiswa(siswa.id)}
-                              className="w-4 h-4 text-emerald-600"
-                            />
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">{siswa.nama}</p>
-                              <p className="text-xs text-gray-500">
-                                Kelas {siswa.kelas.tingkat} {siswa.kelas.nama} • {siswa.totalJuzLancar} Juz
-                              </p>
-                            </div>
-                          </label>
-                        ))
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      ⚠️ Template akan di-generate otomatis berdasarkan siswa yang dipilih
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Judul Pengumuman
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.judul}
-                        onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        placeholder="Masukkan judul pengumuman..."
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Isi Pengumuman
-                      </label>
-                      <textarea
-                        rows={8}
-                        value={formData.isi}
-                        onChange={(e) => setFormData({ ...formData, isi: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                        placeholder="Masukkan isi pengumuman..."
-                        required
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Toggle Penting */}
-                <div className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-200">
-                  <div>
-                    <p className="text-sm font-semibold text-amber-900">Tandai sebagai Penting</p>
-                    <p className="text-xs text-amber-700 mt-1">Pengumuman akan ditampilkan dengan highlight merah</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, isPenting: !formData.isPenting })}
-                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                      formData.isPenting ? 'bg-red-500' : 'bg-gray-300'
-                    }`}
+              {/* Kategori Pengumuman */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Kategori Pengumuman
+                  </label>
+                  <select
+                    value={formData.kategori}
+                    onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
                   >
-                    <span
-                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
-                        formData.isPenting ? 'translate-x-6' : ''
-                      }`}
-                    />
-                  </button>
+                    <option value="UMUM">Umum</option>
+                    <option value="AKADEMIK">Akademik</option>
+                    <option value="KEGIATAN">Kegiatan</option>
+                    <option value="PENTING">Penting</option>
+                  </select>
                 </div>
 
-                {/* Buttons */}
+                {/* Tanggal Berlaku */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Tanggal Berakhir <span className="text-gray-400 font-normal">(Opsional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.tanggalBerlaku}
+                    onChange={(e) => setFormData({ ...formData, tanggalBerlaku: e.target.value })}
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Pengumuman akan otomatis tidak ditampilkan setelah tanggal ini</p>
+                </div>
+
+                {/* Action Buttons */}
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                      setError('');
-                    }}
+                    onClick={closeModal}
                     disabled={submitting}
-                    className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 disabled:opacity-50"
+                    className="flex-1 px-6 py-4 rounded-xl font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-100 disabled:opacity-50"
+                    style={{ backgroundColor: colors.gray[100] }}
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-4 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+                    }}
                   >
                     {submitting ? (
                       <>
-                        <Loader className="animate-spin" size={20} />
+                        <Loader className="animate-spin" size={18} />
                         Menyimpan...
                       </>
                     ) : (
-                      'Publikasikan'
+                      editingId ? 'Perbarui' : 'Publikasikan'
                     )}
                   </button>
                 </div>

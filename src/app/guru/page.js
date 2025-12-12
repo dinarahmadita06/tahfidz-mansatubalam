@@ -338,7 +338,7 @@ export default function GuruDashboard() {
           className="sm:flex-row sm:justify-between sm:items-start">
             <div style={{ flex: 1, minWidth: 0 }}>
               <h1 style={{
-                fontSize: '24px',
+                fontSize: '20px',
                 fontWeight: 700,
                 background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
                 WebkitBackgroundClip: 'text',
@@ -346,16 +346,16 @@ export default function GuruDashboard() {
                 marginBottom: '8px',
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}
-              className="md:text-3xl lg:text-4xl">
+              className="md:text-2xl lg:text-3xl">
                 Dashboard Guru Tahfidz
               </h1>
               <p style={{
-                fontSize: '13px',
+                fontSize: '12px',
                 fontWeight: 500,
                 color: colors.text.secondary,
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}
-              className="md:text-sm lg:text-base">
+              className="md:text-xs lg:text-sm">
                 {greeting}, {getFirstName(session?.user?.name)} • {formattedDate}
               </p>
             </div>
@@ -398,7 +398,7 @@ export default function GuruDashboard() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: 600,
                   color: colors.white,
                   fontFamily: 'Poppins, system-ui, sans-serif',
@@ -406,7 +406,7 @@ export default function GuruDashboard() {
                   marginBottom: '8px',
                   lineHeight: '1.6',
                 }}
-                className="md:text-base lg:text-lg">
+                className="md:text-sm lg:text-base">
                   "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
                 </p>
                 <p style={{
@@ -471,23 +471,23 @@ export default function GuruDashboard() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '6px',
                     fontFamily: 'Poppins, system-ui, sans-serif',
                   }}
-                  className="md:text-sm md:mb-2">
+                  className="md:text-xs md:mb-2">
                     Kelas Diampu
                   </p>
                   <p style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     color: colors.emerald[700],
                     fontFamily: 'Poppins, system-ui, sans-serif',
                     lineHeight: '1.1',
                   }}
-                  className="md:text-3xl lg:text-4xl">
+                  className="md:text-2xl lg:text-3xl">
                     {stats.jumlahKelas}
                   </p>
                 </div>
@@ -523,23 +523,23 @@ export default function GuruDashboard() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '6px',
                     fontFamily: 'Poppins, system-ui, sans-serif',
                   }}
-                  className="md:text-sm md:mb-2">
+                  className="md:text-xs md:mb-2">
                     Jumlah Siswa
                   </p>
                   <p style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     color: colors.amber[700],
                     fontFamily: 'Poppins, system-ui, sans-serif',
                     lineHeight: '1.1',
                   }}
-                  className="md:text-3xl lg:text-4xl">
+                  className="md:text-2xl lg:text-3xl">
                     {stats.jumlahSiswa}
                   </p>
                 </div>
@@ -575,23 +575,23 @@ export default function GuruDashboard() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: 600,
                     color: colors.text.secondary,
                     marginBottom: '6px',
                     fontFamily: 'Poppins, system-ui, sans-serif',
                   }}
-                  className="md:text-sm md:mb-2">
+                  className="md:text-xs md:mb-2">
                     Progress Rata-rata
                   </p>
                   <p style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     color: colors.violet[700],
                     fontFamily: 'Poppins, system-ui, sans-serif',
                     lineHeight: '1.1',
                   }}
-                  className="md:text-3xl lg:text-4xl">
+                  className="md:text-2xl lg:text-3xl">
                     {stats.progressRataRata}%
                   </p>
                 </div>
@@ -638,12 +638,12 @@ export default function GuruDashboard() {
                   <BookOpen size={24} color={colors.white} className="md:w-7 md:h-7" />
                 </div>
                 <h3 style={{
-                  fontSize: '19px',
+                  fontSize: '17px',
                   fontWeight: 700,
                   color: colors.text.primary,
                   fontFamily: 'Poppins, system-ui, sans-serif',
                 }}
-                className="md:text-xl">
+                className="md:text-lg">
                   Kelola Kelas
                 </h3>
               </div>
@@ -736,12 +736,12 @@ export default function GuruDashboard() {
                   <BookMarked size={24} color={colors.white} className="md:w-7 md:h-7" />
                 </div>
                 <h3 style={{
-                  fontSize: '19px',
+                  fontSize: '17px',
                   fontWeight: 700,
                   color: colors.text.primary,
                   fontFamily: 'Poppins, system-ui, sans-serif',
                 }}
-                className="md:text-xl">
+                className="md:text-lg">
                   Aktivitas Terbaru
                 </h3>
               </div>
@@ -862,12 +862,12 @@ export default function GuruDashboard() {
                   <Calendar size={24} color={colors.white} className="md:w-7 md:h-7" />
                 </div>
                 <h3 style={{
-                  fontSize: '19px',
+                  fontSize: '17px',
                   fontWeight: 700,
                   color: colors.text.primary,
                   fontFamily: 'Poppins, system-ui, sans-serif',
                 }}
-                className="md:text-xl">
+                className="md:text-lg">
                   Agenda Setoran Hari Ini
                 </h3>
               </div>
@@ -1008,12 +1008,12 @@ export default function GuruDashboard() {
             }}
             className="md:p-7">
               <h3 style={{
-                fontSize: '19px',
+                fontSize: '17px',
                 fontWeight: 700,
                 color: colors.text.primary,
                 fontFamily: 'Poppins, system-ui, sans-serif',
               }}
-              className="md:text-xl">
+              className="md:text-lg">
                 Tambah Agenda Baru
               </h3>
               <button

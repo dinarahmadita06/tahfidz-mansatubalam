@@ -19,6 +19,7 @@ import {
   Megaphone,
   Target,
   LogOut,
+  Award,
 } from 'lucide-react';
 
 const menuItems = [
@@ -42,6 +43,13 @@ const menuItems = [
     href: '/orangtua/penilaian',
     description: 'Nilai dari guru',
     color: 'amber'
+  },
+  {
+    title: 'Tasmi\'',
+    icon: Award,
+    href: '/orangtua/tasmi',
+    description: 'Status ujian hafalan',
+    color: 'purple'
   },
   {
     title: 'Presensi',
@@ -127,7 +135,7 @@ function OrangtuaSidebar({ userName = 'Orang Tua' }) {
         onClick={toggleSidebar}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
       >
-        {isOpen ? <X size={24} className="text-white" /> : <Menu size={24} className="text-white" />}
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
       {/* Overlay for mobile */}

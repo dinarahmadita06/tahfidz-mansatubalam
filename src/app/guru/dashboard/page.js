@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import LayoutGuruSimple from '@/components/guru/LayoutGuruSimple';
+import PengumumanWidget from '@/components/PengumumanWidget';
 import {
   BookOpen,
   Users,
@@ -1089,6 +1090,7 @@ export default function DashboardGuru() {
               }}>
               <JadwalSesiCard jadwalHariIni={jadwalHariIni} />
               <AgendaCard agendaHariIni={agendaHariIni} />
+              <PengumumanWidget limit={4} />
             </div>
 
             {/* Riwayat Penilaian - Full Width */}
