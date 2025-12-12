@@ -16,16 +16,20 @@ export default function PengumumanWidget({ title = "Pengumuman Terbaru", limit =
   const fetchPengumuman = async () => {
     try {
       setLoading(true);
+      setError('');
       const res = await fetch(`/api/pengumuman?limit=${limit}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPengumuman(data.pengumuman || []);
-      } else {
-        setError('Gagal memuat pengumuman');
+        
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || `HTTP ${res.status}`);
       }
+        
+      const data = await res.json();
+      setPengumuman(data.pengumuman || []);
     } catch (err) {
       console.error('Error fetching pengumuman:', err);
-      setError('Terjadi kesalahan');
+      setError(`Gagal memuat pengumuman: ${err.message}`);
     } finally {
       setLoading(false);
     }
