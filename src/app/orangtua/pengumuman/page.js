@@ -74,10 +74,10 @@ export default function OrangtuaPengumumanPage() {
                 <Megaphone size={40} className="text-white" />
               </div>
               <div>
-                <h1 className="text-4xl sm:text-5xl font-bold text-white drop-shadow-lg">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
                   Pengumuman
                 </h1>
-                <p className="text-white/90 text-lg mt-2">Informasi dan kabar terbaru untuk orang tua</p>
+                <p className="text-white/90 text-sm mt-2">Informasi dan kabar terbaru untuk orang tua</p>
               </div>
             </div>
           </div>
@@ -110,9 +110,9 @@ export default function OrangtuaPengumumanPage() {
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 mb-6">
                 <Megaphone size={48} className="text-emerald-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Belum Ada Pengumuman</h3>
-              <p className="text-gray-600 text-lg">Nantikan kabar terbaru di sini! 📢</p>
-              <p className="text-gray-500 text-sm mt-3">Admin akan segera mengirimkan informasi penting untuk orang tua dan anak</p>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Belum Ada Pengumuman</h3>
+              <p className="text-gray-600 text-base">Nantikan kabar terbaru di sini! 📢</p>
+              <p className="text-gray-500 text-xs mt-3">Admin akan segera mengirimkan informasi penting untuk orang tua dan anak</p>
             </div>
           </div>
         ) : (
@@ -142,7 +142,7 @@ export default function OrangtuaPengumumanPage() {
                             <CategoryIcon size={24} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-gray-900 text-lg line-clamp-2 group-hover:text-emerald-700 transition-colors">
+                            <h3 className="font-bold text-gray-900 text-base line-clamp-2 group-hover:text-emerald-700 transition-colors">
                               {item.judul}
                             </h3>
                           </div>
@@ -151,14 +151,14 @@ export default function OrangtuaPengumumanPage() {
 
                       {/* Kategori Badge */}
                       <div className="mb-4">
-                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border border-emerald-200">
                           <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
                           {item.kategori}
                         </span>
                       </div>
 
                       {/* Konten */}
-                      <p className="text-gray-700 text-sm leading-relaxed mb-6 line-clamp-3">
+                      <p className="text-gray-700 text-xs leading-relaxed mb-6 line-clamp-3">
                         {truncateText(item.isi, 120)}
                       </p>
 
@@ -166,7 +166,7 @@ export default function OrangtuaPengumumanPage() {
                       <div className="w-full h-px bg-gradient-to-r from-transparent via-emerald-200 to-transparent mb-4"></div>
 
                       {/* Meta Info */}
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
                         <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg">
                           <Calendar size={16} className="text-amber-600" />
                           <span className="font-medium">{formatDate(item.createdAt)}</span>
@@ -186,7 +186,7 @@ export default function OrangtuaPengumumanPage() {
 
             {/* Info Footer */}
             <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 text-center">
-              <p className="text-gray-700 text-sm">
+              <p className="text-gray-700 text-xs">
                 📚 Total <span className="font-bold text-emerald-700">{pengumuman.length}</span> pengumuman
               </p>
             </div>
