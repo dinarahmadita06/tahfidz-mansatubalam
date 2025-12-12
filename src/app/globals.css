@@ -293,3 +293,95 @@ select:focus-visible {
   background-color: rgba(236, 72, 153, 0.2);
   border-bottom: 2px solid rgb(236, 72, 153);
 }
+
+/* FORCE LIGHT MODE FOR SIDEBAR - OVERRIDE ALL DARK MODES */
+aside {
+  color-scheme: light !important;
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+}
+
+aside * {
+  color-scheme: light !important;
+}
+
+aside h2,
+aside h3,
+aside p,
+aside a,
+aside button {
+  color: #111827 !important;
+}
+
+aside nav {
+  background-color: #FFFFFF !important;
+}
+
+aside nav a {
+  color: #374151 !important;
+  background-color: transparent !important;
+}
+
+aside nav a:hover {
+  background-color: #F3F4F6 !important;
+}
+
+aside nav a[data-active="true"],
+aside nav a.active {
+  background-color: #F0FDF4 !important;
+  color: #15803D !important;
+}
+
+/* CRITICAL: Override prefers-color-scheme dark mode for sidebar */
+@media (prefers-color-scheme: dark) {
+  aside {
+    color-scheme: light !important;
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+  }
+
+  aside * {
+    color-scheme: light !important;
+    background-color: inherit !important;
+    color: inherit !important;
+  }
+
+  aside h2,
+  aside h3,
+  aside p,
+  aside a,
+  aside button {
+    color: #111827 !important;
+  }
+
+  aside nav {
+    background-color: #FFFFFF !important;
+  }
+
+  aside nav a {
+    color: #374151 !important;
+  }
+
+  aside nav a:hover {
+    background-color: #F3F4F6 !important;
+  }
+
+  aside nav a[data-active="true"],
+  aside nav a.active {
+    background-color: #F0FDF4 !important;
+    color: #15803D !important;
+  }
+}
+
+/* Override data-theme dark attribute */
+[data-theme="dark"] aside {
+  color-scheme: light !important;
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+}
+
+[data-theme="dark"] aside * {
+  background-color: inherit !important;
+  color: inherit !important;
+  color-scheme: light !important;
+}

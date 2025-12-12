@@ -39,14 +39,26 @@ export const authConfig = {
           console.log('✅ [AUTH] User found:', { id: user.id, email: user.email, role: user.role });
 
           // Check if user account is active based on role
-          if (user.role === 'SISWA' && user.siswa?.status !== 'approved') {
-            console.error('❌ [AUTH] Siswa account not approved');
-            throw new Error("Akun Anda belum disetujui oleh admin");
+          if (user.role === 'SISWA') {
+            if (!user.siswa) {
+              console.error('❌ [AUTH] Siswa profile not found for user');
+              throw new Error("Profil siswa tidak ditemukan. Hubungi admin.");
+            }
+            if (user.siswa.status !== 'approved') {
+              console.warn('⚠️  [AUTH] Siswa account status:', user.siswa.status);
+              throw new Error(`Akun Anda sedang dalam status ${user.siswa.status}. Hubungi admin untuk persetujuan.`);
+            }
           }
 
-          if (user.role === 'ORANG_TUA' && user.orangTua?.status !== 'approved') {
-            console.error('❌ [AUTH] Orang tua account not approved');
-            throw new Error("Akun Anda belum disetujui oleh admin");
+          if (user.role === 'ORANG_TUA') {
+            if (!user.orangTua) {
+              console.error('❌ [AUTH] OrangTua profile not found for user');
+              throw new Error("Profil orang tua tidak ditemukan. Hubungi admin.");
+            }
+            if (user.orangTua.status !== 'approved') {
+              console.warn('⚠️  [AUTH] OrangTua account status:', user.orangTua.status);
+              throw new Error(`Akun Anda sedang dalam status ${user.orangTua.status}. Hubungi admin untuk persetujuan.`);
+            }
           }
 
           console.log('🔑 [AUTH] Comparing password...');
@@ -112,22 +124,23 @@ export const authConfig = {
     async redirect({ url, baseUrl }) {
       console.log('🔄 [REDIRECT CALLBACK] url:', url, 'baseUrl:', baseUrl);
 
-      // If url is a relative path, prepend baseUrl
+      // If url starts with / (relative path), it's safe to prepend baseUrl
       if (url.startsWith('/')) {
         const fullUrl = `${baseUrl}${url}`;
         console.log('🔄 [REDIRECT CALLBACK] Returning relative URL:', fullUrl);
         return fullUrl;
       }
 
-      // If url already contains the baseUrl, return it
+      // If url already contains the baseUrl, return it as-is
       if (url.startsWith(baseUrl)) {
         console.log('🔄 [REDIRECT CALLBACK] Returning full URL:', url);
         return url;
       }
 
-      // Default: return baseUrl (will be handled by client-side redirect)
-      console.log('🔄 [REDIRECT CALLBACK] Returning baseUrl:', baseUrl);
-      return baseUrl;
+      // Fallback to login page using baseUrl (which is auto-detected from X-Forwarded-Proto/X-Forwarded-Host)
+      const loginUrl = `${baseUrl}/login`;
+      console.log('🔄 [REDIRECT CALLBACK] Redirecting to login:', loginUrl);
+      return loginUrl;
     },
   },
   pages: {
