@@ -130,8 +130,8 @@ function CatatanModal({ isOpen, onClose, penilaian }) {
                   <p className="text-2xl font-bold text-amber-600">{penilaian.kelancaran}</p>
                 </div>
                 <div className="bg-sky-50 p-3 rounded-lg text-center">
-                  <p className="text-xs text-gray-600 mb-1">Implementasi</p>
-                  <p className="text-2xl font-bold text-sky-600">{penilaian.implementasi}</p>
+                  <p className="text-xs text-gray-600 mb-1">Adab</p>
+                  <p className="text-2xl font-bold text-sky-600">{penilaian.adab}</p>
                 </div>
               </div>
 
@@ -178,7 +178,7 @@ export default function PenilaianPage() {
       surah: 'Al-Baqarah 1-10',
       tajwid: 90,
       kelancaran: 88,
-      implementasi: 95,
+      adab: 95,
       catatan: 'Sudah lancar, perhatikan mad panjang pada ayat 5 dan 8. Tajwid sudah bagus.',
       guru: 'Ustadz Yusuf',
     },
@@ -188,8 +188,8 @@ export default function PenilaianPage() {
       surah: 'Al-Fatihah',
       tajwid: 95,
       kelancaran: 94,
-      implementasi: 97,
-      catatan: 'Sangat baik, tajwid konsisten. Implementasi saat membaca juga terjaga dengan baik.',
+      adab: 97,
+      catatan: 'Sangat baik, tajwid konsisten. Adab saat membaca juga terjaga dengan baik.',
       guru: 'Ustadz Ahmad',
     },
     {
@@ -198,7 +198,7 @@ export default function PenilaianPage() {
       surah: 'An-Nas',
       tajwid: 88,
       kelancaran: 90,
-      implementasi: 92,
+      adab: 92,
       catatan: 'Bagus, teruskan latihan untuk kelancaran. Fokus pada tajwid huruf-huruf tertentu.',
       guru: 'Ustadzah Aisyah',
     },
@@ -208,7 +208,7 @@ export default function PenilaianPage() {
       surah: 'Al-Falaq',
       tajwid: 85,
       kelancaran: 87,
-      implementasi: 90,
+      adab: 90,
       catatan: 'Perlu latihan lebih untuk tajwid qalqalah. Kelancaran sudah cukup baik.',
       guru: 'Ustadz Yusuf',
     },
@@ -221,8 +221,8 @@ export default function PenilaianPage() {
   const rataRataKelancaran = Math.round(
     penilaianData.reduce((sum, p) => sum + p.kelancaran, 0) / penilaianData.length
   );
-  const rataRataImplementasi = Math.round(
-    penilaianData.reduce((sum, p) => sum + p.implementasi, 0) / penilaianData.length
+  const rataRataAdab = Math.round(
+    penilaianData.reduce((sum, p) => sum + p.adab, 0) / penilaianData.length
   );
 
   // Data untuk grafik
@@ -231,7 +231,7 @@ export default function PenilaianPage() {
     .reverse()
     .map((p) => ({
       label: p.tanggal.split(' ')[0] + ' ' + p.tanggal.split(' ')[1],
-      nilai: Math.round((p.tajwid + p.kelancaran + p.implementasi) / 3),
+      nilai: Math.round((p.tajwid + p.kelancaran + p.adab) / 3),
     }));
 
   useEffect(() => {
@@ -423,7 +423,7 @@ export default function PenilaianPage() {
             </div>
           </motion.div>
 
-          {/* Card 3: Rata-rata Implementasi */}
+          {/* Card 3: Rata-rata Adab */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -434,11 +434,11 @@ export default function PenilaianPage() {
             <div className="flex items-center gap-3 mb-3">
               <div className="text-4xl">🌿</div>
               <div>
-                <h3 className="text-sm font-medium text-gray-600">Rata-rata Implementasi</h3>
+                <h3 className="text-sm font-medium text-gray-600">Rata-rata Adab</h3>
               </div>
             </div>
             <div className="mt-4">
-              <p className="text-4xl font-bold text-sky-600">{rataRataImplementasi}</p>
+              <p className="text-4xl font-bold text-sky-600">{rataRataAdab}</p>
               <p className="text-sm text-gray-600 mt-1">dari 100</p>
             </div>
           </motion.div>
@@ -514,7 +514,7 @@ export default function PenilaianPage() {
                     Kelancaran
                   </th>
                   <th className="text-center py-3 px-4 text-sm font-semibold text-emerald-800">
-                    Implementasi
+                    Adab
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-emerald-800">
                     Catatan
@@ -523,7 +523,7 @@ export default function PenilaianPage() {
               </thead>
               <tbody>
                 {penilaianData.map((item, index) => {
-                  const avgScore = Math.round((item.tajwid + item.kelancaran + item.implementasi) / 3);
+                  const avgScore = Math.round((item.tajwid + item.kelancaran + item.adab) / 3);
                   const borderColor = getColorByAverage(avgScore);
 
                   return (
@@ -547,7 +547,7 @@ export default function PenilaianPage() {
                         <span className="font-bold text-amber-600">{item.kelancaran}</span>
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <span className="font-bold text-sky-600">{item.implementasi}</span>
+                        <span className="font-bold text-sky-600">{item.adab}</span>
                       </td>
                       <td className="py-4 px-4">
                         <button
@@ -568,7 +568,7 @@ export default function PenilaianPage() {
           {/* Mobile Cards */}
           <div className="md:hidden space-y-4">
             {penilaianData.map((item, index) => {
-              const avgScore = Math.round((item.tajwid + item.kelancaran + item.implementasi) / 3);
+              const avgScore = Math.round((item.tajwid + item.kelancaran + item.adab) / 3);
               const borderColor = getColorByAverage(avgScore);
 
               return (
@@ -596,8 +596,8 @@ export default function PenilaianPage() {
                       <p className="text-xl font-bold text-amber-600">{item.kelancaran}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-600 mb-1">Implementasi</p>
-                      <p className="text-xl font-bold text-sky-600">{item.implementasi}</p>
+                      <p className="text-xs text-gray-600 mb-1">Adab</p>
+                      <p className="text-xl font-bold text-sky-600">{item.adab}</p>
                     </div>
                   </div>
 

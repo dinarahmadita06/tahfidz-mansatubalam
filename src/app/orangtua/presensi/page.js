@@ -84,14 +84,14 @@ function DonutChart({ data, percentage }) {
       </div>
 
       {/* Legend */}
-      <div className="mt-8 space-y-2 w-full">
+      <div className="mt-6 grid grid-cols-2 gap-3">
         {data.map((item, index) => (
-          <div key={index} className="flex items-center gap-3">
+          <div key={index} className="flex items-center gap-2">
             <div
-              className="w-4 h-4 rounded-full flex-shrink-0"
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: item.color }}
             ></div>
-            <span className="text-sm text-gray-700 font-medium flex-1">
+            <span className="text-xs text-gray-700">
               {item.label}: {item.value}
             </span>
           </div>
@@ -213,7 +213,7 @@ export default function PresensiPage() {
     { id: 2, name: 'Fatimah Azzahra', kelas: '3B', avatar: '👧' },
   ];
 
-  // Data dummy presensi - hanya menampilkan Setoran Hafalan
+  // Data dummy presensi
   const presensiData = [
     {
       id: 1,
@@ -225,6 +225,14 @@ export default function PresensiPage() {
     },
     {
       id: 2,
+      tanggal: '27 Okt 2025',
+      kegiatan: 'Muroja\'ah',
+      status: 'Izin',
+      catatan: 'Ada kegiatan keluarga, sudah izin sejak kemarin',
+      jam: '-',
+    },
+    {
+      id: 3,
       tanggal: '26 Okt 2025',
       kegiatan: 'Setoran Hafalan',
       status: 'Alfa',
@@ -232,7 +240,7 @@ export default function PresensiPage() {
       jam: '-',
     },
     {
-      id: 3,
+      id: 4,
       tanggal: '25 Okt 2025',
       kegiatan: 'Setoran Hafalan',
       status: 'Hadir',
@@ -240,20 +248,20 @@ export default function PresensiPage() {
       jam: '08:15',
     },
     {
-      id: 4,
+      id: 5,
+      tanggal: '24 Okt 2025',
+      kegiatan: 'Muroja\'ah',
+      status: 'Hadir',
+      catatan: 'Aktif dalam muroja\'ah kelompok',
+      jam: '08:00',
+    },
+    {
+      id: 6,
       tanggal: '23 Okt 2025',
       kegiatan: 'Setoran Hafalan',
       status: 'Sakit',
       catatan: 'Demam, ada surat keterangan dokter',
       jam: '-',
-    },
-    {
-      id: 5,
-      tanggal: '21 Okt 2025',
-      kegiatan: 'Setoran Hafalan',
-      status: 'Hadir',
-      catatan: 'Baik, hafalan sudah lancar',
-      jam: '08:00',
     },
   ];
 
@@ -281,12 +289,10 @@ export default function PresensiPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50/30 via-cream-50/30 to-amber-50/20">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center">
-            <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-600 mt-4 font-medium">Memuat presensi...</p>
+          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat...</p>
         </div>
       </div>
     );

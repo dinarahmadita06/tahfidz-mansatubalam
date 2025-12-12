@@ -11,6 +11,8 @@ import {
   CalendarCheck,
   MessageSquare,
   TrendingUp,
+  Award,
+  Clock,
   CheckCircle,
   AlertCircle,
   Heart,
@@ -122,6 +124,7 @@ export default function DashboardOrangTua() {
     rataRataNilai: 88,
     kehadiran: 95,
     totalHari: 30,
+    catatanGuru: 5,
   };
 
   // Data progres bulanan
@@ -134,6 +137,56 @@ export default function DashboardOrangTua() {
     { label: 'Jun', value: 82 },
   ];
 
+  // Aktivitas terbaru
+  const recentActivities = [
+    {
+      id: 1,
+      type: 'setor',
+      title: 'Setor Hafalan Al-Baqarah 10-15',
+      status: 'approved',
+      nilai: 90,
+      time: '2 jam yang lalu',
+      icon: BookOpen,
+      color: 'emerald',
+    },
+    {
+      id: 2,
+      type: 'nilai',
+      title: 'Nilai Hafalan: 88/100',
+      status: 'info',
+      time: '5 jam yang lalu',
+      icon: Star,
+      color: 'amber',
+    },
+    {
+      id: 3,
+      type: 'catatan',
+      title: 'Catatan dari Ustadz Yusuf',
+      catatan: 'Bacaan sangat baik, pertahankan!',
+      status: 'info',
+      time: '1 hari yang lalu',
+      icon: MessageSquare,
+      color: 'purple',
+    },
+  ];
+
+  // Catatan guru terbaru
+  const teacherNotes = [
+    {
+      id: 1,
+      guru: 'Ustadz Yusuf',
+      catatan: 'Ahmad sangat konsisten dalam muroja\'ah hafalan. Pertahankan semangat!',
+      tanggal: '27 Okt 2025',
+      type: 'positive',
+    },
+    {
+      id: 2,
+      guru: 'Ustadzah Aisyah',
+      catatan: 'Perlu lebih fokus pada tajwid, terutama pada mad dan qalqalah.',
+      tanggal: '25 Okt 2025',
+      type: 'improvement',
+    },
+  ];
 
   // Ambil nama depan dari nama user (mengambil kata pertama)
   const getFirstName = (fullName) => {
@@ -287,8 +340,8 @@ export default function DashboardOrangTua() {
           <ParentingMotivationalCard theme="mint" />
         </motion.div>
 
-        {/* Statistics Cards - 3 Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
+        {/* Statistics Cards - 4 Columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
           {/* Card 1: Hafalan Selesai */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -345,16 +398,39 @@ export default function DashboardOrangTua() {
             <p className="text-3xl font-bold text-gray-900">{stats.kehadiran}</p>
             <p className="text-sm text-sky-600 font-medium mt-2">dari {stats.totalHari} hari</p>
           </motion.div>
+
+          {/* Card 4: Catatan Guru */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15, duration: 0.2, ease: "easeOut" }}
+            whileHover={{ y: -3, scale: 1.01 }}
+            className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-purple-100 hover:shadow-xl transition-all min-h-[180px]"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="p-4 bg-purple-500 rounded-2xl shadow-md">
+                <MessageSquare className="text-white" size={28} />
+              </div>
+              <div className="flex items-center justify-center w-24 h-24">
+                <div className="text-center">
+                  <p className="text-5xl font-bold text-gray-900">{stats.catatanGuru}</p>
+                  <p className="text-sm text-purple-600 font-medium mt-1">Catatan</p>
+                </div>
+              </div>
+            </div>
+            <h3 className="text-base font-semibold text-gray-600 mb-2">Catatan Guru</h3>
+            <p className="text-base text-purple-600 font-medium mt-2">Lihat detail →</p>
+          </motion.div>
         </div>
 
         {/* Main Content Grid - 2 Columns */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Left: Progress Chart */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.175, duration: 0.2, ease: "easeOut" }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+            className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-emerald-100 rounded-lg">
@@ -374,7 +450,111 @@ export default function DashboardOrangTua() {
               </p>
             </div>
           </motion.div>
+
+          {/* Right: Aktivitas Terbaru */}
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.2, ease: "easeOut" }}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Clock className="text-amber-600" size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Aktivitas Terbaru</h2>
+                <p className="text-sm text-gray-600">Update hari ini</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {recentActivities.map((activity, index) => {
+                const Icon = activity.icon;
+                const statusColors = {
+                  approved: 'bg-emerald-100 text-emerald-700',
+                  info: 'bg-sky-100 text-sky-700',
+                };
+
+                return (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.225 + index * 0.025, duration: 0.2, ease: "easeOut" }}
+                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    <div className={`p-2 rounded-lg ${statusColors[activity.status]}`}>
+                      <Icon size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {activity.title}
+                      </p>
+                      {activity.nilai && (
+                        <p className="text-xs text-emerald-600 font-semibold">
+                          Nilai: {activity.nilai}/100
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
         </div>
+
+        {/* Catatan Guru Terbaru */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.2, ease: "easeOut" }}
+          className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-sm border border-amber-100"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-amber-200 rounded-lg">
+              <MessageSquare className="text-amber-700" size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Catatan Guru Terbaru</h2>
+              <p className="text-sm text-gray-600">Feedback untuk perkembangan anak</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {teacherNotes.map((note, index) => (
+              <motion.div
+                key={note.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.275 + index * 0.025, duration: 0.2, ease: "easeOut" }}
+                className={`p-4 rounded-xl border-l-4 transition-all ${
+                  note.type === 'positive'
+                    ? 'bg-emerald-50 border-emerald-500'
+                    : 'bg-sky-50 border-sky-500'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {note.type === 'positive' ? (
+                      <CheckCircle size={18} className="text-emerald-600" />
+                    ) : (
+                      <AlertCircle size={18} className="text-sky-600" />
+                    )}
+                    <p className="font-bold text-gray-900">{note.guru}</p>
+                  </div>
+                  <span className="text-xs text-gray-600">{note.tanggal}</span>
+                </div>
+                <p className={`text-sm leading-relaxed ${
+                  note.type === 'positive' ? 'text-emerald-900' : 'text-sky-900'
+                }`}>
+                  {note.catatan}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </OrangtuaLayout>
   );

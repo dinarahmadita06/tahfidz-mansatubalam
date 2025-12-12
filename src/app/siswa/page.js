@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import PengumumanWidget from '@/components/PengumumanWidget';
 import {
   BookOpen,
   Star,
@@ -65,7 +66,7 @@ function ProgressRing({ progress = 75, color = 'emerald', size = 120, strokeWidt
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold text-gray-900">{progress}%</span>
+        <span className="text-xl font-bold text-gray-900">{progress}%</span>
       </div>
     </div>
   );
@@ -173,11 +174,11 @@ export default function DashboardSiswa() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 md:gap-4 mb-4">
               <Sparkles className="text-amber-300 flex-shrink-0" size={28} />
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white" suppressHydrationWarning>
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white" suppressHydrationWarning>
                 {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
               </h1>
             </div>
-            <p className="text-emerald-50 text-base md:text-lg mb-5" suppressHydrationWarning>
+            <p className="text-emerald-50 text-sm md:text-base mb-5" suppressHydrationWarning>
               {isHydrated ? currentTime : ''}
             </p>
             <div className="flex flex-wrap gap-4 md:gap-5 items-center">
@@ -224,8 +225,8 @@ export default function DashboardSiswa() {
             </div>
             <ProgressRing progress={hafalanProgress} color="emerald" size={90} strokeWidth={7} />
           </div>
-          <h3 className="text-base font-semibold text-gray-600 mb-2">Hafalan Selesai</h3>
-          <p className="text-3xl font-bold text-gray-900">{stats.hafalanSelesai}</p>
+          <h3 className="text-sm font-semibold text-gray-600 mb-2">Hafalan Selesai</h3>
+          <p className="text-2xl font-bold text-gray-900">{stats.hafalanSelesai}</p>
           <p className="text-sm text-emerald-600 font-medium mt-2">dari {stats.totalHafalan} target</p>
         </motion.div>
 
@@ -243,8 +244,8 @@ export default function DashboardSiswa() {
             </div>
             <ProgressRing progress={stats.rataRataNilai} color="amber" size={90} strokeWidth={7} />
           </div>
-          <h3 className="text-base font-semibold text-gray-600 mb-2">Rata-rata Nilai</h3>
-          <p className="text-3xl font-bold text-gray-900">{stats.rataRataNilai}</p>
+          <h3 className="text-sm font-semibold text-gray-600 mb-2">Rata-rata Nilai</h3>
+          <p className="text-2xl font-bold text-gray-900">{stats.rataRataNilai}</p>
           <p className="text-sm text-amber-600 font-medium mt-2">dari 100</p>
         </motion.div>
 
@@ -262,8 +263,8 @@ export default function DashboardSiswa() {
             </div>
             <ProgressRing progress={kehadiranProgress} color="sky" size={90} strokeWidth={7} />
           </div>
-          <h3 className="text-base font-semibold text-gray-600 mb-2">Kehadiran</h3>
-          <p className="text-3xl font-bold text-gray-900">{stats.kehadiran}</p>
+          <h3 className="text-sm font-semibold text-gray-600 mb-2">Kehadiran</h3>
+          <p className="text-2xl font-bold text-gray-900">{stats.kehadiran}</p>
           <p className="text-sm text-sky-600 font-medium mt-2">dari {stats.totalHari} hari</p>
         </motion.div>
 
@@ -281,12 +282,12 @@ export default function DashboardSiswa() {
             </div>
             <div className="flex items-center justify-center w-24 h-24">
               <div className="text-center">
-                <p className="text-5xl font-bold text-gray-900">{stats.catatanGuru}</p>
-                <p className="text-sm text-purple-600 font-medium mt-1">Catatan</p>
+                <p className="text-4xl font-bold text-gray-900">{stats.catatanGuru}</p>
+                <p className="text-xs text-purple-600 font-medium mt-1">Catatan</p>
               </div>
             </div>
           </div>
-          <h3 className="text-base font-semibold text-gray-600 mb-2">Catatan Guru</h3>
+          <h3 className="text-sm font-semibold text-gray-600 mb-2">Catatan Guru</h3>
           <Link
             href="/siswa/penilaian-hafalan"
             className="inline-flex items-center gap-1.5 text-sm text-purple-600 hover:text-purple-700 font-medium mt-2 transition-colors"
@@ -310,8 +311,8 @@ export default function DashboardSiswa() {
               <TrendingUp className="text-emerald-600" size={28} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Progress Hafalan per Juz</h2>
-              <p className="text-sm text-gray-600">Pantau perkembangan hafalanmu</p>
+              <h2 className="text-lg font-bold text-gray-900">Progress Hafalan per Juz</h2>
+              <p className="text-xs text-gray-600">Pantau perkembangan hafalanmu</p>
             </div>
           </div>
 
@@ -325,8 +326,8 @@ export default function DashboardSiswa() {
                 className="space-y-2.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-semibold text-gray-700">{item.label}</span>
-                  <span className="text-base font-bold text-gray-900">{item.progress}%</span>
+                  <span className="text-sm font-semibold text-gray-700">{item.label}</span>
+                  <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                   <motion.div
@@ -364,8 +365,8 @@ export default function DashboardSiswa() {
               <Clock className="text-amber-600" size={28} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Aktivitas Terkini</h2>
-              <p className="text-sm text-gray-600">Update terbaru</p>
+              <h2 className="text-lg font-bold text-gray-900">Aktivitas Terkini</h2>
+              <p className="text-xs text-gray-600">Update terbaru</p>
             </div>
           </div>
 
@@ -406,7 +407,14 @@ export default function DashboardSiswa() {
         </motion.div>
       </div>
 
-
+      {/* Pengumuman Widget */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.2, ease: "easeOut" }}
+      >
+        <PengumumanWidget limit={3} />
+      </motion.div>
 
       <style jsx>{`
         @keyframes blob {
