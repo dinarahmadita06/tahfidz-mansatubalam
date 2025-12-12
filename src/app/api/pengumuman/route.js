@@ -13,47 +13,32 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '5');
+    const now = new Date();
 
-    // Ambil pengumuman yang sesuai dengan role user
+    // Ambil semua pengumuman yang masih aktif (belum expired)
     const pengumuman = await prisma.pengumuman.findMany({
       where: {
-        targetRole: {
-          has: session.user.role
+        // Pengumuman harus dimulai sebelum atau hari ini
+        tanggalMulai: {
+          lte: now
         },
-        publishedAt: {
-          not: null
-        }
-      },
-      include: {
-        guru: {
-          include: {
-            user: {
-              select: {
-                name: true
-              }
+        // Pengumuman belum berakhir (tanggalSelesai null atau belum tercapai)
+        OR: [
+          {
+            tanggalSelesai: null
+          },
+          {
+            tanggalSelesai: {
+              gte: now
             }
           }
-        },
-        wisuda: {
-          include: {
-            siswa: {
-              include: {
-                siswa: {
-                  include: {
-                    user: {
-                      select: {
-                        name: true
-                      }
-                    },
-                    kelas: {
-                      select: {
-                        nama: true,
-                      }
-                    }
-                  }
-                }
-              }
-            }
+        ]
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true
           }
         }
       },
