@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Calendar, Megaphone, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-export default function OrangtuaPengumumanPage() {
+export default function SiswaPengumumanPage() {
+  const { data: session } = useSession();
   const [pengumuman, setPengumuman] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -17,6 +19,7 @@ export default function OrangtuaPengumumanPage() {
     try {
       setLoading(true);
       setError('');
+      // Fetch all pengumuman (tidak filter unreadOnly untuk history)
       const res = await fetch('/api/pengumuman?limit=100');
       
       if (!res.ok) {
@@ -45,23 +48,27 @@ export default function OrangtuaPengumumanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50">
       {/* Header */}
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Link 
-            href="/orangtua"
-            className="p-2 hover:bg-white rounded-lg transition"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Riwayat Pengumuman</h1>
-            <p className="text-gray-600 mt-1">Daftar semua pengumuman yang telah dikirimkan</p>
+      <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/siswa"
+              className="p-2 hover:bg-gray-100 rounded-lg transition"
+            >
+              <ArrowLeft size={20} className="text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Riwayat Pengumuman</h1>
+              <p className="text-gray-600 mt-1">Daftar semua pengumuman yang telah dikirimkan</p>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Content */}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -84,6 +91,7 @@ export default function OrangtuaPengumumanPage() {
                 key={item.id}
                 className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
               >
+                {/* Title and Badge */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 flex-1">
                     {item.judul}
@@ -93,10 +101,12 @@ export default function OrangtuaPengumumanPage() {
                   </span>
                 </div>
 
+                {/* Content */}
                 <p className="text-gray-700 mb-4 leading-relaxed">
                   {item.isi}
                 </p>
 
+                {/* Meta Information */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Calendar size={16} />

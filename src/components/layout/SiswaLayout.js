@@ -19,6 +19,7 @@ import {
   Target,
   LogOut,
   Award,
+  Megaphone,
 } from 'lucide-react';
 
 const menuItems = [
@@ -79,12 +80,18 @@ const menuItems = [
     color: 'amber'
   },
   {
+    title: 'Pengumuman',
+    icon: Megaphone,
+    href: '/siswa/pengumuman',
+    description: 'Riwayat pengumuman',
+    color: 'emerald'
+  },
+  {
     title: 'Profil',
     icon: UserCircle,
     href: '/siswa/profil',
     description: 'Pengaturan akun',
     color: 'gray'
-  },
 ];
 
 function SiswaSidebar({ userName = 'Siswa' }) {

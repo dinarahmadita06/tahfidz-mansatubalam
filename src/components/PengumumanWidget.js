@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Megaphone, ChevronRight, Calendar } from 'lucide-react';
+import { Megaphone, ChevronRight, Calendar, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PengumumanWidget({ title = "Pengumuman Terbaru", limit = 3 }) {
@@ -17,7 +17,8 @@ export default function PengumumanWidget({ title = "Pengumuman Terbaru", limit =
     try {
       setLoading(true);
       setError('');
-      const res = await fetch(`/api/pengumuman?limit=${limit}`);
+      // Fetch unread announcements (not in pengumuman_read)
+      const res = await fetch(`/api/pengumuman?limit=${limit}&unreadOnly=true`);
         
       if (!res.ok) {
         const errorData = await res.json();
@@ -42,6 +43,28 @@ export default function PengumumanWidget({ title = "Pengumuman Terbaru", limit =
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const handleClosePengumuman = async (pengumumanId) => {
+    try {
+      const res = await fetch('/api/pengumuman/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pengumumanId })
+      });
+
+      if (res.ok) {
+        // Remove from local state
+        setPengumuman(pengumuman.filter(item => item.id !== pengumumanId));
+        console.log('Pengumuman marked as read');
+      } else {
+        console.error('Failed to mark pengumuman as read');
+      }
+    } catch (err) {
+      console.error('Error closing pengumuman:', err);
+    }
   };
 
   const truncateText = (text, length = 100) => {
@@ -118,6 +141,13 @@ export default function PengumumanWidget({ title = "Pengumuman Terbaru", limit =
                     <span>{formatDate(item.createdAt)}</span>
                   </div>
                 </div>
+                <button
+                  onClick={() => handleClosePengumuman(item.id)}
+                  className="flex-shrink-0 p-1 hover:bg-red-100 rounded transition-colors text-gray-400 hover:text-red-600"
+                  title="Tutup pengumuman"
+                >
+                  <X size={16} />
+                </button>
               </div>
             </div>
           ))}
