@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import LayoutGuruSimple from '@/components/guru/LayoutGuruSimple';
 import { Calendar, Megaphone } from 'lucide-react';
-import Link from 'next/link';
+import LayoutGuruSimple from '@/components/guru/LayoutGuruSimple';
 
 export default function GuruPengumumanPage() {
   const [pengumuman, setPengumuman] = useState([]);

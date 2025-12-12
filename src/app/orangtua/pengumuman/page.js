@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Megaphone, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { Calendar, Megaphone } from 'lucide-react';
+import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 
 export default function OrangtuaPengumumanPage() {
   const [pengumuman, setPengumuman] = useState([]);
@@ -45,65 +45,93 @@ export default function OrangtuaPengumumanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 p-6">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Link 
-            href="/orangtua"
-            className="p-2 hover:bg-white rounded-lg transition"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Riwayat Pengumuman</h1>
-            <p className="text-gray-600 mt-1">Daftar semua pengumuman yang telah dikirimkan</p>
-          </div>
+    <OrangtuaLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#1F2937', marginBottom: '6px' }}>
+            Riwayat Pengumuman
+          </h1>
+          <p style={{ fontSize: '14px', color: '#6B7280' }}>
+            Daftar semua pengumuman yang telah dikirimkan
+          </p>
         </div>
 
         {/* Content */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-white rounded-lg animate-pulse" />
+              <div key={i} style={{
+                height: '128px',
+                backgroundColor: '#F3F4F6',
+                borderRadius: '8px',
+                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+              }} />
             ))}
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <p className="text-red-600">{error}</p>
+          <div style={{
+            backgroundColor: '#FEE2E2',
+            border: '1px solid #FCA5A5',
+            borderRadius: '8px',
+            padding: '24px',
+            textAlign: 'center',
+            color: '#DC2626'
+          }}>
+            {error}
           </div>
         ) : pengumuman.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center">
-            <Megaphone size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">Tidak ada pengumuman</p>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '48px 24px',
+            textAlign: 'center',
+            border: '1px solid #E5E7EB'
+          }}>
+            <Megaphone size={48} style={{ color: '#D1D5DB', margin: '0 auto 16px' }} />
+            <p style={{ color: '#6B7280', fontSize: '18px' }}>Tidak ada pengumuman</p>
           </div>
         ) : (
           <div className="space-y-6">
             {pengumuman.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '8px',
+                  border: '1px solid #E5E7EB',
+                  padding: '24px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
               >
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 flex-1">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1F2937', flex: 1 }}>
                     {item.judul}
                   </h2>
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full whitespace-nowrap">
+                  <span style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#ECFDF5',
+                    color: '#059669',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    borderRadius: '9999px',
+                    whiteSpace: 'nowrap'
+                  }}>
                     {item.kategori}
                   </span>
                 </div>
 
-                <p className="text-gray-700 mb-4 leading-relaxed">
+                <p style={{ color: '#374151', marginBottom: '16px', lineHeight: '1.6' }}>
                   {item.isi}
                 </p>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: '16px', borderTop: '1px solid #E5E7EB', fontSize: '14px', color: '#4B5563' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Calendar size={16} />
                     <span>Dibuat: {formatDate(item.createdAt)}</span>
                   </div>
                   {item.tanggalSelesai && (
-                    <div className="flex items-center gap-2">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Calendar size={16} />
                       <span>Berakhir: {formatDate(item.tanggalSelesai)}</span>
                     </div>
@@ -114,6 +142,6 @@ export default function OrangtuaPengumumanPage() {
           </div>
         )}
       </div>
-    </div>
+    </OrangtuaLayout>
   );
 }
