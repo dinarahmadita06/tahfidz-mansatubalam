@@ -1037,7 +1037,15 @@ export default function DashboardGuru() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Pengumuman Widget - After Motivasi */}
+        <div
+          style={{
+            position: 'relative',
+            padding: '0 48px 24px',
+            zIndex: 2,
+          }}>
+          <PengumumanWidget limit={3} />
+        </div>
         <div
           className="main-content"
           style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
@@ -1090,7 +1098,6 @@ export default function DashboardGuru() {
               }}>
               <JadwalSesiCard jadwalHariIni={jadwalHariIni} />
               <AgendaCard agendaHariIni={agendaHariIni} />
-              <PengumumanWidget limit={4} />
             </div>
 
             {/* Riwayat Penilaian - Full Width */}
