@@ -1332,6 +1332,15 @@ export default function DashboardTahfidz() {
           </div>
         </div>
 
+        {/* Pengumuman Widget - After Motivasi */}
+        <div style={{
+          position: 'relative',
+          padding: '0 40px 20px',
+          zIndex: 1,
+        }}>
+          <PengumumanWidget limit={3} />
+        </div>
+
         {/* Main Content */}
         <div className="dashboard-container" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -1406,7 +1415,6 @@ export default function DashboardTahfidz() {
             {/* Grid 2 Kolom: Jadwal & Pengumuman */}
             <div className="charts-responsive-grid">
               <JadwalSetoranCard jadwalSetoran={data.jadwalSetoran} />
-              <PengumumanWidget limit={5} />
             </div>
 
             {/* Quick Actions / Navigasi Cepat */}
