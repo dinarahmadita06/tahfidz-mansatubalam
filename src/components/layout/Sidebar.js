@@ -141,7 +141,7 @@ function Sidebar({ userName = 'Guru' }) {
                     <LayoutDashboard size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-gray-900" style={{ color: '#111827' }}>Tahfidz App</h2>
+                    <h2 className="font-bold text-gray-900" style={{ color: '#111827' }}>SIMTAQ</h2>
                     <p className="text-xs text-gray-600" style={{ color: '#4B5563' }}>{userName}</p>
                   </div>
                 </div>

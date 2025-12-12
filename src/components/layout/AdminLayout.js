@@ -285,7 +285,7 @@ function AdminLayout({ children }) {
                   <BookOpen className="text-white" size={24} strokeWidth={2} />
                 </div>
                 <span className="font-bold text-lg" style={{ color: '#064E3B', letterSpacing: '0.02em' }}>
-                  Tahfidz Admin
+                  SIMTAQ
                 </span>
               </Link>
             ) : (
