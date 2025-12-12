@@ -224,6 +224,9 @@ export default function OrangtuaDashboardPage() {
         </div>
       </div>
 
+      {/* Pengumuman Widget */}
+      <PengumumanWidget limit={3} />
+
       {/* Weekly Progress and Communications */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <WeeklyProgress />
@@ -257,9 +260,6 @@ export default function OrangtuaDashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Pengumuman Widget */}
-      <PengumumanWidget limit={5} />
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
