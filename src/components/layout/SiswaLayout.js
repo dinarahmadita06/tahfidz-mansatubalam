@@ -92,7 +92,7 @@ const menuItems = [
     href: '/siswa/profil',
     description: 'Pengaturan akun',
     color: 'gray'
-  }
+  },
 ];
 
 function SiswaSidebar({ userName = 'Siswa' }) {
