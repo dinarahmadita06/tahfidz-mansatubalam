@@ -1,3 +1,5 @@
+'use client';
+
 import { User, BookOpen, TrendingUp, Calendar, Star, Clock, Award, MessageCircle } from "lucide-react";
 import PengumumanWidget from "@/components/PengumumanWidget";
 
