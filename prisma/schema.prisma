@@ -381,6 +381,7 @@ model Pengumuman {
   kategori    KategoriPengumuman
   tanggalMulai DateTime           @default(now())
   tanggalSelesai DateTime?
+  lampiran    String?             // JSON array of file URLs or file metadata
   isPinned    Boolean             @default(false)
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt

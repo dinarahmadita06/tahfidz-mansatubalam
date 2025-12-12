@@ -1,4 +1,5 @@
 import { User, BookOpen, TrendingUp, Calendar, Star, Clock, Award, MessageCircle } from "lucide-react";
+import PengumumanWidget from "@/components/PengumumanWidget";
 
 function ChildCard({ child }) {
   return (
@@ -254,6 +255,9 @@ export default function OrangtuaDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Pengumuman Widget */}
+      <PengumumanWidget limit={5} />
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
