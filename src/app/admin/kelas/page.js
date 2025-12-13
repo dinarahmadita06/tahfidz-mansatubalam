@@ -203,6 +203,29 @@ export default function AdminKelasPage() {
     e.preventDefault();
 
     try {
+      // Validate data before sending
+      if (!kelasFormData.nama || !kelasFormData.tahunAjaranId) {
+        alert('Nama kelas dan Tahun Ajaran harus diisi');
+        return;
+      }
+
+      // Ensure numeric values are properly converted
+      const submitData = {
+        ...kelasFormData,
+        tahunAjaranId: kelasFormData.tahunAjaranId ? parseInt(kelasFormData.tahunAjaranId) : null,
+        targetJuz: kelasFormData.targetJuz ? parseInt(kelasFormData.targetJuz) : null,
+        guruUtamaId: kelasFormData.guruUtamaId ? parseInt(kelasFormData.guruUtamaId) : null,
+        guruPendampingIds: kelasFormData.guruPendampingIds?.length > 0 
+          ? kelasFormData.guruPendampingIds.map(id => parseInt(id)).filter(id => !isNaN(id))
+          : [],
+      };
+
+      // Validate that all numeric conversions succeeded
+      if (isNaN(submitData.tahunAjaranId)) {
+        alert('Tahun Ajaran tidak valid');
+        return;
+      }
+
       const url = editingKelas ? `/api/admin/kelas/${editingKelas.id}` : '/api/admin/kelas';
       const method = editingKelas ? 'PUT' : 'POST';
 
@@ -211,7 +234,7 @@ export default function AdminKelasPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(kelasFormData),
+        body: JSON.stringify(submitData),
       });
 
       if (response.ok) {
@@ -225,7 +248,7 @@ export default function AdminKelasPage() {
       }
     } catch (error) {
       console.error('Error saving kelas:', error);
-      alert('Gagal menyimpan data kelas');
+      alert('Gagal menyimpan data kelas: ' + error.message);
     }
   };
 
@@ -239,7 +262,7 @@ export default function AdminKelasPage() {
     setKelasFormData({
       nama: kelasItem.nama,
       tingkat: kelasItem.tingkat,
-      tahunAjaranId: kelasItem.tahunAjaranId,
+      tahunAjaranId: kelasItem.tahunAjaranId.toString(), // Convert to string for form
       targetJuz: kelasItem.targetJuz || 1,
       guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
       guruPendampingIds: guruPendamping.map(gp => gp.guruId.toString()),
