@@ -96,27 +96,15 @@ export async function POST(request) {
         if (siswaData.kelas) {
           const kelasInput = siswaData.kelas.toString().trim();
 
-          // Try to extract tingkat (number) from input like "10 A", "12 C", etc
-          const tingkatMatch = kelasInput.match(/^\d+/);
-          const tingkatNumber = tingkatMatch ? parseInt(tingkatMatch[0]) : null;
-
-          // Try to find kelas by nama (string match) or tingkat (number match)
+          // Try to find kelas by nama (string match)
           let kelas = await prisma.kelas.findFirst({
             where: {
               OR: [
                 { nama: { contains: kelasInput, mode: 'insensitive' } },
-                { nama: { equals: kelasInput, mode: 'insensitive' } },
-                ...(tingkatNumber ? [{ tingkat: tingkatNumber }] : [])
+                { nama: { equals: kelasInput, mode: 'insensitive' } }
               ]
             }
           });
-
-          // If not found, try less strict search by tingkat only
-          if (!kelas && tingkatNumber) {
-            kelas = await prisma.kelas.findFirst({
-              where: { tingkat: tingkatNumber }
-            });
-          }
 
           // If still not found, get first kelas as fallback
           if (!kelas) {
