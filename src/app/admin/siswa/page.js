@@ -283,8 +283,8 @@ export default function AdminSiswaPage() {
       (s.kelasId && s.kelasId.toString() === filterKelas);
 
     const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'active' && s.user.isActive && s.validasiStatus === 'APPROVED') ||
-      (filterStatus === 'unvalidated' && s.validasiStatus !== 'APPROVED');
+      (filterStatus === 'active' && s.status === 'approved') ||
+      (filterStatus === 'unvalidated' && s.status !== 'approved');
 
     return matchSearch && matchKelas && matchStatus;
   });
@@ -305,8 +305,8 @@ export default function AdminSiswaPage() {
   // Statistics
   const stats = {
     total: siswa.length,
-    active: siswa.filter(s => s.user.isActive && s.validasiStatus === 'APPROVED').length,
-    unvalidated: siswa.filter(s => s.validasiStatus !== 'APPROVED').length,
+    active: siswa.filter(s => s.status === 'approved').length,
+    unvalidated: siswa.filter(s => s.status !== 'approved').length,
   };
 
   if (loading) {
@@ -762,7 +762,7 @@ export default function AdminSiswaPage() {
                     ) : (
                       filteredSiswa.map((siswaItem, index) => {
                         const totalHafalan = getSiswaHafalan(siswaItem);
-                        const isValidated = siswaItem.validasiStatus === 'APPROVED';
+                        const isValidated = siswaItem.status === 'approved';
 
                         return (
                           <tr
