@@ -168,8 +168,7 @@ export async function POST(request) {
                       email: orangTuaEmail,
                       password: hashedPassword,
                       name: orangtuaData.nama,
-                      role: 'ORANG_TUA',
-                      isActive: true
+                      role: 'ORANG_TUA'
                     }
                   }
                 }
@@ -264,8 +263,7 @@ export async function POST(request) {
                   email: siswaEmail,
                   password: hashedPassword,
                   name: siswaData.nama,
-                  role: 'SISWA',
-                  isActive: true
+                  role: 'SISWA'
                 }
               }
             }
