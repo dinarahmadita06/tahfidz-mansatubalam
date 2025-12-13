@@ -1472,11 +1472,20 @@ export default function AdminKelasPage() {
                   className="form-input"
                 >
                   <option value="">Pilih Tahun Ajaran</option>
-                  {tahunAjaran.map((ta) => (
-                    <option key={ta.id} value={ta.id.toString()}>
-                      {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
-                    </option>
-                  ))}
+                  {tahunAjaran.length === 0 ? (
+                    <option disabled>Tidak ada tahun ajaran tersedia</option>
+                  ) : (
+                    tahunAjaran.map((ta) => {
+                      const optionValue = ta.id.toString();
+                      const isSelected = optionValue === kelasFormData.tahunAjaranId;
+                      console.log(`Option: id=${ta.id}, nama=${ta.nama}, value=${optionValue}, isSelected=${isSelected}, formValue=${kelasFormData.tahunAjaranId}`);
+                      return (
+                        <option key={ta.id} value={optionValue}>
+                          {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
+                        </option>
+                      );
+                    })
+                  )}
                 </select>
               </div>
 
