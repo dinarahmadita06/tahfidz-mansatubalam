@@ -202,13 +202,9 @@ export default function AdminKelasPage() {
     try {
       const response = await fetch('/api/tahun-ajaran');
       const data = await response.json();
-      // Ensure id is a number for proper comparison
-      const formattedData = data.map(ta => ({
-        ...ta,
-        id: typeof ta.id === 'string' ? parseInt(ta.id) : ta.id
-      }));
-      setTahunAjaran(formattedData);
-      console.log('Tahun Ajaran data loaded:', formattedData);
+      // IDs are CUIDs (strings), don't convert to numbers
+      setTahunAjaran(data);
+      console.log('Tahun Ajaran data loaded:', data);
     } catch (error) {
       console.error('Error fetching tahun ajaran:', error);
     }
@@ -290,10 +286,8 @@ export default function AdminKelasPage() {
     const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
     const guruPendamping = kelasItem.guruKelas?.filter(kg => kg.peran === 'pendamping') || [];
 
-    // Ensure tahunAjaranId is properly converted
-    const tahunAjaranId = typeof kelasItem.tahunAjaranId === 'number' 
-      ? kelasItem.tahunAjaranId.toString() 
-      : kelasItem.tahunAjaranId ? kelasItem.tahunAjaranId.toString() : '';
+    // tahunAjaranId is already a string (CUID), use as-is
+    const tahunAjaranId = kelasItem.tahunAjaranId || '';
 
     console.log('EDIT KELAS - Setting form data with tahunAjaranId:', tahunAjaranId);
 
@@ -1397,12 +1391,6 @@ export default function AdminKelasPage() {
                   required
                   value={kelasFormData.tahunAjaranId}
                   onChange={(e) => {
-                    console.log('Select change event:', {
-                      value: e.target.value,
-                      valueType: typeof e.target.value,
-                      tahunAjaranArray: tahunAjaran.map(ta => ({ id: ta.id, idType: typeof ta.id, nama: ta.nama })),
-                      selectedOption: tahunAjaran.find(ta => ta.id.toString() === e.target.value)
-                    });
                     setKelasFormData({ ...kelasFormData, tahunAjaranId: e.target.value });
                   }}
                   style={{
@@ -1423,11 +1411,9 @@ export default function AdminKelasPage() {
                     <option disabled>Tidak ada tahun ajaran tersedia</option>
                   ) : (
                     tahunAjaran.map((ta) => {
-                      const optionValue = ta.id.toString();
-                      const isSelected = optionValue === kelasFormData.tahunAjaranId;
-                      console.log(`Option: id=${ta.id}, nama=${ta.nama}, value=${optionValue}, isSelected=${isSelected}, formValue=${kelasFormData.tahunAjaranId}`);
+                      // ta.id is already a string (CUID), use directly
                       return (
-                        <option key={ta.id} value={optionValue}>
+                        <option key={ta.id} value={ta.id}>
                           {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
                         </option>
                       );
