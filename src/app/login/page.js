@@ -50,6 +50,13 @@ export default function LoginPage() {
             console.error('❌ [QUICK LOGIN] Login failed:', result.error);
             if (result.error === 'CredentialsSignin') {
               setError('Username/Email/No HP atau password salah. Silakan coba lagi.');
+            } else if (result.error === 'Configuration') {
+              setError('Terjadi kesalahan konfigurasi server. Silakan refresh halaman dan coba lagi.');
+              console.error('⚠️ [QUICK LOGIN] Configuration error - check server logs');
+            } else if (result.error.includes('database')) {
+              setError('Terjadi kesalahan koneksi database. Silakan coba lagi.');
+            } else if (result.error.includes('verifikasi')) {
+              setError('Terjadi kesalahan saat verifikasi. Silakan coba lagi.');
             } else {
               setError(result.error);
             }
@@ -130,7 +137,12 @@ export default function LoginPage() {
         if (result.error === 'CredentialsSignin') {
           setError('Username/Email/No HP atau password salah. Silakan coba lagi.');
         } else if (result.error === 'Configuration') {
-          setError('Terjadi kesalahan konfigurasi. Silakan refresh halaman dan coba lagi.');
+          setError('Terjadi kesalahan konfigurasi server. Silakan refresh halaman dan coba lagi.');
+          console.error('⚠️ [LOGIN] Configuration error - check server logs');
+        } else if (result.error.includes('database')) {
+          setError('Terjadi kesalahan koneksi database. Silakan coba lagi.');
+        } else if (result.error.includes('verifikasi')) {
+          setError('Terjadi kesalahan saat verifikasi. Silakan coba lagi.');
         } else {
           setError(result.error);
         }
