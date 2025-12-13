@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 export async function PUT(request, { params }) {
   try {
@@ -80,6 +81,9 @@ export async function PUT(request, { params }) {
       }
     });
 
+    // Invalidate cache
+    invalidateCache('guru-list');
+
     return NextResponse.json(updatedGuru);
   } catch (error) {
     console.error('Error updating guru:', error);
@@ -155,6 +159,9 @@ export async function DELETE(request, { params }) {
         deletedGuruName: guruName
       }
     });
+
+    // Invalidate cache
+    invalidateCache('guru-list');
 
     return NextResponse.json({ message: 'Guru berhasil dihapus' });
   } catch (error) {
