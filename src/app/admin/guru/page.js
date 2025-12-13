@@ -144,7 +144,6 @@ export default function AdminGuruPage() {
     password: '',
     nip: '',
     jenisKelamin: 'L',
-    noHP: '',
     alamat: ''
   });
 
@@ -202,7 +201,6 @@ export default function AdminGuruPage() {
       password: '',
       nip: guruItem.nip || '',
       jenisKelamin: guruItem.jenisKelamin,
-      noHP: guruItem.noHP || '',
       alamat: guruItem.alamat || ''
     });
     setShowModal(true);
@@ -242,7 +240,6 @@ export default function AdminGuruPage() {
       password: '',
       nip: '',
       jenisKelamin: 'L',
-      noHP: '',
       alamat: ''
     });
     setEditingGuru(null);
@@ -1049,34 +1046,6 @@ export default function AdminGuruPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    No. HP
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.noHP}
-                    onChange={(e) => setFormData({ ...formData, noHP: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="form-input"
-                  />
-                </div>
               </div>
 
               <div>
