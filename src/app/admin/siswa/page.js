@@ -160,9 +160,10 @@ export default function AdminSiswaPage() {
   const fetchSiswa = async () => {
     try {
       const response = await fetch('/api/admin/siswa');
-      const data = await response.json();
-      // Ensure data is always an array
-      setSiswa(Array.isArray(data) ? data : []);
+      const result = await response.json();
+      // Handle both array response and object with data property
+      const data = Array.isArray(result) ? result : (result.data || []);
+      setSiswa(data);
     } catch (error) {
       console.error('Error fetching siswa:', error);
       setSiswa([]);
