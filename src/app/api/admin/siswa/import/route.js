@@ -41,14 +41,14 @@ export async function POST(request) {
           noHPOrtu
         } = data;
 
-        // Convert NISN and NIS to string (in case Excel reads them as numbers)
-        nisn = String(nisn || '').trim();
-        nis = String(nis || '').trim();
+        // Convert NIS to string (in case Excel reads as number)
+        // Use nisn as fallback for nis if nisn exists in Excel
+        nis = String(nis || nisn || '').trim();
         let kelasInput = String(kelasId || '').trim();
         noHPOrtu = noHPOrtu ? String(noHPOrtu).trim() : null;
 
-        // Validate required fields for siswa
-        if (!name || !nisn || !nis || !kelasInput || !jenisKelamin || !tempatLahir || !tanggalLahir) {
+        // Validate required fields - only check fields that exist in schema
+        if (!name || !nis || !kelasInput || !jenisKelamin || !tanggalLahir) {
           results.failed.push({
             data,
             error: 'Data siswa tidak lengkap'
@@ -56,16 +56,7 @@ export async function POST(request) {
           continue;
         }
 
-        // Check if nisn or nis already exists
-        const existingNisn = await prisma.siswa.findUnique({ where: { nisn } });
-        if (existingNisn) {
-          results.failed.push({
-            data,
-            error: `NISN ${nisn} sudah terdaftar`
-          });
-          continue;
-        }
-
+        // Check if nis already exists
         const existingNis = await prisma.siswa.findUnique({ where: { nis } });
         if (existingNis) {
           results.failed.push({
@@ -125,14 +116,16 @@ export async function POST(request) {
 
               orangTua = await prisma.orangTua.create({
                 data: {
-                  noHP: noHPOrtu || null,
+                  noTelepon: noHPOrtu || null,
+                  nik: `NIK${Date.now()}${Math.random().toString(36).substr(2, 9)}`, // Generate unique NIK
+                  jenisKelamin: 'LAKI_LAKI', // Default, bisa diubah nanti
+                  status: 'approved', // Auto-approve
                   user: {
                     create: {
                       email: emailOrtu,
                       password: hashedPasswordOrtu,
                       name: namaOrtu,
-                      role: 'ORANG_TUA',
-                      isActive: true
+                      role: 'ORANG_TUA'
                     }
                   }
                 }
@@ -145,8 +138,8 @@ export async function POST(request) {
           }
         }
 
-        // Generate email for siswa based on NISN
-        const emailSiswa = `${nisn}@siswa.tahfidz.com`;
+        // Generate email for siswa based on NIS
+        const emailSiswa = `${nis}@siswa.tahfidz.com`;
 
         // Check if email already exists
         const existingUserEmail = await prisma.user.findUnique({ where: { email: emailSiswa } });
@@ -158,47 +151,30 @@ export async function POST(request) {
           continue;
         }
 
-        // Default password is NISN
-        const hashedPassword = await bcrypt.hash(nisn, 10);
-
-        // Create siswa data object
-        const siswaData = {
-          nisn,
-          nis,
-          jenisKelamin,
-          tempatLahir,
-          tanggalLahir: new Date(tanggalLahir),
-          status: 'approved',
-          approvedBy: session.user.id,
-          approvedAt: new Date(),
-          user: {
-            create: {
-              email: emailSiswa,
-              password: hashedPassword,
-              name,
-              role: 'SISWA',
-              isActive: true
-            }
-          },
-          kelas: {
-            connect: {
-              id: kelasId
-            }
-          }
-        };
-
-        // Add orangTua connection if exists
-        if (orangTuaId) {
-          siswaData.orangTua = {
-            connect: {
-              id: orangTuaId
-            }
-          };
-        }
+        // Default password is NIS
+        const hashedPassword = await bcrypt.hash(nis, 10);
 
         // Create siswa
         const siswa = await prisma.siswa.create({
-          data: siswaData,
+          data: {
+            nis,
+            jenisKelamin,
+            tanggalLahir: new Date(tanggalLahir),
+            status: 'approved', // Auto-approve admin imports
+            user: {
+              create: {
+                email: emailSiswa,
+                password: hashedPassword,
+                name,
+                role: 'SISWA'
+              }
+            },
+            kelas: {
+              connect: {
+                id: kelasId
+              }
+            }
+          },
           include: {
             user: {
               select: {
@@ -210,19 +186,20 @@ export async function POST(request) {
               select: {
                 nama: true
               }
-            },
-            orangTua: {
-              include: {
-                user: {
-                  select: {
-                    name: true,
-                    email: true
-                  }
-                }
-              }
             }
           }
         });
+
+        // Create OrangTuaSiswa relation if orangTua exists
+        if (orangTuaId) {
+          await prisma.orangTuaSiswa.create({
+            data: {
+              orangTuaId: orangTuaId,
+              siswaId: siswa.id,
+              hubungan: 'Orang Tua'
+            }
+          });
+        }
 
         results.success.push(siswa);
       } catch (error) {
