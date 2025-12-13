@@ -1222,6 +1222,30 @@ export default function DashboardTahfidz() {
     else if (hour < 15) setGreeting('Selamat Siang');
     else if (hour < 18) setGreeting('Selamat Sore');
     else setGreeting('Selamat Malam');
+
+    // Fetch real data from API
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/admin/dashboard-stats');
+        const result = await response.json();
+
+        if (result.success) {
+          // Merge real stats dengan mockData untuk charts/graphs
+          setData({
+            ...mockData,
+            stats: result.stats,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Keep mockData as fallback
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   return (
