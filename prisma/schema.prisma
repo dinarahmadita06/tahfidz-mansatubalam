@@ -198,6 +198,7 @@ model OrangTuaSiswa {
 model TahunAjaran {
   id            String          @id @default(cuid())
   nama          String
+  semester      Int?            // 1 atau 2, bisa null jika belum ditentukan
   tanggalMulai  DateTime
   tanggalSelesai DateTime
   isActive      Boolean         @default(false)
