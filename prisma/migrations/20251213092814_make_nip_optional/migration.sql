@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Guru" ALTER COLUMN "nip" DROP NOT NULL;

@@ -42,12 +42,12 @@ export async function POST(request) {
         // Validasi required fields
         const nama = row['Nama Lengkap'] || row['Nama'] || row['nama'];
         const email = row['Email'] || row['email'];
-        const nip = row['NIP'] || row['nip'];
+        const nip = row['NIP'] || row['nip'] || null;
         const jenisKelamin = row['Jenis Kelamin'] || row['jenisKelamin'] || row['L/P'];
 
-        if (!nama || !email || !nip) {
+        if (!nama || !email) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Nama Lengkap, Email, dan NIP harus diisi`);
+          errors.push(`Baris ${i + 2}: Nama Lengkap dan Email harus diisi`);
           continue;
         }
 
@@ -90,8 +90,7 @@ export async function POST(request) {
               email: email.toLowerCase().trim(),
               name: nama.trim(),
               password: hashedPassword,
-              role: 'GURU',
-              isActive: true
+              role: 'GURU'
             }
           });
 
