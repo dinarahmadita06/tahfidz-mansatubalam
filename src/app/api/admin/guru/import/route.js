@@ -42,18 +42,18 @@ export async function POST(request) {
         // Validasi required fields
         const nama = row['Nama Lengkap'] || row['Nama'] || row['nama'];
         const email = row['Email'] || row['email'];
-        let nip = row['NIP'] || row['nip'];
+        const nip = row['NIP'] || row['nip'];
         const jenisKelamin = row['Jenis Kelamin'] || row['jenisKelamin'] || row['L/P'];
 
-        if (!nama || !email) {
+        if (!nama || !email || !nip) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Nama dan Email harus diisi`);
+          errors.push(`Baris ${i + 2}: Nama Lengkap, Email, dan NIP harus diisi`);
           continue;
         }
 
         if (!jenisKelamin) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Jenis Kelamin harus diisi (LAKI_LAKI atau PEREMPUAN)`);
+          errors.push(`Baris ${i + 2}: Jenis Kelamin harus diisi (L/P)`);
           continue;
         }
 
@@ -66,13 +66,8 @@ export async function POST(request) {
           normalizedJenisKelamin = 'LAKI_LAKI';
         } else {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Jenis Kelamin harus LAKI_LAKI atau PEREMPUAN (Anda menulis: ${jenisKelamin})`);
+          errors.push(`Baris ${i + 2}: Jenis Kelamin harus L atau P (Anda menulis: ${jenisKelamin})`);
           continue;
-        }
-
-        // Generate unique NIP if not provided
-        if (!nip) {
-          nip = `GURU${Date.now()}${i}`;
         }
 
         // Check if user already exists
@@ -117,9 +112,9 @@ export async function POST(request) {
           await prisma.guru.update({
             where: { id: existingGuru.id },
             data: {
-              nip: nip || existingGuru.nip,
+              nip: nip,
               jenisKelamin: normalizedJenisKelamin,
-              bidangKeahlian: row['Bidang Keahlian'] || row['bidangKeahlian'] || row['Mata Pelajaran'] || existingGuru.bidangKeahlian,
+              bidangKeahlian: row['Mata Pelajaran'] || row['Bidang Keahlian'] || row['bidangKeahlian'] || 'Tahfidz',
               jabatan: row['Jabatan'] || row['jabatan'] || existingGuru.jabatan,
               noTelepon: row['No. Telepon'] || row['noTelepon'] || existingGuru.noTelepon,
               alamat: row['Alamat'] || row['alamat'] || existingGuru.alamat,
@@ -132,7 +127,7 @@ export async function POST(request) {
               userId,
               nip: nip,
               jenisKelamin: normalizedJenisKelamin,
-              bidangKeahlian: row['Bidang Keahlian'] || row['bidangKeahlian'] || row['Mata Pelajaran'] || null,
+              bidangKeahlian: row['Mata Pelajaran'] || row['Bidang Keahlian'] || row['bidangKeahlian'] || 'Tahfidz',
               jabatan: row['Jabatan'] || row['jabatan'] || null,
               noTelepon: row['No. Telepon'] || row['noTelepon'] || null,
               alamat: row['Alamat'] || row['alamat'] || null,
