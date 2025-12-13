@@ -26,6 +26,21 @@ const nextConfig = {
 
   // Optimize page loading
   swcMinify: true,
+
+  // Security headers including CSP
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'inline-speculation-rules' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com blob:; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
