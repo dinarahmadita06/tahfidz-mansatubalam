@@ -183,7 +183,13 @@ export default function AdminKelasPage() {
     try {
       const response = await fetch('/api/tahun-ajaran');
       const data = await response.json();
-      setTahunAjaran(data);
+      // Ensure id is a number for proper comparison
+      const formattedData = data.map(ta => ({
+        ...ta,
+        id: typeof ta.id === 'string' ? parseInt(ta.id) : ta.id
+      }));
+      setTahunAjaran(formattedData);
+      console.log('Tahun Ajaran data loaded:', formattedData);
     } catch (error) {
       console.error('Error fetching tahun ajaran:', error);
     }
@@ -262,10 +268,17 @@ export default function AdminKelasPage() {
     const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
     const guruPendamping = kelasItem.guruKelas?.filter(kg => kg.peran === 'pendamping') || [];
 
+    // Ensure tahunAjaranId is properly converted
+    const tahunAjaranId = typeof kelasItem.tahunAjaranId === 'number' 
+      ? kelasItem.tahunAjaranId.toString() 
+      : kelasItem.tahunAjaranId ? kelasItem.tahunAjaranId.toString() : '';
+
+    console.log('Edit kelas - tahunAjaranId:', kelasItem.tahunAjaranId, 'converted to:', tahunAjaranId);
+
     setKelasFormData({
       nama: kelasItem.nama,
       tingkat: kelasItem.tingkat,
-      tahunAjaranId: kelasItem.tahunAjaranId.toString(), // Convert to string for form
+      tahunAjaranId: tahunAjaranId,
       targetJuz: kelasItem.targetJuz || 1,
       guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
       guruPendampingIds: guruPendamping.map(gp => gp.guruId.toString()),
