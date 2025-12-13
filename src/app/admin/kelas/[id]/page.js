@@ -52,10 +52,13 @@ export default function KelasDetailPage() {
     try {
       setLoading(true);
       const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}`);
-      const data = await response.json();
+      const result = await response.json();
+      // Handle both array response and object with data property
+      const data = Array.isArray(result) ? result : (result.data || []);
       setSiswa(data);
     } catch (error) {
       console.error('Error fetching siswa:', error);
+      setSiswa([]);
     } finally {
       setLoading(false);
     }
@@ -262,7 +265,7 @@ export default function KelasDetailPage() {
                 {kelas?.nama || 'Loading...'}
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Tingkat {kelas?.tingkat} • Tahun Ajaran {kelas?.tahunAjaran?.nama}
+                Tahun Ajaran {kelas?.tahunAjaran?.nama} • Target {kelas?.targetJuz || 1} Juz
               </p>
             </div>
           </div>
