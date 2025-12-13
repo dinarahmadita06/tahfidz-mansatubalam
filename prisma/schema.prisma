@@ -112,7 +112,7 @@ model User {
 model Guru {
   id             String       @id @default(cuid())
   userId         String       @unique
-  nip            String       @unique
+  nip            String?      @unique
   jabatan        String?
   bidangKeahlian String?
   alamat         String?
