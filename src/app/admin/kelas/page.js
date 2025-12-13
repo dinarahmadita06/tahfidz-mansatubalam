@@ -210,9 +210,16 @@ export default function AdminKelasPage() {
       }
 
       // Ensure numeric values are properly converted
+      const tahunAjaranIdNum = parseInt(kelasFormData.tahunAjaranId);
+      if (isNaN(tahunAjaranIdNum)) {
+        alert('Tahun Ajaran tidak valid. Silakan pilih tahun ajaran dari dropdown');
+        console.log('Invalid tahunAjaranId:', kelasFormData.tahunAjaranId, 'type:', typeof kelasFormData.tahunAjaranId);
+        return;
+      }
+
       const submitData = {
         ...kelasFormData,
-        tahunAjaranId: kelasFormData.tahunAjaranId ? parseInt(kelasFormData.tahunAjaranId) : null,
+        tahunAjaranId: tahunAjaranIdNum,
         targetJuz: kelasFormData.targetJuz ? parseInt(kelasFormData.targetJuz) : null,
         guruUtamaId: kelasFormData.guruUtamaId ? parseInt(kelasFormData.guruUtamaId) : null,
         guruPendampingIds: kelasFormData.guruPendampingIds?.length > 0 
@@ -220,11 +227,7 @@ export default function AdminKelasPage() {
           : [],
       };
 
-      // Validate that all numeric conversions succeeded
-      if (isNaN(submitData.tahunAjaranId)) {
-        alert('Tahun Ajaran tidak valid');
-        return;
-      }
+      console.log('Submitting kelas data:', submitData);
 
       const url = editingKelas ? `/api/admin/kelas/${editingKelas.id}` : '/api/admin/kelas';
       const method = editingKelas ? 'PUT' : 'POST';
@@ -1405,7 +1408,7 @@ export default function AdminKelasPage() {
                 >
                   <option value="">Pilih Tahun Ajaran</option>
                   {tahunAjaran.map((ta) => (
-                    <option key={ta.id} value={ta.id}>
+                    <option key={ta.id} value={ta.id.toString()}>
                       {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
                     </option>
                   ))}
@@ -1441,7 +1444,7 @@ export default function AdminKelasPage() {
                 >
                   <option value="">Pilih Guru Utama (Opsional)</option>
                   {guruList.map((guru) => (
-                    <option key={guru.id} value={guru.id}>
+                    <option key={guru.id} value={guru.id.toString()}>
                       {guru.user.name}
                     </option>
                   ))}
