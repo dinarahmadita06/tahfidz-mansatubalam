@@ -14,7 +14,7 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const { name, email, password, nip, jenisKelamin, noHP, alamat, isActive } = await request.json();
+    const { name, email, password, nip, jenisKelamin, noHP, alamat } = await request.json();
 
     // Cari guru
     const guru = await prisma.guru.findUnique({
@@ -26,10 +26,21 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Guru tidak ditemukan' }, { status: 404 });
     }
 
+    // Normalize jenisKelamin dari L/P ke LAKI_LAKI/PEREMPUAN
+    let normalizedJenisKelamin = guru.jenisKelamin; // Keep existing if not provided
+    if (jenisKelamin) {
+      const jkUpper = String(jenisKelamin).toUpperCase().trim();
+      if (jkUpper === 'PEREMPUAN' || jkUpper === 'P' || jkUpper === 'FEMALE') {
+        normalizedJenisKelamin = 'PEREMPUAN';
+      } else if (jkUpper === 'LAKI_LAKI' || jkUpper === 'LAKI-LAKI' || jkUpper === 'L' || jkUpper === 'MALE') {
+        normalizedJenisKelamin = 'LAKI_LAKI';
+      }
+    }
+
     // Update data
     const updateData = {
-      nip,
-      jenisKelamin,
+      nip: nip || null,
+      jenisKelamin: normalizedJenisKelamin,
       noHP,
       alamat,
       user: {
@@ -39,11 +50,6 @@ export async function PUT(request, { params }) {
         }
       }
     };
-
-    // Update isActive jika disediakan
-    if (isActive !== undefined) {
-      updateData.user.update.isActive = isActive;
-    }
 
     // Update password jika disediakan
     if (password) {
@@ -59,8 +65,7 @@ export async function PUT(request, { params }) {
           select: {
             id: true,
             name: true,
-            email: true,
-            isActive: true
+            email: true
           }
         }
       }
