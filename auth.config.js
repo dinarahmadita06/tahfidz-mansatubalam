@@ -20,16 +20,23 @@ export const authConfig = {
           }
 
           console.log('🔍 [AUTH] Looking up user in database...');
-          const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.email.toLowerCase().trim(),
-            },
-            include: {
-              siswa: true,
-              guru: true,
-              orangTua: true,
-            },
-          });
+          
+          let user;
+          try {
+            user = await prisma.user.findUnique({
+              where: {
+                email: credentials.email.toLowerCase().trim(),
+              },
+              include: {
+                siswa: true,
+                guru: true,
+                orangTua: true,
+              },
+            });
+          } catch (dbError) {
+            console.error('💥 [AUTH] Database error:', dbError.message);
+            throw new Error("Terjadi kesalahan koneksi database. Silakan coba lagi.");
+          }
 
           if (!user) {
             console.error('❌ [AUTH] User not found:', credentials.email);
@@ -66,10 +73,16 @@ export const authConfig = {
           console.log('🔑 [AUTH] Password hash length:', user.password?.length);
 
           // Ensure we're using bcryptjs compare properly
-          const isPasswordValid = await bcrypt.compare(
-            String(credentials.password),
-            String(user.password)
-          );
+          let isPasswordValid = false;
+          try {
+            isPasswordValid = await bcrypt.compare(
+              String(credentials.password),
+              String(user.password)
+            );
+          } catch (bcryptError) {
+            console.error('❌ [AUTH] Bcrypt error:', bcryptError.message);
+            throw new Error("Terjadi kesalahan saat verifikasi password.");
+          }
 
           console.log('🔑 [AUTH] Password valid:', isPasswordValid);
 
