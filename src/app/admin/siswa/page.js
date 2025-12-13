@@ -171,6 +171,20 @@ export default function AdminSiswaPage() {
     }
   };
 
+  const handleRefreshData = async () => {
+    try {
+      setLoading(true);
+      // Clear cache
+      await fetch('/api/admin/siswa/clear-cache', { method: 'POST' });
+      // Refetch data
+      await fetchSiswa();
+      alert('Data berhasil di-refresh!');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      alert('Gagal refresh data');
+    }
+  };
+
   const fetchKelas = async () => {
     try {
       const response = await fetch('/api/kelas');
@@ -439,6 +453,40 @@ export default function AdminSiswaPage() {
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
                 Export Data
+              </button>
+
+              {/* Refresh Data Button */}
+              <button
+                onClick={handleRefreshData}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: `linear-gradient(135deg, ${colors.blue[500]} 0%, ${colors.blue[600]} 100%)`,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: '0.75rem',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+                Refresh Data
               </button>
 
               {/* Tambah Siswa Button */}
