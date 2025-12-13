@@ -247,9 +247,9 @@ export default function AdminKelasPage() {
         ...kelasFormData,
         // Keep tahunAjaranId as string (it's a CUID in database)
         targetJuz: kelasFormData.targetJuz ? parseInt(kelasFormData.targetJuz) : null,
-        guruUtamaId: kelasFormData.guruUtamaId ? kelasFormData.guruUtamaId : null, // Also keep as string
+        guruUtamaId: kelasFormData.guruUtamaId && kelasFormData.guruUtamaId.trim() ? kelasFormData.guruUtamaId : null,
         guruPendampingIds: kelasFormData.guruPendampingIds?.length > 0 
-          ? kelasFormData.guruPendampingIds
+          ? kelasFormData.guruPendampingIds.filter(id => id && id.trim())
           : [],
       };
 

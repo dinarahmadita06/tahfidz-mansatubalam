@@ -46,8 +46,8 @@ export async function POST(request) {
         }
       });
 
-      // 2. Add guru utama if provided
-      if (guruUtamaId) {
+      // 2. Add guru utama if provided (non-null, non-empty)
+      if (guruUtamaId && guruUtamaId.trim()) {
         await tx.guruKelas.create({
           data: {
             kelasId: newKelas.id,
@@ -58,18 +58,21 @@ export async function POST(request) {
         });
       }
 
-      // 3. Add guru pendamping if provided
+      // 3. Add guru pendamping if provided (filter out empty values)
       if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
-        const guruPendampingData = guruPendampingIds.map((guruId) => ({
-          kelasId: newKelas.id,
-          guruId: guruId, // Keep as string - it's a CUID
-          peran: 'pendamping',
-          isActive: true,
-        }));
+        const validGuruIds = guruPendampingIds.filter(id => id && id.trim());
+        if (validGuruIds.length > 0) {
+          const guruPendampingData = validGuruIds.map((guruId) => ({
+            kelasId: newKelas.id,
+            guruId: guruId, // Keep as string - it's a CUID
+            peran: 'pendamping',
+            isActive: true,
+          }));
 
-        await tx.guruKelas.createMany({
-          data: guruPendampingData,
-        });
+          await tx.guruKelas.createMany({
+            data: guruPendampingData,
+          });
+        }
       }
 
       // 4. Fetch complete kelas data
