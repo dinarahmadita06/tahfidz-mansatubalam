@@ -154,7 +154,6 @@ export default function AdminKelasPage() {
   const [editingKelas, setEditingKelas] = useState(null);
   const [kelasFormData, setKelasFormData] = useState({
     nama: '', // Menggunakan field 'nama' sesuai schema
-    tingkat: 1,
     tahunAjaranId: '',
     targetJuz: 1,
     guruUtamaId: '', // Guru utama/wali kelas
@@ -177,7 +176,6 @@ export default function AdminKelasPage() {
       
       const newFormData = {
         nama: editingKelas.nama,
-        tingkat: editingKelas.tingkat,
         tahunAjaranId: tahunAjaranId,
         targetJuz: editingKelas.targetJuz || 1,
         guruUtamaId: guruUtama ? String(guruUtama.guruId) : '',
@@ -302,7 +300,6 @@ export default function AdminKelasPage() {
     setKelasFormData(prevState => {
       const newState = {
         nama: kelasItem.nama,
-        tingkat: kelasItem.tingkat,
         tahunAjaranId: tahunAjaranId,
         targetJuz: kelasItem.targetJuz || 1,
         guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
@@ -363,7 +360,6 @@ export default function AdminKelasPage() {
   const resetKelasForm = () => {
     setKelasFormData({
       nama: '',
-      tingkat: 1,
       tahunAjaranId: '',
       targetJuz: 1,
       guruUtamaId: '',
@@ -1356,68 +1352,35 @@ export default function AdminKelasPage() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text.secondary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  Target Juz
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={kelasFormData.targetJuz}
+                  onChange={(e) => setKelasFormData({ ...kelasFormData, targetJuz: parseInt(e.target.value) })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `2px solid ${colors.gray[200]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
                     fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Tingkat *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    max="12"
-                    value={kelasFormData.tingkat}
-                    onChange={(e) => setKelasFormData({ ...kelasFormData, tingkat: parseInt(e.target.value) })}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="form-input"
-                  />
-                </div>
-
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Target Juz
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={kelasFormData.targetJuz}
-                    onChange={(e) => setKelasFormData({ ...kelasFormData, targetJuz: parseInt(e.target.value) })}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="form-input"
-                  />
-                </div>
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                  }}
+                  className="form-input"
+                />
               </div>
 
               <div>
@@ -1508,6 +1471,7 @@ export default function AdminKelasPage() {
                     </option>
                   ))}
                 </select>
+              </div>
               </div>
 
               <div>
