@@ -24,7 +24,7 @@ export async function POST(request) {
 
     // Check if tahun ajaran exists
     const tahunAjaran = await prisma.tahunAjaran.findUnique({
-      where: { id: parseInt(tahunAjaranId) }
+      where: { id: tahunAjaranId } // tahunAjaranId is a string (CUID), not a number
     });
 
     if (!tahunAjaran) {
@@ -41,7 +41,7 @@ export async function POST(request) {
         data: {
           nama,
           tingkat: parseInt(tingkat),
-          tahunAjaranId: parseInt(tahunAjaranId),
+          tahunAjaranId: tahunAjaranId, // Keep as string - it's a CUID
           targetJuz: targetJuz ? parseInt(targetJuz) : 1,
         }
       });
@@ -51,7 +51,7 @@ export async function POST(request) {
         await tx.guruKelas.create({
           data: {
             kelasId: newKelas.id,
-            guruId: parseInt(guruUtamaId),
+            guruId: guruUtamaId, // Keep as string - it's a CUID
             peran: 'utama',
             isActive: true,
           },
@@ -62,7 +62,7 @@ export async function POST(request) {
       if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
         const guruPendampingData = guruPendampingIds.map((guruId) => ({
           kelasId: newKelas.id,
-          guruId: parseInt(guruId),
+          guruId: guruId, // Keep as string - it's a CUID
           peran: 'pendamping',
           isActive: true,
         }));
