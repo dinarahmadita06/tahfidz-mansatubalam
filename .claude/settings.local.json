@@ -74,7 +74,11 @@
       "Bash(if [ -d .vercel ])",
       "Bash(then echo \"Project sudah terlink\")",
       "Bash(else echo \"Project belum terlink\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(vercel login:*)",
+      "Bash(Select-String -Pattern \"(error|Error|ERROR|failed|Failed|FAILED|auth|Auth|AUTH)\")",
+      "Bash(neonctl projects:*)",
+      "Bash(neonctl branches create:*)"
     ],
     "deny": [],
     "ask": []
