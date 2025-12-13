@@ -250,6 +250,7 @@ export async function POST(request) {
           // Create siswa
           const siswa = await prisma.siswa.create({
             data: {
+              nisn: siswaData.nisn?.toString() || siswaData.nis?.toString() || null,
               nis: siswaData.nis?.toString() || siswaData.nisn?.toString() || '',
               jenisKelamin: normalizedJenisKelamin,
               tanggalLahir: tanggalLahir,

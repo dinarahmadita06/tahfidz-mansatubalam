@@ -140,15 +140,13 @@ export async function POST(request) {
       nis,
       kelasId,
       jenisKelamin,
-      tempatLahir,
       tanggalLahir,
       alamat,
-      noHP,
-      orangTuaId
+      noTelepon
     } = body;
 
     // Validate required fields
-    if (!name || !email || !password || !nisn || !nis || !kelasId || !jenisKelamin || !tempatLahir || !tanggalLahir) {
+    if (!name || !email || !password || !nisn || !nis || !kelasId || !jenisKelamin) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
@@ -177,14 +175,10 @@ export async function POST(request) {
         nisn,
         nis,
         jenisKelamin,
-        tempatLahir,
-        tanggalLahir: new Date(tanggalLahir),
+        tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
         alamat,
-        noHP,
-        orangTuaId: orangTuaId || null,
+        noTelepon,
         status: 'approved', // Admin-created students are auto-approved
-        approvedBy: session.user.id,
-        approvedAt: new Date(),
         kelas: {
           connect: {
             id: kelasId
@@ -195,8 +189,7 @@ export async function POST(request) {
             email,
             password: hashedPassword,
             name,
-            role: 'SISWA',
-            isActive: true
+            role: 'SISWA'
           }
         }
       },
