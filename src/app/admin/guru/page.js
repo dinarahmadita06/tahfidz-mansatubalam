@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import ImportExportToolbar from '@/components/ImportExportToolbar';
 
@@ -246,6 +246,26 @@ export default function AdminGuruPage() {
       alamat: ''
     });
     setEditingGuru(null);
+  };
+
+  // Generate email from name
+  const generateEmail = () => {
+    if (!formData.name) {
+      alert('Masukkan nama terlebih dahulu');
+      return;
+    }
+    // Ambil kata pertama dari nama
+    const firstName = formData.name.trim().split(' ')[0].toLowerCase();
+    // Format: guru.{firstName}@tahfidz.sch.id
+    const generatedEmail = `guru.${firstName}@tahfidz.sch.id`;
+    setFormData({ ...formData, email: generatedEmail });
+  };
+
+  // Generate 6 digit random password
+  const generatePassword = () => {
+    // Generate random 6 digit number
+    const password = Math.floor(100000 + Math.random() * 900000).toString();
+    setFormData({ ...formData, password });
   };
 
 
@@ -866,23 +886,49 @@ export default function AdminGuruPage() {
                   }}>
                     Email *
                   </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="form-input"
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 48px 12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="form-input"
+                      placeholder="guru.nama@tahfidz.sch.id"
+                    />
+                    <button
+                      type="button"
+                      onClick={generateEmail}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="generate-btn"
+                      title="Generate email otomatis"
+                    >
+                      <RefreshCw size={16} color={colors.white} />
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -896,23 +942,49 @@ export default function AdminGuruPage() {
                   }}>
                     Password {editingGuru ? '(kosongkan jika tidak diubah)' : '*'}
                   </label>
-                  <input
-                    type="password"
-                    required={!editingGuru}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="form-input"
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      required={!editingGuru}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 48px 12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", system-ui, sans-serif',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="form-input"
+                      placeholder="6 digit angka"
+                    />
+                    <button
+                      type="button"
+                      onClick={generatePassword}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="generate-btn"
+                      title="Generate password 6 digit"
+                    >
+                      <RefreshCw size={16} color={colors.white} />
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -1120,6 +1192,12 @@ export default function AdminGuruPage() {
         .stats-card:hover {
           transform: translateY(-6px) scale(1.02);
           box-shadow: 0 12px 28px rgba(26, 147, 111, 0.15);
+        }
+
+        /* Generate Button Hover */
+        .generate-btn:hover {
+          transform: translateY(-50%) scale(1.1) rotate(180deg);
+          box-shadow: 0 4px 12px rgba(26, 147, 111, 0.3) !important;
         }
 
         /* Button Hover Effects */
