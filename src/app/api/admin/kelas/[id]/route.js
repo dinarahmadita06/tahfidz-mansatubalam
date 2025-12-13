@@ -14,10 +14,10 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { nama, tingkat, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds } = body;
+    const { nama, tahunAjaranId, targetJuz, kapasitas, guruUtamaId, guruPendampingIds } = body;
 
     // Validate required fields
-    if (!nama || !tingkat || !tahunAjaranId) {
+    if (!nama || !tahunAjaranId) {
       return NextResponse.json(
         { error: 'Data tidak lengkap' },
         { status: 400 }
@@ -26,7 +26,7 @@ export async function PUT(request, { params }) {
 
     // Check if kelas exists
     const kelas = await prisma.kelas.findUnique({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     if (!kelas) {
@@ -40,26 +40,26 @@ export async function PUT(request, { params }) {
     const updatedKelas = await prisma.$transaction(async (tx) => {
       // 1. Update kelas data
       const updated = await tx.kelas.update({
-        where: { id: parseInt(id) },
+        where: { id },
         data: {
           nama,
-          tingkat: parseInt(tingkat),
-          tahunAjaranId: parseInt(tahunAjaranId),
-          targetJuz: targetJuz ? parseInt(targetJuz) : 1,
+          tahunAjaranId,
+          targetJuz: targetJuz ? parseInt(targetJuz) : null,
+          kapasitas: kapasitas ? parseInt(kapasitas) : null,
         }
       });
 
       // 2. Remove all existing guru assignments
       await tx.guruKelas.deleteMany({
-        where: { kelasId: parseInt(id) }
+        where: { kelasId: id }
       });
 
       // 3. Add guru utama if provided
       if (guruUtamaId) {
         await tx.guruKelas.create({
           data: {
-            kelasId: parseInt(id),
-            guruId: parseInt(guruUtamaId),
+            kelasId: id,
+            guruId: guruUtamaId,
             peran: 'utama',
             isActive: true,
           },
@@ -69,8 +69,8 @@ export async function PUT(request, { params }) {
       // 4. Add guru pendamping if provided
       if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
         const guruPendampingData = guruPendampingIds.map((guruId) => ({
-          kelasId: parseInt(id),
-          guruId: parseInt(guruId),
+          kelasId: id,
+          guruId: guruId,
           peran: 'pendamping',
           isActive: true,
         }));
@@ -82,7 +82,7 @@ export async function PUT(request, { params }) {
 
       // 5. Fetch complete kelas data
       const kelasWithRelations = await tx.kelas.findUnique({
-        where: { id: parseInt(id) },
+        where: { id },
         include: {
           tahunAjaran: {
             select: {
