@@ -86,7 +86,7 @@ export async function POST(request) {
     const body = await request.json();
     console.log('📝 Request body:', JSON.stringify(body, null, 2));
 
-    const { name, email, password, nip, jenisKelamin, noHP, alamat } = body;
+    const { name, email, password, nip, jenisKelamin, noHP, noTelepon, alamat } = body;
 
     // Validasi input
     if (!name || !email || !password || !jenisKelamin) {
@@ -140,7 +140,7 @@ export async function POST(request) {
     const createData = {
       nip: nip || null,
       jenisKelamin: normalizedJenisKelamin,
-      noHP: noHP || null,
+      noTelepon: noTelepon || noHP || null,
       alamat: alamat || null,
       user: {
         create: {
