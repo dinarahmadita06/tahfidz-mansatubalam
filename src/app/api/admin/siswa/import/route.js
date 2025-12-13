@@ -41,22 +41,31 @@ export async function POST(request) {
           noHPOrtu
         } = data;
 
-        // Convert NIS to string (in case Excel reads as number)
-        // Use nisn as fallback for nis if nisn exists in Excel
-        nis = String(nis || nisn || '').trim();
+        // Convert NISN and NIS to string (in case Excel reads as number)
+        nisn = String(nisn || '').trim();
+        nis = String(nis || '').trim();
         let kelasInput = String(kelasId || '').trim();
         noHPOrtu = noHPOrtu ? String(noHPOrtu).trim() : null;
 
-        // Validate required fields - only check fields that exist in schema
-        if (!name || !nis || !kelasInput || !jenisKelamin || !tanggalLahir) {
+        // Validate required fields - NISN and NIS are both required now
+        if (!name || !nisn || !nis || !kelasInput || !jenisKelamin || !tanggalLahir) {
           results.failed.push({
             data,
-            error: 'Data siswa tidak lengkap'
+            error: 'Data siswa tidak lengkap (NISN, NIS, Nama, Jenis Kelamin, Tanggal Lahir wajib diisi)'
           });
           continue;
         }
 
-        // Check if nis already exists
+        // Check if nisn or nis already exists
+        const existingNisn = await prisma.siswa.findUnique({ where: { nisn } });
+        if (existingNisn) {
+          results.failed.push({
+            data,
+            error: `NISN ${nisn} sudah terdaftar`
+          });
+          continue;
+        }
+
         const existingNis = await prisma.siswa.findUnique({ where: { nis } });
         if (existingNis) {
           results.failed.push({
@@ -157,6 +166,7 @@ export async function POST(request) {
         // Create siswa
         const siswa = await prisma.siswa.create({
           data: {
+            nisn,
             nis,
             jenisKelamin,
             tanggalLahir: new Date(tanggalLahir),

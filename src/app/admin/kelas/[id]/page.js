@@ -1,36 +1,65 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Edit, Trash2, Search, ArrowLeft, Upload, Download, Users, BookOpen } from 'lucide-react';
+import {
+  UserPlus, Edit, Trash2, Search, ArrowLeft, Upload, Download,
+  Users, Link as LinkIcon, Filter, X
+} from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter, useParams } from 'next/navigation';
 import * as XLSX from 'xlsx';
+import {
+  generateSiswaEmail,
+  normalizeGender,
+  formatGender,
+  validateNISN,
+  validateNIS,
+  matchesSearch
+} from '@/lib/siswaUtils';
 
-export default function KelasDetailPage() {
+// Modern Pastel Color Palette (SIMTAQ Style)
+const colors = {
+  emerald: { 50: '#ECFDF5', 100: '#D1FAE5', 500: '#10B981', 600: '#059669', 700: '#047857' },
+  amber: { 50: '#FEF3C7', 100: '#FDE68A', 500: '#F59E0B', 600: '#D97706' },
+  blue: { 50: '#EFF6FF', 100: '#DBEAFE', 500: '#3B82F6', 600: '#2563EB' },
+  gray: { 50: '#F9FAFB', 100: '#F3F4F6', 200: '#E5E7EB', 400: '#9CA3AF', 600: '#4B5563', 900: '#111827' },
+  white: '#FFFFFF',
+  red: { 50: '#FEF2F2', 500: '#EF4444', 600: '#DC2626' }
+};
+
+export default function KelolaSiswaPage() {
   const router = useRouter();
   const params = useParams();
   const kelasId = params.id;
 
+  // ============ STATE ============
   const [kelas, setKelas] = useState(null);
-  const [siswa, setSiswa] = useState([]);
+  const [siswaList, setSiswaList] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterGender, setFilterGender] = useState('all');
+
+  // Modals
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingSiswa, setEditingSiswa] = useState(null);
-  const [importData, setImportData] = useState([]);
   const [importResults, setImportResults] = useState(null);
+
+  // Form Data
   const [formData, setFormData] = useState({
     name: '',
     nisn: '',
     nis: '',
-    jenisKelamin: 'L',
-    tempatLahir: '',
+    email: '', // Auto-generated
+    jenisKelamin: 'LAKI_LAKI',
     tanggalLahir: '',
     alamat: '',
-    noHP: ''
+    noTelepon: ''
   });
 
+  // ============ EFFECTS ============
   useEffect(() => {
     if (kelasId) {
       fetchKelasDetail();
@@ -38,6 +67,15 @@ export default function KelasDetailPage() {
     }
   }, [kelasId]);
 
+  // Auto-generate email when name or NIS changes
+  useEffect(() => {
+    if (formData.name && formData.nis) {
+      const generatedEmail = generateSiswaEmail(formData.name, formData.nis);
+      setFormData(prev => ({ ...prev, email: generatedEmail }));
+    }
+  }, [formData.name, formData.nis]);
+
+  // ============ DATA FETCHING ============
   const fetchKelasDetail = async () => {
     try {
       const response = await fetch(`/api/kelas/${kelasId}`);
@@ -53,37 +91,49 @@ export default function KelasDetailPage() {
       setLoading(true);
       const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}`);
       const result = await response.json();
-      // Handle both array response and object with data property
       const data = Array.isArray(result) ? result : (result.data || []);
-      setSiswa(data);
+      setSiswaList(data);
     } catch (error) {
       console.error('Error fetching siswa:', error);
-      setSiswa([]);
+      setSiswaList([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // ============ FORM HANDLERS ============
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validations
+    const nisnValidation = validateNISN(formData.nisn);
+    if (!nisnValidation.valid) {
+      alert(nisnValidation.error);
+      return;
+    }
+
+    const nisValidation = validateNIS(formData.nis);
+    if (!nisValidation.valid) {
+      alert(nisValidation.error);
+      return;
+    }
+
     try {
-      const url = editingSiswa ? `/api/admin/siswa/${editingSiswa.id}` : '/api/admin/siswa';
+      const url = editingSiswa
+        ? `/api/admin/siswa/${editingSiswa.id}`
+        : '/api/admin/siswa';
       const method = editingSiswa ? 'PUT' : 'POST';
 
-      // Always include kelasId for this context
       const submitData = {
         ...formData,
-        kelasId: kelasId,
-        email: formData.email || `${formData.nisn}@siswa.tahfidz.com`,
-        password: formData.password || formData.nisn
+        kelasId,
+        jenisKelamin: normalizeGender(formData.jenisKelamin),
+        password: formData.nis // Default password = NIS
       };
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),
       });
 
@@ -94,38 +144,34 @@ export default function KelasDetailPage() {
         fetchSiswa();
       } else {
         const error = await response.json();
-        console.error('Server error:', error);
         alert(error.error || 'Gagal menyimpan data siswa');
       }
     } catch (error) {
       console.error('Error saving siswa:', error);
-      alert('Gagal menyimpan data siswa: ' + error.message);
+      alert('Gagal menyimpan data siswa');
     }
   };
 
-  const handleEdit = (siswaItem) => {
-    setEditingSiswa(siswaItem);
+  const handleEdit = (siswa) => {
+    setEditingSiswa(siswa);
     setFormData({
-      name: siswaItem.user.name,
-      nisn: siswaItem.nisn,
-      nis: siswaItem.nis,
-      jenisKelamin: siswaItem.jenisKelamin,
-      tempatLahir: siswaItem.tempatLahir,
-      tanggalLahir: new Date(siswaItem.tanggalLahir).toISOString().split('T')[0],
-      alamat: siswaItem.alamat || '',
-      noHP: siswaItem.noHP || ''
+      name: siswa.user.name,
+      nisn: siswa.nisn || '',
+      nis: siswa.nis,
+      email: siswa.user.email,
+      jenisKelamin: siswa.jenisKelamin,
+      tanggalLahir: siswa.tanggalLahir ? new Date(siswa.tanggalLahir).toISOString().split('T')[0] : '',
+      alamat: siswa.alamat || '',
+      noTelepon: siswa.noTelepon || ''
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Yakin ingin menghapus siswa ini dari kelas?')) return;
+    if (!confirm('Yakin ingin menghapus siswa ini?')) return;
 
     try {
-      const response = await fetch(`/api/admin/siswa/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/admin/siswa/${id}`, { method: 'DELETE' });
       if (response.ok) {
         alert('Siswa berhasil dihapus');
         fetchSiswa();
@@ -139,110 +185,108 @@ export default function KelasDetailPage() {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      nisn: '',
+      nis: '',
+      email: '',
+      jenisKelamin: 'LAKI_LAKI',
+      tanggalLahir: '',
+      alamat: '',
+      noTelepon: ''
+    });
+    setEditingSiswa(null);
+  };
+
+  // ============ EXCEL IMPORT ============
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const bstr = evt.target.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
+        const ws = wb.Sheets[wb.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(ws);
 
-        // Transform data to match API format
-        const transformedData = data.map(row => ({
-          name: row['Nama Siswa'] || row['Nama'] || row['nama'] || '',
-          nisn: row['NISN'] || row['nisn'] || '',
-          nis: row['NIS'] || row['nis'] || '',
-          kelasId: kelasId, // Use current kelas
-          jenisKelamin: row['L/P'] || row['Jenis Kelamin'] || row['jenisKelamin'] || 'L',
-          tempatLahir: row['Tempat Lahir'] || row['tempatLahir'] || '',
-          tanggalLahir: row['Tanggal Lahir'] || row['tanggalLahir'] || '',
-          namaOrtu: row['Nama Ortu'] || row['namaOrtu'] || '',
-          emailOrtu: row['Email Ortu'] || row['emailOrtu'] || '',
-          noHPOrtu: row['No HP Ortu'] || row['noHPOrtu'] || ''
-        }));
+        // Transform & validate
+        const transformedData = data.map(row => {
+          const name = row['Nama Siswa'] || row['Nama'] || '';
+          const nisn = String(row['NISN'] || '').trim();
+          const nis = String(row['NIS'] || '').trim();
+          const rawGender = row['Jenis Kelamin'] || row['L/P'] || 'L';
 
-        setImportData(transformedData);
+          return {
+            name,
+            nisn,
+            nis,
+            email: generateSiswaEmail(name, nis),
+            jenisKelamin: normalizeGender(rawGender),
+            tanggalLahir: row['Tanggal Lahir'] || '',
+            alamat: row['Alamat'] || '',
+            kelasId,
+            // Orang Tua
+            namaOrtu: row['Nama Orang Tua'] || '',
+            emailOrtu: row['Email Orang Tua'] || '',
+            noHPOrtu: row['No HP Orang Tua'] || ''
+          };
+        });
+
+        // Send to import API
+        const response = await fetch('/api/admin/siswa/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ siswaData: transformedData }),
+        });
+
+        const result = await response.json();
+        setImportResults(result);
         setShowImportModal(true);
+        fetchSiswa();
       } catch (error) {
         console.error('Error parsing Excel:', error);
         alert('Gagal membaca file Excel');
       }
     };
     reader.readAsBinaryString(file);
-  };
-
-  const handleImport = async () => {
-    try {
-      const response = await fetch('/api/admin/siswa/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ siswaData: importData }),
-      });
-
-      const result = await response.json();
-      setImportResults(result);
-      fetchSiswa();
-    } catch (error) {
-      console.error('Error importing siswa:', error);
-      alert('Gagal mengimport data siswa');
-    }
+    e.target.value = ''; // Reset input
   };
 
   const downloadTemplate = () => {
-    const template = [
-      {
-        'Nama Siswa': 'Contoh Nama Siswa',
-        'NISN': '1234567890',
-        'NIS': '12345',
-        'L/P': 'L',
-        'Tempat Lahir': 'Jakarta',
-        'Tanggal Lahir': '2010-01-01',
-        'Nama Ortu': 'Nama Orang Tua',
-        'Email Ortu': 'orangtua@example.com',
-        'No HP Ortu': '081234567890'
-      }
-    ];
+    const template = [{
+      'Nama Siswa': 'Ahmad Fauzi',
+      'NISN': '1234567890',
+      'NIS': '2024001',
+      'Jenis Kelamin': 'L',
+      'Tanggal Lahir': '2010-01-15',
+      'Alamat': 'Jl. Contoh No. 123',
+      'Nama Orang Tua': 'Budi Santoso',
+      'Email Orang Tua': 'budi@example.com',
+      'No HP Orang Tua': '081234567890'
+    }];
 
     const ws = XLSX.utils.json_to_sheet(template);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Template Siswa');
+    XLSX.utils.book_append_sheet(wb, ws, 'Template');
     XLSX.writeFile(wb, `template_siswa_${kelas?.nama || 'kelas'}.xlsx`);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      nisn: '',
-      nis: '',
-      jenisKelamin: 'L',
-      tempatLahir: '',
-      tanggalLahir: '',
-      alamat: '',
-      noHP: ''
-    });
-    setEditingSiswa(null);
-  };
-
-  const filteredSiswa = siswa.filter(s => {
-    const matchSearch = searchTerm === '' ||
-      s.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.nisn.includes(searchTerm) ||
-      s.nis.includes(searchTerm);
-    return matchSearch;
+  // ============ FILTERING ============
+  const filteredSiswa = siswaList.filter(siswa => {
+    const matchSearch = matchesSearch(siswa, searchTerm);
+    const matchGender = filterGender === 'all' || siswa.jenisKelamin === filterGender;
+    return matchSearch && matchGender;
   });
 
-  if (loading && !kelas) {
+  // ============ RENDER ============
+  if (loading) {
     return (
       <AdminLayout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: colors.emerald[500] }}></div>
         </div>
       </AdminLayout>
     );
@@ -250,495 +294,447 @@ export default function KelasDetailPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* Header with Back Button */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
+      <div style={{ background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`, minHeight: '100vh', padding: '32px' }}>
+
+        {/* Header */}
+        <div style={{ background: colors.white, borderRadius: '20px', padding: '32px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
             <button
-              onClick={() => router.push('/admin/kelas')}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+              onClick={() => router.back()}
+              style={{ padding: '12px', borderRadius: '12px', border: 'none', background: colors.gray[100], cursor: 'pointer' }}
             >
               <ArrowLeft size={24} />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                {kelas?.nama || 'Loading...'}
+              <h1 style={{ fontSize: '32px', fontWeight: '700', color: colors.gray[900], marginBottom: '4px' }}>
+                Kelola Siswa - {kelas?.nama}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <p style={{ fontSize: '14px', color: colors.gray[600] }}>
                 Tahun Ajaran {kelas?.tahunAjaran?.nama} • Target {kelas?.targetJuz || 1} Juz
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <label style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 20px',
+              background: colors.blue[500], color: colors.white, borderRadius: '12px',
+              fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+            }}>
+              <Upload size={18} />
+              Import Excel
+              <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} style={{ display: 'none' }} />
+            </label>
+
             <button
               onClick={downloadTemplate}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-            >
-              <Download size={20} />
-              Template
-            </button>
-            <label className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer">
-              <Upload size={20} />
-              Import Excel
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </label>
-            <button
-              onClick={() => {
-                resetForm();
-                setShowModal(true);
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 20px',
+                background: colors.white, color: colors.emerald[600], border: `2px solid ${colors.emerald[500]}`,
+                borderRadius: '12px', fontWeight: '600', cursor: 'pointer'
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
             >
-              <UserPlus size={20} />
+              <Download size={18} />
+              Template Excel
+            </button>
+
+            <button
+              onClick={() => { resetForm(); setShowModal(true); }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 20px',
+                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                color: colors.white, border: 'none', borderRadius: '12px', fontWeight: '600',
+                cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+              }}
+            >
+              <UserPlus size={18} />
               Tambah Siswa
             </button>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Cari siswa (nama, NISN, NIS)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 text-gray-900 dark:text-white"
-          />
-        </div>
+        {/* Search & Filters */}
+        <div style={{ background: colors.white, borderRadius: '20px', padding: '24px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+            {/* Search */}
+            <div style={{ position: 'relative' }}>
+              <Search style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: colors.gray[400] }} size={20} />
+              <input
+                type="text"
+                placeholder="Cari berdasarkan nama, email, NIS, NISN, atau nama orang tua..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%', paddingLeft: '44px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px',
+                  border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none'
+                }}
+              />
+            </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-gray-200 dark:border-neutral-800">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                <Users className="text-orange-600 dark:text-orange-400" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Siswa</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{siswa.length}</p>
-              </div>
-            </div>
+            {/* Gender Filter */}
+            <select
+              value={filterGender}
+              onChange={(e) => setFilterGender(e.target.value)}
+              style={{
+                padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px',
+                fontSize: '14px', outline: 'none', cursor: 'pointer'
+              }}
+            >
+              <option value="all">Semua Jenis Kelamin</option>
+              <option value="LAKI_LAKI">Laki-laki</option>
+              <option value="PEREMPUAN">Perempuan</option>
+            </select>
           </div>
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-gray-200 dark:border-neutral-800">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                <Users className="text-green-600 dark:text-green-400" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Laki-laki</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {siswa.filter(s => s.jenisKelamin === 'L').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-gray-200 dark:border-neutral-800">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <Users className="text-purple-600 dark:text-purple-400" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Perempuan</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {siswa.filter(s => s.jenisKelamin === 'P').length}
-                </p>
-              </div>
-            </div>
+
+          <div style={{ marginTop: '12px', fontSize: '13px', color: colors.gray[600] }}>
+            Menampilkan {filteredSiswa.length} dari {siswaList.length} siswa
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-neutral-800">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    No
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Nama Siswa
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    NISN / NIS
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Jenis Kelamin
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Orang Tua
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Aksi
-                  </th>
+        <div style={{ background: colors.white, borderRadius: '20px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.emerald[100]} 100%)` }}>
+                  <th style={tableHeaderStyle}>NO</th>
+                  <th style={tableHeaderStyle}>NAMA SISWA</th>
+                  <th style={tableHeaderStyle}>EMAIL</th>
+                  <th style={tableHeaderStyle}>NISN</th>
+                  <th style={tableHeaderStyle}>NIS</th>
+                  <th style={tableHeaderStyle}>JENIS KELAMIN</th>
+                  <th style={tableHeaderStyle}>ORANG TUA</th>
+                  <th style={tableHeaderStyle}>AKSI</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-neutral-800">
+              <tbody>
                 {filteredSiswa.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                      <Users size={48} className="mx-auto mb-2 opacity-50" />
-                      <p>Belum ada siswa di kelas ini</p>
+                    <td colSpan="8" style={{ textAlign: 'center', padding: '48px', color: colors.gray[400] }}>
+                      <Users size={48} style={{ margin: '0 auto 16px' }} />
+                      <p>Tidak ada data siswa</p>
                     </td>
                   </tr>
                 ) : (
-                  filteredSiswa.map((siswaItem, index) => (
-                    <tr key={siswaItem.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {index + 1}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {siswaItem.user.name}
+                  filteredSiswa.map((siswa, index) => {
+                    const parentName = siswa.orangTuaSiswa?.[0]?.orangTua?.user?.name || '-';
+                    const hasParent = siswa.orangTuaSiswa?.length > 0;
+
+                    return (
+                      <tr
+                        key={siswa.id}
+                        style={{
+                          borderBottom: `1px solid ${colors.gray[100]}`,
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = colors.emerald[50]}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <td style={tableCellStyle}>{index + 1}</td>
+                        <td style={tableCellStyle}>
+                          <div style={{ fontWeight: '600', color: colors.gray[900] }}>{siswa.user.name}</div>
+                        </td>
+                        <td style={tableCellStyle}>
+                          <span style={{ fontSize: '13px', color: colors.gray[600] }}>{siswa.user.email}</span>
+                        </td>
+                        <td style={tableCellStyle}>{siswa.nisn || '-'}</td>
+                        <td style={tableCellStyle}>
+                          <span style={{ fontWeight: '600', color: colors.emerald[700] }}>{siswa.nis}</span>
+                        </td>
+                        <td style={tableCellStyle}>
+                          <span style={{
+                            padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '600',
+                            background: siswa.jenisKelamin === 'LAKI_LAKI' ? colors.blue[50] : '#FEE2F2',
+                            color: siswa.jenisKelamin === 'LAKI_LAKI' ? colors.blue[700] : '#DC2626'
+                          }}>
+                            {formatGender(siswa.jenisKelamin)}
+                          </span>
+                        </td>
+                        <td style={tableCellStyle}>{parentName}</td>
+                        <td style={tableCellStyle}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => handleEdit(siswa)}
+                              title="Edit Siswa"
+                              style={actionButtonStyle(colors.emerald[500], colors.emerald[50])}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(siswa.id)}
+                              title="Hapus Siswa"
+                              style={actionButtonStyle(colors.red[500], colors.red[50])}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                            {!hasParent && (
+                              <button
+                                onClick={() => alert('Fitur hubungkan orang tua akan segera ditambahkan')}
+                                title="Hubungkan Orang Tua"
+                                style={actionButtonStyle(colors.amber[500], colors.amber[50])}
+                              >
+                                <LinkIcon size={16} />
+                              </button>
+                            )}
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {siswaItem.user.email}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {siswaItem.nisn}
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {siswaItem.nis}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {siswaItem.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {siswaItem.orangTua ? (
-                          <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {siswaItem.orangTua.user.name}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {siswaItem.orangTua.user.email}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-gray-500 dark:text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleEdit(siswaItem)}
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(siswaItem.id)}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Add/Edit Modal */}
+        {/* Modal Form Siswa */}
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {editingSiswa ? 'Edit Siswa' : 'Tambah Siswa ke ' + kelas?.nama}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    resetForm();
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Nama Lengkap *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      NISN *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.nisn}
-                      onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      NIS *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.nis}
-                      onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Jenis Kelamin *
-                    </label>
-                    <select
-                      required
-                      value={formData.jenisKelamin}
-                      onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                    >
-                      <option value="L">Laki-laki</option>
-                      <option value="P">Perempuan</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tempat Lahir *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.tempatLahir}
-                      onChange={(e) => setFormData({ ...formData, tempatLahir: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tanggal Lahir *
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.tanggalLahir}
-                      onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      No. HP
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.noHP}
-                      onChange={(e) => setFormData({ ...formData, noHP: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Alamat
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.alamat}
-                    onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Info:</strong> Email akan otomatis dibuat: <code>{formData.nisn}@siswa.tahfidz.com</code>
-                    <br />
-                    Password default: <code>{formData.nisn}</code> (NISN siswa)
-                  </p>
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                    }}
-                    className="px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                  >
-                    {editingSiswa ? 'Update' : 'Simpan'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+          <ModalFormSiswa
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleSubmit}
+            onClose={() => { setShowModal(false); resetForm(); }}
+            isEditing={!!editingSiswa}
+          />
         )}
 
-        {/* Import Modal */}
-        {showImportModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Preview Import Data - {kelas?.nama}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowImportModal(false);
-                    setImportData([]);
-                    setImportResults(null);
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {!importResults ? (
-                <>
-                  <p className="mb-4 text-gray-600 dark:text-gray-400">
-                    {importData.length} data siswa siap diimport ke kelas {kelas?.nama}
-                  </p>
-                  <div className="overflow-x-auto mb-4">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 dark:bg-neutral-800">
-                        <tr>
-                          <th className="px-4 py-2 text-left">Nama Siswa</th>
-                          <th className="px-4 py-2 text-left">NISN</th>
-                          <th className="px-4 py-2 text-left">NIS</th>
-                          <th className="px-4 py-2 text-left">L/P</th>
-                          <th className="px-4 py-2 text-left">Nama Ortu</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {importData.slice(0, 10).map((row, idx) => (
-                          <tr key={idx} className="border-t dark:border-neutral-700">
-                            <td className="px-4 py-2">{row.name}</td>
-                            <td className="px-4 py-2">{row.nisn}</td>
-                            <td className="px-4 py-2">{row.nis}</td>
-                            <td className="px-4 py-2">{row.jenisKelamin}</td>
-                            <td className="px-4 py-2">{row.namaOrtu || '-'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {importData.length > 10 && (
-                      <p className="text-sm text-gray-500 mt-2">
-                        ... dan {importData.length - 10} data lainnya
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex justify-end gap-3">
-                    <button
-                      onClick={() => {
-                        setShowImportModal(false);
-                        setImportData([]);
-                      }}
-                      className="px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      onClick={handleImport}
-                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                    >
-                      Import Sekarang
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="mb-4">
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      {importResults.message}
-                    </p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                        <p className="text-green-800 dark:text-green-200 font-bold text-2xl">
-                          {importResults.results.success.length}
-                        </p>
-                        <p className="text-green-600 dark:text-green-400">Berhasil</p>
-                      </div>
-                      <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                        <p className="text-red-800 dark:text-red-200 font-bold text-2xl">
-                          {importResults.results.failed.length}
-                        </p>
-                        <p className="text-red-600 dark:text-red-400">Gagal</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {importResults.results.failed.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                        Data yang Gagal:
-                      </h3>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {importResults.results.failed.map((fail, idx) => (
-                          <div key={idx} className="bg-red-50 dark:bg-red-900/20 p-3 rounded text-sm">
-                            <p className="text-red-800 dark:text-red-200">
-                              {fail.data.name} (NISN: {fail.data.nisn})
-                            </p>
-                            <p className="text-red-600 dark:text-red-400">{fail.error}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-3 mt-4">
-                    <button
-                      onClick={() => {
-                        setShowImportModal(false);
-                        setImportData([]);
-                        setImportResults(null);
-                      }}
-                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                    >
-                      Tutup
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+        {/* Modal Import Results */}
+        {showImportModal && importResults && (
+          <ModalImportResults
+            results={importResults}
+            onClose={() => { setShowImportModal(false); setImportResults(null); }}
+          />
         )}
       </div>
     </AdminLayout>
   );
 }
+
+// ============ STYLES ============
+const tableHeaderStyle = {
+  padding: '16px 12px',
+  textAlign: 'left',
+  fontSize: '12px',
+  fontWeight: '700',
+  color: colors.emerald[700],
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase'
+};
+
+const tableCellStyle = {
+  padding: '16px 12px',
+  fontSize: '14px',
+  color: colors.gray[700]
+};
+
+const actionButtonStyle = (color, bgColor) => ({
+  padding: '8px',
+  borderRadius: '8px',
+  border: 'none',
+  background: bgColor,
+  color: color,
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.2s ease'
+});
+
+// ============ SUB-COMPONENTS ============
+function ModalFormSiswa({ formData, setFormData, onSubmit, onClose, isEditing }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
+      <div style={{ background: colors.white, borderRadius: '24px', padding: '32px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: colors.gray[900] }}>
+            {isEditing ? 'Edit Siswa' : 'Tambah Siswa Baru'}
+          </h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Nama */}
+          <FormField label="Nama Lengkap *" required>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              style={inputStyle}
+              placeholder="Contoh: Ahmad Fauzi"
+            />
+          </FormField>
+
+          {/* NISN & NIS */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <FormField label="NISN *" required>
+              <input
+                type="text"
+                required
+                value={formData.nisn}
+                onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                style={inputStyle}
+                placeholder="10 digit"
+                maxLength="10"
+              />
+            </FormField>
+
+            <FormField label="NIS *" required>
+              <input
+                type="text"
+                required
+                value={formData.nis}
+                onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                style={inputStyle}
+                placeholder="Contoh: 2024001"
+              />
+            </FormField>
+          </div>
+
+          {/* Email (Auto-generated, read-only) */}
+          <FormField label="Email (Otomatis)">
+            <input
+              type="email"
+              value={formData.email}
+              readOnly
+              style={{ ...inputStyle, background: colors.gray[50], cursor: 'not-allowed' }}
+              placeholder="Akan otomatis dibuat dari nama dan NIS"
+            />
+            <p style={{ fontSize: '11px', color: colors.gray[500], marginTop: '4px' }}>
+              Format: katapertama.NIS@siswa.tahfidz.sch.id
+            </p>
+          </FormField>
+
+          {/* Jenis Kelamin & Tanggal Lahir */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <FormField label="Jenis Kelamin *" required>
+              <select
+                required
+                value={formData.jenisKelamin}
+                onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                style={inputStyle}
+              >
+                <option value="LAKI_LAKI">Laki-laki</option>
+                <option value="PEREMPUAN">Perempuan</option>
+              </select>
+            </FormField>
+
+            <FormField label="Tanggal Lahir">
+              <input
+                type="date"
+                value={formData.tanggalLahir}
+                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                style={inputStyle}
+              />
+            </FormField>
+          </div>
+
+          {/* Alamat */}
+          <FormField label="Alamat">
+            <textarea
+              value={formData.alamat}
+              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+              style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
+              placeholder="Alamat lengkap siswa"
+            />
+          </FormField>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ flex: 1, padding: '12px', border: `2px solid ${colors.gray[300]}`, borderRadius: '12px', background: colors.white, fontWeight: '600', cursor: 'pointer' }}
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', background: `linear-gradient(135deg, ${colors.emerald[500]}, ${colors.emerald[600]})`, color: colors.white, fontWeight: '600', cursor: 'pointer' }}
+            >
+              {isEditing ? 'Update' : 'Simpan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ModalImportResults({ results, onClose }) {
+  const successCount = results.results?.success?.length || 0;
+  const failedCount = results.results?.failed?.length || 0;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
+      <div style={{ background: colors.white, borderRadius: '24px', padding: '32px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '700' }}>Hasil Import</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ padding: '20px', background: colors.emerald[50], borderRadius: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', fontWeight: '700', color: colors.emerald[600] }}>{successCount}</div>
+            <div style={{ fontSize: '14px', color: colors.emerald[700], marginTop: '4px' }}>Berhasil</div>
+          </div>
+          <div style={{ padding: '20px', background: colors.red[50], borderRadius: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', fontWeight: '700', color: colors.red[600] }}>{failedCount}</div>
+            <div style={{ fontSize: '14px', color: colors.red[700], marginTop: '4px' }}>Gagal</div>
+          </div>
+        </div>
+
+        {failedCount > 0 && (
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: colors.red[700] }}>Data yang Gagal:</h3>
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              {results.results.failed.map((item, idx) => (
+                <div key={idx} style={{ padding: '12px', background: colors.red[50], borderRadius: '8px', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '600' }}>
+                    {item.data?.name || 'Nama tidak tersedia'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: colors.red[700], marginTop: '4px' }}>
+                    {item.error}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={onClose}
+          style={{ width: '100%', marginTop: '16px', padding: '12px', background: colors.emerald[500], color: colors.white, border: 'none', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FormField({ label, required, children }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: colors.gray[700], marginBottom: '8px' }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+const inputStyle = {
+  width: '100%',
+  padding: '12px 16px',
+  border: `2px solid ${colors.gray[200]}`,
+  borderRadius: '12px',
+  fontSize: '14px',
+  outline: 'none',
+  transition: 'all 0.2s ease'
+};
