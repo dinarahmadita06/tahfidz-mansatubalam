@@ -234,8 +234,6 @@ export default function AdminKelasPage() {
       console.log('SUBMIT - Current form state:', kelasFormData);
       console.log('SUBMIT - tahunAjaranId value:', kelasFormData.tahunAjaranId);
       console.log('SUBMIT - tahunAjaranId type:', typeof kelasFormData.tahunAjaranId);
-      console.log('SUBMIT - parseInt result:', parseInt(kelasFormData.tahunAjaranId));
-      console.log('SUBMIT - Available tahunAjaran:', tahunAjaran.map(ta => ({ id: ta.id, nama: ta.nama })));
 
       // Validate data before sending
       if (!kelasFormData.nama || !kelasFormData.tahunAjaranId) {
@@ -244,27 +242,14 @@ export default function AdminKelasPage() {
         return;
       }
 
-      // Ensure numeric values are properly converted
-      const tahunAjaranIdNum = parseInt(kelasFormData.tahunAjaranId);
-      if (isNaN(tahunAjaranIdNum)) {
-        console.error('VALIDATION ERROR:', {
-          tahunAjaranId: kelasFormData.tahunAjaranId,
-          type: typeof kelasFormData.tahunAjaranId,
-          parseResult: parseInt(kelasFormData.tahunAjaranId),
-          isNaN: isNaN(tahunAjaranIdNum),
-          allTahunAjaran: tahunAjaran
-        });
-        alert('Tahun Ajaran tidak valid. Silakan pilih tahun ajaran dari dropdown');
-        return;
-      }
-
+      // tahunAjaranId is a STRING (CUID), not a number - DON'T parseInt!
       const submitData = {
         ...kelasFormData,
-        tahunAjaranId: tahunAjaranIdNum,
+        // Keep tahunAjaranId as string (it's a CUID in database)
         targetJuz: kelasFormData.targetJuz ? parseInt(kelasFormData.targetJuz) : null,
-        guruUtamaId: kelasFormData.guruUtamaId ? parseInt(kelasFormData.guruUtamaId) : null,
+        guruUtamaId: kelasFormData.guruUtamaId ? kelasFormData.guruUtamaId : null, // Also keep as string
         guruPendampingIds: kelasFormData.guruPendampingIds?.length > 0 
-          ? kelasFormData.guruPendampingIds.map(id => parseInt(id)).filter(id => !isNaN(id))
+          ? kelasFormData.guruPendampingIds
           : [],
       };
 

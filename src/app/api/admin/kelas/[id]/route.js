@@ -43,7 +43,7 @@ export async function PUT(request, { params }) {
         where: { id },
         data: {
           nama,
-          tahunAjaranId: parseInt(tahunAjaranId),
+          tahunAjaranId: tahunAjaranId, // Keep as string - it's a CUID
           targetJuz: targetJuz ? parseInt(targetJuz) : null,
           kapasitas: kapasitas ? parseInt(kapasitas) : null,
         }
@@ -59,7 +59,7 @@ export async function PUT(request, { params }) {
         await tx.guruKelas.create({
           data: {
             kelasId: id,
-            guruId: parseInt(guruUtamaId),
+            guruId: guruUtamaId, // Keep as string - it's a CUID
             peran: 'utama',
             isActive: true,
           },
@@ -70,7 +70,7 @@ export async function PUT(request, { params }) {
       if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
         const guruPendampingData = guruPendampingIds.map((guruId) => ({
           kelasId: id,
-          guruId: parseInt(guruId),
+          guruId: guruId, // Keep as string - it's a CUID
           peran: 'pendamping',
           isActive: true,
         }));
