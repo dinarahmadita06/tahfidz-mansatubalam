@@ -1405,7 +1405,15 @@ export default function AdminKelasPage() {
                 <select
                   required
                   value={kelasFormData.tahunAjaranId}
-                  onChange={(e) => setKelasFormData({ ...kelasFormData, tahunAjaranId: e.target.value })}
+                  onChange={(e) => {
+                    console.log('Select change event:', {
+                      value: e.target.value,
+                      valueType: typeof e.target.value,
+                      tahunAjaranArray: tahunAjaran.map(ta => ({ id: ta.id, idType: typeof ta.id, nama: ta.nama })),
+                      selectedOption: tahunAjaran.find(ta => ta.id.toString() === e.target.value)
+                    });
+                    setKelasFormData({ ...kelasFormData, tahunAjaranId: e.target.value });
+                  }}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
