@@ -17,9 +17,14 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 if (process.env.NODE_ENV === 'development') {
   prisma.$on('query', (e) => {
     if (e.duration > 100) {
-      console.log(`🐌 Slow Query (${e.duration}ms):`, e.query.substring(0, 100))
+      console.log(`🐢 Slow Query (${e.duration}ms):`, e.query.substring(0, 100))
     }
   })
 }
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Cache Prisma client globally in all environments to prevent connection pool exhaustion
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = prisma
+}
+
+export default prisma
