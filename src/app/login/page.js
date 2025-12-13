@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const quickLogin = (role) => {
+  const quickLogin = async (role) => {
     const credentials = {
       ADMIN: { email: 'admin@tahfidz.sch.id', password: '123456' },
       GURU: { email: 'ahmad.fauzi@tahfidz.sch.id', password: '123456' },
@@ -26,6 +26,79 @@ export default function LoginPage() {
     if (cred) {
       setEmail(cred.email);
       setPassword(cred.password);
+      setLoading(true);
+      setError('');
+
+      // Delay slightly to ensure state is updated
+      setTimeout(async () => {
+        try {
+          console.log('🔐 [QUICK LOGIN] Attempting login with email:', cred.email);
+
+          const result = await signIn('credentials', {
+            email: cred.email,
+            password: cred.password,
+            redirect: false,
+          });
+
+          console.log('📝 [QUICK LOGIN] SignIn result:', {
+            ok: result?.ok,
+            error: result?.error,
+            status: result?.status,
+          });
+
+          if (result?.error) {
+            console.error('❌ [QUICK LOGIN] Login failed:', result.error);
+            if (result.error === 'CredentialsSignin') {
+              setError('Username/Email/No HP atau password salah. Silakan coba lagi.');
+            } else {
+              setError(result.error);
+            }
+            setLoading(false);
+            return;
+          }
+
+          // Login successful
+          console.log('✅ [QUICK LOGIN] Login successful!');
+          await new Promise(resolve => setTimeout(resolve, 300));
+
+          const response = await fetch('/api/auth/session');
+          const session = await response.json();
+
+          if (!session?.user) {
+            console.error('❌ [QUICK LOGIN] No session found');
+            setError('Login berhasil tapi session tidak ditemukan. Silakan refresh halaman.');
+            setLoading(false);
+            return;
+          }
+
+          // Log login activity
+          try {
+            await fetch('/api/auth/log-activity', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'LOGIN' })
+            });
+          } catch (err) {
+            console.error('⚠️ [QUICK LOGIN] Failed to log activity:', err);
+          }
+
+          // Redirect based on role
+          const dashboardMap = {
+            ADMIN: '/admin',
+            GURU: '/guru',
+            SISWA: '/siswa',
+            ORANG_TUA: '/orangtua',
+          };
+
+          const redirectPath = dashboardMap[session.user.role] || '/siswa';
+          console.log('🔀 [QUICK LOGIN] Redirecting to:', redirectPath);
+          window.location.href = redirectPath;
+        } catch (err) {
+          console.error('💥 [QUICK LOGIN] Login exception:', err);
+          setError('Terjadi kesalahan saat login: ' + err.message);
+          setLoading(false);
+        }
+      }, 100);
     }
   };
 
