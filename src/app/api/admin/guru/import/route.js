@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import * as XLSX from 'xlsx';
 import bcrypt from 'bcryptjs';
+import { invalidateCache } from '@/lib/cache';
 
 export async function POST(request) {
   try {
@@ -140,6 +141,11 @@ export async function POST(request) {
         failedCount++;
         errors.push(`Baris ${i + 2}: ${error.message}`);
       }
+    }
+
+    // Invalidate guru cache if any import succeeded
+    if (successCount > 0) {
+      invalidateCache('guru-list');
     }
 
     return NextResponse.json({

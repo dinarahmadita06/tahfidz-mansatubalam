@@ -3,27 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
-
-// Simple in-memory cache
-const cache = new Map();
-const CACHE_DURATION = 300000; // 5 minutes in milliseconds
-
-// Function to get cached data
-function getCachedData(key) {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
-  }
-  return null;
-}
-
-// Function to set cached data
-function setCachedData(key, data) {
-  cache.set(key, {
-    data,
-    timestamp: Date.now()
-  });
-}
+import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 
 export async function GET(request) {
   try {
@@ -51,7 +31,18 @@ export async function GET(request) {
             id: true,
             name: true,
             email: true,
-            image: true
+            image: true,
+            createdAt: true
+          }
+        },
+        kelasGuru: {
+          include: {
+            kelas: {
+              select: {
+                id: true,
+                namaKelas: true
+              }
+            }
           }
         },
         _count: {
@@ -150,8 +141,7 @@ export async function POST(request) {
     });
 
     // Invalidate cache for guru list
-    cache.delete('guru-list');
-    console.log('Invalidated cache key: guru-list');
+    invalidateCache('guru-list');
 
     return NextResponse.json(guru, { status: 201 });
   } catch (error) {
