@@ -47,7 +47,6 @@ export async function GET(request) {
     if (search) {
       whereClause.OR = [
         { user: { name: { contains: search, mode: 'insensitive' } } },
-        { nisn: { contains: search } },
         { nis: { contains: search } },
         { user: { email: { contains: search, mode: 'insensitive' } } }
       ];
@@ -66,8 +65,7 @@ export async function GET(request) {
           select: {
             id: true,
             name: true,
-            email: true,
-            isActive: true
+            email: true
           }
         },
         kelas: {
@@ -76,12 +74,16 @@ export async function GET(request) {
             nama: true,
           }
         },
-        orangTua: {
+        orangTuaSiswa: {
           include: {
-            user: {
-              select: {
-                name: true,
-                email: true
+            orangTua: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                    email: true
+                  }
+                }
               }
             }
           }
@@ -203,8 +205,7 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
-            email: true,
-            isActive: true
+            email: true
           }
         },
         kelas: {
