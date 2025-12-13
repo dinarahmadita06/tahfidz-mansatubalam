@@ -86,6 +86,17 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
+    // Normalize jenisKelamin dari L/P ke LAKI_LAKI/PEREMPUAN
+    let normalizedJenisKelamin = 'LAKI_LAKI';
+    const jkUpper = String(jenisKelamin).toUpperCase().trim();
+    if (jkUpper === 'PEREMPUAN' || jkUpper === 'P' || jkUpper === 'FEMALE') {
+      normalizedJenisKelamin = 'PEREMPUAN';
+    } else if (jkUpper === 'LAKI_LAKI' || jkUpper === 'LAKI-LAKI' || jkUpper === 'L' || jkUpper === 'MALE') {
+      normalizedJenisKelamin = 'LAKI_LAKI';
+    } else {
+      return NextResponse.json({ error: 'Jenis Kelamin harus L atau P' }, { status: 400 });
+    }
+
     // Cek email sudah ada
     const existingUser = await prisma.user.findUnique({
       where: { email }
@@ -101,8 +112,8 @@ export async function POST(request) {
     // Buat user dan guru
     const guru = await prisma.guru.create({
       data: {
-        nip,
-        jenisKelamin,
+        nip: nip || null,
+        jenisKelamin: normalizedJenisKelamin,
         noHP,
         alamat,
         user: {
