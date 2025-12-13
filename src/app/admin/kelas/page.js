@@ -209,17 +209,31 @@ export default function AdminKelasPage() {
     e.preventDefault();
 
     try {
+      // Log current state BEFORE validation
+      console.log('SUBMIT - Current form state:', kelasFormData);
+      console.log('SUBMIT - tahunAjaranId value:', kelasFormData.tahunAjaranId);
+      console.log('SUBMIT - tahunAjaranId type:', typeof kelasFormData.tahunAjaranId);
+      console.log('SUBMIT - parseInt result:', parseInt(kelasFormData.tahunAjaranId));
+      console.log('SUBMIT - Available tahunAjaran:', tahunAjaran.map(ta => ({ id: ta.id, nama: ta.nama })));
+
       // Validate data before sending
       if (!kelasFormData.nama || !kelasFormData.tahunAjaranId) {
         alert('Nama kelas dan Tahun Ajaran harus diisi');
+        console.log('Validation failed - nama or tahunAjaranId empty');
         return;
       }
 
       // Ensure numeric values are properly converted
       const tahunAjaranIdNum = parseInt(kelasFormData.tahunAjaranId);
       if (isNaN(tahunAjaranIdNum)) {
+        console.error('VALIDATION ERROR:', {
+          tahunAjaranId: kelasFormData.tahunAjaranId,
+          type: typeof kelasFormData.tahunAjaranId,
+          parseResult: parseInt(kelasFormData.tahunAjaranId),
+          isNaN: isNaN(tahunAjaranIdNum),
+          allTahunAjaran: tahunAjaran
+        });
         alert('Tahun Ajaran tidak valid. Silakan pilih tahun ajaran dari dropdown');
-        console.log('Invalid tahunAjaranId:', kelasFormData.tahunAjaranId, 'type:', typeof kelasFormData.tahunAjaranId);
         return;
       }
 
@@ -253,6 +267,7 @@ export default function AdminKelasPage() {
         fetchKelas();
       } else {
         const error = await response.json();
+        console.error('API Error response:', error);
         alert(error.error || 'Gagal menyimpan data kelas');
       }
     } catch (error) {
@@ -262,6 +277,9 @@ export default function AdminKelasPage() {
   };
 
   const handleEditKelas = (kelasItem) => {
+    console.log('EDIT KELAS - kelasItem received:', kelasItem);
+    console.log('EDIT KELAS - tahunAjaranId:', kelasItem.tahunAjaranId, 'type:', typeof kelasItem.tahunAjaranId);
+    
     setEditingKelas(kelasItem);
 
     // Extract guru utama dan pendamping dari kelasGuru
@@ -273,16 +291,21 @@ export default function AdminKelasPage() {
       ? kelasItem.tahunAjaranId.toString() 
       : kelasItem.tahunAjaranId ? kelasItem.tahunAjaranId.toString() : '';
 
-    console.log('Edit kelas - tahunAjaranId:', kelasItem.tahunAjaranId, 'converted to:', tahunAjaranId);
+    console.log('EDIT KELAS - Setting form data with tahunAjaranId:', tahunAjaranId);
 
-    setKelasFormData({
-      nama: kelasItem.nama,
-      tingkat: kelasItem.tingkat,
-      tahunAjaranId: tahunAjaranId,
-      targetJuz: kelasItem.targetJuz || 1,
-      guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
-      guruPendampingIds: guruPendamping.map(gp => gp.guruId.toString()),
+    setKelasFormData(prevState => {
+      const newState = {
+        nama: kelasItem.nama,
+        tingkat: kelasItem.tingkat,
+        tahunAjaranId: tahunAjaranId,
+        targetJuz: kelasItem.targetJuz || 1,
+        guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
+        guruPendampingIds: guruPendamping.map(gp => gp.guruId.toString()),
+      };
+      console.log('EDIT KELAS - Form state updated to:', newState);
+      return newState;
     });
+    
     setShowKelasModal(true);
   };
 
