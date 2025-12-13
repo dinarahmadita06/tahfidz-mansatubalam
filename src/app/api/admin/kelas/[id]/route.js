@@ -43,7 +43,7 @@ export async function PUT(request, { params }) {
         where: { id },
         data: {
           nama,
-          tahunAjaranId,
+          tahunAjaranId: parseInt(tahunAjaranId),
           targetJuz: targetJuz ? parseInt(targetJuz) : null,
           kapasitas: kapasitas ? parseInt(kapasitas) : null,
         }
@@ -59,7 +59,7 @@ export async function PUT(request, { params }) {
         await tx.guruKelas.create({
           data: {
             kelasId: id,
-            guruId: guruUtamaId,
+            guruId: parseInt(guruUtamaId),
             peran: 'utama',
             isActive: true,
           },
@@ -70,7 +70,7 @@ export async function PUT(request, { params }) {
       if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
         const guruPendampingData = guruPendampingIds.map((guruId) => ({
           kelasId: id,
-          guruId: guruId,
+          guruId: parseInt(guruId),
           peran: 'pendamping',
           isActive: true,
         }));
@@ -117,21 +117,26 @@ export async function PUT(request, { params }) {
     });
 
     // Log activity
-    await logActivity({
-      userId: session.user.id,
-      userName: session.user.name,
-      userRole: session.user.role,
-      action: 'UPDATE',
-      module: 'KELAS',
-      description: `Mengupdate data kelas ${updatedKelas.nama}`,
-      ipAddress: getIpAddress(request),
-      userAgent: getUserAgent(request),
-      metadata: {
-        kelasId: updatedKelas.id,
-        guruUtamaId: guruUtamaId || null,
-        guruPendampingCount: guruPendampingIds?.length || 0
-      }
-    });
+    try {
+      await logActivity({
+        userId: session.user.id,
+        userName: session.user.name,
+        userRole: session.user.role,
+        action: 'UPDATE',
+        module: 'KELAS',
+        description: `Mengupdate data kelas ${updatedKelas.nama}`,
+        ipAddress: getIpAddress(request),
+        userAgent: getUserAgent(request),
+        metadata: {
+          kelasId: updatedKelas.id,
+          guruUtamaId: guruUtamaId || null,
+          guruPendampingCount: guruPendampingIds?.length || 0
+        }
+      });
+    } catch (logError) {
+      console.error('Error logging activity:', logError);
+      // Don't throw, just log the error
+    }
 
     return NextResponse.json(updatedKelas);
   } catch (error) {
