@@ -35,7 +35,7 @@ export async function GET(request) {
             createdAt: true
           }
         },
-        kelasGuru: {
+        guruKelas: {
           include: {
             kelas: {
               select: {
