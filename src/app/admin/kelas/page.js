@@ -167,6 +167,27 @@ export default function AdminKelasPage() {
     fetchGuruList();
   }, []);
 
+  // Watch for editingKelas changes and sync form data
+  useEffect(() => {
+    if (editingKelas && showKelasModal) {
+      console.log('SYNC EFFECT - editingKelas changed, syncing form data');
+      const guruUtama = editingKelas.guruKelas?.find(kg => kg.peran === 'utama');
+      const guruPendamping = editingKelas.guruKelas?.filter(kg => kg.peran === 'pendamping') || [];
+      const tahunAjaranId = String(editingKelas.tahunAjaranId);
+      
+      const newFormData = {
+        nama: editingKelas.nama,
+        tingkat: editingKelas.tingkat,
+        tahunAjaranId: tahunAjaranId,
+        targetJuz: editingKelas.targetJuz || 1,
+        guruUtamaId: guruUtama ? String(guruUtama.guruId) : '',
+        guruPendampingIds: guruPendamping.map(gp => String(gp.guruId)),
+      };
+      console.log('SYNC EFFECT - Setting form data:', newFormData);
+      setKelasFormData(newFormData);
+    }
+  }, [editingKelas, showKelasModal]);
+
   const fetchKelas = async () => {
     try {
       const response = await fetch('/api/kelas');
