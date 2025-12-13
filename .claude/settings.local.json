@@ -78,7 +78,8 @@
       "Bash(vercel login:*)",
       "Bash(Select-String -Pattern \"(error|Error|ERROR|failed|Failed|FAILED|auth|Auth|AUTH)\")",
       "Bash(neonctl projects:*)",
-      "Bash(neonctl branches create:*)"
+      "Bash(neonctl branches create:*)",
+      "Bash(git revert:*)"
     ],
     "deny": [],
     "ask": []
