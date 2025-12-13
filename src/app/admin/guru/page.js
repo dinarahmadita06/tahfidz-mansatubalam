@@ -663,7 +663,7 @@ export default function AdminGuruPage() {
                                     }}
                                   >
                                     <GraduationCap size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                                    {kg.kelas.namaKelas}
+                                    {kg.kelas.nama}
                                   </span>
                                 ))}
                               </div>

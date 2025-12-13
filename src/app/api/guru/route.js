@@ -40,7 +40,7 @@ export async function GET(request) {
             kelas: {
               select: {
                 id: true,
-                namaKelas: true
+                nama: true
               }
             }
           }
