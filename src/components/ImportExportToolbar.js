@@ -117,19 +117,23 @@ export default function ImportExportToolbar({
         setImportResult({
           success: true,
           message: result.message,
-          stats: result.stats
+          stats: result.stats,
+          errors: result.errors || []
         });
 
-        // Reset form setelah 2 detik
-        setTimeout(() => {
-          setShowImportModal(false);
-          setSelectedFile(null);
-          if (onImportSuccess) onImportSuccess();
-        }, 2000);
+        // Reset form setelah 2 detik jika semua berhasil
+        if (result.stats.failed === 0) {
+          setTimeout(() => {
+            setShowImportModal(false);
+            setSelectedFile(null);
+            if (onImportSuccess) onImportSuccess();
+          }, 2000);
+        }
       } else {
         setImportResult({
           success: false,
-          message: result.error || 'Gagal import data'
+          message: result.error || 'Gagal import data',
+          errors: result.errors || []
         });
       }
     } catch (error) {
@@ -159,7 +163,8 @@ export default function ImportExportToolbar({
           'Nama Lengkap': item.user?.name || item.nama || '',
           'Email': item.user?.email || item.email || '',
           'NIP': item.nip || '',
-          'Mata Pelajaran': item.mataPelajaran || '',
+          'Jenis Kelamin': item.jenisKelamin === 'LAKI_LAKI' ? 'L' : item.jenisKelamin === 'PEREMPUAN' ? 'P' : '',
+          'Mata Pelajaran': item.bidangKeahlian || item.mataPelajaran || '',
           'No. Telepon': item.noTelepon || item.phone || '',
           'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
           'Username': item.user?.email || '',
@@ -376,7 +381,7 @@ export default function ImportExportToolbar({
               onClick={() => {
                 // Generate template
                 const templateData = kategori === 'guru'
-                  ? [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'guru@example.com', 'NIP': '1234567890', 'Mata Pelajaran': 'Tahfidz', 'No. Telepon': '08123456789' }]
+                  ? [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'guru@example.com', 'NIP': '1234567890', 'Jenis Kelamin': 'L', 'Mata Pelajaran': 'Tahfidz', 'No. Telepon': '08123456789' }]
                   : kategori === 'siswa'
                   ? [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'siswa@example.com', 'NIS': '1234567890', 'Kelas': '10A', 'Tanggal Lahir': '2005-01-01', 'Jenis Kelamin': 'L', 'Alamat': 'Alamat lengkap' }]
                   : [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'orangtua@example.com', 'No. Telepon': '08123456789', 'Hubungan': 'Ayah', 'Nama Siswa': 'Nama Anak' }];
@@ -734,6 +739,38 @@ export default function ImportExportToolbar({
                           {importResult.stats.failed}
                         </p>
                       </div>
+                    </div>
+                  )}
+                  {importResult.errors && importResult.errors.length > 0 && (
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '12px',
+                      background: colors.white,
+                      borderRadius: '8px',
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}>
+                      <p style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: '#DC2626',
+                        margin: '0 0 8px 0',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        Error Details:
+                      </p>
+                      <ul style={{
+                        margin: 0,
+                        paddingLeft: '20px',
+                        fontSize: '12px',
+                        color: '#991B1B',
+                        lineHeight: '1.8'
+                      }}>
+                        {importResult.errors.map((error, idx) => (
+                          <li key={idx}>{error}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                   {importResult.success && (
