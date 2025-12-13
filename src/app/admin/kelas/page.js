@@ -340,10 +340,9 @@ export default function AdminKelasPage() {
 
   const handleExport = () => {
     const csvContent = [
-      ['Nama Kelas', 'Tingkat', 'Tahun Ajaran', 'Guru Tahfidz', 'Jumlah Siswa'],
+      ['Nama Kelas', 'Tahun Ajaran', 'Guru Tahfidz', 'Jumlah Siswa'],
       ...filteredKelas.map(k => [
         k.nama,
-        k.tingkat,
         k.tahunAjaran?.nama || '-',
         k.guruKelas?.filter(kg => kg.peran === 'utama').map(kg => kg.guru.user.name).join(', ') || '-',
         k._count?.siswa || 0
