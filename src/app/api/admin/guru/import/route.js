@@ -42,12 +42,37 @@ export async function POST(request) {
         // Validasi required fields
         const nama = row['Nama Lengkap'] || row['Nama'] || row['nama'];
         const email = row['Email'] || row['email'];
-        const nip = row['NIP'] || row['nip'];
+        let nip = row['NIP'] || row['nip'];
+        const jenisKelamin = row['Jenis Kelamin'] || row['jenisKelamin'] || row['L/P'];
 
         if (!nama || !email) {
           failedCount++;
           errors.push(`Baris ${i + 2}: Nama dan Email harus diisi`);
           continue;
+        }
+
+        if (!jenisKelamin) {
+          failedCount++;
+          errors.push(`Baris ${i + 2}: Jenis Kelamin harus diisi (LAKI_LAKI atau PEREMPUAN)`);
+          continue;
+        }
+
+        // Normalize jenisKelamin
+        let normalizedJenisKelamin = 'LAKI_LAKI';
+        const jkUpper = String(jenisKelamin).toUpperCase().trim();
+        if (jkUpper === 'PEREMPUAN' || jkUpper === 'P' || jkUpper === 'FEMALE') {
+          normalizedJenisKelamin = 'PEREMPUAN';
+        } else if (jkUpper === 'LAKI_LAKI' || jkUpper === 'LAKI-LAKI' || jkUpper === 'L' || jkUpper === 'MALE') {
+          normalizedJenisKelamin = 'LAKI_LAKI';
+        } else {
+          failedCount++;
+          errors.push(`Baris ${i + 2}: Jenis Kelamin harus LAKI_LAKI atau PEREMPUAN (Anda menulis: ${jenisKelamin})`);
+          continue;
+        }
+
+        // Generate unique NIP if not provided
+        if (!nip) {
+          nip = `GURU${Date.now()}${i}`;
         }
 
         // Check if user already exists
@@ -93,8 +118,11 @@ export async function POST(request) {
             where: { id: existingGuru.id },
             data: {
               nip: nip || existingGuru.nip,
-              mataPelajaran: row['Mata Pelajaran'] || row['mataPelajaran'] || existingGuru.mataPelajaran,
+              jenisKelamin: normalizedJenisKelamin,
+              bidangKeahlian: row['Bidang Keahlian'] || row['bidangKeahlian'] || row['Mata Pelajaran'] || existingGuru.bidangKeahlian,
+              jabatan: row['Jabatan'] || row['jabatan'] || existingGuru.jabatan,
               noTelepon: row['No. Telepon'] || row['noTelepon'] || existingGuru.noTelepon,
+              alamat: row['Alamat'] || row['alamat'] || existingGuru.alamat,
             }
           });
         } else {
@@ -102,9 +130,12 @@ export async function POST(request) {
           await prisma.guru.create({
             data: {
               userId,
-              nip: nip || '',
-              mataPelajaran: row['Mata Pelajaran'] || row['mataPelajaran'] || '',
-              noTelepon: row['No. Telepon'] || row['noTelepon'] || '',
+              nip: nip,
+              jenisKelamin: normalizedJenisKelamin,
+              bidangKeahlian: row['Bidang Keahlian'] || row['bidangKeahlian'] || row['Mata Pelajaran'] || null,
+              jabatan: row['Jabatan'] || row['jabatan'] || null,
+              noTelepon: row['No. Telepon'] || row['noTelepon'] || null,
+              alamat: row['Alamat'] || row['alamat'] || null,
             }
           });
         }
