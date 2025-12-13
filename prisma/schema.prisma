@@ -89,6 +89,11 @@ enum JenisMateri {
   VIDEO
 }
 
+enum PeranGuru {
+  utama
+  pendamping
+}
+
 model User {
   id               String        @id @default(cuid())
   name             String
@@ -230,21 +235,23 @@ model Kelas {
 }
 
 model GuruKelas {
-  id           String    @id @default(cuid())
-  guruId       String
-  kelasId      String
-  tanggalMulai DateTime  @default(now())
+  id             String     @id @default(cuid())
+  guruId         String
+  kelasId        String
+  peran          PeranGuru  @default(pendamping)
+  tanggalMulai   DateTime   @default(now())
   tanggalSelesai DateTime?
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  guru         Guru      @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  kelas        Kelas     @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  guru           Guru       @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  kelas          Kelas      @relation(fields: [kelasId], references: [id], onDelete: Cascade)
 
   @@unique([guruId, kelasId])
   @@index([guruId])
   @@index([kelasId])
   @@index([isActive])
+  @@index([peran])
 }
 
 model TargetHafalan {
