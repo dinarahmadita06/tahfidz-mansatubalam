@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { invalidateCache } from '@/lib/cache';
 
 // Helper untuk generate username
 function generateUsername(nama, type = 'siswa') {
@@ -307,6 +308,12 @@ export async function POST(request) {
       if (i < data.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+    }
+
+    // Invalidate cache if any siswa was successfully imported
+    if (stats.success > 0) {
+      invalidateCache('siswa-list');
+      console.log('✅ Cache invalidated for siswa-list');
     }
 
     return NextResponse.json({

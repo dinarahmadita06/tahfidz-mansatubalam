@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 export async function POST(request) {
   try {
@@ -249,6 +250,11 @@ export async function POST(request) {
         failedCount: results.failed.length
       }
     });
+
+    // Invalidate cache if any siswa was successfully imported
+    if (results.success.length > 0) {
+      invalidateCache('siswa-list');
+    }
 
     return NextResponse.json({
       message: `Import selesai. Berhasil: ${results.success.length}, Gagal: ${results.failed.length}`,

@@ -3,33 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
-
-// Simple in-memory cache
-const cache = new Map();
-const CACHE_DURATION = 180000; // 3 minutes in milliseconds
-
-// Function to get cached data
-function getCachedData(key) {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
-  }
-  return null;
-}
-
-// Function to set cached data
-function setCachedData(key, data) {
-  cache.set(key, {
-    data,
-    timestamp: Date.now()
-  });
-}
-
-// Function to generate cache key based on parameters
-function generateCacheKey(params) {
-  const { status, kelasId, search, page, limit } = params;
-  return `siswa-list-${status || 'all'}-${kelasId || 'all'}-${search || 'all'}-${page}-${limit}`;
-}
+import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 
 // GET - List all siswa (Admin only)
 export async function GET(request) {
@@ -47,18 +21,18 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Generate cache key
-    const cacheKey = generateCacheKey({ status, kelasId, search, page, limit });
-    
+    // Use simple cache key
+    const cacheKey = 'siswa-list';
+
     // Check if we have cached data
     const cachedData = getCachedData(cacheKey);
-    
+
     if (cachedData) {
-      console.log(`Returning cached siswa data for key: ${cacheKey}`);
+      console.log('Returning cached siswa data');
       return NextResponse.json(cachedData);
     }
 
-    console.log(`Fetching fresh siswa data for key: ${cacheKey}`);
+    console.log('Fetching fresh siswa data from database');
 
     let whereClause = {};
 
@@ -258,17 +232,7 @@ export async function POST(request) {
     });
 
     // Invalidate cache for siswa list
-    // Clear all siswa cache entries
-    const keysToDelete = [];
-    for (const key of cache.keys()) {
-      if (key.startsWith('siswa-list-')) {
-        keysToDelete.push(key);
-      }
-    }
-    keysToDelete.forEach(key => {
-      cache.delete(key);
-      console.log(`Invalidated cache key: ${key}`);
-    });
+    invalidateCache('siswa-list');
 
     return NextResponse.json(siswa, { status: 201 });
   } catch (error) {
