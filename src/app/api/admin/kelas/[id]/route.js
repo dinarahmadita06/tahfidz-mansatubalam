@@ -144,6 +144,12 @@ export async function PUT(request, { params }) {
     return NextResponse.json(updatedKelas);
   } catch (error) {
     console.error('Error updating kelas:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
     return NextResponse.json(
       { error: 'Gagal mengupdate kelas', details: error.message },
       { status: 500 }
