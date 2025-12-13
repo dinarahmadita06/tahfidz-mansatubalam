@@ -2,6 +2,22 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./src/lib/prisma.js";
 import bcrypt from "bcryptjs";
 
+// Test Prisma connection on startup
+let prismaReady = false;
+let prismaError = null;
+
+(async () => {
+  try {
+    console.log('🔗 [AUTH] Testing Prisma connection...');
+    await prisma.$queryRaw`SELECT 1`;
+    prismaReady = true;
+    console.log('✅ [AUTH] Prisma connection successful!');
+  } catch (error) {
+    prismaError = error;
+    console.error('❌ [AUTH] Prisma connection failed:', error.message);
+  }
+})();
+
 export const authConfig = {
   providers: [
     CredentialsProvider({
@@ -13,6 +29,12 @@ export const authConfig = {
       async authorize(credentials) {
         try {
           console.log('🔐 [AUTH] Authorize attempt for:', credentials?.email);
+
+          // Check if Prisma is ready
+          if (!prismaReady && prismaError) {
+            console.error('❌ [AUTH] Prisma not ready:', prismaError.message);
+            throw new Error("Database connection error. Please try again later.");
+          }
 
           if (!credentials?.email || !credentials?.password) {
             console.error('❌ [AUTH] Missing credentials');
