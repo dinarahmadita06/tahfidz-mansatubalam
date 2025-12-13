@@ -73,18 +73,36 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    console.log('🔍 POST /api/guru called');
     const session = await auth();
 
     if (!session || session.user.role !== 'ADMIN') {
+      console.log('❌ Unauthorized - no session or not admin');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, email, password, nip, jenisKelamin, noHP, alamat } = await request.json();
+    console.log('✅ Session valid:', session.user.email);
+
+    const body = await request.json();
+    console.log('📝 Request body:', JSON.stringify(body, null, 2));
+
+    const { name, email, password, nip, jenisKelamin, noHP, alamat } = body;
 
     // Validasi input
     if (!name || !email || !password || !jenisKelamin) {
-      return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+      console.log('❌ Validation failed:', { name, email, hasPassword: !!password, jenisKelamin });
+      return NextResponse.json({
+        error: 'Data tidak lengkap',
+        missing: {
+          name: !name,
+          email: !email,
+          password: !password,
+          jenisKelamin: !jenisKelamin
+        }
+      }, { status: 400 });
     }
+
+    console.log('✅ Validation passed');
 
     // Normalize jenisKelamin dari L/P ke LAKI_LAKI/PEREMPUAN
     let normalizedJenisKelamin = 'LAKI_LAKI';
@@ -94,37 +112,54 @@ export async function POST(request) {
     } else if (jkUpper === 'LAKI_LAKI' || jkUpper === 'LAKI-LAKI' || jkUpper === 'L' || jkUpper === 'MALE') {
       normalizedJenisKelamin = 'LAKI_LAKI';
     } else {
+      console.log('❌ Invalid jenisKelamin:', jenisKelamin);
       return NextResponse.json({ error: 'Jenis Kelamin harus L atau P' }, { status: 400 });
     }
 
+    console.log('✅ Normalized jenisKelamin:', normalizedJenisKelamin);
+
     // Cek email sudah ada
+    console.log('🔍 Checking existing user...');
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
 
     if (existingUser) {
+      console.log('❌ Email already exists:', email);
       return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
     }
 
+    console.log('✅ Email available');
+
     // Hash password
+    console.log('🔐 Hashing password...');
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('✅ Password hashed');
+
+    // Prepare data
+    const createData = {
+      nip: nip || null,
+      jenisKelamin: normalizedJenisKelamin,
+      noHP: noHP || null,
+      alamat: alamat || null,
+      user: {
+        create: {
+          name,
+          email,
+          password: hashedPassword,
+          role: 'GURU'
+        }
+      }
+    };
+
+    console.log('📦 Creating guru with data:', JSON.stringify({
+      ...createData,
+      user: { ...createData.user, create: { ...createData.user.create, password: '[HIDDEN]' } }
+    }, null, 2));
 
     // Buat user dan guru
     const guru = await prisma.guru.create({
-      data: {
-        nip: nip || null,
-        jenisKelamin: normalizedJenisKelamin,
-        noHP,
-        alamat,
-        user: {
-          create: {
-            name,
-            email,
-            password: hashedPassword,
-            role: 'GURU'
-          }
-        }
-      },
+      data: createData,
       include: {
         user: {
           select: {
@@ -136,7 +171,10 @@ export async function POST(request) {
       }
     });
 
+    console.log('✅ Guru created successfully:', guru.id);
+
     // Log activity
+    console.log('📝 Logging activity...');
     await logActivity({
       userId: session.user.id,
       userName: session.user.name,
@@ -151,14 +189,23 @@ export async function POST(request) {
       }
     });
 
+    console.log('✅ Activity logged');
+
     // Invalidate cache for guru list
     invalidateCache('guru-list');
+    console.log('✅ Cache invalidated');
 
+    console.log('🎉 Create guru completed successfully');
     return NextResponse.json(guru, { status: 201 });
   } catch (error) {
-    console.error('Error creating guru:', error);
+    console.error('❌ Error creating guru:', error);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
-      { error: 'Failed to create guru' },
+      {
+        error: 'Failed to create guru',
+        details: error.message,
+        errorName: error.name
+      },
       { status: 500 }
     );
   }
