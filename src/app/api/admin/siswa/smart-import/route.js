@@ -59,12 +59,13 @@ export async function POST(request) {
         // Debug logging
         console.log(`Processing row ${i + 2}:`, { siswaData, orangtuaData });
 
-        // Validasi required fields siswa
-        if (!siswaData || !siswaData.nama || !siswaData.nis) {
+        // Validasi required fields siswa (allow either nis or nisn)
+        const nisValue = siswaData.nis || siswaData.nisn;
+        if (!siswaData || !siswaData.nama || !nisValue) {
           console.log(`Row ${i + 2} validation failed:`, {
             hasSiswaData: !!siswaData,
             hasNama: !!siswaData?.nama,
-            hasNIS: !!siswaData?.nis,
+            hasNIS: !!nisValue,
             siswaKeys: siswaData ? Object.keys(siswaData) : []
           });
           stats.failed++;
@@ -75,7 +76,7 @@ export async function POST(request) {
         // Check duplicate NIS with timeout
         const existingNIS = await Promise.race([
           prisma.siswa.findUnique({
-            where: { nis: siswaData.nis?.toString() }
+            where: { nis: nisValue?.toString() }
           }),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Query timeout')), 5000)
@@ -87,7 +88,7 @@ export async function POST(request) {
 
         if (existingNIS) {
           stats.duplicate++;
-          errors.push(`Baris ${i + 2}: NIS ${siswaData.nis} sudah terdaftar`);
+          errors.push(`Baris ${i + 2}: NIS ${nisValue} sudah terdaftar`);
           continue;
         }
 
@@ -235,24 +236,29 @@ export async function POST(request) {
             }
           }
 
+          // Normalize jenisKelamin
+          let normalizedJenisKelamin = 'LAKI_LAKI';
+          if (siswaData.jenisKelamin) {
+            const jkUpper = String(siswaData.jenisKelamin).toUpperCase().trim();
+            if (jkUpper === 'PEREMPUAN' || jkUpper === 'P' || jkUpper === 'FEMALE') {
+              normalizedJenisKelamin = 'PEREMPUAN';
+            } else if (jkUpper === 'LAKI_LAKI' || jkUpper === 'LAKI-LAKI' || jkUpper === 'L' || jkUpper === 'MALE') {
+              normalizedJenisKelamin = 'LAKI_LAKI';
+            }
+          }
+
           // Create siswa
           const siswa = await prisma.siswa.create({
             data: {
-              nis: siswaData.nis?.toString() || '',
-              nisn: siswaData.nisn?.toString() || '',
-              jenisKelamin: siswaData.jenisKelamin || '',
-              tempatLahir: siswaData.tempatLahir || '',
+              nis: siswaData.nis?.toString() || siswaData.nisn?.toString() || '',
+              jenisKelamin: normalizedJenisKelamin,
               tanggalLahir: tanggalLahir,
               alamat: siswaData.alamat || '',
+              noTelepon: siswaData.noTelepon || siswaData.noHP || null,
               status: 'approved', // Auto-approve
-              approvedBy: session.user.id,
-              approvedAt: new Date(),
               kelas: {
                 connect: { id: kelasId }
               },
-              orangTua: orangTuaId ? {
-                connect: { id: orangTuaId }
-              } : undefined,
               user: {
                 create: {
                   email: siswaEmail,
@@ -264,6 +270,17 @@ export async function POST(request) {
               }
             }
           });
+
+          // Create OrangTuaSiswa relation if orangTuaId exists
+          if (orangTuaId) {
+            await prisma.orangTuaSiswa.create({
+              data: {
+                orangTuaId: orangTuaId,
+                siswaId: siswa.id,
+                hubungan: 'Orang Tua' // Default hubungan
+              }
+            });
+          }
 
           // Save new siswa account
           newAccounts.push({
