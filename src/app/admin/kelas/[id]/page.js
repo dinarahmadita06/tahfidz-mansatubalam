@@ -212,12 +212,19 @@ export default function KelolaSiswaPage() {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(ws);
 
-        // Transform & validate
+        // Transform & validate - support both old and new format
         const transformedData = data.map(row => {
-          const name = row['Nama Siswa'] || row['Nama'] || '';
-          const nisn = String(row['NISN'] || '').trim();
-          const nis = String(row['NIS'] || '').trim();
-          const rawGender = row['Jenis Kelamin'] || row['L/P'] || 'L';
+          // Support both formats: "Nama Siswa"/"Nama" (new) OR "name" (old)
+          const name = row['Nama Siswa'] || row['Nama'] || row['name'] || '';
+
+          // Support both formats: "NISN" (new) OR "nisn" (old)
+          const nisn = String(row['NISN'] || row['nisn'] || '').trim();
+
+          // Support both formats: "NIS" (new) OR "nis" (old)
+          const nis = String(row['NIS'] || row['nis'] || '').trim();
+
+          // Support: "Jenis Kelamin"/"L/P" (new) OR "jenisKelamin"/"jenisKelamir" (old - with typo support!)
+          const rawGender = row['Jenis Kelamin'] || row['L/P'] || row['jenisKelamin'] || row['jenisKelamir'] || 'L';
 
           return {
             name,
@@ -225,13 +232,13 @@ export default function KelolaSiswaPage() {
             nis,
             email: generateSiswaEmail(name, nis),
             jenisKelamin: normalizeGender(rawGender),
-            tanggalLahir: row['Tanggal Lahir'] || '',
-            alamat: row['Alamat'] || '',
+            tanggalLahir: row['Tanggal Lahir'] || row['tanggalLahir'] || '',
+            alamat: row['Alamat'] || row['alamat'] || '',
             kelasId,
-            // Orang Tua
-            namaOrtu: row['Nama Orang Tua'] || '',
-            emailOrtu: row['Email Orang Tua'] || '',
-            noHPOrtu: row['No HP Orang Tua'] || ''
+            // Orang Tua - support both formats
+            namaOrtu: row['Nama Orang Tua'] || row['namaOrtu'] || '',
+            emailOrtu: row['Email Orang Tua'] || row['emailOrtu'] || '',
+            noHPOrtu: row['No HP Orang Tua'] || row['noHPOrtu'] || ''
           };
         });
 
