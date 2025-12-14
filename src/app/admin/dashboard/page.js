@@ -10,6 +10,8 @@ import {
   Award,
   UserCog,
   CheckCircle2,
+  Target,
+  Trophy,
 } from 'lucide-react';
 
 // Islamic Modern Color Palette - Emerald & Amber Pastel
@@ -43,6 +45,24 @@ const colors = {
   },
   mint: {
     100: '#D1FAE5',
+  },
+  teal: {
+    50: '#F0FDFA',
+    100: '#E6FFF4',
+    200: '#CCFBF1',
+    300: '#99F6E4',
+    400: '#5EEAD4',
+    500: '#14B8A6',
+    600: '#0D9488',
+  },
+  gold: {
+    50: '#FFFBEB',
+    100: '#FFF7D1',
+    200: '#FEF3C7',
+    300: '#FDE68A',
+    400: '#FCD34D',
+    500: '#F59E0B',
+    600: '#D97706',
   },
   white: '#FFFFFF',
   gray: {
@@ -94,6 +114,18 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }
       iconBg: `linear-gradient(135deg, ${colors.emerald[400]} 0%, ${colors.emerald[500]} 100%)`,
       value: colors.emerald[600],
       border: colors.emerald[200],
+    },
+    teal: {
+      bg: `linear-gradient(135deg, ${colors.teal[100]} 0%, ${colors.teal[200]} 100%)`,
+      iconBg: `linear-gradient(135deg, ${colors.teal[500]} 0%, ${colors.teal[600]} 100%)`,
+      value: colors.teal[600],
+      border: colors.teal[200],
+    },
+    gold: {
+      bg: `linear-gradient(135deg, ${colors.gold[100]} 0%, ${colors.gold[200]} 100%)`,
+      iconBg: `linear-gradient(135deg, ${colors.gold[500]} 0%, ${colors.gold[600]} 100%)`,
+      value: colors.gold[600],
+      border: colors.gold[200],
     },
   };
 
@@ -168,6 +200,10 @@ export default function AdminDashboardPage() {
       totalJuz: 0,
       rataRataNilai: 0,
       rataRataKehadiran: 0,
+      siswaMencapaiTarget: 0,
+      persentaseSiswaMencapaiTarget: 0,
+      kelasMencapaiTarget: 0,
+      totalKelas: 0,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -194,6 +230,10 @@ export default function AdminDashboardPage() {
             totalJuz: 1847,
             rataRataNilai: 85.4,
             rataRataKehadiran: 94.2,
+            siswaMencapaiTarget: 90,
+            persentaseSiswaMencapaiTarget: 63,
+            kelasMencapaiTarget: 8,
+            totalKelas: 12,
           },
         });
       }
@@ -208,6 +248,10 @@ export default function AdminDashboardPage() {
           totalJuz: 1847,
           rataRataNilai: 85.4,
           rataRataKehadiran: 94.2,
+          siswaMencapaiTarget: 90,
+          persentaseSiswaMencapaiTarget: 63,
+          kelasMencapaiTarget: 8,
+          totalKelas: 12,
         },
       });
     } finally {
@@ -352,7 +396,7 @@ export default function AdminDashboardPage() {
           zIndex: 1,
           padding: '0 40px 40px',
         }}>
-          {/* Stats Cards Grid - 5 Cards */}
+          {/* Stats Cards Grid - 7 Cards */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -397,6 +441,22 @@ export default function AdminDashboardPage() {
               subtitle="Kehadiran siswa"
               color="mint"
               delay={0.2}
+            />
+            <StatCard
+              icon={<Target size={22} color={colors.white} />}
+              title="Siswa Mencapai Target"
+              value={loading ? '...' : `${data.stats.persentaseSiswaMencapaiTarget}%`}
+              subtitle={`${loading ? '...' : data.stats.siswaMencapaiTarget} dari ${loading ? '...' : data.stats.totalSiswa} siswa`}
+              color="teal"
+              delay={0.25}
+            />
+            <StatCard
+              icon={<Trophy size={22} color={colors.white} />}
+              title="Kelas Mencapai Target"
+              value={loading ? '...' : data.stats.kelasMencapaiTarget}
+              subtitle={`dari ${loading ? '...' : data.stats.totalKelas} kelas aktif`}
+              color="gold"
+              delay={0.3}
             />
           </div>
         </div>
