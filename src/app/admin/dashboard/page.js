@@ -267,6 +267,7 @@ export default function AdminDashboardPage() {
       // Fetch siswa data untuk donut chart
       const siswRes = await fetch('/api/siswa');
       let siswData = siswRes.ok ? await siswRes.json() : [];
+      console.log('Siswa API Response:', siswData);
       
       // Handle if response is wrapped in data property
       if (siswData && typeof siswData === 'object' && siswData.data && Array.isArray(siswData.data)) {
@@ -277,15 +278,18 @@ export default function AdminDashboardPage() {
       if (!Array.isArray(siswData)) {
         siswData = [];
       }
+      console.log('Processed Siswa Data:', siswData);
       
       // Fetch kelas data untuk bar chart
       const kelasRes = await fetch('/api/kelas');
       let kelasData = kelasRes.ok ? await kelasRes.json() : [];
+      console.log('Kelas API Response:', kelasData);
       
       // Ensure it's an array
       if (!Array.isArray(kelasData)) {
         kelasData = [];
       }
+      console.log('Processed Kelas Data:', kelasData);
       
       // Hitung statistik siswa mencapai target (≥ 3 juz)
       let siswaMencapai = 0;
