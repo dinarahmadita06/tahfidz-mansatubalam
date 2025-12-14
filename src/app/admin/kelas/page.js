@@ -742,17 +742,17 @@ export default function AdminKelasPage() {
                         transition: 'all 0.3s ease',
                         animation: `slideUp 0.4s ease-out ${0.3 + (index * 0.05)}s both`,
                         position: 'relative',
-                        overflow: 'hidden',
+                        overflow: 'visible',
                       }}
                       className="kelas-card"
                     >
                       {/* Icon Background */}
                       <div style={{
                         position: 'absolute',
-                        top: '-20px',
-                        right: '-20px',
-                        width: '120px',
-                        height: '120px',
+                        top: '10px',
+                        right: '10px',
+                        width: '100px',
+                        height: '100px',
                         borderRadius: '50%',
                         background: isActive ?
                           `${colors.emerald[500]}15` :
@@ -760,8 +760,9 @@ export default function AdminKelasPage() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        zIndex: 0,
                       }}>
-                        <GraduationCap size={60} color={isActive ? colors.emerald[300] : colors.amber[300]} />
+                        <GraduationCap size={50} color={isActive ? colors.emerald[300] : colors.amber[300]} />
                       </div>
 
                       {/* Header */}
@@ -819,15 +820,17 @@ export default function AdminKelasPage() {
                               style={{
                                 position: 'absolute',
                                 top: '100%',
-                                right: 0,
-                                marginTop: '4px',
-                                background: colors.white,
+                                right: '-8px',
+                                marginTop: '8px',
+                                background: '#FFFFFF',
                                 borderRadius: '12px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                                padding: '8px',
-                                minWidth: '160px',
-                                zIndex: 50,
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08)',
+                                padding: '10px',
+                                minWidth: '150px',
+                                width: 'max-content',
+                                zIndex: 1000,
                                 animation: 'fadeSlideIn 0.2s ease-out',
+                                border: `1px solid ${colors.gray[200]}`,
                               }}
                             >
                               <button
@@ -840,8 +843,8 @@ export default function AdminKelasPage() {
                                   width: '100%',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '12px',
-                                  padding: '10px 12px',
+                                  gap: '10px',
+                                  padding: '10px 14px',
                                   border: 'none',
                                   background: 'transparent',
                                   borderRadius: '8px',
@@ -851,11 +854,13 @@ export default function AdminKelasPage() {
                                   fontSize: '14px',
                                   fontWeight: 500,
                                   color: colors.text.primary,
+                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                  whiteSpace: 'nowrap',
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.background = colors.emerald[50]}
                                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                               >
-                                <Edit size={16} color={colors.emerald[600]} />
+                                <Edit size={16} color={colors.emerald[600]} style={{ flexShrink: 0 }} />
                                 <span>Edit Kelas</span>
                               </button>
 
@@ -868,8 +873,8 @@ export default function AdminKelasPage() {
                                   width: '100%',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '12px',
-                                  padding: '10px 12px',
+                                  gap: '10px',
+                                  padding: '10px 14px',
                                   border: 'none',
                                   background: 'transparent',
                                   borderRadius: '8px',
@@ -879,11 +884,13 @@ export default function AdminKelasPage() {
                                   fontSize: '14px',
                                   fontWeight: 500,
                                   color: colors.text.primary,
+                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                  whiteSpace: 'nowrap',
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.background = '#FEE2E2'}
                                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                               >
-                                <Trash2 size={16} color="#DC2626" />
+                                <Trash2 size={16} color="#DC2626" style={{ flexShrink: 0 }} />
                                 <span>Hapus Kelas</span>
                               </button>
                             </div>
