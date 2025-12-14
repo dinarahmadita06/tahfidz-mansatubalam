@@ -523,7 +523,7 @@ export default function AdminKelasPage() {
       const isActive = kelasItem.guruKelas && kelasItem.guruKelas.some(kg => kg.isActive);
       const newStatus = !isActive;
       
-      const response = await fetch(`/api/admin/kelas/${kelasItem.id}/toggle-status`, {
+      const response = await fetch(`/api/admin/kelas/${kelasItem.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -532,13 +532,29 @@ export default function AdminKelasPage() {
       });
 
       if (response.ok) {
+        const data = await response.json();
         const statusText = newStatus ? 'Aktif' : 'Nonaktif';
         alert(`Kelas "${kelasItem.nama}" berhasil diubah menjadi ${statusText}`);
         fetchKelas();
         setOpenMenuId(null);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal mengubah status kelas');
+        // Handle non-OK response
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Gagal mengubah status kelas';
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch (e) {
+            console.error('Error parsing error response:', e);
+          }
+        } else {
+          const text = await response.text();
+          console.error(`Server returned ${response.status}: ${text}`);
+        }
+        
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Error toggling kelas status:', error);
