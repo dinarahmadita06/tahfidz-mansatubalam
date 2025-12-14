@@ -12,10 +12,10 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { nama, tingkat, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds } = body;
+    const { nama, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds } = body;
 
     // Validate required fields
-    if (!nama || !tingkat || !tahunAjaranId) {
+    if (!nama || !tahunAjaranId) {
       return NextResponse.json(
         { error: 'Data tidak lengkap' },
         { status: 400 }
@@ -40,7 +40,6 @@ export async function POST(request) {
       const newKelas = await tx.kelas.create({
         data: {
           nama,
-          tingkat: parseInt(tingkat),
           tahunAjaranId: tahunAjaranId, // Keep as string - it's a CUID
           targetJuz: targetJuz ? parseInt(targetJuz) : 1,
         }
