@@ -16,7 +16,7 @@ export async function GET(request) {
     // 1. Total Siswa & Siswa Aktif
     const totalSiswa = await prisma.siswa.count();
     const siswaAktif = await prisma.siswa.count({
-      where: { status: 'AKTIF' }
+      where: { status: 'approved' }
     });
 
     console.log('DASHBOARD STATS - Siswa:', { totalSiswa, siswaAktif });
