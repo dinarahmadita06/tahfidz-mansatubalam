@@ -34,6 +34,23 @@ export async function POST(request) {
       );
     }
 
+    // Check for duplicate class name (case-insensitive)
+    const existingKelas = await prisma.kelas.findFirst({
+      where: {
+        nama: {
+          equals: nama,
+          mode: 'insensitive'
+        }
+      }
+    });
+
+    if (existingKelas) {
+      return NextResponse.json(
+        { error: `Kelas "${nama}" sudah ada. Silakan gunakan nama kelas yang berbeda.` },
+        { status: 409 }
+      );
+    }
+
     // Create kelas dengan guru menggunakan transaction
     const kelas = await prisma.$transaction(async (tx) => {
       // 1. Create kelas
