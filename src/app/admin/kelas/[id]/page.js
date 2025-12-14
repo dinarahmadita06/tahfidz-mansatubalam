@@ -475,15 +475,13 @@ export default function KelolaSiswaPage() {
                             >
                               <Trash2 size={16} />
                             </button>
-                            {!hasParent && (
-                              <button
-                                onClick={() => alert('Fitur hubungkan orang tua akan segera ditambahkan')}
-                                title="Hubungkan Orang Tua"
-                                style={actionButtonStyle(colors.amber[500], colors.amber[50])}
-                              >
-                                <LinkIcon size={16} />
-                              </button>
-                            )}
+                            <button
+                              onClick={() => alert('Fitur hubungkan orang tua akan segera ditambahkan')}
+                              title={hasParent ? 'Kelola Orang Tua' : 'Hubungkan Orang Tua'}
+                              style={actionButtonStyle(colors.amber[500], colors.amber[50])}
+                            >
+                              <LinkIcon size={16} />
+                            </button>
                           </div>
                         </td>
                       </tr>
