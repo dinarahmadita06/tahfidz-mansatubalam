@@ -45,12 +45,22 @@ export default function LaporanHafalanPage() {
   };
 
   const fetchSiswaByKelas = async (kelasId) => {
+    if (!kelasId || kelasId.trim() === '') {
+      console.warn('Invalid kelasId provided to fetchSiswaByKelas');
+      setSiswaList([]);
+      return;
+    }
+    
     try {
-      const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}`);
+      const response = await fetch(`/api/admin/siswa?kelasId=${encodeURIComponent(kelasId)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch siswa`);
+      }
       const data = await response.json();
-      setSiswaList(data);
+      setSiswaList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching siswa:', error);
+      setSiswaList([]);
     }
   };
 
@@ -92,14 +102,14 @@ export default function LaporanHafalanPage() {
   };
 
   const handleGeneratePreview = async () => {
-    if (!filters.kelasId) {
+    if (!filters.kelasId || filters.kelasId.trim() === '') {
       alert('Pilih kelas terlebih dahulu');
       return;
     }
 
     const { startDate, endDate } = calculateDateRange();
 
-    if (!startDate || !endDate) {
+    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       alert('Periode tanggal tidak valid');
       return;
     }
@@ -113,6 +123,7 @@ export default function LaporanHafalanPage() {
     }
 
     setLoading(true);
+    setReportData(null);
     try {
       const params = new URLSearchParams({
         kelasId: filters.kelasId,
@@ -120,14 +131,26 @@ export default function LaporanHafalanPage() {
         tanggalSelesai: endDate.toISOString()
       });
 
-      if (filters.siswaId) {
+      if (filters.siswaId && filters.siswaId.trim() !== '') {
         params.append('siswaId', filters.siswaId);
       }
 
       const response = await fetch(`/api/admin/laporan/hafalan?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch report data`);
+      }
+      
       const data = await response.json();
 
-      if (!data.hafalan || data.hafalan.length === 0) {
+      if (!data || (!data.hafalan && !data.siswaData)) {
+        alert('Tidak ada data hafalan di periode ini');
+        setReportData(null);
+        return;
+      }
+      
+      if ((Array.isArray(data.hafalan) && data.hafalan.length === 0) || 
+          (Array.isArray(data.siswaData) && data.siswaData.length === 0)) {
         alert('Tidak ada data hafalan di periode ini');
         setReportData(null);
         return;
@@ -136,7 +159,8 @@ export default function LaporanHafalanPage() {
       setReportData(data);
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('Gagal generate laporan');
+      alert(`Gagal generate laporan: ${error.message}`);
+      setReportData(null);
     } finally {
       setLoading(false);
     }
@@ -391,8 +415,10 @@ export default function LaporanHafalanPage() {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white disabled:opacity-50"
               >
                 <option value="">Semua Siswa</option>
-                {siswaList.map((s) => (
-                  <option key={s.id} value={s.id}>{s.user.name}</option>
+                {Array.isArray(siswaList) && siswaList.length > 0 && siswaList.map((s) => (
+                  s && s.id && s.user && s.user.name ? (
+                    <option key={s.id} value={s.id}>{s.user.name}</option>
+                  ) : null
                 ))}
               </select>
             </div>
@@ -464,8 +490,29 @@ export default function LaporanHafalanPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white dark:bg-neutral-900 rounded-xl p-12 text-center border border-gray-200 dark:border-neutral-800">
+            <Loader className="animate-spin mx-auto mb-4 text-orange-500" size={48} />
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Memproses data laporan...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {!loading && reportData === null && filters.kelasId && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 border border-amber-200 dark:border-amber-800 flex items-start gap-4">
+            <AlertTriangle className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" size={24} />
+            <div>
+              <h3 className="font-semibold text-amber-900 dark:text-amber-200">Perhatian</h3>
+              <p className="text-amber-800 dark:text-amber-300 text-sm mt-1">
+                Tidak ada data hafalan untuk periode yang dipilih. Coba ubah filter atau periode tanggal.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Preview Section */}
-        {reportData && (
+        {reportData && !loading && (
           <>
             {/* Summary Cards */}
             {reportData.type === 'kelas' ? (
@@ -569,50 +616,60 @@ export default function LaporanHafalanPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-neutral-800">
-                    {reportData.type === 'kelas' ? (
+                    {reportData.type === 'kelas' && Array.isArray(reportData.siswaData) && reportData.siswaData.length > 0 ? (
                       reportData.siswaData.map((siswa, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{idx + 1}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.nama}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.nisn}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.totalJuz} juz</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.jumlahSetoran}x</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.nilaiRata}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              siswa.statusTarget === 'Tercapai'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                            }`}>
-                              {siswa.statusTarget}
-                            </span>
-                          </td>
-                        </tr>
+                        siswa && siswa.id ? (
+                          <tr key={siswa.id || idx} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{idx + 1}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.nama || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.nisn || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.totalJuz || 0} juz</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.jumlahSetoran || 0}x</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{siswa.nilaiRata || '-'}</td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                siswa.statusTarget === 'Tercapai'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              }`}>
+                                {siswa.statusTarget || 'Belum Tercapai'}
+                              </span>
+                            </td>
+                          </tr>
+                        ) : null
+                      ))
+                    ) : reportData.type !== 'kelas' && Array.isArray(reportData.hafalan) && reportData.hafalan.length > 0 ? (
+                      reportData.hafalan.map((h, idx) => (
+                        h && h.id ? (
+                          <tr key={h.id || idx} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                              {h.tanggalSetor ? new Date(h.tanggalSetor).toLocaleDateString('id-ID') : '-'}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.surah?.namaLatin || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.ayatMulai || '-'}-{h.ayatSelesai || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.juz || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.nilaiAkhir || '-'}</td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                h.status === 'LANCAR'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : h.status === 'PERLU_PERBAIKAN'
+                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              }`}>
+                                {h.status || 'UNKNOWN'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.catatan || '-'}</td>
+                          </tr>
+                        ) : null
                       ))
                     ) : (
-                      reportData.hafalan.map((h, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                            {new Date(h.tanggalSetor).toLocaleDateString('id-ID')}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.surah.namaLatin}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.ayatMulai}-{h.ayatSelesai}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.juz}</td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.nilaiAkhir || '-'}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              h.status === 'LANCAR'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : h.status === 'PERLU_PERBAIKAN'
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            }`}>
-                              {h.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{h.catatan || '-'}</td>
-                        </tr>
-                      ))
+                      <tr>
+                        <td colSpan={reportData.type === 'kelas' ? 7 : 8} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                          Tidak ada data untuk ditampilkan
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
@@ -640,7 +697,7 @@ export default function LaporanHafalanPage() {
         )}
 
         {/* Empty State */}
-        {!reportData && !loading && (
+        {!reportData && !loading && (!filters.kelasId || filters.kelasId === '') && (
           <div className="bg-gray-50 dark:bg-neutral-800 rounded-xl p-12 text-center">
             <FileText size={48} className="mx-auto text-gray-400 mb-4" />
             <p className="text-gray-600 dark:text-gray-400">
