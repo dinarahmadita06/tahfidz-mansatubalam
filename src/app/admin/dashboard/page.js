@@ -215,28 +215,36 @@ export default function AdminDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API calls
-      const response = await fetch('/api/dashboard/stats');
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-      } else {
-        // Use mock data if API fails
-        setData({
-          stats: {
-            totalSiswa: 142,
-            siswaAktif: 136,
-            totalGuru: 12,
-            totalJuz: 1847,
-            rataRataNilai: 85.4,
-            rataRataKehadiran: 94.2,
-            siswaMencapaiTarget: 90,
-            persentaseSiswaMencapaiTarget: 63,
-            kelasMencapaiTarget: 8,
-            totalKelas: 12,
-          },
-        });
+      
+      // Try to fetch from /api/dashboard/stats, but fallback to mock data if fails
+      try {
+        const response = await fetch('/api/dashboard/stats');
+        if (response.ok) {
+          const result = await response.json();
+          setData(result);
+          // Fetch chart data separately
+          await fetchChartData();
+          return;
+        }
+      } catch (e) {
+        console.warn('Dashboard stats API not available, using mock data:', e);
       }
+      
+      // Use mock data if API fails or endpoint doesn't exist
+      setData({
+        stats: {
+          totalSiswa: 142,
+          siswaAktif: 136,
+          totalGuru: 12,
+          totalJuz: 1847,
+          rataRataNilai: 85.4,
+          rataRataKehadiran: 94.2,
+          siswaMencapaiTarget: 90,
+          persentaseSiswaMencapaiTarget: 63,
+          kelasMencapaiTarget: 8,
+          totalKelas: 12,
+        },
+      });
       
       // Fetch chart data
       await fetchChartData();
@@ -257,6 +265,8 @@ export default function AdminDashboardPage() {
           totalKelas: 12,
         },
       });
+      // Still try to fetch chart data even if stats failed
+      await fetchChartData();
     } finally {
       setLoading(false);
     }
