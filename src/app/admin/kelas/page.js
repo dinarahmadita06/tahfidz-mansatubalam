@@ -519,46 +519,67 @@ export default function AdminKelasPage() {
   };
 
   const handleToggleStatusKelas = async (kelasItem) => {
+    if (!kelasItem) {
+      console.error('handleToggleStatusKelas - No kelas provided');
+      return;
+    }
+
+    console.log('handleToggleStatusKelas - Toggling status for kelas:', {
+      id: kelasItem.id,
+      nama: kelasItem.nama,
+      currentStatus: kelasItem.status
+    });
+
     try {
-      const isActive = kelasItem.guruKelas && kelasItem.guruKelas.some(kg => kg.isActive);
-      const newStatus = !isActive;
-      
-      const response = await fetch(`/api/admin/kelas/${kelasItem.id}`, {
+      // Toggle status: AKTIF <-> NONAKTIF
+      const currentStatus = kelasItem.status || 'AKTIF';
+      const newStatus = currentStatus === 'AKTIF' ? 'NONAKTIF' : 'AKTIF';
+
+      console.log('handleToggleStatusKelas - New status:', newStatus);
+
+      const response = await fetch(`/api/admin/kelas/${kelasItem.id}/toggle-status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isActive: newStatus }),
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+      console.log('handleToggleStatusKelas - Response:', {
+        status: response.status,
+        ok: response.ok,
+        data
       });
 
       if (response.ok) {
-        const data = await response.json();
-        const statusText = newStatus ? 'Aktif' : 'Nonaktif';
+        const statusText = newStatus === 'AKTIF' ? 'Aktif' : 'Nonaktif';
         alert(`Kelas "${kelasItem.nama}" berhasil diubah menjadi ${statusText}`);
-        fetchKelas();
-        setOpenMenuId(null);
+        fetchKelas(); // Refresh kelas list
+        setOpenMenuId(null); // Close dropdown
       } else {
-        // Handle non-OK response
-        const contentType = response.headers.get('content-type');
-        let errorMessage = 'Gagal mengubah status kelas';
-        
-        if (contentType && contentType.includes('application/json')) {
-          try {
-            const error = await response.json();
-            errorMessage = error.error || errorMessage;
-          } catch (e) {
-            console.error('Error parsing error response:', e);
-          }
-        } else {
-          const text = await response.text();
-          console.error(`Server returned ${response.status}: ${text}`);
+        let errorMessage = data.error || 'Gagal mengubah status kelas';
+
+        if (data.details) {
+          errorMessage += `\n\nDetail: ${data.details}`;
         }
-        
+
+        if (data.code) {
+          errorMessage += `\n\nKode Error: ${data.code}`;
+        }
+
+        console.error('handleToggleStatusKelas - Error response:', {
+          status: response.status,
+          error: data.error,
+          details: data.details,
+          code: data.code
+        });
+
         alert(errorMessage);
       }
     } catch (error) {
-      console.error('Error toggling kelas status:', error);
-      alert('Gagal mengubah status kelas: ' + error.message);
+      console.error('handleToggleStatusKelas - Exception:', error);
+      alert(`Terjadi kesalahan saat mengubah status kelas.\n\nError: ${error.message}`);
     }
   };
 
@@ -1177,7 +1198,8 @@ export default function AdminKelasPage() {
       {/* Dropdown Menu dengan Portal */}
       {openMenuId && buttonRefs.current[openMenuId] && (() => {
         const kelasItem = kelas.find(k => k.id === openMenuId);
-        const isActive = kelasItem && kelasItem.guruKelas && kelasItem.guruKelas.some(kg => kg.isActive);
+        // Check status kelas, default to AKTIF if not set
+        const isActive = kelasItem && (kelasItem.status === 'AKTIF' || !kelasItem.status);
         return (
           <DropdownMenu
             buttonRef={{ current: buttonRefs.current[openMenuId] }}
