@@ -187,6 +187,8 @@ export default function AdminTahunAjaranPage() {
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [selectedTahunAjaran, setSelectedTahunAjaran] = useState(null);
   const [editingTahunAjaran, setEditingTahunAjaran] = useState(null);
+  const [showUpdateTargetModal, setShowUpdateTargetModal] = useState(false);
+  const [targetHafalanInput, setTargetHafalanInput] = useState('');
   const [tahunAjaranFormData, setTahunAjaranFormData] = useState({
     nama: '',
     semester: 1,
@@ -352,6 +354,43 @@ export default function AdminTahunAjaranPage() {
     setEditingTahunAjaran(null);
   };
 
+  const handleUpdateTargetHafalan = async (e) => {
+    e.preventDefault();
+
+    if (!stats.activeTahunAjaranId) {
+      alert('Tahun ajaran aktif tidak ditemukan');
+      return;
+    }
+
+    const numTarget = parseInt(targetHafalanInput);
+    if (isNaN(numTarget) || numTarget < 1 || numTarget > 30) {
+      alert('Target hafalan harus antara 1-30 juz');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/tahun-ajaran/${stats.activeTahunAjaranId}/target`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetHafalan: numTarget }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Target hafalan berhasil diperbarui.');
+        setShowUpdateTargetModal(false);
+        setTargetHafalanInput('');
+        fetchTahunAjaran();
+      } else {
+        alert(data.error || 'Gagal memperbarui target hafalan');
+      }
+    } catch (error) {
+      console.error('Error updating target:', error);
+      alert('Gagal memperbarui target hafalan: ' + error.message);
+    }
+  };
+
   // Statistics
   const activeTahunAjaran = tahunAjaran.find(ta => ta.isActive);
   const stats = {
@@ -361,6 +400,8 @@ export default function AdminTahunAjaranPage() {
     totalSiswa: tahunAjaran.reduce((sum, ta) => {
       return sum + (ta.kelas?.reduce((kelasSum, k) => kelasSum + (k._count?.siswa || 0), 0) || 0);
     }, 0),
+    activeTargetHafalan: activeTahunAjaran?.targetHafalan || null,
+    activeTahunAjaranId: activeTahunAjaran?.id || null,
   };
 
   if (loading) {
@@ -523,6 +564,86 @@ export default function AdminTahunAjaranPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Target Hafalan Section */}
+                {stats.activePeriod && (
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '18px 24px',
+                    background: `linear-gradient(135deg, ${colors.amber[50]} 0%, ${colors.amber[100]} 100%)`,
+                    borderRadius: '16px',
+                    border: `2px solid ${colors.amber[200]}`,
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '16px',
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: colors.text.secondary,
+                          marginBottom: '6px',
+                          fontFamily: '"Poppins", sans-serif',
+                          letterSpacing: '0.5px',
+                          textTransform: 'uppercase',
+                        }}>
+                          Target Hafalan Tahun Ini
+                        </p>
+                        <p style={{
+                          fontSize: '28px',
+                          fontWeight: 700,
+                          color: colors.amber[700],
+                          fontFamily: '"Poppins", sans-serif',
+                          marginBottom: '4px',
+                        }}>
+                          {stats.activeTargetHafalan || '-'} Juz
+                        </p>
+                        <p style={{
+                          fontSize: '12px',
+                          color: colors.text.tertiary,
+                          fontFamily: '"Poppins", sans-serif',
+                        }}>
+                          Target hafalan minimum untuk seluruh kelas pada tahun ajaran ini.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (stats.activeTahunAjaranId) {
+                            setTargetHafalanInput(stats.activeTargetHafalan?.toString() || '');
+                            setShowUpdateTargetModal(true);
+                          }
+                        }}
+                        style={{
+                          padding: '10px 18px',
+                          background: colors.white,
+                          border: `2px solid ${colors.amber[500]}`,
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          color: colors.amber[700],
+                          fontFamily: '"Poppins", sans-serif',
+                          transition: 'all 0.3s ease',
+                          whiteSpace: 'nowrap',
+                        }}
+                        className="update-target-btn"
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = colors.amber[50];
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = colors.white;
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        Perbarui Target
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <StatCard
                 icon={<BookOpen size={28} color={colors.white} />}
@@ -1242,6 +1363,155 @@ export default function AdminTahunAjaranPage() {
             border: `2px solid ${colors.emerald.pastel}`,
           }}>
             <SuccessCheck onComplete={() => setShowSuccessAnimation(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Modal Perbarui Target Hafalan */}
+      {showUpdateTargetModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50,
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: colors.white,
+            borderRadius: '24px',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '100%',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: `2px solid ${colors.amber[100]}`,
+            animation: 'modalSlideIn 0.3s ease-out',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <h2 style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: colors.text.primary,
+                fontFamily: '"Poppins", sans-serif',
+              }}>
+                Perbarui Target Hafalan Tahun Ajaran
+              </h2>
+              <button
+                onClick={() => setShowUpdateTargetModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  color: colors.text.tertiary,
+                  cursor: 'pointer',
+                  padding: '4px',
+                  transition: 'all 0.2s ease',
+                }}
+                className="close-btn"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateTargetHafalan} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text.secondary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", sans-serif',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  Target Hafalan (dalam Juz)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  step="1"
+                  value={targetHafalanInput}
+                  onChange={(e) => setTargetHafalanInput(e.target.value)}
+                  placeholder="Contoh: 3"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `2px solid ${colors.gray[200]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontFamily: '"Poppins", sans-serif',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                    boxSizing: 'border-box',
+                  }}
+                  className="form-input"
+                />
+                <p style={{
+                  fontSize: '12px',
+                  color: colors.text.tertiary,
+                  fontFamily: '"Poppins", sans-serif',
+                  marginTop: '8px',
+                }}>
+                  Target berlaku untuk seluruh kelas dalam tahun ajaran ini.
+                </p>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+                marginTop: '8px',
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateTargetModal(false)}
+                  style={{
+                    padding: '12px 24px',
+                    border: `2px solid ${colors.gray[300]}`,
+                    borderRadius: '12px',
+                    background: colors.white,
+                    color: colors.text.secondary,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: '"Poppins", sans-serif',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                  className="cancel-btn"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 24px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    background: `linear-gradient(135deg, ${colors.amber[500]} 0%, ${colors.amber[600]} 100%)`,
+                    color: colors.white,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: '"Poppins", sans-serif',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 12px rgba(217, 119, 6, 0.2)',
+                  }}
+                  className="submit-btn"
+                >
+                  Simpan
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
