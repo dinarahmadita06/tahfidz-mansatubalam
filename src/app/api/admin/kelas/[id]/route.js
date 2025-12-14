@@ -331,3 +331,108 @@ export async function DELETE(request, { params }) {
     );
   }
 }
+
+// PATCH - Toggle kelas status (Aktif/Nonaktif)
+export async function PATCH(request, { params }) {
+  try {
+    const session = await auth();
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+    const { isActive } = body;
+
+    if (typeof isActive !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Parameter isActive harus boolean' },
+        { status: 400 }
+      );
+    }
+
+    // Check if kelas exists
+    const kelas = await prisma.kelas.findUnique({
+      where: { id },
+      include: {
+        guruKelas: true
+      }
+    });
+
+    if (!kelas) {
+      return NextResponse.json(
+        { error: 'Kelas tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    // Update all guruKelas isActive status
+    await prisma.guruKelas.updateMany({
+      where: { kelasId: id },
+      data: { isActive }
+    });
+
+    // Fetch updated kelas data
+    const updatedKelas = await prisma.kelas.findUnique({
+      where: { id },
+      include: {
+        tahunAjaran: {
+          select: {
+            nama: true,
+            semester: true
+          }
+        },
+        guruKelas: {
+          include: {
+            guru: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            siswa: true
+          }
+        }
+      }
+    });
+
+    // Log activity
+    try {
+      await logActivity({
+        userId: session.user.id,
+        userName: session.user.name,
+        userRole: session.user.role,
+        action: 'UPDATE',
+        module: 'KELAS',
+        description: `Mengubah status kelas ${kelas.nama} menjadi ${isActive ? 'Aktif' : 'Nonaktif'}`,
+        ipAddress: getIpAddress(request),
+        userAgent: getUserAgent(request),
+        metadata: {
+          kelasId: kelas.id,
+          newStatus: isActive ? 'ACTIVE' : 'INACTIVE'
+        }
+      });
+    } catch (logError) {
+      console.error('Error logging activity:', logError);
+      // Don't throw, just log the error
+    }
+
+    return NextResponse.json(updatedKelas);
+  } catch (error) {
+    console.error('Error toggling kelas status:', error);
+    return NextResponse.json(
+      { error: 'Gagal mengubah status kelas', details: error.message },
+      { status: 500 }
+    );
+  }
+}

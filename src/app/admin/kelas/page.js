@@ -55,7 +55,7 @@ const colors = {
 };
 
 // Komponen Dropdown Menu dengan Portal
-function DropdownMenu({ buttonRef, onEdit, onDelete, onClose }) {
+function DropdownMenu({ buttonRef, onEdit, onToggleStatus, onDelete, isActive, onClose }) {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
 
@@ -130,6 +130,37 @@ function DropdownMenu({ buttonRef, onEdit, onDelete, onClose }) {
       >
         <Edit size={16} color={colors.emerald[600]} style={{ flexShrink: 0 }} />
         <span>Edit Kelas</span>
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleStatus();
+          onClose();
+        }}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '10px 14px',
+          border: 'none',
+          background: 'transparent',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          textAlign: 'left',
+          fontSize: '14px',
+          fontWeight: 500,
+          color: colors.text.primary,
+          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = colors.amber[50]}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+      >
+        <ShieldCheck size={16} color={colors.amber[600]} style={{ flexShrink: 0 }} />
+        <span>{isActive ? 'Nonaktifkan Kelas' : 'Aktifkan Kelas'}</span>
       </button>
 
       <button
@@ -484,6 +515,34 @@ export default function AdminKelasPage() {
     } catch (error) {
       console.error('confirmDeleteKelas - Exception:', error);
       alert(`Terjadi kesalahan saat menghapus kelas.\n\nError: ${error.message}`);
+    }
+  };
+
+  const handleToggleStatusKelas = async (kelasItem) => {
+    try {
+      const isActive = kelasItem.guruKelas && kelasItem.guruKelas.some(kg => kg.isActive);
+      const newStatus = !isActive;
+      
+      const response = await fetch(`/api/admin/kelas/${kelasItem.id}/toggle-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+
+      if (response.ok) {
+        const statusText = newStatus ? 'Aktif' : 'Nonaktif';
+        alert(`Kelas "${kelasItem.nama}" berhasil diubah menjadi ${statusText}`);
+        fetchKelas();
+        setOpenMenuId(null);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Gagal mengubah status kelas');
+      }
+    } catch (error) {
+      console.error('Error toggling kelas status:', error);
+      alert('Gagal mengubah status kelas: ' + error.message);
     }
   };
 
@@ -1100,20 +1159,26 @@ export default function AdminKelasPage() {
       </div>
 
       {/* Dropdown Menu dengan Portal */}
-      {openMenuId && buttonRefs.current[openMenuId] && (
-        <DropdownMenu
-          buttonRef={{ current: buttonRefs.current[openMenuId] }}
-          onEdit={() => {
-            const kelasItem = kelas.find(k => k.id === openMenuId);
-            if (kelasItem) handleEditKelas(kelasItem);
-          }}
-          onDelete={() => {
-            const kelasItem = kelas.find(k => k.id === openMenuId);
-            if (kelasItem) handleDeleteKelas(kelasItem);
-          }}
-          onClose={() => setOpenMenuId(null)}
-        />
-      )}
+      {openMenuId && buttonRefs.current[openMenuId] && (() => {
+        const kelasItem = kelas.find(k => k.id === openMenuId);
+        const isActive = kelasItem && kelasItem.guruKelas && kelasItem.guruKelas.some(kg => kg.isActive);
+        return (
+          <DropdownMenu
+            buttonRef={{ current: buttonRefs.current[openMenuId] }}
+            onEdit={() => {
+              if (kelasItem) handleEditKelas(kelasItem);
+            }}
+            onToggleStatus={() => {
+              if (kelasItem) handleToggleStatusKelas(kelasItem);
+            }}
+            onDelete={() => {
+              if (kelasItem) handleDeleteKelas(kelasItem);
+            }}
+            isActive={isActive}
+            onClose={() => setOpenMenuId(null)}
+          />
+        );
+      })()}
 
       {/* Modal Detail Kelas */}
       {showDetailModal && selectedKelas && (
