@@ -16,7 +16,6 @@ import {
   Star,
   CalendarCheck2,
   Book,
-  Target,
   Volume2,
   Award
 } from 'lucide-react';
@@ -57,12 +56,6 @@ const menuItems = [
     icon: CalendarCheck2,
     href: '/guru/presensi',
     description: 'Catat kehadiran siswa'
-  },
-  {
-    title: 'Target Hafalan',
-    icon: Target,
-    href: '/guru/target-hafalan',
-    description: 'Target & progres siswa'
   },
   {
     title: 'Referensi Al-Qur\'an',
