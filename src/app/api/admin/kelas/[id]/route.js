@@ -3,6 +3,11 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 
+// Default handler untuk method yang tidak didukung
+export async function GET(request, { params }) {
+  return NextResponse.json({ error: 'Method GET not allowed for this endpoint' }, { status: 405 });
+}
+
 // PUT - Update kelas
 export async function PUT(request, { params }) {
   try {
@@ -342,7 +347,19 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params;
-    const body = await request.json();
+    
+    // Parse request body with error handling
+    let body = {};
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body', details: parseError.message },
+        { status: 400 }
+      );
+    }
+    
     const { isActive } = body;
 
     if (typeof isActive !== 'boolean') {
@@ -427,7 +444,11 @@ export async function PATCH(request, { params }) {
       // Don't throw, just log the error
     }
 
-    return NextResponse.json(updatedKelas);
+    return NextResponse.json({
+      message: 'Status kelas berhasil diubah',
+      success: true,
+      data: updatedKelas
+    });
   } catch (error) {
     console.error('Error toggling kelas status:', error);
     return NextResponse.json(
