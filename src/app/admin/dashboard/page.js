@@ -621,31 +621,34 @@ export default function AdminDashboardPage() {
                 alignItems: 'center',
                 minHeight: '300px',
               }}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={chartData.donutData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={80}
-                      outerRadius={120}
-                      dataKey="value"
-                      label={(entry) => `${entry.name}: ${entry.value}`}
-                    >
-                      {chartData.donutData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => `${value} siswa`}
-                      contentStyle={{
-                        background: colors.white,
-                        border: `1px solid ${colors.gray[200]}`,
-                        borderRadius: '8px',
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                {/* Donut Chart will be rendered here with Recharts */}
+                {typeof window !== 'undefined' && (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={chartData.donutData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={80}
+                        outerRadius={120}
+                        dataKey="value"
+                        label={(entry) => `${entry.name}: ${entry.value}`}
+                      >
+                        {chartData.donutData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => `${value} siswa`}
+                        contentStyle={{
+                          background: colors.white,
+                          border: `1px solid ${colors.gray[200]}`,
+                          borderRadius: '8px',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </div>
               <div style={{
                 display: 'flex',
