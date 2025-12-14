@@ -431,25 +431,59 @@ export default function AdminKelasPage() {
   };
 
   const confirmDeleteKelas = async () => {
-    if (!kelasToDelete) return;
+    if (!kelasToDelete) {
+      console.error('confirmDeleteKelas - No kelas to delete');
+      return;
+    }
+
+    console.log('confirmDeleteKelas - Deleting kelas:', {
+      id: kelasToDelete.id,
+      nama: kelasToDelete.nama
+    });
 
     try {
       const response = await fetch(`/api/admin/kelas/${kelasToDelete.id}`, {
         method: 'DELETE',
       });
 
+      const data = await response.json();
+      console.log('confirmDeleteKelas - Response:', {
+        status: response.status,
+        ok: response.ok,
+        data
+      });
+
       if (response.ok) {
-        alert('Kelas berhasil dihapus');
+        const kelasNama = kelasToDelete.nama;
+        alert(`Kelas "${kelasNama}" berhasil dihapus`);
         fetchKelas();
         setShowDeleteModal(false);
         setKelasToDelete(null);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menghapus kelas');
+        // Display detailed error message from server
+        let errorMessage = data.error || 'Gagal menghapus kelas';
+
+        // Add details if available
+        if (data.details) {
+          errorMessage += `\n\nDetail: ${data.details}`;
+        }
+
+        if (data.code) {
+          errorMessage += `\n\nKode Error: ${data.code}`;
+        }
+
+        console.error('confirmDeleteKelas - Error response:', {
+          status: response.status,
+          error: data.error,
+          details: data.details,
+          code: data.code
+        });
+
+        alert(errorMessage);
       }
     } catch (error) {
-      console.error('Error deleting kelas:', error);
-      alert('Gagal menghapus kelas');
+      console.error('confirmDeleteKelas - Exception:', error);
+      alert(`Terjadi kesalahan saat menghapus kelas.\n\nError: ${error.message}`);
     }
   };
 
