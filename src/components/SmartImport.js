@@ -34,20 +34,20 @@ const colors = {
 // Smart column mapping patterns
 const COLUMN_PATTERNS = {
   siswa: {
-    nama: ['nama siswa', 'nama lengkap siswa', 'nama', 'name', 'student name'],
-    nis: ['nis', 'nomor induk siswa', 'no induk'],
+    nama: ['nama siswa', 'nama lengkap siswa', 'nama', 'name', 'student name', 'namasw', 'namesiswa'],
+    nis: ['nis', 'nomor induk siswa', 'no induk', 'nisp'],
     nisn: ['nisn', 'nomor induk siswa nasional'],
-    kelas: ['kelas', 'class', 'tingkat'],
-    jenisKelamin: ['jenis kelamin', 'gender', 'l/p', 'jk'],
-    tanggalLahir: ['tanggal lahir', 'tgl lahir', 'birth date', 'dob'],
-    tempatLahir: ['tempat lahir', 'place of birth'],
+    kelas: ['kelas', 'class', 'tingkat', 'kelasid'],
+    jenisKelamin: ['jenis kelamin', 'gender', 'l/p', 'jk', 'jeniskelamin'],
+    tanggalLahir: ['tanggal lahir', 'tgl lahir', 'birth date', 'dob', 'tanggallahir'],
+    tempatLahir: ['tempat lahir', 'place of birth', 'tempatLahir'],
     alamat: ['alamat', 'address', 'alamat siswa'],
     email: ['email siswa', 'email', 'e-mail'],
   },
   orangtua: {
-    nama: ['nama orang tua', 'nama ortu', 'nama ayah/ibu', 'parent name', 'nama wali'],
-    email: ['email orang tua', 'email ortu', 'parent email'],
-    noHP: ['no hp orang tua', 'no hp ortu', 'telepon', 'phone', 'no hp', 'no telepon'],
+    nama: ['nama orang tua', 'nama ortu', 'nama ayah/ibu', 'parent name', 'nama wali', 'namaorang', 'namaaortu'],
+    email: ['email orang tua', 'email ortu', 'parent email', 'emailortu'],
+    noHP: ['no hp orang tua', 'no hp ortu', 'telepon', 'phone', 'no hp', 'no telepon', 'nohp', 'nohportu'],
     hubungan: ['hubungan', 'relation', 'status'],
   }
 };
@@ -64,17 +64,25 @@ export default function SmartImport({ onSuccess, onClose }) {
   const [newAccounts, setNewAccounts] = useState([]);
   const fileInputRef = useRef(null);
 
-  // Smart column detection
+  // Smart column detection with improved normalization
   const detectColumns = (headers) => {
     const mapping = {};
-    const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
+    
+    // Normalize: remove spaces, lowercase, remove special chars
+    const normalizeForMatching = (str) => {
+      return str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+    };
 
     // Detect siswa columns
     Object.keys(COLUMN_PATTERNS.siswa).forEach(field => {
       const patterns = COLUMN_PATTERNS.siswa[field];
-      const matchedIndex = normalizedHeaders.findIndex(header =>
-        patterns.some(pattern => header.includes(pattern))
-      );
+      const matchedIndex = headers.findIndex(header => {
+        const normalizedHeader = normalizeForMatching(header);
+        return patterns.some(pattern => {
+          const normalizedPattern = normalizeForMatching(pattern);
+          return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
+        });
+      });
       if (matchedIndex !== -1) {
         mapping[`siswa_${field}`] = headers[matchedIndex];
       }
@@ -83,9 +91,13 @@ export default function SmartImport({ onSuccess, onClose }) {
     // Detect orang tua columns
     Object.keys(COLUMN_PATTERNS.orangtua).forEach(field => {
       const patterns = COLUMN_PATTERNS.orangtua[field];
-      const matchedIndex = normalizedHeaders.findIndex(header =>
-        patterns.some(pattern => header.includes(pattern))
-      );
+      const matchedIndex = headers.findIndex(header => {
+        const normalizedHeader = normalizeForMatching(header);
+        return patterns.some(pattern => {
+          const normalizedPattern = normalizeForMatching(pattern);
+          return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
+        });
+      });
       if (matchedIndex !== -1) {
         mapping[`orangtua_${field}`] = headers[matchedIndex];
       }
