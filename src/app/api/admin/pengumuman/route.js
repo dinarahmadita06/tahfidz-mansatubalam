@@ -48,8 +48,7 @@ export async function POST(request) {
     const {
       judul,
       isi,
-      tanggalBerlaku,
-      kategori = 'UMUM'
+      tanggalBerlaku
     } = body;
 
     // Validasi input
@@ -81,7 +80,6 @@ export async function POST(request) {
         userId: session.user.id,
         judul: judul.trim(),
         isi: isi.trim(),
-        kategori,
         tanggalMulai: new Date(),
         tanggalSelesai: tanggalBerlaku ? new Date(tanggalBerlaku) : null,
         isPinned: false
@@ -188,7 +186,6 @@ export async function PUT(request) {
       data: {
         judul: judul.trim(),
         isi: isi.trim(),
-        kategori,
         tanggalSelesai: tanggalBerlaku ? new Date(tanggalBerlaku) : null
       },
       include: {
