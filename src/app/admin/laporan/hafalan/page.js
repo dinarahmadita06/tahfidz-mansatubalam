@@ -439,7 +439,7 @@ export default function LaporanHafalanPage() {
         </div>
 
         {/* Main Container */}
-        <div style={{ maxWidth: '1000px', margin: '0 auto', paddingLeft: '48px', paddingRight: '48px', paddingBottom: '48px' }}>
+        <div style={{ paddingLeft: '48px', paddingRight: '48px', paddingBottom: '48px' }}>
           {/* Filter Card */}
           <div className="filter-card p-8 mb-8">
             <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Filter Laporan</h2>
