@@ -21,7 +21,6 @@ import {
   Activity,
   User,
   Megaphone,
-  Target,
   Key
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
@@ -49,7 +48,6 @@ const menuItems = [
     submenu: [
       { title: 'Kelas', href: '/admin/kelas', icon: School },
       { title: 'Tahun Ajaran', href: '/admin/tahun-ajaran', icon: Calendar },
-      { title: 'Target Hafalan', href: '/admin/target-hafalan', icon: Target },
     ]
   },
   {
