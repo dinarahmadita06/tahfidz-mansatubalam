@@ -68,11 +68,47 @@ export async function POST(request) {
 
     // Validasi userId
     if (!session.user.id) {
+      console.error('CREATE PENGUMUMAN - No user ID in session');
       return NextResponse.json(
         { error: 'User ID tidak ditemukan dalam session' },
         { status: 400 }
       );
     }
+
+    console.log('CREATE PENGUMUMAN - Session user:', {
+      id: session.user.id,
+      email: session.user.email,
+      role: session.user.role,
+      name: session.user.name
+    });
+
+    // Validasi apakah user exists di database
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+
+    console.log('CREATE PENGUMUMAN - User exists check:', {
+      userId: session.user.id,
+      exists: !!userExists,
+      userData: userExists ? { id: userExists.id, email: userExists.email, name: userExists.name } : null
+    });
+
+    if (!userExists) {
+      console.error('CREATE PENGUMUMAN - User not found in database:', session.user.id);
+      return NextResponse.json(
+        {
+          error: 'User tidak ditemukan di database',
+          details: `User dengan ID ${session.user.id} tidak terdaftar dalam sistem. Silakan logout dan login kembali, atau hubungi administrator.`
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log('CREATE PENGUMUMAN - Creating pengumuman:', {
+      userId: session.user.id,
+      judul: judul.trim(),
+      isiLength: isi.trim().length
+    });
 
     // Buat pengumuman
     const pengumuman = await prisma.pengumuman.create({
@@ -92,6 +128,11 @@ export async function POST(request) {
           }
         }
       }
+    });
+
+    console.log('CREATE PENGUMUMAN - Success:', {
+      id: pengumuman.id,
+      judul: pengumuman.judul
     });
 
     // Log aktivitas
@@ -119,21 +160,39 @@ export async function POST(request) {
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating pengumuman:', error);
-    
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
+
     // Berikan error message yang lebih detail
     let errorMessage = 'Gagal membuat pengumuman';
-    
+    let statusCode = 500;
+
     if (error.code === 'P2002') {
       errorMessage = 'Pengumuman dengan judul ini sudah ada';
+      statusCode = 400;
+    } else if (error.code === 'P2003') {
+      // Foreign key constraint violation
+      errorMessage = 'User tidak ditemukan di database. Silakan logout dan login kembali.';
+      statusCode = 400;
+      console.error('P2003 Foreign key constraint - userId tidak valid:', error.meta);
     } else if (error.code === 'P2025') {
       errorMessage = 'User tidak ditemukan';
+      statusCode = 404;
     } else if (error.message) {
       errorMessage = error.message;
     }
 
     return NextResponse.json(
-      { error: errorMessage, details: error.message },
-      { status: 500 }
+      {
+        error: errorMessage,
+        details: error.message,
+        code: error.code || 'UNKNOWN_ERROR'
+      },
+      { status: statusCode }
     );
   }
 }
