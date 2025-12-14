@@ -168,15 +168,42 @@ export async function DELETE(request, { params }) {
 
     const { id } = await params;
 
+    // Validate ID exists
+    console.log('DELETE KELAS - Received ID:', id);
+
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error('DELETE KELAS - Invalid ID:', id);
+      return NextResponse.json(
+        { error: 'ID kelas tidak valid' },
+        { status: 400 }
+      );
+    }
+
     // Check if kelas exists
     const kelas = await prisma.kelas.findUnique({
       where: { id },
       include: {
         siswa: true,
         guruKelas: true,
-        hafalan: true
+        _count: {
+          select: {
+            siswa: true,
+            guruKelas: true,
+            targetHafalan: true,
+            agenda: true
+          }
+        }
       }
     });
+
+    console.log('DELETE KELAS - Found kelas:', kelas ? {
+      id: kelas.id,
+      nama: kelas.nama,
+      siswaCount: kelas._count.siswa,
+      guruKelasCount: kelas._count.guruKelas,
+      targetHafalanCount: kelas._count.targetHafalan,
+      agendaCount: kelas._count.agenda
+    } : null);
 
     if (!kelas) {
       return NextResponse.json(
@@ -186,17 +213,31 @@ export async function DELETE(request, { params }) {
     }
 
     // Check if kelas has students
-    if (kelas.siswa.length > 0) {
+    if (kelas.siswa && kelas.siswa.length > 0) {
       return NextResponse.json(
-        { error: 'Tidak dapat menghapus kelas yang memiliki siswa' },
+        {
+          error: `Tidak dapat menghapus kelas yang masih memiliki ${kelas.siswa.length} siswa. Silakan pindahkan siswa ke kelas lain terlebih dahulu.`
+        },
         { status: 400 }
       );
     }
 
-    // Check if kelas has hafalan records
-    if (kelas.hafalan.length > 0) {
+    // Check if kelas has target hafalan records
+    if (kelas._count.targetHafalan > 0) {
       return NextResponse.json(
-        { error: 'Tidak dapat menghapus kelas yang memiliki data hafalan' },
+        {
+          error: `Tidak dapat menghapus kelas yang memiliki ${kelas._count.targetHafalan} target hafalan. Silakan hapus target hafalan terlebih dahulu.`
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if kelas has agenda records
+    if (kelas._count.agenda > 0) {
+      return NextResponse.json(
+        {
+          error: `Tidak dapat menghapus kelas yang memiliki ${kelas._count.agenda} agenda. Silakan hapus agenda terlebih dahulu.`
+        },
         { status: 400 }
       );
     }
@@ -204,32 +245,88 @@ export async function DELETE(request, { params }) {
     // Store data for logging
     const kelasNama = kelas.nama;
 
-    // Delete kelas (will also delete guruKelas records due to cascade)
-    await prisma.kelas.delete({
-      where: { id }
+    console.log('DELETE KELAS - Proceeding to delete kelas:', id);
+
+    // Delete in transaction to ensure atomicity
+    await prisma.$transaction(async (tx) => {
+      // Delete guruKelas first (if cascade is not set)
+      if (kelas.guruKelas && kelas.guruKelas.length > 0) {
+        await tx.guruKelas.deleteMany({
+          where: { kelasId: id }
+        });
+        console.log('DELETE KELAS - Deleted guruKelas relations');
+      }
+
+      // Delete kelas
+      await tx.kelas.delete({
+        where: { id }
+      });
+      console.log('DELETE KELAS - Deleted kelas successfully');
     });
 
     // Log activity
-    await logActivity({
-      userId: session.user.id,
-      userName: session.user.name,
-      userRole: session.user.role,
-      action: 'DELETE',
-      module: 'KELAS',
-      description: `Menghapus kelas ${kelasNama}`,
-      ipAddress: getIpAddress(request),
-      userAgent: getUserAgent(request),
-      metadata: {
-        deletedKelasId: id,
-        deletedKelasNama: kelasNama
-      }
-    });
+    try {
+      await logActivity({
+        userId: session.user.id,
+        userName: session.user.name,
+        userRole: session.user.role,
+        action: 'DELETE',
+        module: 'KELAS',
+        description: `Menghapus kelas ${kelasNama}`,
+        ipAddress: getIpAddress(request),
+        userAgent: getUserAgent(request),
+        metadata: {
+          deletedKelasId: id,
+          deletedKelasNama: kelasNama
+        }
+      });
+    } catch (logError) {
+      console.error('Error logging delete activity:', logError);
+      // Don't fail the request if logging fails
+    }
 
-    return NextResponse.json({ message: 'Kelas berhasil dihapus' });
+    return NextResponse.json({
+      message: 'Kelas berhasil dihapus',
+      deletedKelasNama: kelasNama
+    });
   } catch (error) {
     console.error('Error deleting kelas:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
+
+    // Handle specific Prisma errors
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Kelas tidak ditemukan atau sudah dihapus' },
+        { status: 404 }
+      );
+    }
+
+    if (error.code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Tidak dapat menghapus kelas karena masih terhubung dengan data lain (siswa, hafalan, atau relasi lainnya)' },
+        { status: 400 }
+      );
+    }
+
+    if (error.code === 'P2014') {
+      return NextResponse.json(
+        { error: 'Tidak dapat menghapus kelas karena melanggar constraint relasi database' },
+        { status: 400 }
+      );
+    }
+
+    // Generic error with more details
     return NextResponse.json(
-      { error: 'Gagal menghapus kelas' },
+      {
+        error: 'Gagal menghapus kelas',
+        details: error.message,
+        code: error.code || 'UNKNOWN_ERROR'
+      },
       { status: 500 }
     );
   }
