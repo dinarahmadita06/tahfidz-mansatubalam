@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { invalidateCache } from '@/lib/cache';
+import { generateSiswaEmail } from '@/lib/siswaUtils';
 
 export async function POST(request) {
   try {
@@ -147,15 +148,15 @@ export async function POST(request) {
           }
         }
 
-        // Generate email for siswa based on NIS
-        const emailSiswa = `${nis}@siswa.tahfidz.com`;
+        // Auto-generate email using consistent format: firstname.nis@siswa.tahfidz.sch.id
+        const emailSiswa = generateSiswaEmail(name, nis);
 
         // Check if email already exists
         const existingUserEmail = await prisma.user.findUnique({ where: { email: emailSiswa } });
         if (existingUserEmail) {
           results.failed.push({
             data,
-            error: `Email ${emailSiswa} sudah terdaftar`
+            error: `Email ${emailSiswa} sudah terdaftar (kombinasi Nama + NIS sudah ada)`
           });
           continue;
         }
