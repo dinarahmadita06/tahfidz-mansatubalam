@@ -195,7 +195,13 @@ export async function POST(request) {
         if (autoCreateAccount) {
           // Use NIS as default username if available, otherwise generate
           const baseUsername = siswaData.nis || generateUsername(siswaData.nama, 'siswa');
-          siswaEmail = siswaData.email || `${baseUsername}@tahfidz.siswa`;
+          // Format: nama.NIS@siswa.tahfidz.sch.id
+          const cleanNama = siswaData.nama
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .split(' ')[0]; // Ambil kata pertama dari nama
+          const emailUsername = `${cleanNama}.${baseUsername}`.toLowerCase();
+          siswaEmail = siswaData.email || `${emailUsername}@siswa.tahfidz.sch.id`;
           siswaPassword = siswaData.nis?.toString() || generatePassword(8);
 
           // Check if email already exists
@@ -204,8 +210,10 @@ export async function POST(request) {
           });
 
           if (existingUserEmail) {
-            // Generate alternative email
-            siswaEmail = `${generateUsername(siswaData.nama, 'siswa')}@tahfidz.siswa`;
+            // Generate alternative email with timestamp
+            const timestamp = Date.now().toString().slice(-4);
+            const altUsername = `${cleanNama}.${baseUsername}.${timestamp}`.toLowerCase();
+            siswaEmail = `${altUsername}@siswa.tahfidz.sch.id`;
           }
 
           const hashedPassword = await bcrypt.hash(siswaPassword, 10);
