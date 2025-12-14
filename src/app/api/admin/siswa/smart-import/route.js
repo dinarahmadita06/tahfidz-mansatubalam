@@ -3,18 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { invalidateCache } from '@/lib/cache';
-
-// Helper untuk generate username
-function generateUsername(nama, type = 'siswa') {
-  const cleanName = nama
-    .toLowerCase()
-    .replace(/[^a-z\s]/g, '')
-    .trim()
-    .split(' ')[0]; // Ambil nama depan
-
-  const timestamp = Date.now().toString().slice(-4);
-  return `${cleanName}${timestamp}`;
-}
+import { generateSiswaEmail } from '@/lib/siswaUtils';
 
 // Helper untuk generate password random
 function generatePassword(length = 8) {
@@ -193,15 +182,8 @@ export async function POST(request) {
         let siswaEmail, siswaPassword;
 
         if (autoCreateAccount) {
-          // Use NIS as default username if available, otherwise generate
-          const baseUsername = siswaData.nis || generateUsername(siswaData.nama, 'siswa');
-          // Format: nama_depan.NIS@siswa.tahfidz.sch.id (hanya kata pertama)
-          const firstNameOnly = siswaData.nama
-            .toLowerCase()
-            .trim()
-            .split(/\s+/)[0]; // Ambil HANYA kata pertama
-          const emailUsername = `${firstNameOnly}.${baseUsername}`.toLowerCase();
-          siswaEmail = siswaData.email || `${emailUsername}@siswa.tahfidz.sch.id`;
+          // Auto-generate email using consistent format: firstname.nis@siswa.tahfidz.sch.id
+          siswaEmail = generateSiswaEmail(siswaData.nama, siswaData.nis);
           siswaPassword = siswaData.nis?.toString() || generatePassword(8);
 
           // Check if email already exists
@@ -210,10 +192,10 @@ export async function POST(request) {
           });
 
           if (existingUserEmail) {
-            // Generate alternative email with timestamp
-            const timestamp = Date.now().toString().slice(-4);
-            const altUsername = `${firstNameOnly}.${baseUsername}.${timestamp}`.toLowerCase();
-            siswaEmail = `${altUsername}@siswa.tahfidz.sch.id`;
+            // Skip this student if email already exists (duplicate nama + NIS combination)
+            stats.duplicate++;
+            errors.push(`Baris ${i + 2}: Email ${siswaEmail} sudah terdaftar (kombinasi Nama + NIS sudah ada)`);
+            continue;
           }
 
           const hashedPassword = await bcrypt.hash(siswaPassword, 10);
