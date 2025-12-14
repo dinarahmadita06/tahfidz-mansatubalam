@@ -2,32 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { FileText, Download } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { FileText, Download, Loader, AlertTriangle, Users, TrendingUp, Activity } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 export default function LaporanKehadiranPage() {
   const [kelasList, setKelasList] = useState([]);
   const [selectedKelas, setSelectedKelas] = useState('');
-  const [filterType, setFilterType] = useState('range'); // 'range' or 'monthly'
+  const [filterType, setFilterType] = useState('range'); // 'range', 'bulanan', 'semester'
   const [tanggalMulai, setTanggalMulai] = useState('');
   const [tanggalSelesai, setTanggalSelesai] = useState('');
   const [bulan, setBulan] = useState('');
   const [tahun, setTahun] = useState(new Date().getFullYear().toString());
+  const [semester, setSemester] = useState('');
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchKelas();
@@ -48,75 +38,62 @@ export default function LaporanKehadiranPage() {
   const handleGenerateReport = async () => {
     let startDate, endDate;
 
-    if (filterType === 'monthly') {
-      if (!selectedKelas || !bulan || !tahun) {
-        toast({
-          title: 'Error',
-          description: 'Mohon lengkapi semua filter (kelas, bulan, tahun)',
-          variant: 'destructive',
-        });
+    if (filterType === 'semester') {
+      if (!selectedKelas || !semester) {
+        alert('Mohon lengkapi semua filter (kelas dan semester)');
         return;
       }
-
-      // Calculate first and last day of selected month
+      const year = new Date().getFullYear();
+      if (semester === '1') {
+        // Semester 1: Juli - Desember
+        startDate = new Date(year, 6, 1).toISOString().split('T')[0];
+        endDate = new Date(year, 11, 31).toISOString().split('T')[0];
+      } else {
+        // Semester 2: Januari - Juni
+        startDate = new Date(year, 0, 1).toISOString().split('T')[0];
+        endDate = new Date(year, 5, 30).toISOString().split('T')[0];
+      }
+    } else if (filterType === 'bulanan') {
+      if (!selectedKelas || !bulan || !tahun) {
+        alert('Mohon lengkapi semua filter (kelas, bulan, tahun)');
+        return;
+      }
       const monthNum = parseInt(bulan);
       const yearNum = parseInt(tahun);
       startDate = new Date(yearNum, monthNum - 1, 1).toISOString().split('T')[0];
       endDate = new Date(yearNum, monthNum, 0).toISOString().split('T')[0];
     } else {
       if (!selectedKelas || !tanggalMulai || !tanggalSelesai) {
-        toast({
-          title: 'Error',
-          description: 'Mohon lengkapi semua filter',
-          variant: 'destructive',
-        });
+        alert('Mohon lengkapi semua filter');
         return;
       }
-
       if (new Date(tanggalMulai) > new Date(tanggalSelesai)) {
-        toast({
-          title: 'Error',
-          description: 'Tanggal mulai tidak boleh lebih dari tanggal selesai',
-          variant: 'destructive',
-        });
+        alert('Tanggal mulai tidak boleh lebih dari tanggal selesai');
         return;
       }
-
       startDate = tanggalMulai;
       endDate = tanggalSelesai;
     }
 
     setLoading(true);
+    setReportData(null);
     try {
       const params = new URLSearchParams({
         kelasId: selectedKelas,
         tanggalMulai: startDate,
         tanggalSelesai: endDate,
       });
-
       const res = await fetch(`/api/admin/laporan/kehadiran?${params}`);
       if (res.ok) {
         const data = await res.json();
         setReportData(data);
-        toast({
-          title: 'Berhasil',
-          description: 'Laporan berhasil dibuat',
-        });
       } else {
         const error = await res.json();
-        toast({
-          title: 'Error',
-          description: error.error || 'Gagal membuat laporan',
-          variant: 'destructive',
-        });
+        alert(error.error || 'Gagal membuat laporan');
       }
     } catch (error) {
       console.error('Error generating report:', error);
-      toast({
-        title: 'Error',
-        description: 'Terjadi kesalahan saat membuat laporan',
-        variant: 'destructive',
-      });
+      alert('Terjadi kesalahan saat membuat laporan');
     } finally {
       setLoading(false);
     }
@@ -233,257 +210,318 @@ export default function LaporanKehadiranPage() {
 
   return (
     <AdminLayout>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Laporan Kehadiran</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Generate dan download laporan kehadiran tahfidz
-            </p>
-          </div>
+      <style jsx>{`
+        .filter-card {
+          background: #FFFFFF;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+          border-radius: 20px;
+          border: 1px solid #E6F4EF;
+        }
+        .filter-card:hover {
+          border-color: #00C98D;
+        }
+        .preview-empty {
+          background: #F3FCF8;
+          border-radius: 16px;
+          padding: 32px;
+        }
+        .select-input {
+          height: 48px;
+          border: 1px solid #DDE6E1;
+          border-radius: 12px;
+          background: white;
+          color: #2F3E3A;
+          transition: border-color 0.2s ease;
+        }
+        .select-input:hover {
+          border-color: #00C98D;
+        }
+        .select-input:focus {
+          border-color: #00C98D;
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(0, 201, 141, 0.3);
+        }
+        .btn-primary {
+          background: linear-gradient(90deg, #00C98D, #00B77E);
+          color: white;
+          border-radius: 12px;
+          padding: 12px 28px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .btn-primary:hover:not(:disabled) {
+          background: #00B77E;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 201, 141, 0.3);
+        }
+        .btn-primary:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      `}</style>
+
+      <div style={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #FEFFD9 0%, #F7FFE5 40%, #F5FBEF 100%)'
+      }}>
+        {/* Header Section */}
+        <div style={{ paddingLeft: '48px', paddingRight: '48px', paddingTop: '48px', paddingBottom: '32px', marginBottom: '24px' }}>
+          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Laporan Kehadiran</h1>
+          <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Generate dan download laporan kehadiran tahfidz</p>
         </div>
 
-        {/* Filter Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filter Laporan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label htmlFor="filterType">Tipe Filter</Label>
-                <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih tipe filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="range">Range Tanggal</SelectItem>
-                    <SelectItem value="monthly">Bulanan</SelectItem>
-                  </SelectContent>
-                </Select>
+        {/* Main Container */}
+        <div style={{ paddingLeft: '48px', paddingRight: '48px', paddingBottom: '48px' }}>
+          {/* Filter Card */}
+          <div className="filter-card p-8 mb-8">
+            <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Filter Laporan</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div>
+                <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tipe Filter</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="select-input w-full px-4"
+                >
+                  <option value="range">Range Tanggal</option>
+                  <option value="bulanan">Bulanan</option>
+                  <option value="semester">Per Semester</option>
+                </select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="kelas">Kelas</Label>
-                <Select value={selectedKelas} onValueChange={setSelectedKelas}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih kelas" />
-                </SelectTrigger>
-                <SelectContent>
+              <div>
+                <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Kelas <span style={{ color: '#F9844A' }}>*</span></label>
+                <select
+                  value={selectedKelas}
+                  onChange={(e) => setSelectedKelas(e.target.value)}
+                  className="select-input w-full px-4"
+                >
+                  <option value="">Pilih Kelas</option>
                   {kelasList.map((kelas) => (
-                    <SelectItem key={kelas.id} value={kelas.id}>
-                      {kelas.nama}
-                    </SelectItem>
+                    <option key={kelas.id} value={kelas.id}>{kelas.nama}</option>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </select>
+              </div>
 
-            {filterType === 'range' ? (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="tanggalMulai">Tanggal Mulai</Label>
-                  <input
-                    type="date"
-                    id="tanggalMulai"
-                    value={tanggalMulai}
-                    onChange={(e) => setTanggalMulai(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
+              {filterType === 'semester' && (
+                <div>
+                  <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Semester</label>
+                  <select
+                    value={semester}
+                    onChange={(e) => setSemester(e.target.value)}
+                    className="select-input w-full px-4"
+                  >
+                    <option value="">Pilih Semester</option>
+                    <option value="1">Semester 1 (Juli - Desember)</option>
+                    <option value="2">Semester 2 (Januari - Juni)</option>
+                  </select>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="tanggalSelesai">Tanggal Selesai</Label>
-                  <input
-                    type="date"
-                    id="tanggalSelesai"
-                    value={tanggalSelesai}
-                    onChange={(e) => setTanggalSelesai(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="bulan">Bulan</Label>
-                  <Select value={bulan} onValueChange={setBulan}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih bulan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Januari</SelectItem>
-                      <SelectItem value="2">Februari</SelectItem>
-                      <SelectItem value="3">Maret</SelectItem>
-                      <SelectItem value="4">April</SelectItem>
-                      <SelectItem value="5">Mei</SelectItem>
-                      <SelectItem value="6">Juni</SelectItem>
-                      <SelectItem value="7">Juli</SelectItem>
-                      <SelectItem value="8">Agustus</SelectItem>
-                      <SelectItem value="9">September</SelectItem>
-                      <SelectItem value="10">Oktober</SelectItem>
-                      <SelectItem value="11">November</SelectItem>
-                      <SelectItem value="12">Desember</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tahun">Tahun</Label>
-                  <Select value={tahun} onValueChange={setTahun}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih tahun" />
-                    </SelectTrigger>
-                    <SelectContent>
+              {filterType === 'bulanan' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Bulan</label>
+                    <select
+                      value={bulan}
+                      onChange={(e) => setBulan(e.target.value)}
+                      className="select-input w-full px-4"
+                    >
+                      <option value="">Pilih Bulan</option>
+                      <option value="1">Januari</option>
+                      <option value="2">Februari</option>
+                      <option value="3">Maret</option>
+                      <option value="4">April</option>
+                      <option value="5">Mei</option>
+                      <option value="6">Juni</option>
+                      <option value="7">Juli</option>
+                      <option value="8">Agustus</option>
+                      <option value="9">September</option>
+                      <option value="10">Oktober</option>
+                      <option value="11">November</option>
+                      <option value="12">Desember</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tahun</label>
+                    <select
+                      value={tahun}
+                      onChange={(e) => setTahun(e.target.value)}
+                      className="select-input w-full px-4"
+                    >
                       {[...Array(5)].map((_, i) => {
                         const year = new Date().getFullYear() - i;
-                        return (
-                          <SelectItem key={year} value={year.toString()}>
-                            {year}
-                          </SelectItem>
-                        );
+                        return <option key={year} value={year.toString()}>{year}</option>;
                       })}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            )}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {filterType === 'range' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tanggal Mulai</label>
+                    <input
+                      type="date"
+                      value={tanggalMulai}
+                      onChange={(e) => setTanggalMulai(e.target.value)}
+                      className="select-input w-full px-4"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tanggal Selesai</label>
+                    <input
+                      type="date"
+                      value={tanggalSelesai}
+                      onChange={(e) => setTanggalSelesai(e.target.value)}
+                      className="select-input w-full px-4"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Generate Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleGenerateReport}
+                disabled={loading || !selectedKelas}
+                className="btn-primary flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader className="animate-spin" size={20} />
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <FileText size={20} />
+                    Tampilkan Laporan
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleGenerateReport} disabled={loading}>
-              <FileText className="w-4 h-4 mr-2" />
-              {loading ? 'Memuat...' : 'Tampilkan Laporan'}
-            </Button>
-            {reportData && (
-              <Button onClick={exportPDF} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Export PDF
-              </Button>
-            )}
+        {/* Loading State */}
+        {loading && (
+          <div className="filter-card p-12 text-center">
+            <Loader className="animate-spin mx-auto mb-4" size={48} style={{ color: '#00C98D' }} />
+            <p className="font-medium" style={{ color: '#2F3E3A' }}>Memproses data laporan...</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Report Preview */}
-      {reportData && (
-        <>
-          {/* Summary Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ringkasan Statistik</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {reportData.summary.jumlahSiswa}
+        {/* Error State */}
+        {!loading && reportData === null && selectedKelas && (
+          <div className="filter-card p-6 flex items-start gap-4" style={{ border: '1px solid #FED7AA', background: '#FEFCE8' }}>
+            <AlertTriangle className="flex-shrink-0 mt-1" size={24} style={{ color: '#D97706' }} />
+            <div>
+              <h3 className="font-semibold" style={{ color: '#92400E' }}>Perhatian</h3>
+              <p className="text-sm mt-1" style={{ color: '#B45309' }}>
+                Tidak ada data kehadiran untuk periode yang dipilih. Coba ubah filter atau periode tanggal.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!reportData && !loading && !selectedKelas && (
+          <div className="preview-empty text-center">
+            <FileText size={48} className="mx-auto mb-4" style={{ color: '#00C98D', opacity: 0.9 }} />
+            <p style={{ color: '#6B7E75', fontSize: '15px' }}>
+              Pilih kelas dan klik 'Tampilkan Laporan' untuk melihat laporan kehadiran
+            </p>
+          </div>
+        )}
+
+        {/* Report Preview */}
+        {reportData && !loading && (
+          <>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="filter-card p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-lg" style={{ background: '#F3FCF8' }}>
+                    <Users size={28} style={{ color: '#00C98D' }} />
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Jumlah Siswa</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {reportData.summary.totalPertemuan}
+                  <div>
+                    <p className="text-sm" style={{ color: '#6B7E75' }}>Jumlah Siswa</p>
+                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.jumlahSiswa}</p>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Pertemuan</div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {reportData.summary.rataKehadiran}%
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Rata-rata Kehadiran</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {reportData.summary.persenHadir}%
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Persentase Hadir</div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                  <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {reportData.summary.persenIzin}%
+              <div className="filter-card p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-lg" style={{ background: '#FFE7C2' }}>
+                    <Activity size={28} style={{ color: '#F9844A' }} />
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Izin</div>
-                </div>
-                <div className="text-center p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
-                  <div className="text-xl font-bold text-cyan-600 dark:text-cyan-400">
-                    {reportData.summary.persenSakit}%
+                  <div>
+                    <p className="text-sm" style={{ color: '#6B7E75' }}>Total Pertemuan</p>
+                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.totalPertemuan}</p>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Sakit</div>
-                </div>
-                <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <div className="text-xl font-bold text-red-600 dark:text-red-400">
-                    {reportData.summary.persenAlpa}%
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Alpa</div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="filter-card p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-lg" style={{ background: '#F3FCF8' }}>
+                    <TrendingUp size={28} style={{ color: '#00C98D' }} />
+                  </div>
+                  <div>
+                    <p className="text-sm" style={{ color: '#6B7E75' }}>Rata-rata Kehadiran</p>
+                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.rataKehadiran}%</p>
+                  </div>
+                </div>
+              </div>
+              <div className="filter-card p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-lg" style={{ background: '#FFE7C2' }}>
+                    <TrendingUp size={28} style={{ color: '#F9844A' }} />
+                  </div>
+                  <div>
+                    <p className="text-sm" style={{ color: '#6B7E75' }}>Persentase Hadir</p>
+                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.persenHadir}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          {/* Detail Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Detail Kehadiran Siswa</CardTitle>
-            </CardHeader>
-            <CardContent>
+            {/* Detail Table */}
+            <div className="filter-card overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-orange-500 text-white">
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">No</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">Nama Siswa</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">NISN</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">Hadir</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">Izin</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">Sakit</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">Alpa</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">Total</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-4 py-2">Status</th>
+                <table className="w-full">
+                  <thead style={{ background: '#F3FCF8', borderBottom: '2px solid #DDE6E1' }}>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>No</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Nama Siswa</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>NISN</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Hadir</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Izin</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Sakit</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Alpa</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Total</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody style={{ borderTop: '2px solid #DDE6E1' }}>
                     {reportData.siswaData.map((siswa, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">
-                          {idx + 1}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
-                          {siswa.nama}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
-                          {siswa.nisn}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">
-                          {siswa.hadir} ({siswa.persenHadir}%)
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">
-                          {siswa.izin} ({siswa.persenIzin}%)
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">
-                          {siswa.sakit} ({siswa.persenSakit}%)
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">
-                          {siswa.alpa} ({siswa.persenAlpa}%)
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center font-semibold">
-                          {siswa.totalKehadiran}%
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold ${
-                              siswa.status === 'Sangat Baik'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : siswa.status === 'Baik'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                : siswa.status === 'Cukup'
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            }`}
-                          >
+                      <tr key={idx} style={{ borderBottom: '1px solid #DDE6E1' }}>
+                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{idx + 1}</td>
+                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.nama}</td>
+                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.nisn}</td>
+                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.hadir} ({siswa.persenHadir}%)</td>
+                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.izin} ({siswa.persenIzin}%)</td>
+                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.sakit} ({siswa.persenSakit}%)</td>
+                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.alpa} ({siswa.persenAlpa}%)</td>
+                        <td className="px-6 py-4 text-sm font-semibold" style={{ color: '#2F3E3A' }}>{siswa.totalKehadiran}%</td>
+                        <td className="px-6 py-4 text-sm">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium" style={{
+                            background: siswa.status === 'Sangat Baik' ? '#D4F8E8' : siswa.status === 'Baik' ? '#FFF4E6' : siswa.status === 'Cukup' ? '#FFF4E6' : '#FEE2E2',
+                            color: siswa.status === 'Sangat Baik' ? '#00A57A' : siswa.status === 'Baik' ? '#D97706' : siswa.status === 'Cukup' ? '#D97706' : '#DC2626'
+                          }}>
                             {siswa.status}
                           </span>
                         </td>
@@ -492,10 +530,24 @@ export default function LaporanKehadiranPage() {
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+            </div>
+
+            {/* Export Buttons */}
+            <div className="flex gap-4 mt-8">
+              <button
+                onClick={exportPDF}
+                className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all"
+                style={{ background: 'linear-gradient(90deg, #00C98D, #00B77E)' }}
+                onMouseEnter={(e) => e.target.style.boxShadow = '0 4px 12px rgba(0, 201, 141, 0.3)'}
+                onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+              >
+                <Download size={20} />
+                Export PDF
+              </button>
+            </div>
+          </>
+        )}
+        </div>
       </div>
     </AdminLayout>
   );
