@@ -13,6 +13,7 @@ import {
   Target,
   Trophy,
 } from 'lucide-react';
+import { PieChart, Pie, BarChart, Bar, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 // Islamic Modern Color Palette - Emerald & Amber Pastel
 const colors = {
@@ -192,18 +193,17 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }
 
 export default function AdminDashboardPage() {
   const { data: session } = useSession();
-  const [data, setData] = useState({
-    stats: {
-      totalSiswa: 0,
-      siswaAktif: 0,
-      totalGuru: 0,
-      totalJuz: 0,
-      rataRataNilai: 0,
-      rataRataKehadiran: 0,
-      siswaMencapaiTarget: 0,
-      persentaseSiswaMencapaiTarget: 0,
-      kelasMencapaiTarget: 0,
-      totalKelas: 0,
+  const [chartData, setChartData] = useState({
+    donutData: [],
+    barData: [],
+    siswaStats: {
+      mencapai: 0,
+      belum: 0,
+    },
+    kelasStats: {
+      mencapai: 0,
+      total: 0,
+      persentase: 0,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -237,6 +237,9 @@ export default function AdminDashboardPage() {
           },
         });
       }
+      
+      // Fetch chart data
+      await fetchChartData();
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       // Use mock data on error
@@ -256,6 +259,94 @@ export default function AdminDashboardPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchChartData = async () => {
+    try {
+      // Fetch siswa data untuk donut chart
+      const siswRes = await fetch('/api/siswa');
+      const siswData = siswRes.ok ? await siswRes.json() : [];
+      
+      // Fetch kelas data untuk bar chart
+      const kelasRes = await fetch('/api/kelas');
+      const kelasData = kelasRes.ok ? await kelasRes.json() : [];
+      
+      // Hitung statistik siswa mencapai target (≥ 3 juz)
+      let siswaMencapai = 0;
+      let siswaBelum = 0;
+      
+      if (Array.isArray(siswData)) {
+        siswData.forEach(siswa => {
+          const totalJuzSiswa = siswa.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
+          if (totalJuzSiswa >= 3) {
+            siswaMencapai++;
+          } else {
+            siswaBelum++;
+          }
+        });
+      }
+      
+      // Hitung statistik kelas mencapai target (≥ 50% siswa mencapai target)
+      let kelasMencapai = 0;
+      let totalKelasAktif = 0;
+      
+      if (Array.isArray(kelasData)) {
+        kelasData.forEach(kelas => {
+          if (kelas.status === 'AKTIF') {
+            totalKelasAktif++;
+            const siswaDiKelas = siswData.filter(s => s.kelasId === kelas.id) || [];
+            const siswaMencapaiDiKelas = siswaDiKelas.filter(s => {
+              const totalJuzSiswa = s.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
+              return totalJuzSiswa >= 3;
+            }).length;
+            
+            const persentaseMencapai = siswaDiKelas.length > 0 
+              ? (siswaMencapaiDiKelas / siswaDiKelas.length) * 100 
+              : 0;
+            
+            if (persentaseMencapai >= 50) {
+              kelasMencapai++;
+            }
+          }
+        });
+      }
+      
+      const kelasPersentase = totalKelasAktif > 0 
+        ? Math.round((kelasMencapai / totalKelasAktif) * 100) 
+        : 0;
+      
+      // Prepare donut chart data
+      const donutChartData = [
+        { name: 'Mencapai Target', value: siswaMencapai, fill: colors.emerald[500] },
+        { name: 'Belum Mencapai', value: siswaBelum, fill: colors.gray[300] },
+      ];
+      
+      // Prepare bar chart data
+      const barChartData = [
+        { 
+          name: 'Kelas Mencapai Target', 
+          value: kelasMencapai, 
+          total: totalKelasAktif,
+          persentase: kelasPersentase,
+        },
+      ];
+      
+      setChartData({
+        donutData: donutChartData,
+        barData: barChartData,
+        siswaStats: { mencapai: siswaMencapai, belum: siswaBelum },
+        kelasStats: { mencapai: kelasMencapai, total: totalKelasAktif, persentase: kelasPersentase },
+      });
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+      // Set default empty chart data
+      setChartData({
+        donutData: [],
+        barData: [],
+        siswaStats: { mencapai: 0, belum: 0 },
+        kelasStats: { mencapai: 0, total: 0, persentase: 0 },
+      });
     }
   };
 
@@ -460,6 +551,201 @@ export default function AdminDashboardPage() {
             />
           </div>
         </div>
+        
+        {/* Chart Sections */}
+        <div style={{
+          position: 'relative',
+          zIndex: 1,
+          padding: '20px 40px 40px',
+        }}>
+          {/* Section 1: Donut Chart - Siswa Mencapai Target */}
+          {chartData.donutData.length > 0 && (chartData.siswaStats.mencapai > 0 || chartData.siswaStats.belum > 0) && (
+            <div style={{
+              background: colors.white,
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              border: `1px solid ${colors.gray[200]}`,
+              marginBottom: '24px',
+            }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                color: colors.text.primary,
+                marginBottom: '20px',
+                fontFamily: '"Poppins", system-ui, sans-serif',
+              }}>
+                Statistik Siswa Mencapai Target
+              </h3>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '300px',
+              }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={chartData.donutData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={80}
+                      outerRadius={120}
+                      dataKey="value"
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                    >
+                      {chartData.donutData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value) => `${value} siswa`}
+                      contentStyle={{
+                        background: colors.white,
+                        border: `1px solid ${colors.gray[200]}`,
+                        borderRadius: '8px',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '30px',
+                marginTop: '20px',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: colors.emerald[500],
+                    marginBottom: '4px',
+                  }}>Mencapai Target</p>
+                  <p style={{
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color: colors.text.primary,
+                  }}>{chartData.siswaStats.mencapai}</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: colors.gray[400],
+                    marginBottom: '4px',
+                  }}>Belum Mencapai</p>
+                  <p style={{
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color: colors.text.primary,
+                  }}>{chartData.siswaStats.belum}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Section 2: Horizontal Bar Chart - Kelas Mencapai Target */}
+          {chartData.kelasStats.total > 0 && (
+            <div style={{
+              background: colors.white,
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              border: `1px solid ${colors.gray[200]}`,
+            }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                color: colors.text.primary,
+                marginBottom: '20px',
+                fontFamily: '"Poppins", system-ui, sans-serif',
+              }}>
+                Statistik Kelas Mencapai Target
+              </h3>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '20px',
+                minHeight: '200px',
+                justifyContent: 'center',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{
+                      flex: 1,
+                      height: '40px',
+                      background: colors.gray[100],
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${chartData.kelasStats.persentase}%`,
+                        background: `linear-gradient(90deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                        borderRadius: '8px',
+                        transition: 'width 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        {chartData.kelasStats.persentase > 0 && (
+                          <span style={{
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            color: colors.white,
+                            fontFamily: '"Poppins", system-ui, sans-serif',
+                          }}>
+                            {chartData.kelasStats.persentase}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      color: colors.text.primary,
+                      minWidth: '60px',
+                      textAlign: 'right',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
+                    }}>
+                      {chartData.kelasStats.persentase}%
+                    </span>
+                  </div>
+                  <p style={{
+                    fontSize: '13px',
+                    color: colors.text.secondary,
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                  }}>
+                    {chartData.kelasStats.mencapai} dari {chartData.kelasStats.total} kelas aktif mencapai target
+                  </p>
+                </div>
+              </div>
+              <div style={{
+                marginTop: '20px',
+                padding: '16px',
+                background: colors.emerald[50],
+                borderRadius: '8px',
+                borderLeft: `4px solid ${colors.emerald[500]}`,
+              }}>
+                <p style={{
+                  fontSize: '13px',
+                  color: colors.text.secondary,
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                  margin: 0,
+                }}>
+                  <span style={{ fontWeight: 700, color: colors.emerald[600] }}>Target:</span> Kelas dianggap mencapai target jika ≥ 50% siswanya telah mencapai target hafalan (≥ 3 juz)
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <style jsx global>{`
@@ -491,6 +777,10 @@ export default function AdminDashboardPage() {
         @media (max-width: 768px) {
           .dashboard-stats-grid {
             grid-template-columns: 1fr !important;
+          }
+          
+          .chart-container {
+            padding: 16px;
           }
         }
       `}</style>
