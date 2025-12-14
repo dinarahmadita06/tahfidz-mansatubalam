@@ -269,6 +269,7 @@ model TargetHafalan {
   targetAyat    String?
   deadline      DateTime?
   keterangan    String?
+  schoolTarget  Int?        // Target hafalan global sekolah (dalam juz per tahun)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   siswa         Siswa?      @relation(fields: [siswaId], references: [id], onDelete: Cascade)

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, BookOpen, Calendar, TrendingUp, AlertCircle, Plus } from 'lucide-react';
+import { Target, BookOpen, Calendar, TrendingUp, AlertCircle, Plus, Edit2, X } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import {
   ResponsiveContainer,
@@ -15,6 +15,7 @@ import {
 
 export default function TargetHafalanPage() {
   const [targets, setTargets] = useState([]);
+  const [schoolTarget, setSchoolTarget] = useState(2); // Target global sekolah (default 2 juz per tahun)
   const [statistics, setStatistics] = useState({
     totalKelas: 0,
     tahunAjaranAktif: '',
@@ -22,6 +23,8 @@ export default function TargetHafalanPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showUpdateSchoolTargetModal, setShowUpdateSchoolTargetModal] = useState(false);
+  const [schoolTargetInput, setSchoolTargetInput] = useState('');
   const [kelasList, setKelasList] = useState([]);
   const [formData, setFormData] = useState({
     kelasId: '',
@@ -40,6 +43,15 @@ export default function TargetHafalanPage() {
   const fetchTargets = async () => {
     try {
       setIsLoading(true);
+      
+      // Fetch school target global
+      const schoolTargetResponse = await fetch('/api/admin/target-hafalan/school-target');
+      const schoolTargetData = await schoolTargetResponse.json();
+      if (schoolTargetData.success && schoolTargetData.data.schoolTarget) {
+        setSchoolTarget(schoolTargetData.data.schoolTarget);
+      }
+      
+      // Fetch targets
       const response = await fetch('/api/admin/target-hafalan');
       const data = await response.json();
 
@@ -116,6 +128,44 @@ export default function TargetHafalanPage() {
     });
   };
 
+  const handleOpenUpdateSchoolTargetModal = () => {
+    setSchoolTargetInput(schoolTarget.toString());
+    setShowUpdateSchoolTargetModal(true);
+  };
+
+  const handleUpdateSchoolTarget = async (e) => {
+    e.preventDefault();
+
+    const newTarget = parseInt(schoolTargetInput);
+    if (isNaN(newTarget) || newTarget <= 0) {
+      alert('Target harus berupa angka positif');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/target-hafalan/school-target', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ schoolTarget: newTarget })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSchoolTarget(newTarget);
+        setShowUpdateSchoolTargetModal(false);
+        setSchoolTargetInput('');
+        alert(`Target hafalan sekolah berhasil diperbarui menjadi ${newTarget} juz per tahun!`);
+        fetchTargets(); // Refresh data
+      } else {
+        alert(data.message || 'Gagal memperbarui target sekolah');
+      }
+    } catch (error) {
+      console.error('Error updating school target:', error);
+      alert('Terjadi kesalahan saat memperbarui target sekolah');
+    }
+  };
+
   return (
     <AdminLayout>
       <ResponsiveContainer>
@@ -147,6 +197,28 @@ export default function TargetHafalanPage() {
               </button>
             </div>
           </div>
+
+          {/* School Target Card */}
+          <ResponsiveCard className="bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg mb-6 sm:mb-8 border-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-emerald-100 text-sm font-medium mb-1 sm:mb-2">Target Hafalan Global</p>
+                <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2 sm:mb-3">
+                  {schoolTarget} Juz
+                </h2>
+                <p className="text-emerald-100 text-sm sm:text-base">
+                  Target hafalan sekolah per tahun ajaran
+                </p>
+              </div>
+              <button
+                onClick={handleOpenUpdateSchoolTargetModal}
+                className="w-full sm:w-auto px-6 py-3 bg-white text-emerald-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 font-semibold hover:scale-105"
+              >
+                <Edit2 size={18} />
+                <span className="text-sm sm:text-base">Perbarui Target</span>
+              </button>
+            </div>
+          </ResponsiveCard>
 
           {/* Statistics Cards */}
           <ResponsiveGrid cols={{ sm: 1, md: 3, lg: 3, xl: 3 }} gap="md" className="mb-6 sm:mb-8">
@@ -408,6 +480,72 @@ export default function TargetHafalanPage() {
                 </button>
               </div>
             </form>
+            </ResponsiveModal>
+          )}
+
+          {/* Update School Target Modal */}
+          {showUpdateSchoolTargetModal && (
+            <ResponsiveModal
+              isOpen={showUpdateSchoolTargetModal}
+              onClose={() => {
+                setShowUpdateSchoolTargetModal(false);
+                setSchoolTargetInput('');
+              }}
+              maxWidth="md"
+            >
+              <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target className="text-white" size={20} />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  Perbarui Target Hafalan Sekolah
+                </h3>
+              </div>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                Ubah target hafalan global sekolah. Perubahan ini akan mempengaruhi semua kelas.
+              </p>
+
+              <form onSubmit={handleUpdateSchoolTarget} className="space-y-5">
+                {/* Target Juz Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Target Hafalan Sekolah (Juz per Tahun) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    value={schoolTargetInput}
+                    onChange={(e) => setSchoolTargetInput(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Masukkan target dalam juz..."
+                    required
+                  />
+                  <p className="text-xs sm:text-sm text-gray-500 mt-2">
+                    Target saat ini: {schoolTarget} Juz per tahun
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUpdateSchoolTargetModal(false);
+                      setSchoolTargetInput('');
+                    }}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                  >
+                    Perbarui Target
+                  </button>
+                </div>
+              </form>
             </ResponsiveModal>
           )}
         </ResponsiveCard>
