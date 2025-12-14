@@ -70,7 +70,6 @@ export default function PengumumanPage() {
   const [formData, setFormData] = useState({
     judul: '',
     isi: '',
-    kategori: 'UMUM',
     tanggalBerlaku: ''
   });
 
@@ -146,7 +145,6 @@ export default function PengumumanPage() {
     setFormData({
       judul: item.judul,
       isi: item.isi,
-      kategori: item.kategori || 'UMUM',
       tanggalBerlaku: item.tanggalSelesai ? new Date(item.tanggalSelesai).toISOString().split('T')[0] : ''
     });
     setShowModal(true);
@@ -177,7 +175,6 @@ export default function PengumumanPage() {
     setFormData({
       judul: '',
       isi: '',
-      kategori: 'UMUM',
       tanggalBerlaku: ''
     });
     setEditingId(null);
@@ -406,23 +403,6 @@ export default function PengumumanPage() {
                     placeholder="Masukkan isi pengumuman..."
                     required
                   />
-                </div>
-
-              {/* Kategori Pengumuman */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3">
-                    Kategori Pengumuman
-                  </label>
-                  <select
-                    value={formData.kategori}
-                    onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
-                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
-                  >
-                    <option value="UMUM">Umum</option>
-                    <option value="AKADEMIK">Akademik</option>
-                    <option value="KEGIATAN">Kegiatan</option>
-                    <option value="PENTING">Penting</option>
-                  </select>
                 </div>
 
                 {/* Tanggal Berlaku */}
