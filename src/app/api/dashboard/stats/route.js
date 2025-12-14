@@ -28,15 +28,21 @@ export async function GET(request) {
 
     console.log('DASHBOARD STATS - Guru:', { totalGuru });
 
-    // 3. Total Hafalan (sum of all totalHafalan in juz)
-    const hafalanData = await prisma.siswa.aggregate({
+    // 3. Total Hafalan (sum of juz from hafalan table)
+    const hafalanData = await prisma.hafalan.aggregate({
+      _count: true
+    });
+    const totalHafalan = hafalanData._count || 0;
+    
+    // For totalJuz, we need to sum from hafalan juz field
+    const totalJuzData = await prisma.hafalan.aggregate({
       _sum: {
-        totalHafalan: true
+        juz: true
       }
     });
-    const totalJuz = hafalanData._sum?.totalHafalan || 0;
+    const totalJuz = totalJuzData._sum?.juz || 0;
 
-    console.log('DASHBOARD STATS - Total Juz:', { totalJuz });
+    console.log('DASHBOARD STATS - Hafalan:', { totalHafalan, totalJuz });
 
     // 4. Rata-rata Nilai (from all penilaian records)
     const nilaiData = await prisma.penilaian.aggregate({
@@ -51,17 +57,16 @@ export async function GET(request) {
     console.log('DASHBOARD STATS - Rata-rata Nilai:', { rataRataNilai });
 
     // 5. Rata-rata Kehadiran
-    // Hitung total presensi dan yang hadir
     const totalPresensi = await prisma.presensi.count();
     const hadir = await prisma.presensi.count({
       where: {
         status: {
-          in: ['HADIR', 'SAKIT', 'IZIN'] // Count semua kecuali ALPA
+          in: ['HADIR', 'SAKIT', 'IZIN']
         }
       }
     });
     const rataRataKehadiran = totalPresensi > 0
-      ? Math.round((hadir / totalPresensi) * 1000) / 10
+      ? Math.round((hadir / totalPresensi) * 100)
       : 0;
 
     console.log('DASHBOARD STATS - Kehadiran:', {
@@ -70,16 +75,22 @@ export async function GET(request) {
       rataRataKehadiran
     });
 
-    // 6. **NEW** Siswa Mencapai Target (≥3 juz)
+    // 6. **NEW** Siswa Mencapai Target (≥3 juz hafalan)
     const TARGET_HAFALAN = 3; // Target sekolah = 3 juz
 
-    const siswaMencapaiTarget = await prisma.siswa.count({
-      where: {
-        totalHafalan: {
-          gte: TARGET_HAFALAN
+    // Get siswa with their total hafalan
+    const siswaDenganHafalan = await prisma.siswa.findMany({
+      include: {
+        hafalan: {
+          select: { juz: true }
         }
       }
     });
+
+    const siswaMencapaiTarget = siswaDenganHafalan.filter(siswa => {
+      const totalJuzSiswa = siswa.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
+      return totalJuzSiswa >= TARGET_HAFALAN;
+    }).length;
 
     const persentaseSiswaMencapaiTarget = totalSiswa > 0
       ? Math.round((siswaMencapaiTarget / totalSiswa) * 100)
@@ -91,52 +102,53 @@ export async function GET(request) {
       persentase: persentaseSiswaMencapaiTarget
     });
 
-    // 7. **NEW** Kelas Mencapai Target (rata-rata hafalan kelas ≥3 juz)
-    // Get all kelas with their students' average hafalan
+    // 7. **NEW** Kelas Mencapai Target (≥50% siswa mencapai target)
     const allKelas = await prisma.kelas.findMany({
       where: {
         status: 'AKTIF'
       },
       include: {
         siswa: {
-          select: {
-            totalHafalan: true
+          include: {
+            hafalan: {
+              select: { juz: true }
+            }
           }
         }
       }
     });
 
-    const totalKelas = allKelas.length;
-
     const kelasMencapaiTarget = allKelas.filter(kelas => {
       if (kelas.siswa.length === 0) return false;
 
-      const totalHafalanKelas = kelas.siswa.reduce(
-        (sum, siswa) => sum + (siswa.totalHafalan || 0),
-        0
-      );
-      const rataRataKelas = totalHafalanKelas / kelas.siswa.length;
+      const siswaMencapaiDiKelas = kelas.siswa.filter(siswa => {
+        const totalJuzSiswa = siswa.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
+        return totalJuzSiswa >= TARGET_HAFALAN;
+      }).length;
 
-      return rataRataKelas >= TARGET_HAFALAN;
+      const persentaseMencapai = (siswaMencapaiDiKelas / kelas.siswa.length) * 100;
+      return persentaseMencapai >= 50;
     }).length;
+
+    const totalKelasAktif = allKelas.length;
 
     console.log('DASHBOARD STATS - Kelas Mencapai Target:', {
       kelasMencapaiTarget,
-      totalKelas
+      totalKelasAktif
     });
 
     const stats = {
       totalSiswa,
       siswaAktif,
       totalGuru,
+      totalHafalan,
       totalJuz,
       rataRataNilai,
       rataRataKehadiran,
-      // New statistics
       siswaMencapaiTarget,
       persentaseSiswaMencapaiTarget,
       kelasMencapaiTarget,
-      totalKelas
+      totalKelas: totalKelasAktif
     };
 
     console.log('DASHBOARD STATS - Final stats:', stats);
