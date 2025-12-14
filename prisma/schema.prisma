@@ -33,13 +33,6 @@ enum StatusPresensi {
   ALFA
 }
 
-enum KategoriPengumuman {
-  UMUM
-  AKADEMIK
-  KEGIATAN
-  PENTING
-}
-
 enum KategoriBuku {
   TAJWID
   TAFSIR
@@ -391,7 +384,6 @@ model Pengumuman {
   userId      String
   judul       String
   isi         String
-  kategori    KategoriPengumuman
   tanggalMulai DateTime           @default(now())
   tanggalSelesai DateTime?
   lampiran    String?             // JSON array of file URLs or file metadata
@@ -403,7 +395,6 @@ model Pengumuman {
 
   @@index([isPinned])
   @@index([tanggalMulai(sort: Desc)])
-  @@index([kategori])
 }
 
 model PengumumanRead {
