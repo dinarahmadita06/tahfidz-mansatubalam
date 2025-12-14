@@ -39,6 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-nul 
-( 
-.vercel
+
+# Excel files (generated/temporary)
+*.xlsx
+*.xls
+*.csv
+
+# Temporary migration/utility scripts
+fix-siswa-emails.js
+update-siswa-emails.js
+update-tahun-ajaran.js
