@@ -193,6 +193,21 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }
 
 export default function AdminDashboardPage() {
   const { data: session } = useSession();
+  const [data, setData] = useState({
+    stats: {
+      totalSiswa: 0,
+      siswaAktif: 0,
+      totalGuru: 0,
+      totalHafalan: 0,
+      totalJuz: 0,
+      rataRataNilai: 0,
+      rataRataKehadiran: 0,
+      siswaMencapaiTarget: 0,
+      persentaseSiswaMencapaiTarget: 0,
+      kelasMencapaiTarget: 0,
+      totalKelas: 0,
+    },
+  });
   const [chartData, setChartData] = useState({
     donutData: [],
     barData: [],
