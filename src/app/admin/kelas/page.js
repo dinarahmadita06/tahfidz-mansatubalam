@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Users, Plus, Edit, Trash2, Shield, ShieldCheck,
   ArrowRight, Search, Download, BookOpen, GraduationCap,
@@ -52,6 +53,119 @@ const colors = {
     tertiary: '#6B7280',
   },
 };
+
+// Komponen Dropdown Menu dengan Portal
+function DropdownMenu({ buttonRef, onEdit, onDelete, onClose }) {
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 8,
+        left: rect.right - 150, // Align to right edge, offset by dropdown width
+      });
+    }
+  }, [buttonRef]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+          buttonRef.current && !buttonRef.current.contains(event.target)) {
+        onClose();
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [buttonRef, onClose]);
+
+  if (typeof window === 'undefined') return null;
+
+  return createPortal(
+    <div
+      ref={dropdownRef}
+      style={{
+        position: 'fixed',
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        background: '#FFFFFF',
+        borderRadius: '12px',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)',
+        padding: '10px',
+        minWidth: '150px',
+        width: 'max-content',
+        zIndex: 9999,
+        animation: 'fadeSlideIn 0.2s ease-out',
+        border: `1px solid ${colors.gray[200]}`,
+      }}
+    >
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit();
+          onClose();
+        }}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '10px 14px',
+          border: 'none',
+          background: 'transparent',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          textAlign: 'left',
+          fontSize: '14px',
+          fontWeight: 500,
+          color: colors.text.primary,
+          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = colors.emerald[50]}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+      >
+        <Edit size={16} color={colors.emerald[600]} style={{ flexShrink: 0 }} />
+        <span>Edit Kelas</span>
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+          onClose();
+        }}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '10px 14px',
+          border: 'none',
+          background: 'transparent',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          textAlign: 'left',
+          fontSize: '14px',
+          fontWeight: 500,
+          color: colors.text.primary,
+          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+          whiteSpace: 'nowrap',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = '#FEE2E2'}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+      >
+        <Trash2 size={16} color="#DC2626" style={{ flexShrink: 0 }} />
+        <span>Hapus Kelas</span>
+      </button>
+    </div>,
+    document.body
+  );
+}
 
 // Komponen StatCard
 function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
@@ -155,7 +269,7 @@ export default function AdminKelasPage() {
   const [openMenuId, setOpenMenuId] = useState(null); // Track which card menu is open
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [kelasToDelete, setKelasToDelete] = useState(null);
-  const menuRef = useRef(null);
+  const buttonRefs = useRef({});
   const [kelasFormData, setKelasFormData] = useState({
     nama: '', // Menggunakan field 'nama' sesuai schema
     tahunAjaranId: '',
@@ -189,22 +303,6 @@ export default function AdminKelasPage() {
       setKelasFormData(newFormData);
     }
   }, [editingKelas, showKelasModal]);
-
-  // Handle click outside to close dropdown menu
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setOpenMenuId(null);
-      }
-    }
-
-    if (openMenuId) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [openMenuId]);
 
   const fetchKelas = async () => {
     try {
@@ -793,109 +891,27 @@ export default function AdminKelasPage() {
                           </p>
                         </div>
                         {/* Three-dot menu */}
-                        <div style={{ position: 'relative' }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(openMenuId === kelasItem.id ? null : kelasItem.id);
-                            }}
-                            style={{
-                              padding: '8px',
-                              borderRadius: '10px',
-                              border: 'none',
-                              background: openMenuId === kelasItem.id ? colors.gray[100] : 'transparent',
-                              color: colors.gray[600],
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                            }}
-                            title="Opsi"
-                          >
-                            <MoreVertical size={20} />
-                          </button>
-
-                          {/* Dropdown Menu */}
-                          {openMenuId === kelasItem.id && (
-                            <div
-                              ref={menuRef}
-                              style={{
-                                position: 'absolute',
-                                top: '100%',
-                                right: '-8px',
-                                marginTop: '8px',
-                                background: '#FFFFFF',
-                                borderRadius: '12px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08)',
-                                padding: '10px',
-                                minWidth: '150px',
-                                width: 'max-content',
-                                zIndex: 1000,
-                                animation: 'fadeSlideIn 0.2s ease-out',
-                                border: `1px solid ${colors.gray[200]}`,
-                              }}
-                            >
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditKelas(kelasItem);
-                                  setOpenMenuId(null);
-                                }}
-                                style={{
-                                  width: '100%',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '10px',
-                                  padding: '10px 14px',
-                                  border: 'none',
-                                  background: 'transparent',
-                                  borderRadius: '8px',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  textAlign: 'left',
-                                  fontSize: '14px',
-                                  fontWeight: 500,
-                                  color: colors.text.primary,
-                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                                  whiteSpace: 'nowrap',
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = colors.emerald[50]}
-                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                              >
-                                <Edit size={16} color={colors.emerald[600]} style={{ flexShrink: 0 }} />
-                                <span>Edit Kelas</span>
-                              </button>
-
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteKelas(kelasItem);
-                                }}
-                                style={{
-                                  width: '100%',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '10px',
-                                  padding: '10px 14px',
-                                  border: 'none',
-                                  background: 'transparent',
-                                  borderRadius: '8px',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  textAlign: 'left',
-                                  fontSize: '14px',
-                                  fontWeight: 500,
-                                  color: colors.text.primary,
-                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                                  whiteSpace: 'nowrap',
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = '#FEE2E2'}
-                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                              >
-                                <Trash2 size={16} color="#DC2626" style={{ flexShrink: 0 }} />
-                                <span>Hapus Kelas</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        <button
+                          ref={(el) => {
+                            if (el) buttonRefs.current[kelasItem.id] = el;
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === kelasItem.id ? null : kelasItem.id);
+                          }}
+                          style={{
+                            padding: '8px',
+                            borderRadius: '10px',
+                            border: 'none',
+                            background: openMenuId === kelasItem.id ? colors.gray[100] : 'transparent',
+                            color: colors.gray[600],
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          title="Opsi"
+                        >
+                          <MoreVertical size={20} />
+                        </button>
                       </div>
 
                       {/* Guru Tahfidz */}
@@ -1048,6 +1064,22 @@ export default function AdminKelasPage() {
           </div>
         </div>
       </div>
+
+      {/* Dropdown Menu dengan Portal */}
+      {openMenuId && buttonRefs.current[openMenuId] && (
+        <DropdownMenu
+          buttonRef={{ current: buttonRefs.current[openMenuId] }}
+          onEdit={() => {
+            const kelasItem = kelas.find(k => k.id === openMenuId);
+            if (kelasItem) handleEditKelas(kelasItem);
+          }}
+          onDelete={() => {
+            const kelasItem = kelas.find(k => k.id === openMenuId);
+            if (kelasItem) handleDeleteKelas(kelasItem);
+          }}
+          onClose={() => setOpenMenuId(null)}
+        />
+      )}
 
       {/* Modal Detail Kelas */}
       {showDetailModal && selectedKelas && (
