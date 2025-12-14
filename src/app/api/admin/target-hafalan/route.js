@@ -152,3 +152,61 @@ export async function POST(request) {
     );
   }
 }
+
+// PATCH - Update target hafalan sekolah global (schoolTarget)
+export async function PATCH(request) {
+  try {
+    const url = new URL(request.url);
+    
+    // Check if this is for school target update
+    if (url.pathname.includes('/school-target')) {
+      const body = await request.json();
+      const { schoolTarget } = body;
+
+      if (schoolTarget === undefined) {
+        return NextResponse.json(
+          { success: false, message: 'Target sekolah harus diisi' },
+          { status: 400 }
+        );
+      }
+
+      // Validasi target minimal 0.5 juz, maksimal 30 juz
+      if (schoolTarget < 0.5 || schoolTarget > 30) {
+        return NextResponse.json(
+          { success: false, message: 'Target hafalan harus antara 0.5 - 30 juz' },
+          { status: 400 }
+        );
+      }
+
+      // Update schoolTarget di semua record TargetHafalan untuk menyimpan nilai global
+      // (Opsional: Bisa disimpan di tabel terpisah untuk konfigurasi global)
+      // Untuk saat ini, kita gunakan TargetHafalan sebagai storage
+      
+      // Update atau create record untuk menyimpan school target global
+      const result = await prisma.targetHafalan.upsert({
+        where: { id: 'school-target-global' }, // ID khusus untuk record global
+        update: {
+          targetJuz: Math.round(schoolTarget)
+        },
+        create: {
+          id: 'school-target-global',
+          targetJuz: Math.round(schoolTarget),
+          bulan: new Date().getMonth() + 1,
+          tahun: new Date().getFullYear()
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Target hafalan sekolah berhasil diperbarui',
+        data: result
+      });
+    }
+  } catch (error) {
+    console.error('Error updating school target:', error);
+    return NextResponse.json(
+      { success: false, message: 'Gagal memperbarui target sekolah' },
+      { status: 500 }
+    );
+  }
+}
