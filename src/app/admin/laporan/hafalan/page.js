@@ -379,13 +379,16 @@ export default function LaporanHafalanPage() {
       <style jsx>{`
         .filter-card {
           background: #FFFFFF;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-          border-radius: 18px;
-          border: 1px solid #DDE6E1;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+          border-radius: 20px;
+          border: 1px solid #E6F4EF;
+        }
+        .filter-card:hover {
+          border-color: #00C98D;
         }
         .preview-empty {
           background: #F3FCF8;
-          border-radius: 18px;
+          border-radius: 16px;
           padding: 32px;
         }
         .select-input {
@@ -394,6 +397,7 @@ export default function LaporanHafalanPage() {
           border-radius: 12px;
           background: white;
           color: #2F3E3A;
+          transition: border-color 0.2s ease;
         }
         .select-input:hover {
           border-color: #00C98D;
@@ -401,20 +405,22 @@ export default function LaporanHafalanPage() {
         .select-input:focus {
           border-color: #00C98D;
           outline: none;
-          box-shadow: 0 0 0 3px rgba(0, 201, 141, 0.1);
+          box-shadow: 0 0 0 3px rgba(0, 201, 141, 0.3);
         }
         .btn-primary {
-          background-color: #00C98D;
+          background: linear-gradient(90deg, #00C98D, #00B77E);
           color: white;
           border-radius: 12px;
-          padding: 12px 24px;
+          padding: 12px 28px;
           font-weight: 600;
           border: none;
           cursor: pointer;
-          transition: background-color 0.2s ease;
+          transition: all 0.2s ease;
         }
         .btn-primary:hover:not(:disabled) {
-          background-color: #00B77E;
+          background: #00B77E;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 201, 141, 0.3);
         }
         .btn-primary:disabled {
           opacity: 0.5;
@@ -422,18 +428,21 @@ export default function LaporanHafalanPage() {
         }
       `}</style>
 
-      <div className="min-h-screen" style={{ background: '#FAFDFB' }}>
+      <div style={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #FEFFD9 0%, #F7FFE5 40%, #F5FBEF 100%)'
+      }}>
         {/* Header Section */}
-        <div className="px-8 py-8 mb-8">
-          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A' }}>Laporan Hafalan</h1>
+        <div style={{ paddingLeft: '48px', paddingRight: '48px', paddingTop: '48px', paddingBottom: '32px', marginBottom: '24px' }}>
+          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Laporan Hafalan</h1>
           <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Generate dan unduh laporan hafalan siswa secara terperinci</p>
         </div>
 
         {/* Main Container */}
-        <div style={{ maxWidth: '1000px', margin: '0 auto', paddingLeft: '32px', paddingRight: '32px', paddingBottom: '48px' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', paddingLeft: '48px', paddingRight: '48px', paddingBottom: '48px' }}>
           {/* Filter Card */}
           <div className="filter-card p-8 mb-8">
-            <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A' }}>Filter Laporan</h2>
+            <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Filter Laporan</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div>
@@ -532,19 +541,19 @@ export default function LaporanHafalanPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-12 text-center border border-gray-200 dark:border-neutral-800">
-            <Loader className="animate-spin mx-auto mb-4 text-orange-500" size={48} />
-            <p className="text-gray-600 dark:text-gray-400 font-medium">Memproses data laporan...</p>
+          <div className="filter-card p-12 text-center">
+            <Loader className="animate-spin mx-auto mb-4" size={48} style={{ color: '#00C98D' }} />
+            <p className="font-medium" style={{ color: '#2F3E3A' }}>Memproses data laporan...</p>
           </div>
         )}
 
         {/* Error State */}
         {!loading && reportData === null && filters.kelasId && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 border border-amber-200 dark:border-amber-800 flex items-start gap-4">
-            <AlertTriangle className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" size={24} />
+          <div className="filter-card p-6 flex items-start gap-4" style={{ border: '1px solid #FED7AA', background: '#FEFCE8' }}>
+            <AlertTriangle className="flex-shrink-0 mt-1" size={24} style={{ color: '#D97706' }} />
             <div>
-              <h3 className="font-semibold text-amber-900 dark:text-amber-200">Perhatian</h3>
-              <p className="text-amber-800 dark:text-amber-300 text-sm mt-1">
+              <h3 className="font-semibold" style={{ color: '#92400E' }}>Perhatian</h3>
+              <p className="text-sm mt-1" style={{ color: '#B45309' }}>
                 Tidak ada data hafalan untuk periode yang dipilih. Coba ubah filter atau periode tanggal.
               </p>
             </div>
@@ -718,9 +727,9 @@ export default function LaporanHafalanPage() {
               <button
                 onClick={exportPDF}
                 className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all"
-                style={{ background: '#00C98D' }}
-                onMouseEnter={(e) => e.target.style.background = '#00B77E'}
-                onMouseLeave={(e) => e.target.style.background = '#00C98D'}
+                style={{ background: 'linear-gradient(90deg, #00C98D, #00B77E)' }}
+                onMouseEnter={(e) => e.target.style.boxShadow = '0 4px 12px rgba(0, 201, 141, 0.3)'}
+                onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
               >
                 <Download size={20} />
                 Export PDF
@@ -728,9 +737,9 @@ export default function LaporanHafalanPage() {
               <button
                 onClick={exportExcel}
                 className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all"
-                style={{ background: '#F9844A' }}
-                onMouseEnter={(e) => e.target.style.background = '#F9C74F'}
-                onMouseLeave={(e) => e.target.style.background = '#F9844A'}
+                style={{ background: 'linear-gradient(90deg, #F9844A, #F9C74F)' }}
+                onMouseEnter={(e) => e.target.style.boxShadow = '0 4px 12px rgba(249, 132, 74, 0.3)'}
+                onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
               >
                 <Download size={20} />
                 Export Excel
@@ -742,7 +751,7 @@ export default function LaporanHafalanPage() {
         {/* Empty State */}
         {!reportData && !loading && (!filters.kelasId || filters.kelasId === '') && (
           <div className="preview-empty text-center">
-            <FileText size={48} className="mx-auto mb-4" style={{ color: '#00C98D' }} />
+            <FileText size={48} className="mx-auto mb-4" style={{ color: '#00C98D', opacity: 0.9 }} />
             <p style={{ color: '#6B7E75', fontSize: '15px' }}>
               Pilih kelas dan klik "Generate Preview" untuk melihat laporan hafalan
             </p>
