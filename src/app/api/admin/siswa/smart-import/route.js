@@ -195,12 +195,12 @@ export async function POST(request) {
         if (autoCreateAccount) {
           // Use NIS as default username if available, otherwise generate
           const baseUsername = siswaData.nis || generateUsername(siswaData.nama, 'siswa');
-          // Format: nama.NIS@siswa.tahfidz.sch.id
-          const cleanNama = siswaData.nama
+          // Format: nama_depan.NIS@siswa.tahfidz.sch.id (hanya kata pertama)
+          const firstNameOnly = siswaData.nama
             .toLowerCase()
-            .replace(/[^a-z0-9]/g, '')
-            .split(' ')[0]; // Ambil kata pertama dari nama
-          const emailUsername = `${cleanNama}.${baseUsername}`.toLowerCase();
+            .trim()
+            .split(/\s+/)[0]; // Ambil HANYA kata pertama
+          const emailUsername = `${firstNameOnly}.${baseUsername}`.toLowerCase();
           siswaEmail = siswaData.email || `${emailUsername}@siswa.tahfidz.sch.id`;
           siswaPassword = siswaData.nis?.toString() || generatePassword(8);
 
@@ -212,7 +212,7 @@ export async function POST(request) {
           if (existingUserEmail) {
             // Generate alternative email with timestamp
             const timestamp = Date.now().toString().slice(-4);
-            const altUsername = `${cleanNama}.${baseUsername}.${timestamp}`.toLowerCase();
+            const altUsername = `${firstNameOnly}.${baseUsername}.${timestamp}`.toLowerCase();
             siswaEmail = `${altUsername}@siswa.tahfidz.sch.id`;
           }
 
