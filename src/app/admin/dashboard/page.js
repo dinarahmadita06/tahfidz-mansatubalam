@@ -266,22 +266,42 @@ export default function AdminDashboardPage() {
     try {
       // Fetch siswa data untuk donut chart
       const siswRes = await fetch('/api/siswa');
-      const siswData = siswRes.ok ? await siswRes.json() : [];
+      let siswData = siswRes.ok ? await siswRes.json() : [];
+      
+      // Handle if response is wrapped in data property
+      if (siswData && typeof siswData === 'object' && siswData.data && Array.isArray(siswData.data)) {
+        siswData = siswData.data;
+      }
+      
+      // Ensure it's an array
+      if (!Array.isArray(siswData)) {
+        siswData = [];
+      }
       
       // Fetch kelas data untuk bar chart
       const kelasRes = await fetch('/api/kelas');
-      const kelasData = kelasRes.ok ? await kelasRes.json() : [];
+      let kelasData = kelasRes.ok ? await kelasRes.json() : [];
+      
+      // Ensure it's an array
+      if (!Array.isArray(kelasData)) {
+        kelasData = [];
+      }
       
       // Hitung statistik siswa mencapai target (≥ 3 juz)
       let siswaMencapai = 0;
       let siswaBelum = 0;
       
-      if (Array.isArray(siswData)) {
+      if (Array.isArray(siswData) && siswData.length > 0) {
         siswData.forEach(siswa => {
-          const totalJuzSiswa = siswa.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
-          if (totalJuzSiswa >= 3) {
-            siswaMencapai++;
-          } else {
+          try {
+            const totalJuzSiswa = siswa.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
+            if (totalJuzSiswa >= 3) {
+              siswaMencapai++;
+            } else {
+              siswaBelum++;
+            }
+          } catch (e) {
+            console.warn('Error processing siswa:', siswa, e);
             siswaBelum++;
           }
         });
@@ -291,23 +311,27 @@ export default function AdminDashboardPage() {
       let kelasMencapai = 0;
       let totalKelasAktif = 0;
       
-      if (Array.isArray(kelasData)) {
+      if (Array.isArray(kelasData) && kelasData.length > 0) {
         kelasData.forEach(kelas => {
-          if (kelas.status === 'AKTIF') {
-            totalKelasAktif++;
-            const siswaDiKelas = siswData.filter(s => s.kelasId === kelas.id) || [];
-            const siswaMencapaiDiKelas = siswaDiKelas.filter(s => {
-              const totalJuzSiswa = s.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
-              return totalJuzSiswa >= 3;
-            }).length;
-            
-            const persentaseMencapai = siswaDiKelas.length > 0 
-              ? (siswaMencapaiDiKelas / siswaDiKelas.length) * 100 
-              : 0;
-            
-            if (persentaseMencapai >= 50) {
-              kelasMencapai++;
+          try {
+            if (kelas.status === 'AKTIF') {
+              totalKelasAktif++;
+              const siswaDiKelas = siswData.filter(s => s.kelasId === kelas.id) || [];
+              const siswaMencapaiDiKelas = siswaDiKelas.filter(s => {
+                const totalJuzSiswa = s.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
+                return totalJuzSiswa >= 3;
+              }).length;
+              
+              const persentaseMencapai = siswaDiKelas.length > 0 
+                ? (siswaMencapaiDiKelas / siswaDiKelas.length) * 100 
+                : 0;
+              
+              if (persentaseMencapai >= 50) {
+                kelasMencapai++;
+              }
             }
+          } catch (e) {
+            console.warn('Error processing kelas:', kelas, e);
           }
         });
       }
