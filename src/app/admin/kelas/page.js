@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Users, Plus, Edit, Trash2, Shield, ShieldCheck,
   ArrowRight, Search, Download, BookOpen, GraduationCap,
-  UserCheck, Clock
+  UserCheck, Clock, MoreVertical, X
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter } from 'next/navigation';
@@ -152,6 +152,10 @@ export default function AdminKelasPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedKelas, setSelectedKelas] = useState(null);
   const [editingKelas, setEditingKelas] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null); // Track which card menu is open
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [kelasToDelete, setKelasToDelete] = useState(null);
+  const menuRef = useRef(null);
   const [kelasFormData, setKelasFormData] = useState({
     nama: '', // Menggunakan field 'nama' sesuai schema
     tahunAjaranId: '',
@@ -185,6 +189,22 @@ export default function AdminKelasPage() {
       setKelasFormData(newFormData);
     }
   }, [editingKelas, showKelasModal]);
+
+  // Handle click outside to close dropdown menu
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    }
+
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [openMenuId]);
 
   const fetchKelas = async () => {
     try {
@@ -306,17 +326,25 @@ export default function AdminKelasPage() {
     setShowKelasModal(true);
   };
 
-  const handleDeleteKelas = async (id) => {
-    if (!confirm('Yakin ingin menghapus kelas ini? Semua data siswa di kelas ini akan terpengaruh.')) return;
+  const handleDeleteKelas = (kelasItem) => {
+    setKelasToDelete(kelasItem);
+    setShowDeleteModal(true);
+    setOpenMenuId(null); // Close dropdown
+  };
+
+  const confirmDeleteKelas = async () => {
+    if (!kelasToDelete) return;
 
     try {
-      const response = await fetch(`/api/admin/kelas/${id}`, {
+      const response = await fetch(`/api/admin/kelas/${kelasToDelete.id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
         alert('Kelas berhasil dihapus');
         fetchKelas();
+        setShowDeleteModal(false);
+        setKelasToDelete(null);
       } else {
         const error = await response.json();
         alert(error.error || 'Gagal menghapus kelas');
@@ -763,46 +791,103 @@ export default function AdminKelasPage() {
                             Tingkat {kelasItem.tingkat} • {kelasItem.tahunAjaran?.nama || 'Belum ada tahun ajaran'}
                           </p>
                         </div>
-                        <div style={{
-                          display: 'flex',
-                          gap: '4px',
-                        }}>
+                        {/* Three-dot menu */}
+                        <div style={{ position: 'relative' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEditKelas(kelasItem);
+                              setOpenMenuId(openMenuId === kelasItem.id ? null : kelasItem.id);
                             }}
                             style={{
                               padding: '8px',
                               borderRadius: '10px',
                               border: 'none',
-                              background: `${colors.emerald[500]}15`,
-                              color: colors.emerald[600],
+                              background: openMenuId === kelasItem.id ? colors.gray[100] : 'transparent',
+                              color: colors.gray[600],
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
+                              transition: 'all 0.2s ease',
                             }}
-                            className="action-btn-edit"
+                            title="Opsi"
                           >
-                            <Edit size={16} />
+                            <MoreVertical size={20} />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteKelas(kelasItem.id);
-                            }}
-                            style={{
-                              padding: '8px',
-                              borderRadius: '10px',
-                              border: 'none',
-                              background: '#FEE2E2',
-                              color: '#DC2626',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                            }}
-                            className="action-btn-delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+
+                          {/* Dropdown Menu */}
+                          {openMenuId === kelasItem.id && (
+                            <div
+                              ref={menuRef}
+                              style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                marginTop: '4px',
+                                background: colors.white,
+                                borderRadius: '12px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                padding: '8px',
+                                minWidth: '160px',
+                                zIndex: 50,
+                                animation: 'fadeSlideIn 0.2s ease-out',
+                              }}
+                            >
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditKelas(kelasItem);
+                                  setOpenMenuId(null);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  padding: '10px 12px',
+                                  border: 'none',
+                                  background: 'transparent',
+                                  borderRadius: '8px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  textAlign: 'left',
+                                  fontSize: '14px',
+                                  fontWeight: 500,
+                                  color: colors.text.primary,
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = colors.emerald[50]}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <Edit size={16} color={colors.emerald[600]} />
+                                <span>Edit Kelas</span>
+                              </button>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteKelas(kelasItem);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  padding: '10px 12px',
+                                  border: 'none',
+                                  background: 'transparent',
+                                  borderRadius: '8px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  textAlign: 'left',
+                                  fontSize: '14px',
+                                  fontWeight: 500,
+                                  color: colors.text.primary,
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#FEE2E2'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <Trash2 size={16} color="#DC2626" />
+                                <span>Hapus Kelas</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1594,6 +1679,133 @@ export default function AdminKelasPage() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && kelasToDelete && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 60,
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: colors.white,
+            borderRadius: '24px',
+            padding: '32px',
+            maxWidth: '480px',
+            width: '100%',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: `2px solid ${colors.amber[100]}`,
+            animation: 'modalSlideIn 0.3s ease-out',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '20px',
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: '#FEE2E2',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Trash2 size={28} color="#DC2626" />
+              </div>
+            </div>
+
+            <h2 style={{
+              fontSize: '22px',
+              fontWeight: 700,
+              color: colors.text.primary,
+              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              textAlign: 'center',
+              marginBottom: '12px',
+            }}>
+              Hapus Kelas?
+            </h2>
+
+            <p style={{
+              fontSize: '14px',
+              color: colors.text.secondary,
+              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              textAlign: 'center',
+              lineHeight: '1.6',
+              marginBottom: '8px',
+            }}>
+              Apakah Anda yakin ingin menghapus kelas <strong>{kelasToDelete.nama}</strong>?
+            </p>
+
+            <p style={{
+              fontSize: '13px',
+              color: colors.text.tertiary,
+              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              textAlign: 'center',
+              lineHeight: '1.6',
+              marginBottom: '24px',
+            }}>
+              Data siswa tidak akan terhapus.
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center',
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setKelasToDelete(null);
+                }}
+                style={{
+                  padding: '12px 28px',
+                  border: `2px solid ${colors.gray[300]}`,
+                  borderRadius: '12px',
+                  background: colors.white,
+                  color: colors.text.secondary,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                className="cancel-btn"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteKelas}
+                style={{
+                  padding: '12px 28px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  background: '#DC2626',
+                  color: colors.white,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.2)',
+                }}
+                className="delete-confirm-btn"
+              >
+                Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
@@ -1628,6 +1840,17 @@ export default function AdminKelasPage() {
           to {
             opacity: 1;
             transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
 
@@ -1694,6 +1917,12 @@ export default function AdminKelasPage() {
         .submit-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(26, 147, 111, 0.3) !important;
+        }
+
+        .delete-confirm-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3) !important;
+          background: #B91C1C !important;
         }
 
         /* Responsive */
