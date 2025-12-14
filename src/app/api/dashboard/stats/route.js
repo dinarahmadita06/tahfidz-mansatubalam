@@ -34,7 +34,7 @@ export async function GET(request) {
         totalHafalan: true
       }
     });
-    const totalJuz = hafalanData._sum.totalHafalan || 0;
+    const totalJuz = hafalanData._sum?.totalHafalan || 0;
 
     console.log('DASHBOARD STATS - Total Juz:', { totalJuz });
 
@@ -44,7 +44,7 @@ export async function GET(request) {
         nilai: true
       }
     });
-    const rataRataNilai = nilaiData._avg.nilai
+    const rataRataNilai = nilaiData._avg?.nilai
       ? Math.round(nilaiData._avg.nilai * 10) / 10
       : 0;
 
