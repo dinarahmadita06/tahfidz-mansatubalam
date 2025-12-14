@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { generateSiswaEmail } from '@/lib/siswaUtils';
 
 // PUT - Update siswa
 export async function PUT(request, { params }) {
@@ -17,7 +18,6 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const {
       name,
-      email,
       password,
       nisn,
       nis,
@@ -61,13 +61,22 @@ export async function PUT(request, { params }) {
       }
     }
 
-    // Check for duplicate email (excluding current user)
-    if (email && email !== siswa.user.email) {
+    // Auto-regenerate email if name or NIS changed
+    let newEmail = siswa.user.email;
+    const nameChanged = name && name !== siswa.user.name;
+    const nisChanged = nis && nis !== siswa.nis;
+
+    if (nameChanged || nisChanged) {
+      const finalName = name || siswa.user.name;
+      const finalNis = nis || siswa.nis;
+      newEmail = generateSiswaEmail(finalName, finalNis);
+
+      // Check for duplicate email (excluding current user)
       const existingEmail = await prisma.user.findFirst({
-        where: { email, id: { not: siswa.userId } }
+        where: { email: newEmail, id: { not: siswa.userId } }
       });
       if (existingEmail) {
-        return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
+        return NextResponse.json({ error: 'Email sudah terdaftar (kombinasi Nama dan NIS sudah digunakan)' }, { status: 400 });
       }
     }
 
@@ -95,7 +104,8 @@ export async function PUT(request, { params }) {
     const userUpdateData = {};
 
     if (name !== undefined) userUpdateData.name = name;
-    if (email !== undefined) userUpdateData.email = email;
+    // Always update email if name or NIS changed
+    if (newEmail !== siswa.user.email) userUpdateData.email = newEmail;
     if (isActive !== undefined) userUpdateData.isActive = isActive;
 
     // Update password if provided

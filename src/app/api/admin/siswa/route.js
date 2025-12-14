@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
+import { generateSiswaEmail } from '@/lib/siswaUtils';
 
 // GET - List all siswa (Admin only)
 export async function GET(request) {
@@ -134,7 +135,6 @@ export async function POST(request) {
     const body = await request.json();
     const {
       name,
-      email,
       password,
       nisn,
       nis,
@@ -146,14 +146,17 @@ export async function POST(request) {
     } = body;
 
     // Validate required fields
-    if (!name || !email || !password || !nisn || !nis || !kelasId || !jenisKelamin) {
+    if (!name || !password || !nis || !kelasId || !jenisKelamin) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
+
+    // Auto-generate email based on name and NIS
+    const email = generateSiswaEmail(name, nis);
 
     // Check if email, nisn, or nis already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
+      return NextResponse.json({ error: 'Email sudah terdaftar (NIS atau Nama mungkin duplikat)' }, { status: 400 });
     }
 
     const existingNisn = await prisma.siswa.findUnique({ where: { nisn } });
