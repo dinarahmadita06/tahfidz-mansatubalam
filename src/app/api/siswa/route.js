@@ -75,6 +75,15 @@ export async function GET(request) {
             nama: true,
           },
         },
+        hafalan: {
+          select: {
+            id: true,
+            juz: true,
+            surah: true,
+            ayatMulai: true,
+            ayatSelesai: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
