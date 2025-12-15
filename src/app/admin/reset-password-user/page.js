@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { Key, Search, User, Mail, Shield, AlertCircle } from 'lucide-react';
+import { Key, Search, User, Mail, Shield, AlertCircle, CheckCircle, Lock } from 'lucide-react';
 
 export default function ResetPasswordUserPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,83 +77,63 @@ export default function ResetPasswordUserPage() {
 
   const getRoleBadgeColor = (role) => {
     const colors = {
-      ADMIN: 'bg-purple-100 text-purple-800 border-purple-200',
-      GURU: 'bg-blue-100 text-blue-800 border-blue-200',
-      SISWA: 'bg-green-100 text-green-800 border-green-200',
-      ORANG_TUA: 'bg-amber-100 text-amber-800 border-amber-200',
+      ADMIN: 'bg-purple-100 text-purple-700 border-purple-200',
+      GURU: 'bg-blue-100 text-blue-700 border-blue-200',
+      SISWA: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+      ORANG_TUA: 'bg-amber-100 text-amber-700 border-amber-200',
     };
-    return colors[role] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colors[role] || 'bg-gray-100 text-gray-700 border-gray-200';
   };
 
   return (
     <AdminLayout>
-      {/* Background Pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.015]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0 L61.8 38.2 100 38.2 69.1 61.8 80.9 100 50 76.4 19.1 100 30.9 61.8 0 38.2 38.2 38.2 Z' fill='%23059669' fill-opacity='1'/%3E%3C/svg%3E")`,
-        backgroundSize: '100px 100px'
-      }}></div>
+      <div className="min-h-screen py-8 px-4">
+        {/* Container utama dengan max-width compact & centered */}
+        <div className="max-w-[480px] mx-auto space-y-6">
 
-      <div className="relative space-y-6 pb-8">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-md p-6 border border-sage-100">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-md">
-              <Key className="w-6 h-6 text-white" strokeWidth={2.5} />
+          {/* Header Section - Elegant */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg mb-4">
+              <Key className="w-8 h-8 text-white" strokeWidth={2.5} />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-sage-800 to-emerald-700 bg-clip-text text-transparent">
-                Reset Password User
-              </h1>
-              <p className="text-sage-600 mt-1">
-                Reset password untuk Guru, Siswa, dan Orang Tua
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+              Reset Password User
+            </h1>
+            <p className="text-sm text-gray-600">
+              Atur ulang password untuk akun pengguna melalui kontrol admin
+            </p>
           </div>
-        </div>
 
-        {/* Alert Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm text-blue-800">
-                <strong>Info:</strong> Gunakan fitur ini untuk mereset password user yang lupa password mereka.
-                Password baru akan langsung diterapkan dan user bisa login dengan password baru tersebut.
-              </p>
+          {/* Success Alert - Smooth with left accent */}
+          {success && (
+            <div
+              className="bg-emerald-50 border-l-4 border-emerald-500 rounded-xl p-4 flex items-start gap-3 animate-[slideIn_0.3s_ease-out]"
+              style={{ animation: 'slideIn 0.3s ease-out' }}
+            >
+              <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-emerald-800 font-medium">{success}</p>
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Success Message */}
-        {success && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <p className="text-sm text-green-800">{success}</p>
-            </div>
-          </div>
-        )}
+          {/* Search Card - Modern & Clean */}
+          <div className="bg-white rounded-2xl p-7 shadow-[0_4px_14px_rgba(0,0,0,0.06)] border border-gray-100">
+            <h2 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+              <Search className="w-5 h-5 text-emerald-600" />
+              Cari User
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">Cari pengguna berdasarkan email, NIS, NIP, atau nomor telepon</p>
 
-        {/* Search Form */}
-        <div className="bg-white rounded-2xl shadow-md p-6 border border-sage-100">
-          <h2 className="text-xl font-bold text-sage-800 mb-4 flex items-center gap-2">
-            <Search className="w-5 h-5" />
-            Cari User
-          </h2>
-
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Search Type */}
+            <form onSubmit={handleSearch} className="space-y-4">
+              {/* Search Type Select */}
               <div>
-                <label className="block text-sm font-medium text-sage-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-500" />
                   Cari Berdasarkan
                 </label>
                 <select
                   value={searchType}
                   onChange={(e) => setSearchType(e.target.value)}
-                  className="w-full px-4 py-3 border border-sage-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none"
                 >
                   <option value="email">Email</option>
                   <option value="nis">NIS (Siswa)</option>
@@ -162,9 +142,10 @@ export default function ResetPasswordUserPage() {
                 </select>
               </div>
 
-              {/* Search Query */}
+              {/* Search Query Input */}
               <div>
-                <label className="block text-sm font-medium text-sage-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-500" />
                   Masukkan Data
                 </label>
                 <input
@@ -172,124 +153,160 @@ export default function ResetPasswordUserPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-sage-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent"
-                  placeholder={`Contoh: ${searchType === 'email' ? 'guru@tahfidz.sch.id' : searchType === 'nis' ? '123456' : searchType === 'nip' ? '987654' : '081234567890'}`}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none"
+                  placeholder={`Contoh: ${searchType === 'email' ? 'guru@tahfidz.sch.id' : searchType === 'nis' ? '2024001' : searchType === 'nip' ? '987654' : '081234567890'}`}
                 />
               </div>
-            </div>
 
-            {error && !searchResult && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Mencari...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Search className="w-5 h-5" />
-                  Cari User
-                </div>
-              )}
-            </button>
-          </form>
-        </div>
-
-        {/* Search Result & Reset Password Form */}
-        {searchResult && (
-          <div className="bg-white rounded-2xl shadow-md p-6 border border-sage-100">
-            <h2 className="text-xl font-bold text-sage-800 mb-4 flex items-center gap-2">
-              <User className="w-5 h-5" />
-              Data User
-            </h2>
-
-            {/* User Info Card */}
-            <div className="bg-gradient-to-br from-sage-50 to-emerald-50 rounded-xl p-6 mb-6 border border-sage-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-sage-600 mb-1">Nama Lengkap</p>
-                  <p className="font-semibold text-sage-900">{searchResult.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-sage-600 mb-1">Email</p>
-                  <p className="font-semibold text-sage-900">{searchResult.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-sage-600 mb-1">Role</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getRoleBadgeColor(searchResult.role)}`}>
-                    {searchResult.role}
-                  </span>
-                </div>
-                {searchResult.guru && (
-                  <div>
-                    <p className="text-sm text-sage-600 mb-1">NIP</p>
-                    <p className="font-semibold text-sage-900">{searchResult.guru.nip}</p>
-                  </div>
-                )}
-                {searchResult.siswa && (
-                  <div>
-                    <p className="text-sm text-sage-600 mb-1">NIS</p>
-                    <p className="font-semibold text-sage-900">{searchResult.siswa.nis}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Reset Password Form */}
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-sage-700 mb-2">
-                  Password Baru
-                </label>
-                <input
-                  type="text"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-sage-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent"
-                  placeholder="Minimal 8 karakter"
-                />
-                <p className="text-xs text-sage-500 mt-1">
-                  Password ini akan langsung aktif dan user bisa login dengan password baru
-                </p>
-              </div>
-
-              {error && searchResult && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {error}
+              {/* Error Alert - Smooth with left accent */}
+              {error && !searchResult && (
+                <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-800 font-medium">{error}</p>
                 </div>
               )}
 
+              {/* Submit Button - Premium Gradient */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-[0_4px_16px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Mereset Password...
+                    Mencari...
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    Reset Password
+                    <Search className="w-5 h-5" />
+                    Cari User
                   </div>
                 )}
               </button>
             </form>
           </div>
-        )}
+
+          {/* User Result & Reset Password Card */}
+          {searchResult && (
+            <div className="bg-white rounded-2xl p-7 shadow-[0_4px_14px_rgba(0,0,0,0.06)] border border-gray-100 animate-[fadeIn_0.4s_ease-out]">
+              <h2 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                <User className="w-5 h-5 text-emerald-600" />
+                Data User Ditemukan
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">Informasi pengguna yang akan direset passwordnya</p>
+
+              {/* User Info Card - Soft Background */}
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5 mb-6 border border-emerald-100">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600 mb-1">Nama Lengkap</p>
+                      <p className="font-semibold text-gray-900">{searchResult.name}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(searchResult.role)}`}>
+                      {searchResult.role}
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Email</p>
+                    <p className="font-medium text-gray-800 text-sm">{searchResult.email}</p>
+                  </div>
+
+                  {searchResult.guru && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">NIP</p>
+                      <p className="font-medium text-gray-800 text-sm">{searchResult.guru.nip}</p>
+                    </div>
+                  )}
+
+                  {searchResult.siswa && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">NIS</p>
+                      <p className="font-medium text-gray-800 text-sm">{searchResult.siswa.nis}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reset Password Form */}
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-gray-500" />
+                    Password Baru
+                  </label>
+                  <input
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none"
+                    placeholder="Minimal 8 karakter"
+                  />
+                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    Password akan langsung aktif setelah direset
+                  </p>
+                </div>
+
+                {/* Error Alert - Smooth with left accent */}
+                {error && searchResult && (
+                  <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-800 font-medium">{error}</p>
+                  </div>
+                )}
+
+                {/* Reset Button - Premium Gradient */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-purple-700 hover:shadow-[0_4px_16px_rgba(168,85,247,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Mereset Password...
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Reset Password Sekarang
+                    </div>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Custom Animations */}
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }
