@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { Key, Search, User, Mail, Shield, AlertCircle, CheckCircle, Lock } from 'lucide-react';
+import { Key, Search, User, Mail, Shield, AlertCircle, CheckCircle, Lock, Info, Clock, UserCheck } from 'lucide-react';
 
 export default function ResetPasswordUserPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,77 +85,119 @@ export default function ResetPasswordUserPage() {
     return colors[role] || 'bg-gray-100 text-gray-700 border-gray-200';
   };
 
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   return (
     <AdminLayout>
-      <div className="min-h-screen py-8 px-4">
-        {/* Container utama dengan max-width compact & centered */}
-        <div className="max-w-[480px] mx-auto space-y-6">
+      {/* Decorative Background Pattern */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.02]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10 L35 25 45 25 37 32 40 45 30 38 20 45 23 32 15 25 25 25 Z' fill='%2310B981' /%3E%3C/svg%3E")`,
+        backgroundSize: '60px 60px'
+      }}></div>
+
+      <div className="relative min-h-screen py-8 px-4">
+        {/* Container utama dengan max-width lebih besar & centered */}
+        <div className="max-w-[750px] mx-auto space-y-6">
 
           {/* Header Section - Elegant */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg mb-4">
-              <Key className="w-8 h-8 text-white" strokeWidth={2.5} />
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-xl mb-5">
+              <Key className="w-10 h-10 text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            <h1 className="text-3xl font-bold text-gray-800 mb-3">
               Reset Password User
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-base text-gray-600 max-w-xl mx-auto">
               Atur ulang password untuk akun pengguna melalui kontrol admin
             </p>
+          </div>
+
+          {/* Info Card - Tips & Panduan */}
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+                <Info className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-blue-900 mb-2 text-lg">Panduan Penggunaan</h3>
+                <p className="text-sm text-blue-800 leading-relaxed mb-3">
+                  Gunakan fitur ini untuk mereset password user yang lupa passwordnya. Admin dapat mencari berdasarkan <strong>email, NIS, NIP, atau nomor telepon</strong>.
+                </p>
+                <div className="flex items-start gap-2 text-sm text-blue-700">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Password baru akan langsung aktif setelah direset</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Success Alert - Smooth with left accent */}
           {success && (
             <div
-              className="bg-emerald-50 border-l-4 border-emerald-500 rounded-xl p-4 flex items-start gap-3 animate-[slideIn_0.3s_ease-out]"
+              className="bg-emerald-50 border-l-4 border-emerald-500 rounded-xl p-5 flex items-start gap-3 shadow-sm animate-[slideIn_0.3s_ease-out]"
               style={{ animation: 'slideIn 0.3s ease-out' }}
             >
-              <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-emerald-800 font-medium">{success}</p>
+              <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-emerald-900 mb-1">Berhasil!</p>
+                <p className="text-sm text-emerald-800">{success}</p>
+              </div>
             </div>
           )}
 
           {/* Search Card - Modern & Clean */}
-          <div className="bg-white rounded-2xl p-7 shadow-[0_4px_14px_rgba(0,0,0,0.06)] border border-gray-100">
-            <h2 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-              <Search className="w-5 h-5 text-emerald-600" />
-              Cari User
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">Cari pengguna berdasarkan email, NIS, NIP, atau nomor telepon</p>
-
-            <form onSubmit={handleSearch} className="space-y-4">
-              {/* Search Type Select */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-500" />
-                  Cari Berdasarkan
-                </label>
-                <select
-                  value={searchType}
-                  onChange={(e) => setSearchType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none"
-                >
-                  <option value="email">Email</option>
-                  <option value="nis">NIS (Siswa)</option>
-                  <option value="nip">NIP (Guru)</option>
-                  <option value="noTelepon">No. Telepon</option>
-                </select>
+          <div className="bg-white rounded-2xl p-8 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <Search className="w-6 h-6 text-emerald-600" />
               </div>
-
-              {/* Search Query Input */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-500" />
-                  Masukkan Data
-                </label>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none"
-                  placeholder={`Contoh: ${searchType === 'email' ? 'guru@tahfidz.sch.id' : searchType === 'nis' ? '2024001' : searchType === 'nip' ? '987654' : '081234567890'}`}
-                />
+                <h2 className="text-xl font-bold text-gray-800">Cari User</h2>
+                <p className="text-sm text-gray-500">Temukan pengguna yang akan direset passwordnya</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSearch} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Search Type Select */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <User className="w-4 h-4 text-gray-500" />
+                    Cari Berdasarkan
+                  </label>
+                  <select
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value)}
+                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none font-medium"
+                  >
+                    <option value="email">📧 Email</option>
+                    <option value="nis">🎓 NIS (Siswa)</option>
+                    <option value="nip">👨‍🏫 NIP (Guru)</option>
+                    <option value="noTelepon">📱 No. Telepon</option>
+                  </select>
+                </div>
+
+                {/* Search Query Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-500" />
+                    Masukkan Data
+                  </label>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    required
+                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none"
+                    placeholder={`Contoh: ${searchType === 'email' ? 'guru@tahfidz.sch.id' : searchType === 'nis' ? '2024001' : searchType === 'nip' ? '987654' : '081234567890'}`}
+                  />
+                </div>
               </div>
 
               {/* Error Alert - Smooth with left accent */}
@@ -170,17 +212,17 @@ export default function ResetPasswordUserPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-[0_4px_16px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Mencari...
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Mencari...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <Search className="w-5 h-5" />
-                    Cari User
+                    <span>Cari User</span>
                   </div>
                 )}
               </button>
@@ -189,49 +231,80 @@ export default function ResetPasswordUserPage() {
 
           {/* User Result & Reset Password Card */}
           {searchResult && (
-            <div className="bg-white rounded-2xl p-7 shadow-[0_4px_14px_rgba(0,0,0,0.06)] border border-gray-100 animate-[fadeIn_0.4s_ease-out]">
-              <h2 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-                <User className="w-5 h-5 text-emerald-600" />
-                Data User Ditemukan
-              </h2>
-              <p className="text-sm text-gray-500 mb-6">Informasi pengguna yang akan direset passwordnya</p>
+            <div className="bg-white rounded-2xl p-8 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 animate-[fadeIn_0.4s_ease-out]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                  <UserCheck className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">Data User Ditemukan</h2>
+                  <p className="text-sm text-gray-500">Informasi pengguna yang akan direset passwordnya</p>
+                </div>
+              </div>
 
-              {/* User Info Card - Soft Background */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5 mb-6 border border-emerald-100">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-600 mb-1">Nama Lengkap</p>
-                      <p className="font-semibold text-gray-900">{searchResult.name}</p>
+              {/* User Info Card - Detailed */}
+              <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 rounded-2xl p-6 mb-6 border border-emerald-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Nama & Role */}
+                  <div className="md:col-span-2">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">Nama Lengkap</p>
+                        <p className="text-xl font-bold text-gray-900">{searchResult.name}</p>
+                      </div>
+                      <span className={`px-4 py-2 rounded-xl text-sm font-bold border shadow-sm ${getRoleBadgeColor(searchResult.role)}`}>
+                        {searchResult.role}
+                      </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(searchResult.role)}`}>
-                      {searchResult.role}
-                    </span>
                   </div>
 
+                  {/* Email */}
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">Email</p>
-                    <p className="font-medium text-gray-800 text-sm">{searchResult.email}</p>
+                    <p className="text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">Email</p>
+                    <p className="font-semibold text-gray-800 flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-500" />
+                      {searchResult.email}
+                    </p>
                   </div>
 
+                  {/* NIP/NIS */}
                   {searchResult.guru && (
                     <div>
-                      <p className="text-xs text-gray-600 mb-1">NIP</p>
-                      <p className="font-medium text-gray-800 text-sm">{searchResult.guru.nip}</p>
+                      <p className="text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">NIP</p>
+                      <p className="font-semibold text-gray-800">{searchResult.guru.nip || '-'}</p>
                     </div>
                   )}
 
                   {searchResult.siswa && (
                     <div>
-                      <p className="text-xs text-gray-600 mb-1">NIS</p>
-                      <p className="font-medium text-gray-800 text-sm">{searchResult.siswa.nis}</p>
+                      <p className="text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">NIS</p>
+                      <p className="font-semibold text-gray-800">{searchResult.siswa.nis || '-'}</p>
                     </div>
                   )}
+
+                  {/* Tanggal Bergabung */}
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">Tanggal Bergabung</p>
+                    <p className="font-medium text-gray-700 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      {formatDate(searchResult.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="px-4 bg-white text-sm font-medium text-gray-500">Form Reset Password</span>
                 </div>
               </div>
 
               {/* Reset Password Form */}
-              <form onSubmit={handleResetPassword} className="space-y-4">
+              <form onSubmit={handleResetPassword} className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                     <Lock className="w-4 h-4 text-gray-500" />
@@ -242,13 +315,13 @@ export default function ResetPasswordUserPage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 transition-all duration-200 outline-none"
+                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-purple-500 focus:ring-3 focus:ring-purple-100 transition-all duration-200 outline-none"
                     placeholder="Minimal 8 karakter"
                   />
-                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    Password akan langsung aktif setelah direset
-                  </p>
+                  <div className="mt-2 flex items-start gap-2 text-xs text-gray-500">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>Password akan langsung aktif dan user dapat login dengan password baru ini</p>
+                  </div>
                 </div>
 
                 {/* Error Alert - Smooth with left accent */}
@@ -263,17 +336,17 @@ export default function ResetPasswordUserPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-purple-700 hover:shadow-[0_4px_16px_rgba(168,85,247,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-purple-600 hover:to-purple-700 hover:shadow-[0_6px_20px_rgba(168,85,247,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Mereset Password...
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Mereset Password...</span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <Shield className="w-5 h-5" />
-                      Reset Password Sekarang
+                      <span>Reset Password Sekarang</span>
                     </div>
                   )}
                 </button>
