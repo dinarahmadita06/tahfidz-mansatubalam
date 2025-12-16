@@ -110,7 +110,7 @@ export default function ResetPasswordUserPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-xl mb-5">
               <Key className="w-10 h-10 text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-3">
+            <h1 className="text-3xl font-bold text-gray-800 mb-3" style={{ fontSize: '24px' }}>
               Reset Password User
             </h1>
             <p className="text-base text-gray-600 max-w-xl mx-auto">
