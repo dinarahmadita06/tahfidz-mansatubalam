@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import ImportExportToolbar from '@/components/ImportExportToolbar';
 
 // Islamic Modern Color Palette (sama dengan Dashboard)
 const colors = {
@@ -137,6 +136,7 @@ export default function AdminGuruPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, inactive
   const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingGuru, setEditingGuru] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -336,19 +336,142 @@ export default function AdminGuruPage() {
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <ImportExportToolbar
-              kategori="guru"
-              data={filteredGuru}
-              onImportSuccess={fetchGuru}
-              showAddButton
-              onAddClick={() => {
-                resetForm();
-                setShowModal(true);
-              }}
-              addButtonLabel="Tambah Guru"
-              addButtonIcon={<UserPlus size={18} />}
-            />
+            {/* Action Buttons - Two Row Layout */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              {/* Row 1: Tambah Guru Button - Full Width */}
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowModal(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  padding: '10px 16px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                  transition: 'all 0.3s ease',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                  width: '100%'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.2)';
+                }}
+              >
+                <UserPlus size={18} />
+                <span>Tambah Guru</span>
+              </button>
+
+              {/* Row 2: Import & Export Buttons */}
+              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                {/* Import Button */}
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 14px',
+                    background: colors.white,
+                    color: colors.emerald[600],
+                    border: `2px solid ${colors.emerald[200]}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    flex: 1
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = colors.emerald[50];
+                    e.currentTarget.style.borderColor = colors.emerald[300];
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = colors.white;
+                    e.currentTarget.style.borderColor = colors.emerald[200];
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <Upload size={16} />
+                  <span>Import</span>
+                </button>
+
+                {/* Export Button */}
+                <button
+                  onClick={() => {
+                    // Export implementation
+                    const csvContent = [
+                      ['Nama Lengkap', 'Email', 'NIP', 'Status', 'Tanggal Bergabung'],
+                      ...filteredGuru.map(g => [
+                        g.user.name,
+                        g.user.email,
+                        g.nip || '-',
+                        'Aktif',
+                        new Date(g.user.createdAt).toLocaleDateString('id-ID')
+                      ])
+                    ].map(row => row.join(',')).join('\n');
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `data-guru-${new Date().toISOString().split('T')[0]}.csv`;
+                    link.click();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 14px',
+                    background: colors.white,
+                    color: colors.amber[600],
+                    border: `2px solid ${colors.amber[200]}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    flex: 1
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = colors.amber[50];
+                    e.currentTarget.style.borderColor = colors.amber[300];
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = colors.white;
+                    e.currentTarget.style.borderColor = colors.amber[200];
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <Download size={16} />
+                  <span>Export</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
