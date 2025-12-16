@@ -529,12 +529,13 @@ export default function ProfileAdminPage() {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Nomor Telepon */}
+          {/* Baris 1: Nama Lengkap + Jabatan */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Nama Lengkap */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <Phone size={16} className="text-amber-600" strokeWidth={2} />
-                Nomor Telepon
+                <User size={16} className="text-amber-600" strokeWidth={2} />
+                Nama Lengkap
               </label>
               <div
                 className="px-4 py-3 rounded-xl border shadow-sm"
@@ -543,7 +544,7 @@ export default function ProfileAdminPage() {
                   borderColor: '#FCD34D'
                 }}
               >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.phoneNumber}</p>
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.nama}</p>
               </div>
             </div>
 
@@ -563,12 +564,15 @@ export default function ProfileAdminPage() {
                 <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.jabatan}</p>
               </div>
             </div>
+          </div>
 
-            {/* NIP/ID Admin */}
+          {/* Baris 2: NIP + Nomor Telepon */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* NIP */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
                 <IdCard size={16} className="text-amber-600" strokeWidth={2} />
-                NIP / ID Admin
+                NIP <span className="text-gray-500 font-normal">(Opsional)</span>
               </label>
               <div
                 className="px-4 py-3 rounded-xl border shadow-sm"
@@ -577,15 +581,15 @@ export default function ProfileAdminPage() {
                   borderColor: '#FCD34D'
                 }}
               >
-                <p className="font-semibold font-mono" style={{ color: '#374151' }}>{profileData?.nip}</p>
+                <p className="font-semibold font-mono" style={{ color: '#374151' }}>{profileData?.nip || '-'}</p>
               </div>
             </div>
 
-            {/* Alamat Kantor */}
+            {/* Nomor Telepon */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <MapPin size={16} className="text-amber-600" strokeWidth={2} />
-                Alamat Kantor
+                <Phone size={16} className="text-amber-600" strokeWidth={2} />
+                Nomor Telepon
               </label>
               <div
                 className="px-4 py-3 rounded-xl border shadow-sm"
@@ -594,13 +598,30 @@ export default function ProfileAdminPage() {
                   borderColor: '#FCD34D'
                 }}
               >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat}</p>
+                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.phoneNumber}</p>
               </div>
+            </div>
+          </div>
+
+          {/* Baris 3: Alamat Kantor */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
+              <MapPin size={16} className="text-amber-600" strokeWidth={2} />
+              Alamat Kantor
+            </label>
+            <div
+              className="px-4 py-3 rounded-xl border shadow-sm"
+              style={{
+                background: 'rgba(255, 255, 255, 0.7)',
+                borderColor: '#FCD34D'
+              }}
+            >
+              <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat}</p>
             </div>
           </div>
         </div>
 
-        {/* Digital Signature Section */}
+        {/* Digital Signature Section - Koordinator Tahfidz Only */}
         <div
           className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
           style={{
@@ -618,94 +639,19 @@ export default function ProfileAdminPage() {
               <Edit size={20} className="text-white" strokeWidth={2} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#1E40AF' }}>
-              Tanda Tangan Digital
+              Tanda Tangan Digital Koordinator Tahfidz
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Guru Tahfidz Signature */}
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#1E40AF' }}>
-                <FileText size={16} className="text-blue-600" strokeWidth={2} />
-                Tanda Tangan Guru Tahfidz
-              </label>
-              {signaturePreviews.guru ? (
-                <div className="relative">
-                  <div
-                    className="px-4 py-4 rounded-xl border-2"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.9)',
-                      borderColor: '#10B981',
-                      borderStyle: 'solid'
-                    }}
-                  >
-                    <img
-                      src={signaturePreviews.guru}
-                      alt="Guru Signature"
-                      className="h-20 object-contain"
-                    />
-                    <p className="text-xs text-gray-500 mt-2">✅ Tanda tangan berhasil disimpan</p>
-                  </div>
-                  <button
-                    onClick={() => document.getElementById('guru-file-input').click()}
-                    className="mt-2 w-full px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200"
-                    style={{
-                      background: '#DBEAFE',
-                      color: '#1E40AF'
-                    }}
-                  >
-                    Ganti Tanda Tangan
-                  </button>
-                  <input
-                    id="guru-file-input"
-                    type="file"
-                    accept=".png"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
-                        handleSignatureUpload('guru', file);
-                      }
-                    }}
-                    className="hidden"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="px-4 py-4 rounded-xl border-2 border-dashed"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    borderColor: '#93C5FD'
-                  }}
-                >
-                  <input
-                    type="file"
-                    accept=".png"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
-                        handleSignatureUpload('guru', file);
-                      }
-                    }}
-                    className="w-full cursor-pointer"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
-                  <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload, pilih file lalu file akan otomatis tersimpan</p>
-                </div>
-              )}
-            </div>
-
+          <div className="max-w-md">
             {/* Koordinator Tahfidz Signature */}
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#1E40AF' }}>
-                <FileText size={16} className="text-blue-600" strokeWidth={2} />
-                Tanda Tangan Koordinator Tahfidz
-              </label>
+              <p className="text-sm text-gray-600">Upload tanda tangan digital Anda dalam format PNG (max 500 KB). Tanda tangan ini akan otomatis muncul di laporan kehadiran dan hafalan.</p>
+              
               {signaturePreviews.koordinator ? (
                 <div className="relative">
                   <div
-                    className="px-4 py-4 rounded-xl border-2"
+                    className="px-6 py-6 rounded-xl border-2 flex items-center justify-center min-h-32"
                     style={{
                       background: 'rgba(255, 255, 255, 0.9)',
                       borderColor: '#10B981',
@@ -715,13 +661,13 @@ export default function ProfileAdminPage() {
                     <img
                       src={signaturePreviews.koordinator}
                       alt="Koordinator Signature"
-                      className="h-20 object-contain"
+                      className="max-h-32 max-w-64 object-contain"
                     />
-                    <p className="text-xs text-gray-500 mt-2">✅ Tanda tangan berhasil disimpan</p>
                   </div>
+                  <p className="text-xs text-emerald-600 mt-3 font-semibold">✅ Tanda tangan berhasil disimpan</p>
                   <button
                     onClick={() => document.getElementById('koordinator-file-input').click()}
-                    className="mt-2 w-full px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200"
+                    className="mt-3 w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 hover:opacity-90"
                     style={{
                       background: '#DBEAFE',
                       color: '#1E40AF'
@@ -745,12 +691,13 @@ export default function ProfileAdminPage() {
                 </div>
               ) : (
                 <div
-                  className="px-4 py-4 rounded-xl border-2 border-dashed"
+                  className="px-6 py-8 rounded-xl border-2 border-dashed text-center"
                   style={{
                     background: 'rgba(255, 255, 255, 0.8)',
                     borderColor: '#93C5FD'
                   }}
                 >
+                  <FileText size={32} className="text-blue-400 mx-auto mb-3" strokeWidth={1.5} />
                   <input
                     type="file"
                     accept=".png"
@@ -761,10 +708,13 @@ export default function ProfileAdminPage() {
                         handleSignatureUpload('koordinator', file);
                       }
                     }}
-                    className="w-full cursor-pointer"
+                    className="hidden"
+                    id="koordinator-file-input-new"
                   />
-                  <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
-                  <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload, pilih file lalu file akan otomatis tersimpan</p>
+                  <label htmlFor="koordinator-file-input-new" className="cursor-pointer">
+                    <p className="text-sm font-semibold text-blue-600 mb-1">Klik untuk upload atau drag & drop</p>
+                    <p className="text-xs text-gray-500">Format: PNG | Max: 500 KB</p>
+                  </label>
                 </div>
               )}
             </div>
@@ -855,25 +805,41 @@ export default function ProfileAdminPage() {
                 {/* Nama Lengkap */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nama Lengkap
+                    Nama Lengkap *
                   </label>
                   <input
                     type="text"
+                    placeholder="Contoh: Ahmad Fauzi, S.Pd.I"
                     value={editFormData.nama || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, nama: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
-                {/* Email */}
+                {/* Jabatan */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    Jabatan *
                   </label>
                   <input
-                    type="email"
-                    value={editFormData.email || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    type="text"
+                    placeholder="Koordinator Tahfidz"
+                    value={editFormData.jabatan || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, jabatan: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* NIP */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    NIP <span className="text-gray-400">(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nomor Induk Pegawai"
+                    value={editFormData.nip || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, nip: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
@@ -885,34 +851,9 @@ export default function ProfileAdminPage() {
                   </label>
                   <input
                     type="tel"
+                    placeholder="0812-3456-7890"
                     value={editFormData.phoneNumber || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Jabatan */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jabatan
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.jabatan || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, jabatan: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* NIP */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    NIP / ID Admin
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.nip || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, nip: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
@@ -924,10 +865,25 @@ export default function ProfileAdminPage() {
                   </label>
                   <textarea
                     rows={3}
+                    placeholder="Jln. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame"
                     value={editFormData.alamat || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                   />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email (Read-only)
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email || ''}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
                 </div>
               </div>
 

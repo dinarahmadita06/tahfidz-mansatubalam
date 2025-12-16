@@ -172,24 +172,62 @@ export default function LaporanKehadiranPage() {
       doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 59);
       doc.text(`Kelas: ${reportData.kelasNama}`, 14, 64);
 
-      // Summary
+      // Summary Statistics - Horizontal Card Layout
       let yPos = 72;
-      doc.setFont('helvetica', 'bold');
-      doc.text('RINGKASAN STATISTIK:', 14, yPos);
-      doc.setFont('helvetica', 'normal');
-      yPos += 5;
-      doc.text(`Jumlah Siswa: ${reportData.summary.jumlahSiswa} orang`, 14, yPos);
-      yPos += 5;
-      doc.text(`Total Pertemuan: ${reportData.summary.totalPertemuan} kali`, 14, yPos);
-      yPos += 5;
-      doc.text(`Total Hadir: ${reportData.summary.totalHadir || 0} hari`, 14, yPos);
-      yPos += 5;
-      doc.text(`Total Izin: ${reportData.summary.totalIzin || 0} hari`, 14, yPos);
-      yPos += 5;
-      doc.text(`Total Sakit: ${reportData.summary.totalSakit || 0} hari`, 14, yPos);
-      yPos += 5;
-      doc.text(`Total Alpa: ${reportData.summary.totalAlpa || 0} hari`, 14, yPos);
-      yPos += 10;
+      const cardHeight = 20;
+      const cardWidth = 28;
+      const cardSpacingX = 3;
+      const cardStartY = yPos;
+      
+      // 6 Statistics cards: Jumlah Siswa, Total Pertemuan, Hadir, Izin, Sakit, Alpa
+      const stats = [
+        { label: 'Jumlah Siswa', value: reportData.summary.jumlahSiswa, unit: 'orang' },
+        { label: 'Total Pertemuan', value: reportData.summary.totalPertemuan, unit: 'kali' },
+        { label: 'Hadir', value: reportData.summary.totalHadir || 0, unit: 'hari' },
+        { label: 'Izin', value: reportData.summary.totalIzin || 0, unit: 'hari' },
+        { label: 'Sakit', value: reportData.summary.totalSakit || 0, unit: 'hari' },
+        { label: 'Alpa', value: reportData.summary.totalAlpa || 0, unit: 'hari' }
+      ];
+      
+      let xPos = 14;
+      stats.forEach((stat, idx) => {
+        // Check if need to wrap to next row
+        if (idx > 0 && idx % 3 === 0) {
+          yPos += cardHeight + 5;
+          xPos = 14;
+        }
+        
+        // Draw card background (light green)
+        doc.setFillColor(209, 250, 229); // Light emerald background
+        doc.rect(xPos, yPos, cardWidth, cardHeight, 'F');
+        
+        // Card border
+        doc.setDrawColor(16, 185, 129); // Emerald green
+        doc.setLineWidth(0.5);
+        doc.rect(xPos, yPos, cardWidth, cardHeight);
+        
+        // Label text
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 109);
+        doc.text(stat.label, xPos + 1.5, yPos + 4);
+        
+        // Value text (large)
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(6, 78, 59); // Dark green
+        doc.text(stat.value.toString(), xPos + 1.5, yPos + 11);
+        
+        // Unit text
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 126, 117);
+        doc.text(stat.unit, xPos + 1.5, yPos + 15);
+        
+        xPos += cardWidth + cardSpacingX;
+      });
+      
+      yPos += cardHeight + 10;
 
       // Table with raw numbers only
       const tableData = reportData.siswaData.map((s, idx) => [
@@ -232,12 +270,8 @@ export default function LaporanKehadiranPage() {
       signatureY += 12;
 
       // Left signature (Guru Tahfidz)
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
       doc.text('Mengetahui,', 14, signatureY);
-      
-      let guruSignatureHeight = 0;
-      let guruName = 'Guru Tahfidz';
+      doc.text('Guru Tahfidz', 14, signatureY + 20);
       
       // Try to load guru signature from API
       try {
@@ -245,39 +279,19 @@ export default function LaporanKehadiranPage() {
         if (guruRes.ok) {
           const guruData = await guruRes.json();
           if (guruData.signature && guruData.signature.data) {
-            // Display signature at better size (60mm width roughly = 50 points)
-            const sigWidth = 50;
-            const sigHeight = 25; // Proportional height
-            doc.addImage(guruData.signature.data, 'PNG', 14, signatureY + 8, sigWidth, sigHeight);
-            guruSignatureHeight = sigHeight;
+            doc.addImage(guruData.signature.data, 'PNG', 14, signatureY + 25, 40, 15);
           } else {
-            doc.setFont('helvetica', 'normal');
-            doc.text('_____________________', 14, signatureY + 15);
-            guruSignatureHeight = 8;
+            doc.text('_____________________', 14, signatureY + 25);
           }
         } else {
-          doc.setFont('helvetica', 'normal');
-          doc.text('_____________________', 14, signatureY + 15);
-          guruSignatureHeight = 8;
+          doc.text('_____________________', 14, signatureY + 25);
         }
       } catch (err) {
-        doc.setFont('helvetica', 'normal');
-        doc.text('_____________________', 14, signatureY + 15);
-        guruSignatureHeight = 8;
+        doc.text('_____________________', 14, signatureY + 25);
       }
-      
-      // Add guru name below signature
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text('( Guru Tahfidz )', 14, signatureY + 8 + guruSignatureHeight + 5);
 
       // Right signature (Koordinator Tahfidz)
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
       doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
-      
-      let koordinatorSignatureHeight = 0;
-      let koordinatorName = 'Koordinator Tahfidz';
       
       // Try to load koordinator signature from API
       try {
@@ -285,31 +299,16 @@ export default function LaporanKehadiranPage() {
         if (koordinatorRes.ok) {
           const koordinatorData = await koordinatorRes.json();
           if (koordinatorData.signature && koordinatorData.signature.data) {
-            // Display signature at better size (60mm width roughly = 50 points)
-            const sigWidth = 50;
-            const sigHeight = 25; // Proportional height
-            doc.addImage(koordinatorData.signature.data, 'PNG', pageWidth - 14 - sigWidth, signatureY + 8, sigWidth, sigHeight);
-            koordinatorSignatureHeight = sigHeight;
+            doc.addImage(koordinatorData.signature.data, 'PNG', pageWidth - 14 - 40, signatureY + 25, 40, 15);
           } else {
-            doc.setFont('helvetica', 'normal');
-            doc.text('_____________________', pageWidth - 14, signatureY + 15, { align: 'right' });
-            koordinatorSignatureHeight = 8;
+            doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
           }
         } else {
-          doc.setFont('helvetica', 'normal');
-          doc.text('_____________________', pageWidth - 14, signatureY + 15, { align: 'right' });
-          koordinatorSignatureHeight = 8;
+          doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
         }
       } catch (err) {
-        doc.setFont('helvetica', 'normal');
-        doc.text('_____________________', pageWidth - 14, signatureY + 15, { align: 'right' });
-        koordinatorSignatureHeight = 8;
+        doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
       }
-      
-      // Add koordinator name below signature
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text('( Koordinator Tahfidz )', pageWidth - 14, signatureY + 8 + koordinatorSignatureHeight + 5, { align: 'right' });
 
       doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
     } catch (error) {
