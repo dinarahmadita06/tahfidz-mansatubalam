@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 export async function POST(request) {
   try {
@@ -181,6 +182,9 @@ export async function POST(request) {
         guruPendampingCount: guruPendampingIds?.length || 0
       }
     });
+
+    // Invalidate guru cache karena kelas binaan berubah
+    invalidateCache('guru-list');
 
     return NextResponse.json(kelas);
   } catch (error) {
