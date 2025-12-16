@@ -352,7 +352,7 @@ export default function AdminSiswaPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexDirection: 'column', gap: '16px' }} className="header-container sm:flex-row sm:gap-0">
             <div>
               <h1 style={{
-                fontSize: '28px',
+                fontSize: '24px',
                 fontWeight: 700,
                 background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
                 WebkitBackgroundClip: 'text',
