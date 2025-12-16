@@ -273,49 +273,54 @@ export default function LaporanKehadiranPage() {
         signatureY = 20;
       }
 
-      // 2-COLUMN LAYOUT FOR SIGNATURE SECTION
-      // Structure:
-      // Col 1 (Left):  Mengetahui, | TTD Guru | (Guru Tahfidz)
-      // Col 2 (Right): Bandar Lampung, tanggal | Koordinator Tahfidz | TTD Admin | (Administrator)
+      // 2-COLUMN LAYOUT FOR SIGNATURE SECTION - FULLY ALIGNED
+      // Row 1: Mengetahui, | Bandar Lampung, date
+      // Row 2: Guru Tahfidz | Koordinator Tahfidz
+      // Row 3: [TTD Guru] | [TTD Admin] (SAME Y POSITION)
+      // Row 4: (Guru Tahfidz) | (Administrator) (SAME Y POSITION)
       
       const colWidth = (pageWidth - 28) / 2; // Two equal columns
       const leftColX = 14;                    // Left column at 14
       const rightColX = 14 + colWidth + 4;  // Right column starts after left col
-      const colCenterX1 = leftColX + colWidth / 2;   // Left column center for alignment
-      const colCenterX2 = rightColX + colWidth / 2;  // Right column center for alignment
+      const colCenterX1 = leftColX + colWidth / 2;   // Left column center
+      const colCenterX2 = rightColX + colWidth / 2;  // Right column center
+      const sigImageMaxWidth = 38;
+      const sigImageMaxHeight = 24;
 
-      // ROW 1: Mengetahui, (left) | Bandar Lampung, date (right)
+      let currentY = signatureY;
       const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      // ROW 1: Mengetahui, | Bandar Lampung, date
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text('Mengetahui,', colCenterX1, signatureY, { align: 'center' });
-      doc.text(`Bandar Lampung, ${today}`, colCenterX2, signatureY, { align: 'center' });
+      doc.text('Mengetahui,', colCenterX1, currentY, { align: 'center' });
+      doc.text(`Bandar Lampung, ${today}`, colCenterX2, currentY, { align: 'center' });
+      currentY += 8;
 
-      signatureY += 10;
-
-      // ROW 2: (empty left) | Koordinator Tahfidz (right) - sejajar dengan Mengetahui
-      doc.setFontSize(11);
+      // ROW 2: Guru Tahfidz | Koordinator Tahfidz
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(adminData.jabatan, colCenterX2, signatureY, { align: 'center' });
+      doc.setTextColor(0, 0, 0);
+      doc.text('Guru Tahfidz', colCenterX1, currentY, { align: 'center' });
+      doc.text(adminData.jabatan, colCenterX2, currentY, { align: 'center' });
+      currentY += 8;
 
-      signatureY += 8;
+      // ROW 3: [TTD Guru] | [TTD Admin] - BOTH AT SAME Y
+      let sigY = currentY;
 
-      // Signature display area
-      const sigImageMaxWidth = 38;
-      const sigImageMaxHeight = 24;
-      let sigY = signatureY;
-
-      // LEFT: Guru Tahfidz Signature (at leftColX)
+      // LEFT: Guru Tahfidz Signature (centered in left column)
       try {
         const guruRes = await fetch('/api/admin/signature-upload?type=guru');
         if (guruRes.ok) {
           const guruData = await guruRes.json();
           if (guruData.signature && guruData.signature.data) {
+            // Center signature horizontally in left column
+            const sigXLeft = colCenterX1 - sigImageMaxWidth / 2;
             doc.addImage(
               guruData.signature.data,
               'PNG',
-              leftColX,
+              sigXLeft,
               sigY,
               sigImageMaxWidth,
               sigImageMaxHeight,
@@ -326,21 +331,21 @@ export default function LaporanKehadiranPage() {
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(150, 150, 150);
-            doc.text('TTD belum diupload', leftColX, sigY + 12);
+            doc.text('TTD belum diupload', colCenterX1, sigY + 12, { align: 'center' });
             doc.setTextColor(0, 0, 0);
           }
         } else {
           doc.setFontSize(9);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(150, 150, 150);
-          doc.text('TTD belum diupload', leftColX, sigY + 12);
+          doc.text('TTD belum diupload', colCenterX1, sigY + 12, { align: 'center' });
           doc.setTextColor(0, 0, 0);
         }
       } catch (err) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(150, 150, 150);
-        doc.text('TTD belum diupload', leftColX, sigY + 12);
+        doc.text('TTD belum diupload', colCenterX1, sigY + 12, { align: 'center' });
         doc.setTextColor(0, 0, 0);
       }
 
