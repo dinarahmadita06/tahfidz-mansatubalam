@@ -349,7 +349,7 @@ export default function AdminSiswaPage() {
           backdropFilter: 'blur(10px)',
           zIndex: 2,
         }} className="page-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexDirection: 'column', gap: '16px' }} className="header-container sm:flex-row sm:gap-0">
             <div>
               <h1 style={{
                 fontSize: '36px',
@@ -373,7 +373,7 @@ export default function AdminSiswaPage() {
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '12px', width: '100%', flexWrap: 'wrap' }} className="buttons-container sm:w-auto sm:flex-nowrap">
               {/* Import Data Button */}
               <button
                 onClick={() => setShowImportModal(true)}
@@ -1180,6 +1180,37 @@ export default function AdminSiswaPage() {
           
           .page-main-content {
             padding: 24px 16px 32px !important;
+          }
+
+          .header-container {
+            flex-direction: column !important;
+            gap: 16px !important;
+          }
+
+          .buttons-container {
+            width: 100% !important;
+            flex-wrap: wrap !important;
+          }
+
+          .buttons-container button {
+            flex: 1 1 calc(50% - 6px) !important;
+            min-width: 120px !important;
+          }
+        }
+
+        @media (min-width: 640px) {
+          .header-container {
+            flex-direction: row !important;
+            gap: 0 !important;
+          }
+
+          .buttons-container {
+            width: auto !important;
+            flex-wrap: nowrap !important;
+          }
+
+          .buttons-container button {
+            flex: none !important;
           }
         }
       `}</style>
