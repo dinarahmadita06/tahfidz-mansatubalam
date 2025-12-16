@@ -49,3 +49,7 @@ next-env.d.ts
 fix-siswa-emails.js
 update-siswa-emails.js
 update-tahun-ajaran.js
+
+# Digital signatures (uploaded by admins)
+public/signatures/*
+!public/signatures/.gitkeep
