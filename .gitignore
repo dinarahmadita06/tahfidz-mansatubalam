@@ -53,3 +53,5 @@ update-tahun-ajaran.js
 # Digital signatures (uploaded by admins)
 public/signatures/*
 !public/signatures/.gitkeep
+
+.env*.local
