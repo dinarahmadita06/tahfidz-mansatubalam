@@ -1369,8 +1369,19 @@ export default function AdminOrangTuaPage() {
             gap: 16px !important;
           }
 
-          .header-container div:last-child {
-            width: 100%;
+          /* Mobile: Keep 2-row layout for buttons */
+          div[style*="flexDirection: 'column', gap: '8px'"] {
+            flex-direction: column !important;
+            gap: 8px !important;
+            width: 100% !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > button:first-child {
+            width: 100% !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > div {
+            width: 100% !important;
           }
         }
 
@@ -1378,6 +1389,31 @@ export default function AdminOrangTuaPage() {
           .header-container {
             flex-direction: row !important;
             gap: 0 !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          /* Desktop: Change to 1-row layout */
+          div[style*="flexDirection: 'column', gap: '8px'"] {
+            flex-direction: row !important;
+            gap: 8px !important;
+            width: auto !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > button:first-child {
+            width: auto !important;
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > div {
+            width: auto !important;
+            flex-direction: row !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > div > button {
+            flex: 0 1 auto !important;
+            min-width: 110px !important;
           }
         }
 
