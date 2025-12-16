@@ -232,8 +232,12 @@ export default function LaporanKehadiranPage() {
       signatureY += 12;
 
       // Left signature (Guru Tahfidz)
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
       doc.text('Mengetahui,', 14, signatureY);
-      doc.text('Guru Tahfidz', 14, signatureY + 20);
+      
+      let guruSignatureHeight = 0;
+      let guruName = 'Guru Tahfidz';
       
       // Try to load guru signature from API
       try {
@@ -241,19 +245,39 @@ export default function LaporanKehadiranPage() {
         if (guruRes.ok) {
           const guruData = await guruRes.json();
           if (guruData.signature && guruData.signature.data) {
-            doc.addImage(guruData.signature.data, 'PNG', 14, signatureY + 25, 40, 15);
+            // Display signature at better size (60mm width roughly = 50 points)
+            const sigWidth = 50;
+            const sigHeight = 25; // Proportional height
+            doc.addImage(guruData.signature.data, 'PNG', 14, signatureY + 8, sigWidth, sigHeight);
+            guruSignatureHeight = sigHeight;
           } else {
-            doc.text('_____________________', 14, signatureY + 25);
+            doc.setFont('helvetica', 'normal');
+            doc.text('_____________________', 14, signatureY + 15);
+            guruSignatureHeight = 8;
           }
         } else {
-          doc.text('_____________________', 14, signatureY + 25);
+          doc.setFont('helvetica', 'normal');
+          doc.text('_____________________', 14, signatureY + 15);
+          guruSignatureHeight = 8;
         }
       } catch (err) {
-        doc.text('_____________________', 14, signatureY + 25);
+        doc.setFont('helvetica', 'normal');
+        doc.text('_____________________', 14, signatureY + 15);
+        guruSignatureHeight = 8;
       }
+      
+      // Add guru name below signature
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('( Guru Tahfidz )', 14, signatureY + 8 + guruSignatureHeight + 5);
 
       // Right signature (Koordinator Tahfidz)
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
       doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
+      
+      let koordinatorSignatureHeight = 0;
+      let koordinatorName = 'Koordinator Tahfidz';
       
       // Try to load koordinator signature from API
       try {
@@ -261,16 +285,31 @@ export default function LaporanKehadiranPage() {
         if (koordinatorRes.ok) {
           const koordinatorData = await koordinatorRes.json();
           if (koordinatorData.signature && koordinatorData.signature.data) {
-            doc.addImage(koordinatorData.signature.data, 'PNG', pageWidth - 14 - 40, signatureY + 25, 40, 15);
+            // Display signature at better size (60mm width roughly = 50 points)
+            const sigWidth = 50;
+            const sigHeight = 25; // Proportional height
+            doc.addImage(koordinatorData.signature.data, 'PNG', pageWidth - 14 - sigWidth, signatureY + 8, sigWidth, sigHeight);
+            koordinatorSignatureHeight = sigHeight;
           } else {
-            doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            doc.text('_____________________', pageWidth - 14, signatureY + 15, { align: 'right' });
+            koordinatorSignatureHeight = 8;
           }
         } else {
-          doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+          doc.setFont('helvetica', 'normal');
+          doc.text('_____________________', pageWidth - 14, signatureY + 15, { align: 'right' });
+          koordinatorSignatureHeight = 8;
         }
       } catch (err) {
-        doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.text('_____________________', pageWidth - 14, signatureY + 15, { align: 'right' });
+        koordinatorSignatureHeight = 8;
       }
+      
+      // Add koordinator name below signature
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('( Koordinator Tahfidz )', pageWidth - 14, signatureY + 8 + koordinatorSignatureHeight + 5, { align: 'right' });
 
       doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
     } catch (error) {
