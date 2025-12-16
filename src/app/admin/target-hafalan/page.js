@@ -168,7 +168,7 @@ export default function TargetHafalanPage() {
 
   return (
     <AdminLayout>
-      <ResponsiveContainer>
+      <ResponsiveContainer className="responsive-container">
         <ResponsiveCard className="bg-gradient-to-br from-emerald-50/30 via-cream-50/30 to-amber-50/20">
           {/* Header */}
           <div className="mb-6 sm:mb-8">
@@ -550,6 +550,14 @@ export default function TargetHafalanPage() {
           )}
         </ResponsiveCard>
       </ResponsiveContainer>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .responsive-container {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }

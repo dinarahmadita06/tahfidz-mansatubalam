@@ -302,19 +302,7 @@ export default function AdminGuruPage() {
         minHeight: '100vh',
         position: 'relative',
       }}>
-        {/* Subtle Pattern Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%231A936F' stroke-width='0.5' opacity='0.05'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%23F7C873' stroke-width='0.5' opacity='0.05'/%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px',
-          pointerEvents: 'none',
-          opacity: 0.3,
-          zIndex: 'auto',
-        }} />
+        {/* ... existing code ... */}
 
         {/* Header */}
         <div style={{
@@ -324,7 +312,7 @@ export default function AdminGuruPage() {
           background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
           backdropFilter: 'blur(10px)',
           zIndex: 1,
-        }}>
+        }} className="page-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <h1 style={{
@@ -365,7 +353,7 @@ export default function AdminGuruPage() {
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 1 }}>
+        <div style={{ position: 'relative', zIndex: 1 }} className="page-main-content">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
             {/* Stats Cards */}
@@ -1231,6 +1219,14 @@ export default function AdminGuruPage() {
         @media (max-width: 768px) {
           .stats-card {
             min-width: 100%;
+          }
+          
+          .page-header {
+            padding: 24px 16px 20px !important;
+          }
+          
+          .page-main-content {
+            padding: 24px 16px 32px !important;
           }
         }
       `}</style>
