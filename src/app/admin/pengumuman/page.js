@@ -210,25 +210,18 @@ export default function PengumumanPage() {
   return (
     <AdminLayout>
       <PageWrapper>
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-          <Home size={16} />
-          <ChevronRight size={14} />
-          <span className="font-medium text-emerald-700">Pengumuman</span>
-        </div>
-
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-8">
-          <div className="flex items-start gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-4 mb-8">
+          <div className="flex items-start gap-4 min-w-0">
             <div
-              className="p-4 rounded-2xl shadow-lg"
+              className="p-4 rounded-2xl shadow-lg flex-shrink-0"
               style={{
                 background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
               }}
             >
               <Megaphone className="text-white" size={28} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-3xl font-bold text-gray-900">Pengumuman</h1>
               <p className="text-sm text-gray-600 mt-1">
                 Kelola pengumuman untuk semua pengguna aplikasi
@@ -237,13 +230,14 @@ export default function PengumumanPage() {
           </div>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg"
+            className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg whitespace-nowrap flex-shrink-0 w-full sm:w-auto justify-center sm:justify-start"
             style={{
               background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
             }}
           >
             <Plus size={20} />
-            Buat Pengumuman
+            <span className="hidden sm:inline">Buat Pengumuman</span>
+            <span className="sm:hidden">Buat</span>
           </button>
         </div>
 
@@ -340,7 +334,7 @@ export default function PengumumanPage() {
             className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
           >
-            <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)' }}>
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto mt-8 sm:mt-0" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)' }}>
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-8">
                 <div>
