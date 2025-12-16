@@ -598,7 +598,7 @@ export default function AdminDashboardPage() {
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '24px',
-          }}>
+          }} className="charts-grid">
             {/* Left: Bar Chart - Kelas Mencapai Target */}
             {chartData.kelasStats.total > 0 && (
               <div style={{
@@ -825,6 +825,45 @@ export default function AdminDashboardPage() {
           
           .chart-container {
             padding: 16px;
+          }
+          
+          /* Chart Grid Horizontal Scroll on Mobile */
+          .charts-grid {
+            display: flex !important;
+            grid-template-columns: unset !important;
+            gap: 24px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            padding-bottom: 8px;
+            /* Hide scrollbar but keep functionality */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+          }
+          
+          /* Chrome/Safari scrollbar styling */
+          .charts-grid::-webkit-scrollbar {
+            height: 6px;
+          }
+          
+          .charts-grid::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          
+          .charts-grid::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+          }
+          
+          .charts-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+          }
+          
+          /* Chart items on mobile */
+          .charts-grid > div {
+            flex-shrink: 0;
+            width: min(calc(100vw - 60px), 100%);
+            min-width: 350px;
           }
         }
       `}</style>
