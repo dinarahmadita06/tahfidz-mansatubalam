@@ -286,11 +286,11 @@ export default function LaporanKehadiranPage() {
 
       signatureY += 15; // More space after date for proper separation
 
-      // Title row: "Mengetahui," (left) and "Koordinator Tahfidz" (right) - below date
+      // Title row: "Mengetahui," (left ONLY)
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text('Mengetahui,', leftColX, signatureY);
-      doc.text(adminData.jabatan, rightColX, signatureY);
+      // "Koordinator Tahfidz" akan ditampilkan di atas TTD admin saja
 
       signatureY += 10; // Space for TTD
 
@@ -298,6 +298,12 @@ export default function LaporanKehadiranPage() {
       const sigImageMaxWidth = 38;
       const sigImageMaxHeight = 24;
       let sigY = signatureY;
+
+      // TITLE KOORDINATOR: Tampilkan di atas TTD admin (kolom kanan saja) 
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text(adminData.jabatan, rightColX, sigY - 2);
 
       // LEFT: Guru Tahfidz Signature
       try {
