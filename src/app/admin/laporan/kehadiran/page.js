@@ -107,6 +107,24 @@ export default function LaporanKehadiranPage() {
     if (!reportData) return;
 
     try {
+      // Fetch admin profile data for signature names
+      let adminData = { nama: 'Admin', jabatan: 'Koordinator Tahfidz' };
+      try {
+        const profileRes = await fetch('/api/admin/profile');
+        if (profileRes.ok) {
+          const profileResponse = await profileRes.json();
+          if (profileResponse.profile) {
+            adminData = {
+              nama: profileResponse.profile.nama,
+              jabatan: profileResponse.profile.jabatan
+            };
+          }
+        }
+      } catch (profileError) {
+        console.error('Error fetching admin profile:', profileError);
+        // Continue with default values
+      }
+
       // Fetch logos as base64
       const logoMan1Data = await fetch('/logo-man1.png')
         .then(res => res.blob())
@@ -172,12 +190,11 @@ export default function LaporanKehadiranPage() {
       doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 59);
       doc.text(`Kelas: ${reportData.kelasNama}`, 14, 64);
 
-      // Summary Statistics - Horizontal Card Layout
+      // Summary Statistics - Horizontal Card Layout (6 cards in 1 row)
       let yPos = 72;
-      const cardHeight = 20;
-      const cardWidth = 28;
-      const cardSpacingX = 3;
-      const cardStartY = yPos;
+      const cardHeight = 18;     // Reduced height (120px on screen ≈ 18pt in PDF)
+      const cardWidth = 27;      // Reduced width (140-160px on screen ≈ 27pt in PDF)
+      const cardSpacingX = 2.5;  // Tight spacing
       
       // 6 Statistics cards: Jumlah Siswa, Total Pertemuan, Hadir, Izin, Sakit, Alpa
       const stats = [
@@ -191,43 +208,38 @@ export default function LaporanKehadiranPage() {
       
       let xPos = 14;
       stats.forEach((stat, idx) => {
-        // Check if need to wrap to next row
-        if (idx > 0 && idx % 3 === 0) {
-          yPos += cardHeight + 5;
-          xPos = 14;
-        }
-        
         // Draw card background (light green)
-        doc.setFillColor(209, 250, 229); // Light emerald background
+        doc.setFillColor(209, 250, 229); // Light emerald background #DFF7E5
         doc.rect(xPos, yPos, cardWidth, cardHeight, 'F');
         
-        // Card border
-        doc.setDrawColor(16, 185, 129); // Emerald green
-        doc.setLineWidth(0.5);
+        // Card border (2px equivalent)
+        doc.setDrawColor(59, 178, 115); // Green #3BB273
+        doc.setLineWidth(0.4);
         doc.rect(xPos, yPos, cardWidth, cardHeight);
         
-        // Label text
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 116, 109);
-        doc.text(stat.label, xPos + 1.5, yPos + 4);
-        
-        // Value text (large)
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(6, 78, 59); // Dark green
-        doc.text(stat.value.toString(), xPos + 1.5, yPos + 11);
-        
-        // Unit text
+        // Label text (8pt, small)
         doc.setFontSize(7);
         doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 109);
+        const labelLines = doc.splitTextToSize(stat.label, cardWidth - 1.5);
+        doc.text(labelLines, xPos + 0.8, yPos + 2.5);
+        
+        // Value text (14pt, bold, large)
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(6, 78, 59); // Dark green
+        doc.text(stat.value.toString(), xPos + 0.8, yPos + 10);
+        
+        // Unit text (7pt, small)
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'normal');
         doc.setTextColor(107, 126, 117);
-        doc.text(stat.unit, xPos + 1.5, yPos + 15);
+        doc.text(stat.unit, xPos + 0.8, yPos + 14);
         
         xPos += cardWidth + cardSpacingX;
       });
       
-      yPos += cardHeight + 10;
+      yPos += cardHeight + 8;
 
       // Table with raw numbers only
       const tableData = reportData.siswaData.map((s, idx) => [
@@ -261,54 +273,120 @@ export default function LaporanKehadiranPage() {
         signatureY = 20;
       }
 
-      // Date and location
-      doc.setFontSize(10);
+      // Date and location (right-aligned)
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       doc.text(`Bandar Lampung, ${today}`, pageWidth - 14, signatureY, { align: 'right' });
 
       signatureY += 12;
 
-      // Left signature (Guru Tahfidz)
+      // Title row: "Mengetahui," and "[Jabatan Koordinator]"
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
       doc.text('Mengetahui,', 14, signatureY);
-      doc.text('Guru Tahfidz', 14, signatureY + 20);
-      
-      // Try to load guru signature from API
+      doc.text(adminData.jabatan, pageWidth - 14, signatureY, { align: 'right' });
+
+      signatureY += 8;
+
+      // Signature display area (2-column layout)
+      const colWidth = (pageWidth - 28) / 2; // Two equal columns
+      const sigAreaX1 = 14;                    // Left column start
+      const sigAreaX2 = 14 + colWidth + 4;    // Right column start
+      const sigImageMaxWidth = 40;             // Max width for signature
+      const sigImageMaxHeight = 25;            // Max height for signature
+      let sigY = signatureY;
+
+      // LEFT: Guru Tahfidz Signature
       try {
         const guruRes = await fetch('/api/admin/signature-upload?type=guru');
         if (guruRes.ok) {
           const guruData = await guruRes.json();
           if (guruData.signature && guruData.signature.data) {
-            doc.addImage(guruData.signature.data, 'PNG', 14, signatureY + 25, 40, 15);
+            // Draw signature respecting aspect ratio
+            doc.addImage(
+              guruData.signature.data,
+              'PNG',
+              sigAreaX1,
+              sigY,
+              sigImageMaxWidth,
+              sigImageMaxHeight,
+              undefined,
+              'FAST',
+              { x: 0, y: 0 }
+            );
           } else {
-            doc.text('_____________________', 14, signatureY + 25);
+            // Placeholder if no signature
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(150, 150, 150);
+            doc.text('TTD belum diupload', sigAreaX1, sigY + 12, { maxWidth: 35 });
+            doc.setTextColor(0, 0, 0);
           }
         } else {
-          doc.text('_____________________', 14, signatureY + 25);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(150, 150, 150);
+          doc.text('TTD belum diupload', sigAreaX1, sigY + 12, { maxWidth: 35 });
+          doc.setTextColor(0, 0, 0);
         }
       } catch (err) {
-        doc.text('_____________________', 14, signatureY + 25);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150, 150, 150);
+        doc.text('TTD belum diupload', sigAreaX1, sigY + 12, { maxWidth: 35 });
+        doc.setTextColor(0, 0, 0);
       }
 
-      // Right signature (Koordinator Tahfidz)
-      doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
-      
-      // Try to load koordinator signature from API
+      // RIGHT: Koordinator Tahfidz Signature
       try {
         const koordinatorRes = await fetch('/api/admin/signature-upload?type=koordinator');
         if (koordinatorRes.ok) {
           const koordinatorData = await koordinatorRes.json();
           if (koordinatorData.signature && koordinatorData.signature.data) {
-            doc.addImage(koordinatorData.signature.data, 'PNG', pageWidth - 14 - 40, signatureY + 25, 40, 15);
+            // Draw signature respecting aspect ratio, right-aligned
+            doc.addImage(
+              koordinatorData.signature.data,
+              'PNG',
+              sigAreaX2,
+              sigY,
+              sigImageMaxWidth,
+              sigImageMaxHeight,
+              undefined,
+              'FAST',
+              { x: 0, y: 0 }
+            );
           } else {
-            doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+            // Placeholder if no signature
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(150, 150, 150);
+            doc.text('TTD belum diupload', sigAreaX2, sigY + 12, { maxWidth: 35, align: 'left' });
+            doc.setTextColor(0, 0, 0);
           }
         } else {
-          doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(150, 150, 150);
+          doc.text('TTD belum diupload', sigAreaX2, sigY + 12, { maxWidth: 35, align: 'left' });
+          doc.setTextColor(0, 0, 0);
         }
       } catch (err) {
-        doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150, 150, 150);
+        doc.text('TTD belum diupload', sigAreaX2, sigY + 12, { maxWidth: 35, align: 'left' });
+        doc.setTextColor(0, 0, 0);
       }
+
+      sigY += sigImageMaxHeight + 8;
+
+      // Name row (below signatures)
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text(`( Guru Tahfidz )`, sigAreaX1 + 5, sigY);
+      doc.text(`( ${adminData.nama} )`, sigAreaX2 + 5, sigY);
 
       doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
     } catch (error) {
