@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Download, Search, Edit, Trash2, Users, UserCheck, UserX, Heart } from 'lucide-react';
+import { UserPlus, Download, Search, Edit, Trash2, Users, UserCheck, UserX, Heart, Upload } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import ImportExportToolbar from '@/components/ImportExportToolbar';
 
 // Islamic Modern Color Palette dengan variasi Violet & Gold
 const colors = {
@@ -160,6 +159,7 @@ export default function AdminOrangTuaPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all'); // all, connected, disconnected
   const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingOrangTua, setEditingOrangTua] = useState(null);
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [formData, setFormData] = useState({
@@ -382,19 +382,142 @@ export default function AdminOrangTuaPage() {
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <ImportExportToolbar
-              kategori="orangtua"
-              data={filteredOrangTua}
-              onImportSuccess={fetchOrangTua}
-              showAddButton
-              onAddClick={() => {
-                resetForm();
-                setShowModal(true);
-              }}
-              addButtonLabel="Tambah Orang Tua"
-              addButtonIcon={<UserPlus size={18} />}
-            />
+            {/* Action Buttons - Two Row Layout */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              {/* Row 1: Tambah Orang Tua Button - Full Width */}
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowModal(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  padding: '10px 16px',
+                  background: `linear-gradient(135deg, ${colors.violet[500]} 0%, ${colors.violet[600]} 100%)`,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
+                  transition: 'all 0.3s ease',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                  width: '100%'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 92, 246, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.2)';
+                }}
+              >
+                <UserPlus size={18} />
+                <span>Tambah Orang Tua</span>
+              </button>
+
+              {/* Row 2: Import & Export Buttons */}
+              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                {/* Import Button */}
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 14px',
+                    background: colors.white,
+                    color: colors.violet[600],
+                    border: `2px solid ${colors.violet[200]}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    flex: 1
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = colors.violet[50];
+                    e.currentTarget.style.borderColor = colors.violet[300];
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = colors.white;
+                    e.currentTarget.style.borderColor = colors.violet[200];
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <Upload size={16} />
+                  <span>Import</span>
+                </button>
+
+                {/* Export Button */}
+                <button
+                  onClick={() => {
+                    // Export implementation
+                    const csvContent = [
+                      ['Nama Lengkap', 'Email', 'No HP', 'Pekerjaan', 'Tanggal Bergabung'],
+                      ...filteredOrangTua.map(ot => [
+                        ot.user.name,
+                        ot.user.email,
+                        ot.noHP || '-',
+                        ot.pekerjaan || '-',
+                        new Date(ot.user.createdAt).toLocaleDateString('id-ID')
+                      ])
+                    ].map(row => row.join(',')).join('\n');
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `data-orangtua-${new Date().toISOString().split('T')[0]}.csv`;
+                    link.click();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 14px',
+                    background: colors.white,
+                    color: colors.gold[600],
+                    border: `2px solid ${colors.gold[200]}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    flex: 1
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = colors.gold[50];
+                    e.currentTarget.style.borderColor = colors.gold[300];
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = colors.white;
+                    e.currentTarget.style.borderColor = colors.gold[200];
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <Download size={16} />
+                  <span>Export</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
