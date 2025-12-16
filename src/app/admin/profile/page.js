@@ -39,10 +39,41 @@ export default function ProfileAdminPage() {
     guruTandaTangan: null,
     koordinatorTandaTangan: null
   });
+  const [signaturePreviews, setSignaturePreviews] = useState({
+    guru: null,
+    koordinator: null
+  });
 
   useEffect(() => {
     fetchProfileData();
+    loadSignatures();
   }, []);
+
+  const loadSignatures = async () => {
+    try {
+      console.log('[Load Signatures] Checking for existing signatures...');
+      
+      // Check guru signature
+      const guruRes = await fetch('/signatures/guru_signature.png');
+      if (guruRes.ok) {
+        const guruBlob = await guruRes.blob();
+        const guruUrl = URL.createObjectURL(guruBlob);
+        setSignaturePreviews(prev => ({ ...prev, guru: guruUrl }));
+        console.log('[Load Signatures] Guru signature found');
+      }
+      
+      // Check koordinator signature
+      const koordinatorRes = await fetch('/signatures/koordinator_signature.png');
+      if (koordinatorRes.ok) {
+        const koordinatorBlob = await koordinatorRes.blob();
+        const koordinatorUrl = URL.createObjectURL(koordinatorBlob);
+        setSignaturePreviews(prev => ({ ...prev, koordinator: koordinatorUrl }));
+        console.log('[Load Signatures] Koordinator signature found');
+      }
+    } catch (error) {
+      console.error('[Load Signatures] Error:', error);
+    }
+  };
 
   const fetchProfileData = async () => {
     try {
@@ -207,6 +238,8 @@ export default function ProfileAdminPage() {
         const msg = `Tanda tangan ${type === 'guru' ? 'Guru Tahfidz' : 'Koordinator Tahfidz'} berhasil diupload!`;
         setSuccess(msg);
         console.log('Success:', msg);
+        // Reload signatures to show preview
+        await loadSignatures();
         setTimeout(() => setSuccess(''), 3000);
       } else {
         const err = data.error || `Gagal upload (Status: ${res.status})`;
@@ -594,28 +627,71 @@ export default function ProfileAdminPage() {
                 <FileText size={16} className="text-blue-600" strokeWidth={2} />
                 Tanda Tangan Guru Tahfidz
               </label>
-              <div
-                className="px-4 py-4 rounded-xl border-2 border-dashed"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  borderColor: '#93C5FD'
-                }}
-              >
-                <input
-                  type="file"
-                  accept=".png"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
-                      handleSignatureUpload('guru', file);
-                    }
+              {signaturePreviews.guru ? (
+                <div className="relative">
+                  <div
+                    className="px-4 py-4 rounded-xl border-2"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderColor: '#10B981',
+                      borderStyle: 'solid'
+                    }}
+                  >
+                    <img
+                      src={signaturePreviews.guru}
+                      alt="Guru Signature"
+                      className="h-20 object-contain"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">✅ Tanda tangan berhasil disimpan</p>
+                  </div>
+                  <button
+                    onClick={() => document.getElementById('guru-file-input').click()}
+                    className="mt-2 w-full px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200"
+                    style={{
+                      background: '#DBEAFE',
+                      color: '#1E40AF'
+                    }}
+                  >
+                    Ganti Tanda Tangan
+                  </button>
+                  <input
+                    id="guru-file-input"
+                    type="file"
+                    accept=".png"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
+                        handleSignatureUpload('guru', file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="px-4 py-4 rounded-xl border-2 border-dashed"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    borderColor: '#93C5FD'
                   }}
-                  className="w-full cursor-pointer"
-                />
-                <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
-                <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload baru, pilih file lalu file akan otomatis tersimpan</p>
-              </div>
+                >
+                  <input
+                    type="file"
+                    accept=".png"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
+                        handleSignatureUpload('guru', file);
+                      }
+                    }}
+                    className="w-full cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
+                  <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload, pilih file lalu file akan otomatis tersimpan</p>
+                </div>
+              )}
             </div>
 
             {/* Koordinator Tahfidz Signature */}
@@ -624,28 +700,71 @@ export default function ProfileAdminPage() {
                 <FileText size={16} className="text-blue-600" strokeWidth={2} />
                 Tanda Tangan Koordinator Tahfidz
               </label>
-              <div
-                className="px-4 py-4 rounded-xl border-2 border-dashed"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.8)',
-                  borderColor: '#93C5FD'
-                }}
-              >
-                <input
-                  type="file"
-                  accept=".png"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
-                      handleSignatureUpload('koordinator', file);
-                    }
+              {signaturePreviews.koordinator ? (
+                <div className="relative">
+                  <div
+                    className="px-4 py-4 rounded-xl border-2"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderColor: '#10B981',
+                      borderStyle: 'solid'
+                    }}
+                  >
+                    <img
+                      src={signaturePreviews.koordinator}
+                      alt="Koordinator Signature"
+                      className="h-20 object-contain"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">✅ Tanda tangan berhasil disimpan</p>
+                  </div>
+                  <button
+                    onClick={() => document.getElementById('koordinator-file-input').click()}
+                    className="mt-2 w-full px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200"
+                    style={{
+                      background: '#DBEAFE',
+                      color: '#1E40AF'
+                    }}
+                  >
+                    Ganti Tanda Tangan
+                  </button>
+                  <input
+                    id="koordinator-file-input"
+                    type="file"
+                    accept=".png"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
+                        handleSignatureUpload('koordinator', file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="px-4 py-4 rounded-xl border-2 border-dashed"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    borderColor: '#93C5FD'
                   }}
-                  className="w-full cursor-pointer"
-                />
-                <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
-                <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload baru, pilih file lalu file akan otomatis tersimpan</p>
-              </div>
+                >
+                  <input
+                    type="file"
+                    accept=".png"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
+                        handleSignatureUpload('koordinator', file);
+                      }
+                    }}
+                    className="w-full cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
+                  <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload, pilih file lalu file akan otomatis tersimpan</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
