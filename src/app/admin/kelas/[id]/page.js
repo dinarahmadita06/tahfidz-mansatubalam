@@ -44,8 +44,11 @@ export default function KelolaSiswaPage() {
   // Modals
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [editingSiswa, setEditingSiswa] = useState(null);
   const [importResults, setImportResults] = useState(null);
+  const [previewData, setPreviewData] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Form Data
   const [formData, setFormData] = useState({
@@ -242,17 +245,9 @@ export default function KelolaSiswaPage() {
           };
         });
 
-        // Send to import API
-        const response = await fetch('/api/admin/siswa/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ siswaData: transformedData }),
-        });
-
-        const result = await response.json();
-        setImportResults(result);
-        setShowImportModal(true);
-        fetchSiswa();
+        // Set preview data and show preview modal
+        setPreviewData(transformedData);
+        setShowPreviewModal(true);
       } catch (error) {
         console.error('Error parsing Excel:', error);
         alert('Gagal membaca file Excel');
@@ -260,6 +255,44 @@ export default function KelolaSiswaPage() {
     };
     reader.readAsBinaryString(file);
     e.target.value = ''; // Reset input
+  };
+
+  const handleConfirmImport = async () => {
+    if (previewData.length === 0) {
+      alert('Tidak ada data untuk diimport');
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      // Send to import API
+      const response = await fetch('/api/admin/siswa/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siswaData: previewData }),
+      });
+
+      const result = await response.json();
+
+      // Close preview modal
+      setShowPreviewModal(false);
+
+      // Show import results
+      setImportResults(result);
+      setShowImportModal(true);
+
+      // Refresh siswa list
+      await fetchSiswa();
+
+      // Clear preview data
+      setPreviewData([]);
+    } catch (error) {
+      console.error('Error importing data:', error);
+      alert('Gagal mengimport data siswa');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const downloadTemplate = () => {
@@ -504,6 +537,16 @@ export default function KelolaSiswaPage() {
           />
         )}
 
+        {/* Modal Preview Excel */}
+        {showPreviewModal && previewData.length > 0 && (
+          <ModalPreviewExcel
+            data={previewData}
+            onImport={handleConfirmImport}
+            onClose={() => { setShowPreviewModal(false); setPreviewData([]); }}
+            isImporting={isImporting}
+          />
+        )}
+
         {/* Modal Import Results */}
         {showImportModal && importResults && (
           <ModalImportResults
@@ -673,6 +716,137 @@ function ModalFormSiswa({ formData, setFormData, onSubmit, onClose, isEditing })
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
+      <div style={{ background: colors.white, borderRadius: '24px', padding: '32px', maxWidth: '1000px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', color: colors.gray[900], marginBottom: '4px' }}>
+              Preview Data Import
+            </h2>
+            <p style={{ fontSize: '14px', color: colors.gray[600] }}>
+              {data.length} siswa akan diimport
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Table Preview */}
+        <div style={{ flex: 1, overflowY: 'auto', marginBottom: '24px', border: `1px solid ${colors.gray[200]}`, borderRadius: '12px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ background: colors.emerald[50], position: 'sticky', top: 0, zIndex: 1 }}>
+              <tr>
+                <th style={{ ...tableHeaderStyle, width: '40px' }}>No</th>
+                <th style={tableHeaderStyle}>Nama Siswa</th>
+                <th style={{ ...tableHeaderStyle, width: '120px' }}>NISN</th>
+                <th style={{ ...tableHeaderStyle, width: '100px' }}>NIS</th>
+                <th style={{ ...tableHeaderStyle, width: '80px' }}>L/P</th>
+                <th style={tableHeaderStyle}>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((siswa, index) => (
+                <tr key={index} style={{ borderBottom: `1px solid ${colors.gray[100]}` }}>
+                  <td style={{ ...tableCellStyle, textAlign: 'center', fontWeight: '600' }}>{index + 1}</td>
+                  <td style={tableCellStyle}>{siswa.name}</td>
+                  <td style={tableCellStyle}>{siswa.nisn || '-'}</td>
+                  <td style={tableCellStyle}>{siswa.nis}</td>
+                  <td style={{ ...tableCellStyle, textAlign: 'center' }}>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background: siswa.jenisKelamin === 'LAKI_LAKI' ? colors.blue[100] : colors.amber[100],
+                      color: siswa.jenisKelamin === 'LAKI_LAKI' ? colors.blue[700] : colors.amber[700]
+                    }}>
+                      {siswa.jenisKelamin === 'LAKI_LAKI' ? 'L' : 'P'}
+                    </span>
+                  </td>
+                  <td style={{ ...tableCellStyle, fontSize: '12px', color: colors.gray[600] }}>{siswa.email}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isImporting}
+            style={{
+              padding: '12px 28px',
+              border: `2px solid ${colors.gray[300]}`,
+              borderRadius: '12px',
+              background: colors.white,
+              color: colors.text?.secondary || colors.gray[700],
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: isImporting ? 'not-allowed' : 'pointer',
+              opacity: isImporting ? 0.5 : 1,
+              transition: 'all 0.3s ease',
+            }}
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            onClick={onImport}
+            disabled={isImporting}
+            style={{
+              padding: '12px 28px',
+              border: 'none',
+              borderRadius: '12px',
+              background: isImporting
+                ? colors.gray[400]
+                : `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+              color: colors.white,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: isImporting ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: isImporting ? 'none' : '0 4px 12px rgba(26, 147, 111, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            {isImporting ? (
+              <>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid white',
+                  borderTopColor: 'transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite'
+                }}></div>
+                Mengimport...
+              </>
+            ) : (
+              <>
+                <Upload size={18} />
+                Import {data.length} Siswa
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
