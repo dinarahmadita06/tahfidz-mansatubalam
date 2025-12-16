@@ -380,14 +380,14 @@ export default function AdminSiswaPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
+                  gap: '6px',
+                  padding: '8px 14px',
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   color: colors.white,
                   border: 'none',
-                  borderRadius: '0.75rem',
+                  borderRadius: '8px',
                   fontWeight: 600,
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -412,14 +412,14 @@ export default function AdminSiswaPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
+                  gap: '6px',
+                  padding: '8px 14px',
                   background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
                   color: colors.white,
                   border: 'none',
-                  borderRadius: '0.75rem',
+                  borderRadius: '8px',
                   fontWeight: 600,
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -451,14 +451,14 @@ export default function AdminSiswaPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
+                  gap: '6px',
+                  padding: '8px 14px',
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   color: colors.white,
                   border: 'none',
-                  borderRadius: '0.75rem',
+                  borderRadius: '8px',
                   fontWeight: 600,
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -1190,11 +1190,12 @@ export default function AdminSiswaPage() {
           .buttons-container {
             width: 100% !important;
             flex-wrap: wrap !important;
+            gap: 8px !important;
           }
 
           .buttons-container button {
-            flex: 1 1 calc(50% - 6px) !important;
-            min-width: 120px !important;
+            flex: 1 1 calc(33% - 6px) !important;
+            min-width: 100px !important;
           }
         }
 
@@ -1207,6 +1208,7 @@ export default function AdminSiswaPage() {
           .buttons-container {
             width: auto !important;
             flex-wrap: nowrap !important;
+            gap: 8px !important;
           }
 
           .buttons-container button {
