@@ -234,11 +234,49 @@ export default function LaporanKehadiranPage() {
       // Left signature (Guru Tahfidz)
       doc.text('Mengetahui,', 14, signatureY);
       doc.text('Guru Tahfidz', 14, signatureY + 20);
-      doc.text('_____________________', 14, signatureY + 25);
+      
+      // Try to load guru signature
+      try {
+        const guruSigData = await fetch('/signatures/guru_signature.png')
+          .then(res => res.blob())
+          .then(blob => new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          }))
+          .catch(() => null);
+        
+        if (guruSigData) {
+          doc.addImage(guruSigData, 'PNG', 14, signatureY + 25, 40, 15);
+        } else {
+          doc.text('_____________________', 14, signatureY + 25);
+        }
+      } catch (err) {
+        doc.text('_____________________', 14, signatureY + 25);
+      }
 
       // Right signature (Koordinator Tahfidz)
       doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
-      doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+      
+      // Try to load koordinator signature
+      try {
+        const koordinatorSigData = await fetch('/signatures/koordinator_signature.png')
+          .then(res => res.blob())
+          .then(blob => new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          }))
+          .catch(() => null);
+        
+        if (koordinatorSigData) {
+          doc.addImage(koordinatorSigData, 'PNG', pageWidth - 14 - 40, signatureY + 25, 40, 15);
+        } else {
+          doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+        }
+      } catch (err) {
+        doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+      }
 
       doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
     } catch (error) {
