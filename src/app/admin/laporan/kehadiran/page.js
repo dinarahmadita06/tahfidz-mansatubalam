@@ -278,21 +278,21 @@ export default function LaporanKehadiranPage() {
       const leftColX = 14;                    // Left column at 14
       const rightColX = 14 + colWidth + 4;  // Right column after left
 
-      // Date and location (right-aligned)
+      // Date and location (right-aligned) - at top
       const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text(`Bandar Lampung, ${today}`, pageWidth - 14, signatureY, { align: 'right' });
 
-      signatureY += 8;
+      signatureY += 15; // More space after date for proper separation
 
-      // Title row: "Mengetahui," (left) and "Koordinator Tahfidz" (right)
+      // Title row: "Mengetahui," (left) and "Koordinator Tahfidz" (right) - below date
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text('Mengetahui,', leftColX, signatureY);
       doc.text(adminData.jabatan, rightColX, signatureY);
 
-      signatureY += 8; // Space for TTD
+      signatureY += 10; // Space for TTD
 
       // Signature display area
       const sigImageMaxWidth = 38;
