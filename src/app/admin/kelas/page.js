@@ -300,6 +300,8 @@ export default function AdminKelasPage() {
   const [openMenuId, setOpenMenuId] = useState(null); // Track which card menu is open
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [kelasToDelete, setKelasToDelete] = useState(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationData, setConfirmationData] = useState(null);
   const buttonRefs = useRef({});
   const [kelasFormData, setKelasFormData] = useState({
     nama: '', // Menggunakan field 'nama' sesuai schema
@@ -369,7 +371,7 @@ export default function AdminKelasPage() {
     }
   };
 
-  const handleKelasSubmit = async (e) => {
+  const handleKelasSubmit = async (e, forceSubmit = false) => {
     e.preventDefault();
 
     try {
@@ -377,6 +379,7 @@ export default function AdminKelasPage() {
       console.log('SUBMIT - Current form state:', kelasFormData);
       console.log('SUBMIT - tahunAjaranId value:', kelasFormData.tahunAjaranId);
       console.log('SUBMIT - tahunAjaranId type:', typeof kelasFormData.tahunAjaranId);
+      console.log('SUBMIT - forceSubmit:', forceSubmit);
 
       // Validate data before sending
       if (!kelasFormData.nama || !kelasFormData.tahunAjaranId) {
@@ -391,10 +394,19 @@ export default function AdminKelasPage() {
         // Keep tahunAjaranId as string (it's a CUID in database)
         targetJuz: kelasFormData.targetJuz ? parseInt(kelasFormData.targetJuz) : null,
         guruUtamaId: kelasFormData.guruUtamaId && kelasFormData.guruUtamaId.trim() ? kelasFormData.guruUtamaId : null,
-        guruPendampingIds: kelasFormData.guruPendampingIds?.length > 0 
+        guruPendampingIds: kelasFormData.guruPendampingIds?.length > 0
           ? kelasFormData.guruPendampingIds.filter(id => id && id.trim())
           : [],
       };
+
+      // Add force flag if this is a confirmed submission
+      if (forceSubmit) {
+        if (editingKelas) {
+          submitData.forceUpdate = true;
+        } else {
+          submitData.forceCreate = true;
+        }
+      }
 
       console.log('Submitting kelas data:', submitData);
 
@@ -409,20 +421,32 @@ export default function AdminKelasPage() {
         body: JSON.stringify(submitData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         alert(editingKelas ? 'Kelas berhasil diupdate' : 'Kelas berhasil ditambahkan');
         setShowKelasModal(false);
         resetKelasForm();
         fetchKelas();
+      } else if (response.status === 409 && data.requiresConfirmation) {
+        // Guru sudah memiliki kelas lain, tampilkan konfirmasi
+        setConfirmationData(data);
+        setShowConfirmationModal(true);
       } else {
-        const error = await response.json();
-        console.error('API Error response:', error);
-        alert(error.error || 'Gagal menyimpan data kelas');
+        console.error('API Error response:', data);
+        alert(data.error || 'Gagal menyimpan data kelas');
       }
     } catch (error) {
       console.error('Error saving kelas:', error);
       alert('Gagal menyimpan data kelas: ' + error.message);
     }
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmationModal(false);
+    // Re-submit with force flag
+    const fakeEvent = { preventDefault: () => {} };
+    await handleKelasSubmit(fakeEvent, true);
   };
 
   const handleEditKelas = (kelasItem) => {
@@ -1851,6 +1875,122 @@ export default function AdminKelasPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Guru Confirmation Modal */}
+      {showConfirmationModal && confirmationData && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 60,
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: colors.white,
+            borderRadius: '24px',
+            padding: '32px',
+            maxWidth: '480px',
+            width: '100%',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: `2px solid ${colors.amber[100]}`,
+            animation: 'modalSlideIn 0.3s ease-out',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '20px',
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: `${colors.amber[100]}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <UserCheck size={28} color={colors.amber[600]} />
+              </div>
+            </div>
+
+            <h2 style={{
+              fontSize: '22px',
+              fontWeight: 700,
+              color: colors.text.primary,
+              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              textAlign: 'center',
+              marginBottom: '12px',
+            }}>
+              Konfirmasi Penugasan Guru
+            </h2>
+
+            <p style={{
+              fontSize: '14px',
+              color: colors.text.secondary,
+              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+              textAlign: 'center',
+              lineHeight: '1.6',
+              marginBottom: '24px',
+            }}>
+              {confirmationData.message}
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center',
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  setConfirmationData(null);
+                }}
+                style={{
+                  padding: '12px 28px',
+                  border: `2px solid ${colors.gray[300]}`,
+                  borderRadius: '12px',
+                  background: colors.white,
+                  color: colors.text.secondary,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                className="cancel-btn"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSubmit}
+                style={{
+                  padding: '12px 28px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  color: colors.white,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                }}
+                className="submit-btn"
+              >
+                Ya, Tambahkan
+              </button>
+            </div>
           </div>
         </div>
       )}
