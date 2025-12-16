@@ -1,7 +1,21 @@
 import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
+import { Buffer } from 'buffer';
 
 const prisma = new PrismaClient();
+
+// Helper function to get image dimensions from PNG buffer
+function getPNGDimensions(buffer) {
+  try {
+    // PNG width is at bytes 16-20, height at 20-24 (big-endian)
+    const view = new DataView(buffer);
+    const width = view.getUint32(16, false);
+    const height = view.getUint32(20, false);
+    return { width, height };
+  } catch {
+    return { width: 100, height: 50 }; // Default fallback
+  }
+}
 
 export async function POST(request) {
   try {
@@ -49,6 +63,10 @@ export async function POST(request) {
     const uint8Array = new Uint8Array(buffer);
     console.log('[Signature Upload] Buffer ready, size:', uint8Array.length);
 
+    // Get PNG dimensions
+    const dimensions = getPNGDimensions(buffer);
+    console.log('[Signature Upload] Image dimensions:', dimensions);
+
     // Convert to base64
     const base64Data = Buffer.from(uint8Array).toString('base64');
     const base64DataUrl = `data:image/png;base64,${base64Data}`;
@@ -70,13 +88,17 @@ export async function POST(request) {
           signatureData: base64DataUrl,
           fileName: file.name,
           fileSize: file.size,
+          imageWidth: dimensions.width,
+          imageHeight: dimensions.height,
           updatedAt: new Date()
         },
         create: {
           type,
           signatureData: base64DataUrl,
           fileName: file.name,
-          fileSize: file.size
+          fileSize: file.size,
+          imageWidth: dimensions.width,
+          imageHeight: dimensions.height
         }
       });
 
@@ -93,7 +115,8 @@ export async function POST(request) {
           signature: {
             id: signature.id,
             fileName: signature.fileName,
-            uploadedAt: signature.uploadedAt
+            uploadedAt: signature.uploadedAt,
+            dimensions: { width: dimensions.width, height: dimensions.height }
           }
         },
         { status: 200 }
@@ -144,7 +167,11 @@ export async function GET(request) {
           type: signature.type,
           data: signature.signatureData,
           fileName: signature.fileName,
-          uploadedAt: signature.uploadedAt
+          uploadedAt: signature.uploadedAt,
+          dimensions: {
+            width: signature.imageWidth,
+            height: signature.imageHeight
+          }
         }
       },
       { status: 200 }
