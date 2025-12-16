@@ -751,11 +751,3 @@ const inputStyle = {
   outline: 'none',
   transition: 'all 0.2s ease'
 };
-
-const styles = `
-  @media (max-width: 768px) {
-    .kelas-detail-container {
-      padding: 16px !important;
-    }
-  }
-`;

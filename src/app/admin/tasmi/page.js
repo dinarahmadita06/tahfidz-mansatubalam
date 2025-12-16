@@ -646,7 +646,7 @@ export default function AdminTasmiPage() {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style jsx>{`
         @media (max-width: 768px) {
           .tasmi-container {
             padding: 16px !important;

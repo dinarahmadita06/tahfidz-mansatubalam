@@ -551,7 +551,7 @@ export default function TargetHafalanPage() {
         </ResponsiveCard>
       </ResponsiveContainer>
 
-      <style jsx global>{`
+      <style jsx>{`
         @media (max-width: 768px) {
           .responsive-container {
             padding: 16px !important;
