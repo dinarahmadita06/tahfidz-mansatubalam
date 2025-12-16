@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 // Default handler untuk method yang tidak didukung
 export async function GET(request, { params }) {
@@ -186,6 +187,9 @@ export async function PUT(request, { params }) {
       // Don't throw, just log the error
     }
 
+    // Invalidate guru cache karena kelas binaan berubah
+    invalidateCache('guru-list');
+
     return NextResponse.json(updatedKelas);
   } catch (error) {
     console.error('Error updating kelas:', error);
@@ -329,6 +333,9 @@ export async function DELETE(request, { params }) {
       console.error('Error logging delete activity:', logError);
       // Don't fail the request if logging fails
     }
+
+    // Invalidate guru cache karena kelas binaan berubah
+    invalidateCache('guru-list');
 
     return NextResponse.json({
       message: 'Kelas berhasil dihapus',
