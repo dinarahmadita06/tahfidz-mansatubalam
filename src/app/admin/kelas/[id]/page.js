@@ -301,7 +301,7 @@ export default function KelolaSiswaPage() {
 
   return (
     <AdminLayout>
-      <div style={{ background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`, minHeight: '100vh', padding: '32px' }}>
+      <div style={{ background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`, minHeight: '100vh', padding: '32px' }} className="kelas-detail-container">
 
         {/* Header */}
         <div style={{ background: colors.white, borderRadius: '20px', padding: '32px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
@@ -512,6 +512,14 @@ export default function KelolaSiswaPage() {
           />
         )}
       </div>
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .kelas-detail-container {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }
@@ -743,3 +751,11 @@ const inputStyle = {
   outline: 'none',
   transition: 'all 0.2s ease'
 };
+
+const styles = `
+  @media (max-width: 768px) {
+    .kelas-detail-container {
+      padding: 16px !important;
+    }
+  }
+`;

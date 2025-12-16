@@ -363,7 +363,7 @@ export default function ValidasiSiswaPage() {
           background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
           backdropFilter: 'blur(10px)',
           zIndex: 2,
-        }}>
+        }} className="page-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <h1 style={{
@@ -390,7 +390,7 @@ export default function ValidasiSiswaPage() {
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
+        <div style={{ position: 'relative', zIndex: 2 }} className="page-main-content">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
             {/* Stats Cards */}
@@ -1450,6 +1450,14 @@ export default function ValidasiSiswaPage() {
         @media (max-width: 768px) {
           .stats-card {
             min-width: 100%;
+          }
+          
+          .page-header {
+            padding: 24px 16px 20px !important;
+          }
+          
+          .page-main-content {
+            padding: 24px 16px 32px !important;
           }
         }
       `}</style>

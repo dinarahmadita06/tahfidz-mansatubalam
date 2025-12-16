@@ -183,7 +183,7 @@ export default function AdminTasmiPage() {
     <AdminLayout>
       <Toaster position="top-right" />
 
-      <div className="space-y-6">
+      <div className="space-y-6 tasmi-container">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
           <div className="flex items-center justify-between">
@@ -645,6 +645,14 @@ export default function AdminTasmiPage() {
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .tasmi-container {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }
