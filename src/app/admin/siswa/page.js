@@ -372,77 +372,9 @@ export default function AdminSiswaPage() {
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '12px', width: '100%', flexWrap: 'wrap' }} className="buttons-container sm:w-auto sm:flex-nowrap">
-              {/* Import Data Button */}
-              <button
-                onClick={() => setShowImportModal(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(26, 147, 111, 0.3)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.2)';
-                }}
-              >
-                <Upload size={18} />
-                Import Data
-              </button>
-
-              {/* Export Data Button */}
-              <button
-                onClick={handleExportData}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.3)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.2)';
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Export Data
-              </button>
-
-              {/* Tambah Siswa Button */}
+            {/* Action Buttons - Two Row Layout */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              {/* Row 1: Tambah Siswa Button - Full Width */}
               <button
                 onClick={() => {
                   resetForm();
@@ -451,18 +383,20 @@ export default function AdminSiswaPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '6px',
-                  padding: '8px 14px',
+                  padding: '10px 16px',
                   background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
                   color: colors.white,
                   border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 600,
+                  borderRadius: '10px',
                   fontSize: '13px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  fontWeight: 600,
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
                   boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                  transition: 'all 0.3s ease',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                  width: '100%'
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
@@ -474,8 +408,91 @@ export default function AdminSiswaPage() {
                 }}
               >
                 <UserPlus size={18} />
-                Tambah Siswa
+                <span>Tambah Siswa</span>
               </button>
+
+              {/* Row 2: Import & Export Buttons */}
+              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                {/* Import Data Button */}
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 14px',
+                    background: colors.white,
+                    color: colors.emerald[600],
+                    border: `2px solid ${colors.emerald[200]}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    flex: 1
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = colors.emerald[50];
+                    e.currentTarget.style.borderColor = colors.emerald[300];
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(26, 147, 111, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = colors.white;
+                    e.currentTarget.style.borderColor = colors.emerald[200];
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <Upload size={16} />
+                  <span>Import</span>
+                </button>
+
+                {/* Export Data Button */}
+                <button
+                  onClick={handleExportData}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 14px',
+                    background: colors.white,
+                    color: colors.amber[600],
+                    border: `2px solid ${colors.amber[200]}`,
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    flex: 1
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = colors.amber[50];
+                    e.currentTarget.style.borderColor = colors.amber[300];
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = colors.white;
+                    e.currentTarget.style.borderColor = colors.amber[200];
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Export</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
