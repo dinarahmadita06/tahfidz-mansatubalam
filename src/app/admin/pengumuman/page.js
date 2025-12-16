@@ -331,8 +331,8 @@ export default function PengumumanPage() {
         {/* Modal Create/Edit */}
         {showModal && (
           <div
-            className="fixed inset-0 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingTop: '20px' }}
+            className="fixed inset-0 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto pt-20 sm:pt-4"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
           >
             <div className="bg-white rounded-3xl p-6 w-full sm:max-w-2xl max-w-sm my-auto" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
               {/* Modal Header */}
