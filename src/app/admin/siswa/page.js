@@ -1204,15 +1204,19 @@ export default function AdminSiswaPage() {
             gap: 16px !important;
           }
 
-          .buttons-container {
-            width: 100% !important;
-            flex-wrap: wrap !important;
+          /* Mobile: Keep 2-row layout for buttons */
+          div[style*="flexDirection: 'column', gap: '8px'"] {
+            flex-direction: column !important;
             gap: 8px !important;
+            width: 100% !important;
           }
 
-          .buttons-container button {
-            flex: 1 1 calc(33% - 6px) !important;
-            min-width: 100px !important;
+          div[style*="flexDirection: 'column', gap: '8px'"] > button:first-child {
+            width: 100% !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > div {
+            width: 100% !important;
           }
         }
 
@@ -1222,14 +1226,27 @@ export default function AdminSiswaPage() {
             gap: 0 !important;
           }
 
-          .buttons-container {
-            width: auto !important;
-            flex-wrap: nowrap !important;
+          /* Desktop: Change to 1-row layout */
+          div[style*="flexDirection: 'column', gap: '8px'"] {
+            flex-direction: row !important;
             gap: 8px !important;
+            width: auto !important;
           }
 
-          .buttons-container button {
-            flex: none !important;
+          div[style*="flexDirection: 'column', gap: '8px'"] > button:first-child {
+            width: auto !important;
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > div {
+            width: auto !important;
+            flex-direction: row !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > div > button {
+            flex: 0 1 auto !important;
+            min-width: 110px !important;
           }
         }
       `}</style>
