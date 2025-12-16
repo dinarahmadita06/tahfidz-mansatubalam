@@ -443,7 +443,7 @@ export default function AdminDashboardPage() {
           position: 'relative',
           padding: '32px 40px 20px',
           zIndex: 1,
-        }}>
+        }} className="dashboard-header">
           <div>
             <h1 style={{
               fontSize: '32px',
@@ -472,7 +472,7 @@ export default function AdminDashboardPage() {
           position: 'relative',
           padding: '0 40px 20px',
           zIndex: 1,
-        }}>
+        }} className="dashboard-quote">
           <div style={{
             background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
             borderRadius: '16px',
@@ -530,7 +530,7 @@ export default function AdminDashboardPage() {
           position: 'relative',
           padding: '0 40px 20px',
           zIndex: 1,
-        }}>
+        }} className="dashboard-pengumuman">
           <PengumumanWidget limit={3} />
         </div>
 
@@ -539,7 +539,7 @@ export default function AdminDashboardPage() {
           position: 'relative',
           zIndex: 1,
           padding: '0 40px 40px',
-        }}>
+        }} className="dashboard-main-content">
           {/* Stats Cards Grid - 7 Cards */}
           <div style={{
             display: 'grid',
@@ -593,7 +593,7 @@ export default function AdminDashboardPage() {
           position: 'relative',
           zIndex: 1,
           padding: '20px 40px 40px',
-        }}>
+        }} className="dashboard-charts">
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -819,6 +819,27 @@ export default function AdminDashboardPage() {
 
         /* Responsive */
         @media (max-width: 768px) {
+          /* Reduce padding on mobile for wider content */
+          .dashboard-header {
+            padding: 24px 16px 16px !important;
+          }
+          
+          .dashboard-quote {
+            padding: 0 16px 16px !important;
+          }
+          
+          .dashboard-pengumuman {
+            padding: 0 16px 16px !important;
+          }
+          
+          .dashboard-main-content {
+            padding: 0 16px 24px !important;
+          }
+          
+          .dashboard-charts {
+            padding: 16px 16px 24px !important;
+          }
+          
           .dashboard-stats-grid {
             grid-template-columns: 1fr !important;
           }
