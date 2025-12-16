@@ -313,7 +313,7 @@ export default function AdminGuruPage() {
           backdropFilter: 'blur(10px)',
           zIndex: 1,
         }} className="page-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexDirection: 'column', gap: '16px' }} className="header-container sm:flex-row sm:gap-0">
             <div>
               <h1 style={{
                 fontSize: '36px',
@@ -1227,6 +1227,22 @@ export default function AdminGuruPage() {
           
           .page-main-content {
             padding: 24px 16px 32px !important;
+          }
+
+          .header-container {
+            flex-direction: column !important;
+            gap: 16px !important;
+          }
+
+          .header-container div:last-child {
+            width: 100%;
+          }
+        }
+
+        @media (min-width: 640px) {
+          .header-container {
+            flex-direction: row !important;
+            gap: 0 !important;
           }
         }
       `}</style>
