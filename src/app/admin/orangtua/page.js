@@ -362,7 +362,7 @@ export default function AdminOrangTuaPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexDirection: 'column', gap: '16px' }} className="header-container sm:flex-row sm:gap-0">
             <div>
               <h1 style={{
-                fontSize: '36px',
+                fontSize: '24px',
                 fontWeight: 700,
                 background: `linear-gradient(135deg, ${colors.violet[600]} 0%, ${colors.violet[500]} 100%)`,
                 WebkitBackgroundClip: 'text',
