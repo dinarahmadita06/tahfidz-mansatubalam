@@ -222,7 +222,7 @@ export default function PengumumanPage() {
               <Megaphone className="text-white" size={28} />
             </div>
             <div className="min-w-0">
-              <h1 className="text-3xl font-bold text-gray-900">Pengumuman</h1>
+              <h1 className="text-3xl font-bold text-gray-900" style={{ fontSize: '24px' }}>Pengumuman</h1>
               <p className="text-sm text-gray-600 mt-1">
                 Kelola pengumuman untuk semua pengguna aplikasi
               </p>

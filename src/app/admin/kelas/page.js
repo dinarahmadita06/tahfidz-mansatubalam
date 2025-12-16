@@ -683,7 +683,7 @@ export default function AdminKelasPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <h1 style={{
-                fontSize: '36px',
+                fontSize: '24px',
                 fontWeight: 700,
                 background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.gold[600]} 100%)`,
                 WebkitBackgroundClip: 'text',
