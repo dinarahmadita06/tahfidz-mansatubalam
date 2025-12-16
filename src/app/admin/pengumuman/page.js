@@ -338,7 +338,7 @@ export default function PengumumanPage() {
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
+                  <h2 className="text-xl sm:text-3xl font-bold text-gray-900">
                     {editingId ? 'Edit Pengumuman' : 'Buat Pengumuman Baru'}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
