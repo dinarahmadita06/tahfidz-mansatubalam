@@ -108,9 +108,10 @@ export default function GuruDashboard() {
     }
 
     try {
-      const kelasRes = await fetch('/api/kelas');
+      // Get guru's specific classes, not all classes in system
+      const kelasRes = await fetch('/api/guru/kelas');
       const kelasData = await kelasRes.json();
-      setKelasList(Array.isArray(kelasData) ? kelasData : []);
+      setKelasList(Array.isArray(kelasData.kelas) ? kelasData.kelas : []);
 
       const siswaRes = await fetch('/api/siswa');
       const siswaData = await siswaRes.json();
@@ -131,14 +132,14 @@ export default function GuruDashboard() {
         }
         const avgProgress = totalProgress / siswaArray.length;
 
-        const kelasArray = Array.isArray(kelasData) ? kelasData : [];
+        const kelasArray = Array.isArray(kelasData.kelas) ? kelasData.kelas : [];
         setStats({
           jumlahKelas: kelasArray.length,
           jumlahSiswa: siswaArray.length,
           progressRataRata: avgProgress.toFixed(1),
         });
       } else {
-        const kelasArray = Array.isArray(kelasData) ? kelasData : [];
+        const kelasArray = Array.isArray(kelasData.kelas) ? kelasData.kelas : [];
         setStats({
           jumlahKelas: kelasArray.length,
           jumlahSiswa: 0,
