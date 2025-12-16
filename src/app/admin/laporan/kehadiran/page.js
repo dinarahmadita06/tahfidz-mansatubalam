@@ -6,7 +6,10 @@ import { FileText, Download, Loader, AlertTriangle, Users, TrendingUp, Activity,
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import Image from 'next/image';
+
+// Import logos as data URLs
+const logoMan1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+const logoKemenag = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
 export default function LaporanKehadiranPage() {
   const [kelasList, setKelasList] = useState([]);
@@ -100,120 +103,148 @@ export default function LaporanKehadiranPage() {
     }
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     if (!reportData) return;
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+    try {
+      // Fetch logos as base64
+      const logoMan1Data = await fetch('/logo-man1.png')
+        .then(res => res.blob())
+        .then(blob => new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        }))
+        .catch(() => null);
 
-    // Header with logos
-    const logoSize = 15;
-    const logoY = 8;
-    
-    // Left logo (MAN 1)
-    doc.addImage('/logo-man1.png', 'PNG', 10, logoY, logoSize, logoSize);
-    
-    // Right logo (Kemenag)
-    doc.addImage('/logo-kemenag.png', 'PNG', pageWidth - 10 - logoSize, logoY, logoSize, logoSize);
+      const logoKemenagData = await fetch('/logo-kemenag.png')
+        .then(res => res.blob())
+        .then(blob => new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        }))
+        .catch(() => null);
 
-    // Kop Surat - Professional Header
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MAN 1 BANDAR LAMPUNG', pageWidth / 2, 20, { align: 'center' });
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Jl. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame', pageWidth / 2, 27, { align: 'center' });
-    doc.text('Kota Bandar Lampung, Lampung 35131', pageWidth / 2, 32, { align: 'center' });
+      // Header with logos
+      const logoSize = 15;
+      const logoY = 8;
+      
+      // Left logo (MAN 1)
+      if (logoMan1Data) {
+        doc.addImage(logoMan1Data, 'PNG', 10, logoY, logoSize, logoSize);
+      }
+      
+      // Right logo (Kemenag)
+      if (logoKemenagData) {
+        doc.addImage(logoKemenagData, 'PNG', pageWidth - 10 - logoSize, logoY, logoSize, logoSize);
+      }
 
-    // Line separator
-    doc.setLineWidth(0.5);
-    doc.line(10, 35, pageWidth - 10, 35);
-    doc.setLineWidth(0.2);
-    doc.line(10, 36, pageWidth - 10, 36);
+      // Kop Surat - Professional Header
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('MAN 1 BANDAR LAMPUNG', pageWidth / 2, 20, { align: 'center' });
 
-    // Document title
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LAPORAN KEHADIRAN TAHFIDZ AL-QUR\'AN', pageWidth / 2, 45, { align: 'center' });
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Jl. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame', pageWidth / 2, 27, { align: 'center' });
+      doc.text('Kota Bandar Lampung, Lampung 35131', pageWidth / 2, 32, { align: 'center' });
 
-    // Info
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Periode: ${reportData.periodeText}`, 14, 54);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 59);
-    doc.text(`Kelas: ${reportData.kelasNama}`, 14, 64);
+      // Line separator
+      doc.setLineWidth(0.5);
+      doc.line(10, 35, pageWidth - 10, 35);
+      doc.setLineWidth(0.2);
+      doc.line(10, 36, pageWidth - 10, 36);
 
-    // Summary
-    let yPos = 72;
-    doc.setFont('helvetica', 'bold');
-    doc.text('RINGKASAN STATISTIK:', 14, yPos);
-    doc.setFont('helvetica', 'normal');
-    yPos += 5;
-    doc.text(`Jumlah Siswa: ${reportData.summary.jumlahSiswa} orang`, 14, yPos);
-    yPos += 5;
-    doc.text(`Total Pertemuan: ${reportData.summary.totalPertemuan} kali`, 14, yPos);
-    yPos += 5;
-    doc.text(`Total Hadir: ${reportData.summary.totalHadir || 0} hari`, 14, yPos);
-    yPos += 5;
-    doc.text(`Total Izin: ${reportData.summary.totalIzin || 0} hari`, 14, yPos);
-    yPos += 5;
-    doc.text(`Total Sakit: ${reportData.summary.totalSakit || 0} hari`, 14, yPos);
-    yPos += 5;
-    doc.text(`Total Alpa: ${reportData.summary.totalAlpa || 0} hari`, 14, yPos);
-    yPos += 10;
+      // Document title
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('LAPORAN KEHADIRAN TAHFIDZ AL-QUR\'AN', pageWidth / 2, 45, { align: 'center' });
 
-    // Table with raw numbers only
-    const tableData = reportData.siswaData.map((s, idx) => [
-      idx + 1,
-      s.nama,
-      s.nisn,
-      s.hadir || 0,
-      s.izin || 0,
-      s.sakit || 0,
-      s.alpa || 0,
-      s.status
-    ]);
+      // Info
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Periode: ${reportData.periodeText}`, 14, 54);
+      doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 59);
+      doc.text(`Kelas: ${reportData.kelasNama}`, 14, 64);
 
-    autoTable(doc, {
-      startY: yPos,
-      head: [['No', 'Nama Siswa', 'NISN', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Status']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [0, 201, 141] },
-      bodyStyles: { fontSize: 8 },
-      margin: { bottom: 70 }
-    });
+      // Summary
+      let yPos = 72;
+      doc.setFont('helvetica', 'bold');
+      doc.text('RINGKASAN STATISTIK:', 14, yPos);
+      doc.setFont('helvetica', 'normal');
+      yPos += 5;
+      doc.text(`Jumlah Siswa: ${reportData.summary.jumlahSiswa} orang`, 14, yPos);
+      yPos += 5;
+      doc.text(`Total Pertemuan: ${reportData.summary.totalPertemuan} kali`, 14, yPos);
+      yPos += 5;
+      doc.text(`Total Hadir: ${reportData.summary.totalHadir || 0} hari`, 14, yPos);
+      yPos += 5;
+      doc.text(`Total Izin: ${reportData.summary.totalIzin || 0} hari`, 14, yPos);
+      yPos += 5;
+      doc.text(`Total Sakit: ${reportData.summary.totalSakit || 0} hari`, 14, yPos);
+      yPos += 5;
+      doc.text(`Total Alpa: ${reportData.summary.totalAlpa || 0} hari`, 14, yPos);
+      yPos += 10;
 
-    // Signature section - Dynamic positioning following table
-    const tableEndY = doc.lastAutoTable?.finalY || doc.previousAutoTable?.finalY || 100;
+      // Table with raw numbers only
+      const tableData = reportData.siswaData.map((s, idx) => [
+        idx + 1,
+        s.nama,
+        s.nisn,
+        s.hadir || 0,
+        s.izin || 0,
+        s.sakit || 0,
+        s.alpa || 0,
+        s.status
+      ]);
 
-    // Check if there's enough space for signature, otherwise add new page
-    let signatureY = tableEndY + 15;
-    if (signatureY + 50 > pageHeight - 15) {
-      doc.addPage();
-      signatureY = 20;
+      autoTable(doc, {
+        startY: yPos,
+        head: [['No', 'Nama Siswa', 'NISN', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Status']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 201, 141] },
+        bodyStyles: { fontSize: 8 },
+        margin: { bottom: 70 }
+      });
+
+      // Signature section - Dynamic positioning following table
+      const tableEndY = doc.lastAutoTable?.finalY || doc.previousAutoTable?.finalY || 100;
+
+      // Check if there's enough space for signature, otherwise add new page
+      let signatureY = tableEndY + 15;
+      if (signatureY + 50 > pageHeight - 15) {
+        doc.addPage();
+        signatureY = 20;
+      }
+
+      // Date and location
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      doc.text(`Bandar Lampung, ${today}`, pageWidth - 14, signatureY, { align: 'right' });
+
+      signatureY += 12;
+
+      // Left signature (Guru Tahfidz)
+      doc.text('Mengetahui,', 14, signatureY);
+      doc.text('Guru Tahfidz', 14, signatureY + 20);
+      doc.text('_____________________', 14, signatureY + 25);
+
+      // Right signature (Koordinator Tahfidz)
+      doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
+      doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+
+      doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Gagal export PDF. Silahkan coba lagi.');
     }
-
-    // Date and location
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-    doc.text(`Bandar Lampung, ${today}`, pageWidth - 14, signatureY, { align: 'right' });
-
-    signatureY += 12;
-
-    // Left signature (Guru Tahfidz)
-    doc.text('Mengetahui,', 14, signatureY);
-    doc.text('Guru Tahfidz', 14, signatureY + 20);
-    doc.text('_____________________', 14, signatureY + 25);
-
-    // Right signature (Koordinator Tahfidz)
-    doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
-    doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
-
-    doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
   };
 
   return (
