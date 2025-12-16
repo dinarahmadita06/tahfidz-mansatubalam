@@ -289,12 +289,12 @@ export default function LaporanKehadiranPage() {
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text('Mengetahui,', leftColX, signatureY);
+      doc.text('Mengetahui,', colCenterX1, signatureY, { align: 'center' });
       doc.text(`Bandar Lampung, ${today}`, colCenterX2, signatureY, { align: 'center' });
 
       signatureY += 10;
 
-      // ROW 2: (empty left) | Koordinator Tahfidz (right)
+      // ROW 2: (empty left) | Koordinator Tahfidz (right) - sejajar dengan Mengetahui
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text(adminData.jabatan, colCenterX2, signatureY, { align: 'center' });
