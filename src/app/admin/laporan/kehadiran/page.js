@@ -281,13 +281,13 @@ export default function LaporanKehadiranPage() {
 
       signatureY += 12;
 
-      // Title row: "Mengetahui," and "[Jabatan Koordinator]"
+      // Title row: "Mengetahui," (left) and "[Jabatan Koordinator]" (right, above signature)
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text('Mengetahui,', 14, signatureY);
       doc.text(adminData.jabatan, pageWidth - 14, signatureY, { align: 'right' });
 
-      signatureY += 8;
+      signatureY += 10; // Space for signatures below titles
 
       // Signature display area (2-column layout)
       const colWidth = (pageWidth - 28) / 2; // Two equal columns
