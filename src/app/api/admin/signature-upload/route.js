@@ -1,7 +1,7 @@
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
+
+const prisma = new PrismaClient();
 
 export async function POST(request) {
   try {
@@ -49,29 +49,38 @@ export async function POST(request) {
     const uint8Array = new Uint8Array(buffer);
     console.log('[Signature Upload] Buffer ready, size:', uint8Array.length);
 
-    // Try multiple paths - use public folder in workspace
-    const workspaceRoot = process.cwd();
-    console.log('[Signature Upload] Workspace root:', workspaceRoot);
-    
-    // Path 1: /public/signatures (relative to workspace)
-    const publicSignaturesDir = join(workspaceRoot, 'public', 'signatures');
-    console.log('[Signature Upload] Attempting to use path:', publicSignaturesDir);
-    
+    // Convert to base64
+    const base64Data = Buffer.from(uint8Array).toString('base64');
+    const base64DataUrl = `data:image/png;base64,${base64Data}`;
+    console.log('[Signature Upload] Base64 encoded, length:', base64DataUrl.length);
+
+    // Validate type
+    if (type !== 'guru' && type !== 'koordinator') {
+      return NextResponse.json(
+        { error: 'Type harus guru atau koordinator' },
+        { status: 400 }
+      );
+    }
+
+    // Save to database
     try {
-      // Make sure directory exists
-      const parentDir = join(workspaceRoot, 'public');
-      if (!existsSync(publicSignaturesDir)) {
-        console.log('[Signature Upload] Creating signatures directory...');
-        await mkdir(publicSignaturesDir, { recursive: true });
-      }
-      
-      // Save file
-      const fileName = type === 'guru' ? 'guru_signature.png' : 'koordinator_signature.png';
-      const filePath = join(publicSignaturesDir, fileName);
-      
-      console.log('[Signature Upload] Writing file to:', filePath);
-      await writeFile(filePath, uint8Array);
-      console.log('[Signature Upload] File saved successfully to:', filePath);
+      const signature = await prisma.adminSignature.upsert({
+        where: { type },
+        update: {
+          signatureData: base64DataUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          updatedAt: new Date()
+        },
+        create: {
+          type,
+          signatureData: base64DataUrl,
+          fileName: file.name,
+          fileSize: file.size
+        }
+      });
+
+      console.log('[Signature Upload] Saved to database:', { type, id: signature.id });
 
       const successMsg = `Tanda tangan ${type === 'guru' ? 'Guru Tahfidz' : 'Koordinator Tahfidz'} berhasil diupload`;
       console.log('[Signature Upload] Success:', successMsg);
@@ -79,15 +88,19 @@ export async function POST(request) {
       return NextResponse.json(
         { 
           message: successMsg,
-          path: `/signatures/${fileName}`,
           success: true,
-          debugInfo: { savedPath: filePath }
+          type,
+          signature: {
+            id: signature.id,
+            fileName: signature.fileName,
+            uploadedAt: signature.uploadedAt
+          }
         },
         { status: 200 }
       );
-    } catch (fsError) {
-      console.error('[Signature Upload] File system error:', fsError);
-      throw fsError;
+    } catch (dbError) {
+      console.error('[Signature Upload] Database error:', dbError);
+      throw dbError;
     }
   } catch (error) {
     console.error('[Signature Upload] Fatal error:', error);
@@ -95,5 +108,54 @@ export async function POST(request) {
       { error: `Gagal upload tanda tangan: ${error.message}` },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+// GET endpoint untuk fetch signature
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type'); // 'guru' atau 'koordinator'
+
+    if (!type) {
+      return NextResponse.json(
+        { error: 'Type parameter diperlukan' },
+        { status: 400 }
+      );
+    }
+
+    const signature = await prisma.adminSignature.findUnique({
+      where: { type }
+    });
+
+    if (!signature) {
+      return NextResponse.json(
+        { error: 'Signature tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        signature: {
+          type: signature.type,
+          data: signature.signatureData,
+          fileName: signature.fileName,
+          uploadedAt: signature.uploadedAt
+        }
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('[Signature Fetch] Error:', error);
+    return NextResponse.json(
+      { error: `Gagal fetch tanda tangan: ${error.message}` },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
   }
 }
