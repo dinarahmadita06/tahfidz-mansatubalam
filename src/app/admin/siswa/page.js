@@ -373,7 +373,7 @@ export default function AdminSiswaPage() {
             </div>
 
             {/* Action Buttons - Two Row Layout */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }} className="action-buttons-container">
               {/* Row 1: Tambah Siswa Button - Full Width */}
               <button
                 onClick={() => {
@@ -1205,17 +1205,17 @@ export default function AdminSiswaPage() {
           }
 
           /* Mobile: Keep 2-row layout for buttons */
-          div[style*="flexDirection: 'column', gap: '8px'"] {
+          .action-buttons-container {
             flex-direction: column !important;
             gap: 8px !important;
             width: 100% !important;
           }
 
-          div[style*="flexDirection: 'column', gap: '8px'"] > button:first-child {
+          .action-buttons-container > button:first-child {
             width: 100% !important;
           }
 
-          div[style*="flexDirection: 'column', gap: '8px'"] > div {
+          .action-buttons-container > div {
             width: 100% !important;
           }
         }
@@ -1225,26 +1225,28 @@ export default function AdminSiswaPage() {
             flex-direction: row !important;
             gap: 0 !important;
           }
+        }
 
+        @media (min-width: 769px) {
           /* Desktop: Change to 1-row layout */
-          div[style*="flexDirection: 'column', gap: '8px'"] {
+          .action-buttons-container {
             flex-direction: row !important;
             gap: 8px !important;
             width: auto !important;
           }
 
-          div[style*="flexDirection: 'column', gap: '8px'"] > button:first-child {
+          .action-buttons-container > button:first-child {
             width: auto !important;
             padding: 8px 14px !important;
             font-size: 13px !important;
           }
 
-          div[style*="flexDirection: 'column', gap: '8px'"] > div {
+          .action-buttons-container > div {
             width: auto !important;
             flex-direction: row !important;
           }
 
-          div[style*="flexDirection: 'column', gap: '8px'"] > div > button {
+          .action-buttons-container > div > button {
             flex: 0 1 auto !important;
             min-width: 110px !important;
           }
