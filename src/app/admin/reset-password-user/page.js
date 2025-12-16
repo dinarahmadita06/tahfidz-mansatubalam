@@ -101,7 +101,7 @@ export default function ResetPasswordUserPage() {
         backgroundSize: '60px 60px'
       }}></div>
 
-      <div className="relative min-h-screen py-8 px-4">
+      <div className="relative min-h-screen py-8 px-4 reset-password-container">
         {/* Container utama dengan max-width lebih besar & centered */}
         <div className="max-w-[750px] mx-auto space-y-6">
 
@@ -377,6 +377,12 @@ export default function ResetPasswordUserPage() {
           to {
             opacity: 1;
             transform: scale(1);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .reset-password-container {
+            padding: 16px 16px !important;
           }
         }
       `}</style>

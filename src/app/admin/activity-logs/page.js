@@ -148,10 +148,21 @@ export default function ActivityLogsPage() {
         body {
           font-family: 'Poppins', sans-serif;
         }
+        
+        /* Mobile Responsive Padding for Activity Logs */
+        .activity-container {
+          padding: 32px;
+        }
+        
+        @media (max-width: 768px) {
+          .activity-container {
+            padding: 16px;
+          }
+        }
       `}</style>
 
       <div
-        className="min-h-screen p-8"
+        className="min-h-screen activity-container"
         style={{
           background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
           fontFamily: 'Poppins, sans-serif'

@@ -426,6 +426,27 @@ export default function LaporanHafalanPage() {
           opacity: 0.5;
           cursor: not-allowed;
         }
+        
+        /* Mobile Responsive Padding */
+        .laporan-header {
+          padding: 48px;
+          margin-bottom: 24px;
+        }
+        
+        .laporan-container {
+          padding: 0 48px 48px 48px;
+        }
+        
+        @media (max-width: 768px) {
+          .laporan-header {
+            padding: 24px 16px 20px 16px;
+            margin-bottom: 16px;
+          }
+          
+          .laporan-container {
+            padding: 0 16px 24px 16px;
+          }
+        }
       `}</style>
 
       <div style={{ 
@@ -433,13 +454,13 @@ export default function LaporanHafalanPage() {
         background: 'linear-gradient(180deg, #FEFFD9 0%, #F7FFE5 40%, #F5FBEF 100%)'
       }}>
         {/* Header Section */}
-        <div style={{ paddingLeft: '48px', paddingRight: '48px', paddingTop: '48px', paddingBottom: '32px', marginBottom: '24px' }}>
+        <div className="laporan-header">
           <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Laporan Hafalan</h1>
           <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Generate dan unduh laporan hafalan siswa secara terperinci</p>
         </div>
 
         {/* Main Container */}
-        <div style={{ paddingLeft: '48px', paddingRight: '48px', paddingBottom: '48px' }}>
+        <div className="laporan-container">
           {/* Filter Card */}
           <div className="filter-card p-8 mb-8">
             <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Filter Laporan</h2>

@@ -268,7 +268,7 @@ export default function ProfileAdminPage() {
       `}</style>
 
       <div
-        className="min-h-screen p-8 relative overflow-hidden"
+        className="min-h-screen p-8 relative overflow-hidden profile-container"
         style={{
           background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
           fontFamily: 'Poppins, sans-serif'
@@ -811,6 +811,14 @@ export default function ProfileAdminPage() {
           </div>
         )}
       </div>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .profile-container {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }

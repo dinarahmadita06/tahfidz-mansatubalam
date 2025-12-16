@@ -112,7 +112,7 @@ export default function PengaturanPage() {
       `}</style>
 
       <div
-        className="min-h-screen p-8"
+        className="min-h-screen p-8 settings-container"
         style={{
           background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
           fontFamily: 'Poppins, sans-serif'
@@ -593,6 +593,14 @@ export default function PengaturanPage() {
           Perubahan pengaturan akan disimpan secara otomatis. Pastikan Anda memiliki hak akses sebagai administrator
           utama.
         </div>
+
+        <style jsx global>{`
+          @media (max-width: 768px) {
+            .settings-container {
+              padding: 16px !important;
+            }
+          }
+        `}</style>
 
         {/* Password Modal */}
         {showPasswordModal && (
