@@ -151,9 +151,11 @@ export default function AdminGuruPage() {
     fetchGuru();
   }, []);
 
-  const fetchGuru = async () => {
+  const fetchGuru = async (skipCache = false) => {
     try {
-      const response = await fetch('/api/guru');
+      // Add cache busting parameter if skipCache is true
+      const url = skipCache ? `/api/guru?t=${Date.now()}` : '/api/guru';
+      const response = await fetch(url);
       const data = await response.json();
       setGuru(data);
     } catch (error) {
@@ -161,6 +163,18 @@ export default function AdminGuruPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    // Also clear server-side cache
+    try {
+      await fetch('/api/admin/clear-cache', { method: 'POST' });
+    } catch (err) {
+      console.error('Error clearing cache:', err);
+    }
+    // Fetch fresh data
+    await fetchGuru(true);
   };
 
   const handleSubmit = async (e) => {
@@ -775,11 +789,11 @@ export default function AdminGuruPage() {
                           <td style={{
                             padding: '20px 24px',
                           }}>
-                            {guruItem.kelasGuru && guruItem.kelasGuru.length > 0 ? (
+                            {guruItem.guruKelas && guruItem.guruKelas.length > 0 ? (
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                {guruItem.kelasGuru.map((kg) => (
+                                {guruItem.guruKelas.map((gk) => (
                                   <span
-                                    key={kg.id}
+                                    key={gk.id}
                                     style={{
                                       padding: '4px 10px',
                                       fontSize: '12px',
@@ -791,7 +805,7 @@ export default function AdminGuruPage() {
                                     }}
                                   >
                                     <GraduationCap size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                                    {kg.kelas.nama}
+                                    {gk.kelas.nama}
                                   </span>
                                 ))}
                               </div>
