@@ -124,16 +124,8 @@ const surahData = [
 async function main() {
   console.log('🌱 Starting seed...');
 
-  // Seed Surah
-  console.log('📖 Seeding Surah data...');
-  for (const surah of surahData) {
-    await prisma.surah.upsert({
-      where: { nomor: surah.nomor },
-      update: {},
-      create: surah,
-    });
-  }
-  console.log('✅ Surah data seeded successfully!');
+  // Note: Surah model doesn't exist in schema, data stored as strings in Hafalan table
+  console.log('⏭️  Skipping Surah seeding (no Surah model in schema)...');
 
   // Seed Tahun Ajaran
   console.log('📅 Seeding Tahun Ajaran...');
@@ -162,7 +154,6 @@ async function main() {
       password: hashedPassword,
       name: 'Administrator',
       role: 'ADMIN',
-      isActive: true,
     },
   });
   console.log('✅ Admin user created! Email: admin@tahfidz.sch.id | Password: admin123');
@@ -178,11 +169,10 @@ async function main() {
       password: guruPassword,
       name: 'Ustadz Ahmad',
       role: 'GURU',
-      isActive: true,
       guru: {
         create: {
           nip: '198501012010011001',
-          jenisKelamin: 'L',
+          jenisKelamin: 'LAKI_LAKI',
           noHP: '081234567890',
           alamat: 'Jl. Pendidikan No. 123',
         },
@@ -242,12 +232,14 @@ async function main() {
         password: orangTuaPassword,
         name: 'Bapak Ali',
         role: 'ORANG_TUA',
-        isActive: true,
         orangTua: {
           create: {
+            nik: '3201010101700001',
+            jenisKelamin: 'LAKI_LAKI',
             pekerjaan: 'Wiraswasta',
-            noHP: '081234567891',
+            noTelepon: '081234567891',
             alamat: 'Jl. Keluarga No. 45',
+            status: 'approved',
           },
         },
       },
@@ -268,21 +260,28 @@ async function main() {
         password: siswaPassword,
         name: 'Muhammad Rizki',
         role: 'SISWA',
-        isActive: true,
         siswa: {
           create: {
             nisn: '0012345678',
             nis: '2021001',
             kelasId: kelas.id,
-            jenisKelamin: 'Laki-laki',
-            tempatLahir: 'Jakarta',
+            jenisKelamin: 'LAKI_LAKI',
             tanggalLahir: new Date('2006-05-15'),
             alamat: 'Jl. Siswa No. 1',
-            noHP: '081234567892',
-            orangTuaId: orangTuaUser.orangTua.id,
+            noTelepon: '081234567892',
             status: 'approved',
           },
         },
+      },
+      include: { siswa: true },
+    });
+
+    // Create OrangTuaSiswa relationship
+    await prisma.orangTuaSiswa.create({
+      data: {
+        orangTuaId: orangTuaUser.orangTua.id,
+        siswaId: siswaUser.siswa.id,
+        hubungan: 'Ayah',
       },
     });
   }

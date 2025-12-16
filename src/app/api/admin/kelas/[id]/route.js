@@ -19,7 +19,7 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { nama, tahunAjaranId, targetJuz, kapasitas, guruUtamaId, guruPendampingIds } = body;
+    const { nama, tahunAjaranId, targetJuz, kapasitas, guruUtamaId, guruPendampingIds, forceUpdate } = body;
 
     // Validate required fields
     if (!nama || !tahunAjaranId) {
@@ -39,6 +39,46 @@ export async function PUT(request, { params }) {
         { error: 'Kelas tidak ditemukan' },
         { status: 404 }
       );
+    }
+
+    // Validasi: Cek apakah guru utama sudah menjadi guru di kelas lain
+    if (guruUtamaId && guruUtamaId.trim() && !forceUpdate) {
+      const existingGuruKelas = await prisma.guruKelas.findFirst({
+        where: {
+          guruId: guruUtamaId,
+          kelasId: {
+            not: id // Exclude kelas yang sedang diedit
+          }
+        },
+        include: {
+          kelas: {
+            select: {
+              id: true,
+              nama: true
+            }
+          },
+          guru: {
+            include: {
+              user: {
+                select: {
+                  name: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (existingGuruKelas) {
+        // Guru sudah memiliki kelas lain, minta konfirmasi
+        return NextResponse.json({
+          requiresConfirmation: true,
+          guruName: existingGuruKelas.guru.user.name,
+          existingKelas: existingGuruKelas.kelas.nama,
+          newKelas: nama,
+          message: `${existingGuruKelas.guru.user.name} saat ini menjadi Guru Tahfidz di kelas ${existingGuruKelas.kelas.nama}. Apakah Anda yakin ingin menambahkannya ke kelas ${nama}?`
+        }, { status: 409 });
+      }
     }
 
     // Update kelas dengan guru menggunakan transaction

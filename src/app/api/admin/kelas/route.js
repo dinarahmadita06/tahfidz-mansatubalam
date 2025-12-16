@@ -12,7 +12,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { nama, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds } = body;
+    const { nama, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds, forceCreate } = body;
 
     // Validate required fields
     if (!nama || !tahunAjaranId) {
@@ -49,6 +49,43 @@ export async function POST(request) {
         { error: `Kelas "${nama}" sudah ada. Silakan gunakan nama kelas yang berbeda.` },
         { status: 409 }
       );
+    }
+
+    // Validasi: Cek apakah guru utama sudah menjadi guru di kelas lain
+    if (guruUtamaId && guruUtamaId.trim() && !forceCreate) {
+      const existingGuruKelas = await prisma.guruKelas.findFirst({
+        where: {
+          guruId: guruUtamaId
+        },
+        include: {
+          kelas: {
+            select: {
+              id: true,
+              nama: true
+            }
+          },
+          guru: {
+            include: {
+              user: {
+                select: {
+                  name: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (existingGuruKelas) {
+        // Guru sudah memiliki kelas lain, minta konfirmasi
+        return NextResponse.json({
+          requiresConfirmation: true,
+          guruName: existingGuruKelas.guru.user.name,
+          existingKelas: existingGuruKelas.kelas.nama,
+          newKelas: nama,
+          message: `${existingGuruKelas.guru.user.name} saat ini menjadi Guru Tahfidz di kelas ${existingGuruKelas.kelas.nama}. Apakah Anda yakin ingin menambahkannya ke kelas ${nama}?`
+        }, { status: 409 });
+      }
     }
 
     // Create kelas dengan guru menggunakan transaction
