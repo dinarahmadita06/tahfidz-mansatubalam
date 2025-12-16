@@ -190,11 +190,11 @@ export default function LaporanKehadiranPage() {
       doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 59);
       doc.text(`Kelas: ${reportData.kelasNama}`, 14, 64);
 
-      // Summary Statistics - Centered Horizontal Card Layout
+      // Summary Statistics - Left-aligned cards with centered text
       let yPos = 72;
       const cardHeight = 18;
-      const cardWidth = 25;      // Slightly reduced to fit 6 cards centered
-      const cardSpacingX = 2;    // Minimal spacing between cards
+      const cardWidth = 27;
+      const cardSpacingX = 2.5;
       
       // 6 Statistics cards: Jumlah Siswa, Total Pertemuan, Hadir, Izin, Sakit, Alpa
       const stats = [
@@ -206,13 +206,7 @@ export default function LaporanKehadiranPage() {
         { label: 'Alpa', value: reportData.summary.totalAlpa || 0, unit: 'hari' }
       ];
       
-      // Calculate total width of all cards and center them
-      const totalCardWidth = (cardWidth + cardSpacingX) * 6 - cardSpacingX; // Total width without final spacing
-      const containerPadding = 14; // Left and right padding
-      const availableWidth = pageWidth - (containerPadding * 2);
-      const startXOffset = (availableWidth - totalCardWidth) / 2 + containerPadding; // Center cards
-      
-      let xPos = startXOffset;
+      let xPos = 14;
       stats.forEach((stat, idx) => {
         // Draw card background (light green)
         doc.setFillColor(209, 250, 229); // Light emerald background #DFF7E5
@@ -223,20 +217,20 @@ export default function LaporanKehadiranPage() {
         doc.setLineWidth(0.4);
         doc.rect(xPos, yPos, cardWidth, cardHeight);
         
-        // Label text (7pt, small)
+        // Label text (7pt, small, centered in card)
         doc.setFontSize(7);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(100, 116, 109);
         const labelLines = doc.splitTextToSize(stat.label, cardWidth - 1);
-        doc.text(labelLines, xPos + 0.6, yPos + 2.5, { align: 'center', maxWidth: cardWidth - 1.2 });
+        doc.text(labelLines, xPos + cardWidth / 2, yPos + 2.5, { align: 'center' });
         
-        // Value text (12pt, bold)
+        // Value text (12pt, bold, centered in card)
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(6, 78, 59); // Dark green
         doc.text(stat.value.toString(), xPos + cardWidth / 2, yPos + 10, { align: 'center' });
         
-        // Unit text (6pt, small)
+        // Unit text (6pt, small, centered in card)
         doc.setFontSize(6);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(107, 126, 117);
@@ -269,7 +263,7 @@ export default function LaporanKehadiranPage() {
         margin: { bottom: 70 }
       });
 
-      // Signature section - 2-column centered layout
+      // Signature section - Simple 2-column layout (left-right, not centered)
       const tableEndY = doc.lastAutoTable?.finalY || doc.previousAutoTable?.finalY || 100;
 
       // Check if there's enough space for signature, otherwise add new page
@@ -279,54 +273,42 @@ export default function LaporanKehadiranPage() {
         signatureY = 20;
       }
 
-      // Two-column signature layout (centered)
-      const colWidth = (pageWidth - 28) / 2; // Two equal columns with padding
-      const leftColX = 14;                    // Left column starts at 14
-      const rightColX = 14 + colWidth + 4;  // Right column starts after left col + spacing
-      const colCenterX1 = leftColX + colWidth / 2;   // Left column center
-      const colCenterX2 = rightColX + colWidth / 2;  // Right column center
+      // Simple 2-column layout: Left for Guru, Right for Koordinator
+      const colWidth = (pageWidth - 28) / 2; // Two equal columns
+      const leftColX = 14;                    // Left column at 14
+      const rightColX = 14 + colWidth + 4;  // Right column after left
 
-      // Date and location (right column header)
+      // Date and location (right-aligned)
       const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Bandar Lampung, ${today}`, colCenterX2, signatureY, { align: 'center' });
+      doc.text(`Bandar Lampung, ${today}`, pageWidth - 14, signatureY, { align: 'right' });
 
-      signatureY += 5;
+      signatureY += 8;
 
-      // Title row: "Mengetahui," (left) and "Koordinator Tahfidz" (right), both centered in their columns
+      // Title row: "Mengetahui," (left) and "Koordinator Tahfidz" (right)
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.text('Mengetahui,', colCenterX1, signatureY, { align: 'center' });
-      doc.text(adminData.jabatan, colCenterX2, signatureY, { align: 'center' });
+      doc.text('Mengetahui,', leftColX, signatureY);
+      doc.text(adminData.jabatan, rightColX, signatureY);
 
-      signatureY += 2;
+      signatureY += 8; // Space for TTD
 
-      // Sub-title: "Guru Tahfidz" and "Admin Name" (centered in each column)
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Guru Tahfidz', colCenterX1, signatureY, { align: 'center' });
-      doc.text(`( ${adminData.nama} )`, colCenterX2, signatureY, { align: 'center' });
-
-      signatureY += 12; // Space for signature images
-
-      // Signature images (side by side, centered in each column)
-      const sigImageMaxWidth = 35;   // Max width for signature
-      const sigImageMaxHeight = 22;  // Max height for signature
+      // Signature display area
+      const sigImageMaxWidth = 38;
+      const sigImageMaxHeight = 24;
       let sigY = signatureY;
 
-      // LEFT: Guru Tahfidz Signature (centered in left column)
+      // LEFT: Guru Tahfidz Signature
       try {
         const guruRes = await fetch('/api/admin/signature-upload?type=guru');
         if (guruRes.ok) {
           const guruData = await guruRes.json();
           if (guruData.signature && guruData.signature.data) {
-            // Center signature horizontally in left column
-            const sigX1 = colCenterX1 - sigImageMaxWidth / 2;
             doc.addImage(
               guruData.signature.data,
               'PNG',
-              sigX1,
+              leftColX,
               sigY,
               sigImageMaxWidth,
               sigImageMaxHeight,
@@ -337,36 +319,34 @@ export default function LaporanKehadiranPage() {
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(150, 150, 150);
-            doc.text('TTD belum diupload', colCenterX1, sigY + 10, { align: 'center' });
+            doc.text('TTD belum diupload', leftColX, sigY + 12);
             doc.setTextColor(0, 0, 0);
           }
         } else {
           doc.setFontSize(9);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(150, 150, 150);
-          doc.text('TTD belum diupload', colCenterX1, sigY + 10, { align: 'center' });
+          doc.text('TTD belum diupload', leftColX, sigY + 12);
           doc.setTextColor(0, 0, 0);
         }
       } catch (err) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(150, 150, 150);
-        doc.text('TTD belum diupload', colCenterX1, sigY + 10, { align: 'center' });
+        doc.text('TTD belum diupload', leftColX, sigY + 12);
         doc.setTextColor(0, 0, 0);
       }
 
-      // RIGHT: Koordinator Tahfidz Signature (centered in right column)
+      // RIGHT: Koordinator Tahfidz Signature
       try {
         const koordinatorRes = await fetch('/api/admin/signature-upload?type=koordinator');
         if (koordinatorRes.ok) {
           const koordinatorData = await koordinatorRes.json();
           if (koordinatorData.signature && koordinatorData.signature.data) {
-            // Center signature horizontally in right column
-            const sigX2 = colCenterX2 - sigImageMaxWidth / 2;
             doc.addImage(
               koordinatorData.signature.data,
               'PNG',
-              sigX2,
+              rightColX,
               sigY,
               sigImageMaxWidth,
               sigImageMaxHeight,
@@ -377,23 +357,32 @@ export default function LaporanKehadiranPage() {
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(150, 150, 150);
-            doc.text('TTD belum diupload', colCenterX2, sigY + 10, { align: 'center' });
+            doc.text('TTD belum diupload', rightColX, sigY + 12);
             doc.setTextColor(0, 0, 0);
           }
         } else {
           doc.setFontSize(9);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(150, 150, 150);
-          doc.text('TTD belum diupload', colCenterX2, sigY + 10, { align: 'center' });
+          doc.text('TTD belum diupload', rightColX, sigY + 12);
           doc.setTextColor(0, 0, 0);
         }
       } catch (err) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(150, 150, 150);
-        doc.text('TTD belum diupload', colCenterX2, sigY + 10, { align: 'center' });
+        doc.text('TTD belum diupload', rightColX, sigY + 12);
         doc.setTextColor(0, 0, 0);
       }
+
+      sigY += sigImageMaxHeight + 6;
+
+      // Names below signatures
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text('( Guru Tahfidz )', leftColX, sigY);
+      doc.text(`( ${adminData.nama} )`, rightColX, sigY);
 
       doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
     } catch (error) {
