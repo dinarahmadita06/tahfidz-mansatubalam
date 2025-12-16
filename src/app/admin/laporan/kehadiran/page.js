@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { FileText, Download, Loader, AlertTriangle, Users, TrendingUp, Activity } from 'lucide-react';
+import { FileText, Download, Loader, AlertTriangle, Users, TrendingUp, Activity, Check, Clock, Heart, AlertCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import Image from 'next/image';
 
 export default function LaporanKehadiranPage() {
   const [kelasList, setKelasList] = useState([]);
@@ -104,37 +105,48 @@ export default function LaporanKehadiranPage() {
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Header with logos
+    const logoSize = 15;
+    const logoY = 8;
+    
+    // Left logo (MAN 1)
+    doc.addImage('/logo-man1.png', 'PNG', 10, logoY, logoSize, logoSize);
+    
+    // Right logo (Kemenag)
+    doc.addImage('/logo-kemenag.png', 'PNG', pageWidth - 10 - logoSize, logoY, logoSize, logoSize);
 
     // Kop Surat - Professional Header
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('MAN 1 BANDAR LAMPUNG', pageWidth / 2, 15, { align: 'center' });
+    doc.text('MAN 1 BANDAR LAMPUNG', pageWidth / 2, 20, { align: 'center' });
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('Jl. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame', pageWidth / 2, 22, { align: 'center' });
-    doc.text('Kota Bandar Lampung, Lampung 35131', pageWidth / 2, 27, { align: 'center' });
+    doc.text('Jl. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame', pageWidth / 2, 27, { align: 'center' });
+    doc.text('Kota Bandar Lampung, Lampung 35131', pageWidth / 2, 32, { align: 'center' });
 
     // Line separator
     doc.setLineWidth(0.5);
-    doc.line(14, 30, pageWidth - 14, 30);
+    doc.line(10, 35, pageWidth - 10, 35);
     doc.setLineWidth(0.2);
-    doc.line(14, 31, pageWidth - 14, 31);
+    doc.line(10, 36, pageWidth - 10, 36);
 
     // Document title
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
-    doc.text('LAPORAN KEHADIRAN TAHFIDZ AL-QUR\'AN', pageWidth / 2, 40, { align: 'center' });
+    doc.text('LAPORAN KEHADIRAN TAHFIDZ AL-QUR\'AN', pageWidth / 2, 45, { align: 'center' });
 
     // Info
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Periode: ${reportData.periodeText}`, 14, 50);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 55);
-    doc.text(`Kelas: ${reportData.kelasNama}`, 14, 60);
+    doc.text(`Periode: ${reportData.periodeText}`, 14, 54);
+    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 59);
+    doc.text(`Kelas: ${reportData.kelasNama}`, 14, 64);
 
     // Summary
-    let yPos = 70;
+    let yPos = 72;
     doc.setFont('helvetica', 'bold');
     doc.text('RINGKASAN STATISTIK:', 14, yPos);
     doc.setFont('helvetica', 'normal');
@@ -143,47 +155,43 @@ export default function LaporanKehadiranPage() {
     yPos += 5;
     doc.text(`Total Pertemuan: ${reportData.summary.totalPertemuan} kali`, 14, yPos);
     yPos += 5;
-    doc.text(`Rata-rata Kehadiran: ${reportData.summary.rataKehadiran}%`, 14, yPos);
+    doc.text(`Total Hadir: ${reportData.summary.totalHadir || 0} hari`, 14, yPos);
     yPos += 5;
-    doc.text(`Persentase Hadir: ${reportData.summary.persenHadir}%`, 14, yPos);
+    doc.text(`Total Izin: ${reportData.summary.totalIzin || 0} hari`, 14, yPos);
     yPos += 5;
-    doc.text(`Persentase Izin: ${reportData.summary.persenIzin}%`, 14, yPos);
+    doc.text(`Total Sakit: ${reportData.summary.totalSakit || 0} hari`, 14, yPos);
     yPos += 5;
-    doc.text(`Persentase Sakit: ${reportData.summary.persenSakit}%`, 14, yPos);
-    yPos += 5;
-    doc.text(`Persentase Alpa: ${reportData.summary.persenAlpa}%`, 14, yPos);
+    doc.text(`Total Alpa: ${reportData.summary.totalAlpa || 0} hari`, 14, yPos);
     yPos += 10;
 
-    // Table
+    // Table with raw numbers only
     const tableData = reportData.siswaData.map((s, idx) => [
       idx + 1,
       s.nama,
       s.nisn,
-      `${s.hadir} (${s.persenHadir}%)`,
-      `${s.izin} (${s.persenIzin}%)`,
-      `${s.sakit} (${s.persenSakit}%)`,
-      `${s.alpa} (${s.persenAlpa}%)`,
-      `${s.totalKehadiran}%`,
+      s.hadir || 0,
+      s.izin || 0,
+      s.sakit || 0,
+      s.alpa || 0,
       s.status
     ]);
 
     autoTable(doc, {
       startY: yPos,
-      head: [['No', 'Nama Siswa', 'NISN', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Total', 'Status']],
+      head: [['No', 'Nama Siswa', 'NISN', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Status']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: [249, 115, 22] },
-      styles: { fontSize: 8 },
-      margin: { bottom: 60 }
+      headStyles: { fillColor: [0, 201, 141] },
+      bodyStyles: { fontSize: 8 },
+      margin: { bottom: 70 }
     });
 
     // Signature section - Dynamic positioning following table
     const tableEndY = doc.lastAutoTable?.finalY || doc.previousAutoTable?.finalY || 100;
-    const pageHeight = doc.internal.pageSize.getHeight();
 
     // Check if there's enough space for signature, otherwise add new page
     let signatureY = tableEndY + 15;
-    if (signatureY + 35 > pageHeight - 20) {
+    if (signatureY + 50 > pageHeight - 15) {
       doc.addPage();
       signatureY = 20;
     }
@@ -194,15 +202,15 @@ export default function LaporanKehadiranPage() {
     const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     doc.text(`Bandar Lampung, ${today}`, pageWidth - 14, signatureY, { align: 'right' });
 
-    signatureY += 10;
+    signatureY += 12;
 
     // Left signature (Guru Tahfidz)
     doc.text('Mengetahui,', 14, signatureY);
     doc.text('Guru Tahfidz', 14, signatureY + 20);
     doc.text('_____________________', 14, signatureY + 25);
 
-    // Right signature (Kepala Sekolah)
-    doc.text('Kepala Sekolah', pageWidth - 14, signatureY, { align: 'right' });
+    // Right signature (Koordinator Tahfidz)
+    doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
     doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
 
     doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
@@ -462,49 +470,56 @@ export default function LaporanKehadiranPage() {
         {/* Report Preview */}
         {reportData && !loading && (
           <>
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="filter-card p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-lg" style={{ background: '#F3FCF8' }}>
-                    <Users size={28} style={{ color: '#00C98D' }} />
+            {/* Summary Cards - Horizontal Layout */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {/* Hadir */}
+              <div className="filter-card p-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg" style={{ background: '#D1FAE5' }}>
+                    <Check size={24} style={{ color: '#00C98D' }} strokeWidth={3} />
                   </div>
                   <div>
-                    <p className="text-sm" style={{ color: '#6B7E75' }}>Jumlah Siswa</p>
-                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.jumlahSiswa}</p>
+                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Hadir</p>
+                    <p className="text-xl font-bold" style={{ color: '#00C98D' }}>{reportData.summary.totalHadir || 0}</p>
                   </div>
                 </div>
               </div>
-              <div className="filter-card p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-lg" style={{ background: '#FFE7C2' }}>
-                    <Activity size={28} style={{ color: '#F9844A' }} />
+              
+              {/* Izin */}
+              <div className="filter-card p-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg" style={{ background: '#FEF3C7' }}>
+                    <Clock size={24} style={{ color: '#F59E0B' }} strokeWidth={3} />
                   </div>
                   <div>
-                    <p className="text-sm" style={{ color: '#6B7E75' }}>Total Pertemuan</p>
-                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.totalPertemuan}</p>
+                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Izin</p>
+                    <p className="text-xl font-bold" style={{ color: '#F59E0B' }}>{reportData.summary.totalIzin || 0}</p>
                   </div>
                 </div>
               </div>
-              <div className="filter-card p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-lg" style={{ background: '#F3FCF8' }}>
-                    <TrendingUp size={28} style={{ color: '#00C98D' }} />
+              
+              {/* Sakit */}
+              <div className="filter-card p-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg" style={{ background: '#FEE2E2' }}>
+                    <Heart size={24} style={{ color: '#EF4444' }} strokeWidth={3} />
                   </div>
                   <div>
-                    <p className="text-sm" style={{ color: '#6B7E75' }}>Rata-rata Kehadiran</p>
-                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.rataKehadiran}%</p>
+                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Sakit</p>
+                    <p className="text-xl font-bold" style={{ color: '#EF4444' }}>{reportData.summary.totalSakit || 0}</p>
                   </div>
                 </div>
               </div>
-              <div className="filter-card p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-lg" style={{ background: '#FFE7C2' }}>
-                    <TrendingUp size={28} style={{ color: '#F9844A' }} />
+              
+              {/* Alpa */}
+              <div className="filter-card p-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg" style={{ background: '#FCD34D' }}>
+                    <AlertCircle size={24} style={{ color: '#DC2626' }} strokeWidth={3} />
                   </div>
                   <div>
-                    <p className="text-sm" style={{ color: '#6B7E75' }}>Persentase Hadir</p>
-                    <p className="text-2xl font-bold" style={{ color: '#2F3E3A' }}>{reportData.summary.persenHadir}%</p>
+                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Alpa</p>
+                    <p className="text-xl font-bold" style={{ color: '#DC2626' }}>{reportData.summary.totalAlpa || 0}</p>
                   </div>
                 </div>
               </div>
@@ -519,11 +534,10 @@ export default function LaporanKehadiranPage() {
                       <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>No</th>
                       <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Nama Siswa</th>
                       <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>NISN</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Hadir</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Izin</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Sakit</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Alpa</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Total</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Hadir</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Izin</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Sakit</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Alpa</th>
                       <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Status</th>
                     </tr>
                   </thead>
@@ -533,11 +547,10 @@ export default function LaporanKehadiranPage() {
                         <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{idx + 1}</td>
                         <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.nama}</td>
                         <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.nisn}</td>
-                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.hadir} ({siswa.persenHadir}%)</td>
-                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.izin} ({siswa.persenIzin}%)</td>
-                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.sakit} ({siswa.persenSakit}%)</td>
-                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.alpa} ({siswa.persenAlpa}%)</td>
-                        <td className="px-6 py-4 text-sm font-semibold" style={{ color: '#2F3E3A' }}>{siswa.totalKehadiran}%</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#00C98D', fontWeight: 600 }}>{siswa.hadir || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#F59E0B', fontWeight: 600 }}>{siswa.izin || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#EF4444', fontWeight: 600 }}>{siswa.sakit || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#DC2626', fontWeight: 600 }}>{siswa.alpa || 0}</td>
                         <td className="px-6 py-4 text-sm">
                           <span className="px-2 py-1 rounded-full text-xs font-medium" style={{
                             background: siswa.status === 'Sangat Baik' ? '#D4F8E8' : siswa.status === 'Baik' ? '#FFF4E6' : siswa.status === 'Cukup' ? '#FFF4E6' : '#FEE2E2',
@@ -554,10 +567,10 @@ export default function LaporanKehadiranPage() {
             </div>
 
             {/* Export Buttons */}
-            <div className="flex gap-4 mt-8">
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <button
                 onClick={exportPDF}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all"
+                className="flex items-center justify-center sm:justify-start gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all"
                 style={{ background: 'linear-gradient(90deg, #00C98D, #00B77E)' }}
                 onMouseEnter={(e) => e.target.style.boxShadow = '0 4px 12px rgba(0, 201, 141, 0.3)'}
                 onMouseLeave={(e) => e.target.style.boxShadow = 'none'}

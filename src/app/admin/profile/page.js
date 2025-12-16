@@ -15,7 +15,8 @@ import {
   Home,
   ChevronRight,
   Briefcase,
-  IdCard
+  IdCard,
+  FileText
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 
@@ -34,6 +35,10 @@ export default function ProfileAdminPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [signatureFiles, setSignatureFiles] = useState({
+    guruTandaTangan: null,
+    koordinatorTandaTangan: null
+  });
 
   useEffect(() => {
     fetchProfileData();
@@ -152,6 +157,52 @@ export default function ProfileAdminPage() {
       setError(`Terjadi kesalahan: ${error.message}`);
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const handleSignatureUpload = async (type, file) => {
+    if (!file) return;
+    
+    // Validasi: hanya PNG
+    if (file.type !== 'image/png') {
+      setError('Format file harus PNG saja');
+      return;
+    }
+    
+    // Validasi: ukuran max 500 KB
+    if (file.size > 500 * 1024) {
+      setError('Ukuran file tidak boleh lebih dari 500 KB');
+      return;
+    }
+    
+    try {
+      setSaveLoading(true);
+      setError('');
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type); // 'guru' atau 'koordinator'
+      
+      const res = await fetch('/api/admin/signature-upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        setSuccess(`Tanda tangan ${type === 'guru' ? 'Guru' : 'Koordinator'} berhasil diupload!`);
+        await fetchProfileData();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Gagal upload tanda tangan');
+      }
+    } catch (error) {
+      console.error('Error uploading signature:', error);
+      setError('Terjadi kesalahan saat upload tanda tangan');
+    } finally {
+      setSaveLoading(false);
+      setSignatureFiles({ ...signatureFiles, [type]: null });
     }
   };
 
@@ -492,6 +543,85 @@ export default function ProfileAdminPage() {
                 }}
               >
                 <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Digital Signature Section */}
+        <div
+          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
+          style={{
+            background: 'linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 100%)',
+            border: '1px solid rgba(59, 130, 246, 0.2)'
+          }}
+        >
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-blue-200/50">
+            <div
+              className="p-2 rounded-lg"
+              style={{
+                background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)'
+              }}
+            >
+              <Edit size={20} className="text-white" strokeWidth={2} />
+            </div>
+            <h3 className="text-lg font-bold" style={{ color: '#1E40AF' }}>
+              Tanda Tangan Digital
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Guru Tahfidz Signature */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#1E40AF' }}>
+                <FileText size={16} className="text-blue-600" strokeWidth={2} />
+                Tanda Tangan Guru Tahfidz
+              </label>
+              <div
+                className="px-4 py-4 rounded-xl border-2 border-dashed"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderColor: '#93C5FD'
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".png"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
+                    handleSignatureUpload('guru', file);
+                  }}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
+              </div>
+            </div>
+
+            {/* Koordinator Tahfidz Signature */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#1E40AF' }}>
+                <FileText size={16} className="text-blue-600" strokeWidth={2} />
+                Tanda Tangan Koordinator Tahfidz
+              </label>
+              <div
+                className="px-4 py-4 rounded-xl border-2 border-dashed"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  borderColor: '#93C5FD'
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".png"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
+                    handleSignatureUpload('koordinator', file);
+                  }}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
               </div>
             </div>
           </div>
