@@ -24,8 +24,7 @@ export async function GET(request) {
         nip: true,
         jabatan: true,
         alamat: true,
-        createdAt: true,
-        lastLogin: true
+        createdAt: true
       }
     });
 
@@ -40,20 +39,14 @@ export async function GET(request) {
       role: 'Administrator',
       phoneNumber: admin.phoneNumber || '0812-3456-7890',
       jabatan: admin.jabatan || 'Koordinator Tahfidz',
-      nip: admin.nip || 'ADM.2024.001',
+      nip: admin.nip || '',
       alamat: admin.alamat || 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
       tanggalBergabung: admin.createdAt ? new Date(admin.createdAt).toLocaleDateString('id-ID', {
         day: '2-digit',
         month: 'long',
         year: 'numeric'
       }) : '15 Agustus 2024',
-      lastLogin: admin.lastLogin ? new Date(admin.lastLogin).toLocaleString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }) + ' WIB' : new Date().toLocaleString('id-ID', {
+      lastLogin: new Date().toLocaleString('id-ID', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',

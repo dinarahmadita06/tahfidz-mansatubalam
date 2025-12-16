@@ -97,6 +97,11 @@ model User {
   emailVerified    DateTime?
   resetToken       String?
   resetTokenExpiry DateTime?
+  // Admin/Coordinator specific fields
+  phoneNumber      String?
+  jabatan          String?       // Koordinator Tahfidz, etc
+  nip              String?       // NIP / Nomor Induk Pegawai (optional)
+  alamat           String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   guru             Guru?
