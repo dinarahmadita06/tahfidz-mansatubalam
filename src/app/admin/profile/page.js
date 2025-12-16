@@ -161,47 +161,64 @@ export default function ProfileAdminPage() {
   };
 
   const handleSignatureUpload = async (type, file) => {
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+    
+    console.log('Uploading signature:', { type, fileName: file.name, fileSize: file.size, fileType: file.type });
     
     // Validasi: hanya PNG
     if (file.type !== 'image/png') {
-      setError('Format file harus PNG saja');
+      const err = `Format file harus PNG saja (Anda upload: ${file.type})`;
+      setError(err);
+      console.error(err);
       return;
     }
     
     // Validasi: ukuran max 500 KB
     if (file.size > 500 * 1024) {
-      setError('Ukuran file tidak boleh lebih dari 500 KB');
+      const err = `Ukuran file tidak boleh lebih dari 500 KB (File Anda: ${(file.size / 1024).toFixed(2)} KB)`;
+      setError(err);
+      console.error(err);
       return;
     }
     
     try {
       setSaveLoading(true);
       setError('');
+      setSuccess('');
       
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', type); // 'guru' atau 'koordinator'
       
+      console.log('Sending request to /api/admin/signature-upload');
       const res = await fetch('/api/admin/signature-upload', {
         method: 'POST',
         body: formData
       });
       
+      console.log('Response status:', res.status);
       const data = await res.json();
+      console.log('Response data:', data);
       
       if (res.ok) {
-        setSuccess(`Tanda tangan ${type === 'guru' ? 'Guru' : 'Koordinator'} berhasil diupload!`);
-        await fetchProfileData();
+        const msg = `Tanda tangan ${type === 'guru' ? 'Guru Tahfidz' : 'Koordinator Tahfidz'} berhasil diupload!`;
+        setSuccess(msg);
+        console.log('Success:', msg);
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Gagal upload tanda tangan');
+        const err = data.error || `Gagal upload (Status: ${res.status})`;
+        setError(err);
+        console.error('API Error:', err);
       }
     } catch (error) {
       console.error('Error uploading signature:', error);
-      setError('Terjadi kesalahan saat upload tanda tangan');
+      setError(`Terjadi kesalahan: ${error.message}`);
     } finally {
       setSaveLoading(false);
+      // Clear file input
       setSignatureFiles({ ...signatureFiles, [type]: null });
     }
   };
@@ -589,12 +606,15 @@ export default function ProfileAdminPage() {
                   accept=".png"
                   onChange={(e) => {
                     const file = e.target.files[0];
-                    setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
-                    handleSignatureUpload('guru', file);
+                    if (file) {
+                      setSignatureFiles({ ...signatureFiles, guruTandaTangan: file });
+                      handleSignatureUpload('guru', file);
+                    }
                   }}
-                  className="w-full"
+                  className="w-full cursor-pointer"
                 />
                 <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
+                <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload baru, pilih file lalu file akan otomatis tersimpan</p>
               </div>
             </div>
 
@@ -616,12 +636,15 @@ export default function ProfileAdminPage() {
                   accept=".png"
                   onChange={(e) => {
                     const file = e.target.files[0];
-                    setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
-                    handleSignatureUpload('koordinator', file);
+                    if (file) {
+                      setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
+                      handleSignatureUpload('koordinator', file);
+                    }
                   }}
-                  className="w-full"
+                  className="w-full cursor-pointer"
                 />
                 <p className="text-xs text-gray-500 mt-2">Format: PNG | Max: 500 KB</p>
+                <p className="text-xs text-blue-600 mt-2 font-semibold">📝 Untuk upload baru, pilih file lalu file akan otomatis tersimpan</p>
               </div>
             </div>
           </div>
