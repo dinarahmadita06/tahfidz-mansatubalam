@@ -273,39 +273,40 @@ export default function LaporanKehadiranPage() {
         signatureY = 20;
       }
 
-      // Simple 2-column layout: Left for Guru, Right for Koordinator
+      // 2-COLUMN LAYOUT FOR SIGNATURE SECTION
+      // Structure:
+      // Col 1 (Left):  Mengetahui, | TTD Guru | (Guru Tahfidz)
+      // Col 2 (Right): Bandar Lampung, tanggal | Koordinator Tahfidz | TTD Admin | (Administrator)
+      
       const colWidth = (pageWidth - 28) / 2; // Two equal columns
       const leftColX = 14;                    // Left column at 14
-      const rightColX = 14 + colWidth + 4;  // Right column after left
+      const rightColX = 14 + colWidth + 4;  // Right column starts after left col
+      const colCenterX1 = leftColX + colWidth / 2;   // Left column center for alignment
+      const colCenterX2 = rightColX + colWidth / 2;  // Right column center for alignment
 
-      // Date and location (right-aligned) - at top
+      // ROW 1: Mengetahui, (left) | Bandar Lampung, date (right)
       const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Bandar Lampung, ${today}`, pageWidth - 14, signatureY, { align: 'right' });
+      doc.setTextColor(0, 0, 0);
+      doc.text('Mengetahui,', leftColX, signatureY);
+      doc.text(`Bandar Lampung, ${today}`, colCenterX2, signatureY, { align: 'center' });
 
-      signatureY += 15; // More space after date for proper separation
+      signatureY += 10;
 
-      // Title row: "Mengetahui," (left ONLY)
+      // ROW 2: (empty left) | Koordinator Tahfidz (right)
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.text('Mengetahui,', leftColX, signatureY);
-      // "Koordinator Tahfidz" akan ditampilkan di atas TTD admin saja
+      doc.text(adminData.jabatan, colCenterX2, signatureY, { align: 'center' });
 
-      signatureY += 10; // Space for TTD
+      signatureY += 8;
 
       // Signature display area
       const sigImageMaxWidth = 38;
       const sigImageMaxHeight = 24;
       let sigY = signatureY;
 
-      // TITLE KOORDINATOR: Tampilkan di atas TTD admin (kolom kanan saja) 
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      doc.text(adminData.jabatan, rightColX, sigY - 2);
-
-      // LEFT: Guru Tahfidz Signature
+      // LEFT: Guru Tahfidz Signature (at leftColX)
       try {
         const guruRes = await fetch('/api/admin/signature-upload?type=guru');
         if (guruRes.ok) {
@@ -343,16 +344,18 @@ export default function LaporanKehadiranPage() {
         doc.setTextColor(0, 0, 0);
       }
 
-      // RIGHT: Koordinator Tahfidz Signature
+      // RIGHT: Koordinator Tahfidz Signature (at rightColX, centered in col)
       try {
         const koordinatorRes = await fetch('/api/admin/signature-upload?type=koordinator');
         if (koordinatorRes.ok) {
           const koordinatorData = await koordinatorRes.json();
           if (koordinatorData.signature && koordinatorData.signature.data) {
+            // Position signature centered in right column
+            const sigXRight = colCenterX2 - sigImageMaxWidth / 2;
             doc.addImage(
               koordinatorData.signature.data,
               'PNG',
-              rightColX,
+              sigXRight,
               sigY,
               sigImageMaxWidth,
               sigImageMaxHeight,
@@ -363,32 +366,32 @@ export default function LaporanKehadiranPage() {
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(150, 150, 150);
-            doc.text('TTD belum diupload', rightColX, sigY + 12);
+            doc.text('TTD belum diupload', colCenterX2, sigY + 12, { align: 'center' });
             doc.setTextColor(0, 0, 0);
           }
         } else {
           doc.setFontSize(9);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(150, 150, 150);
-          doc.text('TTD belum diupload', rightColX, sigY + 12);
+          doc.text('TTD belum diupload', colCenterX2, sigY + 12, { align: 'center' });
           doc.setTextColor(0, 0, 0);
         }
       } catch (err) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(150, 150, 150);
-        doc.text('TTD belum diupload', rightColX, sigY + 12);
+        doc.text('TTD belum diupload', colCenterX2, sigY + 12, { align: 'center' });
         doc.setTextColor(0, 0, 0);
       }
 
       sigY += sigImageMaxHeight + 6;
 
-      // Names below signatures
+      // Names below signatures - centered in each column
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(80, 80, 80);
-      doc.text('( Guru Tahfidz )', leftColX, sigY);
-      doc.text(`( ${adminData.nama} )`, rightColX, sigY);
+      doc.text('( Guru Tahfidz )', colCenterX1, sigY, { align: 'center' });
+      doc.text(`( ${adminData.nama} )`, colCenterX2, sigY, { align: 'center' });
 
       doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
     } catch (error) {
