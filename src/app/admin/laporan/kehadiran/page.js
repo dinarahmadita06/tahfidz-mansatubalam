@@ -235,19 +235,16 @@ export default function LaporanKehadiranPage() {
       doc.text('Mengetahui,', 14, signatureY);
       doc.text('Guru Tahfidz', 14, signatureY + 20);
       
-      // Try to load guru signature
+      // Try to load guru signature from API
       try {
-        const guruSigData = await fetch('/signatures/guru_signature.png')
-          .then(res => res.blob())
-          .then(blob => new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(blob);
-          }))
-          .catch(() => null);
-        
-        if (guruSigData) {
-          doc.addImage(guruSigData, 'PNG', 14, signatureY + 25, 40, 15);
+        const guruRes = await fetch('/api/admin/signature-upload?type=guru');
+        if (guruRes.ok) {
+          const guruData = await guruRes.json();
+          if (guruData.signature && guruData.signature.data) {
+            doc.addImage(guruData.signature.data, 'PNG', 14, signatureY + 25, 40, 15);
+          } else {
+            doc.text('_____________________', 14, signatureY + 25);
+          }
         } else {
           doc.text('_____________________', 14, signatureY + 25);
         }
@@ -258,19 +255,16 @@ export default function LaporanKehadiranPage() {
       // Right signature (Koordinator Tahfidz)
       doc.text('Koordinator Tahfidz', pageWidth - 14, signatureY, { align: 'right' });
       
-      // Try to load koordinator signature
+      // Try to load koordinator signature from API
       try {
-        const koordinatorSigData = await fetch('/signatures/koordinator_signature.png')
-          .then(res => res.blob())
-          .then(blob => new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(blob);
-          }))
-          .catch(() => null);
-        
-        if (koordinatorSigData) {
-          doc.addImage(koordinatorSigData, 'PNG', pageWidth - 14 - 40, signatureY + 25, 40, 15);
+        const koordinatorRes = await fetch('/api/admin/signature-upload?type=koordinator');
+        if (koordinatorRes.ok) {
+          const koordinatorData = await koordinatorRes.json();
+          if (koordinatorData.signature && koordinatorData.signature.data) {
+            doc.addImage(koordinatorData.signature.data, 'PNG', pageWidth - 14 - 40, signatureY + 25, 40, 15);
+          } else {
+            doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+          }
         } else {
           doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
         }

@@ -54,21 +54,23 @@ export default function ProfileAdminPage() {
       console.log('[Load Signatures] Checking for existing signatures...');
       
       // Check guru signature
-      const guruRes = await fetch('/signatures/guru_signature.png');
+      const guruRes = await fetch('/api/admin/signature-upload?type=guru');
       if (guruRes.ok) {
-        const guruBlob = await guruRes.blob();
-        const guruUrl = URL.createObjectURL(guruBlob);
-        setSignaturePreviews(prev => ({ ...prev, guru: guruUrl }));
-        console.log('[Load Signatures] Guru signature found');
+        const guruData = await guruRes.json();
+        if (guruData.signature && guruData.signature.data) {
+          setSignaturePreviews(prev => ({ ...prev, guru: guruData.signature.data }));
+          console.log('[Load Signatures] Guru signature found');
+        }
       }
       
       // Check koordinator signature
-      const koordinatorRes = await fetch('/signatures/koordinator_signature.png');
+      const koordinatorRes = await fetch('/api/admin/signature-upload?type=koordinator');
       if (koordinatorRes.ok) {
-        const koordinatorBlob = await koordinatorRes.blob();
-        const koordinatorUrl = URL.createObjectURL(koordinatorBlob);
-        setSignaturePreviews(prev => ({ ...prev, koordinator: koordinatorUrl }));
-        console.log('[Load Signatures] Koordinator signature found');
+        const koordinatorData = await koordinatorRes.json();
+        if (koordinatorData.signature && koordinatorData.signature.data) {
+          setSignaturePreviews(prev => ({ ...prev, koordinator: koordinatorData.signature.data }));
+          console.log('[Load Signatures] Koordinator signature found');
+        }
       }
     } catch (error) {
       console.error('[Load Signatures] Error:', error);
