@@ -1257,6 +1257,11 @@ export default function AdminOrangTuaPage() {
             gap: 0 !important;
           }
         }
+
+        /* Toolbar button spacing */
+        .page-header div[style*="gap: '12px'"] {
+          gap: 8px !important;
+        }
       `}</style>
     </AdminLayout>
   );
