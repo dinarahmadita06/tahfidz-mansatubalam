@@ -1,4 +1,5 @@
 import { writeFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import { NextResponse } from 'next/server';
 
@@ -48,38 +49,48 @@ export async function POST(request) {
     const uint8Array = new Uint8Array(buffer);
     console.log('[Signature Upload] Buffer ready, size:', uint8Array.length);
 
-    // Create signatures directory if not exists
-    const signaturesDir = join(process.cwd(), 'public', 'signatures');
-    console.log('[Signature Upload] Signatures directory:', signaturesDir);
+    // Try multiple paths - use public folder in workspace
+    const workspaceRoot = process.cwd();
+    console.log('[Signature Upload] Workspace root:', workspaceRoot);
+    
+    // Path 1: /public/signatures (relative to workspace)
+    const publicSignaturesDir = join(workspaceRoot, 'public', 'signatures');
+    console.log('[Signature Upload] Attempting to use path:', publicSignaturesDir);
     
     try {
-      await mkdir(signaturesDir, { recursive: true });
-      console.log('[Signature Upload] Directory ready');
-    } catch (err) {
-      console.warn('[Signature Upload] Directory creation warning:', err.message);
+      // Make sure directory exists
+      const parentDir = join(workspaceRoot, 'public');
+      if (!existsSync(publicSignaturesDir)) {
+        console.log('[Signature Upload] Creating signatures directory...');
+        await mkdir(publicSignaturesDir, { recursive: true });
+      }
+      
+      // Save file
+      const fileName = type === 'guru' ? 'guru_signature.png' : 'koordinator_signature.png';
+      const filePath = join(publicSignaturesDir, fileName);
+      
+      console.log('[Signature Upload] Writing file to:', filePath);
+      await writeFile(filePath, uint8Array);
+      console.log('[Signature Upload] File saved successfully to:', filePath);
+
+      const successMsg = `Tanda tangan ${type === 'guru' ? 'Guru Tahfidz' : 'Koordinator Tahfidz'} berhasil diupload`;
+      console.log('[Signature Upload] Success:', successMsg);
+
+      return NextResponse.json(
+        { 
+          message: successMsg,
+          path: `/signatures/${fileName}`,
+          success: true,
+          debugInfo: { savedPath: filePath }
+        },
+        { status: 200 }
+      );
+    } catch (fsError) {
+      console.error('[Signature Upload] File system error:', fsError);
+      throw fsError;
     }
-
-    // Save file with type-based name
-    const fileName = type === 'guru' ? 'guru_signature.png' : 'koordinator_signature.png';
-    const filePath = join(signaturesDir, fileName);
-    
-    console.log('[Signature Upload] Writing file to:', filePath);
-    await writeFile(filePath, uint8Array);
-    console.log('[Signature Upload] File saved successfully');
-
-    const successMsg = `Tanda tangan ${type === 'guru' ? 'Guru Tahfidz' : 'Koordinator Tahfidz'} berhasil diupload`;
-    console.log('[Signature Upload] Success:', successMsg);
-
-    return NextResponse.json(
-      { 
-        message: successMsg,
-        path: `/signatures/${fileName}`,
-        success: true
-      },
-      { status: 200 }
-    );
   } catch (error) {
-    console.error('[Signature Upload] Error:', error);
+    console.error('[Signature Upload] Fatal error:', error);
     return NextResponse.json(
       { error: `Gagal upload tanda tangan: ${error.message}` },
       { status: 500 }
