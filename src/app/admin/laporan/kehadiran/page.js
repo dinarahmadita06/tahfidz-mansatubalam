@@ -289,7 +289,7 @@ export default function LaporanKehadiranPage() {
       }}>
         {/* Header Section */}
         <div className="laporan-header">
-          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Laporan Kehadiran</h1>
+          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, fontSize: '24px', letterSpacing: '-0.3px' }}>Laporan Kehadiran</h1>
           <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Generate dan download laporan kehadiran tahfidz</p>
         </div>
 
