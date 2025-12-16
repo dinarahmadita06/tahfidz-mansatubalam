@@ -812,7 +812,7 @@ export default function ProfileAdminPage() {
         )}
       </div>
 
-      <style jsx global>{`
+      <style jsx>{`
         @media (max-width: 768px) {
           .profile-container {
             padding: 16px !important;

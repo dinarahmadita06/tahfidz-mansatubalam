@@ -594,14 +594,6 @@ export default function PengaturanPage() {
           utama.
         </div>
 
-        <style jsx global>{`
-          @media (max-width: 768px) {
-            .settings-container {
-              padding: 16px !important;
-            }
-          }
-        `}</style>
-
         {/* Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -710,6 +702,14 @@ export default function PengaturanPage() {
           </div>
         )}
       </div>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .settings-container {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </AdminLayout>
   );
 }
