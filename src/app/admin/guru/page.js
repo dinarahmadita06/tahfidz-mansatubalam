@@ -1369,6 +1369,42 @@ export default function AdminGuruPage() {
           }
         }
 
+        /* Responsive Action Buttons - Desktop: 1 row, Mobile: 2 rows */
+        @media (max-width: 768px) {
+          /* Mobile: Keep 2-row layout */
+          div[style*="flexDirection: 'column', gap: '8px'"] {
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          /* Desktop: Change to 1-row layout with small buttons */
+          div[style*="flexDirection: 'column', gap: '8px'"] {
+            flex-direction: row !important;
+            gap: 8px !important;
+            width: auto !important;
+          }
+
+          /* Tambah button on desktop - smaller width */
+          div[style*="flexDirection: 'column', gap: '8px'"] > button:first-child {
+            width: auto !important;
+            padding: 8px 14px !important;
+            font-size: 13px !important;
+          }
+
+          /* Import/Export row on desktop - auto layout */
+          div[style*="flexDirection: 'column', gap: '8px'"] > div {
+            width: auto !important;
+            flex-direction: row !important;
+          }
+
+          div[style*="flexDirection: 'column', gap: '8px'"] > div > button {
+            flex: 0 1 auto !important;
+            min-width: 110px !important;
+          }
+        }
+
         /* Toolbar button spacing */
         .page-header div[style*="gap: '12px'"] {
           gap: 8px !important;
