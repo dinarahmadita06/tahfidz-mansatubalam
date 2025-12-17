@@ -54,8 +54,7 @@ const menuItems = [
     title: 'Monitoring & Laporan',
     icon: BarChart3,
     submenu: [
-      { title: 'Laporan Hafalan', href: '/admin/laporan/hafalan', icon: BookOpen },
-      { title: 'Laporan Kehadiran', href: '/admin/laporan/kehadiran', icon: UserCheck },
+      { title: 'Laporan Hafalan & Kehadiran', href: '/admin/laporan/kehadiran', icon: BarChart3 },
     ]
   },
   {
