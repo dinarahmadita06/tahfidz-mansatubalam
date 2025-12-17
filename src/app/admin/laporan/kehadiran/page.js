@@ -181,7 +181,7 @@ export default function LaporanKehadiranPage() {
       // Document title
       doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
-      doc.text('LAPORAN KEHADIRAN TAHFIDZ AL-QUR\'AN', pageWidth / 2, 45, { align: 'center' });
+      doc.text('LAPORAN REKAP KEHADIRAN DAN PENILAIAN HAFALAN', pageWidth / 2, 45, { align: 'center' });
 
       // Info
       doc.setFontSize(10);
@@ -241,26 +241,42 @@ export default function LaporanKehadiranPage() {
       
       yPos += cardHeight + 8;
 
-      // Table with raw numbers only
+      // Table with attendance and assessment data
       const tableData = reportData.siswaData.map((s, idx) => [
         idx + 1,
         s.nama,
-        s.nisn,
         s.hadir || 0,
-        s.izin || 0,
         s.sakit || 0,
+        s.izin || 0,
         s.alpa || 0,
-        s.status
+        s.tajwid ?? '-',
+        s.kelancaran ?? '-',
+        s.makhraj ?? '-',
+        s.implementasi ?? '-',
+        s.totalNilai ?? '-'
       ]);
 
       autoTable(doc, {
         startY: yPos,
-        head: [['No', 'Nama Siswa', 'NISN', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Status']],
+        head: [['No', 'Nama Siswa', 'Hadir', 'Sakit', 'Izin', 'Alpa', 'Tajwid', 'Kelancaran', 'Makhraj', 'Implementasi', 'Total']],
         body: tableData,
         theme: 'grid',
-        headStyles: { fillColor: [0, 201, 141] },
-        bodyStyles: { fontSize: 8 },
-        margin: { bottom: 70 }
+        headStyles: { fillColor: [0, 201, 141], fontSize: 8 },
+        bodyStyles: { fontSize: 7 },
+        margin: { bottom: 70 },
+        columnStyles: {
+          0: { cellWidth: 8 },   // No
+          1: { cellWidth: 35 },  // Nama
+          2: { cellWidth: 12 },  // Hadir
+          3: { cellWidth: 12 },  // Sakit
+          4: { cellWidth: 12 },  // Izin
+          5: { cellWidth: 12 },  // Alpa
+          6: { cellWidth: 15 },  // Tajwid
+          7: { cellWidth: 18 },  // Kelancaran
+          8: { cellWidth: 15 },  // Makhraj
+          9: { cellWidth: 20 },  // Implementasi
+          10: { cellWidth: 12 }  // Total
+        }
       });
 
       // Signature section - Simple 2-column layout (left-right, not centered)
@@ -486,8 +502,8 @@ export default function LaporanKehadiranPage() {
       }}>
         {/* Header Section */}
         <div className="laporan-header">
-          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, fontSize: '24px', letterSpacing: '-0.3px' }}>Laporan Kehadiran</h1>
-          <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Generate dan download laporan kehadiran tahfidz</p>
+          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, fontSize: '24px', letterSpacing: '-0.3px' }}>Laporan Rekap Kehadiran & Penilaian</h1>
+          <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Laporan terintegrasi kehadiran dan penilaian hafalan siswa (Read-Only)</p>
         </div>
 
         {/* Main Container */}
@@ -722,12 +738,15 @@ export default function LaporanKehadiranPage() {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>No</th>
                       <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Nama Siswa</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>NISN</th>
                       <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Hadir</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Izin</th>
                       <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Sakit</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Izin</th>
                       <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Alpa</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Status</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Tajwid</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Kelancaran</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Makhraj</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Implementasi</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Total Nilai</th>
                     </tr>
                   </thead>
                   <tbody style={{ borderTop: '2px solid #DDE6E1' }}>
@@ -735,19 +754,15 @@ export default function LaporanKehadiranPage() {
                       <tr key={idx} style={{ borderBottom: '1px solid #DDE6E1' }}>
                         <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{idx + 1}</td>
                         <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.nama}</td>
-                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.nisn}</td>
                         <td className="px-6 py-4 text-sm text-center" style={{ color: '#00C98D', fontWeight: 600 }}>{siswa.hadir || 0}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#F59E0B', fontWeight: 600 }}>{siswa.izin || 0}</td>
                         <td className="px-6 py-4 text-sm text-center" style={{ color: '#EF4444', fontWeight: 600 }}>{siswa.sakit || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#F59E0B', fontWeight: 600 }}>{siswa.izin || 0}</td>
                         <td className="px-6 py-4 text-sm text-center" style={{ color: '#DC2626', fontWeight: 600 }}>{siswa.alpa || 0}</td>
-                        <td className="px-6 py-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium" style={{
-                            background: siswa.status === 'Sangat Baik' ? '#D4F8E8' : siswa.status === 'Baik' ? '#FFF4E6' : siswa.status === 'Cukup' ? '#FFF4E6' : '#FEE2E2',
-                            color: siswa.status === 'Sangat Baik' ? '#00A57A' : siswa.status === 'Baik' ? '#D97706' : siswa.status === 'Cukup' ? '#D97706' : '#DC2626'
-                          }}>
-                            {siswa.status}
-                          </span>
-                        </td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.tajwid ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.kelancaran ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.makhraj ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.implementasi ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center font-semibold" style={{ color: '#00C98D' }}>{siswa.totalNilai ?? '-'}</td>
                       </tr>
                     ))}
                   </tbody>
