@@ -265,6 +265,7 @@ export default function KelolaSiswaPage() {
     totalSiswa: 0,
     siswaAktif: 0,
     menungguValidasi: 0,
+    rataRataNilai: 0,
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -304,11 +305,15 @@ export default function KelolaSiswaPage() {
       const totalSiswa = transformedData.length;
       const siswaAktif = transformedData.filter(s => s.status === 'aktif').length;
       const menungguValidasi = transformedData.filter(s => s.status === 'menunggu_validasi').length;
+      const rataRataNilai = totalSiswa > 0
+        ? (transformedData.reduce((sum, s) => sum + s.nilai, 0) / totalSiswa).toFixed(1)
+        : 0;
 
       setStats({
         totalSiswa,
         siswaAktif,
         menungguValidasi,
+        rataRataNilai: parseFloat(rataRataNilai),
       });
     } catch (error) {
       console.error('Error fetching siswa:', error);
@@ -493,6 +498,13 @@ export default function KelolaSiswaPage() {
                 subtitle="Perlu persetujuan"
                 color="amber"
               />
+              <StatCard
+                icon={<Award size={22} color={colors.white} />}
+                title="Rata-rata Nilai"
+                value={stats.rataRataNilai}
+                subtitle="Nilai keseluruhan"
+                color="violet"
+              />
             </div>
 
             {/* Search and Filter */}
@@ -651,7 +663,7 @@ export default function KelolaSiswaPage() {
                         fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
-                        Total Setoran
+                        Total Ayat
                       </th>
                       <th style={{
                         padding: '16px',
@@ -662,7 +674,29 @@ export default function KelolaSiswaPage() {
                         fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
-                        Aksi
+                        Nilai
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Poppins", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Setoran Bulan Ini
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Poppins", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Total Setoran
                       </th>
                     </tr>
                   </thead>
@@ -726,7 +760,51 @@ export default function KelolaSiswaPage() {
                             color: colors.emerald[700],
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
-                            {student.totalJuz} Juz
+                            {student.totalJuz}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            color: colors.text.secondary,
+                            fontFamily: '"Poppins", system-ui, sans-serif',
+                          }}>
+                            {student.totalAyat}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                          }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              background: student.nilai >= 85
+                                ? `${colors.emerald[500]}20`
+                                : student.nilai >= 70
+                                ? `${colors.amber[400]}20`
+                                : `${colors.gray[400]}20`,
+                              color: student.nilai >= 85
+                                ? colors.emerald[700]
+                                : student.nilai >= 70
+                                ? colors.amber[700]
+                                : colors.gray[700],
+                              fontSize: '14px',
+                              fontWeight: 700,
+                              fontFamily: '"Poppins", system-ui, sans-serif',
+                            }}>
+                              {student.nilai}
+                            </span>
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: colors.text.primary,
+                            fontFamily: '"Poppins", system-ui, sans-serif',
+                          }}>
+                            {student.setoranBulanIni}
                           </td>
                           <td style={{
                             padding: '18px 16px',
@@ -736,35 +814,7 @@ export default function KelolaSiswaPage() {
                             color: colors.text.secondary,
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
-                            {student.totalSetoran} kali
-                          </td>
-                          <td style={{
-                            padding: '18px 16px',
-                            textAlign: 'center',
-                          }}>
-                            <Link href={`/guru/kelola-siswa/${student.id}`}>
-                              <button
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                  padding: '8px 16px',
-                                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                                  border: 'none',
-                                  borderRadius: '8px',
-                                  fontSize: '13px',
-                                  fontWeight: 600,
-                                  color: colors.white,
-                                  cursor: 'pointer',
-                                  fontFamily: '"Poppins", system-ui, sans-serif',
-                                  transition: 'all 0.2s ease',
-                                }}
-                                className="detail-btn"
-                              >
-                                <BookOpen size={16} />
-                                Detail
-                              </button>
-                            </Link>
+                            {student.totalSetoran}
                           </td>
                         </tr>
                       );
@@ -896,12 +946,6 @@ export default function KelolaSiswaPage() {
         .pagination-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Detail Button */
-        .detail-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 12px rgba(26, 147, 111, 0.3);
         }
 
         /* Spin Animation */
