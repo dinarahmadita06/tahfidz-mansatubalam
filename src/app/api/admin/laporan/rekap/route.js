@@ -78,7 +78,7 @@ export async function GET(request) {
           const hafalan = await prisma.hafalan.findFirst({
             where: {
               siswaId: siswa.id,
-              tanggalSetor: {
+              tanggal: {
                 gte: startOfDay,
                 lte: endOfDay
               }
@@ -152,7 +152,7 @@ export async function GET(request) {
           const hafalanRecords = await prisma.hafalan.findMany({
             where: {
               siswaId: siswa.id,
-              tanggalSetor: {
+              tanggal: {
                 gte: startDate,
                 lte: endDate
               }
