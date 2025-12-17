@@ -260,13 +260,73 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
 }
 
 export default function KelolaSiswaPage() {
-  const [students, setStudents] = useState(mockStudents);
-  const [stats, setStats] = useState(mockStats);
+  const [students, setStudents] = useState([]);
+  const [stats, setStats] = useState({
+    totalSiswa: 0,
+    siswaAktif: 0,
+    menungguValidasi: 0,
+    rataRataNilai: 0,
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch siswa dari kelas binaan guru
+  useEffect(() => {
+    fetchSiswa();
+  }, []);
+
+  const fetchSiswa = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/siswa');
+      if (!response.ok) throw new Error('Failed to fetch siswa');
+
+      const data = await response.json();
+
+      // Transform data untuk match format yang digunakan component
+      const transformedData = data.map(siswa => ({
+        id: siswa.id,
+        nama: siswa.user.name,
+        kelas: siswa.kelas?.nama || '-',
+        status: siswa.status === 'approved' ? 'aktif' : 'menunggu_validasi',
+        totalJuz: siswa.hafalan?.length || 0,
+        totalAyat: siswa.hafalan?.reduce((sum, h) => sum + (h.ayatSelesai - h.ayatMulai + 1), 0) || 0,
+        nilai: 0, // TODO: Hitung dari data penilaian
+        setoranBulanIni: 0, // TODO: Hitung dari hafalan bulan ini
+        totalSetoran: siswa.hafalan?.length || 0,
+      }));
+
+      setStudents(transformedData);
+
+      // Hitung statistik dari data real
+      const totalSiswa = transformedData.length;
+      const siswaAktif = transformedData.filter(s => s.status === 'aktif').length;
+      const menungguValidasi = transformedData.filter(s => s.status === 'menunggu_validasi').length;
+      const rataRataNilai = totalSiswa > 0
+        ? (transformedData.reduce((sum, s) => sum + s.nilai, 0) / totalSiswa).toFixed(1)
+        : 0;
+
+      setStats({
+        totalSiswa,
+        siswaAktif,
+        menungguValidasi,
+        rataRataNilai: parseFloat(rataRataNilai),
+      });
+    } catch (error) {
+      console.error('Error fetching siswa:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchSiswa();
+    setRefreshing(false);
+  };
 
   // Filter students based on search
   const filteredStudents = students.filter(student =>
@@ -278,13 +338,6 @@ export default function KelolaSiswaPage() {
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedStudents = filteredStudents.slice(startIndex, startIndex + itemsPerPage);
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  };
 
   const getStatusConfig = (status) => {
     const configs = {
