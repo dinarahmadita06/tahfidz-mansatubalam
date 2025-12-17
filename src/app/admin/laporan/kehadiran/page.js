@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { FileText, Download, Loader, AlertTriangle, Users, TrendingUp, Activity, Check, Clock, Heart, AlertCircle } from 'lucide-react';
+import { FileText, Download, Loader, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -144,7 +144,7 @@ export default function LaporanKehadiranPage() {
         }))
         .catch(() => null);
 
-      const doc = new jsPDF();
+      const doc = new jsPDF('landscape', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -190,56 +190,8 @@ export default function LaporanKehadiranPage() {
       doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 59);
       doc.text(`Kelas: ${reportData.kelasNama}`, 14, 64);
 
-      // Summary Statistics - Left-aligned cards with centered text
+      // Start table position
       let yPos = 72;
-      const cardHeight = 18;
-      const cardWidth = 27;
-      const cardSpacingX = 2.5;
-      
-      // 6 Statistics cards: Jumlah Siswa, Total Pertemuan, Hadir, Izin, Sakit, Alpa
-      const stats = [
-        { label: 'Jumlah Siswa', value: reportData.summary.jumlahSiswa, unit: 'orang' },
-        { label: 'Total Pertemuan', value: reportData.summary.totalPertemuan, unit: 'kali' },
-        { label: 'Hadir', value: reportData.summary.totalHadir || 0, unit: 'hari' },
-        { label: 'Izin', value: reportData.summary.totalIzin || 0, unit: 'hari' },
-        { label: 'Sakit', value: reportData.summary.totalSakit || 0, unit: 'hari' },
-        { label: 'Alpa', value: reportData.summary.totalAlpa || 0, unit: 'hari' }
-      ];
-      
-      let xPos = 14;
-      stats.forEach((stat, idx) => {
-        // Draw card background (light green)
-        doc.setFillColor(209, 250, 229); // Light emerald background #DFF7E5
-        doc.rect(xPos, yPos, cardWidth, cardHeight, 'F');
-        
-        // Card border
-        doc.setDrawColor(59, 178, 115); // Green #3BB273
-        doc.setLineWidth(0.4);
-        doc.rect(xPos, yPos, cardWidth, cardHeight);
-        
-        // Label text (7pt, small, centered in card)
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 116, 109);
-        const labelLines = doc.splitTextToSize(stat.label, cardWidth - 1);
-        doc.text(labelLines, xPos + cardWidth / 2, yPos + 2.5, { align: 'center' });
-        
-        // Value text (12pt, bold, centered in card)
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(6, 78, 59); // Dark green
-        doc.text(stat.value.toString(), xPos + cardWidth / 2, yPos + 10, { align: 'center' });
-        
-        // Unit text (6pt, small, centered in card)
-        doc.setFontSize(6);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(107, 126, 117);
-        doc.text(stat.unit, xPos + cardWidth / 2, yPos + 14.5, { align: 'center' });
-        
-        xPos += cardWidth + cardSpacingX;
-      });
-      
-      yPos += cardHeight + 8;
 
       // Table with attendance and assessment data
       const tableData = reportData.siswaData.map((s, idx) => [
@@ -256,26 +208,54 @@ export default function LaporanKehadiranPage() {
         s.totalNilai ?? '-'
       ]);
 
+      // Calculate balanced column widths for landscape A4 (297mm width)
+      // Available width = 297 - (left margin + right margin) = 297 - 28 = 269mm
+      const availableWidth = pageWidth - 28;
+      const columnWidths = {
+        no: availableWidth * 0.05,           // 5% - ~13.5mm
+        nama: availableWidth * 0.25,         // 25% - ~67mm
+        hadir: availableWidth * 0.07,        // 7% - ~19mm
+        sakit: availableWidth * 0.07,        // 7% - ~19mm
+        izin: availableWidth * 0.07,         // 7% - ~19mm
+        alpa: availableWidth * 0.07,         // 7% - ~19mm
+        tajwid: availableWidth * 0.08,       // 8% - ~21.5mm
+        kelancaran: availableWidth * 0.10,   // 10% - ~27mm
+        makhraj: availableWidth * 0.08,      // 8% - ~21.5mm
+        implementasi: availableWidth * 0.10, // 10% - ~27mm
+        total: availableWidth * 0.06         // 6% - ~16mm
+      };
+
       autoTable(doc, {
         startY: yPos,
         head: [['No', 'Nama Siswa', 'Hadir', 'Sakit', 'Izin', 'Alpa', 'Tajwid', 'Kelancaran', 'Makhraj', 'Implementasi', 'Total']],
         body: tableData,
         theme: 'grid',
-        headStyles: { fillColor: [0, 201, 141], fontSize: 8 },
-        bodyStyles: { fontSize: 7 },
-        margin: { bottom: 70 },
+        headStyles: {
+          fillColor: [0, 201, 141],
+          fontSize: 9,
+          fontStyle: 'bold',
+          halign: 'center',
+          valign: 'middle'
+        },
+        bodyStyles: {
+          fontSize: 8,
+          halign: 'center',
+          valign: 'middle'
+        },
+        margin: { left: 14, right: 14, bottom: 70 },
+        tableWidth: 'auto',
         columnStyles: {
-          0: { cellWidth: 8 },   // No
-          1: { cellWidth: 35 },  // Nama
-          2: { cellWidth: 12 },  // Hadir
-          3: { cellWidth: 12 },  // Sakit
-          4: { cellWidth: 12 },  // Izin
-          5: { cellWidth: 12 },  // Alpa
-          6: { cellWidth: 15 },  // Tajwid
-          7: { cellWidth: 18 },  // Kelancaran
-          8: { cellWidth: 15 },  // Makhraj
-          9: { cellWidth: 20 },  // Implementasi
-          10: { cellWidth: 12 }  // Total
+          0: { cellWidth: columnWidths.no, halign: 'center' },
+          1: { cellWidth: columnWidths.nama, halign: 'left' },
+          2: { cellWidth: columnWidths.hadir },
+          3: { cellWidth: columnWidths.sakit },
+          4: { cellWidth: columnWidths.izin },
+          5: { cellWidth: columnWidths.alpa },
+          6: { cellWidth: columnWidths.tajwid },
+          7: { cellWidth: columnWidths.kelancaran },
+          8: { cellWidth: columnWidths.makhraj },
+          9: { cellWidth: columnWidths.implementasi },
+          10: { cellWidth: columnWidths.total }
         }
       });
 
@@ -675,61 +655,6 @@ export default function LaporanKehadiranPage() {
         {/* Report Preview */}
         {reportData && !loading && (
           <>
-            {/* Summary Cards - Horizontal Layout */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {/* Hadir */}
-              <div className="filter-card p-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg" style={{ background: '#D1FAE5' }}>
-                    <Check size={24} style={{ color: '#00C98D' }} strokeWidth={3} />
-                  </div>
-                  <div>
-                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Hadir</p>
-                    <p className="text-xl font-bold" style={{ color: '#00C98D' }}>{reportData.summary.totalHadir || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Izin */}
-              <div className="filter-card p-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg" style={{ background: '#FEF3C7' }}>
-                    <Clock size={24} style={{ color: '#F59E0B' }} strokeWidth={3} />
-                  </div>
-                  <div>
-                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Izin</p>
-                    <p className="text-xl font-bold" style={{ color: '#F59E0B' }}>{reportData.summary.totalIzin || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Sakit */}
-              <div className="filter-card p-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg" style={{ background: '#FEE2E2' }}>
-                    <Heart size={24} style={{ color: '#EF4444' }} strokeWidth={3} />
-                  </div>
-                  <div>
-                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Sakit</p>
-                    <p className="text-xl font-bold" style={{ color: '#EF4444' }}>{reportData.summary.totalSakit || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Alpa */}
-              <div className="filter-card p-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-lg" style={{ background: '#FCD34D' }}>
-                    <AlertCircle size={24} style={{ color: '#DC2626' }} strokeWidth={3} />
-                  </div>
-                  <div>
-                    <p className="text-xs" style={{ color: '#6B7E75' }}>Total Alpa</p>
-                    <p className="text-xl font-bold" style={{ color: '#DC2626' }}>{reportData.summary.totalAlpa || 0}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Detail Table */}
             <div className="filter-card overflow-hidden">
               <div className="overflow-x-auto">
