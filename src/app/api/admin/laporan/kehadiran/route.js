@@ -74,6 +74,22 @@ export async function GET(request) {
     const uniqueDates = [...new Set(kehadiran.map(k => k.tanggal.toISOString().split('T')[0]))];
     const totalPertemuan = uniqueDates.length;
 
+    // Get hafalan data with penilaian for the period
+    const hafalanData = await prisma.hafalan.findMany({
+      where: {
+        siswa: {
+          kelasId: kelasId
+        },
+        tanggal: {
+          gte: new Date(tanggalMulai),
+          lte: new Date(tanggalSelesai)
+        }
+      },
+      include: {
+        penilaian: true
+      }
+    });
+
     // Calculate statistics per siswa
     const siswaData = siswaList.map(siswa => {
       const siswaKehadiran = kehadiran.filter(k => k.siswaId === siswa.id);
@@ -83,18 +99,34 @@ export async function GET(request) {
       const sakit = siswaKehadiran.filter(k => k.status === 'SAKIT').length;
       const alpa = siswaKehadiran.filter(k => k.status === 'ALPA').length;
 
-      const totalKehadiran = siswaKehadiran.length;
-      const persenHadir = totalPertemuan > 0 ? Math.round((hadir / totalPertemuan) * 100) : 0;
-      const persenIzin = totalPertemuan > 0 ? Math.round((izin / totalPertemuan) * 100) : 0;
-      const persenSakit = totalPertemuan > 0 ? Math.round((sakit / totalPertemuan) * 100) : 0;
-      const persenAlpa = totalPertemuan > 0 ? Math.round((alpa / totalPertemuan) * 100) : 0;
+      // Get penilaian data for this siswa
+      const siswaHafalan = hafalanData.filter(h => h.siswaId === siswa.id);
+      const penilaianRecords = siswaHafalan
+        .filter(h => h.penilaian)
+        .map(h => h.penilaian);
 
-      // Status kehadiran
-      let status = 'Baik';
-      if (persenHadir >= 90) status = 'Sangat Baik';
-      else if (persenHadir >= 75) status = 'Baik';
-      else if (persenHadir >= 60) status = 'Cukup';
-      else status = 'Kurang';
+      // Calculate average scores
+      let avgTajwid = null;
+      let avgKelancaran = null;
+      let avgMakhraj = null;
+      let avgImplementasi = null;
+      let totalNilai = null;
+
+      if (penilaianRecords.length > 0) {
+        avgTajwid = Math.round(
+          penilaianRecords.reduce((sum, p) => sum + p.tajwid, 0) / penilaianRecords.length
+        );
+        avgKelancaran = Math.round(
+          penilaianRecords.reduce((sum, p) => sum + p.kelancaran, 0) / penilaianRecords.length
+        );
+        avgMakhraj = Math.round(
+          penilaianRecords.reduce((sum, p) => sum + p.makhraj, 0) / penilaianRecords.length
+        );
+        avgImplementasi = Math.round(
+          penilaianRecords.reduce((sum, p) => sum + p.adab, 0) / penilaianRecords.length
+        );
+        totalNilai = Math.round((avgTajwid + avgKelancaran + avgMakhraj + avgImplementasi) / 4);
+      }
 
       return {
         nama: siswa.user.name,
@@ -103,12 +135,11 @@ export async function GET(request) {
         izin,
         sakit,
         alpa,
-        persenHadir,
-        persenIzin,
-        persenSakit,
-        persenAlpa,
-        totalKehadiran: persenHadir,
-        status
+        tajwid: avgTajwid,
+        kelancaran: avgKelancaran,
+        makhraj: avgMakhraj,
+        implementasi: avgImplementasi,
+        totalNilai
       };
     });
 
@@ -117,16 +148,6 @@ export async function GET(request) {
     const totalIzin = siswaData.reduce((sum, s) => sum + s.izin, 0);
     const totalSakit = siswaData.reduce((sum, s) => sum + s.sakit, 0);
     const totalAlpa = siswaData.reduce((sum, s) => sum + s.alpa, 0);
-    const totalKehadiranAll = totalHadir + totalIzin + totalSakit + totalAlpa;
-
-    const persenHadirOverall = totalKehadiranAll > 0 ? Math.round((totalHadir / totalKehadiranAll) * 100) : 0;
-    const persenIzinOverall = totalKehadiranAll > 0 ? Math.round((totalIzin / totalKehadiranAll) * 100) : 0;
-    const persenSakitOverall = totalKehadiranAll > 0 ? Math.round((totalSakit / totalKehadiranAll) * 100) : 0;
-    const persenAlpaOverall = totalKehadiranAll > 0 ? Math.round((totalAlpa / totalKehadiranAll) * 100) : 0;
-
-    const rataKehadiran = siswaList.length > 0
-      ? Math.round(siswaData.reduce((sum, s) => sum + s.totalKehadiran, 0) / siswaList.length)
-      : 0;
 
     // Period text
     const startDate = new Date(tanggalMulai);
@@ -139,14 +160,12 @@ export async function GET(request) {
       summary: {
         jumlahSiswa: siswaList.length,
         totalPertemuan,
-        rataKehadiran,
-        persenHadir: persenHadirOverall,
-        persenIzin: persenIzinOverall,
-        persenSakit: persenSakitOverall,
-        persenAlpa: persenAlpaOverall
+        totalHadir,
+        totalIzin,
+        totalSakit,
+        totalAlpa
       },
-      siswaData,
-      kehadiran
+      siswaData
     });
   } catch (error) {
     console.error('Error generating attendance report:', error);
