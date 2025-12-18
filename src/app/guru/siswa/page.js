@@ -6,7 +6,6 @@ import GuruLayout from '@/components/layout/GuruLayout';
 import {
   Users,
   UserCheck,
-  UserPlus,
   Award,
   Search,
   RefreshCw,
@@ -70,103 +69,6 @@ const colors = {
   info: '#3B82F6',
 };
 
-// Mock data siswa
-const mockStudents = [
-  {
-    id: 1,
-    nama: "Ahmad Fadli Rahman",
-    kelas: "XI IPA 1",
-    status: "aktif",
-    totalJuz: 15,
-    totalAyat: 450,
-    nilai: 85,
-    setoranBulanIni: 8,
-    totalSetoran: 45
-  },
-  {
-    id: 2,
-    nama: "Siti Nurhaliza",
-    kelas: "XI IPA 2",
-    status: "aktif",
-    totalJuz: 12,
-    totalAyat: 360,
-    nilai: 92,
-    setoranBulanIni: 6,
-    totalSetoran: 38
-  },
-  {
-    id: 3,
-    nama: "Muhammad Rizki",
-    kelas: "X IPA 1",
-    status: "menunggu_validasi",
-    totalJuz: 8,
-    totalAyat: 240,
-    nilai: 78,
-    setoranBulanIni: 4,
-    totalSetoran: 22
-  },
-  {
-    id: 4,
-    nama: "Fatimah Zahra",
-    kelas: "XII IPA 1",
-    status: "aktif",
-    totalJuz: 18,
-    totalAyat: 540,
-    nilai: 88,
-    setoranBulanIni: 7,
-    totalSetoran: 52
-  },
-  {
-    id: 5,
-    nama: "Abdullah Hasan",
-    kelas: "XI IPS 1",
-    status: "aktif",
-    totalJuz: 10,
-    totalAyat: 300,
-    nilai: 75,
-    setoranBulanIni: 5,
-    totalSetoran: 28
-  },
-  {
-    id: 6,
-    nama: "Khadijah Aisyah",
-    kelas: "X IPA 2",
-    status: "menunggu_validasi",
-    totalJuz: 14,
-    totalAyat: 420,
-    nilai: 90,
-    setoranBulanIni: 6,
-    totalSetoran: 40
-  },
-  {
-    id: 7,
-    nama: "Umar Faruq",
-    kelas: "XII IPA 2",
-    status: "aktif",
-    totalJuz: 25,
-    totalAyat: 750,
-    nilai: 95,
-    setoranBulanIni: 9,
-    totalSetoran: 68
-  },
-  {
-    id: 8,
-    nama: "Maryam Salsabila",
-    kelas: "X IPS 1",
-    status: "aktif",
-    totalJuz: 6,
-    totalAyat: 180,
-    nilai: 70,
-    setoranBulanIni: 3,
-    totalSetoran: 18
-  },
-];
-
-const mockStats = {
-  totalSiswa: 142,
-  siswaAktif: 136,
-  menungguValidasi: 6,
-};
 
 // Komponen StatCard
 function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
@@ -259,13 +161,74 @@ function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
 }
 
 export default function KelolaSiswaPage() {
-  const [students, setStudents] = useState(mockStudents);
-  const [stats, setStats] = useState(mockStats);
+  const [students, setStudents] = useState([]);
+  const [stats, setStats] = useState({
+    totalSiswa: 0,
+    siswaAktif: 0,
+    menungguValidasi: 0,
+    rataRataNilai: 0,
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch siswa dari kelas binaan guru
+  useEffect(() => {
+    fetchSiswa();
+  }, []);
+
+  const fetchSiswa = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/siswa');
+      if (!response.ok) throw new Error('Failed to fetch siswa');
+
+      const data = await response.json();
+
+      // Transform data untuk match format yang digunakan component
+      // Hanya tampilkan siswa dengan status approved (Aktif)
+      const transformedData = data
+        .filter(siswa => siswa.status === 'approved')
+        .map(siswa => ({
+          id: siswa.id,
+          nama: siswa.user.name,
+          kelas: siswa.kelas?.nama || '-',
+          status: 'aktif', // Semua siswa yang ditampilkan adalah aktif
+          totalJuz: siswa.totalJuz || 0,
+          totalSetoran: siswa.totalSetoran || 0,
+          averageNilai: siswa.averageNilai || 0,
+        }));
+
+      setStudents(transformedData);
+
+      // Hitung statistik dari data real
+      const totalSiswa = transformedData.length;
+      const siswaAktif = transformedData.length; // Semua siswa adalah aktif
+      const menungguValidasi = 0; // Tidak ada siswa menunggu validasi di halaman ini
+      const rataRataNilai = totalSiswa > 0
+        ? (transformedData.reduce((sum, s) => sum + s.averageNilai, 0) / totalSiswa).toFixed(1)
+        : 0;
+
+      setStats({
+        totalSiswa,
+        siswaAktif,
+        menungguValidasi,
+        rataRataNilai: parseFloat(rataRataNilai),
+      });
+    } catch (error) {
+      console.error('Error fetching siswa:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchSiswa();
+    setRefreshing(false);
+  };
 
   // Filter students based on search
   const filteredStudents = students.filter(student =>
@@ -277,13 +240,6 @@ export default function KelolaSiswaPage() {
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedStudents = filteredStudents.slice(startIndex, startIndex + itemsPerPage);
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  };
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -358,7 +314,7 @@ export default function KelolaSiswaPage() {
                 color: colors.text.secondary,
                 fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
-                Manajemen data siswa dan monitoring progress hafalan
+                Monitoring siswa kelas binaan dan tracking progress hafalan
               </p>
             </div>
 
@@ -386,29 +342,6 @@ export default function KelolaSiswaPage() {
               >
                 <RefreshCw size={18} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
                 Refresh
-              </button>
-
-              <button
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 24px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.white,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.3)',
-                }}
-                className="action-btn-primary"
-              >
-                <UserPlus size={18} />
-                Tambah Siswa
               </button>
             </div>
           </div>
@@ -443,6 +376,13 @@ export default function KelolaSiswaPage() {
                 value={stats.menungguValidasi}
                 subtitle="Perlu persetujuan"
                 color="amber"
+              />
+              <StatCard
+                icon={<Award size={22} color={colors.white} />}
+                title="Rata-rata Nilai"
+                value={stats.rataRataNilai}
+                subtitle="Nilai keseluruhan"
+                color="violet"
               />
             </div>
 
@@ -677,7 +617,7 @@ export default function KelolaSiswaPage() {
                             color: colors.emerald[700],
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
-                            {student.totalJuz} Juz
+                            {student.totalJuz}
                           </td>
                           <td style={{
                             padding: '18px 16px',
@@ -687,28 +627,31 @@ export default function KelolaSiswaPage() {
                             color: colors.text.secondary,
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
-                            {student.totalSetoran} kali
+                            {student.totalSetoran}
                           </td>
                           <td style={{
                             padding: '18px 16px',
                             textAlign: 'center',
                           }}>
                             <Link href={`/guru/siswa/${student.id}`}>
-                              <button className="detail-btn" style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '8px 16px',
-                                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                color: colors.white,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                fontFamily: '"Poppins", system-ui, sans-serif',
-                              }}>
+                              <button
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '8px 16px',
+                                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  color: colors.white,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  fontFamily: '"Poppins", system-ui, sans-serif',
+                                }}
+                                className="detail-btn"
+                              >
                                 <BookOpen size={16} />
                                 Detail
                               </button>
@@ -835,12 +778,6 @@ export default function KelolaSiswaPage() {
           border-color: ${colors.emerald[500]};
         }
 
-        /* Detail Button */
-        .detail-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(26, 147, 111, 0.4);
-        }
-
         /* Table Row Hover */
         .table-row:hover {
           background: ${colors.emerald[50]}40;
@@ -850,6 +787,12 @@ export default function KelolaSiswaPage() {
         .pagination-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Detail Button */
+        .detail-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(26, 147, 111, 0.4);
         }
 
         /* Spin Animation */
