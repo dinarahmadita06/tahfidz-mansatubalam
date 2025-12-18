@@ -6,6 +6,7 @@ import GuruLayout from '@/components/layout/GuruLayout';
 import {
   Users,
   UserCheck,
+  UserPlus,
   Award,
   Search,
   RefreshCw,
@@ -343,6 +344,31 @@ export default function KelolaSiswaPage() {
                 <RefreshCw size={18} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
                 Refresh
               </button>
+
+              <Link href="/guru/tambah-siswa">
+                <button
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 24px',
+                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: colors.white,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    boxShadow: '0 4px 12px rgba(26, 147, 111, 0.3)',
+                  }}
+                  className="action-btn-primary"
+                >
+                  <UserPlus size={18} />
+                  Tambah Siswa
+                </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -376,13 +402,6 @@ export default function KelolaSiswaPage() {
                 value={stats.menungguValidasi}
                 subtitle="Perlu persetujuan"
                 color="amber"
-              />
-              <StatCard
-                icon={<Award size={22} color={colors.white} />}
-                title="Rata-rata Nilai"
-                value={stats.rataRataNilai}
-                subtitle="Nilai keseluruhan"
-                color="violet"
               />
             </div>
 
