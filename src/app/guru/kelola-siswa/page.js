@@ -6,7 +6,6 @@ import LayoutGuruSimple from '@/components/guru/LayoutGuruSimple';
 import {
   Users,
   UserCheck,
-  UserPlus,
   Award,
   Search,
   RefreshCw,
@@ -70,104 +69,6 @@ const colors = {
   info: '#3B82F6',
 };
 
-// Mock data siswa
-const mockStudents = [
-  {
-    id: 1,
-    nama: "Ahmad Fadli Rahman",
-    kelas: "XI IPA 1",
-    status: "aktif",
-    totalJuz: 15,
-    totalAyat: 450,
-    nilai: 85,
-    setoranBulanIni: 8,
-    totalSetoran: 45
-  },
-  {
-    id: 2,
-    nama: "Siti Nurhaliza",
-    kelas: "XI IPA 2",
-    status: "aktif",
-    totalJuz: 12,
-    totalAyat: 360,
-    nilai: 92,
-    setoranBulanIni: 6,
-    totalSetoran: 38
-  },
-  {
-    id: 3,
-    nama: "Muhammad Rizki",
-    kelas: "X IPA 1",
-    status: "menunggu_validasi",
-    totalJuz: 8,
-    totalAyat: 240,
-    nilai: 78,
-    setoranBulanIni: 4,
-    totalSetoran: 22
-  },
-  {
-    id: 4,
-    nama: "Fatimah Zahra",
-    kelas: "XII IPA 1",
-    status: "aktif",
-    totalJuz: 18,
-    totalAyat: 540,
-    nilai: 88,
-    setoranBulanIni: 7,
-    totalSetoran: 52
-  },
-  {
-    id: 5,
-    nama: "Abdullah Hasan",
-    kelas: "XI IPS 1",
-    status: "aktif",
-    totalJuz: 10,
-    totalAyat: 300,
-    nilai: 75,
-    setoranBulanIni: 5,
-    totalSetoran: 28
-  },
-  {
-    id: 6,
-    nama: "Khadijah Aisyah",
-    kelas: "X IPA 2",
-    status: "menunggu_validasi",
-    totalJuz: 14,
-    totalAyat: 420,
-    nilai: 90,
-    setoranBulanIni: 6,
-    totalSetoran: 40
-  },
-  {
-    id: 7,
-    nama: "Umar Faruq",
-    kelas: "XII IPA 2",
-    status: "aktif",
-    totalJuz: 25,
-    totalAyat: 750,
-    nilai: 95,
-    setoranBulanIni: 9,
-    totalSetoran: 68
-  },
-  {
-    id: 8,
-    nama: "Maryam Salsabila",
-    kelas: "X IPS 1",
-    status: "aktif",
-    totalJuz: 6,
-    totalAyat: 180,
-    nilai: 70,
-    setoranBulanIni: 3,
-    totalSetoran: 18
-  },
-];
-
-const mockStats = {
-  totalSiswa: 142,
-  siswaAktif: 136,
-  menungguValidasi: 6,
-  rataRataNilai: 85.4,
-};
 
 // Komponen StatCard
 function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
@@ -287,26 +188,27 @@ export default function KelolaSiswaPage() {
       const data = await response.json();
 
       // Transform data untuk match format yang digunakan component
-      const transformedData = data.map(siswa => ({
-        id: siswa.id,
-        nama: siswa.user.name,
-        kelas: siswa.kelas?.nama || '-',
-        status: siswa.status === 'approved' ? 'aktif' : 'menunggu_validasi',
-        totalJuz: siswa.hafalan?.length || 0,
-        totalAyat: siswa.hafalan?.reduce((sum, h) => sum + (h.ayatSelesai - h.ayatMulai + 1), 0) || 0,
-        nilai: 0, // TODO: Hitung dari data penilaian
-        setoranBulanIni: 0, // TODO: Hitung dari hafalan bulan ini
-        totalSetoran: siswa.hafalan?.length || 0,
-      }));
+      // Hanya tampilkan siswa dengan status approved (Aktif)
+      const transformedData = data
+        .filter(siswa => siswa.status === 'approved')
+        .map(siswa => ({
+          id: siswa.id,
+          nama: siswa.user.name,
+          kelas: siswa.kelas?.nama || '-',
+          status: 'aktif', // Semua siswa yang ditampilkan adalah aktif
+          totalJuz: siswa.totalJuz || 0,
+          totalSetoran: siswa.totalSetoran || 0,
+          averageNilai: siswa.averageNilai || 0,
+        }));
 
       setStudents(transformedData);
 
       // Hitung statistik dari data real
       const totalSiswa = transformedData.length;
-      const siswaAktif = transformedData.filter(s => s.status === 'aktif').length;
-      const menungguValidasi = transformedData.filter(s => s.status === 'menunggu_validasi').length;
+      const siswaAktif = transformedData.length; // Semua siswa adalah aktif
+      const menungguValidasi = 0; // Tidak ada siswa menunggu validasi di halaman ini
       const rataRataNilai = totalSiswa > 0
-        ? (transformedData.reduce((sum, s) => sum + s.nilai, 0) / totalSiswa).toFixed(1)
+        ? (transformedData.reduce((sum, s) => sum + s.averageNilai, 0) / totalSiswa).toFixed(1)
         : 0;
 
       setStats({
@@ -412,7 +314,7 @@ export default function KelolaSiswaPage() {
                 color: colors.text.secondary,
                 fontFamily: '"Poppins", system-ui, sans-serif',
               }}>
-                Manajemen data siswa dan monitoring progress hafalan
+                Monitoring siswa kelas binaan dan tracking progress hafalan
               </p>
             </div>
 
@@ -440,29 +342,6 @@ export default function KelolaSiswaPage() {
               >
                 <RefreshCw size={18} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
                 Refresh
-              </button>
-
-              <button
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 24px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.white,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.3)',
-                }}
-                className="action-btn-primary"
-              >
-                <UserPlus size={18} />
-                Tambah Siswa
               </button>
             </div>
           </div>
@@ -663,40 +542,18 @@ export default function KelolaSiswaPage() {
                         fontFamily: '"Poppins", system-ui, sans-serif',
                         borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
-                        Total Ayat
-                      </th>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'center',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.text.primary,
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
-                      }}>
-                        Nilai
-                      </th>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'center',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.text.primary,
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
-                      }}>
-                        Setoran Bulan Ini
-                      </th>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'center',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.text.primary,
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
-                      }}>
                         Total Setoran
+                      </th>
+                      <th style={{
+                        padding: '16px',
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text.primary,
+                        fontFamily: '"Poppins", system-ui, sans-serif',
+                        borderBottom: `2px solid ${colors.gray[200]}`,
+                      }}>
+                        Aksi
                       </th>
                     </tr>
                   </thead>
@@ -766,55 +623,39 @@ export default function KelolaSiswaPage() {
                             padding: '18px 16px',
                             textAlign: 'center',
                             fontSize: '14px',
-                            color: colors.text.secondary,
-                            fontFamily: '"Poppins", system-ui, sans-serif',
-                          }}>
-                            {student.totalAyat}
-                          </td>
-                          <td style={{
-                            padding: '18px 16px',
-                            textAlign: 'center',
-                          }}>
-                            <span style={{
-                              display: 'inline-block',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              background: student.nilai >= 85
-                                ? `${colors.emerald[500]}20`
-                                : student.nilai >= 70
-                                ? `${colors.amber[400]}20`
-                                : `${colors.gray[400]}20`,
-                              color: student.nilai >= 85
-                                ? colors.emerald[700]
-                                : student.nilai >= 70
-                                ? colors.amber[700]
-                                : colors.gray[700],
-                              fontSize: '14px',
-                              fontWeight: 700,
-                              fontFamily: '"Poppins", system-ui, sans-serif',
-                            }}>
-                              {student.nilai}
-                            </span>
-                          </td>
-                          <td style={{
-                            padding: '18px 16px',
-                            textAlign: 'center',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: colors.text.primary,
-                            fontFamily: '"Poppins", system-ui, sans-serif',
-                          }}>
-                            {student.setoranBulanIni}
-                          </td>
-                          <td style={{
-                            padding: '18px 16px',
-                            textAlign: 'center',
-                            fontSize: '14px',
                             fontWeight: 600,
                             color: colors.text.secondary,
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.totalSetoran}
+                          </td>
+                          <td style={{
+                            padding: '18px 16px',
+                            textAlign: 'center',
+                          }}>
+                            <Link href={`/guru/kelola-siswa/${student.id}`}>
+                              <button
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '8px 16px',
+                                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  color: colors.white,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  fontFamily: '"Poppins", system-ui, sans-serif',
+                                }}
+                                className="detail-btn"
+                              >
+                                <BookOpen size={16} />
+                                Detail
+                              </button>
+                            </Link>
                           </td>
                         </tr>
                       );
@@ -946,6 +787,12 @@ export default function KelolaSiswaPage() {
         .pagination-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Detail Button */
+        .detail-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(26, 147, 111, 0.4);
         }
 
         /* Spin Animation */

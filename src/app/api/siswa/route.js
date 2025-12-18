@@ -82,6 +82,12 @@ export async function GET(request) {
             surah: true,
             ayatMulai: true,
             ayatSelesai: true,
+            tanggal: true,
+          },
+        },
+        penilaian: {
+          select: {
+            nilaiAkhir: true,
           },
         },
       },
@@ -90,7 +96,29 @@ export async function GET(request) {
       },
     });
 
-    return NextResponse.json(siswa);
+    // Transform data to include calculated totals
+    const transformedSiswa = siswa.map(s => {
+      // Calculate Total Juz (count of distinct juz values)
+      const uniqueJuz = [...new Set(s.hafalan.map(h => h.juz))];
+      const totalJuz = uniqueJuz.length;
+
+      // Calculate Total Setoran (count of hafalan records)
+      const totalSetoran = s.hafalan.length;
+
+      // Calculate average nilai
+      const averageNilai = s.penilaian.length > 0
+        ? s.penilaian.reduce((sum, p) => sum + p.nilaiAkhir, 0) / s.penilaian.length
+        : 0;
+
+      return {
+        ...s,
+        totalJuz,
+        totalSetoran,
+        averageNilai: parseFloat(averageNilai.toFixed(1)),
+      };
+    });
+
+    return NextResponse.json(transformedSiswa);
   } catch (error) {
     console.error('Error fetching siswa:', error);
     return NextResponse.json(
