@@ -61,7 +61,7 @@ export default function TambahSiswaPage() {
     tempatLahir: '',
     tanggalLahir: '',
     alamat: '',
-    noHP: '',
+    noTelepon: '',
   });
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function TambahSiswaPage() {
           tempatLahir: formData.tempatLahir,
           tanggalLahir: formData.tanggalLahir,
           alamat: formData.alamat,
-          noHP: formData.noHP,
+          noTelepon: formData.noTelepon,
           // Status 'pending' is set automatically by backend
         }),
       });
@@ -153,7 +153,9 @@ export default function TambahSiswaPage() {
         alert('Siswa berhasil ditambahkan!\nData siswa akan ditampilkan setelah disetujui oleh admin.');
         router.push('/guru/siswa');
       } else {
-        alert('Error: ' + (result.error || 'Failed to create siswa'));
+        console.error('API Error:', result);
+        alert('Error: ' + (result.error || 'Failed to create siswa') +
+              (result.details ? '\n\nDetail: ' + result.details : ''));
       }
     } catch (error) {
       console.error('Error creating siswa:', error);
@@ -705,8 +707,8 @@ export default function TambahSiswaPage() {
                   </label>
                   <input
                     type="tel"
-                    value={formData.noHP}
-                    onChange={(e) => setFormData({ ...formData, noHP: e.target.value })}
+                    value={formData.noTelepon}
+                    onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '14px 16px',

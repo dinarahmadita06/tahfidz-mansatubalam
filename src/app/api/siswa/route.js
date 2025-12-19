@@ -138,7 +138,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { name, email, password, nisn, nis, kelasId, jenisKelamin, tempatLahir, tanggalLahir, alamat, noHP } = body;
+    const { name, email, password, nisn, nis, kelasId, jenisKelamin, tempatLahir, tanggalLahir, alamat, noTelepon } = body;
 
     // Validate required fields
     if (!name || !email || !password || !nisn || !nis || !kelasId || !jenisKelamin || !tempatLahir || !tanggalLahir) {
@@ -186,7 +186,7 @@ export async function POST(request) {
           tempatLahir,
           tanggalLahir: new Date(tanggalLahir),
           alamat,
-          noHP,
+          noTelepon,
           status: 'pending',
           // Removed createdBy field since it doesn't exist in the schema
         },
@@ -253,6 +253,11 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Error creating siswa:', error);
-    return NextResponse.json({ error: 'Failed to create siswa' }, { status: 500 });
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    return NextResponse.json({
+      error: 'Failed to create siswa',
+      details: error.message
+    }, { status: 500 });
   }
 }
