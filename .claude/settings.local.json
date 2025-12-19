@@ -81,7 +81,8 @@
       "Bash(neonctl branches create:*)",
       "Bash(git revert:*)",
       "Bash(git diff:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": []
