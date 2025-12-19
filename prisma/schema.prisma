@@ -147,6 +147,7 @@ model Siswa {
   kelasId        String?
   alamat         String?
   noTelepon      String?
+  tempatLahir    String?
   tanggalLahir   DateTime?
   jenisKelamin   JenisKelamin
   status         StatusAkun     @default(pending)
