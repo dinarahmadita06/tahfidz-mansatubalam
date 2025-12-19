@@ -17,7 +17,6 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  BookOpen,
   TrendingUp
 } from 'lucide-react';
 
@@ -494,7 +493,7 @@ export default function KelolaSiswaPage() {
             <div style={{
               background: colors.white,
               borderRadius: '20px',
-              padding: '28px',
+              padding: '32px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
               border: `2px solid ${colors.gray[200]}`,
             }}>
@@ -506,73 +505,62 @@ export default function KelolaSiswaPage() {
                 }}>
                   <thead>
                     <tr style={{
-                      background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
+                      background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                      borderRadius: '12px',
                     }}>
                       <th style={{
-                        padding: '16px',
+                        padding: '18px 20px',
                         textAlign: 'left',
-                        fontSize: '13px',
+                        fontSize: '14px',
                         fontWeight: 700,
-                        color: colors.text.primary,
+                        color: colors.white,
                         fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
+                        borderTopLeftRadius: '12px',
+                        borderBottomLeftRadius: '12px',
                       }}>
                         Nama Siswa
                       </th>
                       <th style={{
-                        padding: '16px',
+                        padding: '18px 20px',
                         textAlign: 'center',
-                        fontSize: '13px',
+                        fontSize: '14px',
                         fontWeight: 700,
-                        color: colors.text.primary,
+                        color: colors.white,
                         fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Kelas
                       </th>
                       <th style={{
-                        padding: '16px',
+                        padding: '18px 20px',
                         textAlign: 'center',
-                        fontSize: '13px',
+                        fontSize: '14px',
                         fontWeight: 700,
-                        color: colors.text.primary,
+                        color: colors.white,
                         fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Status
                       </th>
                       <th style={{
-                        padding: '16px',
+                        padding: '18px 20px',
                         textAlign: 'center',
-                        fontSize: '13px',
+                        fontSize: '14px',
                         fontWeight: 700,
-                        color: colors.text.primary,
+                        color: colors.white,
                         fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
                       }}>
                         Total Juz
                       </th>
                       <th style={{
-                        padding: '16px',
+                        padding: '18px 20px',
                         textAlign: 'center',
-                        fontSize: '13px',
+                        fontSize: '14px',
                         fontWeight: 700,
-                        color: colors.text.primary,
+                        color: colors.white,
                         fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
+                        borderTopRightRadius: '12px',
+                        borderBottomRightRadius: '12px',
                       }}>
                         Total Setoran
-                      </th>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'center',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.text.primary,
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        borderBottom: `2px solid ${colors.gray[200]}`,
-                      }}>
-                        Aksi
                       </th>
                     </tr>
                   </thead>
@@ -585,13 +573,14 @@ export default function KelolaSiswaPage() {
                         <tr
                           key={student.id}
                           style={{
-                            borderBottom: index < paginatedStudents.length - 1 ? `1px solid ${colors.gray[100]}` : 'none',
-                            transition: 'background 0.2s ease',
+                            borderBottom: index < paginatedStudents.length - 1 ? `2px solid ${colors.gray[100]}` : 'none',
+                            transition: 'all 0.2s ease',
+                            background: index % 2 === 0 ? colors.white : `${colors.gray[50]}`,
                           }}
                           className="table-row"
                         >
                           <td style={{
-                            padding: '18px 16px',
+                            padding: '20px',
                             fontSize: '14px',
                             fontWeight: 600,
                             color: colors.text.primary,
@@ -600,27 +589,28 @@ export default function KelolaSiswaPage() {
                             {student.nama}
                           </td>
                           <td style={{
-                            padding: '18px 16px',
+                            padding: '20px',
                             textAlign: 'center',
                             fontSize: '14px',
+                            fontWeight: 500,
                             color: colors.text.secondary,
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
                             {student.kelas}
                           </td>
                           <td style={{
-                            padding: '18px 16px',
+                            padding: '20px',
                             textAlign: 'center',
                           }}>
                             <span style={{
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '6px',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
+                              padding: '8px 16px',
+                              borderRadius: '10px',
                               background: statusConfig.bg,
                               color: statusConfig.text,
-                              fontSize: '12px',
+                              fontSize: '13px',
                               fontWeight: 600,
                               fontFamily: '"Poppins", system-ui, sans-serif',
                             }}>
@@ -629,52 +619,24 @@ export default function KelolaSiswaPage() {
                             </span>
                           </td>
                           <td style={{
-                            padding: '18px 16px',
+                            padding: '20px',
                             textAlign: 'center',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: colors.emerald[700],
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            color: colors.emerald[600],
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
-                            {student.totalJuz}
+                            {student.totalJuz} Juz
                           </td>
                           <td style={{
-                            padding: '18px 16px',
+                            padding: '20px',
                             textAlign: 'center',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            color: colors.text.secondary,
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            color: colors.text.primary,
                             fontFamily: '"Poppins", system-ui, sans-serif',
                           }}>
-                            {student.totalSetoran}
-                          </td>
-                          <td style={{
-                            padding: '18px 16px',
-                            textAlign: 'center',
-                          }}>
-                            <Link href={`/guru/siswa/${student.id}`}>
-                              <button
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                  padding: '8px 16px',
-                                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                                  border: 'none',
-                                  borderRadius: '8px',
-                                  fontSize: '13px',
-                                  fontWeight: 600,
-                                  color: colors.white,
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  fontFamily: '"Poppins", system-ui, sans-serif',
-                                }}
-                                className="detail-btn"
-                              >
-                                <BookOpen size={16} />
-                                Detail
-                              </button>
-                            </Link>
+                            {student.totalSetoran}×
                           </td>
                         </tr>
                       );
@@ -799,19 +761,15 @@ export default function KelolaSiswaPage() {
 
         /* Table Row Hover */
         .table-row:hover {
-          background: ${colors.emerald[50]}40;
+          background: ${colors.emerald[100]} !important;
+          transform: scale(1.01);
+          box-shadow: 0 2px 8px rgba(26, 147, 111, 0.15);
         }
 
         /* Pagination Buttons */
         .pagination-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Detail Button */
-        .detail-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(26, 147, 111, 0.4);
         }
 
         /* Spin Animation */
