@@ -622,8 +622,8 @@ export default function TambahSiswaPage() {
                       className="form-input"
                     >
                       <option value="">Pilih Jenis Kelamin</option>
-                      <option value="Laki-laki">Laki-laki</option>
-                      <option value="Perempuan">Perempuan</option>
+                      <option value="LAKI_LAKI">Laki-laki</option>
+                      <option value="PEREMPUAN">Perempuan</option>
                     </select>
                   </div>
                 </div>
