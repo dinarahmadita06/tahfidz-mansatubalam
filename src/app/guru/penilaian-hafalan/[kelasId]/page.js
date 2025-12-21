@@ -127,7 +127,6 @@ export default function PenilaianHafalanPage() {
         `/api/guru/penilaian-hafalan?kelasId=${kelasId}`
       );
       const result = await response.json();
-      console.log('API Response:', result);
 
       // API returns array of hafalan with penilaian data
       if (Array.isArray(result)) {
@@ -139,27 +138,26 @@ export default function PenilaianHafalanPage() {
             String(hafalanDate.getMonth() + 1).padStart(2, '0') + '-' + 
             String(hafalanDate.getDate()).padStart(2, '0');
           
-          console.log('Hafalan Date:', hafalanDateString, 'Selected Date:', selectedDate);
-          
           // Only include if date matches selected date
           if (hafalanDateString === selectedDate) {
-            console.log('Match found for siswaId:', hafalan.siswaId);
+            // Get penilaian from the array (could have multiple)
+            const penilaianData = hafalan.penilaian && hafalan.penilaian.length > 0 ? hafalan.penilaian[0] : null;
+            
             dataMap[hafalan.siswaId] = {
-              penilaian: {
+              penilaian: penilaianData ? {
                 surah: hafalan.surah || '',
                 ayatMulai: hafalan.ayatMulai || '',
                 ayatSelesai: hafalan.ayatSelesai || '',
-                tajwid: hafalan.penilaian?.tajwid || '',
-                kelancaran: hafalan.penilaian?.kelancaran || '',
-                makhraj: hafalan.penilaian?.makhraj || '',
-                implementasi: hafalan.penilaian?.adab || '',
-              },
+                tajwid: penilaianData.tajwid || '',
+                kelancaran: penilaianData.kelancaran || '',
+                makhraj: penilaianData.makhraj || '',
+                implementasi: penilaianData.adab || '', // map 'adab' to 'implementasi'
+              } : {},
               statusKehadiran: 'HADIR',
-              catatan: hafalan.penilaian?.catatan || '',
+              catatan: penilaianData?.catatan || '',
             };
           }
         });
-        console.log('Final dataMap:', dataMap);
         setPenilaianData(dataMap);
       }
     } catch (error) {
