@@ -124,18 +124,26 @@ export default function PenilaianHafalanPage() {
   const fetchPenilaianData = async () => {
     try {
       const response = await fetch(
-        `/api/guru/penilaian-hafalan?kelasId=${kelasId}&tanggal=${selectedDate}`
+        `/api/guru/penilaian-hafalan?kelasId=${kelasId}`
       );
       const result = await response.json();
+      console.log('API Response:', result);
 
       // API returns array of hafalan with penilaian data
       if (Array.isArray(result)) {
         const dataMap = {};
         result.forEach((hafalan) => {
-          // Map hafalan data structure to expected format
-          const tanggalHafalan = new Date(hafalan.tanggal).toISOString().split('T')[0];
+          // Extract year, month, day from tanggal
+          const hafalanDate = new Date(hafalan.tanggal);
+          const hafalanDateString = hafalanDate.getFullYear() + '-' + 
+            String(hafalanDate.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(hafalanDate.getDate()).padStart(2, '0');
+          
+          console.log('Hafalan Date:', hafalanDateString, 'Selected Date:', selectedDate);
+          
           // Only include if date matches selected date
-          if (tanggalHafalan === selectedDate) {
+          if (hafalanDateString === selectedDate) {
+            console.log('Match found for siswaId:', hafalan.siswaId);
             dataMap[hafalan.siswaId] = {
               penilaian: {
                 surah: hafalan.surah || '',
@@ -151,6 +159,7 @@ export default function PenilaianHafalanPage() {
             };
           }
         });
+        console.log('Final dataMap:', dataMap);
         setPenilaianData(dataMap);
       }
     } catch (error) {
