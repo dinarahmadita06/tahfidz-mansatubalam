@@ -131,19 +131,29 @@ export async function GET(request) {
 // POST - Create new siswa (Guru)
 export async function POST(request) {
   try {
+    console.log('🔍 POST /api/siswa called');
     const session = await auth();
 
     if (!session || session.user.role !== 'GURU') {
+      console.log('❌ Unauthorized - no session or not guru');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('✅ Session valid - Guru:', session.user.email);
+
     const body = await request.json();
+    console.log('📝 Request body received');
     const { name, email, password, nisn, nis, kelasId, jenisKelamin, tempatLahir, tanggalLahir, alamat, noTelepon } = body;
 
     // Validate required fields
     if (!name || !email || !password || !nisn || !nis || !kelasId || !jenisKelamin || !tempatLahir || !tanggalLahir) {
+      console.log('❌ Validation failed - missing required fields');
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    console.log('✅ Validation passed');
+    console.log('🔍 Checking if prisma is defined:', !!prisma);
+    console.log('🔍 Checking if prisma.$transaction is defined:', !!prisma.$transaction);
 
     // Check if email, nisn, or nis already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -165,7 +175,9 @@ export async function POST(request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user and siswa with pending status
+    console.log('🔄 Starting transaction...');
     const result = await prisma.$transaction(async (tx) => {
+      console.log('✅ Transaction started, tx defined:', !!tx);
       const user = await tx.user.create({
         data: {
           email,
@@ -175,6 +187,8 @@ export async function POST(request) {
           isActive: false, // Not active until approved
         },
       });
+
+      console.log('✅ User created:', user.id);
 
       const siswa = await tx.siswa.create({
         data: {
@@ -205,6 +219,8 @@ export async function POST(request) {
         },
       });
 
+      console.log('✅ Siswa created:', siswa.id);
+
       // Create notification for all admins
       const admins = await tx.user.findMany({
         where: { role: 'ADMIN' },
@@ -230,6 +246,8 @@ export async function POST(request) {
       return siswa;
     });
 
+    console.log('✅ Transaction completed');
+
     // Log activity
     await logActivity({
       userId: session.user.id,
@@ -247,17 +265,20 @@ export async function POST(request) {
       }
     });
 
+    console.log('🎉 Siswa created successfully');
     return NextResponse.json({
       message: 'Siswa berhasil ditambahkan. Menunggu validasi dari admin.',
       siswa: result,
     });
   } catch (error) {
-    console.error('Error creating siswa:', error);
+    console.error('❌ Error creating siswa:', error);
     console.error('Error details:', error.message);
     console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
     return NextResponse.json({
       error: 'Failed to create siswa',
-      details: error.message
+      details: error.message,
+      errorName: error.name
     }, { status: 500 });
   }
 }
