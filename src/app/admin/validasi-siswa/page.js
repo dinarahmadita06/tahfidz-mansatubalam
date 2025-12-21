@@ -199,8 +199,9 @@ export default function ValidasiSiswaPage() {
   const fetchSiswa = async () => {
     try {
       const response = await fetch('/api/admin/siswa');
-      const data = await response.json();
-      setSiswa(data);
+      const result = await response.json();
+      // API returns { data: siswa, pagination: {...} }
+      setSiswa(Array.isArray(result.data) ? result.data : []);
     } catch (error) {
       console.error('Error fetching siswa:', error);
     } finally {
@@ -298,9 +299,9 @@ export default function ValidasiSiswaPage() {
   const filteredSiswa = siswa.filter(s => {
     const matchSearch = s.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.nisn && s.nisn.includes(searchTerm));
+      (s.nis && s.nis.includes(searchTerm));
 
-    const matchStatus = filterStatus === 'all' || s.validasiStatus === filterStatus;
+    const matchStatus = filterStatus === 'all' || s.status === filterStatus;
 
     const matchKelas = filterKelas === 'all' ||
       (s.kelasId && s.kelasId.toString() === filterKelas);
@@ -311,8 +312,8 @@ export default function ValidasiSiswaPage() {
   // Statistics
   const stats = {
     total: siswa.length,
-    pending: siswa.filter(s => s.validasiStatus === 'PENDING').length,
-    approved: siswa.filter(s => s.validasiStatus === 'APPROVED').length,
+    pending: siswa.filter(s => s.status === 'pending').length,
+    approved: siswa.filter(s => s.status === 'approved').length,
   };
 
   if (loading) {
@@ -513,7 +514,7 @@ export default function ValidasiSiswaPage() {
                   >
                     <option value="all">Semua Kelas</option>
                     {kelas.map(k => (
-                      <option key={k.id} value={k.id}>{k.namaKelas}</option>
+                      <option key={k.id} value={k.id}>{k.nama}</option>
                     ))}
                   </select>
                 </div>
@@ -660,14 +661,14 @@ export default function ValidasiSiswaPage() {
                     ) : (
                       filteredSiswa.map((siswaItem, index) => {
                         const getStatusStyle = () => {
-                          switch (siswaItem.validasiStatus) {
-                            case 'APPROVED':
+                          switch (siswaItem.status) {
+                            case 'approved':
                               return {
                                 bg: colors.emerald.bright,
                                 color: colors.emerald[700],
                                 label: 'Divalidasi'
                               };
-                            case 'REJECTED':
+                            case 'rejected':
                               return {
                                 bg: colors.red.pastel,
                                 color: colors.red[700],
@@ -754,7 +755,7 @@ export default function ValidasiSiswaPage() {
                               color: colors.text.secondary,
                               fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                             }}>
-                              {siswaItem.kelas?.namaKelas || '-'}
+                              {siswaItem.kelas?.nama || '-'}
                             </td>
                             <td style={{ padding: '20px 24px' }}>
                               <span style={{
@@ -809,7 +810,7 @@ export default function ValidasiSiswaPage() {
                                 >
                                   <Eye size={16} />
                                 </button>
-                                {siswaItem.validasiStatus === 'PENDING' && (
+                                {siswaItem.status === 'pending' && (
                                   <>
                                     <button
                                       onClick={() => handleApproveClick(siswaItem)}
@@ -1006,7 +1007,7 @@ export default function ValidasiSiswaPage() {
                   color: colors.text.primary,
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}>
-                  {selectedSiswa.kelas?.namaKelas || '-'}
+                  {selectedSiswa.kelas?.nama || '-'}
                 </p>
               </div>
 
@@ -1028,7 +1029,7 @@ export default function ValidasiSiswaPage() {
                   color: colors.text.primary,
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}>
-                  {selectedSiswa.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+                  {selectedSiswa.jenisKelamin === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan'}
                 </p>
               </div>
 
@@ -1072,8 +1073,8 @@ export default function ValidasiSiswaPage() {
                   color: colors.text.primary,
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}>
-                  {selectedSiswa.validasiStatus === 'APPROVED' ? 'Divalidasi' :
-                   selectedSiswa.validasiStatus === 'REJECTED' ? 'Ditolak' : 'Menunggu'}
+                  {selectedSiswa.status === 'approved' ? 'Divalidasi' :
+                   selectedSiswa.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
                 </p>
               </div>
             </div>
