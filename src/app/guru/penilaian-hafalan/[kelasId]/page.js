@@ -5,9 +5,11 @@ import GuruLayout from '@/components/layout/GuruLayout';
 import { useParams, useRouter } from 'next/navigation';
 import {
   BookOpen,
-  ArrowLeft,
+  Calendar,
   Save,
   X,
+  AlertCircle,
+  Loader,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import Link from 'next/link';
@@ -97,18 +99,23 @@ export default function PenilaianHafalanPage() {
   const fetchSiswaData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/guru/kelas/${kelasId}/siswa`);
+      // Try to fetch from /api/siswa with kelasId filter
+      const response = await fetch(`/api/siswa?kelasId=${kelasId}`);
       const result = await response.json();
 
-      if (result.success) {
-        setSiswaList(result.siswa || []);
-        setKelasInfo(result.kelas || null);
+      if (result && Array.isArray(result)) {
+        setSiswaList(result);
+        // Get kelas info
+        const kelasRes = await fetch(`/api/kelas/${kelasId}`);
+        const kelasData = await kelasRes.json();
+        setKelasInfo(kelasData);
       } else {
         toast.error('Gagal memuat data siswa');
+        setSiswaList([]);
       }
     } catch (error) {
       console.error('Error fetching siswa:', error);
-      toast.error('Terjadi kesalahan saat memuat data');
+      setSiswaList([]);
     } finally {
       setLoading(false);
     }
@@ -275,10 +282,12 @@ export default function PenilaianHafalanPage() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-amber-50 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Memuat data...</p>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mb-4">
+              <Loader className="w-8 h-8 text-white animate-spin" />
+            </div>
+            <p className="text-gray-600 font-medium">Memuat data siswa...</p>
           </div>
         </div>
       </GuruLayout>
@@ -289,107 +298,118 @@ export default function PenilaianHafalanPage() {
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div className="p-6 max-w-[1400px] mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <Link
-            href="/guru/penilaian-hafalan"
-            className="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali ke Daftar Kelas
-          </Link>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Penilaian Hafalan - {kelasInfo?.nama || 'Kelas'}
-                </h1>
-                <p className="text-gray-600">
-                  Input penilaian hafalan per pertemuan
-                </p>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-amber-50">
+        {/* Header Card */}
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-8 mb-8">
+          <div className="max-w-[1400px] mx-auto flex items-center gap-4">
+            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center">
+              <BookOpen className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Penilaian Hafalan – Kelas {kelasInfo?.nama || 'Loading...'}</h1>
+              <p className="text-emerald-50 text-lg">Input penilaian hafalan per pertemuan</p>
             </div>
           </div>
         </div>
 
-        {/* Date Filter */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">
-              Tanggal Pertemuan:
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-            <span className="text-sm text-gray-600">
-              {new Date(selectedDate).toLocaleDateString('id-ID', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
-            </span>
+        <div className="max-w-[1400px] mx-auto px-8 pb-8">
+
+          {/* Date Filter Card */}
+          <div className="bg-white rounded-2xl shadow-md border-2 border-emerald-100 p-6 mb-8">
+            <div className="flex items-center gap-4">
+              <Calendar className="w-6 h-6 text-emerald-600" />
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Tanggal Pertemuan</label>
+                <div className="flex gap-4 items-center">
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                  />
+                  <span className="text-gray-700 font-medium">
+                    {new Date(selectedDate).toLocaleDateString('id-ID', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-emerald-500 to-teal-600">
-                <tr>
-                  <th className="px-4 py-4 text-left text-sm font-semibold text-white w-12">
-                    No
-                  </th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold text-white">
-                    Nama Siswa
-                  </th>
-                  <th className="px-4 py-4 text-center text-sm font-semibold text-white w-40">
-                    Status Kehadiran
-                  </th>
-                  <th className="px-4 py-4 text-center text-sm font-semibold text-white" style={{ minWidth: '300px' }}>
-                    Penilaian
-                  </th>
-                  <th className="px-4 py-4 text-center text-sm font-semibold text-white w-32">
-                    Rata-rata Nilai
-                  </th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold text-white" style={{ minWidth: '200px' }}>
-                    Catatan
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {siswaList.map((siswa, index) => {
-                  const data = penilaianData[siswa.id] || {};
-                  const penilaian = data.penilaian || {};
-                  const rataRata = hitungRataRata(
-                    penilaian.tajwid,
-                    penilaian.kelancaran,
-                    penilaian.makhraj,
-                    penilaian.implementasi
-                  );
+          {/* Table Card */}
+          <div className="bg-white rounded-2xl shadow-md border-2 border-emerald-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-emerald-600 to-teal-600">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white w-12">No</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white">Nama Siswa</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white w-40">Status Kehadiran</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white" style={{ minWidth: '300px' }}>Penilaian</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white w-32">Rata-rata Nilai</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white" style={{ minWidth: '200px' }}>Catatan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-emerald-100">
+                  {siswaList.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-16 text-center">
+                        <div className="flex flex-col items-center">
+                          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                            <AlertCircle className="w-10 h-10 text-emerald-500" />
+                          </div>
+                          <p className="text-gray-600 font-medium text-lg">Belum ada siswa di kelas ini</p>
+                          <p className="text-gray-500 text-sm mt-2">Data siswa akan tampil di sini ketika kelas memiliki anggota</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    siswaList.map((siswa, index) => {
+                      const data = penilaianData[siswa.id] || {};
+                      const penilaian = data.penilaian || {};
+                      const rataRata = hitungRataRata(
+                        penilaian.tajwid,
+                        penilaian.kelancaran,
+                        penilaian.makhraj,
+                        penilaian.implementasi
+                      );
+                      const statusKehadiran = data.statusKehadiran || 'HADIR';
 
-                  return (
-                    <tr key={siswa.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                        {siswa.user?.name || siswa.nama}
-                      </td>
-                      <td className="px-4 py-4 text-center">
+                      const getStatusStyle = () => {
+                        switch (statusKehadiran) {
+                          case 'HADIR':
+                            return 'bg-emerald-100 text-emerald-700 border-emerald-300';
+                          case 'IZIN':
+                            return 'bg-amber-100 text-amber-700 border-amber-300';
+                          case 'SAKIT':
+                            return 'bg-blue-100 text-blue-700 border-blue-300';
+                          case 'ALFA':
+                            return 'bg-red-100 text-red-700 border-red-300';
+                          default:
+                            return 'bg-gray-100 text-gray-700 border-gray-300';
+                        }
+                      };
+
+                      const statusLabels = {
+                        HADIR: 'Hadir',
+                        IZIN: 'Izin',
+                        SAKIT: 'Sakit',
+                        ALFA: 'Alpa',
+                      };
+
+                      return (
+                    <tr key={siswa.id} className="hover:bg-emerald-50 transition-colors duration-200 border-l-4 border-l-emerald-300">
+                      <td className="px-6 py-4 text-sm font-semibold text-gray-700">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">{siswa.user?.name || siswa.nama}</td>
+                      <td className="px-6 py-4 text-center">
                         <select
-                          value={data.statusKehadiran || 'HADIR'}
+                          value={statusKehadiran}
                           onChange={(e) => handleStatusChange(siswa.id, e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className={`px-3 py-2 border-2 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all cursor-pointer ${getStatusStyle()}`}
                         >
                           <option value="HADIR">Hadir</option>
                           <option value="SAKIT">Sakit</option>
@@ -397,30 +417,34 @@ export default function PenilaianHafalanPage() {
                           <option value="ALFA">Alpa</option>
                         </select>
                       </td>
-                      <td className="px-4 py-4 text-center">
+                      <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => openPenilaianPopup(siswa)}
-                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                          className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all text-sm font-semibold shadow-md hover:shadow-lg"
                         >
-                          {penilaian.surah ? 'Edit Penilaian' : 'Input Penilaian'}
+                          {penilaian.surah ? 'Edit' : 'Input'}
                         </button>
                         {penilaian.surah && (
-                          <div className="mt-2 text-xs text-gray-600">
+                          <div className="mt-2 text-xs text-emerald-700 font-medium">
                             {penilaian.surah} ({penilaian.ayatMulai}-{penilaian.ayatSelesai})
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <span className={`text-lg font-bold ${
-                          rataRata >= 90 ? 'text-emerald-600' :
-                          rataRata >= 80 ? 'text-yellow-600' :
-                          rataRata >= 70 ? 'text-orange-600' :
-                          'text-gray-400'
-                        }`}>
-                          {rataRata != null ? formatNilai(rataRata) : '-'}
-                        </span>
+                      <td className="px-6 py-4 text-center">
+                        {rataRata != null ? (
+                          <div className={`inline-flex items-center px-3 py-2 rounded-lg font-bold text-sm ${
+                            rataRata >= 90 ? 'bg-emerald-100 text-emerald-700' :
+                            rataRata >= 80 ? 'bg-amber-100 text-amber-700' :
+                            rataRata >= 70 ? 'bg-orange-100 text-orange-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {formatNilai(rataRata)}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-6 py-4">
                         <input
                           type="text"
                           value={data.catatan || ''}
@@ -435,50 +459,46 @@ export default function PenilaianHafalanPage() {
                           }}
                           onBlur={(e) => handleCatatanChange(siswa.id, e.target.value)}
                           placeholder="Tambahkan catatan..."
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className="w-full px-3 py-2 text-sm border-2 border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-all"
                         />
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {siswaList.length === 0 && (
-            <div className="text-center py-12 text-gray-500">
-              Tidak ada data siswa di kelas ini
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
       {/* Popup Penilaian */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white">
-                Form Penilaian - {selectedSiswa?.user?.name || selectedSiswa?.nama}
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-emerald-100">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-6 flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-white">
+                Form Penilaian – {selectedSiswa?.user?.name || selectedSiswa?.nama}
               </h3>
               <button
                 onClick={() => setShowPopup(false)}
-                className="text-white hover:text-gray-200 transition-colors"
+                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-8 space-y-6">
               {/* Surah */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-3">
                   Surah <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={popupForm.surah}
                   onChange={(e) => setPopupForm({ ...popupForm, surah: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                 >
                   <option value="">Pilih Surah</option>
                   {surahList.map((surah) => (
@@ -490,9 +510,9 @@ export default function PenilaianHafalanPage() {
               </div>
 
               {/* Ayat */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Ayat Mulai <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -500,12 +520,12 @@ export default function PenilaianHafalanPage() {
                     min="1"
                     value={popupForm.ayatMulai}
                     onChange={(e) => setPopupForm({ ...popupForm, ayatMulai: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                     placeholder="1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Ayat Selesai <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -513,19 +533,19 @@ export default function PenilaianHafalanPage() {
                     min="1"
                     value={popupForm.ayatSelesai}
                     onChange={(e) => setPopupForm({ ...popupForm, ayatSelesai: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                     placeholder="10"
                   />
                 </div>
               </div>
 
               {/* Penilaian 4 Aspek */}
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <h4 className="font-semibold text-gray-900 mb-4">Penilaian (0-100)</h4>
+              <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-6">
+                <h4 className="font-bold text-gray-900 mb-6 text-lg">Penilaian (0-100)</h4>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-3">
                       Tajwid <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -534,12 +554,12 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.tajwid}
                       onChange={(e) => setPopupForm({ ...popupForm, tajwid: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="85"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-3">
                       Kelancaran <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -548,12 +568,12 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.kelancaran}
                       onChange={(e) => setPopupForm({ ...popupForm, kelancaran: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="90"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-3">
                       Makhraj <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -562,12 +582,12 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.makhraj}
                       onChange={(e) => setPopupForm({ ...popupForm, makhraj: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="88"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-3">
                       Implementasi/Adab <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -576,7 +596,7 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.implementasi}
                       onChange={(e) => setPopupForm({ ...popupForm, implementasi: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="92"
                     />
                   </div>
@@ -584,17 +604,17 @@ export default function PenilaianHafalanPage() {
 
                 {/* Preview Rata-rata */}
                 {popupForm.tajwid && popupForm.kelancaran && popupForm.makhraj && popupForm.implementasi && (
-                  <div className="mt-4 p-4 bg-emerald-50 rounded-lg">
-                    <div className="text-sm text-gray-700">
-                      Rata-rata Nilai:{' '}
-                      <span className="text-xl font-bold text-emerald-600">
+                  <div className="mt-6 p-4 bg-white border-2 border-emerald-300 rounded-lg">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-700 font-medium mb-2">Rata-rata Nilai</p>
+                      <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                         {formatNilai(hitungRataRata(
                           parseFloat(popupForm.tajwid),
                           parseFloat(popupForm.kelancaran),
                           parseFloat(popupForm.makhraj),
                           parseFloat(popupForm.implementasi)
                         ))}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -602,24 +622,24 @@ export default function PenilaianHafalanPage() {
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-gray-200">
+            <div className="sticky bottom-0 bg-gray-50 px-8 py-4 flex items-center justify-end gap-3 border-t-2 border-emerald-100">
               <button
                 onClick={() => setShowPopup(false)}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-semibold"
               >
                 Batal
               </button>
               <button
                 onClick={handleSavePenilaian}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2"
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold flex items-center gap-2 shadow-md hover:shadow-lg"
               >
-                <Save className="w-4 h-4" />
+                <Save className="w-5 h-5" />
                 Simpan Penilaian
               </button>
             </div>
           </div>
         </div>
-      )}
+      )}}
     </GuruLayout>
   );
 }
