@@ -778,11 +778,11 @@ export default function ValidasiSiswaPage() {
                               color: colors.text.secondary,
                               fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                             }}>
-                              {new Date(siswaItem.user.createdAt).toLocaleDateString('id-ID', {
+                              {siswaItem.createdAt ? new Date(siswaItem.createdAt).toLocaleDateString('id-ID', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
-                              })}
+                              }) : '-'}
                             </td>
                             <td style={{ padding: '20px 24px' }}>
                               <div style={{
