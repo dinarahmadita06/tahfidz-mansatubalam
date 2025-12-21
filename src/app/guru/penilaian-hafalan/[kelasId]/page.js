@@ -128,11 +128,28 @@ export default function PenilaianHafalanPage() {
       );
       const result = await response.json();
 
-      if (result.success) {
-        // Convert array to object keyed by siswaId
+      // API returns array of hafalan with penilaian data
+      if (Array.isArray(result)) {
         const dataMap = {};
-        result.data.forEach((item) => {
-          dataMap[item.siswaId] = item;
+        result.forEach((hafalan) => {
+          // Map hafalan data structure to expected format
+          const tanggalHafalan = new Date(hafalan.tanggal).toISOString().split('T')[0];
+          // Only include if date matches selected date
+          if (tanggalHafalan === selectedDate) {
+            dataMap[hafalan.siswaId] = {
+              penilaian: {
+                surah: hafalan.surah || '',
+                ayatMulai: hafalan.ayatMulai || '',
+                ayatSelesai: hafalan.ayatSelesai || '',
+                tajwid: hafalan.penilaian?.tajwid || '',
+                kelancaran: hafalan.penilaian?.kelancaran || '',
+                makhraj: hafalan.penilaian?.makhraj || '',
+                implementasi: hafalan.penilaian?.adab || '',
+              },
+              statusKehadiran: 'HADIR',
+              catatan: hafalan.penilaian?.catatan || '',
+            };
+          }
         });
         setPenilaianData(dataMap);
       }
