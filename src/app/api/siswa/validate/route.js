@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 
@@ -51,17 +51,13 @@ export async function PATCH(request) {
 
     if (action === 'approve') {
       updateData = {
-        status: 'active',
-        approvedBy: session.user.id,
-        approvedAt: new Date(),
+        status: 'approved',
       };
       notificationTitle = 'Siswa Disetujui';
       notificationMessage = `Siswa ${siswa.user.name} telah disetujui oleh admin.`;
     } else if (action === 'reject') {
       updateData = {
         status: 'rejected',
-        rejectedBy: session.user.id,
-        rejectedAt: new Date(),
         rejectionReason: rejectionReason || 'Tidak memenuhi persyaratan',
       };
       notificationTitle = 'Siswa Ditolak';
@@ -96,27 +92,6 @@ export async function PATCH(request) {
           where: { id: siswa.userId },
           data: { isActive: true },
         });
-      }
-
-      // Create notification for guru who created the siswa
-      if (siswa.createdBy) {
-        // Get guru data to get their userId
-        const guru = await tx.guru.findUnique({
-          where: { id: siswa.createdBy },
-          select: { userId: true },
-        });
-
-        if (guru) {
-          await tx.notification.create({
-            data: {
-              userId: guru.userId,
-              title: notificationTitle,
-              message: notificationMessage,
-              type: action === 'approve' ? 'student_approved' : 'student_rejected',
-              link: '/guru/siswa',
-            },
-          });
-        }
       }
 
       return updatedSiswa;
