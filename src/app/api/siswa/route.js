@@ -221,28 +221,6 @@ export async function POST(request) {
 
       console.log('✅ Siswa created:', siswa.id);
 
-      // Create notification for all admins
-      const admins = await tx.user.findMany({
-        where: { role: 'ADMIN' },
-        select: { id: true },
-      });
-
-      if (admins.length > 0) {
-        await Promise.all(
-          admins.map((admin) =>
-            tx.notification.create({
-              data: {
-                userId: admin.id,
-                title: 'Siswa Baru Menunggu Validasi',
-                message: `Guru ${session.user.name} menambahkan siswa ${name} - menunggu validasi.`,
-                type: 'student_pending',
-                link: '/admin/validasi-siswa',
-              },
-            })
-          )
-        );
-      }
-
       return siswa;
     });
 
