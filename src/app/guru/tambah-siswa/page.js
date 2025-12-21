@@ -106,11 +106,10 @@ export default function TambahSiswaPage() {
   };
 
   const generatePassword = () => {
-    // Generate random 8-character password with letters and numbers
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    // Generate random 8-digit numeric password
     let password = '';
     for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+      password += Math.floor(Math.random() * 10);
     }
     setFormData(prev => ({ ...prev, password }));
   };
