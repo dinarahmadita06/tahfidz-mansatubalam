@@ -639,7 +639,7 @@ export default function PenilaianHafalanPage() {
             </div>
           </div>
         </div>
-      )}}
+      )}
     </GuruLayout>
   );
 }
