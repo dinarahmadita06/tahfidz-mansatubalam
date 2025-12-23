@@ -188,25 +188,25 @@ export default function KelolaSiswaPage() {
       const data = await response.json();
 
       // Transform data untuk match format yang digunakan component
-      // Hanya tampilkan siswa dengan status approved (Aktif)
-      const transformedData = data
-        .filter(siswa => siswa.status === 'approved')
-        .map(siswa => ({
-          id: siswa.id,
-          nama: siswa.user.name,
-          kelas: siswa.kelas?.nama || '-',
-          status: 'aktif', // Semua siswa yang ditampilkan adalah aktif
-          totalJuz: siswa.totalJuz || 0,
-          totalSetoran: siswa.totalSetoran || 0,
-          averageNilai: siswa.averageNilai || 0,
-        }));
+      // Tampilkan siswa dengan status approved (Aktif) dan pending (Menunggu Validasi)
+      const transformedData = data.map(siswa => ({
+        id: siswa.id,
+        nama: siswa.user.name,
+        kelas: siswa.kelas?.nama || '-',
+        status: siswa.status === 'approved' ? 'aktif' :
+                siswa.status === 'pending' ? 'menunggu_validasi' :
+                'tidak_aktif',
+        totalJuz: siswa.totalJuz || 0,
+        totalSetoran: siswa.totalSetoran || 0,
+        averageNilai: siswa.averageNilai || 0,
+      }));
 
       setStudents(transformedData);
 
       // Hitung statistik dari data real
       const totalSiswa = transformedData.length;
-      const siswaAktif = transformedData.length; // Semua siswa adalah aktif
-      const menungguValidasi = 0; // Tidak ada siswa menunggu validasi di halaman ini
+      const siswaAktif = transformedData.filter(s => s.status === 'aktif').length;
+      const menungguValidasi = transformedData.filter(s => s.status === 'menunggu_validasi').length;
       const rataRataNilai = totalSiswa > 0
         ? (transformedData.reduce((sum, s) => sum + s.averageNilai, 0) / totalSiswa).toFixed(1)
         : 0;
