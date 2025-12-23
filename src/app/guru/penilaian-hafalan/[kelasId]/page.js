@@ -10,6 +10,7 @@ import {
   X,
   AlertCircle,
   Loader,
+  Bookmark,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import Link from 'next/link';
@@ -331,7 +332,7 @@ export default function PenilaianHafalanPage() {
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-8 mb-8">
           <div className="max-w-[1400px] mx-auto flex items-center gap-4">
             <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center">
-              <BookOpen className="w-8 h-8" />
+              <Bookmark className="w-8 h-8 text-white" strokeWidth={1.5} />
             </div>
             <div>
               <h1 className="text-4xl font-bold mb-2">Penilaian Hafalan – Kelas {kelasInfo?.nama || 'Loading...'}</h1>
