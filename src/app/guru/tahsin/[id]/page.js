@@ -32,6 +32,7 @@ export default function TahsinDetailPage() {
   const [guruData, setGuruData] = useState(null);
   const [tahsinList, setTahsinList] = useState([]);
   const [materiList, setMateriList] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Modal states
   const [showMateriModal, setShowMateriModal] = useState(false);
@@ -92,9 +93,9 @@ export default function TahsinDetailPage() {
     return filtered;
   }, [tahsinList, filterSiswa, searchQuery]);
 
-  // Fetch data on mount - only once
+  // Fetch data on mount - only once, prevent refetch on tab focus
   useEffect(() => {
-    if (session) {
+    if (session && !dataLoaded) {
       fetchData();
     }
   }, [session, kelasId]);
@@ -159,6 +160,9 @@ export default function TahsinDetailPage() {
         const materiData = await materiRes.json();
         setMateriList(materiData.materi || []);
       }
+
+      // Mark data as loaded to prevent refetch on tab focus
+      setDataLoaded(true);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Gagal memuat data');
