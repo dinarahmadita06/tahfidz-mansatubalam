@@ -52,6 +52,38 @@ export default function TahsinDetailPage() {
     }
   }, [session, kelasId]);
 
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draftKey = `tahsin-draft-${kelasId}`;
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        // Only load draft if it's from today
+        const draftDate = new Date(draft.tanggal).toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
+        if (draftDate === today) {
+          setFormData(draft);
+        } else {
+          // Clear old draft
+          localStorage.removeItem(draftKey);
+        }
+      } catch (error) {
+        console.error('Error loading draft:', error);
+        localStorage.removeItem(draftKey);
+      }
+    }
+  }, [kelasId]);
+
+  // Save draft to localStorage whenever formData changes
+  useEffect(() => {
+    // Only save if there's meaningful data
+    if (formData.siswaId || formData.materiHariIni || formData.bacaanDipraktikkan || formData.catatan) {
+      const draftKey = `tahsin-draft-${kelasId}`;
+      localStorage.setItem(draftKey, JSON.stringify(formData));
+    }
+  }, [formData, kelasId]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -182,6 +214,9 @@ export default function TahsinDetailPage() {
 
       if (response.ok) {
         toast.success('Pencatatan tahsin berhasil disimpan');
+        // Clear draft from localStorage
+        const draftKey = `tahsin-draft-${kelasId}`;
+        localStorage.removeItem(draftKey);
         resetForm();
         fetchData();
       } else {
@@ -360,33 +395,48 @@ export default function TahsinDetailPage() {
   return (
     <GuruLayout>
       <div className="min-h-screen bg-gray-50" style={{ margin: '-32px', padding: '32px', backgroundColor: '#f9fafb' }}>
-        {/* Header */}
-        <div className="mb-6">
+        {/* Breadcrumb */}
+        <div className="mb-4">
           <Link
             href="/guru/tahsin"
-            className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium mb-4"
+            className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
           >
-            <ArrowLeft size={20} />
-            <span>Kembali ke Daftar Kelas</span>
+            <ArrowLeft size={16} />
+            <span>Kembali</span>
           </Link>
+        </div>
 
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center">
-              <BookOpen size={24} className="text-white" />
+        {/* Header Card with Gradient */}
+        <div className="mb-6 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <BookOpen size={32} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  Tahsin Al-Qur'an
+                </h1>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-50 text-lg" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    {kelas?.nama || 'Loading...'}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-semibold text-slate-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                Tahsin Al-Qur'an
-              </h1>
-              <p className="text-slate-600" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                {kelas?.nama || 'Loading...'}
+            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <p className="text-white/80 text-xs font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                PENCATATAN TAHSIN
+              </p>
+              <p className="text-white text-sm font-semibold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                {siswaList.length} Siswa
               </p>
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation and Laporan Button */}
-        <div className="mb-6 flex justify-between items-center">
+        {/* Tab Navigation */}
+        <div className="mb-6">
           <div className="bg-white rounded-xl p-2 shadow-sm inline-flex gap-2">
             <button
               onClick={() => setActiveTab('pencatatan')}
@@ -417,30 +467,6 @@ export default function TahsinDetailPage() {
               </div>
             </button>
           </div>
-
-          {/* Tombol Lihat Laporan Progres */}
-          {activeTab === 'pencatatan' && (
-            <button
-              onClick={() => router.push(`/guru/tahsin/${kelasId}/laporan`)}
-              className="flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-white transition-all shadow-md hover:shadow-lg"
-              style={{
-                backgroundColor: '#059669',
-                borderRadius: '10px',
-                fontFamily: 'Poppins, sans-serif',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#047857';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#059669';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>📄</span>
-              <span>Lihat Laporan Progres</span>
-            </button>
-          )}
         </div>
 
         {/* Content Based on Active Tab */}
@@ -454,77 +480,80 @@ export default function TahsinDetailPage() {
                 style={{ borderRadius: '16px' }}
               >
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Nama Siswa */}
-                  <div>
-                    <label
-                      className="block text-sm font-semibold text-slate-700 mb-2"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      Nama Siswa <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="siswaId"
-                      value={formData.siswaId}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                        errors.siswaId ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      <option value="">-- Pilih Siswa --</option>
-                      {siswaList.map((siswa) => (
-                        <option key={siswa.id} value={siswa.id}>
-                          {siswa.user.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.siswaId && (
-                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        {errors.siswaId}
-                      </p>
-                    )}
+                  {/* Info Guru - Static Display */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                        {guruData?.user?.name?.charAt(0) || 'G'}
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-600 font-semibold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                          Guru Pengajar
+                        </p>
+                        <p className="text-sm font-bold text-slate-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                          {guruData?.user?.name || 'Loading...'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Nama Guru */}
-                  <div>
-                    <label
-                      className="block text-sm font-semibold text-slate-700 mb-2"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      Nama Guru
-                    </label>
-                    <input
-                      type="text"
-                      value={guruData?.user?.name || 'Loading...'}
-                      disabled
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    />
-                  </div>
+                  {/* Two Column Layout for Siswa, Tanggal, Level */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Nama Siswa */}
+                    <div>
+                      <label
+                        className="block text-sm font-semibold text-slate-700 mb-2"
+                        style={{ fontFamily: 'Poppins, sans-serif' }}
+                      >
+                        Nama Siswa <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="siswaId"
+                        value={formData.siswaId}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
+                          errors.siswaId ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
+                      >
+                        <option value="">-- Pilih Siswa --</option>
+                        {siswaList.map((siswa) => (
+                          <option key={siswa.id} value={siswa.id}>
+                            {siswa.user.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.siswaId && (
+                        <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                          {errors.siswaId}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Tanggal */}
-                  <div>
-                    <label
-                      className="block text-sm font-semibold text-slate-700 mb-2"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      Tanggal <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="tanggal"
-                      value={formData.tanggal}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                        errors.tanggal ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    />
-                    {errors.tanggal && (
-                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        {errors.tanggal}
-                      </p>
-                    )}
+                    {/* Tanggal */}
+                    <div>
+                      <label
+                        className="block text-sm font-semibold text-slate-700 mb-2"
+                        style={{ fontFamily: 'Poppins, sans-serif' }}
+                      >
+                        Tanggal <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        name="tanggal"
+                        value={formData.tanggal}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
+                          errors.tanggal ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
+                      />
+                      {errors.tanggal && (
+                        <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                          {errors.tanggal}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Level / Tahap */}
