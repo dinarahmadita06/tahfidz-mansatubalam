@@ -169,6 +169,7 @@ export default function KelolaSiswaPage() {
     rataRataNilai: 0,
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all'); // all, aktif, menunggu_validasi
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [loading, setLoading] = useState(true);
@@ -230,11 +231,13 @@ export default function KelolaSiswaPage() {
     setRefreshing(false);
   };
 
-  // Filter students based on search
-  const filteredStudents = students.filter(student =>
-    student.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.kelas.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter students based on search and status
+  const filteredStudents = students.filter(student => {
+    const matchSearch = student.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.kelas.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStatus = filterStatus === 'all' || student.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
   // Pagination
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
@@ -426,13 +429,18 @@ export default function KelolaSiswaPage() {
                   />
                 </div>
 
-                {/* Filter Buttons */}
-                <button
+                {/* Filter Status */}
+                <select
+                  value={filterStatus}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setCurrentPage(1); // Reset to first page when filter changes
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    padding: '14px 20px',
+                    padding: '14px 16px',
                     background: colors.white,
                     border: `2px solid ${colors.gray[300]}`,
                     borderRadius: '12px',
@@ -441,12 +449,16 @@ export default function KelolaSiswaPage() {
                     color: colors.text.primary,
                     cursor: 'pointer',
                     fontFamily: '"Poppins", system-ui, sans-serif',
+                    outline: 'none',
+                    minWidth: '180px',
                   }}
-                  className="filter-btn"
+                  className="filter-select"
                 >
-                  <Filter size={18} />
-                  Filter
-                </button>
+                  <option value="all">Semua Status</option>
+                  <option value="aktif">Aktif</option>
+                  <option value="menunggu_validasi">Menunggu Validasi</option>
+                  <option value="tidak_aktif">Tidak Aktif</option>
+                </select>
 
                 <button
                   style={{
@@ -759,6 +771,16 @@ export default function KelolaSiswaPage() {
         .search-input:focus {
           border-color: ${colors.emerald[500]};
           box-shadow: 0 0 0 3px ${colors.emerald[100]};
+        }
+
+        /* Filter Select */
+        .filter-select:focus {
+          border-color: ${colors.emerald[500]};
+          box-shadow: 0 0 0 3px ${colors.emerald[100]};
+        }
+
+        .filter-select:hover {
+          border-color: ${colors.emerald[500]};
         }
 
         /* Filter Buttons */

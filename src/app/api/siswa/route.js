@@ -35,6 +35,8 @@ export async function GET(request) {
 
     // Filter by guru's kelas if guru
     if (session.user.role === 'GURU' && session.user.guruId) {
+      console.log('🔍 [API/SISWA] Guru detected:', session.user.guruId);
+
       const guruKelas = await prisma.guruKelas.findMany({
         where: {
           guruId: session.user.guruId,
@@ -43,9 +45,13 @@ export async function GET(request) {
         select: { kelasId: true },
       });
 
+      console.log('🔍 [API/SISWA] GuruKelas found:', guruKelas.length);
+      console.log('🔍 [API/SISWA] Kelas IDs:', guruKelas.map(gk => gk.kelasId));
+
       // Jika ada filter kelasId dari query parameter
       if (kelasId) {
         whereClause.kelasId = kelasId;
+        console.log('🔍 [API/SISWA] Filtering by specific kelasId:', kelasId);
         // Note: We removed the createdBy filter since it doesn't exist in the schema
       } else {
         // Tidak ada filter kelas spesifik, tampilkan semua siswa yang bisa diakses guru
@@ -54,12 +60,17 @@ export async function GET(request) {
           whereClause.kelasId = {
             in: guruKelas.map(gk => gk.kelasId),
           };
+          console.log('🔍 [API/SISWA] Filtering by guru kelas:', whereClause.kelasId);
+        } else {
+          console.warn('⚠️  [API/SISWA] Guru has no active kelas assigned!');
         }
       }
     } else if (kelasId && session.user.role !== 'GURU') {
       // Untuk role lain (admin, dll), filter by kelas jika disediakan
       whereClause.kelasId = kelasId;
     }
+
+    console.log('🔍 [API/SISWA] Final whereClause:', JSON.stringify(whereClause));
 
     const siswa = await prisma.siswa.findMany({
       where: whereClause,
@@ -94,6 +105,14 @@ export async function GET(request) {
       orderBy: {
         createdAt: 'desc',
       },
+    });
+
+    console.log('✅ [API/SISWA] Found', siswa.length, 'siswa');
+    console.log('✅ [API/SISWA] Status breakdown:', {
+      total: siswa.length,
+      approved: siswa.filter(s => s.status === 'approved').length,
+      pending: siswa.filter(s => s.status === 'pending').length,
+      rejected: siswa.filter(s => s.status === 'rejected').length,
     });
 
     // Transform data to include calculated totals
