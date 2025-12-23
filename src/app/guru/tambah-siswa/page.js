@@ -149,7 +149,7 @@ export default function TambahSiswaPage() {
       const result = await response.json();
 
       if (response.ok) {
-        alert('Siswa berhasil ditambahkan!\nData siswa akan ditampilkan setelah disetujui oleh admin.');
+        alert('Siswa berhasil ditambahkan!\nSiswa akan muncul di daftar dengan status "Menunggu Validasi" dan akan aktif setelah disetujui admin.');
         router.push('/guru/siswa');
       } else {
         console.error('API Error:', result);
