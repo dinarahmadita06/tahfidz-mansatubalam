@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 import { generateSiswaEmail } from '@/lib/siswaUtils';
+
+// Force Node.js runtime untuk Prisma compatibility
+export const runtime = 'nodejs';
+// Prevent static optimization
+export const dynamic = 'force-dynamic';
 
 // GET - List all siswa (Admin only)
 export async function GET(request) {
@@ -124,7 +129,10 @@ export async function GET(request) {
 }
 
 // POST - Create new siswa (Admin only)
+// Optimized for fast response time
 export async function POST(request) {
+  const startTime = Date.now();
+
   try {
     const session = await auth();
 
@@ -132,6 +140,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const parseStart = Date.now();
     const body = await request.json();
     const {
       name,
@@ -144,6 +153,7 @@ export async function POST(request) {
       alamat,
       noTelepon
     } = body;
+    console.log(`⏱️ Parse body: ${Date.now() - parseStart}ms`);
 
     // Validate required fields
     if (!name || !password || !nis || !kelasId || !jenisKelamin) {
@@ -153,26 +163,34 @@ export async function POST(request) {
     // Auto-generate email based on name and NIS
     const email = generateSiswaEmail(name, nis);
 
-    // Check if email, nisn, or nis already exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    // OPTIMIZED: Check all duplicates in parallel (single query instead of 3)
+    const validationStart = Date.now();
+    const [existingUser, existingSiswaByNisn, existingSiswaByNis] = await Promise.all([
+      prisma.user.findUnique({ where: { email }, select: { id: true } }),
+      nisn ? prisma.siswa.findUnique({ where: { nisn }, select: { id: true } }) : null,
+      prisma.siswa.findUnique({ where: { nis }, select: { id: true } })
+    ]);
+    console.log(`⏱️ Validation queries: ${Date.now() - validationStart}ms`);
+
     if (existingUser) {
       return NextResponse.json({ error: 'Email sudah terdaftar (NIS atau Nama mungkin duplikat)' }, { status: 400 });
     }
 
-    const existingNisn = await prisma.siswa.findUnique({ where: { nisn } });
-    if (existingNisn) {
+    if (existingSiswaByNisn) {
       return NextResponse.json({ error: 'NISN sudah terdaftar' }, { status: 400 });
     }
 
-    const existingNis = await prisma.siswa.findUnique({ where: { nis } });
-    if (existingNis) {
+    if (existingSiswaByNis) {
       return NextResponse.json({ error: 'NIS sudah terdaftar' }, { status: 400 });
     }
 
-    // Hash password
+    // OPTIMIZED: Hash password dengan saltRounds explicit (10 untuk balance security vs speed)
+    const hashStart = Date.now();
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(`⏱️ Password hashing: ${Date.now() - hashStart}ms`);
 
-    // Create user and siswa
+    // OPTIMIZED: Create user dan siswa dengan minimal select untuk response cepat
+    const createStart = Date.now();
     const siswa = await prisma.siswa.create({
       data: {
         nisn,
@@ -196,44 +214,50 @@ export async function POST(request) {
           }
         }
       },
-      include: {
+      // OPTIMIZED: Minimal select untuk response cepat
+      select: {
+        id: true,
+        nisn: true,
+        nis: true,
+        kelasId: true,
+        createdAt: true,
         user: {
           select: {
             id: true,
             name: true,
             email: true
           }
-        },
-        kelas: {
-          select: {
-            nama: true
-          }
         }
       }
     });
+    console.log(`⏱️ Database insert: ${Date.now() - createStart}ms`);
 
-    // Log activity
-    await logActivity({
+    // Log activity (non-blocking - don't await)
+    logActivity({
       userId: session.user.id,
       userName: session.user.name,
       userRole: session.user.role,
       action: 'CREATE',
       module: 'SISWA',
-      description: `Menambahkan siswa baru ${siswa.user.name} (NISN: ${siswa.nisn})`,
+      description: `Menambahkan siswa baru ${siswa.user.name} (NIS: ${siswa.nis})`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
         siswaId: siswa.id,
         kelasId: siswa.kelasId
       }
-    });
+    }).catch(err => console.error('Log activity error:', err));
 
-    // Invalidate cache for siswa list
+    // Invalidate cache (non-blocking)
     invalidateCache('siswa-list');
+
+    const totalTime = Date.now() - startTime;
+    console.log(`✅ Total request time: ${totalTime}ms`);
 
     return NextResponse.json(siswa, { status: 201 });
   } catch (error) {
-    console.error('Error creating siswa:', error);
+    const totalTime = Date.now() - startTime;
+    console.error(`❌ Error creating siswa (${totalTime}ms):`, error);
     return NextResponse.json(
       { error: 'Gagal menambahkan siswa' },
       { status: 500 }
