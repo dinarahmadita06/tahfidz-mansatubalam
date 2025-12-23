@@ -62,6 +62,7 @@ export default function TahsinDetailPage() {
     deskripsi: '',
   });
 
+  const [selectedFile, setSelectedFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [materiErrors, setMateriErrors] = useState({});
 
@@ -213,7 +214,8 @@ export default function TahsinDetailPage() {
         newErrors.youtubeUrl = 'URL YouTube wajib diisi';
       }
     } else {
-      if (!materiFormData.fileUrl.trim()) {
+      // Check if file is selected (not uploaded URL)
+      if (!selectedFile) {
         newErrors.fileUrl = 'File wajib diunggah';
       }
     }
@@ -302,13 +304,37 @@ export default function TahsinDetailPage() {
 
     try {
       setSubmitting(true);
+      let fileUrl = null;
 
+      // Upload file first if not YouTube
+      if (materiFormData.jenisMateri !== 'YOUTUBE' && selectedFile) {
+        setUploadingFile(true);
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', selectedFile);
+        uploadFormData.append('folder', 'materi-tahsin');
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+
+        const uploadData = await uploadResponse.json();
+
+        if (!uploadResponse.ok) {
+          throw new Error(uploadData.message || 'Gagal mengunggah file');
+        }
+
+        fileUrl = uploadData.url;
+        setUploadingFile(false);
+      }
+
+      // Submit materi data
       const payload = {
         guruId: guruData.id,
         kelasId: kelasId,
         judul: materiFormData.judul.trim(),
         jenisMateri: materiFormData.jenisMateri,
-        fileUrl: materiFormData.jenisMateri !== 'YOUTUBE' ? materiFormData.fileUrl : null,
+        fileUrl: materiFormData.jenisMateri !== 'YOUTUBE' ? fileUrl : null,
         youtubeUrl: materiFormData.jenisMateri === 'YOUTUBE' ? materiFormData.youtubeUrl.trim() : null,
         deskripsi: materiFormData.deskripsi.trim() || null,
       };
@@ -334,9 +360,10 @@ export default function TahsinDetailPage() {
       }
     } catch (error) {
       console.error('Error submitting materi:', error);
-      toast.error('Terjadi kesalahan saat menyimpan materi');
+      toast.error(error.message || 'Terjadi kesalahan saat menyimpan materi');
     } finally {
       setSubmitting(false);
+      setUploadingFile(false);
     }
   };
 
@@ -362,45 +389,27 @@ export default function TahsinDetailPage() {
     }
   };
 
-  const handleFileUpload = async (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const allowedTypes = ['application/pdf', 'video/mp4', 'video/webm', 'video/ogg'];
     if (!allowedTypes.includes(file.type)) {
       toast.error('Format file tidak didukung. Gunakan PDF atau video (MP4, WebM, OGG)');
+      e.target.value = ''; // Reset input
       return;
     }
 
     if (file.size > 50 * 1024 * 1024) {
       toast.error('Ukuran file terlalu besar. Maksimal 50MB');
+      e.target.value = ''; // Reset input
       return;
     }
 
-    try {
-      setUploadingFile(true);
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder', 'materi-tahsin');
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMateriFormData((prev) => ({ ...prev, fileUrl: data.url }));
-        toast.success('File berhasil diunggah');
-      } else {
-        toast.error(data.message || 'Gagal mengunggah file');
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast.error('Terjadi kesalahan saat mengunggah file');
-    } finally {
-      setUploadingFile(false);
+    // Save file to state and clear error
+    setSelectedFile(file);
+    if (materiErrors.fileUrl) {
+      setMateriErrors((prev) => ({ ...prev, fileUrl: '' }));
     }
   };
 
@@ -425,6 +434,7 @@ export default function TahsinDetailPage() {
       youtubeUrl: '',
       deskripsi: '',
     });
+    setSelectedFile(null);
     setMateriErrors({});
   };
 
@@ -1153,22 +1163,27 @@ export default function TahsinDetailPage() {
                       type="file"
                       accept={materiFormData.jenisMateri === 'PDF' ? 'application/pdf' : 'video/*'}
                       onChange={handleFileUpload}
-                      disabled={uploadingFile}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                      disabled={uploadingFile || submitting}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
+                        materiErrors.fileUrl ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
                     />
-                    {uploadingFile && (
+                    {selectedFile && !uploadingFile && (
                       <p className="text-emerald-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                      </p>
+                    )}
+                    {uploadingFile && (
+                      <p className="text-blue-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
                         <Loader2 className="animate-spin" size={16} />
                         <span>Mengunggah file...</span>
                       </p>
                     )}
-                    {materiFormData.fileUrl && (
-                      <p className="text-emerald-600 text-sm mt-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        ✓ File berhasil diunggah
-                      </p>
-                    )}
-                    {materiErrors.fileUrl && (
+                    {materiErrors.fileUrl && !selectedFile && (
                       <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
                         {materiErrors.fileUrl}
                       </p>

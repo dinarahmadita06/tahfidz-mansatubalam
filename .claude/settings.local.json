@@ -83,7 +83,10 @@
       "Bash(git diff:*)",
       "Bash(git show:*)",
       "Bash(git fetch:*)",
-      "Bash(Select-Object -First 10)"
+      "Bash(Select-Object -First 10)",
+      "Skill(commit-commands:commit)",
+      "Skill(commit-commands:commit-push-pr)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
