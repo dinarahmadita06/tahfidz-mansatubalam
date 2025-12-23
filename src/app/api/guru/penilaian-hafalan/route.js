@@ -98,6 +98,7 @@ export async function POST(request) {
       kelancaran,
       makhraj,
       implementasi,
+      catatan,
     } = body;
 
     // Validation
@@ -175,6 +176,7 @@ export async function POST(request) {
           makhraj,
           adab: implementasi,
           nilaiAkhir,
+          catatan: catatan || null,
         },
       });
     } else {
@@ -202,6 +204,7 @@ export async function POST(request) {
           makhraj,
           adab: implementasi,
           nilaiAkhir,
+          catatan: catatan || null,
         },
       });
     }
