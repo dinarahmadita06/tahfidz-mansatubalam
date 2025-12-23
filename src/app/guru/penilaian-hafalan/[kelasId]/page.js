@@ -82,6 +82,7 @@ export default function PenilaianHafalanPage() {
     kelancaran: '',
     makhraj: '',
     implementasi: '',
+    catatan: '',
   });
 
   // Fetch data siswa dan kelas
@@ -212,6 +213,7 @@ export default function PenilaianHafalanPage() {
         kelancaran: existingData.penilaian.kelancaran || '',
         makhraj: existingData.penilaian.makhraj || '',
         implementasi: existingData.penilaian.implementasi || '',
+        catatan: existingData.catatan || '',
       });
     } else {
       // Reset form
@@ -223,6 +225,7 @@ export default function PenilaianHafalanPage() {
         kelancaran: '',
         makhraj: '',
         implementasi: '',
+        catatan: '',
       });
     }
 
@@ -643,6 +646,24 @@ export default function PenilaianHafalanPage() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Catatan */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Catatan (Opsional)
+                </label>
+                <textarea
+                  value={popupForm.catatan || ''}
+                  onChange={(e) => setPopupForm({ ...popupForm, catatan: e.target.value })}
+                  rows="4"
+                  maxLength="500"
+                  className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium resize-none"
+                  placeholder="Tulis catatan evaluasi bacaan, koreksi tajwid/makhraj, atau arahan perbaikan untuk siswa..."
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  {(popupForm.catatan || '').length}/500 karakter
+                </p>
               </div>
             </div>
 
