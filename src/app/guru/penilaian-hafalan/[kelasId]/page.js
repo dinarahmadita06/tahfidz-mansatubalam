@@ -255,6 +255,7 @@ export default function PenilaianHafalanPage() {
           kelancaran: parseInt(popupForm.kelancaran),
           makhraj: parseInt(popupForm.makhraj),
           implementasi: parseInt(popupForm.implementasi),
+          catatan: popupForm.catatan || null,
         }),
       });
 
