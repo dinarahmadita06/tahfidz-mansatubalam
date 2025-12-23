@@ -21,7 +21,7 @@ export async function GET(request, { params }) {
         tahunAjaran: true,
         siswa: {
           where: {
-            status: 'VALIDATED', // Only get validated/active students
+            status: 'approved', // Only get approved/active students
           },
           include: {
             user: {
