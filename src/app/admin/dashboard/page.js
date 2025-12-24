@@ -28,29 +28,22 @@ import {
   Target
 } from 'lucide-react';
 
-// Optimized dynamic import untuk Recharts - mengurangi bundle size dan mempercepat initial load
-const RechartsComponents = dynamic(
-  () => import('recharts').then(mod => ({
-    LineChart: mod.LineChart,
-    Line: mod.Line,
-    BarChart: mod.BarChart,
-    Bar: mod.Bar,
-    PieChart: mod.PieChart,
-    Pie: mod.Pie,
-    Cell: mod.Cell,
-    XAxis: mod.XAxis,
-    YAxis: mod.YAxis,
-    CartesianGrid: mod.CartesianGrid,
-    Tooltip: mod.Tooltip,
-    Legend: mod.Legend,
-    ResponsiveContainer: mod.ResponsiveContainer
-  })),
-  { 
-    ssr: false, 
-    loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div>,
-    suspense: true
-  }
-);
+// Import Recharts components directly
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 // Islamic Modern Color Palette - Emerald & Amber Pastel
 const colors = {
@@ -354,20 +347,19 @@ function TrendHafalanChart({ data }) {
       </div>
 
       <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
-        <RechartsComponents />
-        <RechartsComponents.ResponsiveContainer width="100%" height={240}>
-          <RechartsComponents.LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-            <RechartsComponents.CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
-            <RechartsComponents.XAxis
+        <ResponsiveContainer width="100%" height={240}>
+          <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
+            <XAxis
               dataKey="bulan"
               stroke={colors.text.tertiary}
               style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
             />
-            <RechartsComponents.YAxis
+            <YAxis
               stroke={colors.text.tertiary}
               style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
             />
-            <RechartsComponents.Tooltip
+            <Tooltip
               contentStyle={{
                 background: colors.white,
                 border: `1px solid ${colors.emerald[200]}`,
@@ -376,13 +368,13 @@ function TrendHafalanChart({ data }) {
                 fontSize: '11px',
               }}
             />
-            <RechartsComponents.Legend
+            <Legend
               wrapperStyle={{
                 fontFamily: '"Poppins", system-ui, sans-serif',
                 fontSize: '11px',
               }}
             />
-            <RechartsComponents.Line
+            <Line
               type="monotone"
               dataKey="aktual"
               name="Hafalan Aktual"
@@ -391,7 +383,7 @@ function TrendHafalanChart({ data }) {
               dot={{ fill: colors.emerald[500], r: 4 }}
               activeDot={{ r: 6 }}
             />
-            <RechartsComponents.Line
+            <Line
               type="monotone"
               dataKey="target"
               name="Target Sekolah"
@@ -401,8 +393,8 @@ function TrendHafalanChart({ data }) {
               activeDot={{ r: 6 }}
               strokeDasharray="4 4"
             />
-          </RechartsComponents.LineChart>
-        </RechartsComponents.ResponsiveContainer>
+          </LineChart>
+        </ResponsiveContainer>
       </Suspense>
     </div>
   );
@@ -451,10 +443,9 @@ function DistribusiKehadiranChart({ data }) {
       </div>
 
       <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
-        <RechartsComponents />
-        <RechartsComponents.ResponsiveContainer width="100%" height={220}>
-          <RechartsComponents.PieChart>
-            <RechartsComponents.Pie
+        <ResponsiveContainer width="100%" height={220}>
+          <PieChart>
+            <Pie
               data={data}
               cx="50%"
               cy="50%"
@@ -464,10 +455,10 @@ function DistribusiKehadiranChart({ data }) {
               dataKey="value"
             >
               {data.map((entry, index) => (
-                <RechartsComponents.Cell key={`cell-${index}`} fill={COLORS[index]} />
+                <Cell key={`cell-${index}`} fill={COLORS[index]} />
               ))}
-            </RechartsComponents.Pie>
-            <RechartsComponents.Tooltip
+            </Pie>
+            <Tooltip
               contentStyle={{
                 background: colors.white,
                 border: `1px solid ${colors.gray[200]}`,
@@ -478,8 +469,8 @@ function DistribusiKehadiranChart({ data }) {
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
               }}
             />
-          </RechartsComponents.PieChart>
-        </RechartsComponents.ResponsiveContainer>
+          </PieChart>
+        </ResponsiveContainer>
       </Suspense>
 
       {/* Legend */}
@@ -680,20 +671,19 @@ function KinerjaGuruChart({ data }) {
       </div>
 
       <Suspense fallback={<div className="h-48 flex items-center justify-center text-gray-400 text-sm">Memuat grafik...</div>}>
-        <RechartsComponents />
-        <RechartsComponents.ResponsiveContainer width="100%" height={240}>
-          <RechartsComponents.BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <RechartsComponents.CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
-            <RechartsComponents.XAxis
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={colors.gray[200]} />
+            <XAxis
               dataKey="nama"
               stroke={colors.text.tertiary}
               style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
             />
-            <RechartsComponents.YAxis
+            <YAxis
               stroke={colors.text.tertiary}
               style={{ fontSize: '11px', fontFamily: '"Poppins", system-ui, sans-serif' }}
             />
-            <RechartsComponents.Tooltip
+            <Tooltip
               contentStyle={{
                 background: colors.white,
                 border: `1px solid ${colors.gray[200]}`,
@@ -711,13 +701,13 @@ function KinerjaGuruChart({ data }) {
                 <stop offset="100%" stopColor="#FBBF24" stopOpacity={1} />
               </linearGradient>
             </defs>
-            <RechartsComponents.Bar
+            <Bar
               dataKey="rataJuz"
               radius={[6, 6, 0, 0]}
               fill="url(#barGradient)"
             />
-          </RechartsComponents.BarChart>
-        </RechartsComponents.ResponsiveContainer>
+          </BarChart>
+        </ResponsiveContainer>
       </Suspense>
 
       {/* Highlight Guru Terbaik */}
