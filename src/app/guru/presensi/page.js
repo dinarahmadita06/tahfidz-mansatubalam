@@ -74,20 +74,23 @@ export default function PresensiPage() {
 
       <div className="space-y-6">
         {/* Header Gradient Hijau */}
-        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-8 text-white">
+        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-5 sm:p-8 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
-                <ClipboardCheck size={40} className="text-white" />
+            <div className="flex items-center gap-3 sm:gap-4 w-full">
+              <div className="bg-white/20 backdrop-blur-sm p-3 sm:p-4 rounded-xl sm:rounded-2xl flex-shrink-0">
+                <ClipboardCheck size={32} className="text-white sm:hidden" />
+                <ClipboardCheck size={40} className="text-white hidden sm:block" />
               </div>
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl font-bold">Presensi Siswa</h1>
-                  <span className="bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                  <h1 className="text-2xl sm:text-4xl font-bold truncate">Presensi Siswa</h1>
+                  <span className="hidden sm:inline bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm whitespace-nowrap">
                     Kehadiran
                   </span>
                 </div>
-                <p className="text-green-50 text-lg">Pilih kelas untuk mencatat kehadiran siswa</p>
+                <p className="text-green-50 text-sm sm:text-lg leading-relaxed max-w-2xl">
+                  Pilih kelas untuk mencatat kehadiran siswa
+                </p>
               </div>
             </div>
           </div>
