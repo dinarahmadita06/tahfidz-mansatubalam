@@ -83,6 +83,54 @@ const colors = {
   },
 };
 
+// Komponen Skeleton Card untuk loading state
+function SkeletonCard({ delay = 0 }) {
+  return (
+    <div
+      style={{
+        background: `linear-gradient(135deg, ${colors.gray[100]} 0%, ${colors.gray[200]} 100%)`,
+        borderRadius: '16px',
+        padding: '24px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+        border: `1px solid ${colors.gray[200]}`,
+        animation: `fadeInUp 0.5s ease-out ${delay}s both, pulse 1.5s ease-in-out infinite`,
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              height: '14px',
+              width: '80px',
+              background: colors.gray[300],
+              borderRadius: '4px',
+              marginBottom: '12px',
+            }} />
+            <div style={{
+              height: '32px',
+              width: '60px',
+              background: colors.gray[300],
+              borderRadius: '4px',
+            }} />
+          </div>
+          <div style={{
+            background: colors.gray[300],
+            borderRadius: '12px',
+            width: '46px',
+            height: '46px',
+          }} />
+        </div>
+        <div style={{
+          height: '12px',
+          width: '120px',
+          background: colors.gray[300],
+          borderRadius: '4px',
+        }} />
+      </div>
+    </div>
+  );
+}
+
 // Komponen StatCard
 function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
   const colorMap = {
@@ -222,6 +270,7 @@ export default function AdminDashboardPage() {
     },
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -230,58 +279,23 @@ export default function AdminDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
-      // Try to fetch from /api/dashboard/stats, but fallback to mock data if fails
-      try {
-        const response = await fetch('/api/dashboard/stats');
-        if (response.ok) {
-          const result = await response.json();
-          setData(result);
-          // Fetch chart data separately
-          await fetchChartData();
-          return;
-        }
-      } catch (e) {
-        console.warn('Dashboard stats API not available, using mock data:', e);
+      setError(null);
+
+      // Fetch from /api/admin/dashboard
+      const response = await fetch('/api/admin/dashboard');
+
+      if (!response.ok) {
+        throw new Error('Gagal memuat data dashboard');
       }
-      
-      // Use mock data if API fails or endpoint doesn't exist
-      setData({
-        stats: {
-          totalSiswa: 142,
-          siswaAktif: 136,
-          totalGuru: 12,
-          totalJuz: 1847,
-          rataRataNilai: 85.4,
-          rataRataKehadiran: 94.2,
-          siswaMencapaiTarget: 90,
-          persentaseSiswaMencapaiTarget: 63,
-          kelasMencapaiTarget: 8,
-          totalKelas: 12,
-        },
-      });
-      
-      // Fetch chart data
+
+      const result = await response.json();
+      setData(result);
+
+      // Fetch chart data separately
       await fetchChartData();
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Use mock data on error
-      setData({
-        stats: {
-          totalSiswa: 142,
-          siswaAktif: 136,
-          totalGuru: 12,
-          totalJuz: 1847,
-          rataRataNilai: 85.4,
-          rataRataKehadiran: 94.2,
-          siswaMencapaiTarget: 90,
-          persentaseSiswaMencapaiTarget: 63,
-          kelasMencapaiTarget: 8,
-          totalKelas: 12,
-        },
-      });
-      // Still try to fetch chart data even if stats failed
-      await fetchChartData();
+      setError(error.message || 'Gagal memuat data dashboard');
     } finally {
       setLoading(false);
     }
@@ -534,7 +548,79 @@ export default function AdminDashboardPage() {
           <PengumumanWidget limit={3} />
         </div>
 
+        {/* Error State */}
+        {error && (
+          <div style={{
+            position: 'relative',
+            padding: '0 40px 20px',
+            zIndex: 1,
+          }}>
+            <div style={{
+              background: '#FEE2E2',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid #FCA5A5',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+            }}>
+              <div style={{
+                fontSize: '48px',
+              }}>
+                ⚠️
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: 700,
+                  color: '#991B1B',
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                }}>
+                  Gagal Memuat Data
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#DC2626',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                  marginBottom: '16px',
+                }}>
+                  {error}
+                </p>
+                <button
+                  onClick={fetchDashboardData}
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                    color: colors.white,
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                  }}
+                >
+                  Coba Lagi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
+        {!error && (
         <div style={{
           position: 'relative',
           zIndex: 1,
@@ -546,46 +632,58 @@ export default function AdminDashboardPage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
             gap: '20px',
           }}>
-            <StatCard
-              icon={<Users size={22} color={colors.white} />}
-              title="Total Siswa"
-              value={loading ? '...' : data.stats.totalSiswa}
-              subtitle={`${loading ? '...' : data.stats.siswaAktif} siswa aktif`}
-              color="emerald"
-              delay={0}
-            />
-            <StatCard
-              icon={<UserCog size={22} color={colors.white} />}
-              title="Total Guru Tahfidz"
-              value={loading ? '...' : data.stats.totalGuru}
-              subtitle="Guru aktif mengajar"
-              color="amber"
-              delay={0.05}
-            />
-            <StatCard
-              icon={<BookOpen size={22} color={colors.white} />}
-              title="Total Hafalan"
-              value={loading ? '...' : `${data.stats.totalJuz} Juz`}
-              subtitle="Keseluruhan siswa"
-              color="lavender"
-              delay={0.1}
-            />
-            <StatCard
-              icon={<Award size={22} color={colors.white} />}
-              title="Rata-rata Nilai"
-              value={loading ? '...' : data.stats.rataRataNilai}
-              subtitle="Nilai keseluruhan"
-              color="blue"
-              delay={0.15}
-            />
-            <StatCard
-              icon={<CheckCircle2 size={22} color={colors.white} />}
-              title="Rata-rata Kehadiran"
-              value={loading ? '...' : `${data.stats.rataRataKehadiran}%`}
-              subtitle="Kehadiran siswa"
-              color="mint"
-              delay={0.2}
-            />
+            {loading ? (
+              <>
+                <SkeletonCard delay={0} />
+                <SkeletonCard delay={0.05} />
+                <SkeletonCard delay={0.1} />
+                <SkeletonCard delay={0.15} />
+                <SkeletonCard delay={0.2} />
+              </>
+            ) : (
+              <>
+                <StatCard
+                  icon={<Users size={22} color={colors.white} />}
+                  title="Total Siswa"
+                  value={data.stats.totalSiswa}
+                  subtitle={`${data.stats.siswaAktif} siswa aktif`}
+                  color="emerald"
+                  delay={0}
+                />
+                <StatCard
+                  icon={<UserCog size={22} color={colors.white} />}
+                  title="Total Guru Tahfidz"
+                  value={data.stats.totalGuru}
+                  subtitle="Guru aktif mengajar"
+                  color="amber"
+                  delay={0.05}
+                />
+                <StatCard
+                  icon={<BookOpen size={22} color={colors.white} />}
+                  title="Total Hafalan"
+                  value={`${data.stats.totalJuz} Juz`}
+                  subtitle="Keseluruhan siswa"
+                  color="lavender"
+                  delay={0.1}
+                />
+                <StatCard
+                  icon={<Award size={22} color={colors.white} />}
+                  title="Rata-rata Nilai"
+                  value={data.stats.rataRataNilai}
+                  subtitle="Nilai keseluruhan"
+                  color="blue"
+                  delay={0.15}
+                />
+                <StatCard
+                  icon={<CheckCircle2 size={22} color={colors.white} />}
+                  title="Rata-rata Kehadiran"
+                  value={`${data.stats.rataRataKehadiran}%`}
+                  subtitle="Kehadiran siswa"
+                  color="mint"
+                  delay={0.2}
+                />
+              </>
+            )}
           </div>
         </div>
         {/* Chart Sections - 2 Column Layout */}
@@ -790,6 +888,7 @@ export default function AdminDashboardPage() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       <style jsx global>{`
@@ -804,6 +903,15 @@ export default function AdminDashboardPage() {
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.7;
           }
         }
 
