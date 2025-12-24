@@ -147,16 +147,54 @@ export default function ReferensiQuran() {
     }
   };
 
+  // Builder function untuk URL audio yang aman dan valid
+  const buildAudioUrl = (reciter, surahNumber, ayahNumber) => {
+    try {
+      // Format surah dan ayah menjadi 3 digit (001, 002, dst)
+      const formattedSurah = String(surahNumber).padStart(3, '0');
+      const formattedAyah = String(ayahNumber).padStart(3, '0');
+
+      // Encode reciter folder untuk handle spasi atau karakter khusus
+      const encodedReciter = encodeURIComponent(reciter);
+
+      // Build URL lengkap
+      const baseUrl = 'https://everyayah.com/data';
+      const fileName = `${formattedSurah}${formattedAyah}.mp3`;
+
+      // Gabungkan dan encode full URL untuk keamanan
+      const fullUrl = `${baseUrl}/${encodedReciter}/${fileName}`;
+
+      console.log('🔧 Building audio URL:', {
+        reciter,
+        encodedReciter,
+        surah: formattedSurah,
+        ayah: formattedAyah,
+        fileName,
+        fullUrl
+      });
+
+      return fullUrl;
+    } catch (error) {
+      console.error('❌ Error building audio URL:', error);
+      return null;
+    }
+  };
+
   const playAudio = (surahNumber, ayahNumberInSurah) => {
     try {
       console.log('🎵 playAudio called:', { surahNumber, ayahNumberInSurah });
 
+      // Validasi parameter
       if (!surahNumber || !ayahNumberInSurah) {
         console.error('❌ Invalid parameters:', { surahNumber, ayahNumberInSurah });
-        alert('Error: Nomor surah atau ayat tidak valid');
+        toast.error('Nomor surah atau ayat tidak valid', {
+          icon: '⚠️',
+          style: { borderRadius: '12px', background: '#EF4444', color: '#fff' },
+        });
         return;
       }
 
+      // Stop dan cleanup audio sebelumnya (hanya 1 instance)
       if (audioElement) {
         console.log('🧹 Cleaning up previous audio');
         audioElement.pause();
@@ -167,91 +205,152 @@ export default function ReferensiQuran() {
         setAudioElement(null);
       }
 
-      const formattedSurah = String(surahNumber).padStart(3, '0');
-      const formattedAyah = String(ayahNumberInSurah).padStart(3, '0');
+      // List reciter dengan prioritas (fallback jika gagal)
+      const reciters = [
+        'Abdul_Basit_Murattal_192kbps',
+        'Abdurrahmaan_As-Sudais_192kbps',
+        'Mishari_Rashid_al_Afasy_128kbps'
+      ];
 
-      console.log('📝 Formatted:', { formattedSurah, formattedAyah });
+      let currentReciterIndex = 0;
 
-      const audioUrl = `https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/${formattedSurah}${formattedAyah}.mp3`;
-
-      console.log('🎵 URL:', audioUrl);
-
-      const playingId = `${surahNumber}-${ayahNumberInSurah}`;
-      setAudioPlaying(playingId);
-
-      const audio = new Audio();
-      audio.preload = 'auto';
-
-      audio.addEventListener('loadstart', () => {
-        console.log('📥 Loading started...');
-      });
-
-      audio.addEventListener('loadeddata', () => {
-        console.log('📦 Audio data loaded');
-      });
-
-      audio.addEventListener('canplay', () => {
-        console.log('✅ Can play, attempting to play...');
-        audio.play()
-          .then(() => {
-            console.log('▶️ Playing successfully!');
-          })
-          .catch(err => {
-            console.error('❌ Play error:', err);
-            alert('Gagal memutar audio. Error: ' + err.message);
-            setAudioPlaying(null);
-            setAudioElement(null);
+      const tryPlayAudio = () => {
+        if (currentReciterIndex >= reciters.length) {
+          console.error('❌ All reciters failed');
+          toast.error('Audio tidak tersedia untuk ayat ini. Coba lagi nanti.', {
+            icon: '🔇',
+            style: { borderRadius: '12px', background: '#EF4444', color: '#fff' },
           });
-      });
-
-      audio.addEventListener('error', (e) => {
-        if (!audio.src || audio.src === '' || audio.src === window.location.href) {
-          console.log('⚠️ Error on cleanup audio element (empty src), ignoring');
+          setAudioPlaying(null);
+          setAudioElement(null);
           return;
         }
 
-        const errorCode = audio.error?.code;
-        const errorMessages = {
-          1: 'MEDIA_ERR_ABORTED - Loading dibatalkan',
-          2: 'MEDIA_ERR_NETWORK - Error network',
-          3: 'MEDIA_ERR_DECODE - Error decoding',
-          4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Format tidak didukung'
-        };
-        console.error('❌ Audio error:', errorMessages[errorCode] || 'Unknown error');
-        console.error('❌ Error details:', {
-          code: errorCode,
-          message: audio.error?.message,
-          src: audio.src,
-          expectedUrl: audioUrl
+        const reciter = reciters[currentReciterIndex];
+        const audioUrl = buildAudioUrl(reciter, surahNumber, ayahNumberInSurah);
+
+        // Validasi URL sebelum digunakan
+        if (!audioUrl) {
+          console.error('❌ Failed to build valid audio URL');
+          toast.error('Gagal membangun URL audio', {
+            icon: '⚠️',
+            style: { borderRadius: '12px', background: '#EF4444', color: '#fff' },
+          });
+          setAudioPlaying(null);
+          return;
+        }
+
+        console.log(`🎵 Trying reciter ${currentReciterIndex + 1}/${reciters.length}:`, reciter);
+        console.log('🎵 Audio URL:', audioUrl);
+
+        const playingId = `${surahNumber}-${ayahNumberInSurah}`;
+        setAudioPlaying(playingId);
+
+        const audio = new Audio();
+        audio.preload = 'auto';
+
+        let hasStartedPlaying = false;
+
+        audio.addEventListener('loadstart', () => {
+          console.log('📥 Loading started...');
         });
 
-        alert(`Gagal memuat audio:\n${errorMessages[errorCode] || 'Unknown error'}\n\nURL: ${audioUrl}`);
-        setAudioPlaying(null);
-        setAudioElement(null);
-      });
+        audio.addEventListener('loadeddata', () => {
+          console.log('📦 Audio data loaded');
+        });
 
-      audio.addEventListener('ended', () => {
-        console.log('⏹️ Playback ended');
-        setAudioPlaying(null);
-        setAudioElement(null);
-      });
+        audio.addEventListener('canplay', () => {
+          console.log('✅ Can play, attempting to play...');
+          audio.play()
+            .then(() => {
+              console.log('▶️ Playing successfully!');
+              hasStartedPlaying = true;
+              toast.success(`Memutar ayat ${ayahNumberInSurah}`, {
+                icon: '🔊',
+                duration: 2000,
+                style: { borderRadius: '12px', background: '#10B981', color: '#fff' },
+              });
+            })
+            .catch(err => {
+              console.error('❌ Play error:', err);
+              if (!hasStartedPlaying) {
+                // Coba reciter berikutnya
+                currentReciterIndex++;
+                tryPlayAudio();
+              }
+            });
+        });
 
-      audio.addEventListener('pause', () => {
-        console.log('⏸️ Paused');
-      });
+        audio.addEventListener('error', (e) => {
+          // Ignore error saat cleanup
+          if (!audio.src || audio.src === '' || audio.src === window.location.href) {
+            console.log('⚠️ Error on cleanup audio element (empty src), ignoring');
+            return;
+          }
 
-      audio.addEventListener('play', () => {
-        console.log('▶️ Play event fired');
-      });
+          const errorCode = audio.error?.code;
+          const errorMessages = {
+            1: 'Loading dibatalkan',
+            2: 'Error jaringan',
+            3: 'Error decoding',
+            4: 'Format tidak didukung'
+          };
 
-      audio.src = audioUrl;
-      audio.load();
+          console.error('❌ Audio error:', errorMessages[errorCode] || 'Unknown error');
+          console.error('❌ Error details:', {
+            code: errorCode,
+            message: audio.error?.message,
+            src: audio.src,
+            reciter: reciter
+          });
 
-      setAudioElement(audio);
+          // Coba reciter berikutnya jika belum mulai playing
+          if (!hasStartedPlaying) {
+            currentReciterIndex++;
+            console.log(`⏭️ Trying next reciter (${currentReciterIndex + 1}/${reciters.length})...`);
+            tryPlayAudio();
+          } else {
+            toast.error('Terjadi kesalahan saat memutar audio', {
+              icon: '❌',
+              style: { borderRadius: '12px', background: '#EF4444', color: '#fff' },
+            });
+            setAudioPlaying(null);
+            setAudioElement(null);
+          }
+        });
 
-      console.log('🎵 Audio element created and loading...');
+        audio.addEventListener('ended', () => {
+          console.log('⏹️ Playback ended');
+          setAudioPlaying(null);
+          setAudioElement(null);
+        });
+
+        audio.addEventListener('pause', () => {
+          console.log('⏸️ Paused');
+        });
+
+        audio.addEventListener('play', () => {
+          console.log('▶️ Play event fired');
+        });
+
+        // Set src dengan URL yang sudah di-encode
+        audio.src = audioUrl;
+        audio.load();
+
+        setAudioElement(audio);
+
+        console.log('🎵 Audio element created and loading...');
+      };
+
+      // Mulai dengan reciter pertama
+      tryPlayAudio();
+
     } catch (error) {
       console.error('❌ Error in playAudio:', error);
+      toast.error('Terjadi kesalahan saat memutar audio', {
+        icon: '❌',
+        style: { borderRadius: '12px', background: '#EF4444', color: '#fff' },
+      });
       setAudioPlaying(null);
       setAudioElement(null);
     }
