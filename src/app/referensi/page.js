@@ -16,18 +16,19 @@ import {
 } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import styles from './referensi.module.css';
 
-// Islamic Modern Color Palette - Purple & Green Theme
+// SIMTAQ Modern Color Palette - Green Gradient Theme (kept for JS logic, but styles use Tailwind)
 const colors = {
-  purple: {
-    50: '#FAF5FF',
-    100: '#F3E8FF',
-    200: '#E9D5FF',
-    300: '#D8B4FE',
-    400: '#C084FC',
-    500: '#A855F7',
-    600: '#9333EA',
-    700: '#7E22CE',
+  emerald: {
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    200: '#A7F3D0',
+    300: '#6EE7B7',
+    400: '#34D399',
+    500: '#10B981',
+    600: '#059669',
+    700: '#047857',
   },
   green: {
     50: '#F0FDF4',
@@ -39,15 +40,15 @@ const colors = {
     600: '#16A34A',
     700: '#15803D',
   },
-  emerald: {
-    50: '#ECFDF5',
-    100: '#D1FAE5',
-    200: '#A7F3D0',
-    300: '#6EE7B7',
-    400: '#34D399',
-    500: '#10B981',
-    600: '#059669',
-    700: '#047857',
+  teal: {
+    50: '#F0FDFA',
+    100: '#CCFBF1',
+    200: '#99F6E4',
+    300: '#5EE7DF',
+    400: '#2DD4BF',
+    500: '#14B8A6',
+    600: '#0D9488',
+    700: '#0F766E',
   },
   white: '#FFFFFF',
   gray: {
@@ -362,7 +363,7 @@ export default function ReferensiQuran() {
   return (
     <Layout>
       <div style={{
-        background: `linear-gradient(to bottom right, ${colors.purple[50]} 0%, ${colors.green[50]} 100%)`,
+        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.green[50]} 100%)`,
         minHeight: '100vh',
         position: 'relative',
       }}>
@@ -395,7 +396,7 @@ export default function ReferensiQuran() {
                 width: '52px',
                 height: '52px',
                 borderRadius: '14px',
-                background: `linear-gradient(135deg, ${colors.purple[500]} 0%, ${colors.green[500]} 100%)`,
+                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.green[500]} 100%)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -407,7 +408,7 @@ export default function ReferensiQuran() {
                 <h1 style={{
                   fontSize: '32px',
                   fontWeight: 700,
-                  background: `linear-gradient(135deg, ${colors.purple[600]} 0%, ${colors.green[600]} 100%)`,
+                  background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.green[600]} 100%)`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   marginBottom: '6px',
@@ -448,11 +449,11 @@ export default function ReferensiQuran() {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '16px 28px',
-                    borderBottom: activeTab === 'quran' ? `3px solid ${colors.purple[600]}` : '3px solid transparent',
+                    borderBottom: activeTab === 'quran' ? `3px solid ${colors.emerald[600]}` : '3px solid transparent',
                     fontWeight: 600,
                     fontSize: '14px',
-                    color: activeTab === 'quran' ? colors.purple[700] : colors.text.tertiary,
-                    background: activeTab === 'quran' ? `${colors.purple[50]}80` : 'transparent',
+                    color: activeTab === 'quran' ? colors.emerald[700] : colors.text.tertiary,
+                    background: activeTab === 'quran' ? `${colors.emerald[50]}80` : 'transparent',
                     transition: 'all 0.2s ease',
                     fontFamily: '"Poppins", system-ui, sans-serif',
                     cursor: 'pointer',
@@ -520,13 +521,13 @@ export default function ReferensiQuran() {
                             style={{
                               width: '100%',
                               padding: '14px 16px 14px 48px',
-                              border: `2px solid ${colors.purple[200]}`,
+                              border: `2px solid ${colors.emerald[200]}`,
                               borderRadius: '12px',
                               fontSize: '14px',
                               fontFamily: '"Poppins", system-ui, sans-serif',
                               outline: 'none',
                               transition: 'all 0.2s ease',
-                              background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.purple[50]} 100%)`,
+                              background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.emerald[50]} 100%)`,
                             }}
                             className="search-input-quran"
                           />
@@ -538,17 +539,17 @@ export default function ReferensiQuran() {
                         <div style={{
                           marginBottom: '20px',
                           padding: '16px',
-                          background: `linear-gradient(135deg, ${colors.purple[100]} 0%, ${colors.green[100]} 100%)`,
-                          border: `2px solid ${colors.purple[300]}`,
+                          background: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.green[100]} 100%)`,
+                          border: `2px solid ${colors.emerald[300]}`,
                           borderRadius: '14px',
                           boxShadow: '0 3px 10px rgba(168, 85, 247, 0.15)',
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <Star size={16} style={{ color: colors.purple[700] }} />
+                            <Star size={16} style={{ color: colors.emerald[700] }} />
                             <span style={{
                               fontSize: '13px',
                               fontWeight: 700,
-                              color: colors.purple[900],
+                              color: colors.emerald[900],
                               fontFamily: '"Poppins", system-ui, sans-serif',
                             }}>
                               Materi Hafalan Minggu Ini
@@ -563,7 +564,7 @@ export default function ReferensiQuran() {
                                 key={material.id}
                                 style={{
                                   fontSize: '12px',
-                                  color: colors.purple[800],
+                                  color: colors.emerald[800],
                                   marginTop: '4px',
                                   fontFamily: '"Poppins", system-ui, sans-serif',
                                 }}
@@ -579,9 +580,9 @@ export default function ReferensiQuran() {
                       <div style={{
                         maxHeight: '600px',
                         overflowY: 'auto',
-                        border: `2px solid ${colors.purple[200]}`,
+                        border: `2px solid ${colors.emerald[200]}`,
                         borderRadius: '16px',
-                        background: `linear-gradient(to bottom, ${colors.white} 0%, ${colors.purple[50]}40 100%)`,
+                        background: `linear-gradient(to bottom, ${colors.white} 0%, ${colors.emerald[50]}40 100%)`,
                       }}>
                         {filteredSurahs && filteredSurahs.length > 0 ? filteredSurahs.map((surah) => (
                           <button
@@ -591,9 +592,9 @@ export default function ReferensiQuran() {
                               width: '100%',
                               padding: '14px 16px',
                               textAlign: 'left',
-                              borderBottom: `1px solid ${colors.purple[100]}`,
+                              borderBottom: `1px solid ${colors.emerald[100]}`,
                               background: selectedSurah === surah.number
-                                ? `linear-gradient(135deg, ${colors.purple[100]} 0%, ${colors.green[100]} 100%)`
+                                ? `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.green[100]} 100%)`
                                 : 'transparent',
                               transition: 'all 0.2s ease',
                               border: 'none',
@@ -606,7 +607,7 @@ export default function ReferensiQuran() {
                               <div style={{
                                 width: '36px',
                                 height: '36px',
-                                background: `linear-gradient(135deg, ${colors.purple[500]} 0%, ${colors.green[500]} 100%)`,
+                                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.green[500]} 100%)`,
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -681,7 +682,7 @@ export default function ReferensiQuran() {
                           alignItems: 'center',
                           gap: '8px',
                           marginBottom: '16px',
-                          color: colors.purple[600],
+                          color: colors.emerald[600],
                           fontWeight: 600,
                           fontSize: '14px',
                           background: 'none',
@@ -704,8 +705,8 @@ export default function ReferensiQuran() {
                         <div style={{
                           width: '48px',
                           height: '48px',
-                          border: `4px solid ${colors.purple[200]}`,
-                          borderTop: `4px solid ${colors.purple[600]}`,
+                          border: `4px solid ${colors.emerald[200]}`,
+                          borderTop: `4px solid ${colors.emerald[600]}`,
                           borderRadius: '50%',
                           margin: '0 auto 16px',
                         }} className="spinner" />
@@ -735,7 +736,7 @@ export default function ReferensiQuran() {
                       <div>
                         {/* Surah Header */}
                         <div style={{
-                          background: `linear-gradient(135deg, ${colors.purple[500]} 0%, ${colors.green[500]} 100%)`,
+                          background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.green[500]} 100%)`,
                           borderRadius: '18px',
                           padding: '32px 24px',
                           marginBottom: '24px',
@@ -775,9 +776,9 @@ export default function ReferensiQuran() {
                             textAlign: 'center',
                             marginBottom: '24px',
                             padding: '20px',
-                            background: `linear-gradient(135deg, ${colors.purple[50]} 0%, ${colors.green[50]} 100%)`,
+                            background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.green[50]} 100%)`,
                             borderRadius: '14px',
-                            border: `2px solid ${colors.purple[200]}`,
+                            border: `2px solid ${colors.emerald[200]}`,
                           }}>
                             <p style={{
                               fontSize: '32px',
@@ -804,11 +805,11 @@ export default function ReferensiQuran() {
                                   padding: '20px',
                                   borderRadius: '16px',
                                   border: isWeekly
-                                    ? `2px solid ${colors.purple[400]}`
+                                    ? `2px solid ${colors.emerald[400]}`
                                     : `2px solid ${colors.gray[200]}`,
                                   background: isWeekly
-                                    ? `linear-gradient(135deg, ${colors.purple[100]} 0%, ${colors.green[100]} 100%)`
-                                    : `linear-gradient(135deg, ${colors.white} 0%, ${colors.purple[50]}30 100%)`,
+                                    ? `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.green[100]} 100%)`
+                                    : `linear-gradient(135deg, ${colors.white} 0%, ${colors.emerald[50]}30 100%)`,
                                   transition: 'all 0.3s ease',
                                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
                                 }}
@@ -820,9 +821,9 @@ export default function ReferensiQuran() {
                                     alignItems: 'center',
                                     gap: '8px',
                                     marginBottom: '12px',
-                                    color: colors.purple[700],
+                                    color: colors.emerald[700],
                                   }}>
-                                    <Star size={14} style={{ fill: colors.purple[700] }} />
+                                    <Star size={14} style={{ fill: colors.emerald[700] }} />
                                     <span style={{
                                       fontSize: '12px',
                                       fontWeight: 700,
@@ -858,7 +859,7 @@ export default function ReferensiQuran() {
                                     <div style={{
                                       width: '36px',
                                       height: '36px',
-                                      background: `linear-gradient(135deg, ${colors.purple[500]} 0%, ${colors.green[500]} 100%)`,
+                                      background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.green[500]} 100%)`,
                                       borderRadius: '50%',
                                       display: 'flex',
                                       alignItems: 'center',
@@ -892,14 +893,14 @@ export default function ReferensiQuran() {
                                       padding: '10px',
                                       borderRadius: '12px',
                                       transition: 'all 0.2s ease',
-                                      background: `${colors.purple[100]}80`,
+                                      background: `${colors.emerald[100]}80`,
                                       border: 'none',
                                       cursor: 'pointer',
                                     }}
                                     className="audio-btn"
                                   >
                                     {audioPlaying === `${surahData.number}-${ayahNumberInSurah}` ? (
-                                      <Pause size={20} style={{ color: colors.purple[700] }} />
+                                      <Pause size={20} style={{ color: colors.emerald[700] }} />
                                     ) : (
                                       <Play size={20} style={{ color: colors.green[700] }} />
                                     )}
@@ -996,7 +997,7 @@ export default function ReferensiQuran() {
                 style={{
                   width: '100%',
                   padding: '14px 16px',
-                  border: `2px solid ${colors.purple[200]}`,
+                  border: `2px solid ${colors.emerald[200]}`,
                   borderRadius: '12px',
                   fontSize: '14px',
                   marginBottom: '20px',
@@ -1034,7 +1035,7 @@ export default function ReferensiQuran() {
                   style={{
                     flex: 1,
                     padding: '14px 20px',
-                    background: `linear-gradient(135deg, ${colors.purple[500]} 0%, ${colors.green[500]} 100%)`,
+                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.green[500]} 100%)`,
                     color: colors.white,
                     borderRadius: '12px',
                     fontSize: '14px',
@@ -1069,31 +1070,31 @@ export default function ReferensiQuran() {
 
           /* Search Input */
           .search-input-quran:focus {
-            border-color: ${colors.purple[500]};
-            box-shadow: 0 0 0 3px ${colors.purple[100]};
+            border-color: ${colors.emerald[500]};
+            box-shadow: 0 0 0 3px ${colors.emerald[100]};
           }
 
           /* Tab Button Hover */
           .tab-button:hover {
-            background: ${colors.purple[50]}60;
+            background: ${colors.emerald[50]}60;
           }
 
           /* Surah Item Hover */
           .surah-item:hover {
-            background: linear-gradient(135deg, ${colors.purple[50]} 0%, ${colors.green[50]} 100%);
-            border-left: 4px solid ${colors.purple[500]};
+            background: linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.green[50]} 100%);
+            border-left: 4px solid ${colors.emerald[500]};
           }
 
           /* Ayah Card Hover */
           .ayah-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(168, 85, 247, 0.15);
-            border-color: ${colors.purple[400]};
+            border-color: ${colors.emerald[400]};
           }
 
           /* Ayah Number Button Hover */
           .ayah-number-btn:hover {
-            background: ${colors.purple[50]}60;
+            background: ${colors.emerald[50]}60;
           }
 
           .ayah-number-btn:hover > div {
@@ -1103,25 +1104,25 @@ export default function ReferensiQuran() {
 
           /* Audio Button Hover */
           .audio-btn:hover {
-            background: ${colors.purple[200]}80;
+            background: ${colors.emerald[200]}80;
             transform: scale(1.05);
           }
 
           /* Back Button Hover */
           .back-button:hover {
-            color: ${colors.purple[700]};
+            color: ${colors.emerald[700]};
           }
 
           /* Modal Input Focus */
           .modal-input:focus {
-            border-color: ${colors.purple[500]};
-            box-shadow: 0 0 0 3px ${colors.purple[100]};
+            border-color: ${colors.emerald[500]};
+            box-shadow: 0 0 0 3px ${colors.emerald[100]};
           }
 
           /* Modal Button Hover */
           .modal-btn-cancel:hover {
             background: ${colors.gray[50]};
-            border-color: ${colors.purple[500]};
+            border-color: ${colors.emerald[500]};
           }
 
           .modal-btn-submit:hover {
@@ -1141,12 +1142,12 @@ export default function ReferensiQuran() {
           }
 
           ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, ${colors.purple[400]} 0%, ${colors.green[400]} 100%);
+            background: linear-gradient(135deg, ${colors.emerald[400]} 0%, ${colors.green[400]} 100%);
             border-radius: 10px;
           }
 
           ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, ${colors.purple[500]} 0%, ${colors.green[500]} 100%);
+            background: linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.green[500]} 100%);
           }
 
           /* Responsive Design */
@@ -1380,3 +1381,4 @@ function TajwidGuide() {
     </div>
   );
 }
+
