@@ -14,7 +14,6 @@ import {
   ArrowLeft,
   Save,
   Loader2,
-  ChevronRight,
   RefreshCw,
   CheckCircle2,
 } from 'lucide-react';
@@ -220,57 +219,34 @@ export default function PresensiDetailPage() {
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div className="space-y-6">
-        {/* Header with Breadcrumb */}
-        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-5 sm:p-6 text-white">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <button
-                onClick={() => router.push('/guru/presensi')}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors"
-              >
-                <ArrowLeft size={16} />
-                <span className="text-sm font-semibold hidden sm:inline">Kembali</span>
-              </button>
-              <ChevronRight size={16} className="text-white/60" />
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="bg-white/20 backdrop-blur-sm p-2.5 rounded-xl flex-shrink-0">
-                  <ClipboardCheck size={24} className="text-white" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs sm:text-sm text-green-50 mb-0.5">Presensi</div>
-                  <h1 className="text-lg sm:text-2xl font-bold truncate">
-                    Kelas {kelas?.nama || '...'}
-                  </h1>
-                </div>
-              </div>
+      <div className="space-y-6 pb-28 sm:pb-0">
+        {/* Breadcrumb */}
+        <div className="px-0">
+          <button
+            onClick={() => router.push('/guru/presensi')}
+            className="flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+          >
+            <ArrowLeft size={16} />
+            <span>Kembali ke Presensi</span>
+          </button>
+        </div>
+
+        {/* Header with Title Only */}
+        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl flex-shrink-0">
+              <ClipboardCheck size={28} className="text-white" />
             </div>
-            <button
-              onClick={handleSimpanPresensi}
-              disabled={presensiData.length === 0 || saving}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                presensiData.length === 0 || saving
-                  ? 'bg-white/20 text-white/50 cursor-not-allowed'
-                  : 'bg-white text-emerald-600 hover:bg-green-50 shadow-lg'
-              }`}
-            >
-              {saving ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Menyimpan...
-                </>
-              ) : (
-                <>
-                  <Save size={18} />
-                  Simpan
-                </>
-              )}
-            </button>
+            <div>
+              <div className="text-sm text-green-50 mb-1">Presensi Kelas</div>
+              <h1 className="text-2xl sm:text-3xl font-bold">{kelas?.nama || '...'}</h1>
+              <p className="text-green-50 text-sm mt-2">Catat kehadiran siswa untuk tanggal yang dipilih</p>
+            </div>
           </div>
         </div>
 
-        {/* Compact Filter Bar */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        {/* Compact Filter Bar with Save Button */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-0 z-10">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex-1 min-w-[200px]">
               <label className="block text-xs font-semibold text-gray-600 mb-1.5">
@@ -302,21 +278,86 @@ export default function PresensiDetailPage() {
                 <span className="hidden sm:inline">Reset</span>
               </button>
             </div>
-            <div className="flex items-end">
-              {isSaved && !hasChanges && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
-                  <CheckCircle2 size={16} />
-                  <span className="text-sm font-semibold">Tersimpan</span>
-                </div>
-              )}
-              {hasChanges && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 rounded-lg border border-amber-200">
-                  <AlertCircle size={16} />
-                  <span className="text-sm font-semibold">Ada Perubahan</span>
-                </div>
-              )}
+            <div className="flex items-center gap-2">
+              {/* Status Indicator */}
+              <div className="hidden sm:flex items-end">
+                {isSaved && !hasChanges && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+                    <CheckCircle2 size={16} />
+                    <span className="text-sm font-semibold">Tersimpan</span>
+                  </div>
+                )}
+                {hasChanges && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 rounded-lg border border-amber-200">
+                    <AlertCircle size={16} />
+                    <span className="text-sm font-semibold">Ada Perubahan</span>
+                  </div>
+                )}
+              </div>
+              {/* Save Button */}
+              <button
+                onClick={handleSimpanPresensi}
+                disabled={presensiData.length === 0 || saving}
+                className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  presensiData.length === 0 || saving
+                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md'
+                }`}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="hidden md:inline">Menyimpan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    <span className="hidden md:inline">Simpan</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
+          {/* Mobile Status Indicator */}
+          <div className="sm:hidden flex gap-2 mt-3">
+            {isSaved && !hasChanges && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 flex-1 justify-center">
+                <CheckCircle2 size={14} />
+                <span className="text-xs font-semibold">Tersimpan</span>
+              </div>
+            )}
+            {hasChanges && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 flex-1 justify-center">
+                <AlertCircle size={14} />
+                <span className="text-xs font-semibold">Ada Perubahan</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Sticky Save Button */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-xl p-3 z-40">
+          <button
+            onClick={handleSimpanPresensi}
+            disabled={presensiData.length === 0 || saving}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+              presensiData.length === 0 || saving
+                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg'
+            }`}
+          >
+            {saving ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Menyimpan...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Simpan Presensi
+              </>
+            )}
+          </button>
         </div>
 
         {/* Statistics Cards */}
