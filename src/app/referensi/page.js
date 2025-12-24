@@ -588,25 +588,40 @@ export default function ReferensiQuran() {
 
                       {!loading && surahData && (
                         <div className="space-y-6">
-                          {/* Surah Header */}
-                          <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-6 md:p-8 text-white shadow-lg">
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex-1">
-                                <h2 className="text-4xl md:text-5xl font-arabic mb-3">{surahData.name}</h2>
-                                <h3 className="text-xl md:text-2xl font-bold mb-2">{surahData.englishName}</h3>
-                                <p className="text-sm md:text-base text-green-50">
-                                  {surahData.englishNameTranslation} • {surahData.numberOfAyahs} Ayat • {surahData.revelationType}
-                                </p>
+                          {/* Surah Header - Konsisten dengan Header Besar */}
+                          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-3xl p-8 md:p-10 text-white shadow-xl">
+                            <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+                              {/* Kiri: Info Surah */}
+                              <div className="flex-1 min-w-[250px]">
+                                <h2 className="text-5xl md:text-6xl font-arabic mb-4 leading-tight drop-shadow-md">
+                                  {surahData.name}
+                                </h2>
+                                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">
+                                  {surahData.englishName}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-3 text-sm md:text-base text-green-50">
+                                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                                    <span className="font-semibold">{surahData.englishNameTranslation}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                                    <span className="font-semibold">{surahData.numberOfAyahs} Ayat</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                                    <span className="font-semibold">
+                                      {surahData.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
 
-                              {/* NEW: Mode Tajwid & Tandai Buttons */}
-                              <div className="flex gap-2">
+                              {/* Kanan: Tombol Mode Tajwid & Tandai */}
+                              <div className="flex flex-wrap gap-3 items-start">
                                 <button
                                   onClick={() => setShowTajwid(!showTajwid)}
-                                  className={`px-4 py-2 rounded-xl font-semibold transition-all text-sm ${
+                                  className={`px-5 py-3 rounded-xl font-semibold transition-all text-sm shadow-lg hover:scale-105 ${
                                     showTajwid
-                                      ? 'bg-white text-green-600'
-                                      : 'bg-white/20 text-white hover:bg-white/30'
+                                      ? 'bg-white text-green-600 shadow-white/30'
+                                      : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
                                   }`}
                                 >
                                   Mode Tajwid
@@ -614,7 +629,7 @@ export default function ReferensiQuran() {
 
                                 <button
                                   onClick={handleBookmark}
-                                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg text-white"
+                                  className="px-5 py-3 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg text-white hover:scale-105"
                                 >
                                   <Bookmark size={16} />
                                   Tandai
@@ -622,11 +637,13 @@ export default function ReferensiQuran() {
                               </div>
                             </div>
 
-                            {/* NEW: Last Bookmark Indicator */}
+                            {/* Last Bookmark Indicator */}
                             {lastBookmark && lastBookmark.surahNumber === surahData.number && (
-                              <div className="mt-3 text-xs text-green-100 flex items-center gap-2">
-                                <Bookmark size={14} />
-                                <span>Terakhir ditandai: Ayat {lastBookmark.ayah}</span>
+                              <div className="pt-4 border-t border-white/20">
+                                <div className="flex items-center gap-2 text-sm text-green-100 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full inline-flex">
+                                  <Bookmark size={16} className="fill-green-100" />
+                                  <span className="font-medium">Terakhir ditandai: Ayat {lastBookmark.ayah}</span>
+                                </div>
                               </div>
                             )}
                           </div>
