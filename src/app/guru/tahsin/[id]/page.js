@@ -56,7 +56,7 @@ export default function TahsinDetailPage() {
 
   const [materiFormData, setMateriFormData] = useState({
     judul: '',
-    jenisMateri: 'PDF',
+    jenisMateri: '',
     fileUrl: '',
     youtubeUrl: '',
     deskripsi: '',
@@ -230,10 +230,17 @@ export default function TahsinDetailPage() {
   const validateMateriForm = () => {
     const newErrors = {};
     if (!materiFormData.judul.trim()) newErrors.judul = 'Judul materi wajib diisi';
+    if (!materiFormData.jenisMateri) newErrors.jenisMateri = 'Pilih jenis materi';
 
-    // Only validate PDF file upload
-    if (!selectedFile) {
-      newErrors.fileUrl = 'File PDF wajib diunggah';
+    // Validate based on type
+    if (materiFormData.jenisMateri === 'YOUTUBE') {
+      if (!materiFormData.youtubeUrl.trim()) {
+        newErrors.youtubeUrl = 'URL YouTube wajib diisi';
+      }
+    } else if (materiFormData.jenisMateri === 'PDF') {
+      if (!selectedFile) {
+        newErrors.fileUrl = 'File wajib diunggah';
+      }
     }
 
     setMateriErrors(newErrors);
@@ -322,8 +329,8 @@ export default function TahsinDetailPage() {
       setSubmitting(true);
       let fileUrl = null;
 
-      // Upload PDF file first
-      if (selectedFile) {
+      // Upload file first if not YouTube
+      if (materiFormData.jenisMateri !== 'YOUTUBE' && selectedFile) {
         setUploadingFile(true);
         const uploadFormData = new FormData();
         uploadFormData.append('file', selectedFile);
@@ -337,21 +344,21 @@ export default function TahsinDetailPage() {
         const uploadData = await uploadResponse.json();
 
         if (!uploadResponse.ok) {
-          throw new Error(uploadData.message || 'Gagal mengunggah file PDF');
+          throw new Error(uploadData.message || 'Gagal mengunggah file');
         }
 
         fileUrl = uploadData.url;
         setUploadingFile(false);
       }
 
-      // Submit materi data (PDF only)
+      // Submit materi data
       const payload = {
         guruId: guruData.id,
         kelasId: kelasId,
         judul: materiFormData.judul.trim(),
-        jenisMateri: 'PDF', // Always PDF
-        fileUrl: fileUrl,
-        youtubeUrl: null, // Not used
+        jenisMateri: materiFormData.jenisMateri,
+        fileUrl: materiFormData.jenisMateri === 'YOUTUBE' ? null : fileUrl,
+        youtubeUrl: materiFormData.jenisMateri === 'YOUTUBE' ? materiFormData.youtubeUrl.trim() : null,
         deskripsi: materiFormData.deskripsi.trim() || null,
       };
 
@@ -445,7 +452,7 @@ export default function TahsinDetailPage() {
   const resetMateriForm = () => {
     setMateriFormData({
       judul: '',
-      jenisMateri: 'PDF',
+      jenisMateri: '',
       fileUrl: '',
       youtubeUrl: '',
       deskripsi: '',
@@ -1244,52 +1251,78 @@ export default function TahsinDetailPage() {
                     name="jenisMateri"
                     value={materiFormData.jenisMateri}
                     onChange={handleMateriInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-gray-50"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                     style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    disabled
                   >
+                    <option value="">-- Pilih Jenis Materi --</option>
                     <option value="PDF">PDF</option>
+                    <option value="YOUTUBE">YouTube</option>
                   </select>
-                  <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Saat ini hanya mendukung file PDF
-                  </p>
+                  {materiErrors.jenisMateri && (
+                    <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      {materiErrors.jenisMateri}
+                    </p>
+                  )}
                 </div>
 
-                {/* PDF Upload Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Upload File PDF <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileUpload}
-                    disabled={uploadingFile || submitting}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                      materiErrors.fileUrl ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                  />
-                  {selectedFile && !uploadingFile && (
-                    <p className="text-emerald-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
-                    </p>
-                  )}
-                  {uploadingFile && (
-                    <p className="text-blue-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      <Loader2 className="animate-spin" size={16} />
-                      <span>Mengunggah file...</span>
-                    </p>
-                  )}
-                  {materiErrors.fileUrl && !selectedFile && (
-                    <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      {materiErrors.fileUrl}
-                    </p>
-                  )}
-                </div>
+                {materiFormData.jenisMateri === 'YOUTUBE' ? (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      URL YouTube <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      name="youtubeUrl"
+                      value={materiFormData.youtubeUrl}
+                      onChange={handleMateriInputChange}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
+                        materiErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
+                    />
+                    {materiErrors.youtubeUrl && (
+                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        {materiErrors.youtubeUrl}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      Upload File {materiFormData.jenisMateri === 'PDF' ? 'PDF' : 'Video'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="file"
+                      accept={materiFormData.jenisMateri === 'PDF' ? 'application/pdf' : 'video/*'}
+                      onChange={handleFileUpload}
+                      disabled={uploadingFile || submitting}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
+                        materiErrors.fileUrl ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
+                    />
+                    {selectedFile && !uploadingFile && (
+                      <p className="text-emerald-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                      </p>
+                    )}
+                    {uploadingFile && (
+                      <p className="text-blue-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        <Loader2 className="animate-spin" size={16} />
+                        <span>Mengunggah file...</span>
+                      </p>
+                    )}
+                    {materiErrors.fileUrl && !selectedFile && (
+                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        {materiErrors.fileUrl}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
