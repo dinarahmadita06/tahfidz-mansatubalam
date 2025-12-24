@@ -588,10 +588,10 @@ export default function ReferensiQuran() {
 
                       {!loading && surahData && (
                         <div className="space-y-6">
-                          {/* Surah Header - Struktur seperti versi siswa */}
+                          {/* Surah Header - Nama Arab di kiri atas, tombol di kanan atas */}
                           <div className="bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 rounded-3xl px-4 py-5 md:px-6 md:py-6 text-white shadow-xl relative overflow-hidden">
-                            {/* Tombol floating di pojok kanan atas */}
-                            <div className="absolute top-4 right-4 flex gap-2 z-10">
+                            {/* Tombol floating di pojok kanan atas - TIDAK mempengaruhi layout judul */}
+                            <div className="absolute top-4 right-4 md:top-5 md:right-6 flex gap-2 z-10">
                               <button
                                 onClick={() => setShowTajwid(!showTajwid)}
                                 className={`px-4 py-2 rounded-xl font-semibold transition-all text-xs md:text-sm shadow-lg hover:scale-105 ${
@@ -612,19 +612,19 @@ export default function ReferensiQuran() {
                               </button>
                             </div>
 
-                            {/* Info Surah - Align kiri, urutan: Arab → Latin → Info */}
-                            <div className="space-y-2 pr-32 md:pr-40">
-                              {/* Baris 1: Nama Arab */}
-                              <h2 className="text-4xl md:text-6xl font-arabic leading-tight drop-shadow-md">
+                            {/* Area Judul - Align KIRI dengan flex flex-col items-start */}
+                            <div className="flex flex-col items-start space-y-2 pr-40 md:pr-48">
+                              {/* Baris 1: Nama Arab - KIRI ATAS */}
+                              <h2 className="text-4xl md:text-6xl font-arabic leading-tight drop-shadow-md text-left">
                                 {surahData.name}
                               </h2>
 
-                              {/* Baris 2: Nama Latin */}
-                              <h3 className="text-2xl md:text-4xl font-bold text-white">
+                              {/* Baris 2: Nama Latin - KIRI, di bawah Arab */}
+                              <h3 className="text-2xl md:text-4xl font-bold text-white text-left">
                                 {surahData.englishName}
                               </h3>
 
-                              {/* Baris 3: Info Jumlah Ayat + Kategori */}
+                              {/* Baris 3: Info Jumlah Ayat + Kategori - KIRI, sejajar dalam 1 baris */}
                               <div className="flex items-center gap-2 text-sm md:text-base text-green-50 font-medium">
                                 <span>Jumlah Ayat: {surahData.numberOfAyahs}</span>
                                 <span>•</span>
