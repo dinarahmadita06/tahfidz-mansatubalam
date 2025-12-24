@@ -17,6 +17,12 @@ import {
   Send,
   Plus,
   Eye,
+  Search,
+  Filter,
+  BookCheck,
+  Users,
+  CalendarCheck,
+  Medal,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -313,22 +319,22 @@ export default function GuruTasmiPage() {
       MENUNGGU: {
         icon: <Clock size={16} />,
         text: 'Menunggu ACC',
-        className: 'bg-amber-100 text-amber-700 border-amber-200',
+        className: 'bg-amber-100 text-amber-700 border-amber-300',
       },
       DISETUJUI: {
         icon: <CheckCircle size={16} />,
         text: 'Terjadwal',
-        className: 'bg-green-100 text-green-700 border-green-200',
+        className: 'bg-emerald-100 text-emerald-700 border-emerald-300',
       },
       DITOLAK: {
         icon: <XCircle size={16} />,
         text: 'Ditolak',
-        className: 'bg-red-100 text-red-700 border-red-200',
+        className: 'bg-red-100 text-red-700 border-red-300',
       },
       SELESAI: {
         icon: <Award size={16} />,
         text: 'Selesai',
-        className: 'bg-blue-100 text-blue-700 border-blue-200',
+        className: 'bg-green-100 text-green-700 border-green-300',
       },
     };
 
@@ -336,7 +342,7 @@ export default function GuruTasmiPage() {
 
     return (
       <span
-        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${badge.className}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${badge.className}`}
       >
         {badge.icon}
         {badge.text}
@@ -388,67 +394,163 @@ export default function GuruTasmiPage() {
       <Toaster position="top-right" />
 
       <div className="space-y-6">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+        {/* Header Gradient Hijau */}
+        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-8 text-white">
           <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+                <Medal size={40} className="text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl font-bold">Manajemen Tasmi&apos; Al-Qur&apos;an</h1>
+                  <span className="bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
+                    Ujian Tasmi&apos;
+                  </span>
+                </div>
+                <p className="text-green-50 text-lg">Kelola pendaftaran dan penilaian ujian bacaan Al-Qur&apos;an siswa</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: Total Pengajuan */}
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-600 text-sm font-semibold mb-1">TOTAL PENGAJUAN TASMI&apos;</p>
+                <h3 className="text-4xl font-bold text-emerald-700">{tasmiList.length}</h3>
+              </div>
+              <div className="bg-emerald-100 p-4 rounded-full">
+                <Users size={32} className="text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Menunggu Jadwal */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-amber-600 text-sm font-semibold mb-1">MENUNGGU JADWAL UJIAN</p>
+                <h3 className="text-4xl font-bold text-amber-700">
+                  {tasmiList.filter(t => t.statusPendaftaran === 'MENUNGGU').length}
+                </h3>
+              </div>
+              <div className="bg-amber-100 p-4 rounded-full">
+                <Clock size={32} className="text-amber-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Sudah Dinilai */}
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-semibold mb-1">SUDAH DINILAI / SELESAI</p>
+                <h3 className="text-4xl font-bold text-blue-700">
+                  {tasmiList.filter(t => t.nilaiAkhir).length}
+                </h3>
+              </div>
+              <div className="bg-blue-100 p-4 rounded-full">
+                <CheckCircle size={32} className="text-blue-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Search */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                <Award className="text-purple-600" size={32} />
-                Manajemen Tasmi&apos; Al-Qur&apos;an
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Kelola pendaftaran dan penilaian ujian Tasmi&apos;
-              </p>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Cari Siswa</label>
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Nama atau NISN..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Filter Status */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Filter Status</label>
+              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                <option value="">Semua Status</option>
+                <option value="MENUNGGU">Menunggu ACC</option>
+                <option value="DISETUJUI">Terjadwal</option>
+                <option value="SELESAI">Selesai</option>
+                <option value="DITOLAK">Ditolak</option>
+              </select>
+            </div>
+
+            {/* Filter Kelas */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Filter Kelas</label>
+              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                <option value="">Semua Kelas</option>
+              </select>
+            </div>
+
+            {/* Filter Juz (Optional) */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Filter Juz</label>
+              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                <option value="">Semua Juz</option>
+              </select>
             </div>
           </div>
         </div>
 
         {/* Main Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-800">Daftar Pendaftaran Tasmi&apos;</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-500 to-green-600">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <BookCheck size={20} />
+              Daftar Pendaftaran Tasmi&apos;
+            </h2>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gradient-to-r from-emerald-500 to-green-600 text-white">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    No
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nama Siswa
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kelas
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Juz yang Ditasmi
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Jadwal Ujian
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hasil Penilaian
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aksi
-                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">No</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Nama Siswa</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Kelas</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Juz yang Ditasmi</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Jadwal Ujian</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">Hasil Penilaian</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {tasmiList.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
-                      Tidak ada data tasmi
+                    <td colSpan="8" className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center">
+                          <BookCheck size={48} className="text-emerald-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-800 mb-2">Belum Ada Pengajuan Tasmi&apos;</h3>
+                          <p className="text-gray-600 mb-4">Daftarkan siswa untuk mengikuti ujian Tasmi&apos; Al-Qur&apos;an</p>
+                          <button className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold flex items-center gap-2 mx-auto">
+                            <Plus size={18} />
+                            Buat Jadwal Tasmi&apos;
+                          </button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   tasmiList.map((tasmi, index) => (
-                    <tr key={tasmi.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={tasmi.id} className="hover:bg-emerald-50 transition-colors duration-200 border-b border-gray-200">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {index + 1}
                       </td>
