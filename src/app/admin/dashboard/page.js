@@ -621,77 +621,78 @@ export default function AdminDashboardPage() {
 
         {/* Main Content */}
         {!error && (
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          padding: '0 40px 40px',
-        }} className="dashboard-main-content">
-          {/* Stats Cards Grid - 7 Cards */}
+        <>
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '20px',
-          }}>
-            {loading ? (
-              <>
-                <SkeletonCard delay={0} />
-                <SkeletonCard delay={0.05} />
-                <SkeletonCard delay={0.1} />
-                <SkeletonCard delay={0.15} />
-                <SkeletonCard delay={0.2} />
-              </>
-            ) : (
-              <>
-                <StatCard
-                  icon={<Users size={22} color={colors.white} />}
-                  title="Total Siswa"
-                  value={data.stats.totalSiswa}
-                  subtitle={`${data.stats.siswaAktif} siswa aktif`}
-                  color="emerald"
-                  delay={0}
-                />
-                <StatCard
-                  icon={<UserCog size={22} color={colors.white} />}
-                  title="Total Guru Tahfidz"
-                  value={data.stats.totalGuru}
-                  subtitle="Guru aktif mengajar"
-                  color="amber"
-                  delay={0.05}
-                />
-                <StatCard
-                  icon={<BookOpen size={22} color={colors.white} />}
-                  title="Total Hafalan"
-                  value={`${data.stats.totalJuz} Juz`}
-                  subtitle="Keseluruhan siswa"
-                  color="lavender"
-                  delay={0.1}
-                />
-                <StatCard
-                  icon={<Award size={22} color={colors.white} />}
-                  title="Rata-rata Nilai"
-                  value={data.stats.rataRataNilai}
-                  subtitle="Nilai keseluruhan"
-                  color="blue"
-                  delay={0.15}
-                />
-                <StatCard
-                  icon={<CheckCircle2 size={22} color={colors.white} />}
-                  title="Rata-rata Kehadiran"
-                  value={`${data.stats.rataRataKehadiran}%`}
-                  subtitle="Kehadiran siswa"
-                  color="mint"
-                  delay={0.2}
-                />
-              </>
-            )}
+            position: 'relative',
+            zIndex: 1,
+            padding: '0 40px 40px',
+          }} className="dashboard-main-content">
+            {/* Stats Cards Grid - 7 Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '20px',
+            }}>
+              {loading ? (
+                <>
+                  <SkeletonCard delay={0} />
+                  <SkeletonCard delay={0.05} />
+                  <SkeletonCard delay={0.1} />
+                  <SkeletonCard delay={0.15} />
+                  <SkeletonCard delay={0.2} />
+                </>
+              ) : (
+                <>
+                  <StatCard
+                    icon={<Users size={22} color={colors.white} />}
+                    title="Total Siswa"
+                    value={data.stats.totalSiswa}
+                    subtitle={`${data.stats.siswaAktif} siswa aktif`}
+                    color="emerald"
+                    delay={0}
+                  />
+                  <StatCard
+                    icon={<UserCog size={22} color={colors.white} />}
+                    title="Total Guru Tahfidz"
+                    value={data.stats.totalGuru}
+                    subtitle="Guru aktif mengajar"
+                    color="amber"
+                    delay={0.05}
+                  />
+                  <StatCard
+                    icon={<BookOpen size={22} color={colors.white} />}
+                    title="Total Hafalan"
+                    value={`${data.stats.totalJuz} Juz`}
+                    subtitle="Keseluruhan siswa"
+                    color="lavender"
+                    delay={0.1}
+                  />
+                  <StatCard
+                    icon={<Award size={22} color={colors.white} />}
+                    title="Rata-rata Nilai"
+                    value={data.stats.rataRataNilai}
+                    subtitle="Nilai keseluruhan"
+                    color="blue"
+                    delay={0.15}
+                  />
+                  <StatCard
+                    icon={<CheckCircle2 size={22} color={colors.white} />}
+                    title="Rata-rata Kehadiran"
+                    value={`${data.stats.rataRataKehadiran}%`}
+                    subtitle="Kehadiran siswa"
+                    color="mint"
+                    delay={0.2}
+                  />
+                </>
+              )}
+            </div>
           </div>
-        </div>
-        {/* Chart Sections - 2 Column Layout */}
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          padding: '20px 40px 40px',
-        }} className="dashboard-charts">
+          {/* Chart Sections - 2 Column Layout */}
+          <div style={{
+            position: 'relative',
+            zIndex: 1,
+            padding: '20px 40px 40px',
+          }} className="dashboard-charts">
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -888,6 +889,7 @@ export default function AdminDashboardPage() {
             )}
           </div>
         </div>
+        </>
         )}
       </div>
 
