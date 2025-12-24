@@ -1,6 +1,7 @@
 /* Header Gradient Background */
 .headerGradient {
-  @apply bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white;
+  background: linear-gradient(to right, #10b981, #22c55e, #14b8a6);
+  color: white;
 }
 
 .headerContent {
@@ -29,7 +30,17 @@
 }
 
 .tabPillActive {
-  @apply bg-gradient-to-r from-emerald-500 to-green-500 text-white border-none;
+  background: linear-gradient(to right, #10b981, #22c55e);
+  color: white;
+  border: none;
+  padding: 0.375rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
 }
 
 .tabPillInactive {
@@ -51,7 +62,14 @@
 
 /* Weekly Material Badge */
 .weeklyBadge {
-  @apply bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-300 rounded-2xl p-4 flex items-center gap-3 mb-6;
+  background: linear-gradient(to right, #ecfdf5, #f0fdf4);
+  border: 2px solid #6EE7B7;
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .weeklyBadgeIcon {
@@ -68,15 +86,29 @@
 }
 
 .surahItem {
-  @apply p-3 rounded-xl cursor-pointer transition-all hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 hover:border-l-4 hover:border-l-emerald-500;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.surahItem:hover {
+  background: linear-gradient(to right, #ecfdf5, #f0fdf4);
+  border-left: 4px solid #10B981;
 }
 
 .surahItemActive {
-  @apply bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-l-emerald-500;
+  background: linear-gradient(to right, #ecfdf5, #f0fdf4);
+  border-left: 4px solid #10B981;
 }
 
 .surahBadge {
-  @apply bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-bold px-3 py-1 rounded-lg;
+  background: linear-gradient(to right, #10b981, #22c55e);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
 }
 
 /* Empty State */
@@ -110,7 +142,22 @@
 }
 
 .ayahNumberBadge {
-  @apply w-9 h-9 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold transition-all hover:scale-110 hover:shadow-lg hover:shadow-emerald-500;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: linear-gradient(to right, #10b981, #22c55e);
+  color: white;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.ayahNumberBadge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 
 .ayahArabic {
@@ -156,7 +203,20 @@
 }
 
 .modalButtonSubmit {
-  @apply flex-1 px-5 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500;
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(to right, #10b981, #22c55e);
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.modalButtonSubmit:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
 /* Loading Spinner */
