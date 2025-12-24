@@ -12,9 +12,24 @@ import {
   Pause,
   Star,
   ChevronDown,
+  Bookmark,
 } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import toast, { Toaster } from 'react-hot-toast';
+import { sanitizeTranslation } from '@/lib/utils';
+
+// Tajweed parser utility
+const parseTajweedText = (tajweedText) => {
+  if (!tajweedText) return null;
+
+  // Parse [h:number[text] format to HTML
+  const parsed = tajweedText.replace(/\[([a-z_]+):(\d+)\[([^\]]+)\]/g, (match, rule, id, text) => {
+    return `<tajweed class="${rule}" data-id="${id}">${text}</tajweed>`;
+  });
+
+  return parsed;
+};
 
 export default function ReferensiQuran() {
   const { data: session, status } = useSession();
@@ -33,6 +48,11 @@ export default function ReferensiQuran() {
   const [jumpToAyah, setJumpToAyah] = useState('');
   const [showSurahContent, setShowSurahContent] = useState(false);
 
+  // NEW: State untuk fitur baru
+  const [showTajwid, setShowTajwid] = useState(false);
+  const [selectedAyah, setSelectedAyah] = useState(null);
+  const [lastBookmark, setLastBookmark] = useState(null);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -40,8 +60,19 @@ export default function ReferensiQuran() {
       console.log('User authenticated, fetching data...');
       fetchSurahs();
       fetchWeeklyMaterial();
+
+      // Load last bookmark from localStorage
+      const saved = localStorage.getItem('guru_last_bookmark_quran');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setLastBookmark(parsed);
+        } catch (e) {
+          console.error('Error loading last bookmark:', e);
+        }
+      }
     }
-  }, [status]);
+  }, [status, router]);
 
   // Cleanup audio on component unmount
   useEffect(() => {
@@ -106,6 +137,7 @@ export default function ReferensiQuran() {
       setSurahData(data);
       setSelectedSurah(surahNumber);
       setShowSurahContent(true);
+      setSelectedAyah(null); // Reset selected ayah when changing surah
     } catch (error) {
       console.error('Error fetching surah data:', error);
       alert('Gagal memuat data surah. Silakan coba lagi.');
@@ -256,6 +288,40 @@ export default function ReferensiQuran() {
     }
   };
 
+  // NEW: Handle bookmark
+  const handleBookmark = () => {
+    if (!selectedAyah || !surahData) {
+      toast.error('Pilih ayat terlebih dahulu', {
+        icon: '⚠️',
+        style: {
+          borderRadius: '12px',
+          background: '#EF4444',
+          color: '#fff',
+        },
+      });
+      return;
+    }
+
+    const bookmark = {
+      surah: surahData.englishName,
+      surahNumber: surahData.number,
+      ayah: selectedAyah,
+      date: new Date().toISOString(),
+    };
+
+    localStorage.setItem('guru_last_bookmark_quran', JSON.stringify(bookmark));
+    setLastBookmark(bookmark);
+
+    toast.success('Bacaan ayat berhasil ditandai', {
+      icon: '📖',
+      style: {
+        borderRadius: '12px',
+        background: '#10B981',
+        color: '#fff',
+      },
+    });
+  };
+
   const filteredSurahs = surahs.filter(
     (surah) =>
       surah.transliteration.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -288,6 +354,86 @@ export default function ReferensiQuran() {
 
   return (
     <Layout>
+      <Toaster position="top-right" />
+
+      {/* Tajweed CSS Styles */}
+      <style jsx global>{`
+        /* Tajweed color coding */
+        .tajweed-text {
+          font-family: 'Scheherazade New', 'Amiri', serif;
+        }
+
+        /* Tajweed rules colors based on AlQuran.cloud */
+        tajweed.ham_wasl, tajweed.silent, tajweed.laam_shamsiyah {
+          color: #AAAAAA;
+        }
+
+        tajweed.madda_normal {
+          color: #537FFF;
+        }
+
+        tajweed.madda_permissible {
+          color: #4050FF;
+        }
+
+        tajweed.madda_necessary {
+          color: #000EBC;
+        }
+
+        tajweed.madda_obligatory {
+          color: #2144C1;
+        }
+
+        tajweed.qalaqah {
+          color: #DD0008;
+          font-weight: 600;
+        }
+
+        tajweed.ikhafa_shafawi {
+          color: #D500B7;
+        }
+
+        tajweed.ikhafa {
+          color: #9400A8;
+        }
+
+        tajweed.idgham_shafawi {
+          color: #58B800;
+        }
+
+        tajweed.iqlab {
+          color: #26BFFD;
+        }
+
+        tajweed.idgham_ghunnah {
+          color: #169777;
+        }
+
+        tajweed.idgham_wo_ghunnah {
+          color: #169200;
+        }
+
+        tajweed.idgham_mutajanisayn, tajweed.idgham_mutaqaribayn {
+          color: #A1A1A1;
+        }
+
+        tajweed.ghunnah {
+          color: #FF7E1E;
+        }
+
+        /* Add subtle background highlight for better visibility */
+        .tajweed-text tajweed {
+          padding: 1px 2px;
+          border-radius: 2px;
+          transition: all 0.2s ease;
+        }
+
+        .tajweed-text tajweed:hover {
+          background-color: rgba(251, 191, 36, 0.1);
+          transform: scale(1.05);
+        }
+      `}</style>
+
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50">
         {/* Header Gradient Hijau - Mirip Tasmi */}
         <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 md:p-8 text-white mb-6">
@@ -443,13 +589,91 @@ export default function ReferensiQuran() {
                       {!loading && surahData && (
                         <div className="space-y-6">
                           {/* Surah Header */}
-                          <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-6 md:p-8 text-white text-center shadow-lg">
-                            <h2 className="text-4xl md:text-5xl font-arabic mb-3">{surahData.name}</h2>
-                            <h3 className="text-xl md:text-2xl font-bold mb-2">{surahData.englishName}</h3>
-                            <p className="text-sm md:text-base text-green-50">
-                              {surahData.englishNameTranslation} • {surahData.numberOfAyahs} Ayat • {surahData.revelationType}
-                            </p>
+                          <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-6 md:p-8 text-white shadow-lg">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1">
+                                <h2 className="text-4xl md:text-5xl font-arabic mb-3">{surahData.name}</h2>
+                                <h3 className="text-xl md:text-2xl font-bold mb-2">{surahData.englishName}</h3>
+                                <p className="text-sm md:text-base text-green-50">
+                                  {surahData.englishNameTranslation} • {surahData.numberOfAyahs} Ayat • {surahData.revelationType}
+                                </p>
+                              </div>
+
+                              {/* NEW: Mode Tajwid & Tandai Buttons */}
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setShowTajwid(!showTajwid)}
+                                  className={`px-4 py-2 rounded-xl font-semibold transition-all text-sm ${
+                                    showTajwid
+                                      ? 'bg-white text-green-600'
+                                      : 'bg-white/20 text-white hover:bg-white/30'
+                                  }`}
+                                >
+                                  Mode Tajwid
+                                </button>
+
+                                <button
+                                  onClick={handleBookmark}
+                                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg text-white"
+                                >
+                                  <Bookmark size={16} />
+                                  Tandai
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* NEW: Last Bookmark Indicator */}
+                            {lastBookmark && lastBookmark.surahNumber === surahData.number && (
+                              <div className="mt-3 text-xs text-green-100 flex items-center gap-2">
+                                <Bookmark size={14} />
+                                <span>Terakhir ditandai: Ayat {lastBookmark.ayah}</span>
+                              </div>
+                            )}
                           </div>
+
+                          {/* Tajweed Legend */}
+                          {showTajwid && (
+                            <div className="px-6 py-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl">
+                              <h3 className="text-sm font-bold text-gray-700 mb-3">📚 Panduan Warna Tajwid:</h3>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#9400A8'}}></span>
+                                  <span>Ikhfa (Samar)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#26BFFD'}}></span>
+                                  <span>Iqlab (Penukaran)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169777'}}></span>
+                                  <span>Idgham + Ghunnah</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169200'}}></span>
+                                  <span>Idgham - Ghunnah</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#DD0008'}}></span>
+                                  <span>Qalqalah</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#FF7E1E'}}></span>
+                                  <span>Ghunnah</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#537FFF'}}></span>
+                                  <span>Mad Normal (2)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#4050FF'}}></span>
+                                  <span>Mad Jaiz (2,4,6)</span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mt-2 italic">
+                                💡 Hover pada huruf berwarna untuk melihat highlight
+                              </p>
+                            </div>
+                          )}
 
                           {/* Bismillah */}
                           {surahData.number !== 1 && surahData.number !== 9 && (
@@ -465,13 +689,17 @@ export default function ReferensiQuran() {
                             {surahData.ayahs && surahData.ayahs.map((ayah, index) => {
                               const ayahNumberInSurah = ayah.verseKey ? parseInt(ayah.verseKey.split(':')[1]) : index + 1;
                               const isWeekly = isWeeklyMaterial(surahData.number, ayahNumberInSurah);
+                              const isSelected = selectedAyah === ayahNumberInSurah;
 
                               return (
                                 <div
                                   key={ayah.number}
                                   id={`ayah-${ayahNumberInSurah}`}
-                                  className={`p-4 md:p-5 rounded-xl border-2 transition-all ${
-                                    isWeekly
+                                  onClick={() => setSelectedAyah(ayahNumberInSurah)}
+                                  className={`p-4 md:p-5 rounded-xl border-2 transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-gradient-to-br from-amber-100 to-yellow-100 border-amber-400 ring-2 ring-amber-300'
+                                      : isWeekly
                                       ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-green-400'
                                       : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-md'
                                   }`}
@@ -483,9 +711,19 @@ export default function ReferensiQuran() {
                                     </div>
                                   )}
 
+                                  {isSelected && (
+                                    <div className="flex items-center gap-2 mb-3 text-amber-700">
+                                      <Bookmark size={14} className="fill-amber-700" />
+                                      <span className="text-xs font-bold">Ayat Dipilih - Klik &quot;Tandai&quot; untuk menyimpan</span>
+                                    </div>
+                                  )}
+
                                   <div className="flex items-start justify-between mb-4">
                                     <button
-                                      onClick={() => setShowJumpModal(true)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowJumpModal(true);
+                                      }}
                                       className="flex items-center gap-2 p-2 rounded-xl hover:bg-gray-100 transition-all"
                                       title="Klik untuk pindah ke ayat lain"
                                     >
@@ -496,7 +734,8 @@ export default function ReferensiQuran() {
                                     </button>
 
                                     <button
-                                      onClick={() => {
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         console.log('🖱️ Button clicked, ayahNumberInSurah:', ayahNumberInSurah);
                                         const isPlaying = audioPlaying === `${surahData.number}-${ayahNumberInSurah}`;
                                         if (isPlaying) {
@@ -515,12 +754,21 @@ export default function ReferensiQuran() {
                                     </button>
                                   </div>
 
-                                  <p className="text-2xl md:text-3xl font-arabic text-right leading-loose mb-4 text-gray-900">
-                                    {ayah.text}
-                                  </p>
+                                  {/* Arabic Text with Tajwid */}
+                                  <div className="text-2xl md:text-3xl font-arabic text-right leading-loose mb-4 text-gray-900">
+                                    {showTajwid && ayah.textTajweed ? (
+                                      <div
+                                        className="tajweed-text"
+                                        dangerouslySetInnerHTML={{ __html: parseTajweedText(ayah.textTajweed) }}
+                                      />
+                                    ) : (
+                                      ayah.text
+                                    )}
+                                  </div>
 
+                                  {/* Translation with Sanitization */}
                                   <p className="text-sm md:text-base text-gray-700 leading-relaxed">
-                                    {ayah.translation}
+                                    {sanitizeTranslation(ayah.translation)}
                                   </p>
                                 </div>
                               );
