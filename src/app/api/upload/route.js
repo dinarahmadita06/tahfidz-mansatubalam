@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 export async function POST(request) {
   try {
@@ -53,32 +51,23 @@ export async function POST(request) {
       );
     }
 
-    // Create uploads directory if not exists
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', folder);
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
     // Generate unique filename
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_'); // Sanitize filename
     const fileExtension = originalName.split('.').pop();
     const baseName = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
-    const fileName = `${baseName}-${timestamp}.${fileExtension}`;
-    const filePath = join(uploadsDir, fileName);
+    const fileName = `${folder}/${baseName}-${timestamp}.${fileExtension}`;
 
-    // Convert file to buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
-
-    // Return relative URL
-    const relativePath = `/uploads/${folder}/${fileName}`;
+    // Upload to Vercel Blob
+    const blob = await put(fileName, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
 
     return NextResponse.json({
       success: true,
       message: 'File berhasil diunggah',
-      url: relativePath,
+      url: blob.url,
       filename: fileName,
       size: file.size,
       type: file.type,
