@@ -469,7 +469,7 @@ export default function ReferensiQuran() {
                         <div style={{
                           marginBottom: '20px',
                           padding: '16px',
-                          background: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.green[100]} 100%)`,
+                          background: 'linear-gradient(135deg, #D1FAE5 0%, #DCFCE7 100%)',
                           border: `2px solid ${colors.emerald[300]}`,
                           borderRadius: '14px',
                           boxShadow: '0 3px 10px rgba(168, 85, 247, 0.15)',
@@ -524,7 +524,7 @@ export default function ReferensiQuran() {
                               textAlign: 'left',
                               borderBottom: `1px solid ${colors.emerald[100]}`,
                               background: selectedSurah === surah.number
-                                ? `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.green[100]} 100%)`
+                                ? 'linear-gradient(135deg, #D1FAE5 0%, #DCFCE7 100%)'
                                 : 'transparent',
                               transition: 'all 0.2s ease',
                               border: 'none',
@@ -736,9 +736,9 @@ export default function ReferensiQuran() {
                                   borderRadius: '16px',
                                   border: isWeekly
                                     ? `2px solid ${colors.emerald[400]}`
-                                    : `2px solid ${colors.gray[200]}`,
+                                    : '2px solid #E5E7EB',
                                   background: isWeekly
-                                    ? `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.green[100]} 100%)`
+                                    ? 'linear-gradient(135deg, #D1FAE5 0%, #DCFCE7 100%)'
                                     : `linear-gradient(135deg, ${colors.white} 0%, ${colors.emerald[50]}30 100%)`,
                                   transition: 'all 0.3s ease',
                                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
@@ -1311,4 +1311,5 @@ function TajwidGuide() {
     </div>
   );
 }
+
 
