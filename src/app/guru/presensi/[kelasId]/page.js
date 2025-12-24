@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
-  CalendarCheck2,
+  ClipboardCheck,
   Users,
   UserCheck,
   Clock,
@@ -14,6 +14,9 @@ import {
   ArrowLeft,
   Save,
   Loader2,
+  ChevronRight,
+  RefreshCw,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -29,6 +32,8 @@ export default function PresensiDetailPage() {
   const [presensiData, setPresensiData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (kelasId) {
@@ -100,6 +105,8 @@ export default function PresensiDetailPage() {
         }));
 
         setPresensiData(newData);
+        setIsSaved(data.presensi.length > 0);
+        setHasChanges(false);
       } else {
         const newData = siswaList.map((siswa) => ({
           siswaId: siswa.id,
@@ -110,6 +117,8 @@ export default function PresensiDetailPage() {
           presensiId: null,
         }));
         setPresensiData(newData);
+        setIsSaved(false);
+        setHasChanges(false);
       }
     } catch (error) {
       console.error('Error fetching presensi:', error);
@@ -119,9 +128,12 @@ export default function PresensiDetailPage() {
   const handleStatusChange = (siswaId, newStatus) => {
     setPresensiData((prev) =>
       prev.map((item) =>
-        item.siswaId === siswaId ? { ...item, status: newStatus } : item
+        item.siswaId === siswaId
+          ? { ...item, status: newStatus, keterangan: newStatus === 'HADIR' ? '' : item.keterangan }
+          : item
       )
     );
+    setHasChanges(true);
   };
 
   const handleKeteranganChange = (siswaId, keterangan) => {
@@ -130,6 +142,22 @@ export default function PresensiDetailPage() {
         item.siswaId === siswaId ? { ...item, keterangan } : item
       )
     );
+    setHasChanges(true);
+  };
+
+  const handleTandaiSemuaHadir = () => {
+    setPresensiData((prev) =>
+      prev.map((item) => ({ ...item, status: 'HADIR', keterangan: '' }))
+    );
+    setHasChanges(true);
+    toast.success('Semua siswa ditandai hadir');
+  };
+
+  const handleResetStatus = () => {
+    if (confirm('Yakin ingin mereset semua status?')) {
+      fetchPresensi();
+      toast.success('Status direset');
+    }
   };
 
   const handleSimpanPresensi = async () => {
@@ -159,15 +187,18 @@ export default function PresensiDetailPage() {
         throw new Error(error.message || 'Gagal menyimpan presensi');
       }
 
-      toast.success('Presensi berhasil disimpan!', {
+      toast.success('✅ Presensi berhasil disimpan!', {
         duration: 3000,
         style: {
           background: '#ECFDF5',
           color: '#059669',
           border: '1px solid #A7F3D0',
+          fontWeight: '600',
         },
       });
 
+      setIsSaved(true);
+      setHasChanges(false);
       fetchPresensi();
     } catch (error) {
       console.error('Error saving presensi:', error);
@@ -185,312 +216,160 @@ export default function PresensiDetailPage() {
     alfa: presensiData.filter((p) => p.status === 'ALFA').length,
   };
 
-  const today = new Date().toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
   return (
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div
-        className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-amber-50"
-        style={{ margin: '-32px', padding: '32px' }}
-      >
-        {/* Header */}
-        <div style={{ marginBottom: '28px' }}>
-          <button
-            onClick={() => router.push('/guru/presensi')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 16px',
-              background: 'white',
-              border: '1px solid #E5E7EB',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              marginBottom: '16px',
-              fontFamily: 'Poppins, sans-serif',
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = '#F9FAFB';
-              e.target.style.borderColor = '#059669';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'white';
-              e.target.style.borderColor = '#E5E7EB';
-            }}
-          >
-            <ArrowLeft size={18} />
-            Kembali ke Daftar Kelas
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)',
-              }}
+      <div className="space-y-6">
+        {/* Header with Breadcrumb */}
+        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-5 sm:p-6 text-white">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <button
+                onClick={() => router.push('/guru/presensi')}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors"
+              >
+                <ArrowLeft size={16} />
+                <span className="text-sm font-semibold hidden sm:inline">Kembali</span>
+              </button>
+              <ChevronRight size={16} className="text-white/60" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="bg-white/20 backdrop-blur-sm p-2.5 rounded-xl flex-shrink-0">
+                  <ClipboardCheck size={24} className="text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs sm:text-sm text-green-50 mb-0.5">Presensi</div>
+                  <h1 className="text-lg sm:text-2xl font-bold truncate">
+                    Kelas {kelas?.nama || '...'}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleSimpanPresensi}
+              disabled={presensiData.length === 0 || saving}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                presensiData.length === 0 || saving
+                  ? 'bg-white/20 text-white/50 cursor-not-allowed'
+                  : 'bg-white text-emerald-600 hover:bg-green-50 shadow-lg'
+              }`}
             >
-              <CalendarCheck2 size={28} style={{ color: 'white' }} />
-            </div>
-            <div>
-              <h1
-                style={{
-                  fontSize: '32px',
-                  fontWeight: '700',
-                  margin: 0,
-                  color: '#065F46',
-                  fontFamily: 'Poppins, sans-serif',
-                  letterSpacing: '-0.5px',
-                }}
-              >
-                Presensi Kelas {kelas?.nama || '...'}
-              </h1>
-              <p
-                style={{
-                  margin: 0,
-                  color: '#6B7280',
-                  fontSize: '15px',
-                  fontFamily: 'Poppins, sans-serif',
-                }}
-              >
-                Catat kehadiran siswa untuk tanggal yang dipilih
-              </p>
-            </div>
+              {saving ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  <Save size={18} />
+                  Simpan
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Filter Tanggal */}
-        <div
-          style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            border: '1px solid rgba(5, 150, 105, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1', minWidth: '200px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#374151',
-                  marginBottom: '8px',
-                  fontFamily: 'Poppins, sans-serif',
-                }}
-              >
-                Pilih Tanggal
+        {/* Compact Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                Tanggal Presensi
               </label>
               <input
                 type="date"
                 value={tanggal}
                 onChange={(e) => setTanggal(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  border: '1.5px solid #E5E7EB',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontFamily: 'Poppins, sans-serif',
-                  transition: 'all 0.2s',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#059669')}
-                onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
-
-            <div style={{ flex: '1', minWidth: '200px', paddingTop: '28px' }}>
+            <div className="flex items-end gap-2">
               <button
-                onClick={handleSimpanPresensi}
-                disabled={presensiData.length === 0 || saving}
-                style={{
-                  width: '100%',
-                  padding: '12px 24px',
-                  background:
-                    presensiData.length === 0 || saving
-                      ? '#E5E7EB'
-                      : 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-                  color: presensiData.length === 0 || saving ? '#9CA3AF' : 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: presensiData.length === 0 || saving ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow:
-                    presensiData.length === 0 || saving
-                      ? 'none'
-                      : '0 2px 8px rgba(5, 150, 105, 0.2)',
-                  fontFamily: 'Poppins, sans-serif',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                }}
+                onClick={handleTandaiSemuaHadir}
+                disabled={presensiData.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
               >
-                {saving ? (
-                  <>
-                    <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                    Menyimpan...
-                  </>
-                ) : (
-                  <>
-                    <Save size={18} />
-                    Simpan Presensi
-                  </>
-                )}
+                <UserCheck size={16} />
+                <span className="hidden sm:inline">Tandai Semua Hadir</span>
+                <span className="sm:hidden">Semua Hadir</span>
               </button>
+              <button
+                onClick={handleResetStatus}
+                disabled={presensiData.length === 0}
+                className="flex items-center gap-2 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
+              >
+                <RefreshCw size={16} />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            </div>
+            <div className="flex items-end">
+              {isSaved && !hasChanges && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+                  <CheckCircle2 size={16} />
+                  <span className="text-sm font-semibold">Tersimpan</span>
+                </div>
+              )}
+              {hasChanges && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 rounded-lg border border-amber-200">
+                  <AlertCircle size={16} />
+                  <span className="text-sm font-semibold">Ada Perubahan</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Statistics Cards */}
         {!loading && presensiData.length > 0 && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '16px',
-              marginBottom: '28px',
-            }}
-          >
-            <StatCard
-              icon={Users}
-              label="Total Siswa"
-              value={stats.total}
-              color="#059669"
-              bgGradient="linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)"
-              borderColor="#A7F3D0"
-            />
-            <StatCard
-              icon={UserCheck}
-              label="Hadir"
-              value={stats.hadir}
-              color="#10B981"
-              bgGradient="linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)"
-              borderColor="#86EFAC"
-            />
-            <StatCard
-              icon={Clock}
-              label="Izin"
-              value={stats.izin}
-              color="#FBBF24"
-              bgGradient="linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)"
-              borderColor="#FDE68A"
-            />
-            <StatCard
-              icon={AlertCircle}
-              label="Sakit"
-              value={stats.sakit}
-              color="#3B82F6"
-              bgGradient="linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)"
-              borderColor="#BFDBFE"
-            />
-            <StatCard
-              icon={XCircle}
-              label="Alfa"
-              value={stats.alfa}
-              color="#EF4444"
-              bgGradient="linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)"
-              borderColor="#FCA5A5"
-            />
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <StatCard label="Total" value={stats.total} icon={Users} color="emerald" />
+            <StatCard label="Hadir" value={stats.hadir} icon={UserCheck} color="green" />
+            <StatCard label="Izin" value={stats.izin} icon={Clock} color="amber" />
+            <StatCard label="Sakit" value={stats.sakit} icon={AlertCircle} color="blue" />
+            <StatCard label="Alfa" value={stats.alfa} icon={XCircle} color="red" />
           </div>
         )}
 
         {/* Table Presensi */}
         {loading ? (
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '80px 20px',
-              textAlign: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            }}
-          >
-            <Loader2
-              size={48}
-              style={{ color: '#059669', margin: '0 auto 16px', animation: 'spin 1s linear infinite' }}
-            />
-            <p
-              style={{
-                fontSize: '16px',
-                color: '#6B7280',
-                margin: 0,
-                fontFamily: 'Poppins, sans-serif',
-              }}
-            >
-              Memuat data siswa...
-            </p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-16 text-center">
+            <Loader2 size={48} className="animate-spin text-emerald-600 mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">Memuat data siswa...</p>
           </div>
         ) : presensiData.length === 0 ? (
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '80px 20px',
-              textAlign: 'center',
-              border: '2px dashed #E5E7EB',
-            }}
-          >
-            <Users size={64} style={{ color: '#D1D5DB', margin: '0 auto 20px' }} />
-            <p
-              style={{
-                fontSize: '18px',
-                color: '#374151',
-                margin: '0 0 8px 0',
-                fontWeight: '600',
-                fontFamily: 'Poppins, sans-serif',
-              }}
-            >
+          <div className="bg-white rounded-xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+            <Users size={64} className="text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
               Tidak ada siswa di kelas ini
-            </p>
+            </h3>
           </div>
         ) : (
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '28px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-              border: '1px solid rgba(5, 150, 105, 0.08)',
-            }}
-          >
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr
-                    style={{
-                      background: 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)',
-                      borderBottom: '2px solid #E5E7EB',
-                    }}
-                  >
-                    <th style={headerStyle}>No</th>
-                    <th style={{ ...headerStyle, textAlign: 'left' }}>Nama Siswa</th>
-                    <th style={{ ...headerStyle, minWidth: '400px' }}>Status Kehadiran</th>
-                    <th style={{ ...headerStyle, textAlign: 'left' }}>Keterangan</th>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-emerald-500 to-green-600 border-b">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Users size={20} />
+                Daftar Kehadiran Siswa ({stats.total} siswa)
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b-2 border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                      No
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                      Nama Siswa
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
+                      Status Kehadiran
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                      Keterangan
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-200">
                   {presensiData.map((item, index) => (
                     <PresensiRow
                       key={item.siswaId}
@@ -504,254 +383,120 @@ export default function PresensiDetailPage() {
               </table>
             </div>
 
-            {/* Signature Section */}
-            <div
-              style={{
-                marginTop: '40px',
-                paddingTop: '24px',
-                borderTop: '2px solid #E5E7EB',
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <div style={{ textAlign: 'center', minWidth: '250px' }}>
-                <p
-                  style={{
-                    margin: '0 0 8px 0',
-                    fontSize: '14px',
-                    color: '#6B7280',
-                    fontFamily: 'Poppins, sans-serif',
-                  }}
-                >
-                  Bandar Lampung, {today}
-                </p>
-                <p
-                  style={{
-                    margin: '0 0 60px 0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    fontFamily: 'Poppins, sans-serif',
-                  }}
-                >
-                  Guru Pengampu,
-                </p>
-                <div
-                  style={{
-                    borderBottom: '2px solid #374151',
-                    marginBottom: '8px',
-                  }}
-                />
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#1F2937',
-                    fontFamily: 'Poppins, sans-serif',
-                  }}
-                >
-                  {session?.user?.name || '...'}
-                </p>
+            {/* Footer with recorder info */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>Dicatat oleh: <strong>{session?.user?.name || '...'}</strong></span>
+                <span>{new Date(tanggal).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</span>
               </div>
             </div>
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </GuruLayout>
   );
 }
 
-function StatCard({ icon: Icon, label, value, color, bgGradient, borderColor }) {
+function StatCard({ label, value, icon: Icon, color }) {
+  const colors = {
+    emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    green: 'bg-green-100 text-green-700 border-green-200',
+    amber: 'bg-amber-100 text-amber-700 border-amber-200',
+    blue: 'bg-blue-100 text-blue-700 border-blue-200',
+    red: 'bg-red-100 text-red-700 border-red-200',
+  };
+
   return (
-    <div
-      style={{
-        background: bgGradient,
-        borderRadius: '14px',
-        padding: '20px',
-        border: `1px solid ${borderColor}`,
-        boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: `0 4px 10px ${color}33`,
-          }}
-        >
-          <Icon size={22} style={{ color: 'white' }} />
-        </div>
+    <div className={`${colors[color]} rounded-xl border-2 p-4`}>
+      <div className="flex items-center justify-between">
         <div>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '13px',
-              color: color,
-              fontWeight: '600',
-              fontFamily: 'Poppins, sans-serif',
-            }}
-          >
-            {label}
-          </p>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '28px',
-              fontWeight: '700',
-              color: color,
-              fontFamily: 'Poppins, sans-serif',
-            }}
-          >
-            {value}
-          </p>
+          <p className="text-xs font-semibold mb-1 opacity-75">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
         </div>
+        <Icon size={24} className="opacity-50" />
       </div>
     </div>
   );
 }
 
 function PresensiRow({ item, index, onStatusChange, onKeteranganChange }) {
-  const isEven = index % 2 === 0;
-  const [hover, setHover] = useState(false);
-
   const statusOptions = [
-    { value: 'HADIR', label: 'Hadir', emoji: '✅', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0' },
-    { value: 'IZIN', label: 'Izin', emoji: '🟡', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-    { value: 'SAKIT', label: 'Sakit', emoji: '🔵', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
-    { value: 'ALFA', label: 'Alfa', emoji: '🔴', color: '#B91C1C', bg: '#FEE2E2', border: '#FCA5A5' },
+    { value: 'HADIR', label: 'Hadir', color: 'emerald', emoji: '✅' },
+    { value: 'IZIN', label: 'Izin', color: 'amber', emoji: '🟡' },
+    { value: 'SAKIT', label: 'Sakit', color: 'blue', emoji: '💊' },
+    { value: 'ALFA', label: 'Alfa', color: 'red', emoji: '❌' },
   ];
 
+  const colorClasses = {
+    emerald: 'bg-emerald-500 hover:bg-emerald-600',
+    amber: 'bg-amber-500 hover:bg-amber-600',
+    blue: 'bg-blue-500 hover:bg-blue-600',
+    red: 'bg-red-500 hover:bg-red-600',
+  };
+
+  const selectedOption = statusOptions.find(opt => opt.value === item.status);
+  const showKeterangan = item.status !== 'HADIR';
+
   return (
-    <tr
-      style={{
-        background: hover ? '#F0FDF4' : isEven ? '#FAFBFC' : 'white',
-        borderBottom: '1px solid #F3F4F6',
-        transition: 'all 0.2s',
-      }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      <td style={{ ...cellStyle, textAlign: 'center', width: '60px' }}>{index + 1}</td>
-      <td style={cellStyle}>
-        <div>
-          <div style={{ fontWeight: '600', fontSize: '15px', color: '#1F2937' }}>
-            {item.nama}
-          </div>
-          <div style={{ fontSize: '13px', color: '#9CA3AF' }}>NIS: {item.nis}</div>
-        </div>
+    <tr className="hover:bg-emerald-50 transition-colors">
+      <td className="px-4 py-3 text-center text-sm font-medium text-gray-900">
+        {index + 1}
       </td>
-      <td style={{ ...cellStyle, padding: '16px 8px' }}>
-        <div
-          style={{
-            display: 'flex',
-            gap: '12px',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
-          {statusOptions.map((option) => (
-            <label
-              key={option.value}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                transition: 'all 0.2s',
-                background: item.status === option.value ? option.bg : 'transparent',
-                border: item.status === option.value ? `1.5px solid ${option.border}` : '1.5px solid transparent',
-              }}
-            >
-              <input
-                type="radio"
-                name={`status-${item.siswaId}`}
-                value={option.value}
-                checked={item.status === option.value}
-                onChange={(e) => onStatusChange(item.siswaId, e.target.value)}
-                style={{
-                  cursor: 'pointer',
-                  accentColor: option.color,
-                  width: '18px',
-                  height: '18px',
-                }}
-              />
-              <span
-                style={{
-                  fontSize: '14px',
-                  fontWeight: item.status === option.value ? '600' : '500',
-                  color: item.status === option.value ? option.color : '#6B7280',
-                  fontFamily: 'Poppins, sans-serif',
-                }}
+      <td className="px-4 py-3">
+        <div className="font-semibold text-gray-900">{item.nama}</div>
+        <div className="text-xs text-gray-500">NIS: {item.nis}</div>
+      </td>
+      <td className="px-4 py-3">
+        {/* Desktop: Segmented Button */}
+        <div className="hidden md:flex gap-2 justify-center">
+          {statusOptions.map((option) => {
+            const isActive = item.status === option.value;
+            return (
+              <button
+                key={option.value}
+                onClick={() => onStatusChange(item.siswaId, option.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  isActive
+                    ? `${colorClasses[option.color]} text-white shadow-md`
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
                 {option.emoji} {option.label}
-              </span>
-            </label>
-          ))}
+              </button>
+            );
+          })}
         </div>
+        {/* Mobile: Dropdown */}
+        <select
+          value={item.status}
+          onChange={(e) => onStatusChange(item.siswaId, e.target.value)}
+          className="md:hidden w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        >
+          {statusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.emoji} {option.label}
+            </option>
+          ))}
+        </select>
       </td>
-      <td style={cellStyle}>
-        <input
-          type="text"
-          value={item.keterangan}
-          onChange={(e) => onKeteranganChange(item.siswaId, e.target.value)}
-          placeholder="Tambahkan keterangan..."
-          style={{
-            width: '100%',
-            padding: '10px 14px',
-            border: '1.5px solid #E5E7EB',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontFamily: 'Poppins, sans-serif',
-            transition: 'all 0.2s',
-          }}
-          onFocus={(e) => {
-            e.target.style.borderColor = '#059669';
-            e.target.style.boxShadow = '0 0 0 3px rgba(5, 150, 105, 0.08)';
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = '#E5E7EB';
-            e.target.style.boxShadow = 'none';
-          }}
-        />
+      <td className="px-4 py-3">
+        {showKeterangan ? (
+          <input
+            type="text"
+            value={item.keterangan}
+            onChange={(e) => onKeteranganChange(item.siswaId, e.target.value)}
+            placeholder="Tambahkan keterangan..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          />
+        ) : (
+          <span className="text-sm text-gray-400 italic">-</span>
+        )}
       </td>
     </tr>
   );
 }
-
-const headerStyle = {
-  padding: '16px 14px',
-  textAlign: 'center',
-  fontSize: '13px',
-  fontWeight: '700',
-  color: '#374151',
-  fontFamily: 'Poppins, sans-serif',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
-};
-
-const cellStyle = {
-  padding: '16px 14px',
-  fontSize: '14px',
-  color: '#1F2937',
-  fontFamily: 'Poppins, sans-serif',
-};
