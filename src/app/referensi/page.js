@@ -588,60 +588,57 @@ export default function ReferensiQuran() {
 
                       {!loading && surahData && (
                         <div className="space-y-6">
-                          {/* Surah Header - Konsisten dengan Header Besar */}
-                          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-3xl p-8 md:p-10 text-white shadow-xl">
-                            <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-                              {/* Kiri: Info Surah */}
-                              <div className="flex-1 min-w-[250px]">
-                                <h2 className="text-5xl md:text-6xl font-arabic mb-4 leading-tight drop-shadow-md">
-                                  {surahData.name}
-                                </h2>
-                                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">
-                                  {surahData.englishName}
-                                </h3>
-                                <div className="flex flex-wrap items-center gap-3 text-sm md:text-base text-green-50">
-                                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                                    <span className="font-semibold">{surahData.englishNameTranslation}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                                    <span className="font-semibold">{surahData.numberOfAyahs} Ayat</span>
-                                  </div>
-                                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                                    <span className="font-semibold">
-                                      {surahData.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
+                          {/* Surah Header - Struktur seperti versi siswa */}
+                          <div className="bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 rounded-3xl px-4 py-5 md:px-6 md:py-6 text-white shadow-xl relative overflow-hidden">
+                            {/* Tombol floating di pojok kanan atas */}
+                            <div className="absolute top-4 right-4 flex gap-2 z-10">
+                              <button
+                                onClick={() => setShowTajwid(!showTajwid)}
+                                className={`px-4 py-2 rounded-xl font-semibold transition-all text-xs md:text-sm shadow-lg hover:scale-105 ${
+                                  showTajwid
+                                    ? 'bg-white text-green-600'
+                                    : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
+                                }`}
+                              >
+                                Mode Tajwid
+                              </button>
 
-                              {/* Kanan: Tombol Mode Tajwid & Tandai */}
-                              <div className="flex flex-wrap gap-3 items-start">
-                                <button
-                                  onClick={() => setShowTajwid(!showTajwid)}
-                                  className={`px-5 py-3 rounded-xl font-semibold transition-all text-sm shadow-lg hover:scale-105 ${
-                                    showTajwid
-                                      ? 'bg-white text-green-600 shadow-white/30'
-                                      : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
-                                  }`}
-                                >
-                                  Mode Tajwid
-                                </button>
+                              <button
+                                onClick={handleBookmark}
+                                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 text-xs md:text-sm shadow-lg text-white hover:scale-105"
+                              >
+                                <Bookmark size={14} />
+                                Tandai
+                              </button>
+                            </div>
 
-                                <button
-                                  onClick={handleBookmark}
-                                  className="px-5 py-3 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg text-white hover:scale-105"
-                                >
-                                  <Bookmark size={16} />
-                                  Tandai
-                                </button>
+                            {/* Info Surah - Align kiri, urutan: Arab → Latin → Info */}
+                            <div className="space-y-2 pr-32 md:pr-40">
+                              {/* Baris 1: Nama Arab */}
+                              <h2 className="text-4xl md:text-6xl font-arabic leading-tight drop-shadow-md">
+                                {surahData.name}
+                              </h2>
+
+                              {/* Baris 2: Nama Latin */}
+                              <h3 className="text-2xl md:text-4xl font-bold text-white">
+                                {surahData.englishName}
+                              </h3>
+
+                              {/* Baris 3: Info Jumlah Ayat + Kategori */}
+                              <div className="flex items-center gap-2 text-sm md:text-base text-green-50 font-medium">
+                                <span>Jumlah Ayat: {surahData.numberOfAyahs}</span>
+                                <span>•</span>
+                                <span>
+                                  Kategori: {surahData.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
+                                </span>
                               </div>
                             </div>
 
                             {/* Last Bookmark Indicator */}
                             {lastBookmark && lastBookmark.surahNumber === surahData.number && (
-                              <div className="pt-4 border-t border-white/20">
-                                <div className="flex items-center gap-2 text-sm text-green-100 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full inline-flex">
-                                  <Bookmark size={16} className="fill-green-100" />
+                              <div className="mt-4 pt-4 border-t border-white/20">
+                                <div className="flex items-center gap-2 text-xs md:text-sm text-green-100 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full inline-flex">
+                                  <Bookmark size={14} className="fill-green-100" />
                                   <span className="font-medium">Terakhir ditandai: Ayat {lastBookmark.ayah}</span>
                                 </div>
                               </div>
