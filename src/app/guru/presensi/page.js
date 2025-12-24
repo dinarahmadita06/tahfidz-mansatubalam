@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
-  CalendarCheck2,
+  ClipboardCheck,
   Users,
   BookOpen,
   ChevronRight,
   Loader2,
-  AlertCircle,
+  CalendarCheck,
+  CheckCircle2,
+  School,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -32,77 +34,11 @@ export default function PresensiPage() {
       }
 
       const data = await response.json();
-
-      // Jika tidak ada data dari API, gunakan contoh data
-      if (!data.kelas || data.kelas.length === 0) {
-        setKelasList([
-          {
-            id: 'sample-1',
-            nama: '10 IPA 1',
-            status: 'AKTIF',
-            _count: { siswa: 32 },
-            tahunAjaran: { nama: '2024/2025' }
-          },
-          {
-            id: 'sample-2',
-            nama: '10 IPA 2',
-            status: 'AKTIF',
-            _count: { siswa: 30 },
-            tahunAjaran: { nama: '2024/2025' }
-          },
-          {
-            id: 'sample-3',
-            nama: '11 IPS 1',
-            status: 'AKTIF',
-            _count: { siswa: 28 },
-            tahunAjaran: { nama: '2024/2025' }
-          },
-          {
-            id: 'sample-4',
-            nama: '12 IPA 1',
-            status: 'AKTIF',
-            _count: { siswa: 25 },
-            tahunAjaran: { nama: '2024/2025' }
-          }
-        ]);
-      } else {
-        setKelasList(data.kelas || []);
-      }
+      setKelasList(data.kelas || []);
     } catch (error) {
       console.error('Error fetching kelas:', error);
-      toast.error('Menampilkan data contoh karena gagal memuat data dari server');
-
-      // Tampilkan contoh data jika terjadi error
-      setKelasList([
-        {
-          id: 'sample-1',
-          nama: '10 IPA 1',
-          status: 'AKTIF',
-          _count: { siswa: 32 },
-          tahunAjaran: { nama: '2024/2025' }
-        },
-        {
-          id: 'sample-2',
-          nama: '10 IPA 2',
-          status: 'AKTIF',
-          _count: { siswa: 30 },
-          tahunAjaran: { nama: '2024/2025' }
-        },
-        {
-          id: 'sample-3',
-          nama: '11 IPS 1',
-          status: 'AKTIF',
-          _count: { siswa: 28 },
-          tahunAjaran: { nama: '2024/2025' }
-        },
-        {
-          id: 'sample-4',
-          nama: '12 IPA 1',
-          status: 'AKTIF',
-          _count: { siswa: 25 },
-          tahunAjaran: { nama: '2024/2025' }
-        }
-      ]);
+      toast.error('Gagal memuat data kelas');
+      setKelasList([]);
     } finally {
       setLoading(false);
     }
@@ -112,297 +48,182 @@ export default function PresensiPage() {
     router.push(`/guru/presensi/${kelasId}`);
   };
 
+  // Calculate statistics
+  const totalKelas = kelasList.length;
+  const totalSiswa = kelasList.reduce((sum, kelas) => sum + (kelas._count?.siswa || 0), 0);
+
+  // TODO: Implement proper presensi hari ini calculation from API
+  const presensiHariIni = 0; // Placeholder - should be calculated from actual presensi data
+
+  if (loading) {
+    return (
+      <GuruLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 size={48} className="animate-spin text-emerald-600 mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">Memuat data...</p>
+          </div>
+        </div>
+      </GuruLayout>
+    );
+  }
+
   return (
     <GuruLayout>
       <Toaster position="top-right" />
 
-      {/* Background Gradient Container */}
-      <div
-        className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-amber-50"
-        style={{ margin: '-32px', padding: '32px' }}
-      >
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)',
-              }}
-            >
-              <CalendarCheck2 size={28} style={{ color: 'white' }} />
-            </div>
-            <div>
-              <h1
-                style={{
-                  fontSize: '32px',
-                  fontWeight: '700',
-                  margin: 0,
-                  color: '#065F46',
-                  fontFamily: 'Poppins, sans-serif',
-                  letterSpacing: '-0.5px',
-                }}
-              >
-                Presensi Siswa
-              </h1>
-              <p
-                style={{
-                  margin: 0,
-                  color: '#6B7280',
-                  fontSize: '15px',
-                  fontFamily: 'Poppins, sans-serif',
-                }}
-              >
-                Pilih kelas untuk mencatat kehadiran siswa
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Info Card */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
-            borderRadius: '12px',
-            padding: '16px 20px',
-            marginBottom: '28px',
-            border: '1px solid #BFDBFE',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}
-        >
-          <AlertCircle size={20} style={{ color: '#1D4ED8', flexShrink: 0 }} />
-          <p
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              color: '#1E40AF',
-              fontFamily: 'Poppins, sans-serif',
-            }}
-          >
-            <strong>Informasi:</strong> Pilih salah satu kelas di bawah untuk mulai mencatat presensi siswa.
-          </p>
-        </div>
-
-        {/* Loading State */}
-        {loading ? (
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '80px 20px',
-              textAlign: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            }}
-          >
-            <Loader2 size={48} style={{ color: '#059669', margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} />
-            <p
-              style={{
-                fontSize: '16px',
-                color: '#6B7280',
-                margin: 0,
-                fontFamily: 'Poppins, sans-serif',
-              }}
-            >
-              Memuat data kelas...
-            </p>
-            <style jsx>{`
-              @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-              }
-            `}</style>
-          </div>
-        ) : kelasList.length === 0 ? (
-          /* Empty State */
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              padding: '80px 20px',
-              textAlign: 'center',
-              border: '2px dashed #E5E7EB',
-            }}
-          >
-            <BookOpen size={64} style={{ color: '#D1D5DB', margin: '0 auto 20px' }} />
-            <p
-              style={{
-                fontSize: '18px',
-                color: '#374151',
-                margin: '0 0 8px 0',
-                fontWeight: '600',
-                fontFamily: 'Poppins, sans-serif',
-              }}
-            >
-              Belum ada kelas yang diampu
-            </p>
-            <p
-              style={{
-                fontSize: '15px',
-                color: '#9CA3AF',
-                margin: 0,
-                fontFamily: 'Poppins, sans-serif',
-              }}
-            >
-              Anda belum ditugaskan untuk mengampu kelas manapun.
-            </p>
-          </div>
-        ) : (
-          /* Kelas List */
-          <div>
-            <div
-              style={{
-                marginBottom: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
+      <div className="space-y-6">
+        {/* Header Gradient Hijau */}
+        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-8 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+                <ClipboardCheck size={40} className="text-white" />
+              </div>
               <div>
-                <h2
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    margin: 0,
-                    color: '#1F2937',
-                    fontFamily: 'Poppins, sans-serif',
-                  }}
-                >
-                  Daftar Kelas yang Diampu
-                </h2>
-                <p
-                  style={{
-                    fontSize: '14px',
-                    color: '#6B7280',
-                    margin: '4px 0 0 0',
-                    fontFamily: 'Poppins, sans-serif',
-                  }}
-                >
-                  Total {kelasList.length} kelas
-                </p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl font-bold">Presensi Siswa</h1>
+                  <span className="bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
+                    Kehadiran
+                  </span>
+                </div>
+                <p className="text-green-50 text-lg">Pilih kelas untuk mencatat kehadiran siswa</p>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                gap: '20px',
-              }}
-            >
-              {kelasList.map((kelas) => (
-                <div
-                  key={kelas.id}
-                  onClick={() => handleKelasClick(kelas.id)}
-                  style={{
-                    background: 'white',
-                    borderRadius: '14px',
-                    padding: '24px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    border: '1px solid #E5E7EB',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(5, 150, 105, 0.15)';
-                    e.currentTarget.style.borderColor = '#10B981';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
-                    e.currentTarget.style.borderColor = '#E5E7EB';
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                    <div
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 10px rgba(5, 150, 105, 0.2)',
-                      }}
-                    >
-                      <BookOpen size={24} style={{ color: 'white' }} />
-                    </div>
-                    <ChevronRight size={24} style={{ color: '#9CA3AF' }} />
-                  </div>
-
-                  <h3
-                    style={{
-                      fontSize: '20px',
-                      fontWeight: '700',
-                      margin: '0 0 8px 0',
-                      color: '#1F2937',
-                      fontFamily: 'Poppins, sans-serif',
-                    }}
-                  >
-                    Kelas {kelas.nama}
-                  </h3>
-
-                  <div style={{ marginBottom: '12px' }}>
-                    <div
-                      style={{
-                        display: 'inline-block',
-                        padding: '4px 12px',
-                        background: kelas.status === 'AKTIF'
-                          ? 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)'
-                          : 'linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)',
-                        color: kelas.status === 'AKTIF' ? '#059669' : '#B91C1C',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        fontFamily: 'Poppins, sans-serif',
-                        border: kelas.status === 'AKTIF' ? '1px solid #A7F3D0' : '1px solid #FCA5A5',
-                      }}
-                    >
-                      {kelas.status === 'AKTIF' ? '✓ Aktif' : '✗ Nonaktif'}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                    <Users size={16} style={{ color: '#6B7280' }} />
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '14px',
-                        color: '#6B7280',
-                        fontFamily: 'Poppins, sans-serif',
-                      }}
-                    >
-                      {kelas._count?.siswa || 0} siswa
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <CalendarCheck2 size={16} style={{ color: '#6B7280' }} />
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '14px',
-                        color: '#6B7280',
-                        fontFamily: 'Poppins, sans-serif',
-                      }}
-                    >
-                      {kelas.tahunAjaran?.nama || 'Tidak ada tahun ajaran'}
-                    </p>
-                  </div>
-                </div>
-              ))}
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: Total Kelas Diampu */}
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-600 text-sm font-semibold mb-1">TOTAL KELAS DIAMPU</p>
+                <h3 className="text-4xl font-bold text-emerald-700">{totalKelas}</h3>
+              </div>
+              <div className="bg-emerald-100 p-4 rounded-full">
+                <School size={32} className="text-emerald-600" />
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Card 2: Total Siswa */}
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-semibold mb-1">TOTAL SISWA</p>
+                <h3 className="text-4xl font-bold text-blue-700">{totalSiswa}</h3>
+              </div>
+              <div className="bg-blue-100 p-4 rounded-full">
+                <Users size={32} className="text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Presensi Hari Ini */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-amber-600 text-sm font-semibold mb-1">PRESENSI HARI INI</p>
+                <h3 className="text-4xl font-bold text-amber-700">{presensiHariIni}</h3>
+                <p className="text-amber-600 text-xs mt-1">kelas sudah diisi</p>
+              </div>
+              <div className="bg-amber-100 p-4 rounded-full">
+                <CheckCircle2 size={32} className="text-amber-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content - Daftar Kelas */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-500 to-green-600">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <BookOpen size={20} />
+              Daftar Kelas yang Diampu
+            </h2>
+          </div>
+
+          <div className="p-6">
+            {kelasList.length === 0 ? (
+              /* Empty State */
+              <div className="py-16 text-center">
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center">
+                    <BookOpen size={48} className="text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Belum Ada Kelas yang Diampu</h3>
+                    <p className="text-gray-600">Anda belum ditugaskan untuk mengampu kelas manapun.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Kelas Grid */
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {kelasList.map((kelas) => (
+                  <div
+                    key={kelas.id}
+                    onClick={() => handleKelasClick(kelas.id)}
+                    className="group bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 p-6 cursor-pointer transition-all duration-300 hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-3 rounded-xl shadow-md group-hover:shadow-lg transition-shadow">
+                        <BookOpen size={28} className="text-white" />
+                      </div>
+                      <ChevronRight size={24} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">
+                      Kelas {kelas.nama}
+                    </h3>
+
+                    {/* Status Badge */}
+                    <div className="mb-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                          kelas.status === 'AKTIF'
+                            ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                            : 'bg-red-100 text-red-700 border-red-300'
+                        }`}
+                      >
+                        {kelas.status === 'AKTIF' ? (
+                          <>
+                            <CheckCircle2 size={14} />
+                            Aktif
+                          </>
+                        ) : (
+                          'Nonaktif'
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Meta Info */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Users size={16} className="text-gray-400" />
+                        <span className="font-medium">{kelas._count?.siswa || 0} siswa</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <CalendarCheck size={16} className="text-gray-400" />
+                        <span className="font-medium">{kelas.tahunAjaran?.nama || 'Tidak ada TA'}</span>
+                      </div>
+                    </div>
+
+                    {/* CTA Button */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between text-emerald-600 font-semibold text-sm group-hover:text-emerald-700">
+                        <span>Catat Presensi</span>
+                        <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </GuruLayout>
   );
