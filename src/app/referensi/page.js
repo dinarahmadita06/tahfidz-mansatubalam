@@ -451,7 +451,7 @@ export default function ReferensiQuran() {
                             style={{
                               width: '100%',
                               padding: '14px 16px 14px 48px',
-                              border: `2px solid ${colors.emerald[200]}`,
+                              border: '2px solid #A7F3D0',
                               borderRadius: '12px',
                               fontSize: '14px',
                               fontFamily: '"Poppins", system-ui, sans-serif',
@@ -510,7 +510,7 @@ export default function ReferensiQuran() {
                       <div style={{
                         maxHeight: '600px',
                         overflowY: 'auto',
-                        border: `2px solid ${colors.emerald[200]}`,
+                        border: '2px solid #A7F3D0',
                         borderRadius: '16px',
                         background: `linear-gradient(to bottom, ${colors.white} 0%, ${colors.emerald[50]}40 100%)`,
                       }}>
@@ -708,7 +708,7 @@ export default function ReferensiQuran() {
                             padding: '20px',
                             background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.green[50]} 100%)`,
                             borderRadius: '14px',
-                            border: `2px solid ${colors.emerald[200]}`,
+                            border: '2px solid #A7F3D0',
                           }}>
                             <p style={{
                               fontSize: '32px',
@@ -927,7 +927,7 @@ export default function ReferensiQuran() {
                 style={{
                   width: '100%',
                   padding: '14px 16px',
-                  border: `2px solid ${colors.emerald[200]}`,
+                  border: '2px solid #A7F3D0',
                   borderRadius: '12px',
                   fontSize: '14px',
                   marginBottom: '20px',
@@ -946,7 +946,7 @@ export default function ReferensiQuran() {
                   style={{
                     flex: 1,
                     padding: '14px 20px',
-                    border: `2px solid ${colors.gray[300]}`,
+                    border: '2px solid #D1D5DB',
                     background: colors.white,
                     color: colors.text.primary,
                     borderRadius: '12px',
@@ -1311,5 +1311,6 @@ function TajwidGuide() {
     </div>
   );
 }
+
 
 
