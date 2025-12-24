@@ -230,17 +230,10 @@ export default function TahsinDetailPage() {
   const validateMateriForm = () => {
     const newErrors = {};
     if (!materiFormData.judul.trim()) newErrors.judul = 'Judul materi wajib diisi';
-    if (!materiFormData.jenisMateri) newErrors.jenisMateri = 'Pilih jenis materi';
 
-    if (materiFormData.jenisMateri === 'YOUTUBE') {
-      if (!materiFormData.youtubeUrl.trim()) {
-        newErrors.youtubeUrl = 'URL YouTube wajib diisi';
-      }
-    } else {
-      // Check if file is selected (not uploaded URL)
-      if (!selectedFile) {
-        newErrors.fileUrl = 'File wajib diunggah';
-      }
+    // Only validate PDF file upload
+    if (!selectedFile) {
+      newErrors.fileUrl = 'File PDF wajib diunggah';
     }
 
     setMateriErrors(newErrors);
@@ -329,8 +322,8 @@ export default function TahsinDetailPage() {
       setSubmitting(true);
       let fileUrl = null;
 
-      // Upload file first if not YouTube
-      if (materiFormData.jenisMateri !== 'YOUTUBE' && selectedFile) {
+      // Upload PDF file first
+      if (selectedFile) {
         setUploadingFile(true);
         const uploadFormData = new FormData();
         uploadFormData.append('file', selectedFile);
@@ -344,21 +337,21 @@ export default function TahsinDetailPage() {
         const uploadData = await uploadResponse.json();
 
         if (!uploadResponse.ok) {
-          throw new Error(uploadData.message || 'Gagal mengunggah file');
+          throw new Error(uploadData.message || 'Gagal mengunggah file PDF');
         }
 
         fileUrl = uploadData.url;
         setUploadingFile(false);
       }
 
-      // Submit materi data
+      // Submit materi data (PDF only)
       const payload = {
         guruId: guruData.id,
         kelasId: kelasId,
         judul: materiFormData.judul.trim(),
-        jenisMateri: materiFormData.jenisMateri,
-        fileUrl: materiFormData.jenisMateri !== 'YOUTUBE' ? fileUrl : null,
-        youtubeUrl: materiFormData.jenisMateri === 'YOUTUBE' ? materiFormData.youtubeUrl.trim() : null,
+        jenisMateri: 'PDF', // Always PDF
+        fileUrl: fileUrl,
+        youtubeUrl: null, // Not used
         deskripsi: materiFormData.deskripsi.trim() || null,
       };
 
@@ -561,9 +554,10 @@ export default function TahsinDetailPage() {
           </div>
         </div>
 
-        {/* Tab Navigation - Now with 3 tabs */}
+        {/* Tab Navigation - Responsive (Horizontal on Desktop, Dropdown on Mobile) */}
         <div className="mb-6">
-          <div className="bg-white rounded-xl p-2 shadow-sm inline-flex gap-2">
+          {/* Desktop: Horizontal Tabs */}
+          <div className="hidden sm:block bg-white rounded-xl p-2 shadow-sm inline-flex gap-2">
             <button
               onClick={() => setActiveTab('pencatatan')}
               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
@@ -606,6 +600,20 @@ export default function TahsinDetailPage() {
                 <span>Materi Tahsin</span>
               </div>
             </button>
+          </div>
+
+          {/* Mobile: Dropdown Select */}
+          <div className="sm:hidden">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition shadow-sm"
+              style={{ fontFamily: 'Poppins, sans-serif' }}
+            >
+              <option value="pencatatan">📝 Pencatatan Tahsin</option>
+              <option value="riwayat">📋 Riwayat/Hasil</option>
+              <option value="materi">📄 Materi Tahsin</option>
+            </select>
           </div>
         </div>
 
@@ -1004,46 +1012,24 @@ export default function TahsinDetailPage() {
           )}
 
           {activeTab === 'materi' && (
-            /* MATERI TAB - Premium Calm Design */
+            /* MATERI TAB - Clean Design */
             <div className="space-y-6">
-              {/* Header Section with Gradient & Badge */}
-              <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 shadow-lg">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                      <FileText size={28} className="text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        Materi Tahsin
-                      </h2>
-                      <p className="text-emerald-50 text-sm" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        Kumpulan materi pembelajaran tahsin untuk {kelas?.nama}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                    <p className="text-white/80 text-xs font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      TOTAL MATERI
-                    </p>
-                    <p className="text-white text-2xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      {materiList.length}
-                    </p>
-                  </div>
+              {/* Simple Section Title */}
+              <div className="flex justify-between items-end border-b border-gray-200 pb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Materi Tahsin
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Kumpulan materi pembelajaran tahsin untuk {kelas?.nama}
+                  </p>
                 </div>
-              </div>
-
-              {/* Banner/Tip Section */}
-              <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-4">
-                <div className="w-10 h-10 bg-amber-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Lightbulb size={20} className="text-amber-700" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-amber-900 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Tips Materi Tahsin
-                  </h3>
-                  <p className="text-sm text-amber-700" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Gunakan materi yang terstruktur dan mudah dipahami siswa. Pastikan file PDF dapat diakses dengan baik.
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Total Materi
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-600" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    {materiList.length}
                   </p>
                 </div>
               </div>
@@ -1258,73 +1244,52 @@ export default function TahsinDetailPage() {
                     name="jenisMateri"
                     value={materiFormData.jenisMateri}
                     onChange={handleMateriInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-gray-50"
                     style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
+                    disabled
                   >
                     <option value="PDF">PDF</option>
-                    <option value="YOUTUBE">YouTube</option>
-                    <option value="VIDEO">Video</option>
                   </select>
+                  <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Saat ini hanya mendukung file PDF
+                  </p>
                 </div>
 
-                {materiFormData.jenisMateri === 'YOUTUBE' ? (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      URL YouTube <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="url"
-                      name="youtubeUrl"
-                      value={materiFormData.youtubeUrl}
-                      onChange={handleMateriInputChange}
-                      placeholder="https://www.youtube.com/watch?v=..."
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                        materiErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    />
-                    {materiErrors.youtubeUrl && (
-                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        {materiErrors.youtubeUrl}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      Upload File {materiFormData.jenisMateri === 'PDF' ? 'PDF' : 'Video'} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="file"
-                      accept={materiFormData.jenisMateri === 'PDF' ? 'application/pdf' : 'video/*'}
-                      onChange={handleFileUpload}
-                      disabled={uploadingFile || submitting}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                        materiErrors.fileUrl ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    />
-                    {selectedFile && !uploadingFile && (
-                      <p className="text-emerald-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
-                      </p>
-                    )}
-                    {uploadingFile && (
-                      <p className="text-blue-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        <Loader2 className="animate-spin" size={16} />
-                        <span>Mengunggah file...</span>
-                      </p>
-                    )}
-                    {materiErrors.fileUrl && !selectedFile && (
-                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        {materiErrors.fileUrl}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* PDF Upload Field */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Upload File PDF <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFileUpload}
+                    disabled={uploadingFile || submitting}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
+                      materiErrors.fileUrl ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
+                  />
+                  {selectedFile && !uploadingFile && (
+                    <p className="text-emerald-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    </p>
+                  )}
+                  {uploadingFile && (
+                    <p className="text-blue-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      <Loader2 className="animate-spin" size={16} />
+                      <span>Mengunggah file...</span>
+                    </p>
+                  )}
+                  {materiErrors.fileUrl && !selectedFile && (
+                    <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      {materiErrors.fileUrl}
+                    </p>
+                  )}
+                </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
