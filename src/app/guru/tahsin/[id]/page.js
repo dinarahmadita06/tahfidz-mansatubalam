@@ -7,7 +7,7 @@ import GuruLayout from '@/components/layout/GuruLayout';
 import {
   ArrowLeft, Save, Loader2, BookOpen, FileText, Plus, Trash2,
   Eye, Youtube, FileVideo, X, Filter, Search, Calendar, User,
-  ClipboardList, CheckCircle, AlertCircle
+  ClipboardList, CheckCircle, AlertCircle, Lightbulb, PlayCircle, Download
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -66,10 +66,33 @@ export default function TahsinDetailPage() {
   const [errors, setErrors] = useState({});
   const [materiErrors, setMateriErrors] = useState({});
 
+  // Search & Filter states for Materi Tahsin
+  const [materiSearchQuery, setMateriSearchQuery] = useState('');
+  const [materiSortBy, setMateriSortBy] = useState('terbaru'); // 'terbaru' | 'terlama'
+
   // Selected siswa for header display
   const selectedSiswa = useMemo(() => {
     return siswaList.find(s => s.id === formData.siswaId);
   }, [siswaList, formData.siswaId]);
+
+  // Filtered and sorted materi list
+  const filteredMateriList = useMemo(() => {
+    let filtered = materiList.filter((materi) => {
+      const matchesSearch =
+        materi.judul.toLowerCase().includes(materiSearchQuery.toLowerCase()) ||
+        (materi.deskripsi && materi.deskripsi.toLowerCase().includes(materiSearchQuery.toLowerCase()));
+      return matchesSearch;
+    });
+
+    // Sort by date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return materiSortBy === 'terbaru' ? dateB - dateA : dateA - dateB;
+    });
+
+    return filtered;
+  }, [materiList, materiSearchQuery, materiSortBy]);
 
   // Filtered tahsin list based on filter
   const filteredTahsinList = useMemo(() => {
@@ -981,16 +1004,85 @@ export default function TahsinDetailPage() {
           )}
 
           {activeTab === 'materi' && (
-            /* MATERI TAB */
-            <>
-              {/* Header dengan Tombol Tambah Materi */}
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-slate-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  Daftar Materi Tahsin
-                </h2>
+            /* MATERI TAB - Premium Calm Design */
+            <div className="space-y-6">
+              {/* Header Section with Gradient & Badge */}
+              <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 shadow-lg">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                      <FileText size={28} className="text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        Materi Tahsin
+                      </h2>
+                      <p className="text-emerald-50 text-sm" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        Kumpulan materi pembelajaran tahsin untuk {kelas?.nama}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                    <p className="text-white/80 text-xs font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      TOTAL MATERI
+                    </p>
+                    <p className="text-white text-2xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      {materiList.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Banner/Tip Section */}
+              <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-4">
+                <div className="w-10 h-10 bg-amber-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Lightbulb size={20} className="text-amber-700" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Tips Materi Tahsin
+                  </h3>
+                  <p className="text-sm text-amber-700" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Gunakan materi yang terstruktur dan mudah dipahami siswa. Pastikan file PDF dapat diakses dengan baik.
+                  </p>
+                </div>
+              </div>
+
+              {/* Search & Filter Bar */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1">
+                  {/* Search Input */}
+                  <div className="relative flex-1 min-w-[280px]">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <input
+                      type="text"
+                      placeholder="Cari materi tahsin..."
+                      value={materiSearchQuery}
+                      onChange={(e) => setMateriSearchQuery(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none transition-all bg-white shadow-sm hover:shadow-md"
+                      style={{ fontFamily: 'Poppins, sans-serif' }}
+                    />
+                  </div>
+
+                  {/* Sort Dropdown */}
+                  <div className="relative min-w-[160px]">
+                    <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <select
+                      value={materiSortBy}
+                      onChange={(e) => setMateriSortBy(e.target.value)}
+                      className="w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none appearance-none bg-white cursor-pointer shadow-sm hover:shadow-md transition-all font-medium"
+                      style={{ fontFamily: 'Poppins, sans-serif' }}
+                    >
+                      <option value="terbaru">Terbaru</option>
+                      <option value="terlama">Terlama</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Tambah Materi Button */}
                 <button
                   onClick={() => setShowMateriModal(true)}
-                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-semibold transition shadow-sm hover:shadow-md"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
                   style={{ fontFamily: 'Poppins, sans-serif' }}
                 >
                   <Plus size={20} />
@@ -998,78 +1090,121 @@ export default function TahsinDetailPage() {
                 </button>
               </div>
 
-              {/* Table/Card Materi */}
-              {materiList.length === 0 ? (
-                <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-                  <FileText size={48} className="mx-auto text-gray-300 mb-4" />
-                  <p className="text-slate-600" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Belum ada materi tahsin. Klik "Tambah Materi" untuk mengunggah materi baru.
+              {/* Grid Cards or Empty State */}
+              {filteredMateriList.length === 0 ? (
+                <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl p-16 text-center border-2 border-dashed border-gray-200 shadow-sm">
+                  <div className="flex justify-center mb-6">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-20"></div>
+                      <div className="relative p-6 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full shadow-sm">
+                        <FileText className="text-gray-400" size={56} />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-700 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    {materiSearchQuery
+                      ? 'Tidak ada materi yang sesuai'
+                      : 'Belum ada materi Tahsin'}
+                  </h3>
+                  <p className="text-gray-500 mb-8 max-w-md mx-auto" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    {materiSearchQuery
+                      ? 'Coba gunakan kata kunci yang berbeda'
+                      : 'Tambahkan materi tahsin pertama untuk membantu siswa belajar dengan lebih baik.'}
                   </p>
+                  {!materiSearchQuery && (
+                    <button
+                      onClick={() => setShowMateriModal(true)}
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                      style={{ fontFamily: 'Poppins, sans-serif' }}
+                    >
+                      <Plus size={22} />
+                      <span>Tambah Materi Pertama</span>
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {materiList.map((materi) => (
+                  {filteredMateriList.map((materi) => (
                     <div
                       key={materi.id}
-                      className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-emerald-300 hover:shadow-md transition"
+                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                          {getJenisMateriIcon(materi.jenisMateri)}
-                          <div>
-                            <h3 className="font-semibold text-slate-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                              {materi.judul}
-                            </h3>
-                          </div>
+                      {/* Thumbnail Area with Soft Background */}
+                      <div className="h-40 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative">
+                        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm"></div>
+                        {materi.jenisMateri === 'PDF' && (
+                          <FileText className="text-gray-300 relative z-10" size={72} />
+                        )}
+                        {materi.jenisMateri === 'VIDEO' && (
+                          <PlayCircle className="text-gray-300 relative z-10" size={72} />
+                        )}
+                        {materi.jenisMateri === 'YOUTUBE' && (
+                          <Youtube className="text-gray-300 relative z-10" size={72} />
+                        )}
+
+                        {/* Category Badge */}
+                        <div className="absolute top-3 left-3">
+                          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
+                            {materi.jenisMateri}
+                          </span>
                         </div>
+
+                        {/* Delete Button */}
                         <button
                           onClick={() => handleDeleteMateri(materi.id)}
-                          className="text-red-500 hover:text-red-700 transition"
+                          className="absolute top-3 right-3 w-8 h-8 bg-white/90 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} className="text-red-500" />
                         </button>
                       </div>
 
-                      {materi.deskripsi && (
-                        <p className="text-sm text-slate-600 mb-4 line-clamp-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                          {materi.deskripsi}
-                        </p>
-                      )}
+                      {/* Card Content */}
+                      <div className="p-5">
+                        <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                          {materi.judul}
+                        </h3>
 
-                      <div className="flex gap-2">
-                        {materi.jenisMateri === 'YOUTUBE' ? (
-                          <a
-                            href={materi.youtubeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-medium transition"
-                            style={{ fontFamily: 'Poppins, sans-serif' }}
-                          >
-                            <Eye size={18} />
-                            <span>Lihat Video</span>
-                          </a>
-                        ) : (
-                          <a
-                            href={materi.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-lg font-medium transition"
-                            style={{ fontFamily: 'Poppins, sans-serif' }}
-                          >
-                            <Eye size={18} />
-                            <span>Lihat File</span>
-                          </a>
+                        {materi.deskripsi && (
+                          <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                            {materi.deskripsi}
+                          </p>
                         )}
-                      </div>
 
-                      <p className="text-xs text-slate-400 mt-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        Ditambahkan: {new Date(materi.createdAt).toLocaleDateString('id-ID')}
-                      </p>
+                        {/* Meta Info */}
+                        <div className="flex items-center gap-2 text-xs text-gray-400 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                          <Calendar size={14} />
+                          <span>{new Date(materi.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                          <a
+                            href={materi.jenisMateri === 'YOUTUBE' ? materi.youtubeUrl : materi.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                            style={{ fontFamily: 'Poppins, sans-serif' }}
+                          >
+                            <Eye size={16} />
+                            <span>Lihat</span>
+                          </a>
+
+                          {materi.jenisMateri !== 'YOUTUBE' && (
+                            <a
+                              href={materi.fileUrl}
+                              download
+                              className="flex items-center justify-center px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                            >
+                              <Download size={16} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
 
