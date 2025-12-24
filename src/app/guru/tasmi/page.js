@@ -15,10 +15,7 @@ import {
   Edit,
   FileText,
   Send,
-  Plus,
-  Eye,
   Search,
-  Filter,
   BookCheck,
   Users,
   CalendarCheck,
@@ -539,11 +536,7 @@ export default function GuruTasmiPage() {
                         </div>
                         <div>
                           <h3 className="text-xl font-semibold text-gray-800 mb-2">Belum Ada Pengajuan Tasmi&apos;</h3>
-                          <p className="text-gray-600 mb-4">Daftarkan siswa untuk mengikuti ujian Tasmi&apos; Al-Qur&apos;an</p>
-                          <button className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold flex items-center gap-2 mx-auto">
-                            <Plus size={18} />
-                            Buat Jadwal Tasmi&apos;
-                          </button>
+                          <p className="text-gray-600">Pengajuan Tasmi&apos; akan muncul otomatis setelah siswa mendaftar.</p>
                         </div>
                       </div>
                     </td>
