@@ -54,4 +54,8 @@ update-tahun-ajaran.js
 public/signatures/*
 !public/signatures/.gitkeep
 
+# Uploaded files (PDFs, videos, etc.)
+public/uploads/*
+!public/uploads/.gitkeep
+
 .env*.local
