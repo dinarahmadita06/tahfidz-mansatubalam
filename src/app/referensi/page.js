@@ -362,66 +362,25 @@ export default function ReferensiQuran() {
 
   return (
     <Layout>
-      <div style={{
-        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.green[50]} 100%)`,
-        minHeight: '100vh',
-        position: 'relative',
-      }}>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 relative">
         {/* Subtle Pattern Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%239333EA' stroke-width='0.5' opacity='0.05'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%2322C55E' stroke-width='0.5' opacity='0.05'/%3E%3C/svg%3E")`,
+        <div className="absolute inset-0 bg-repeat pointer-events-none opacity-30 z-0" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%2310B981' stroke-width='0.5' opacity='0.05'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%2322C55E' stroke-width='0.5' opacity='0.05'/%3E%3C/svg%3E")`,
           backgroundSize: '60px 60px',
-          pointerEvents: 'none',
-          opacity: 0.3,
-          zIndex: 0,
         }} />
 
         {/* Header */}
-        <div style={{
-          position: 'relative',
-          padding: '32px 48px 24px',
-          borderBottom: `1px solid ${colors.gray[200]}`,
-          background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
-          backdropFilter: 'blur(10px)',
-          zIndex: 2,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div style={{
-                width: '52px',
-                height: '52px',
-                borderRadius: '14px',
-                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.green[500]} 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)',
-              }}>
+        <div className="relative px-12 py-8 border-b border-gray-200 bg-gradient-to-r from-white/98 to-white/95 backdrop-blur-lg z-20">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
                 <BookOpen size={26} style={{ color: colors.white }} />
               </div>
               <div>
-                <h1 style={{
-                  fontSize: '32px',
-                  fontWeight: 700,
-                  background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.green[600]} 100%)`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  marginBottom: '6px',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-1 font-poppins">
                   Referensi Al-Qur'an Digital
                 </h1>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: colors.text.secondary,
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
+                <p className="text-sm font-medium text-gray-600 font-poppins">
                   Teks Al-Qur'an dengan tajwid, terjemahan, dan audio
                 </p>
               </div>
@@ -430,58 +389,29 @@ export default function ReferensiQuran() {
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
+        <div className="relative px-12 py-12 pb-12 z-20">
           {/* Tabs */}
-          <div style={{
-            background: colors.white,
-            borderRadius: '20px',
-            marginBottom: '24px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-            border: `2px solid ${colors.gray[200]}`,
-            overflow: 'hidden',
-          }}>
-            <div style={{ borderBottom: `2px solid ${colors.gray[200]}` }}>
-              <nav style={{ display: 'flex', marginBottom: '-2px' }}>
+          <div className="bg-white rounded-3xl mb-6 shadow-lg shadow-black/5 border-2 border-gray-200 overflow-hidden">
+            <div className="border-b-2 border-gray-200">
+              <nav className="flex margin-b-negative-2">
                 <button
                   onClick={() => setActiveTab('quran')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '16px 28px',
-                    borderBottom: activeTab === 'quran' ? `3px solid ${colors.emerald[600]}` : '3px solid transparent',
-                    fontWeight: 600,
-                    fontSize: '14px',
-                    color: activeTab === 'quran' ? colors.emerald[700] : colors.text.tertiary,
-                    background: activeTab === 'quran' ? `${colors.emerald[50]}80` : 'transparent',
-                    transition: 'all 0.2s ease',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                    cursor: 'pointer',
-                    border: 'none',
-                  }}
-                  className="tab-button"
+                  className={`flex items-center gap-2 px-7 py-4 text-sm font-semibold transition-all duration-200 ${
+                    activeTab === 'quran'
+                      ? 'border-b-4 border-emerald-600 text-emerald-700 bg-emerald-50/50'
+                      : 'border-b-4 border-transparent text-gray-500 bg-transparent'
+                  }`}
                 >
                   <BookOpen size={18} />
                   Baca Al-Qur'an
                 </button>
                 <button
                   onClick={() => setActiveTab('tajwid')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '16px 28px',
-                    borderBottom: activeTab === 'tajwid' ? `3px solid ${colors.green[600]}` : '3px solid transparent',
-                    fontWeight: 600,
-                    fontSize: '14px',
-                    color: activeTab === 'tajwid' ? colors.green[700] : colors.text.tertiary,
-                    background: activeTab === 'tajwid' ? `${colors.green[50]}80` : 'transparent',
-                    transition: 'all 0.2s ease',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                    cursor: 'pointer',
-                    border: 'none',
-                  }}
-                  className="tab-button"
+                  className={`flex items-center gap-2 px-7 py-4 text-sm font-semibold transition-all duration-200 ${
+                    activeTab === 'tajwid'
+                      ? 'border-b-4 border-green-600 text-green-700 bg-green-50/50'
+                      : 'border-b-4 border-transparent text-gray-500 bg-transparent'
+                  }`}
                 >
                   <BookMarked size={18} />
                   Panduan Tajwid
