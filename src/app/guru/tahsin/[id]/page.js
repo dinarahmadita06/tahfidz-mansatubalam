@@ -587,8 +587,8 @@ export default function TahsinDetailPage() {
               onClick={() => setActiveTab('materi')}
               className={`shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
                 activeTab === 'materi'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700'
               }`}
             >
               <div className="flex items-center gap-2 whitespace-nowrap">
@@ -1002,11 +1002,11 @@ export default function TahsinDetailPage() {
                     Kumpulan materi pembelajaran tahsin untuk {kelas?.nama}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                <div className="bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl shadow-sm">
+                  <p className="text-xs text-emerald-700/80 font-semibold uppercase tracking-wide">
                     Total Materi
                   </p>
-                  <p className="text-2xl font-bold text-emerald-600" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  <p className="text-3xl text-emerald-700 font-bold">
                     {materiList.length}
                   </p>
                 </div>
@@ -1046,8 +1046,7 @@ export default function TahsinDetailPage() {
                 {/* Tambah Materi Button */}
                 <button
                   onClick={() => setShowMateriModal(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
-                  style={{ fontFamily: 'Poppins, sans-serif' }}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:brightness-105 text-white font-semibold rounded-xl shadow-md transition-all"
                 >
                   <Plus size={20} />
                   <span>Tambah Materi</span>
@@ -1078,8 +1077,7 @@ export default function TahsinDetailPage() {
                   {!materiSearchQuery && (
                     <button
                       onClick={() => setShowMateriModal(true)}
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:brightness-105 text-white font-semibold rounded-xl shadow-md transition-all"
                     >
                       <Plus size={22} />
                       <span>Tambah Materi Pertama</span>
