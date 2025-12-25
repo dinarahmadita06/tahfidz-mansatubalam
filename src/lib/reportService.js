@@ -85,52 +85,68 @@ export async function fetchKelasGuru() {
 /**
  * Fetch laporan data based on filters
  * @param {Object} filters - { kelasId, periode, tanggalMulai, tanggalSelesai }
- * @returns {Promise<Object>} - Report data
+ * @returns {Promise<Array>} - Report data array (can be empty)
+ * @throws {Error} - Only throws on actual errors, NOT on empty data
  */
 export async function fetchLaporan(filters) {
-  try {
-    const { startDate, endDate } = calculateDateRange(
-      filters.periode,
-      filters.tanggalMulai,
-      filters.tanggalSelesai
-    );
+  const { startDate, endDate } = calculateDateRange(
+    filters.periode,
+    filters.tanggalMulai,
+    filters.tanggalSelesai
+  );
 
-    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      throw new Error('Invalid date range');
-    }
-
-    const params = new URLSearchParams({
-      viewMode: filters.periode === 'harian' ? 'harian' : filters.periode === 'mingguan' || filters.periode === 'bulanan' ? 'bulanan' : 'semesteran',
-      periode: filters.periode,
-      tanggalMulai: startDate.toISOString(),
-      tanggalSelesai: endDate.toISOString(),
-    });
-
-    if (filters.kelasId) {
-      params.append('kelasId', filters.kelasId);
-    }
-
-    if (filters.tanggal) {
-      params.append('tanggal', filters.tanggal);
-    }
-
-    const response = await fetch(`/api/guru/laporan?${params.toString()}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: Failed to fetch laporan`);
-    }
-
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch laporan');
-    }
-
-    return result.data || [];
-  } catch (error) {
-    console.error('Error fetching laporan:', error);
-    throw error;
+  if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    throw new Error('Invalid date range');
   }
+
+  const params = new URLSearchParams({
+    viewMode:
+      filters.periode === 'harian'
+        ? 'harian'
+        : filters.periode === 'mingguan' || filters.periode === 'bulanan'
+        ? 'bulanan'
+        : 'semesteran',
+    periode: filters.periode,
+    tanggalMulai: startDate.toISOString(),
+    tanggalSelesai: endDate.toISOString(),
+  });
+
+  if (filters.kelasId) {
+    params.append('kelasId', filters.kelasId);
+  }
+
+  if (filters.tanggal) {
+    params.append('tanggal', filters.tanggal);
+  }
+
+  const response = await fetch(`/api/guru/laporan?${params.toString()}`, {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: Failed to fetch laporan`);
+  }
+
+  const result = await response.json();
+
+  // Debug log (temporary)
+  console.log('Laporan result:', result);
+
+  // If API returns success: false, throw error
+  if (result.success === false) {
+    throw new Error(result.error || 'Failed to fetch laporan');
+  }
+
+  // Return data array (can be empty, which is valid)
+  const data = result.data || [];
+
+  // Ensure it's an array
+  if (!Array.isArray(data)) {
+    console.warn('Laporan data is not an array:', data);
+    return [];
+  }
+
+  return data;
 }
 
 /**
