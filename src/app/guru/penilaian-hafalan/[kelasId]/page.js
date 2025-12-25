@@ -15,6 +15,22 @@ import {
 import { toast, Toaster } from 'react-hot-toast';
 import Link from 'next/link';
 
+// ===== CONSTANTS =====
+
+// Primary green gradient - unified across page
+const PRIMARY_GREEN_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
+const TABLE_HEADER_GRADIENT = 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600';
+
+// Table column configuration
+const TABLE_COLUMNS = [
+  { key: 'no', label: 'No', width: 'w-[60px]', align: 'text-left' },
+  { key: 'nama', label: 'Nama Siswa', width: 'w-[220px]', align: 'text-left' },
+  { key: 'kehadiran', label: 'Kehadiran', width: 'w-[160px]', align: 'text-center' },
+  { key: 'catatan', label: 'Catatan', width: 'w-[320px]', align: 'text-left' },
+  { key: 'nilai', label: 'Rata-rata Nilai', width: 'w-[160px]', align: 'text-center' },
+  { key: 'aksi', label: 'Aksi', width: 'w-[120px]', align: 'text-center' },
+];
+
 // Daftar 114 Surah Al-Quran
 const surahList = [
   'Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa', 'Al-Ma\'idah',
@@ -378,15 +394,15 @@ export default function PenilaianHafalanPage() {
           {/* Table Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-emerald-600">
+              <table className="w-full table-fixed min-w-[900px]">
+                <thead className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white rounded-t-2xl shadow-sm">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white w-12">No</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">Nama Siswa</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-white w-40">Status Kehadiran</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-white" style={{ minWidth: '300px' }}>Penilaian</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-white w-32">Rata-rata Nilai</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white" style={{ minWidth: '200px' }}>Catatan</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold w-[60px]">No</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold w-[220px]">Nama Siswa</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold w-[160px]">Kehadiran</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold w-[320px]">Catatan</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold w-[160px]">Rata-rata Nilai</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold w-[120px]">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -438,8 +454,13 @@ export default function PenilaianHafalanPage() {
 
                       return (
                     <tr key={siswa.id} className="hover:bg-emerald-50 transition-colors">
+                      {/* No */}
                       <td className="px-6 py-4 text-sm font-semibold text-slate-700">{index + 1}</td>
+
+                      {/* Nama Siswa */}
                       <td className="px-6 py-4 text-sm font-semibold text-slate-900">{siswa.user?.name || siswa.nama}</td>
+
+                      {/* Kehadiran */}
                       <td className="px-6 py-4 text-center">
                         <select
                           value={statusKehadiran}
@@ -452,33 +473,8 @@ export default function PenilaianHafalanPage() {
                           <option value="ALFA">Alpa</option>
                         </select>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => openPenilaianPopup(siswa)}
-                          className="rounded-xl px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
-                        >
-                          {penilaian.surah ? 'Edit' : 'Input'}
-                        </button>
-                        {penilaian.surah && (
-                          <div className="mt-2 text-xs text-emerald-700 font-medium">
-                            {penilaian.surah} ({penilaian.ayatMulai}-{penilaian.ayatSelesai})
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {rataRata != null ? (
-                          <div className={`inline-flex items-center px-3 py-2 rounded-lg font-bold text-sm ${
-                            rataRata >= 90 ? 'bg-emerald-100 text-emerald-700' :
-                            rataRata >= 80 ? 'bg-amber-100 text-amber-700' :
-                            rataRata >= 70 ? 'bg-orange-100 text-orange-700' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>
-                            {formatNilai(rataRata)}
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-xs font-medium">Belum ada</span>
-                        )}
-                      </td>
+
+                      {/* Catatan */}
                       <td className="px-6 py-4">
                         <input
                           type="text"
@@ -494,8 +490,34 @@ export default function PenilaianHafalanPage() {
                           }}
                           onBlur={(e) => handleCatatanChange(siswa.id, e.target.value)}
                           placeholder="Tulis catatan singkat…"
-                          className="w-full max-w-xs px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors"
+                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors"
                         />
+                      </td>
+
+                      {/* Rata-rata Nilai */}
+                      <td className="px-6 py-4 text-center">
+                        {rataRata != null ? (
+                          <span className="text-lg font-bold text-emerald-700">
+                            {formatNilai(rataRata)}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">–</span>
+                        )}
+                      </td>
+
+                      {/* Aksi */}
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => openPenilaianPopup(siswa)}
+                          className="rounded-xl px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
+                        >
+                          {penilaian.surah ? 'Edit' : 'Input'}
+                        </button>
+                        {penilaian.surah && (
+                          <div className="mt-2 text-xs text-emerald-700 font-medium">
+                            {penilaian.surah} ({penilaian.ayatMulai}-{penilaian.ayatSelesai})
+                          </div>
+                        )}
                       </td>
                     </tr>
                       );
