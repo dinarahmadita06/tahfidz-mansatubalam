@@ -21,6 +21,56 @@ import {
 const CARD_BASE = 'rounded-2xl bg-white border border-slate-200 shadow-sm';
 const CARD_HOVER = 'hover:shadow-md hover:-translate-y-0.5 transition-all';
 
+// ===== HELPER FUNCTIONS =====
+
+/**
+ * Safely parse API response that can be either:
+ * - Direct array: [...]
+ * - Object with data field: { success: true, data: [...] }
+ * - Object with specific field: { kelas: [...] }
+ * Always returns an array.
+ */
+function parseApiResponse(response, fieldName = null) {
+  if (!response) return [];
+
+  // If response is already an array
+  if (Array.isArray(response)) return response;
+
+  // If response has a specific field (e.g., { kelas: [...] })
+  if (fieldName && response[fieldName]) {
+    return Array.isArray(response[fieldName]) ? response[fieldName] : [];
+  }
+
+  // If response has data field (e.g., { success: true, data: [...] })
+  if (response.data) {
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  // If response has success field but data is array directly (legacy)
+  if (response.success && Array.isArray(response)) {
+    return response;
+  }
+
+  // Default to empty array
+  return [];
+}
+
+/**
+ * Fetch hafalan data with safe parsing
+ */
+async function fetchHafalanData() {
+  try {
+    const res = await fetch('/api/hafalan');
+    if (!res.ok) return [];
+
+    const json = await res.json().catch(() => null);
+    return parseApiResponse(json);
+  } catch (error) {
+    console.error('Error fetching hafalan:', error);
+    return [];
+  }
+}
+
 // ===== COMPONENTS =====
 
 // 1. MotivationCard Component
@@ -57,7 +107,7 @@ function AnnouncementSection({ announcements, loading }) {
     );
   }
 
-  if (!announcements || announcements.length === 0) {
+  if (!Array.isArray(announcements) || announcements.length === 0) {
     return (
       <div className={`${CARD_BASE} p-5 sm:p-6`}>
         <div className="flex items-center gap-3">
@@ -69,6 +119,8 @@ function AnnouncementSection({ announcements, loading }) {
       </div>
     );
   }
+
+  const displayedAnnouncements = announcements.slice(0, 3);
 
   return (
     <div className="rounded-2xl bg-emerald-50 border-2 border-emerald-300 shadow-md p-5 sm:p-6 ring-2 ring-emerald-100">
@@ -87,7 +139,7 @@ function AnnouncementSection({ announcements, loading }) {
         </span>
       </div>
       <div className="space-y-3">
-        {announcements.slice(0, 3).map((announcement) => (
+        {displayedAnnouncements.map((announcement) => (
           <div key={announcement.id} className="bg-white rounded-xl p-4 border border-emerald-200">
             <h4 className="font-semibold text-slate-900 mb-1">{announcement.judul}</h4>
             <p className="text-sm text-slate-600 line-clamp-2">{announcement.isi}</p>
@@ -297,24 +349,18 @@ export default function DashboardGuru() {
       // Fetch kelas yang diampu guru
       const kelasRes = await fetch('/api/guru/kelas');
       const kelasData = await kelasRes.json();
-      const kelasList = Array.isArray(kelasData.kelas) ? kelasData.kelas : [];
+      const kelasList = parseApiResponse(kelasData, 'kelas');
       setKelasList(kelasList);
 
       // Fetch siswa dari kelas binaan
       const siswaRes = await fetch('/api/siswa');
       const siswaData = await siswaRes.json();
-      const siswaArray = Array.isArray(siswaData) ? siswaData : [];
+      const siswaArray = parseApiResponse(siswaData);
 
       // Hitung progress rata-rata dari kelas yang diampu
       let totalProgress = 0;
       if (siswaArray.length > 0) {
-        const hafalanRes = await fetch('/api/hafalan');
-        const hafalanJson = await hafalanRes.json().catch(() => null);
-
-        // Safe parsing: always ensure we have an array
-        const hafalanArray = Array.isArray(hafalanJson?.data)
-          ? hafalanJson.data
-          : [];
+        const hafalanArray = await fetchHafalanData();
 
         for (const siswa of siswaArray) {
           const siswaHafalan = hafalanArray.filter(h => h?.siswaId === siswa.id);
@@ -362,7 +408,8 @@ export default function DashboardGuru() {
       const response = await fetch('/api/pengumuman');
       if (!response.ok) throw new Error('Failed to fetch announcements');
       const data = await response.json();
-      setAnnouncements(data || []);
+      const announcementsList = parseApiResponse(data);
+      setAnnouncements(announcementsList);
     } catch (error) {
       console.error('Error fetching announcements:', error);
       setAnnouncements([]);
