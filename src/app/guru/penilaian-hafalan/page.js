@@ -27,12 +27,19 @@ function HeaderSection() {
 }
 
 // SectionTitle Component
-function SectionTitle({ children, description }) {
+function SectionTitle({ children, description, badge }) {
   return (
     <div className="mb-5">
-      <h2 className="text-xl font-bold text-slate-800 mb-1">
-        {children}
-      </h2>
+      <div className="flex items-center gap-3 mb-1">
+        <h2 className="text-xl font-bold text-slate-800">
+          {children}
+        </h2>
+        {badge && (
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+            {badge}
+          </span>
+        )}
+      </div>
       {description && (
         <p className="text-sm text-slate-500">
           {description}
@@ -50,8 +57,8 @@ function ClassCard({ kelas, onClick }) {
       onClick={(e) => onClick && onClick(e, kelas)}
       className="block"
     >
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 p-5 text-center group">
-        <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-emerald-300 hover:ring-2 hover:ring-emerald-100 transition-all duration-200 cursor-pointer p-5 text-center group">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 group-hover:bg-emerald-200 group-hover:scale-105 transition-all">
           <BookOpen size={24} />
         </div>
         <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-2 break-words">
@@ -63,7 +70,7 @@ function ClassCard({ kelas, onClick }) {
             <span className="text-xs font-medium">{kelas._count.siswa} Siswa</span>
           </div>
         )}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-semibold text-sm hover:bg-emerald-100 transition-colors">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-semibold text-sm group-hover:bg-emerald-100 group-hover:text-emerald-800 transition-colors">
           Lihat Kelas →
         </div>
       </div>
@@ -92,24 +99,39 @@ function ToggleSection({ isOpen, onToggle }) {
   return (
     <button
       onClick={onToggle}
-      className="w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:bg-slate-50 transition-colors text-left"
+      className={`w-full rounded-2xl border border-emerald-200 border-l-4 border-l-emerald-500 p-4 transition-all text-left ${
+        isOpen ? 'bg-emerald-50 shadow-md' : 'bg-white shadow-sm'
+      }`}
     >
-      <div className="flex items-center gap-3">
-        {isOpen ? (
-          <ChevronUp size={20} className="text-emerald-600 shrink-0" />
-        ) : (
-          <ChevronDown size={20} className="text-slate-600 shrink-0" />
-        )}
-        <div className="flex-1 min-w-0">
-          <p className={`font-semibold ${isOpen ? 'text-emerald-700' : 'text-slate-700'}`}>
-            {isOpen ? 'Sembunyikan' : 'Tampilkan'} Semua Kelas
-          </p>
-          <p className="text-slate-500 text-sm mt-1">
-            Untuk menggantikan guru lain atau mengisi kelas di luar kelas binaan
-          </p>
+      <div className="flex items-center justify-between cursor-pointer">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {isOpen ? (
+            <ChevronUp size={20} className="text-emerald-600 shrink-0" />
+          ) : (
+            <ChevronDown size={20} className="text-emerald-600 shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-emerald-700">
+              {isOpen ? 'Sembunyikan' : 'Tampilkan'} Semua Kelas
+            </p>
+            <p className="text-slate-500 text-sm mt-1">
+              Untuk menggantikan guru lain atau mengisi kelas di luar kelas binaan
+            </p>
+          </div>
         </div>
       </div>
     </button>
+  );
+}
+
+// SectionWrapper Component
+function SectionWrapper({ children, highlight = false }) {
+  if (!highlight) return <div>{children}</div>;
+
+  return (
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 sm:p-6">
+      {children}
+    </div>
   );
 }
 
@@ -260,8 +282,11 @@ export default function PenilaianHafalanIndexPage() {
         ) : (
           <>
             {/* Section 1: Kelas Binaan */}
-            <div>
-              <SectionTitle description="Kelas yang telah ditetapkan oleh Admin untuk Anda">
+            <SectionWrapper highlight={true}>
+              <SectionTitle
+                description="Kelas yang telah ditetapkan oleh Admin untuk Anda"
+                badge="Kelas utama yang Anda bimbing"
+              >
                 Kelas Binaan Saya
               </SectionTitle>
 
@@ -274,7 +299,10 @@ export default function PenilaianHafalanIndexPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </SectionWrapper>
+
+            {/* Divider */}
+            <div className="border-t border-emerald-100 my-6"></div>
 
             {/* Toggle Section */}
             <ToggleSection
