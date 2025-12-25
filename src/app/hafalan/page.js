@@ -213,7 +213,7 @@ export default function HafalanPage() {
                     return (
                       <tr key={item.id} className="hover:bg-gray-50">
                         <td className="px-3 py-2 text-gray-900">
-                          {new Date(item.tanggalSetor).toLocaleDateString('id-ID', {
+                          {new Date(item.tanggal).toLocaleDateString('id-ID', {
                             day: 'numeric',
                             month: 'short'
                           })}
@@ -279,7 +279,7 @@ export default function HafalanPage() {
                   <div>
                     <p className="text-xs text-gray-600 mb-1">Tanggal Setor</p>
                     <p className="font-medium text-gray-900 text-sm">
-                      {new Date(viewModal.tanggalSetor).toLocaleDateString('id-ID', {
+                      {new Date(viewModal.tanggal).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric'
