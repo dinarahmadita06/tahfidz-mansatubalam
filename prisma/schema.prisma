@@ -109,6 +109,7 @@ model User {
   siswa            Siswa?
   orangTua         OrangTua?
   logActivity      LogActivity[]
+  guruActivity     GuruActivity[]
   pengumuman       Pengumuman[]
   pengumumanRead   PengumumanRead[] @relation("UserPengumumanRead")
 }
@@ -473,6 +474,20 @@ model LogActivity {
   @@index([userId])
   @@index([createdAt(sort: Desc)])
   @@index([aktivitas])
+}
+
+model GuruActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // presensi, penilaian_tahsin, penilaian_hafalan, penilaian_tasmi, upload_materi, pengumuman, lainnya
+  title     String
+  subtitle  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@index([type])
 }
 
 model Motivasi {
