@@ -516,37 +516,27 @@ export default function TahsinDetailPage() {
         {/* Header Card with Gradient - Tasmi Style */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-7">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-4 flex-1 min-w-0">
-              {/* Back Button Icon */}
-              <Link
-                href="/guru/tahsin"
-                className="p-2 rounded-xl bg-white/20 hover:bg-white/30 transition-all shrink-0"
-              >
-                <ArrowLeft className="w-5 h-5 text-white" />
-              </Link>
-
+            <div className="flex items-center gap-4 flex-1 min-w-0">
               {/* Icon + Title */}
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-                  <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold leading-tight mb-2 whitespace-normal break-words">
-                    Tahsin Al-Qur'an
-                  </h1>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-white/90 text-base sm:text-lg font-medium">
-                      {kelas?.nama || 'Loading...'}
-                    </span>
-                    {selectedSiswa && activeTab === 'pencatatan' && (
-                      <>
-                        <span className="text-white/60">•</span>
-                        <span className="text-white/80 text-sm">
-                          {selectedSiswa.user?.name}
-                        </span>
-                      </>
-                    )}
-                  </div>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold leading-tight mb-2 whitespace-normal break-words">
+                  Tahsin Al-Qur'an
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-white/90 text-base sm:text-lg font-medium">
+                    {kelas?.nama || 'Loading...'}
+                  </span>
+                  {selectedSiswa && activeTab === 'pencatatan' && (
+                    <>
+                      <span className="text-white/60">•</span>
+                      <span className="text-white/80 text-sm">
+                        {selectedSiswa.user?.name}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -848,11 +838,7 @@ export default function TahsinDetailPage() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 px-6 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                      style={{
-                        borderRadius: '10px',
-                        fontFamily: 'Poppins, sans-serif',
-                      }}
+                      className="w-full rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white font-semibold py-3 shadow-md hover:shadow-lg hover:opacity-95 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? (
                         <>
