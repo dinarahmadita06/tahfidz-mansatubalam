@@ -34,7 +34,7 @@ export async function GET(request) {
           select: {
             ayatMulai: true,
             ayatSelesai: true,
-            tanggalSetor: true
+            tanggal: true
           }
         }
       }
@@ -79,7 +79,7 @@ export async function GET(request) {
 
       const hafalanMonth = await prisma.hafalan.findMany({
         where: {
-          tanggalSetor: {
+          tanggal: {
             gte: startOfMonth,
             lte: endOfMonth
           },

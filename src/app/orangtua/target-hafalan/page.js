@@ -341,7 +341,7 @@ export default function TargetHafalanOrangtuaPage() {
                                    '✗ Ditolak'}
                                 </span>
                                 <span className="text-gray-500 ml-auto">
-                                  {new Date(hafalan.tanggalSetor).toLocaleDateString('id-ID', {
+                                  {new Date(hafalan.tanggal).toLocaleDateString('id-ID', {
                                     day: 'numeric',
                                     month: 'short',
                                     year: 'numeric'

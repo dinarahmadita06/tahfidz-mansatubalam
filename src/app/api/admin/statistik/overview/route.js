@@ -57,7 +57,7 @@ export async function GET(request) {
 
       const hafalanMonth = await prisma.hafalan.findMany({
         where: {
-          tanggalSetor: {
+          tanggal: {
             gte: startOfMonth,
             lte: endOfMonth
           }
@@ -133,7 +133,7 @@ export async function GET(request) {
         },
         hafalan: {
           where: {
-            tanggalSetor: {
+            tanggal: {
               gte: startOfMonth,
               lte: endOfMonth
             }
@@ -141,7 +141,7 @@ export async function GET(request) {
           select: {
             ayatMulai: true,
             ayatSelesai: true,
-            tanggalSetor: true
+            tanggal: true
           }
         }
       }
@@ -158,7 +158,7 @@ export async function GET(request) {
           nama: siswa.user.name,
           juz: parseFloat(juzBulanIni.toFixed(1)),
           tanggal: siswa.hafalan.length > 0
-            ? siswa.hafalan[siswa.hafalan.length - 1].tanggalSetor
+            ? siswa.hafalan[siswa.hafalan.length - 1].tanggal
             : null
         };
       })

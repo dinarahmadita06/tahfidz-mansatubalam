@@ -116,7 +116,7 @@ export default function VerifikasiHafalan() {
         </div>
         <div className="flex justify-between">
           <span className="text-sm text-gray-600">Tanggal Setor:</span>
-          <span className="text-sm font-medium">{formatDate(hafalan.tanggalSetor)}</span>
+          <span className="text-sm font-medium">{formatDate(hafalan.tanggal)}</span>
         </div>
       </div>
 

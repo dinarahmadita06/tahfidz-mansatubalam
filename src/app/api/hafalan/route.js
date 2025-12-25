@@ -107,7 +107,7 @@ export async function GET(request) {
         // Removed surah relation since it's a string field, not a relation
       },
       orderBy: {
-        tanggalSetor: 'desc',
+        tanggal: 'desc',
       },
     });
 

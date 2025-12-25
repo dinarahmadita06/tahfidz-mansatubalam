@@ -74,7 +74,7 @@ export async function GET(request) {
         },
       },
       orderBy: {
-        tanggalSetor: 'desc',
+        tanggal: 'desc',
       },
     });
 
@@ -162,7 +162,7 @@ export async function GET(request) {
           ? {
               surah: latestSetoran.surah?.namaSurah,
               ayat: `${latestSetoran.ayatMulai}-${latestSetoran.ayatSelesai}`,
-              tanggal: latestSetoran.tanggalSetor,
+              tanggal: latestSetoran.tanggal,
             }
           : null,
       },
@@ -171,7 +171,7 @@ export async function GET(request) {
         surah: h.surah?.namaSurah,
         juz: h.surah?.nomorJuz,
         ayat: `${h.ayatMulai}-${h.ayatSelesai}`,
-        tanggalSetor: h.tanggalSetor,
+        tanggalSetor: h.tanggal,
         nilai: h.nilai,
         status: h.status,
         catatanGuru: h.catatan,

@@ -51,7 +51,7 @@ export default function SiswaDashboard() {
 
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const setoranBulanIni = data.filter(h => new Date(h.tanggalSetor) >= startOfMonth).length;
+        const setoranBulanIni = data.filter(h => new Date(h.tanggal) >= startOfMonth).length;
 
         setStats({
           totalJuz: uniqueJuz.length,
@@ -230,7 +230,7 @@ export default function SiswaDashboard() {
                     return (
                       <tr key={item.id} className="hover:bg-gray-50">
                         <td className="px-3 py-2 text-gray-900">
-                          {new Date(item.tanggalSetor).toLocaleDateString('id-ID')}
+                          {new Date(item.tanggal).toLocaleDateString('id-ID')}
                         </td>
                         <td className="px-3 py-2 text-gray-900 truncate max-w-[100px]">
                           {item.surah.namaLatin}
