@@ -512,49 +512,51 @@ export default function TahsinDetailPage() {
 
   return (
     <GuruLayout>
-      <div className="min-h-screen bg-gray-50" style={{ margin: '-32px', padding: '32px', backgroundColor: '#f9fafb' }}>
-        {/* Breadcrumb */}
-        <div className="mb-4">
-          <Link
-            href="/guru/tahsin"
-            className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
-          >
-            <ArrowLeft size={16} />
-            <span>Kembali</span>
-          </Link>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header Card with Gradient - Tasmi Style */}
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-7">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              {/* Back Button Icon */}
+              <Link
+                href="/guru/tahsin"
+                className="p-2 rounded-xl bg-white/20 hover:bg-white/30 transition-all shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </Link>
 
-        {/* Header Card with Gradient */}
-        <div className="mb-6 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <BookOpen size={32} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  Tahsin Al-Qur'an
-                </h1>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-50 text-lg" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    {kelas?.nama || 'Loading...'}
-                  </span>
-                  {selectedSiswa && activeTab === 'pencatatan' && (
-                    <>
-                      <span className="text-white/60">•</span>
-                      <span className="text-white/90 text-sm">
-                        {selectedSiswa.user?.name}
-                      </span>
-                    </>
-                  )}
+              {/* Icon + Title */}
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold leading-tight mb-2 whitespace-normal break-words">
+                    Tahsin Al-Qur'an
+                  </h1>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-white/90 text-base sm:text-lg font-medium">
+                      {kelas?.nama || 'Loading...'}
+                    </span>
+                    {selectedSiswa && activeTab === 'pencatatan' && (
+                      <>
+                        <span className="text-white/60">•</span>
+                        <span className="text-white/80 text-sm">
+                          {selectedSiswa.user?.name}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-              <p className="text-white/80 text-xs font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+
+            {/* Badge Total Siswa */}
+            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl shrink-0">
+              <p className="text-white/80 text-xs font-semibold">
                 TOTAL SISWA
               </p>
-              <p className="text-white text-2xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <p className="text-white text-2xl font-bold">
                 {siswaList.length}
               </p>
             </div>
