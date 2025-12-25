@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import GuruLayout from '@/components/layout/GuruLayout';
 import PengumumanWidget from '@/components/PengumumanWidget';
+import ActivityList from '@/components/guru/ActivityList';
 import {
   BookOpen,
   Users,
@@ -372,8 +373,8 @@ function RiwayatPenilaianCard({ riwayatPenilaian }) {
   );
 }
 
-// Aktivitas Terbaru Card (Placeholder for Commit 2)
-function AktivitasTerbaruCard() {
+// Aktivitas Terbaru Card
+function AktivitasTerbaruCard({ activities = [], loading = false }) {
   return (
     <div className="rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5 sm:p-6">
       <div className="flex items-center gap-3 mb-5">
@@ -385,13 +386,14 @@ function AktivitasTerbaruCard() {
         </h3>
       </div>
 
-      <div className="text-center py-12">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FileText size={32} className="text-slate-400" />
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-slate-600">Memuat aktivitas...</p>
         </div>
-        <p className="text-slate-600 font-medium">Aktivitas akan ditampilkan di sini</p>
-        <p className="text-sm text-slate-500 mt-1">Fitur sedang dalam pengembangan</p>
-      </div>
+      ) : (
+        <ActivityList activities={activities} />
+      )}
     </div>
   );
 }
@@ -400,12 +402,30 @@ export default function DashboardGuru() {
   const [stats, setStats] = useState(null);
   const [jadwalHariIni, setJadwalHariIni] = useState([]);
   const [riwayatPenilaian, setRiwayatPenilaian] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
+    fetchActivities();
   }, []);
+
+  const fetchActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      const response = await fetch('/api/guru/activity?limit=8');
+      if (!response.ok) throw new Error('Failed to fetch activities');
+      const data = await response.json();
+      setActivities(data.activities || []);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+      setActivities([]);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
 
   const fetchData = (isRefresh = false) => {
     if (isRefresh) {
@@ -428,6 +448,7 @@ export default function DashboardGuru() {
 
   const handleRefresh = () => {
     fetchData(true);
+    fetchActivities();
   };
 
   if (loading) {
@@ -521,7 +542,7 @@ export default function DashboardGuru() {
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <JadwalSesiCard jadwalHariIni={jadwalHariIni} />
-          <AktivitasTerbaruCard />
+          <AktivitasTerbaruCard activities={activities} loading={activitiesLoading} />
         </div>
 
         {/* Riwayat Penilaian - Full Width */}
