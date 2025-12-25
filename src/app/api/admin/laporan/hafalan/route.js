@@ -74,7 +74,7 @@ export async function GET(request) {
         }
       },
       orderBy: {
-        tanggalSetor: 'desc'
+        tanggal: 'desc'
       }
     });
 
