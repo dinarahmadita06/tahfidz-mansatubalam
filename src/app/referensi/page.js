@@ -155,6 +155,7 @@ export default function ReferensiQuran() {
       const baseUrl = 'https://everyayah.com/data';
       const fullUrl = `${baseUrl}/${reciter}/${fileName}`;
 
+      console.log('🔊 Audio URL:', fullUrl);
       return fullUrl;
     } catch (error) {
       console.error('Error building audio URL:', error);
@@ -164,6 +165,8 @@ export default function ReferensiQuran() {
 
   const playAudio = (surahNumber, ayahNumberInSurah) => {
     try {
+      console.log('🎵 playAudio called:', { surahNumber, ayahNumberInSurah });
+
       // Validasi parameter
       if (!surahNumber || !ayahNumberInSurah) {
         toast.error('Nomor surah atau ayat tidak valid', {
@@ -202,6 +205,7 @@ export default function ReferensiQuran() {
 
       const audio = new Audio();
       audio.preload = 'auto';
+      audio.crossOrigin = 'anonymous'; // Enable CORS
 
       audio.addEventListener('canplaythrough', () => {
         audio.play()
@@ -225,8 +229,17 @@ export default function ReferensiQuran() {
       audio.addEventListener('error', (e) => {
         // Ignore error saat cleanup
         if (!audio.src || audio.src === '' || audio.src === window.location.href) {
+          console.log('⚠️ Ignoring error on cleanup');
           return;
         }
+
+        console.error('❌ Audio error occurred:', {
+          errorCode: audio.error?.code,
+          errorMessage: audio.error?.message,
+          src: audio.src,
+          networkState: audio.networkState,
+          readyState: audio.readyState
+        });
 
         // Toast error hanya muncul saat onerror benar-benar terpanggil
         toast.error('Audio tidak tersedia untuk ayat ini', {
