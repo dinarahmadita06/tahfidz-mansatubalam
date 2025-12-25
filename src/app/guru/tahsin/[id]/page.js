@@ -556,13 +556,13 @@ export default function TahsinDetailPage() {
 
         {/* Tab Navigation - Responsive Scroll Horizontal */}
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="bg-white rounded-xl p-2 shadow-sm inline-flex gap-2 min-w-max">
+          <div className="bg-white rounded-xl p-2 shadow-sm inline-flex gap-3 flex-wrap sm:flex-nowrap min-w-max">
             <button
               onClick={() => setActiveTab('pencatatan')}
-              className={`shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
+              className={`shrink-0 px-5 py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
                 activeTab === 'pencatatan'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md border-transparent'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'
               }`}
             >
               <div className="flex items-center gap-2 whitespace-nowrap">
@@ -572,10 +572,10 @@ export default function TahsinDetailPage() {
             </button>
             <button
               onClick={() => setActiveTab('riwayat')}
-              className={`shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
+              className={`shrink-0 px-5 py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
                 activeTab === 'riwayat'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md border-transparent'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'
               }`}
             >
               <div className="flex items-center gap-2 whitespace-nowrap">
@@ -585,10 +585,10 @@ export default function TahsinDetailPage() {
             </button>
             <button
               onClick={() => setActiveTab('materi')}
-              className={`shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
+              className={`shrink-0 px-5 py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
                 activeTab === 'materi'
-                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700'
+                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md border-transparent'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'
               }`}
             >
               <div className="flex items-center gap-2 whitespace-nowrap">
@@ -605,16 +605,16 @@ export default function TahsinDetailPage() {
             /* PENCATATAN TAB */
             <>
               {/* Info Guru - Static Display */}
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100 mb-6">
+              <div className="bg-emerald-50 border border-emerald-200 shadow-sm rounded-2xl p-4 mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl ring-4 ring-emerald-100">
                     {guruData?.user?.name?.charAt(0) || 'G'}
                   </div>
                   <div>
-                    <p className="text-xs text-emerald-600 font-semibold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    <p className="text-xs text-emerald-600 font-semibold">
                       Guru Pengajar
                     </p>
-                    <p className="text-base font-bold text-slate-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    <p className="text-base font-bold text-slate-800">
                       {guruData?.user?.name || 'Memuat...'}
                     </p>
                   </div>
