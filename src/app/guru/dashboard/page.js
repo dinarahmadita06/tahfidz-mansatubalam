@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import PengumumanWidget from '@/components/PengumumanWidget';
 import ActivityList from '@/components/guru/ActivityList';
@@ -9,108 +10,122 @@ import {
   BookOpen,
   Users,
   TrendingUp,
-  Clock,
-  Play,
-  CheckCircle2,
-  Calendar,
-  User,
-  GraduationCap,
-  Award,
   Sparkles,
   RefreshCw,
   FileText,
+  Megaphone,
+  ChevronRight,
 } from 'lucide-react';
 
-// Mock data functions
-const fetchDashboardStats = () => {
-  return {
-    kelasAjaran: 5,
-    jumlahSiswa: 142,
-    progressRataRata: 78,
-    totalJuz: 12,
-  };
-};
+// Style constants
+const CARD_BASE = 'rounded-2xl bg-white border border-slate-200 shadow-sm';
+const CARD_HOVER = 'hover:shadow-md hover:-translate-y-0.5 transition-all';
 
-const fetchJadwalHariIni = () => {
-  return [
+// ===== COMPONENTS =====
+
+// 1. MotivationCard Component
+function MotivationCard() {
+  return (
+    <div className="rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 shadow-sm p-5 sm:p-6">
+      <div className="flex items-start gap-3">
+        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+          <Sparkles size={22} className="text-blue-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold italic leading-relaxed mb-2">
+            "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
+          </p>
+          <p className="text-xs font-medium text-blue-700">
+            — HR. Bukhari
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 2. AnnouncementSection Component
+function AnnouncementSection({ announcements, loading }) {
+  if (loading) {
+    return (
+      <div className={`${CARD_BASE} p-5 sm:p-6`}>
+        <div className="animate-pulse">
+          <div className="h-4 bg-slate-200 rounded w-1/3 mb-3"></div>
+          <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!announcements || announcements.length === 0) {
+    return (
+      <div className={`${CARD_BASE} p-5 sm:p-6`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <Megaphone size={18} className="text-slate-400" />
+          </div>
+          <p className="text-sm text-slate-600">Tidak ada pengumuman baru</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl bg-emerald-50 border-2 border-emerald-300 shadow-md p-5 sm:p-6 ring-2 ring-emerald-100">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+            <Megaphone size={22} className="text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-emerald-900">Pengumuman</h3>
+            <p className="text-xs text-emerald-700">Informasi terbaru untuk Anda</p>
+          </div>
+        </div>
+        <span className="px-3 py-1 rounded-full bg-emerald-200 text-emerald-800 text-xs font-bold">
+          Baru
+        </span>
+      </div>
+      <div className="space-y-3">
+        {announcements.slice(0, 3).map((announcement) => (
+          <div key={announcement.id} className="bg-white rounded-xl p-4 border border-emerald-200">
+            <h4 className="font-semibold text-slate-900 mb-1">{announcement.judul}</h4>
+            <p className="text-sm text-slate-600 line-clamp-2">{announcement.isi}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 3. StatsCards Component
+function StatsCards({ stats }) {
+  const cards = [
     {
-      id: 1,
-      waktu: "07:30",
-      kelas: "XI IPA 1",
-      totalSiswa: 32,
-      sudahDinilai: 28,
-      status: "berlangsung"
+      icon: BookOpen,
+      title: 'KELAS DIAMPU',
+      value: stats.kelasAjaran || 0,
+      subtitle: 'Kelas yang Anda ampu',
+      variant: 'green',
     },
     {
-      id: 2,
-      waktu: "09:15",
-      kelas: "XI IPA 2",
-      totalSiswa: 30,
-      sudahDinilai: 30,
-      status: "selesai"
+      icon: Users,
+      title: 'JUMLAH SISWA',
+      value: stats.jumlahSiswa || 0,
+      subtitle: 'Siswa di kelas binaan',
+      variant: 'blue',
     },
     {
-      id: 3,
-      waktu: "10:30",
-      kelas: "XII IPS 1",
-      totalSiswa: 28,
-      sudahDinilai: 0,
-      status: "belum_mulai"
+      icon: TrendingUp,
+      title: 'PROGRESS RATA-RATA',
+      value: `${stats.progressRataRata || 0}%`,
+      subtitle: stats.kelasAjaran > 0
+        ? `Rata-rata dari ${stats.kelasAjaran} kelas`
+        : 'Target belum ditetapkan',
+      variant: 'violet',
     },
-    {
-      id: 4,
-      waktu: "13:00",
-      kelas: "X MIA 3",
-      totalSiswa: 35,
-      sudahDinilai: 0,
-      status: "belum_mulai"
-    }
   ];
-};
 
-const fetchRiwayatPenilaianHariIni = () => {
-  return [
-    {
-      id: 1,
-      siswa: "Ahmad Fahmi",
-      kelas: "XI IPA 1",
-      surat: "Al-Baqarah",
-      ayat: "1-15",
-      nilai: "A",
-      waktu: "08:45"
-    },
-    {
-      id: 2,
-      siswa: "Nur Aisyah",
-      kelas: "XI IPA 2",
-      surat: "Al-Mulk",
-      ayat: "1-10",
-      nilai: "A-",
-      waktu: "09:30"
-    },
-    {
-      id: 3,
-      siswa: "Bayu Saputra",
-      kelas: "XII IPS 1",
-      surat: "Ar-Rahman",
-      ayat: "1-25",
-      nilai: "B+",
-      waktu: "10:15"
-    },
-    {
-      id: 4,
-      siswa: "Dewi Kartika",
-      kelas: "X MIA 3",
-      surat: "Al-Waqiah",
-      ayat: "1-20",
-      nilai: "A",
-      waktu: "11:00"
-    }
-  ];
-};
-
-// Stats Card Component (Tasmi style)
-function StatsCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
   const variants = {
     green: {
       wrapper: 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200',
@@ -126,13 +141,6 @@ function StatsCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
       title: 'text-blue-600',
       value: 'text-blue-700',
     },
-    amber: {
-      wrapper: 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200',
-      iconBg: 'bg-amber-100',
-      iconColor: 'text-amber-600',
-      title: 'text-amber-600',
-      value: 'text-amber-700',
-    },
     violet: {
       wrapper: 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200',
       iconBg: 'bg-violet-100',
@@ -142,248 +150,106 @@ function StatsCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
     },
   };
 
-  const style = variants[variant];
-
   return (
-    <div className={`${style.wrapper} rounded-xl border-2 p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className={`${style.title} text-sm font-semibold mb-1 uppercase`}>{title}</p>
-          <h3 className={`${style.value} text-4xl font-bold`}>{value}</h3>
-          {subtitle && (
-            <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
-          )}
-        </div>
-        <div className={`${style.iconBg} p-4 rounded-full`}>
-          <Icon size={32} className={style.iconColor} />
-        </div>
-      </div>
-    </div>
-  );
-}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+      {cards.map((card, index) => {
+        const Icon = card.icon;
+        const style = variants[card.variant];
 
-// Jadwal Sesi Card Component
-function JadwalSesiCard({ jadwalHariIni }) {
-  const getStatusConfig = (status) => {
-    switch (status) {
-      case 'selesai':
-        return {
-          bg: 'bg-emerald-50',
-          text: 'text-emerald-700',
-          label: 'Selesai',
-        };
-      case 'berlangsung':
-        return {
-          bg: 'bg-blue-50',
-          text: 'text-blue-700',
-          label: 'Berlangsung',
-        };
-      case 'belum_mulai':
-        return {
-          bg: 'bg-slate-50',
-          text: 'text-slate-600',
-          label: 'Belum Dimulai',
-        };
-      default:
-        return {
-          bg: 'bg-slate-50',
-          text: 'text-slate-600',
-          label: 'Belum Dimulai',
-        };
-    }
-  };
-
-  return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5 sm:p-6">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
-          <Calendar size={22} className="text-white" />
-        </div>
-        <h3 className="text-xl font-bold text-slate-800">
-          Jadwal Setoran Hari Ini
-        </h3>
-      </div>
-
-      {jadwalHariIni.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar size={32} className="text-slate-400" />
-          </div>
-          <p className="text-slate-600 font-medium">Tidak ada jadwal hari ini</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {jadwalHariIni.map((jadwal) => {
-            const statusConfig = getStatusConfig(jadwal.status);
-            const progress = Math.round((jadwal.sudahDinilai / jadwal.totalSiswa) * 100);
-
-            return (
-              <div
-                key={jadwal.id}
-                className="border-2 border-emerald-100 rounded-xl p-4 bg-emerald-50/30 hover:bg-emerald-50/50 transition-colors"
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-slate-600" />
-                      <span className="font-semibold text-slate-800">
-                        {jadwal.waktu}
-                      </span>
-                    </div>
-                    <span className="font-semibold text-slate-800">
-                      {jadwal.kelas}
-                    </span>
-                  </div>
-                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusConfig.bg} ${statusConfig.text}`}>
-                    {statusConfig.label}
-                  </span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="mb-3">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-slate-600">
-                      Siswa Dinilai: {jadwal.sudahDinilai}/{jadwal.totalSiswa}
-                    </span>
-                    <span className="text-sm font-semibold text-emerald-600">
-                      {progress}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                {jadwal.status !== 'selesai' && (
-                  <Link href={`/guru/penilaian?kelas=${jadwal.kelas}&jadwal=${jadwal.id}`}>
-                    <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:brightness-110 text-white rounded-lg text-sm font-semibold transition-all shadow-sm">
-                      <Play size={16} />
-                      {jadwal.status === 'berlangsung' ? 'Lanjutkan Sesi' : 'Mulai Sesi'}
-                    </button>
-                  </Link>
+        return (
+          <div
+            key={index}
+            className={`${style.wrapper} rounded-xl border-2 p-6 shadow-sm ${CARD_HOVER}`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`${style.title} text-sm font-semibold mb-1 uppercase`}>
+                  {card.title}
+                </p>
+                <h3 className={`${style.value} text-4xl font-bold`}>
+                  {card.value}
+                </h3>
+                {card.subtitle && (
+                  <p className="text-slate-500 text-sm mt-1">{card.subtitle}</p>
                 )}
               </div>
-            );
-          })}
-        </div>
-      )}
+              <div className={`${style.iconBg} p-4 rounded-full`}>
+                <Icon size={32} className={style.iconColor} />
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-// Riwayat Penilaian Card Component
-function RiwayatPenilaianCard({ riwayatPenilaian }) {
-  const getNilaiConfig = (nilai) => {
-    if (nilai.includes('A')) return {
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-700',
-    };
-    if (nilai.includes('B')) return {
-      bg: 'bg-amber-50',
-      text: 'text-amber-700',
-    };
-    if (nilai.includes('C')) return {
-      bg: 'bg-orange-50',
-      text: 'text-orange-700',
-    };
-    return {
-      bg: 'bg-red-50',
-      text: 'text-red-700',
-    };
-  };
-
+// 4. ClassManagementSection Component
+function ClassManagementSection({ kelasList, loading }) {
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5 sm:p-6">
+    <div className={`${CARD_BASE} ${CARD_HOVER} p-5 sm:p-6`}>
       <div className="flex items-center gap-3 mb-5">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
-          <CheckCircle2 size={22} className="text-white" />
+          <BookOpen size={22} className="text-white" />
         </div>
-        <h3 className="text-xl font-bold text-slate-800">
-          Riwayat Penilaian Hari Ini
-        </h3>
+        <h3 className="text-xl font-bold text-slate-800">Kelola Kelas</h3>
       </div>
 
-      {riwayatPenilaian.length === 0 ? (
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse bg-slate-100 rounded-xl p-4 h-20"></div>
+          ))}
+        </div>
+      ) : kelasList.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 size={32} className="text-slate-400" />
+            <BookOpen size={32} className="text-slate-400" />
           </div>
-          <p className="text-slate-600 font-medium">Belum ada penilaian hari ini</p>
+          <p className="text-slate-600 font-medium">Belum ada kelas yang diampu</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-0">
-          {riwayatPenilaian.map((riwayat, index) => {
-            const nilaiConfig = getNilaiConfig(riwayat.nilai);
-
-            return (
-              <div
-                key={riwayat.id}
-                className={`flex justify-between items-center py-4 ${
-                  index < riwayatPenilaian.length - 1 ? 'border-b border-slate-200' : ''
-                }`}
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <User size={20} className="text-emerald-600" />
+        <div className="space-y-3">
+          {kelasList.map((kelas) => (
+            <Link
+              key={kelas.id}
+              href={`/guru/penilaian-hafalan/${kelas.id}`}
+              className="block"
+            >
+              <div className="flex items-center justify-between p-4 rounded-xl border-2 border-emerald-100 bg-gradient-to-r from-emerald-50 to-white hover:border-emerald-300 hover:shadow-md transition-all group">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <BookOpen size={20} className="text-emerald-600" />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-slate-800 text-sm">
-                      {riwayat.siswa}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {riwayat.kelas}
-                    </p>
-                  </div>
-                  <div className="hidden md:block flex-1">
-                    <p className="text-sm font-medium text-slate-800">
-                      {riwayat.surat}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      Ayat {riwayat.ayat}
+                  <div>
+                    <h4 className="font-semibold text-slate-900">{kelas.nama}</h4>
+                    <p className="text-sm text-slate-600">
+                      {kelas._count?.siswa || 0} siswa
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 text-sm font-bold rounded-lg ${nilaiConfig.bg} ${nilaiConfig.text}`}>
-                    {riwayat.nilai}
-                  </span>
-                  <span className="text-sm text-slate-500 min-w-[50px]">
-                    {riwayat.waktu}
-                  </span>
+                <div className="flex items-center gap-2 text-emerald-600 group-hover:translate-x-1 transition-transform">
+                  <span className="text-sm font-semibold">Lihat Kelas</span>
+                  <ChevronRight size={18} />
                 </div>
               </div>
-            );
-          })}
+            </Link>
+          ))}
         </div>
       )}
-
-      <div className="mt-5 pt-5 border-t border-slate-200">
-        <Link
-          href="/guru/laporan"
-          className="text-emerald-600 text-sm font-semibold hover:text-emerald-700 transition-colors"
-        >
-          Lihat Laporan Lengkap →
-        </Link>
-      </div>
     </div>
   );
 }
 
-// Aktivitas Terbaru Card
-function AktivitasTerbaruCard({ activities = [], loading = false }) {
+// 5. RecentActivity Component
+function RecentActivity({ activities, loading }) {
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5 sm:p-6">
+    <div className={`${CARD_BASE} ${CARD_HOVER} p-5 sm:p-6`}>
       <div className="flex items-center gap-3 mb-5">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
           <FileText size={22} className="text-white" />
         </div>
-        <h3 className="text-xl font-bold text-slate-800">
-          Aktivitas Terbaru
-        </h3>
+        <h3 className="text-xl font-bold text-slate-800">Aktivitas Terbaru</h3>
       </div>
 
       {loading ? (
@@ -398,11 +264,18 @@ function AktivitasTerbaruCard({ activities = [], loading = false }) {
   );
 }
 
+// ===== MAIN COMPONENT =====
+
 export default function DashboardGuru() {
-  const [stats, setStats] = useState(null);
-  const [jadwalHariIni, setJadwalHariIni] = useState([]);
-  const [riwayatPenilaian, setRiwayatPenilaian] = useState([]);
+  const { data: session } = useSession();
+  const [stats, setStats] = useState({
+    kelasAjaran: 0,
+    jumlahSiswa: 0,
+    progressRataRata: 0,
+  });
+  const [kelasList, setKelasList] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
@@ -410,7 +283,60 @@ export default function DashboardGuru() {
   useEffect(() => {
     fetchData();
     fetchActivities();
+    fetchAnnouncements();
   }, []);
+
+  const fetchData = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      // Fetch kelas yang diampu guru
+      const kelasRes = await fetch('/api/guru/kelas');
+      const kelasData = await kelasRes.json();
+      const kelasList = Array.isArray(kelasData.kelas) ? kelasData.kelas : [];
+      setKelasList(kelasList);
+
+      // Fetch siswa dari kelas binaan
+      const siswaRes = await fetch('/api/siswa');
+      const siswaData = await siswaRes.json();
+      const siswaArray = Array.isArray(siswaData) ? siswaData : [];
+
+      // Hitung progress rata-rata dari kelas yang diampu
+      let totalProgress = 0;
+      if (siswaArray.length > 0) {
+        const hafalanRes = await fetch('/api/hafalan');
+        const hafalanData = await hafalanRes.json();
+        const hafalanArray = Array.isArray(hafalanData) ? hafalanData : [];
+
+        for (const siswa of siswaArray) {
+          const siswaHafalan = hafalanArray.filter(h => h.siswaId === siswa.id);
+          const uniqueJuz = [...new Set(siswaHafalan.map(h => h.juz))];
+          const progress = (uniqueJuz.length / 30) * 100;
+          totalProgress += progress;
+        }
+      }
+
+      const avgProgress = siswaArray.length > 0 ? totalProgress / siswaArray.length : 0;
+
+      setStats({
+        kelasAjaran: kelasList.length,
+        jumlahSiswa: siswaArray.length,
+        progressRataRata: avgProgress.toFixed(1),
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
 
   const fetchActivities = async () => {
     try {
@@ -427,28 +353,22 @@ export default function DashboardGuru() {
     }
   };
 
-  const fetchData = (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
+  const fetchAnnouncements = async () => {
+    try {
+      const response = await fetch('/api/pengumuman');
+      if (!response.ok) throw new Error('Failed to fetch announcements');
+      const data = await response.json();
+      setAnnouncements(data || []);
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      setAnnouncements([]);
     }
-
-    setTimeout(() => {
-      setStats(fetchDashboardStats());
-      setJadwalHariIni(fetchJadwalHariIni());
-      setRiwayatPenilaian(fetchRiwayatPenilaianHariIni());
-      if (isRefresh) {
-        setRefreshing(false);
-      } else {
-        setLoading(false);
-      }
-    }, 1000);
   };
 
   const handleRefresh = () => {
     fetchData(true);
     fetchActivities();
+    fetchAnnouncements();
   };
 
   if (loading) {
@@ -456,7 +376,7 @@ export default function DashboardGuru() {
       <GuruLayout>
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4" />
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
             <p className="text-slate-600">Memuat dashboard...</p>
           </div>
         </div>
@@ -464,9 +384,31 @@ export default function DashboardGuru() {
     );
   }
 
+  const getFirstName = (fullName) => {
+    if (!fullName) return 'Guru';
+    return fullName.split(' ')[0];
+  };
+
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const greeting = (() => {
+    const hour = today.getHours();
+    if (hour < 12) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  })();
+
   return (
     <GuruLayout>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
         {/* Header */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -475,7 +417,7 @@ export default function DashboardGuru() {
                 Dashboard Guru Tahfidz
               </h1>
               <p className="text-white/90 text-sm sm:text-base mt-1">
-                Selamat datang kembali! Berikut adalah ringkasan aktivitas tahfidz hari ini.
+                {greeting}, {getFirstName(session?.user?.name)} • {formattedDate}
               </p>
             </div>
             <button
@@ -489,64 +431,24 @@ export default function DashboardGuru() {
           </div>
         </div>
 
-        {/* Motivasi Harian */}
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-5 sm:p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-              <Sparkles size={24} className="text-amber-100" />
-            </div>
-            <div className="flex-1">
-              <p className="text-base sm:text-lg font-semibold italic leading-relaxed mb-2">
-                &ldquo;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&rdquo;
-              </p>
-              <p className="text-sm text-amber-100">— HR. Bukhari</p>
-            </div>
-          </div>
-        </div>
+        {/* Motivation Card */}
+        <MotivationCard />
 
-        {/* Pengumuman Widget */}
-        <PengumumanWidget limit={3} />
+        {/* Announcement Section - Paling Pertama & Menonjol */}
+        <AnnouncementSection announcements={announcements} loading={false} />
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            icon={GraduationCap}
-            title="Kelas Diampu"
-            value={stats?.kelasAjaran}
-            subtitle="kelas aktif"
-            variant="green"
-          />
-          <StatsCard
-            icon={Users}
-            title="Jumlah Siswa"
-            value={stats?.jumlahSiswa}
-            subtitle="siswa terdaftar"
-            variant="amber"
-          />
-          <StatsCard
-            icon={Award}
-            title="Progres Rata-rata"
-            value={`${stats?.progressRataRata}%`}
-            subtitle="dari target"
-            variant="blue"
-          />
-          <StatsCard
-            icon={BookOpen}
-            title="Total Juz"
-            value={stats?.totalJuz}
-            subtitle="juz diampu"
-            variant="violet"
-          />
-        </div>
+        {/* Stats Cards - Hapus Total Juz, Progress dengan subtitle jelas */}
+        <StatsCards stats={stats} />
 
         {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <JadwalSesiCard jadwalHariIni={jadwalHariIni} />
-          <AktivitasTerbaruCard activities={activities} loading={activitiesLoading} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Kelola Kelas - Ganti dari Jadwal Setoran */}
+          <ClassManagementSection kelasList={kelasList} loading={loading} />
+
+          {/* Aktivitas Terbaru - Tetap di posisi ini */}
+          <RecentActivity activities={activities} loading={activitiesLoading} />
         </div>
 
-        {/* Riwayat Penilaian - Full Width */}
-        <RiwayatPenilaianCard riwayatPenilaian={riwayatPenilaian} />
       </div>
     </GuruLayout>
   );
