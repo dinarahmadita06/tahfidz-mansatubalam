@@ -256,7 +256,7 @@ export default function LaporanHafalanPage() {
       // Table detail setoran
       const tableData = reportData.hafalan.map((h, idx) => [
         idx + 1,
-        new Date(h.tanggalSetor).toLocaleDateString('id-ID'),
+        new Date(h.tanggal).toLocaleDateString('id-ID'),
         h.surah.namaLatin,
         `${h.ayatMulai}-${h.ayatSelesai}`,
         h.juz,
@@ -356,7 +356,7 @@ export default function LaporanHafalanPage() {
         ['No', 'Tanggal', 'Surah', 'Ayat', 'Juz', 'Nilai', 'Status', 'Catatan'],
         ...reportData.hafalan.map((h, idx) => [
           idx + 1,
-          new Date(h.tanggalSetor).toLocaleDateString('id-ID'),
+          new Date(h.tanggal).toLocaleDateString('id-ID'),
           h.surah.namaLatin,
           `${h.ayatMulai}-${h.ayatSelesai}`,
           h.juz,
@@ -713,7 +713,7 @@ export default function LaporanHafalanPage() {
                         h && h.id ? (
                           <tr key={h.id || idx} style={{ borderBottom: '1px solid #DDE6E1' }}>
                             <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>
-                              {h.tanggalSetor ? new Date(h.tanggalSetor).toLocaleDateString('id-ID') : '-'}
+                              {h.tanggal ? new Date(h.tanggal).toLocaleDateString('id-ID') : '-'}
                             </td>
                             <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{h.surah?.namaLatin || '-'}</td>
                             <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{h.ayatMulai || '-'}-{h.ayatSelesai || '-'}</td>

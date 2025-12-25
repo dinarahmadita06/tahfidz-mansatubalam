@@ -34,7 +34,7 @@ export async function GET(request) {
       siswa: {
         kelasId: kelasId
       },
-      tanggalSetor: {
+      tanggal: {
         gte: new Date(tanggalMulai),
         lte: new Date(tanggalSelesai)
       }
