@@ -3,15 +3,23 @@
 import { useState, useEffect } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
-  FileText, Download, Calendar, Users, TrendingUp,
-  ChevronDown, ChevronUp, Filter, FileSpreadsheet,
-  Sparkles, BookOpen, CheckCircle, XCircle, Clock
+  FileText,
+  Download,
+  Calendar,
+  Users,
+  TrendingUp,
+  FileSpreadsheet,
+  BookOpen,
+  CheckCircle,
+  XCircle,
+  Clock,
+  BarChart3,
 } from 'lucide-react';
 import TabelHarian from '@/components/laporan/TabelHarian';
 import TabelBulanan from '@/components/laporan/TabelBulanan';
 import TabelSemesteran from '@/components/laporan/TabelSemesteran';
 import PopupPenilaian from '@/components/laporan/PopupPenilaian';
-import { colors } from '@/components/laporan/constants';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function LaporanGuruPage() {
   const [loading, setLoading] = useState(true);
@@ -90,8 +98,8 @@ export default function LaporanGuruPage() {
             nilaiMakhraj: 82,
             nilaiImplementasi: 86,
             statusHafalan: 'LANJUT',
-            catatan: 'Bagus, terus tingkatkan'
-          }
+            catatan: 'Bagus, terus tingkatkan',
+          },
         },
         {
           siswaId: '2',
@@ -104,9 +112,9 @@ export default function LaporanGuruPage() {
             nilaiMakhraj: 90,
             nilaiImplementasi: 93,
             statusHafalan: 'LANJUT',
-            catatan: 'Sangat baik'
-          }
-        }
+            catatan: 'Sangat baik',
+          },
+        },
       ];
     } else if (mode === 'bulanan') {
       return [
@@ -120,7 +128,7 @@ export default function LaporanGuruPage() {
           rataRataMakhraj: 85.3,
           rataRataImplementasi: 88.0,
           statusHafalan: 'LANJUT',
-          catatanAkhir: 'Progres sangat baik sepanjang bulan'
+          catatanAkhir: 'Progres sangat baik sepanjang bulan',
         },
         {
           siswaId: '2',
@@ -132,10 +140,11 @@ export default function LaporanGuruPage() {
           rataRataMakhraj: 90.0,
           rataRataImplementasi: 93.0,
           statusHafalan: 'LANJUT',
-          catatanAkhir: 'Excellent, satu kali sakit'
-        }
+          catatanAkhir: 'Excellent, satu kali sakit',
+        },
       ];
-    } else { // semesteran
+    } else {
+      // semesteran
       return [
         {
           siswaId: '1',
@@ -147,7 +156,7 @@ export default function LaporanGuruPage() {
           rataRataMakhraj: 86.5,
           rataRataImplementasi: 89.3,
           statusHafalan: 'LANJUT',
-          catatanAkhir: 'Progres konsisten selama semester'
+          catatanAkhir: 'Progres konsisten selama semester',
         },
         {
           siswaId: '2',
@@ -159,8 +168,8 @@ export default function LaporanGuruPage() {
           rataRataMakhraj: 91.8,
           rataRataImplementasi: 94.1,
           statusHafalan: 'LANJUT',
-          catatanAkhir: 'Outstanding performance selama semester'
-        }
+          catatanAkhir: 'Outstanding performance selama semester',
+        },
       ];
     }
   };
@@ -202,17 +211,17 @@ export default function LaporanGuruPage() {
             printWindow.document.write(result.html);
             printWindow.document.close();
           } else {
-            alert('Pop-up blocker mencegah membuka window cetak. Silakan izinkan pop-up untuk situs ini.');
+            toast.error('Pop-up blocker mencegah membuka window cetak. Silakan izinkan pop-up untuk situs ini.');
           }
         } else {
-          alert(`${format} berhasil diunduh!`);
+          toast.success(`${format} berhasil diunduh!`);
         }
       } else {
-        alert(`Gagal mengunduh ${format}: ${result.error}`);
+        toast.error(`Gagal mengunduh ${format}: ${result.error}`);
       }
     } catch (error) {
       console.error('Error exporting:', error);
-      alert(`Terjadi kesalahan saat mengunduh ${format}`);
+      toast.error(`Terjadi kesalahan saat mengunduh ${format}`);
     }
   };
 
@@ -232,13 +241,13 @@ export default function LaporanGuruPage() {
 
       if (result.success) {
         fetchLaporanData();
-        alert('Status kehadiran disimpan');
+        toast.success('Status kehadiran disimpan');
       } else {
-        alert('Gagal menyimpan status kehadiran');
+        toast.error('Gagal menyimpan status kehadiran');
       }
     } catch (error) {
       console.error('Error saving status:', error);
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     }
   };
 
@@ -275,12 +284,17 @@ export default function LaporanGuruPage() {
     try {
       // Validation
       if (!penilaianForm.surah || !penilaianForm.ayatMulai || !penilaianForm.ayatSelesai) {
-        alert('Surah dan ayat harus diisi');
+        toast.error('Surah dan ayat harus diisi');
         return;
       }
 
-      if (!penilaianForm.tajwid || !penilaianForm.kelancaran || !penilaianForm.makhraj || !penilaianForm.implementasi) {
-        alert('Semua nilai penilaian harus diisi');
+      if (
+        !penilaianForm.tajwid ||
+        !penilaianForm.kelancaran ||
+        !penilaianForm.makhraj ||
+        !penilaianForm.implementasi
+      ) {
+        toast.error('Semua nilai penilaian harus diisi');
         return;
       }
 
@@ -303,15 +317,15 @@ export default function LaporanGuruPage() {
       const result = await response.json();
 
       if (result.success) {
-        alert('Penilaian berhasil disimpan');
+        toast.success('Penilaian berhasil disimpan');
         setShowPenilaianPopup(false);
         fetchLaporanData();
       } else {
-        alert('Gagal menyimpan penilaian');
+        toast.error('Gagal menyimpan penilaian');
       }
     } catch (error) {
       console.error('Error saving penilaian:', error);
-      alert('Terjadi kesalahan');
+      toast.error('Terjadi kesalahan');
     }
   };
 
@@ -383,466 +397,268 @@ export default function LaporanGuruPage() {
     }
   };
 
-  const getNilaiColor = (nilai) => {
-    if (!nilai) return colors.gray[300];
-    if (nilai >= 90) return colors.emerald[500];
-    if (nilai >= 80) return colors.amber[400];
-    if (nilai >= 70) return colors.amber[600];
-    return colors.gray[500];
-  };
-
-  // Helper function untuk format angka (bulat jika tidak pecahan, koma jika pecahan)
-  const formatNilai = (nilai) => {
-    if (nilai == null) return '-';
-    const rounded = Math.round(nilai);
-    // Jika nilai sama dengan nilai bulatannya, tampilkan bulat
-    if (Math.abs(nilai - rounded) < 0.01) {
-      return rounded.toString();
-    }
-    // Jika ada pecahan, tampilkan dengan 1 desimal
-    return nilai.toFixed(1);
-  };
-
-  // Helper function untuk hitung rata-rata
-  const hitungRataRata = (tajwid, kelancaran, makhraj, implementasi) => {
-    const values = [tajwid, kelancaran, makhraj, implementasi].filter(v => v != null);
-    if (values.length === 0) return null;
-    return values.reduce((sum, v) => sum + v, 0) / values.length;
-  };
-
-  const getStatusKehadiranBadge = (status) => {
-    const styles = {
-      HADIR: { bg: colors.emerald[100], text: colors.emerald[700], icon: CheckCircle },
-      SAKIT: { bg: colors.amber[100], text: colors.amber[700], icon: Clock },
-      IZIN: { bg: colors.amber[100], text: colors.amber[700], icon: Clock },
-      ALFA: { bg: '#FEE2E2', text: '#991B1B', icon: XCircle }
-    };
-    const style = styles[status] || styles.ALFA;
-    const Icon = style.icon;
-
-    return (
-      <div style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '4px 12px',
-        borderRadius: '100px',
-        background: style.bg,
-        color: style.text,
-        fontSize: '12px',
-        fontWeight: 600,
-        fontFamily: 'Poppins, system-ui, sans-serif',
-      }}>
-        <Icon size={14} />
-        {status}
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <GuruLayout>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              border: `4px solid ${colors.emerald[200]}`,
-              borderTopColor: colors.emerald[500],
-              borderRadius: '50%',
-              margin: '0 auto 16px',
-              animation: 'spin 1s linear infinite',
-            }} />
-            <p style={{
-              fontSize: '16px',
-              fontWeight: 500,
-              color: colors.text.secondary,
-              fontFamily: 'Poppins, system-ui, sans-serif',
-            }}>
-              Memuat laporan...
-            </p>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat laporan...</p>
           </div>
         </div>
       </GuruLayout>
     );
   }
 
+  // Calculate summary statistics
+  const totalSiswa = laporanData.length;
+  const rataRataHadir =
+    viewMode === 'harian'
+      ? laporanData.filter((s) => s.pertemuan?.statusKehadiran === 'HADIR').length
+      : laporanData.length > 0
+      ? Math.round(laporanData.reduce((acc, s) => acc + (s.totalHadir || 0), 0) / laporanData.length)
+      : 0;
+
+  const rataRataNilai =
+    viewMode === 'harian'
+      ? laporanData.length > 0
+        ? (
+            laporanData.reduce(
+              (acc, s) =>
+                acc +
+                (s.pertemuan
+                  ? ((s.pertemuan.nilaiTajwid || 0) +
+                      (s.pertemuan.nilaiKelancaran || 0) +
+                      (s.pertemuan.nilaiMakhraj || 0) +
+                      (s.pertemuan.nilaiImplementasi || 0)) /
+                    4
+                  : 0),
+              0
+            ) / laporanData.length
+          ).toFixed(1)
+        : '0.0'
+      : laporanData.length > 0
+      ? (
+          laporanData.reduce(
+            (acc, s) =>
+              acc +
+              (s.rataRataTajwid || 0) +
+              (s.rataRataKelancaran || 0) +
+              (s.rataRataMakhraj || 0) +
+              (s.rataRataImplementasi || 0),
+            0
+          ) /
+          (laporanData.length * 4)
+        ).toFixed(1)
+      : '0.0';
+
+  const totalSesi =
+    viewMode === 'harian' ? laporanData.length : viewMode === 'bulanan' ? '4x' : '24x';
+
   return (
     <GuruLayout>
-      <div style={{
-        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
-        minHeight: '100vh',
-        position: 'relative',
-      }}>
-        {/* Islamic Pattern Background */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%231A936F' stroke-width='0.5' opacity='0.05'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%23F7C873' stroke-width='0.5' opacity='0.05'/%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px',
-          pointerEvents: 'none',
-          opacity: 0.3,
-          zIndex: 0,
-        }} />
+      <Toaster position="top-right" />
 
-        {/* Header */}
-        <div style={{
-          position: 'relative',
-          padding: '32px 48px 24px',
-          borderBottom: `1px solid ${colors.gray[200]}`,
-          background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
-          backdropFilter: 'blur(10px)',
-          zIndex: 2,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-            <div>
-              <h1 style={{
-                fontSize: '36px',
-                fontWeight: 700,
-                background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '8px',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                Laporan Hafalan & Kehadiran
-              </h1>
-              <p style={{
-                fontSize: '15px',
-                fontWeight: 500,
-                color: colors.text.secondary,
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                Laporan terpadu hafalan dan kehadiran siswa dengan berbagai mode tampilan
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Motivational Quote */}
-        <div style={{
-          position: 'relative',
-          padding: '24px 48px',
-          zIndex: 2,
-        }}>
-          <div style={{
-            background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-            borderRadius: '20px',
-            padding: '20px 24px',
-            boxShadow: '0 6px 20px rgba(247, 200, 115, 0.25)',
-            border: `2px solid ${colors.amber[300]}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'start', gap: '14px' }}>
-              <div style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '12px',
-                background: `${colors.white}25`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <Sparkles size={22} color={colors.white} />
+      <div className="space-y-6">
+        {/* Header Gradient Hijau - Style Tasmi */}
+        <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-2xl shadow-md p-8 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+                <BarChart3 size={40} className="text-white" />
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  color: colors.white,
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                  fontStyle: 'italic',
-                  marginBottom: '8px',
-                  lineHeight: '1.6',
-                }}>
-                  &ldquo;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&rdquo;
-                </p>
-                <p style={{
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: colors.amber[50],
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
-                  — HR. Bukhari
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div style={{ position: 'relative', padding: '0 48px 48px', zIndex: 2 }}>
-          {/* Control Panel */}
-          <div style={{
-            background: colors.white,
-            borderRadius: '20px',
-            padding: '24px',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
-            border: `2px solid ${colors.emerald[100]}`,
-            marginBottom: '24px',
-          }}>
-            {/* Mode Toggle Buttons */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '20px',
-              gap: '16px',
-            }}>
-              <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
-                <button
-                  onClick={() => setViewMode('harian')}
-                  style={{
-                    flex: 1,
-                    padding: '14px 20px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: viewMode === 'harian'
-                      ? `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
-                      : colors.gray[100],
-                    color: viewMode === 'harian' ? colors.white : colors.text.secondary,
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                  className="mode-btn"
-                >
-                  <Calendar size={18} />
-                  Harian/Mingguan
-                </button>
-                <button
-                  onClick={() => setViewMode('bulanan')}
-                  style={{
-                    flex: 1,
-                    padding: '14px 20px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: viewMode === 'bulanan'
-                      ? `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`
-                      : colors.gray[100],
-                    color: viewMode === 'bulanan' ? colors.white : colors.text.secondary,
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                  className="mode-btn"
-                >
-                  <TrendingUp size={18} />
-                  Rekap Bulanan
-                </button>
-                <button
-                  onClick={() => setViewMode('semesteran')}
-                  style={{
-                    flex: 1,
-                    padding: '14px 20px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: viewMode === 'semesteran'
-                      ? `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
-                      : colors.gray[100],
-                    color: viewMode === 'semesteran' ? colors.white : colors.text.secondary,
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                  className="mode-btn"
-                >
-                  <BookOpen size={18} />
-                  Rekap Semesteran
-                </button>
-              </div>
-
-              {/* Export Buttons */}
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => handleExport('PDF')}
-                  style={{
-                    padding: '14px 20px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderRadius: '12px',
-                    border: `2px solid ${colors.emerald[500]}`,
-                    cursor: 'pointer',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: colors.white,
-                    color: colors.emerald[600],
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  className="export-btn"
-                >
-                  <FileText size={18} />
-                  PDF
-                </button>
-                <button
-                  onClick={() => handleExport('Excel')}
-                  style={{
-                    padding: '14px 20px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderRadius: '12px',
-                    border: `2px solid ${colors.emerald[500]}`,
-                    cursor: 'pointer',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: colors.white,
-                    color: colors.emerald[600],
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  className="export-btn"
-                >
-                  <FileSpreadsheet size={18} />
-                  Excel
-                </button>
-              </div>
-            </div>
-
-            {/* Filter Section */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: viewMode === 'harian' ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
-              gap: '16px',
-            }}>
-              {viewMode === 'harian' && (
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                  }}>
-                    Tanggal Pertemuan
-                  </label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      fontSize: '14px',
-                      border: `2px solid ${colors.emerald[200]}`,
-                      borderRadius: '12px',
-                      outline: 'none',
-                      fontFamily: 'Poppins, system-ui, sans-serif',
-                      background: colors.white,
-                      cursor: 'pointer',
-                      color: colors.text.primary,
-                    }}
-                  />
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl md:text-4xl font-bold">Laporan Hafalan & Kehadiran</h1>
+                  <span className="hidden md:inline-block bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
+                    Laporan
+                  </span>
                 </div>
-              )}
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.text.secondary,
-                  marginBottom: '8px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
-                  {viewMode === 'harian' ? 'Bulan' : 'Periode'}
-                </label>
-                <select
-                  value={selectedPeriod}
-                  onChange={(e) => setSelectedPeriod(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    fontSize: '14px',
-                    border: `2px solid ${colors.emerald[200]}`,
-                    borderRadius: '12px',
-                    outline: 'none',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: colors.white,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="bulan-ini">Bulan Ini</option>
-                  <option value="bulan-lalu">Bulan Lalu</option>
-                  <option value="semester-ini">Semester Ini</option>
-                  <option value="custom">Custom Range</option>
-                </select>
+                <p className="text-green-50 text-base md:text-lg">
+                  Laporan terpadu hafalan dan kehadiran siswa dengan berbagai mode tampilan
+                </p>
               </div>
+            </div>
+          </div>
+        </div>
 
+        {/* Statistics Cards - 4 Kolom Tasmi Style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Card 1: Total Siswa */}
+          <div className="bg-white rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.text.secondary,
-                  marginBottom: '8px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}>
-                  Kelas
-                </label>
-                <select
-                  value={selectedKelas}
-                  onChange={(e) => setSelectedKelas(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    fontSize: '14px',
-                    border: `2px solid ${colors.emerald[200]}`,
-                    borderRadius: '12px',
-                    outline: 'none',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                    background: colors.white,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="">Semua Kelas</option>
-                  <option value="xii-ipa-1">XII IPA 1</option>
-                  <option value="xi-ipa-2">XI IPA 2</option>
-                  <option value="x-mia-3">X MIA 3</option>
-                </select>
+                <p className="text-emerald-600 text-xs font-semibold mb-1">TOTAL SISWA</p>
+                <h3 className="text-3xl font-bold text-emerald-700">{totalSiswa}</h3>
+              </div>
+              <div className="bg-emerald-100 p-3 rounded-full">
+                <Users size={24} className="text-emerald-600" />
               </div>
             </div>
           </div>
 
-          {/* Table Section */}
-          <div style={{
-            background: colors.white,
-            borderRadius: '20px',
-            padding: '24px',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
-            border: `2px solid ${colors.emerald[100]}`,
-            overflowX: 'auto',
-          }}>
+          {/* Card 2: Rata-rata Hadir */}
+          <div className="bg-white rounded-xl border-2 border-blue-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-xs font-semibold mb-1">
+                  {viewMode === 'harian' ? 'HADIR HARI INI' : 'RATA-RATA HADIR'}
+                </p>
+                <h3 className="text-3xl font-bold text-blue-700">{rataRataHadir}</h3>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <CheckCircle size={24} className="text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Rata-rata Nilai */}
+          <div className="bg-white rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-600 text-xs font-semibold mb-1">RATA-RATA NILAI</p>
+                <h3 className="text-3xl font-bold text-emerald-700">{rataRataNilai}</h3>
+              </div>
+              <div className="bg-emerald-100 p-3 rounded-full">
+                <TrendingUp size={24} className="text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Total Sesi */}
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-xs font-semibold mb-1">TOTAL SESI PENILAIAN</p>
+                <h3 className="text-3xl font-bold text-gray-700">{totalSesi}</h3>
+              </div>
+              <div className="bg-gray-100 p-3 rounded-full">
+                <BookOpen size={24} className="text-gray-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Laporan + Filter Section - Clean White Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* Segmented Tabs - Tasmi Style */}
+          <div className="flex flex-wrap gap-3 mb-6 pb-6 border-b border-gray-200">
+            <button
+              onClick={() => setViewMode('harian')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                viewMode === 'harian'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-emerald-300'
+              }`}
+            >
+              <Calendar size={18} />
+              Harian/Mingguan
+            </button>
+            <button
+              onClick={() => setViewMode('bulanan')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                viewMode === 'bulanan'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-emerald-300'
+              }`}
+            >
+              <TrendingUp size={18} />
+              Rekap Bulanan
+            </button>
+            <button
+              onClick={() => setViewMode('semesteran')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                viewMode === 'semesteran'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-emerald-300'
+              }`}
+            >
+              <BookOpen size={18} />
+              Rekap Semesteran
+            </button>
+
+            {/* Export Buttons - Right aligned on desktop */}
+            <div className="flex gap-2 ml-auto">
+              <button
+                onClick={() => handleExport('PDF')}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-all"
+              >
+                <FileText size={18} />
+                PDF
+              </button>
+              <button
+                onClick={() => handleExport('Excel')}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-all"
+              >
+                <FileSpreadsheet size={18} />
+                Excel
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Section - Grid 3 Kolom */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {viewMode === 'harian' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tanggal Pertemuan
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {viewMode === 'harian' ? 'Bulan' : 'Periode'}
+              </label>
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              >
+                <option value="bulan-ini">Bulan Ini</option>
+                <option value="bulan-lalu">Bulan Lalu</option>
+                <option value="semester-ini">Semester Ini</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Kelas</label>
+              <select
+                value={selectedKelas}
+                onChange={(e) => setSelectedKelas(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              >
+                <option value="">Semua Kelas</option>
+                <option value="xii-ipa-1">XII IPA 1</option>
+                <option value="xi-ipa-2">XI IPA 2</option>
+                <option value="x-mia-3">X MIA 3</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Section or Empty State */}
+        {laporanData.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-4 bg-emerald-50 rounded-full">
+                <FileText className="text-emerald-600" size={48} />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">Tidak ada data laporan</h3>
+            <p className="text-gray-500">
+              Belum ada data untuk periode dan filter yang dipilih
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-x-auto">
             {viewMode === 'harian' ? (
               <TabelHarian
                 data={laporanData}
@@ -851,132 +667,12 @@ export default function LaporanGuruPage() {
                 onCatatanChange={handleCatatanChange}
               />
             ) : viewMode === 'bulanan' ? (
-              <TabelBulanan
-                data={laporanData}
-                onCatatanChange={handleCatatanBulananChange}
-              />
+              <TabelBulanan data={laporanData} onCatatanChange={handleCatatanBulananChange} />
             ) : (
-              <TabelSemesteran
-                data={laporanData}
-                onCatatanChange={handleCatatanSemesteranChange}
-              />
+              <TabelSemesteran data={laporanData} onCatatanChange={handleCatatanSemesteranChange} />
             )}
           </div>
-
-          {/* Summary Statistics */}
-          <div style={{
-            marginTop: '24px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px',
-          }}>
-            <div style={{
-              background: colors.white,
-              borderRadius: '16px',
-              padding: '20px',
-              border: `2px solid ${colors.emerald[100]}`,
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '32px',
-                fontWeight: 700,
-                color: colors.emerald[600],
-                marginBottom: '8px',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                {laporanData.length}
-              </div>
-              <div style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: colors.text.tertiary,
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                Total Siswa
-              </div>
-            </div>
-
-            <div style={{
-              background: colors.white,
-              borderRadius: '16px',
-              padding: '20px',
-              border: `2px solid ${colors.amber[100]}`,
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '32px',
-                fontWeight: 700,
-                color: colors.amber[600],
-                marginBottom: '8px',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                {viewMode === 'harian' ? '-' : (laporanData.length > 0 ? Math.round(laporanData.reduce((acc, s) => acc + (s.totalHadir || 0), 0) / laporanData.length) : 0)}
-              </div>
-              <div style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: colors.text.tertiary,
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                Rata-rata Hadir
-              </div>
-            </div>
-
-            <div style={{
-              background: colors.white,
-              borderRadius: '16px',
-              padding: '20px',
-              border: `2px solid ${colors.emerald[100]}`,
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '32px',
-                fontWeight: 700,
-                color: colors.emerald[600],
-                marginBottom: '8px',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                {viewMode === 'harian' ? '-' : (laporanData.length > 0 ? ((laporanData.reduce((acc, s) => acc + (s.rataRataTajwid || 0) + (s.rataRataKelancaran || 0) + (s.rataRataMakhraj || 0) + (s.rataRataImplementasi || 0), 0) / (laporanData.length * 4)).toFixed(1)) : '0.0')}
-              </div>
-              <div style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: colors.text.tertiary,
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                Rata-rata Nilai Keseluruhan
-              </div>
-            </div>
-
-            <div style={{
-              background: colors.white,
-              borderRadius: '16px',
-              padding: '20px',
-              border: `2px solid ${colors.amber[100]}`,
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '32px',
-                fontWeight: 700,
-                color: colors.amber[600],
-                marginBottom: '8px',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                {viewMode === 'harian'
-                  ? laporanData.length
-                  : (viewMode === 'bulanan' ? '4x' : '24x')}
-              </div>
-              <div style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: colors.text.tertiary,
-                fontFamily: 'Poppins, system-ui, sans-serif',
-              }}>
-                Total Sesi Penilaian
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Popup Penilaian */}
@@ -988,25 +684,6 @@ export default function LaporanGuruPage() {
         onFormChange={setPenilaianForm}
         onSave={handleSavePenilaian}
       />
-
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        .mode-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .export-btn:hover {
-          background: linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%) !important;
-          color: ${colors.white} !important;
-          transform: translateY(-2px);
-        }
-      `}</style>
     </GuruLayout>
   );
 }
