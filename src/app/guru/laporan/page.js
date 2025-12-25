@@ -1,33 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
-import {
-  FileText,
-  Download,
-  Calendar,
-  Users,
-  TrendingUp,
-  FileSpreadsheet,
-  BookOpen,
-  CheckCircle,
-  XCircle,
-  Clock,
-  BarChart3,
-} from 'lucide-react';
+import { FileText, Loader, AlertTriangle, BarChart3 } from 'lucide-react';
 import TabelHarian from '@/components/laporan/TabelHarian';
 import TabelBulanan from '@/components/laporan/TabelBulanan';
 import TabelSemesteran from '@/components/laporan/TabelSemesteran';
 import PopupPenilaian from '@/components/laporan/PopupPenilaian';
 import { toast, Toaster } from 'react-hot-toast';
+import { fetchKelasGuru, fetchLaporan, handleExportPDF as exportPDF, getPeriodLabel } from '@/lib/reportService';
 
 export default function LaporanGuruPage() {
-  const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('harian'); // harian, bulanan, semesteran
-  const [selectedKelas, setSelectedKelas] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState('bulan-ini');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // For harian mode date picker
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(false);
+  const [kelasList, setKelasList] = useState([]);
   const [laporanData, setLaporanData] = useState([]);
+  const [reportGenerated, setReportGenerated] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // Filters
+  const [filters, setFilters] = useState({
+    kelasId: '',
+    periode: 'bulanan',
+    tanggalMulai: '',
+    tanggalSelesai: '',
+    tanggal: new Date().toISOString().split('T')[0], // for harian mode
+  });
 
   // State for editable harian mode
   const [showPenilaianPopup, setShowPenilaianPopup] = useState(false);
@@ -42,186 +41,86 @@ export default function LaporanGuruPage() {
     implementasi: '',
   });
 
+  // Fetch kelas when guru logs in
   useEffect(() => {
-    fetchLaporanData();
-  }, [viewMode, selectedKelas, selectedPeriod, selectedDate]);
+    if (session?.user?.id) {
+      loadKelasGuru();
+    }
+  }, [session]);
 
-  const fetchLaporanData = async () => {
-    setLoading(true);
+  const loadKelasGuru = async () => {
     try {
-      const params = new URLSearchParams({
-        viewMode,
-        periode: selectedPeriod,
-      });
+      const kelas = await fetchKelasGuru(session.user.id);
+      setKelasList(kelas);
+    } catch (error) {
+      toast.error('Gagal memuat kelas');
+      console.error('Error loading kelas:', error);
+    }
+  };
 
-      if (selectedKelas) {
-        params.append('kelasId', selectedKelas);
-      }
+  const handleGenerateLaporan = async () => {
+    if (!filters.kelasId) {
+      toast.error('Pilih kelas terlebih dahulu');
+      return;
+    }
 
-      // Add selected date for harian mode
-      if (viewMode === 'harian' && selectedDate) {
-        params.append('tanggal', selectedDate);
-      }
+    setLoading(true);
+    setReportGenerated(false);
+    setLaporanData([]);
 
-      const response = await fetch(`/api/guru/laporan?${params.toString()}`);
-      const result = await response.json();
+    try {
+      const data = await fetchLaporan(filters);
+      setLaporanData(data);
+      setReportGenerated(true);
 
-      if (result.success) {
-        setLaporanData(result.data);
+      if (data.length === 0) {
+        toast.info('Tidak ada data laporan untuk periode ini');
       } else {
-        console.error('Failed to fetch data:', result.error);
-        // Fallback to mock data if API fails
-        const mockData = generateMockData(viewMode);
-        setLaporanData(mockData);
+        toast.success('Laporan berhasil dimuat');
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      // Fallback to mock data on error
-      const mockData = generateMockData(viewMode);
-      setLaporanData(mockData);
+      toast.error('Gagal memuat laporan');
+      console.error('Error generating laporan:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const generateMockData = (mode) => {
-    if (mode === 'harian') {
-      return [
-        {
-          siswaId: '1',
-          namaLengkap: 'Ahmad Fadli Ramadhan',
-          pertemuan: {
-            tanggal: '2025-01-05',
-            statusKehadiran: 'HADIR',
-            nilaiTajwid: 85,
-            nilaiKelancaran: 88,
-            nilaiMakhraj: 82,
-            nilaiImplementasi: 86,
-            statusHafalan: 'LANJUT',
-            catatan: 'Bagus, terus tingkatkan',
-          },
-        },
-        {
-          siswaId: '2',
-          namaLengkap: 'Siti Aisyah Rahmawati',
-          pertemuan: {
-            tanggal: '2025-01-05',
-            statusKehadiran: 'HADIR',
-            nilaiTajwid: 92,
-            nilaiKelancaran: 94,
-            nilaiMakhraj: 90,
-            nilaiImplementasi: 93,
-            statusHafalan: 'LANJUT',
-            catatan: 'Sangat baik',
-          },
-        },
-      ];
-    } else if (mode === 'bulanan') {
-      return [
-        {
-          siswaId: '1',
-          namaLengkap: 'Ahmad Fadli Ramadhan',
-          totalHadir: 4,
-          totalTidakHadir: 0,
-          rataRataTajwid: 87.5,
-          rataRataKelancaran: 89.8,
-          rataRataMakhraj: 85.3,
-          rataRataImplementasi: 88.0,
-          statusHafalan: 'LANJUT',
-          catatanAkhir: 'Progres sangat baik sepanjang bulan',
-        },
-        {
-          siswaId: '2',
-          namaLengkap: 'Siti Aisyah Rahmawati',
-          totalHadir: 3,
-          totalTidakHadir: 1,
-          rataRataTajwid: 92.0,
-          rataRataKelancaran: 94.0,
-          rataRataMakhraj: 90.0,
-          rataRataImplementasi: 93.0,
-          statusHafalan: 'LANJUT',
-          catatanAkhir: 'Excellent, satu kali sakit',
-        },
-      ];
-    } else {
-      // semesteran
-      return [
-        {
-          siswaId: '1',
-          namaLengkap: 'Ahmad Fadli Ramadhan',
-          totalHadir: 22,
-          totalTidakHadir: 2,
-          rataRataTajwid: 88.2,
-          rataRataKelancaran: 90.1,
-          rataRataMakhraj: 86.5,
-          rataRataImplementasi: 89.3,
-          statusHafalan: 'LANJUT',
-          catatanAkhir: 'Progres konsisten selama semester',
-        },
-        {
-          siswaId: '2',
-          namaLengkap: 'Siti Aisyah Rahmawati',
-          totalHadir: 21,
-          totalTidakHadir: 3,
-          rataRataTajwid: 93.5,
-          rataRataKelancaran: 95.2,
-          rataRataMakhraj: 91.8,
-          rataRataImplementasi: 94.1,
-          statusHafalan: 'LANJUT',
-          catatanAkhir: 'Outstanding performance selama semester',
-        },
-      ];
+  const handleExportPDF = async () => {
+    if (!reportGenerated || laporanData.length === 0) {
+      toast.error('Generate laporan terlebih dahulu');
+      return;
     }
-  };
 
-  const handleExport = async (format) => {
+    setExporting(true);
+
     try {
-      const response = await fetch('/api/guru/laporan/export', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          format,
-          viewMode,
-          kelasId: selectedKelas,
-          periode: selectedPeriod,
-          data: laporanData,
-        }),
+      const selectedKelas = kelasList.find((k) => k.id === filters.kelasId);
+      const viewMode =
+        filters.periode === 'harian'
+          ? 'harian'
+          : filters.periode === 'mingguan' || filters.periode === 'bulanan'
+          ? 'bulanan'
+          : 'semesteran';
+
+      const result = await exportPDF({
+        viewMode,
+        kelasId: filters.kelasId,
+        periode: filters.periode,
+        laporanData,
+        kelasNama: selectedKelas?.nama || 'Kelas',
       });
 
-      const result = await response.json();
-
       if (result.success) {
-        if (format === 'Excel' && result.csv) {
-          // Download CSV directly
-          const blob = new Blob([result.csv], { type: 'text/csv;charset=utf-8;' });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = result.filename || `laporan-${viewMode}-${Date.now()}.csv`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        } else if (format === 'PDF' && result.html) {
-          // Open PDF in new window for printing
-          const printWindow = window.open('', '_blank');
-          if (printWindow) {
-            printWindow.document.write(result.html);
-            printWindow.document.close();
-          } else {
-            toast.error('Pop-up blocker mencegah membuka window cetak. Silakan izinkan pop-up untuk situs ini.');
-          }
-        } else {
-          toast.success(`${format} berhasil diunduh!`);
-        }
+        toast.success('PDF berhasil dibuka');
       } else {
-        toast.error(`Gagal mengunduh ${format}: ${result.error}`);
+        toast.error(result.error);
       }
     } catch (error) {
-      console.error('Error exporting:', error);
-      toast.error(`Terjadi kesalahan saat mengunduh ${format}`);
+      toast.error('Gagal export PDF');
+      console.error('Error exporting PDF:', error);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -232,7 +131,7 @@ export default function LaporanGuruPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siswaId,
-          tanggal: selectedDate,
+          tanggal: filters.tanggal,
           status,
         }),
       });
@@ -240,8 +139,8 @@ export default function LaporanGuruPage() {
       const result = await response.json();
 
       if (result.success) {
-        fetchLaporanData();
         toast.success('Status kehadiran disimpan');
+        handleGenerateLaporan(); // Refresh data
       } else {
         toast.error('Gagal menyimpan status kehadiran');
       }
@@ -254,7 +153,6 @@ export default function LaporanGuruPage() {
   const handlePenilaianClick = (siswa) => {
     setSelectedSiswa(siswa);
 
-    // Load existing data if available
     if (siswa.pertemuan) {
       setPenilaianForm({
         surah: siswa.pertemuan.surah || '',
@@ -282,7 +180,6 @@ export default function LaporanGuruPage() {
 
   const handleSavePenilaian = async () => {
     try {
-      // Validation
       if (!penilaianForm.surah || !penilaianForm.ayatMulai || !penilaianForm.ayatSelesai) {
         toast.error('Surah dan ayat harus diisi');
         return;
@@ -303,7 +200,7 @@ export default function LaporanGuruPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siswaId: selectedSiswa.siswaId,
-          tanggal: selectedDate,
+          tanggal: filters.tanggal,
           surah: penilaianForm.surah,
           ayatMulai: parseInt(penilaianForm.ayatMulai),
           ayatSelesai: parseInt(penilaianForm.ayatSelesai),
@@ -319,7 +216,7 @@ export default function LaporanGuruPage() {
       if (result.success) {
         toast.success('Penilaian berhasil disimpan');
         setShowPenilaianPopup(false);
-        fetchLaporanData();
+        handleGenerateLaporan(); // Refresh data
       } else {
         toast.error('Gagal menyimpan penilaian');
       }
@@ -336,7 +233,7 @@ export default function LaporanGuruPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siswaId,
-          tanggal: selectedDate,
+          tanggal: filters.tanggal,
           catatan,
         }),
       });
@@ -344,7 +241,7 @@ export default function LaporanGuruPage() {
       const result = await response.json();
 
       if (result.success) {
-        fetchLaporanData();
+        // Optionally show success toast
       }
     } catch (error) {
       console.error('Error saving catatan:', error);
@@ -358,7 +255,7 @@ export default function LaporanGuruPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siswaId,
-          periode: selectedPeriod,
+          periode: filters.periode,
           catatan,
         }),
       });
@@ -366,7 +263,6 @@ export default function LaporanGuruPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Optionally refetch data or just update local state
         console.log('Catatan bulanan saved successfully');
       }
     } catch (error) {
@@ -381,7 +277,7 @@ export default function LaporanGuruPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siswaId,
-          periode: selectedPeriod,
+          periode: filters.periode,
           catatan,
         }),
       });
@@ -389,7 +285,6 @@ export default function LaporanGuruPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Optionally refetch data or just update local state
         console.log('Catatan semesteran saved successfully');
       }
     } catch (error) {
@@ -397,280 +292,221 @@ export default function LaporanGuruPage() {
     }
   };
 
-  if (loading) {
+  const getViewMode = () => {
+    if (filters.periode === 'harian') return 'harian';
+    if (filters.periode === 'mingguan' || filters.periode === 'bulanan') return 'bulanan';
+    return 'semesteran';
+  };
+
+  if (!session) {
     return (
       <GuruLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Memuat laporan...</p>
+            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
+            <p className="text-gray-600">Memuat...</p>
           </div>
         </div>
       </GuruLayout>
     );
   }
 
-  // Calculate summary statistics
-  const totalSiswa = laporanData.length;
-  const rataRataHadir =
-    viewMode === 'harian'
-      ? laporanData.filter((s) => s.pertemuan?.statusKehadiran === 'HADIR').length
-      : laporanData.length > 0
-      ? Math.round(laporanData.reduce((acc, s) => acc + (s.totalHadir || 0), 0) / laporanData.length)
-      : 0;
-
-  const rataRataNilai =
-    viewMode === 'harian'
-      ? laporanData.length > 0
-        ? (
-            laporanData.reduce(
-              (acc, s) =>
-                acc +
-                (s.pertemuan
-                  ? ((s.pertemuan.nilaiTajwid || 0) +
-                      (s.pertemuan.nilaiKelancaran || 0) +
-                      (s.pertemuan.nilaiMakhraj || 0) +
-                      (s.pertemuan.nilaiImplementasi || 0)) /
-                    4
-                  : 0),
-              0
-            ) / laporanData.length
-          ).toFixed(1)
-        : '0.0'
-      : laporanData.length > 0
-      ? (
-          laporanData.reduce(
-            (acc, s) =>
-              acc +
-              (s.rataRataTajwid || 0) +
-              (s.rataRataKelancaran || 0) +
-              (s.rataRataMakhraj || 0) +
-              (s.rataRataImplementasi || 0),
-            0
-          ) /
-          (laporanData.length * 4)
-        ).toFixed(1)
-      : '0.0';
-
-  const totalSesi =
-    viewMode === 'harian' ? laporanData.length : viewMode === 'bulanan' ? '4x' : '24x';
-
   return (
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div className="space-y-6">
-        {/* Header Gradient Hijau - Style Tasmi */}
-        <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-2xl shadow-md p-8 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
-                <BarChart3 size={40} className="text-white" />
-              </div>
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl md:text-4xl font-bold">Laporan Hafalan & Kehadiran</h1>
-                  <span className="hidden md:inline-block bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
-                    Laporan
-                  </span>
-                </div>
-                <p className="text-green-50 text-base md:text-lg">
-                  Laporan terpadu hafalan dan kehadiran siswa dengan berbagai mode tampilan
-                </p>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
+        {/* Header - Simple & Clean */}
+        <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-2xl shadow-md p-8 mb-6 text-white">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+              <BarChart3 size={40} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold">Laporan Hafalan & Kehadiran</h1>
+              <p className="text-green-50 text-base md:text-lg mt-2">
+                Generate dan unduh laporan hafalan siswa secara terperinci
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Statistics Cards - 4 Kolom Tasmi Style */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Card 1: Total Siswa */}
-          <div className="bg-white rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-600 text-xs font-semibold mb-1">TOTAL SISWA</p>
-                <h3 className="text-3xl font-bold text-emerald-700">{totalSiswa}</h3>
-              </div>
-              <div className="bg-emerald-100 p-3 rounded-full">
-                <Users size={24} className="text-emerald-600" />
-              </div>
-            </div>
-          </div>
+        {/* Filter Card - Clean Admin Style */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6">
+          <h2 className="text-xl font-bold mb-6 text-gray-800">Filter Laporan</h2>
 
-          {/* Card 2: Rata-rata Hadir */}
-          <div className="bg-white rounded-xl border-2 border-blue-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 text-xs font-semibold mb-1">
-                  {viewMode === 'harian' ? 'HADIR HARI INI' : 'RATA-RATA HADIR'}
-                </p>
-                <h3 className="text-3xl font-bold text-blue-700">{rataRataHadir}</h3>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <CheckCircle size={24} className="text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Rata-rata Nilai */}
-          <div className="bg-white rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-600 text-xs font-semibold mb-1">RATA-RATA NILAI</p>
-                <h3 className="text-3xl font-bold text-emerald-700">{rataRataNilai}</h3>
-              </div>
-              <div className="bg-emerald-100 p-3 rounded-full">
-                <TrendingUp size={24} className="text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: Total Sesi */}
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-xs font-semibold mb-1">TOTAL SESI PENILAIAN</p>
-                <h3 className="text-3xl font-bold text-gray-700">{totalSesi}</h3>
-              </div>
-              <div className="bg-gray-100 p-3 rounded-full">
-                <BookOpen size={24} className="text-gray-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Laporan + Filter Section - Clean White Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {/* Segmented Tabs - Tasmi Style */}
-          <div className="flex flex-wrap gap-3 mb-6 pb-6 border-b border-gray-200">
-            <button
-              onClick={() => setViewMode('harian')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-                viewMode === 'harian'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-emerald-300'
-              }`}
-            >
-              <Calendar size={18} />
-              Harian/Mingguan
-            </button>
-            <button
-              onClick={() => setViewMode('bulanan')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-                viewMode === 'bulanan'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-emerald-300'
-              }`}
-            >
-              <TrendingUp size={18} />
-              Rekap Bulanan
-            </button>
-            <button
-              onClick={() => setViewMode('semesteran')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-                viewMode === 'semesteran'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-emerald-300'
-              }`}
-            >
-              <BookOpen size={18} />
-              Rekap Semesteran
-            </button>
-
-            {/* Export Buttons - Right aligned on desktop */}
-            <div className="flex gap-2 ml-auto">
-              <button
-                onClick={() => handleExport('PDF')}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-all"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Kelas Filter */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Pilih Kelas <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={filters.kelasId}
+                onChange={(e) => setFilters({ ...filters, kelasId: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                disabled={loading}
               >
-                <FileText size={18} />
-                PDF
-              </button>
-              <button
-                onClick={() => handleExport('Excel')}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-all"
-              >
-                <FileSpreadsheet size={18} />
-                Excel
-              </button>
+                <option value="">Pilih Kelas</option>
+                {kelasList.map((kelas) => (
+                  <option key={kelas.id} value={kelas.id}>
+                    {kelas.nama}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          {/* Filter Section - Grid 3 Kolom */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {viewMode === 'harian' && (
+            {/* Periode Filter */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Periode</label>
+              <select
+                value={filters.periode}
+                onChange={(e) => setFilters({ ...filters, periode: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                disabled={loading}
+              >
+                <option value="harian">Harian</option>
+                <option value="mingguan">Mingguan (7 hari terakhir)</option>
+                <option value="bulanan">Bulanan</option>
+                <option value="semester1">Semester 1 (Juli - Desember)</option>
+                <option value="semester2">Semester 2 (Januari - Juni)</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+
+            {/* Tanggal Harian */}
+            {filters.periode === 'harian' && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tanggal Pertemuan
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Tanggal</label>
                 <input
                   type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  value={filters.tanggal}
+                  onChange={(e) => setFilters({ ...filters, tanggal: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  disabled={loading}
                 />
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {viewMode === 'harian' ? 'Bulan' : 'Periode'}
-              </label>
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="bulan-ini">Bulan Ini</option>
-                <option value="bulan-lalu">Bulan Lalu</option>
-                <option value="semester-ini">Semester Ini</option>
-                <option value="custom">Custom Range</option>
-              </select>
-            </div>
+            {/* Custom Date Range */}
+            {filters.periode === 'custom' && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Dari Tanggal
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.tanggalMulai}
+                    onChange={(e) => setFilters({ ...filters, tanggalMulai: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Sampai Tanggal
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.tanggalSelesai}
+                    onChange={(e) => setFilters({ ...filters, tanggalSelesai: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    disabled={loading}
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Kelas</label>
-              <select
-                value={selectedKelas}
-                onChange={(e) => setSelectedKelas(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <button
+              onClick={handleGenerateLaporan}
+              disabled={loading || !filters.kelasId}
+              className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader className="animate-spin" size={20} />
+                  Memuat Laporan...
+                </>
+              ) : (
+                <>
+                  <BarChart3 size={20} />
+                  Tampilkan Laporan
+                </>
+              )}
+            </button>
+
+            {reportGenerated && laporanData.length > 0 && (
+              <button
+                onClick={handleExportPDF}
+                disabled={exporting}
+                className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-emerald-50 text-emerald-700 font-semibold rounded-lg border-2 border-emerald-600 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <option value="">Semua Kelas</option>
-                <option value="xii-ipa-1">XII IPA 1</option>
-                <option value="xi-ipa-2">XI IPA 2</option>
-                <option value="x-mia-3">X MIA 3</option>
-              </select>
-            </div>
+                {exporting ? (
+                  <>
+                    <Loader className="animate-spin" size={20} />
+                    Export PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileText size={20} />
+                    Export PDF
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Table Section or Empty State */}
-        {laporanData.length === 0 ? (
+        {/* Report Table or Empty State */}
+        {reportGenerated && (
+          <>
+            {laporanData.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="p-4 bg-amber-50 rounded-full">
+                    <AlertTriangle className="text-amber-600" size={48} />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">Tidak ada data laporan</h3>
+                <p className="text-gray-500">
+                  Belum ada data untuk periode dan kelas yang dipilih
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-x-auto">
+                {getViewMode() === 'harian' ? (
+                  <TabelHarian
+                    data={laporanData}
+                    onStatusChange={handleStatusChange}
+                    onPenilaianClick={handlePenilaianClick}
+                    onCatatanChange={handleCatatanChange}
+                  />
+                ) : getViewMode() === 'bulanan' ? (
+                  <TabelBulanan data={laporanData} onCatatanChange={handleCatatanBulananChange} />
+                ) : (
+                  <TabelSemesteran
+                    data={laporanData}
+                    onCatatanChange={handleCatatanSemesteranChange}
+                  />
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {!reportGenerated && !loading && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <div className="flex justify-center mb-4">
               <div className="p-4 bg-emerald-50 rounded-full">
                 <FileText className="text-emerald-600" size={48} />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">Tidak ada data laporan</h3>
-            <p className="text-gray-500">
-              Belum ada data untuk periode dan filter yang dipilih
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-x-auto">
-            {viewMode === 'harian' ? (
-              <TabelHarian
-                data={laporanData}
-                onStatusChange={handleStatusChange}
-                onPenilaianClick={handlePenilaianClick}
-                onCatatanChange={handleCatatanChange}
-              />
-            ) : viewMode === 'bulanan' ? (
-              <TabelBulanan data={laporanData} onCatatanChange={handleCatatanBulananChange} />
-            ) : (
-              <TabelSemesteran data={laporanData} onCatatanChange={handleCatatanSemesteranChange} />
-            )}
+            <h3 className="text-xl font-bold text-gray-700 mb-2">Siap Generate Laporan</h3>
+            <p className="text-gray-500">Pilih kelas dan periode, lalu klik "Tampilkan Laporan"</p>
           </div>
         )}
       </div>
