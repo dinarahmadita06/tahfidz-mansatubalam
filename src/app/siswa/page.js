@@ -19,9 +19,9 @@ import {
 import Link from 'next/link';
 
 // ===== CONSTANTS - TASMI STYLE =====
-const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-600 to-emerald-500';
+const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
-const CONTAINER = 'max-w-[1200px] mx-auto px-6';
+const CONTAINER = 'w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
 
 // ===== REUSABLE COMPONENTS - TASMI STYLE =====
 
@@ -57,15 +57,15 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald' }) =>
   const styles = colorConfig[color];
 
   return (
-    <div className={`${styles.bg} rounded-2xl p-5 shadow-sm border ${styles.border}`}>
+    <div className={`${styles.bg} rounded-2xl p-5 shadow-sm border ${styles.border} hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-default`}>
       <div className="flex items-center justify-between mb-4">
         <div className={`p-4 ${styles.iconBg} rounded-2xl shadow-md`}>
           <Icon className="text-white" size={28} />
         </div>
       </div>
-      <h3 className="text-sm font-semibold text-gray-600 mb-2">{title}</h3>
+      <h3 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">{title}</h3>
       <p className="text-3xl font-bold text-gray-900">{value}</p>
-      {subtitle && <p className={`text-sm ${styles.textSub} font-medium mt-2`}>{subtitle}</p>}
+      {subtitle && <p className={`text-sm ${styles.textSub} font-medium mt-2 min-w-0 break-words`}>{subtitle}</p>}
     </div>
   );
 };
@@ -181,56 +181,76 @@ export default function DashboardSiswa() {
     <SiswaLayout>
       <div className="min-h-screen bg-gray-50">
         <div className={`${CONTAINER} py-6 space-y-6`}>
-          {/* Banner Header - Hijau Solid/Halus seperti Tasmi */}
-          <div className={`${BANNER_GRADIENT} rounded-2xl shadow-md p-6 sm:p-8 text-white`}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-                <BookMarked className="text-white" size={28} />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold" suppressHydrationWarning>
-                  {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
-                </h1>
-                <p className="text-emerald-50 text-sm sm:text-base mt-1" suppressHydrationWarning>
-                  {isHydrated ? currentTime : ''}
-                </p>
+          {/* Banner Header - Hijau SIMTAQ Style */}
+          <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-6 sm:p-8 text-white`}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                  <BookMarked className="text-white" size={32} />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold break-words" suppressHydrationWarning>
+                    {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
+                  </h1>
+                  <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal" suppressHydrationWarning>
+                    {isHydrated ? currentTime : ''}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 items-center mt-4">
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-full">
+            <div className="flex flex-wrap gap-3 items-center mt-5">
+              <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
                 <Target className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-medium text-sm">
+                <span className="text-white font-semibold text-sm whitespace-nowrap">
                   {stats.hafalanSelesai} / {stats.totalHafalan} Hafalan
                 </span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-full">
+              <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
                 <CalendarCheck className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-medium text-sm">
-                  Kehadiran: {stats.kehadiran}/{stats.totalHari}
+                <span className="text-white font-semibold text-sm whitespace-nowrap">
+                  Kehadiran {stats.kehadiran}/{stats.totalHari}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Motivasi - Biru Transparan */}
-          <div className="bg-sky-50/60 backdrop-blur-sm rounded-2xl shadow-sm border border-sky-100 p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center">
-                <Lightbulb className="text-sky-600" size={24} />
+          {/* Pengumuman Widget - Highlight Pertama */}
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-sm border-2 border-emerald-200/60 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-emerald-500 rounded-xl shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">Pengumuman Terbaru</h2>
               </div>
-              <div className="flex-1">
-                <p className="text-base sm:text-lg italic leading-relaxed text-sky-900 mb-2 font-medium">
+              <Link
+                href="/siswa/pengumuman"
+                className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+              >
+                Lihat Semua
+              </Link>
+            </div>
+            <PengumumanWidget limit={3} />
+          </div>
+
+          {/* Motivasi - Biru Transparan */}
+          <div className="bg-blue-50 rounded-2xl shadow-sm border border-blue-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Lightbulb className="text-blue-600" size={24} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base sm:text-lg italic leading-relaxed text-slate-700 mb-2 font-medium break-words">
                   "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
                 </p>
-                <p className="text-sm text-sky-700 font-semibold">
+                <p className="text-sm text-slate-600 font-semibold">
                   — HR. Bukhari
                 </p>
               </div>
             </div>
           </div>
-
-          {/* Pengumuman Widget */}
-          <PengumumanWidget limit={3} />
 
           {/* Statistics Cards - 4 Columns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
