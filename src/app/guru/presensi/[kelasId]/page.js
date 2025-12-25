@@ -220,17 +220,6 @@ export default function PresensiDetailPage() {
       <Toaster position="top-right" />
 
       <div className="space-y-6 pb-28 sm:pb-0">
-        {/* Breadcrumb */}
-        <div className="px-0">
-          <button
-            onClick={() => router.push('/guru/presensi')}
-            className="flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
-          >
-            <ArrowLeft size={16} />
-            <span>Kembali ke Presensi</span>
-          </button>
-        </div>
-
         {/* Header with Title Only */}
         <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
           <div className="flex items-center gap-4">
