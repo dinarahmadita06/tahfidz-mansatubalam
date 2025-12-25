@@ -514,25 +514,25 @@ export default function TahsinDetailPage() {
     <GuruLayout>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header Card with Gradient - Tasmi Style */}
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-7">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               {/* Icon + Title */}
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-                <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
               </div>
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold leading-tight mb-2 whitespace-normal break-words">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight mb-1 sm:mb-2 whitespace-normal break-words">
                   Tahsin Al-Qur'an
                 </h1>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-white/90 text-base sm:text-lg font-medium">
+                  <span className="text-white/90 text-sm sm:text-base lg:text-lg font-medium break-words">
                     {kelas?.nama || 'Loading...'}
                   </span>
                   {selectedSiswa && activeTab === 'pencatatan' && (
                     <>
                       <span className="text-white/60">•</span>
-                      <span className="text-white/80 text-sm">
+                      <span className="text-white/80 text-xs sm:text-sm break-words">
                         {selectedSiswa.user?.name}
                       </span>
                     </>
@@ -542,77 +542,59 @@ export default function TahsinDetailPage() {
             </div>
 
             {/* Badge Total Siswa */}
-            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl shrink-0">
-              <p className="text-white/80 text-xs font-semibold">
+            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl self-start sm:self-auto shrink-0">
+              <p className="text-white/80 text-xs font-semibold whitespace-nowrap">
                 TOTAL SISWA
               </p>
-              <p className="text-white text-2xl font-bold">
+              <p className="text-white text-xl sm:text-2xl font-bold">
                 {siswaList.length}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation - Responsive (Horizontal on Desktop, Dropdown on Mobile) */}
-        <div className="mb-6">
-          {/* Desktop: Horizontal Tabs */}
-          <div className="hidden sm:block bg-white rounded-xl p-2 shadow-sm inline-flex gap-2">
+        {/* Tab Navigation - Responsive Scroll Horizontal */}
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="bg-white rounded-xl p-2 shadow-sm inline-flex gap-2 min-w-max">
             <button
               onClick={() => setActiveTab('pencatatan')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              className={`shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
                 activeTab === 'pencatatan'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-slate-600 hover:bg-gray-100'
               }`}
-              style={{ fontFamily: 'Poppins, sans-serif' }}
             >
-              <div className="flex items-center gap-2">
-                <BookOpen size={18} />
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <BookOpen size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <span>Pencatatan Tahsin</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('riwayat')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              className={`shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
                 activeTab === 'riwayat'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-slate-600 hover:bg-gray-100'
               }`}
-              style={{ fontFamily: 'Poppins, sans-serif' }}
             >
-              <div className="flex items-center gap-2">
-                <ClipboardList size={18} />
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <ClipboardList size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <span>Riwayat/Hasil</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('materi')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              className={`shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
                 activeTab === 'materi'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-slate-600 hover:bg-gray-100'
               }`}
-              style={{ fontFamily: 'Poppins, sans-serif' }}
             >
-              <div className="flex items-center gap-2">
-                <FileText size={18} />
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <FileText size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <span>Materi Tahsin</span>
               </div>
             </button>
-          </div>
-
-          {/* Mobile: Dropdown Select */}
-          <div className="sm:hidden">
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition shadow-sm"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
-            >
-              <option value="pencatatan">📝 Pencatatan Tahsin</option>
-              <option value="riwayat">📋 Riwayat/Hasil</option>
-              <option value="materi">📄 Materi Tahsin</option>
-            </select>
           </div>
         </div>
 
