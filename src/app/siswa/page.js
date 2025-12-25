@@ -21,35 +21,44 @@ import Link from 'next/link';
 // ===== CONSTANTS - TASMI STYLE =====
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
-const CONTAINER = 'w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
+const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
+const STATS_CARD_GLOW = 'shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_12px_40px_rgba(16,185,129,0.12)]';
 
 // ===== REUSABLE COMPONENTS - TASMI STYLE =====
 
-// StatsCard - Pastel lembut dengan tone Tasmi
+// StatsCard - Glowing transparan seperti Tasmi
 const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald' }) => {
   const colorConfig = {
     emerald: {
-      bg: 'bg-emerald-50',
+      bg: 'bg-white/70',
       border: 'border-emerald-200/60',
-      iconBg: 'bg-emerald-500',
+      iconBg: 'bg-emerald-100',
+      iconRing: 'ring-2 ring-emerald-200',
+      iconColor: 'text-emerald-600',
       textSub: 'text-emerald-600',
     },
     amber: {
-      bg: 'bg-amber-50',
+      bg: 'bg-white/70',
       border: 'border-amber-200/60',
-      iconBg: 'bg-amber-500',
+      iconBg: 'bg-amber-100',
+      iconRing: 'ring-2 ring-amber-200',
+      iconColor: 'text-amber-600',
       textSub: 'text-amber-600',
     },
     sky: {
-      bg: 'bg-sky-50',
+      bg: 'bg-white/70',
       border: 'border-sky-200/60',
-      iconBg: 'bg-sky-500',
+      iconBg: 'bg-sky-100',
+      iconRing: 'ring-2 ring-sky-200',
+      iconColor: 'text-sky-600',
       textSub: 'text-sky-600',
     },
     purple: {
-      bg: 'bg-purple-50',
+      bg: 'bg-white/70',
       border: 'border-purple-200/60',
-      iconBg: 'bg-purple-500',
+      iconBg: 'bg-purple-100',
+      iconRing: 'ring-2 ring-purple-200',
+      iconColor: 'text-purple-600',
       textSub: 'text-purple-600',
     },
   };
@@ -57,15 +66,15 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald' }) =>
   const styles = colorConfig[color];
 
   return (
-    <div className={`${styles.bg} rounded-2xl p-5 shadow-sm border ${styles.border} hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-default`}>
+    <div className={`${styles.bg} backdrop-blur-sm rounded-2xl p-5 border ${styles.border} ${STATS_CARD_GLOW} hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.35),0_16px_48px_rgba(16,185,129,0.18)] transition-all duration-300 cursor-default`}>
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-4 ${styles.iconBg} rounded-2xl shadow-md`}>
-          <Icon className="text-white" size={28} />
+        <div className={`p-4 ${styles.iconBg} ${styles.iconRing} rounded-2xl`}>
+          <Icon className={styles.iconColor} size={28} />
         </div>
       </div>
-      <h3 className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">{title}</h3>
-      <p className="text-3xl font-bold text-gray-900">{value}</p>
-      {subtitle && <p className={`text-sm ${styles.textSub} font-medium mt-2 min-w-0 break-words`}>{subtitle}</p>}
+      <h3 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">{title}</h3>
+      <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+      {subtitle && <p className={`text-sm ${styles.textSub} font-semibold mt-2 min-w-0 break-words`}>{subtitle}</p>}
     </div>
   );
 };
@@ -214,29 +223,8 @@ export default function DashboardSiswa() {
             </div>
           </div>
 
-          {/* Pengumuman Widget - Highlight Pertama */}
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-sm border-2 border-emerald-200/60 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-emerald-500 rounded-xl shadow-md">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                  </svg>
-                </div>
-                <h2 className="text-lg font-bold text-gray-900">Pengumuman Terbaru</h2>
-              </div>
-              <Link
-                href="/siswa/pengumuman"
-                className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-              >
-                Lihat Semua
-              </Link>
-            </div>
-            <PengumumanWidget limit={3} />
-          </div>
-
-          {/* Motivasi - Biru Transparan */}
-          <div className="bg-blue-50 rounded-2xl shadow-sm border border-blue-200 p-6">
+          {/* Motivasi - Biru Transparan (BUKAN HIJAU) */}
+          <div className="bg-blue-50/70 backdrop-blur-sm rounded-2xl shadow-sm border border-blue-200 p-6">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <Lightbulb className="text-blue-600" size={24} />
@@ -252,8 +240,37 @@ export default function DashboardSiswa() {
             </div>
           </div>
 
+          {/* Pengumuman - HIGHLIGHT UTAMA (PALING NGEJRENG) */}
+          <div className="relative bg-emerald-50/60 backdrop-blur-sm rounded-2xl shadow-md border-2 border-emerald-200 p-6">
+            {/* Badge NEW */}
+            <div className="absolute -top-3 -right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse">
+              ADA PENGUMUMAN
+            </div>
+
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="p-3.5 bg-emerald-500 rounded-xl shadow-lg ring-2 ring-emerald-300/50">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-emerald-900">Pengumuman Terbaru</h2>
+                  <p className="text-xs text-emerald-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
+                </div>
+              </div>
+              <Link
+                href="/siswa/pengumuman"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+              >
+                Lihat Semua
+              </Link>
+            </div>
+            <PengumumanWidget limit={3} />
+          </div>
+
           {/* Statistics Cards - 4 Columns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               icon={BookOpen}
               title="Hafalan Selesai"
