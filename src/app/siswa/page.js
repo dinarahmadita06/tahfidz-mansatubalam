@@ -22,53 +22,60 @@ import Link from 'next/link';
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
-const STATS_CARD_GLOW = 'shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_12px_40px_rgba(16,185,129,0.12)]';
 
 // ===== REUSABLE COMPONENTS - TASMI STYLE =====
 
-// StatsCard - Glowing transparan seperti Tasmi
+// StatsCard - Pastel transparan + glow seperti Tasmi
 const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald' }) => {
   const colorConfig = {
     emerald: {
-      bg: 'bg-white/70',
+      bg: 'bg-emerald-50/70',
       border: 'border-emerald-200/60',
-      iconBg: 'bg-emerald-100',
+      iconBg: 'bg-emerald-500',
       iconRing: 'ring-2 ring-emerald-200',
-      iconColor: 'text-emerald-600',
+      iconColor: 'text-white',
       textSub: 'text-emerald-600',
+      glow: 'shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_12px_40px_rgba(16,185,129,0.12)]',
+      hoverGlow: 'hover:shadow-[0_0_0_1px_rgba(16,185,129,0.35),0_16px_48px_rgba(16,185,129,0.18)]',
     },
     amber: {
-      bg: 'bg-white/70',
+      bg: 'bg-amber-50/70',
       border: 'border-amber-200/60',
-      iconBg: 'bg-amber-100',
+      iconBg: 'bg-amber-500',
       iconRing: 'ring-2 ring-amber-200',
-      iconColor: 'text-amber-600',
+      iconColor: 'text-white',
       textSub: 'text-amber-600',
+      glow: 'shadow-[0_0_0_1px_rgba(245,158,11,0.25),0_12px_40px_rgba(245,158,11,0.12)]',
+      hoverGlow: 'hover:shadow-[0_0_0_1px_rgba(245,158,11,0.35),0_16px_48px_rgba(245,158,11,0.18)]',
     },
     sky: {
-      bg: 'bg-white/70',
+      bg: 'bg-sky-50/70',
       border: 'border-sky-200/60',
-      iconBg: 'bg-sky-100',
+      iconBg: 'bg-sky-500',
       iconRing: 'ring-2 ring-sky-200',
-      iconColor: 'text-sky-600',
+      iconColor: 'text-white',
       textSub: 'text-sky-600',
+      glow: 'shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)]',
+      hoverGlow: 'hover:shadow-[0_0_0_1px_rgba(14,165,233,0.35),0_16px_48px_rgba(14,165,233,0.18)]',
     },
     purple: {
-      bg: 'bg-white/70',
+      bg: 'bg-purple-50/70',
       border: 'border-purple-200/60',
-      iconBg: 'bg-purple-100',
+      iconBg: 'bg-purple-500',
       iconRing: 'ring-2 ring-purple-200',
-      iconColor: 'text-purple-600',
+      iconColor: 'text-white',
       textSub: 'text-purple-600',
+      glow: 'shadow-[0_0_0_1px_rgba(168,85,247,0.25),0_12px_40px_rgba(168,85,247,0.12)]',
+      hoverGlow: 'hover:shadow-[0_0_0_1px_rgba(168,85,247,0.35),0_16px_48px_rgba(168,85,247,0.18)]',
     },
   };
 
   const styles = colorConfig[color];
 
   return (
-    <div className={`${styles.bg} backdrop-blur-sm rounded-2xl p-5 border ${styles.border} ${STATS_CARD_GLOW} hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.35),0_16px_48px_rgba(16,185,129,0.18)] transition-all duration-300 cursor-default`}>
+    <div className={`${styles.bg} backdrop-blur-sm rounded-2xl p-5 border ${styles.border} ${styles.glow} ${styles.hoverGlow} hover:-translate-y-1 transition-all duration-300 cursor-default`}>
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-4 ${styles.iconBg} ${styles.iconRing} rounded-2xl`}>
+        <div className={`p-4 ${styles.iconBg} ${styles.iconRing} rounded-2xl shadow-md`}>
           <Icon className={styles.iconColor} size={28} />
         </div>
       </div>
@@ -240,28 +247,23 @@ export default function DashboardSiswa() {
             </div>
           </div>
 
-          {/* Pengumuman - HIGHLIGHT UTAMA (PALING NGEJRENG) */}
-          <div className="relative bg-emerald-50/60 backdrop-blur-sm rounded-2xl shadow-md border-2 border-emerald-200 p-6">
-            {/* Badge NEW */}
-            <div className="absolute -top-3 -right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse">
-              ADA PENGUMUMAN
-            </div>
-
+          {/* Pengumuman - HIGHLIGHT AMBER (Urgent & Elegant) */}
+          <div className="bg-amber-50/70 backdrop-blur-sm rounded-2xl border border-amber-200 ring-2 ring-amber-200/40 shadow-[0_0_0_3px_rgba(245,158,11,0.12)] border-l-4 border-l-amber-400 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
-                <div className="p-3.5 bg-emerald-500 rounded-xl shadow-lg ring-2 ring-emerald-300/50">
+                <div className="p-3.5 bg-amber-500 rounded-xl shadow-lg ring-2 ring-amber-300/50">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-emerald-900">Pengumuman Terbaru</h2>
-                  <p className="text-xs text-emerald-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
+                  <h2 className="text-xl font-bold text-amber-900">Pengumuman Terbaru</h2>
+                  <p className="text-xs text-amber-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
                 </div>
               </div>
               <Link
                 href="/siswa/pengumuman"
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
               >
                 Lihat Semua
               </Link>
@@ -335,7 +337,7 @@ export default function DashboardSiswa() {
 
               <Link
                 href="/siswa/laporan"
-                className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
+                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white font-semibold rounded-xl transition-all duration-300 shadow-md"
               >
                 Lihat Laporan Lengkap <ChevronRight size={20} />
               </Link>
