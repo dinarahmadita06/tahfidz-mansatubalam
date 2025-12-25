@@ -53,7 +53,10 @@ export async function GET(request) {
     
     if (cachedData) {
       console.log(`Returning cached hafalan data for key: ${cacheKey}`);
-      return NextResponse.json(cachedData);
+      return NextResponse.json({
+        success: true,
+        data: Array.isArray(cachedData) ? cachedData : [],
+      });
     }
 
     console.log(`Fetching fresh hafalan data for key: ${cacheKey}`);
@@ -108,14 +111,21 @@ export async function GET(request) {
       },
     });
 
-    // Cache the response
+    // Cache the response data (array only)
     setCachedData(cacheKey, hafalan);
 
-    return NextResponse.json(hafalan);
+    return NextResponse.json({
+      success: true,
+      data: Array.isArray(hafalan) ? hafalan : [],
+    });
   } catch (error) {
     console.error('Error fetching hafalan:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch hafalan' },
+      {
+        success: false,
+        data: [],
+        message: error.message || 'Failed to fetch hafalan',
+      },
       { status: 500 }
     );
   }
