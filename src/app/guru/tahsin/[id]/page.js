@@ -515,7 +515,7 @@ export default function TahsinDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header Card with Gradient - Tasmi Style */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               {/* Icon + Title */}
               <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
@@ -542,11 +542,11 @@ export default function TahsinDetailPage() {
             </div>
 
             {/* Badge Total Siswa */}
-            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl self-start sm:self-auto shrink-0">
-              <p className="text-white/80 text-xs font-semibold whitespace-nowrap">
-                TOTAL SISWA
+            <div className="bg-white/20 rounded-xl px-4 py-3 w-full sm:w-auto">
+              <p className="text-[10px] font-semibold tracking-wide text-white/90 uppercase">
+                Total Siswa
               </p>
-              <p className="text-white text-xl sm:text-2xl font-bold">
+              <p className="text-xl font-bold text-white">
                 {siswaList.length}
               </p>
             </div>
