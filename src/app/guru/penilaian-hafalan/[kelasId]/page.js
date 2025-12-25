@@ -327,25 +327,25 @@ export default function PenilaianHafalanPage() {
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header Card with Gradient - Consistent with Tahsin/Tasmi */}
-        <div className="max-w-6xl mx-auto rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-4 sm:p-6">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6">
+        {/* Header Card with Gradient - Full Width */}
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8 mb-6">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
               <Bookmark className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" strokeWidth={1.5} />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight mb-1 sm:mb-2 whitespace-normal break-words">
+              <h1 className="text-2xl sm:text-3xl font-bold leading-tight mb-1 whitespace-normal break-words">
                 Penilaian Hafalan
               </h1>
-              <p className="text-white/90 text-sm sm:text-base lg:text-lg font-medium break-words">
+              <p className="text-white/90 text-sm sm:text-base font-medium break-words">
                 Input penilaian hafalan per pertemuan — {kelasInfo?.nama || 'Loading...'}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="space-y-6">
 
           {/* Date Filter Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
@@ -511,14 +511,14 @@ export default function PenilaianHafalanPage() {
       {/* Popup Penilaian */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-emerald-100">
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-6 flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-white">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-6 sm:px-8 py-6 flex items-center justify-between">
+              <h3 className="text-xl sm:text-2xl font-bold text-white">
                 Form Penilaian – {selectedSiswa?.user?.name || selectedSiswa?.nama}
               </h3>
               <button
                 onClick={() => setShowPopup(false)}
-                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
+                className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors shrink-0"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -533,7 +533,7 @@ export default function PenilaianHafalanPage() {
                 <select
                   value={popupForm.surah}
                   onChange={(e) => setPopupForm({ ...popupForm, surah: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                 >
                   <option value="">Pilih Surah</option>
                   {surahList.map((surah) => (
@@ -555,7 +555,7 @@ export default function PenilaianHafalanPage() {
                     min="1"
                     value={popupForm.ayatMulai}
                     onChange={(e) => setPopupForm({ ...popupForm, ayatMulai: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                     placeholder="1"
                   />
                 </div>
@@ -568,15 +568,15 @@ export default function PenilaianHafalanPage() {
                     min="1"
                     value={popupForm.ayatSelesai}
                     onChange={(e) => setPopupForm({ ...popupForm, ayatSelesai: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                     placeholder="10"
                   />
                 </div>
               </div>
 
               {/* Penilaian 4 Aspek */}
-              <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-6">
-                <h4 className="font-bold text-gray-900 mb-6 text-lg">Penilaian (0-100)</h4>
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6">
+                <h4 className="font-bold text-slate-900 mb-6 text-lg">Penilaian (0-100)</h4>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
@@ -589,7 +589,7 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.tajwid}
                       onChange={(e) => setPopupForm({ ...popupForm, tajwid: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="85"
                     />
                   </div>
@@ -603,7 +603,7 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.kelancaran}
                       onChange={(e) => setPopupForm({ ...popupForm, kelancaran: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="90"
                     />
                   </div>
@@ -617,7 +617,7 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.makhraj}
                       onChange={(e) => setPopupForm({ ...popupForm, makhraj: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="88"
                     />
                   </div>
@@ -631,7 +631,7 @@ export default function PenilaianHafalanPage() {
                       max="100"
                       value={popupForm.implementasi}
                       onChange={(e) => setPopupForm({ ...popupForm, implementasi: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                       placeholder="92"
                     />
                   </div>
@@ -639,10 +639,10 @@ export default function PenilaianHafalanPage() {
 
                 {/* Preview Rata-rata */}
                 {popupForm.tajwid && popupForm.kelancaran && popupForm.makhraj && popupForm.implementasi && (
-                  <div className="mt-6 p-4 bg-white border-2 border-emerald-300 rounded-lg">
+                  <div className="mt-6 p-4 bg-white border border-emerald-200 rounded-xl">
                     <div className="text-center">
-                      <p className="text-sm text-gray-700 font-medium mb-2">Rata-rata Nilai</p>
-                      <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                      <p className="text-sm text-slate-700 font-medium mb-2">Rata-rata Nilai</p>
+                      <div className="text-4xl font-bold text-emerald-600">
                         {formatNilai(hitungRataRata(
                           parseFloat(popupForm.tajwid),
                           parseFloat(popupForm.kelancaran),
@@ -665,7 +665,7 @@ export default function PenilaianHafalanPage() {
                   onChange={(e) => setPopupForm({ ...popupForm, catatan: e.target.value })}
                   rows="4"
                   maxLength="500"
-                  className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium resize-none"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium resize-none"
                   placeholder="Tulis catatan evaluasi bacaan, koreksi tajwid/makhraj, atau arahan perbaikan untuk siswa..."
                 />
                 <p className="text-xs text-gray-500 mt-2">
@@ -675,16 +675,16 @@ export default function PenilaianHafalanPage() {
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-gray-50 px-8 py-4 flex items-center justify-end gap-3 border-t-2 border-emerald-100">
+            <div className="sticky bottom-0 bg-slate-50 px-6 sm:px-8 py-4 flex items-center justify-end gap-3 border-t border-slate-200">
               <button
                 onClick={() => setShowPopup(false)}
-                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-semibold"
+                className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-semibold"
               >
                 Batal
               </button>
               <button
                 onClick={handleSavePenilaian}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold flex items-center gap-2 shadow-md hover:shadow-lg"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-semibold flex items-center gap-2"
               >
                 <Save className="w-5 h-5" />
                 Simpan Penilaian
