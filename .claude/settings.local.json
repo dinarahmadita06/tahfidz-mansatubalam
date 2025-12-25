@@ -86,7 +86,14 @@
       "Bash(Select-Object -First 10)",
       "Skill(commit-commands:commit)",
       "Skill(commit-commands:commit-push-pr)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|guru/laporan\\)\")",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|guru/pengumuman\\)\")",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|dashboard\\)\")",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|guru/dashboard\\)\")",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|hafalan|tanggal\\)\")",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|presensi\\)\")",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
