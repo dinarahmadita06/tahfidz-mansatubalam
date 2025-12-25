@@ -58,21 +58,27 @@ export function calculateDateRange(periode, customStart = null, customEnd = null
 }
 
 /**
- * Fetch classes taught by a specific guru
- * @param {string} guruId - Guru ID from session
+ * Fetch classes taught by the logged-in guru
+ * Gets guruId from session automatically via API
  * @returns {Promise<Array>} - Array of kelas objects
  */
-export async function fetchKelasGuru(guruId) {
+export async function fetchKelasGuru() {
   try {
-    const response = await fetch(`/api/guru/kelas?guruId=${guruId}`);
+    const response = await fetch('/api/guru/kelas', {
+      credentials: 'include', // Ensure cookies are sent for session
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: Failed to fetch kelas`);
     }
+
     const data = await response.json();
-    return Array.isArray(data) ? data : [];
+
+    // API returns { kelas: [...] }
+    return Array.isArray(data.kelas) ? data.kelas : [];
   } catch (error) {
     console.error('Error fetching kelas guru:', error);
-    return [];
+    throw error; // Re-throw to let caller handle it
   }
 }
 

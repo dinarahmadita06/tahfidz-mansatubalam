@@ -14,6 +14,7 @@ import { fetchKelasGuru, fetchLaporan, handleExportPDF as exportPDF, getPeriodLa
 export default function LaporanGuruPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [loadingKelas, setLoadingKelas] = useState(true);
   const [kelasList, setKelasList] = useState([]);
   const [laporanData, setLaporanData] = useState([]);
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -41,20 +42,27 @@ export default function LaporanGuruPage() {
     implementasi: '',
   });
 
-  // Fetch kelas when guru logs in
+  // Fetch kelas when component mounts
   useEffect(() => {
-    if (session?.user?.id) {
+    if (session) {
       loadKelasGuru();
     }
   }, [session]);
 
   const loadKelasGuru = async () => {
+    setLoadingKelas(true);
     try {
-      const kelas = await fetchKelasGuru(session.user.id);
+      const kelas = await fetchKelasGuru();
       setKelasList(kelas);
+
+      if (kelas.length === 0) {
+        toast.info('Anda belum memiliki kelas yang diampu');
+      }
     } catch (error) {
-      toast.error('Gagal memuat kelas');
+      toast.error('Gagal memuat daftar kelas. Coba refresh halaman.');
       console.error('Error loading kelas:', error);
+    } finally {
+      setLoadingKelas(false);
     }
   };
 
@@ -344,16 +352,31 @@ export default function LaporanGuruPage() {
               <select
                 value={filters.kelasId}
                 onChange={(e) => setFilters({ ...filters, kelasId: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                disabled={loading}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || loadingKelas}
               >
-                <option value="">Pilih Kelas</option>
-                {kelasList.map((kelas) => (
-                  <option key={kelas.id} value={kelas.id}>
-                    {kelas.nama}
-                  </option>
-                ))}
+                {loadingKelas ? (
+                  <option value="">Memuat kelas...</option>
+                ) : kelasList.length === 0 ? (
+                  <option value="">Tidak ada kelas</option>
+                ) : (
+                  <>
+                    <option value="">Pilih Kelas</option>
+                    {kelasList.map((kelas) => (
+                      <option key={kelas.id} value={kelas.id}>
+                        {kelas.nama}
+                        {kelas.tahunAjaran ? ` - ${kelas.tahunAjaran.nama}` : ''}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
+              {!loadingKelas && kelasList.length === 0 && (
+                <p className="mt-2 text-sm text-amber-600 flex items-center gap-1">
+                  <AlertTriangle size={14} />
+                  Anda belum memiliki kelas yang diampu
+                </p>
+              )}
             </div>
 
             {/* Periode Filter */}
