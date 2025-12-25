@@ -4,8 +4,85 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import Link from 'next/link';
-import { Volume2, Search, Users, BookOpen } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Volume2, Search, Users, BookOpen, Loader, Calendar } from 'lucide-react';
+
+// TahsinHeader Component
+function TahsinHeader() {
+  return (
+    <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            <Volume2 className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+          </div>
+
+          <div className="min-w-0">
+            <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
+              Pencatatan Tahsin
+            </h1>
+            <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
+              Pencatatan progres bacaan dan latihan tajwid siswa
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// TahsinFilterBar Component
+function TahsinFilterBar({ searchQuery, onSearchChange }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
+      <div className="relative w-full max-w-xl">
+        <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Cari kelas..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+        />
+      </div>
+    </div>
+  );
+}
+
+// TahsinClassCard Component
+function TahsinClassCard({ kelas }) {
+  return (
+    <Link
+      href={`/guru/tahsin/${kelas.id}`}
+      className="block bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-300 transition-all duration-200 p-6 cursor-pointer group"
+    >
+      {/* Icon Tahsin */}
+      <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-700 transition-colors">
+        <Volume2 size={24} className="text-white" />
+      </div>
+
+      {/* Nama Kelas */}
+      <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 break-words">
+        {kelas.nama}
+      </h3>
+
+      {/* Info Row */}
+      <div className="flex items-center gap-2 text-gray-600 mb-3">
+        <Users size={16} className="text-emerald-600" />
+        <span className="text-sm font-medium">
+          {kelas._count?.siswa || 0} Siswa
+        </span>
+      </div>
+
+      {/* Badge Tahun Ajaran */}
+      {kelas.tahunAjaran && (
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+          <Calendar size={12} />
+          {kelas.tahunAjaran.nama}
+        </div>
+      )}
+    </Link>
+  );
+}
 
 export default function TahsinIndexPage() {
   const { data: session } = useSession();
@@ -40,265 +117,62 @@ export default function TahsinIndexPage() {
 
   return (
     <GuruLayout>
-      {/* Background Gradient Container */}
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-blue-50" style={{ margin: '-32px', padding: '32px' }}>
-        {/* Content Container */}
-        <div>
-          {/* Header Area */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              background: 'white',
-              padding: '20px',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              marginBottom: '24px',
-            }}
-          >
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '12px',
-                background: '#059669',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Volume2 size={32} style={{ color: 'white' }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h1
-                style={{
-                  fontSize: '28px',
-                  fontWeight: '700',
-                  color: '#047857',
-                  margin: 0,
-                  marginBottom: '4px',
-                  fontFamily: 'Poppins, sans-serif',
-                }}
-              >
-                Pencatatan Tahsin
-              </h1>
-              <p
-                style={{
-                  fontSize: '14px',
-                  color: '#6B7280',
-                  margin: 0,
-                  fontFamily: 'Poppins, sans-serif',
-                }}
-              >
-                Pencatatan progres bacaan dan latihan tajwid siswa.
-              </p>
-            </div>
-          </motion.div>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header */}
+        <TahsinHeader />
 
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            style={{
-              marginBottom: '32px',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
-              <Search
-                size={20}
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#9CA3AF',
-                  pointerEvents: 'none',
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Cari kelas..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 12px 12px 44px',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontFamily: 'Poppins, sans-serif',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#8B5CF6';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#D1D5DB';
-                  e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                }}
-              />
-            </div>
-          </motion.div>
+        {/* Filter Bar */}
+        <TahsinFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
-          {/* Loading State */}
-          {loading && (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <div style={{ fontSize: '16px', color: '#6B7280' }}>Memuat data kelas...</div>
-            </div>
-          )}
-
-          {/* Grid Card Kelas */}
-          {!loading && (
-            <div
-              style={{
-                maxWidth: '1400px',
-                margin: '0 auto',
-                marginBottom: '40px',
-              }}
-            >
-              {filteredKelas.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  style={{
-                    background: 'white',
-                    borderRadius: '12px',
-                    padding: '60px 20px',
-                    textAlign: 'center',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                  }}
-                >
-                  <BookOpen size={48} style={{ color: '#D1D5DB', margin: '0 auto 16px' }} />
-                  <p style={{ fontSize: '16px', color: '#6B7280', margin: 0 }}>
-                    {searchQuery ? 'Tidak ada kelas yang ditemukan' : 'Belum ada kelas tersedia'}
-                  </p>
-                </motion.div>
-              ) : (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: '20px',
-                  }}
-                >
-                  {filteredKelas.map((kelas, index) => (
-                    <motion.div
-                      key={kelas.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.05 }}
-                    >
-                      <Link
-                        href={`/guru/tahsin/${kelas.id}`}
-                        style={{
-                          display: 'block',
-                          background: 'white',
-                          borderRadius: '12px',
-                          padding: '24px',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                          transition: 'all 0.3s',
-                          textDecoration: 'none',
-                          color: 'inherit',
-                          border: '2px solid transparent',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-4px)';
-                          e.currentTarget.style.boxShadow = '0 8px 16px rgba(5, 150, 105, 0.2)';
-                          e.currentTarget.style.borderColor = '#059669';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                          e.currentTarget.style.borderColor = 'transparent';
-                        }}
-                      >
-                        {/* Icon */}
-                        <div
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '10px',
-                            background: '#059669',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginBottom: '16px',
-                          }}
-                        >
-                          <Volume2 size={24} style={{ color: 'white' }} />
-                        </div>
-
-                        {/* Nama Kelas */}
-                        <h3
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            color: '#111827',
-                            margin: '0 0 8px 0',
-                            fontFamily: 'Poppins, sans-serif',
-                          }}
-                        >
-                          {kelas.nama}
-                        </h3>
-
-                        {/* Info Jumlah Siswa */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginTop: '12px',
-                          }}
-                        >
-                          <Users size={16} style={{ color: '#059669' }} />
-                          <span
-                            style={{
-                              fontSize: '14px',
-                              color: '#6B7280',
-                              fontFamily: 'Poppins, sans-serif',
-                            }}
-                          >
-                            {kelas._count?.siswa || 0} Siswa
-                          </span>
-                        </div>
-
-                        {/* Tahun Ajaran Info */}
-                        {kelas.tahunAjaran && (
-                          <div
-                            style={{
-                              marginTop: '12px',
-                              padding: '8px 12px',
-                              background: '#F5F3FF',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              color: '#7C3AED',
-                              fontFamily: 'Poppins, sans-serif',
-                              fontWeight: '500',
-                            }}
-                          >
-                            {kelas.tahunAjaran.nama}
-                          </div>
-                        )}
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        {/* Info Box */}
+        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3">
+          <p className="text-sm text-emerald-800">
+            💡 Pilih kelas di bawah untuk mulai mencatat progres bacaan & tajwid siswa.
+          </p>
         </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
+              <p className="text-gray-600">Memuat data kelas...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Grid Card Kelas */}
+        {!loading && (
+          <div>
+            {filteredKelas.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="p-4 bg-gray-50 rounded-full">
+                    <BookOpen size={48} className="text-gray-400" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">
+                  {searchQuery ? 'Tidak Ada Hasil' : 'Belum Ada Kelas'}
+                </h3>
+                <p className="text-gray-500">
+                  {searchQuery
+                    ? 'Tidak ada kelas yang ditemukan dengan pencarian tersebut'
+                    : 'Belum ada kelas tersedia untuk pencatatan tahsin'
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredKelas.map((kelas) => (
+                  <TahsinClassCard key={kelas.id} kelas={kelas} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </GuruLayout>
   );
