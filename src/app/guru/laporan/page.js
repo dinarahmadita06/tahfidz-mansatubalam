@@ -78,17 +78,23 @@ export default function LaporanGuruPage() {
 
     try {
       const data = await fetchLaporan(filters);
+
+      // Set data and mark as generated regardless of length
       setLaporanData(data);
       setReportGenerated(true);
 
+      // Show different messages based on data
       if (data.length === 0) {
-        toast.info('Tidak ada data laporan untuk periode ini');
+        // Empty data is NOT an error - just show info
+        console.log('Laporan kosong untuk periode ini');
       } else {
-        toast.success('Laporan berhasil dimuat');
+        toast.success(`Laporan berhasil dimuat (${data.length} siswa)`);
       }
     } catch (error) {
-      toast.error('Gagal memuat laporan');
+      // Only show error toast for actual errors
+      toast.error('Gagal memuat laporan. Coba lagi.');
       console.error('Error generating laporan:', error);
+      setReportGenerated(false);
     } finally {
       setLoading(false);
     }
@@ -462,25 +468,27 @@ export default function LaporanGuruPage() {
               )}
             </button>
 
-            {reportGenerated && laporanData.length > 0 && (
-              <button
-                onClick={handleExportPDF}
-                disabled={exporting}
-                className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-emerald-50 text-emerald-700 font-semibold rounded-lg border-2 border-emerald-600 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {exporting ? (
-                  <>
-                    <Loader className="animate-spin" size={20} />
-                    Export PDF...
-                  </>
-                ) : (
-                  <>
-                    <FileText size={20} />
-                    Export PDF
-                  </>
-                )}
-              </button>
-            )}
+            <button
+              onClick={handleExportPDF}
+              disabled={exporting || !reportGenerated || laporanData.length === 0}
+              className={`w-full sm:w-auto px-6 py-3 font-semibold rounded-lg border-2 shadow-sm transition-all flex items-center justify-center gap-2 ${
+                reportGenerated && laporanData.length > 0
+                  ? 'bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-600 cursor-pointer'
+                  : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed opacity-50 pointer-events-none'
+              }`}
+            >
+              {exporting ? (
+                <>
+                  <Loader className="animate-spin" size={20} />
+                  Export PDF...
+                </>
+              ) : (
+                <>
+                  <FileText size={20} />
+                  Export PDF
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -490,13 +498,18 @@ export default function LaporanGuruPage() {
             {laporanData.length === 0 ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                 <div className="flex justify-center mb-4">
-                  <div className="p-4 bg-amber-50 rounded-full">
-                    <AlertTriangle className="text-amber-600" size={48} />
+                  <div className="p-4 bg-blue-50 rounded-full">
+                    <FileText className="text-blue-600" size={48} />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-700 mb-2">Tidak ada data laporan</h3>
-                <p className="text-gray-500">
-                  Belum ada data untuk periode dan kelas yang dipilih
+                <h3 className="text-xl font-bold text-gray-700 mb-2">
+                  Belum ada laporan untuk periode ini
+                </h3>
+                <p className="text-gray-500 mb-1">
+                  Coba ganti periode atau pastikan presensi/penilaian sudah diisi
+                </p>
+                <p className="text-sm text-gray-400">
+                  Data laporan akan muncul setelah guru melakukan penilaian hafalan
                 </p>
               </div>
             ) : (
