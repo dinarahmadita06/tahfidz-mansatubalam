@@ -309,12 +309,16 @@ export default function DashboardGuru() {
       let totalProgress = 0;
       if (siswaArray.length > 0) {
         const hafalanRes = await fetch('/api/hafalan');
-        const hafalanData = await hafalanRes.json();
-        const hafalanArray = Array.isArray(hafalanData) ? hafalanData : [];
+        const hafalanJson = await hafalanRes.json().catch(() => null);
+
+        // Safe parsing: always ensure we have an array
+        const hafalanArray = Array.isArray(hafalanJson?.data)
+          ? hafalanJson.data
+          : [];
 
         for (const siswa of siswaArray) {
-          const siswaHafalan = hafalanArray.filter(h => h.siswaId === siswa.id);
-          const uniqueJuz = [...new Set(siswaHafalan.map(h => h.juz))];
+          const siswaHafalan = hafalanArray.filter(h => h?.siswaId === siswa.id);
+          const uniqueJuz = [...new Set(siswaHafalan.map(h => h.juz).filter(Boolean))];
           const progress = (uniqueJuz.length / 30) * 100;
           totalProgress += progress;
         }
