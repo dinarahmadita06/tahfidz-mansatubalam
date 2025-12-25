@@ -13,7 +13,6 @@ import {
   FileText,
   BookOpen,
   AlertCircle,
-  Link as LinkIcon,
   FileCheck,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
@@ -24,6 +23,7 @@ const CATEGORIES = [
   'Tahsin',
   'Doa Harian',
   'Panduan Hafalan',
+  'Umum',
 ];
 
 export default function BukuDigitalPage() {
@@ -73,7 +73,6 @@ export default function BukuDigitalPage() {
   // Calculate statistics
   const totalBooks = books.length;
   const totalPDF = books.filter(b => b.file || b.fileUrl.startsWith('blob:')).length;
-  const totalLinks = books.filter(b => b.fileUrl.startsWith('http') && !b.file).length;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -110,8 +109,8 @@ export default function BukuDigitalPage() {
       return;
     }
 
-    if (!formData.fileUrl.trim() && !formData.file) {
-      toast.error('Pilih file PDF atau masukkan link materi');
+    if (!formData.file) {
+      toast.error('File PDF wajib diupload');
       return;
     }
 
@@ -190,8 +189,8 @@ export default function BukuDigitalPage() {
           </div>
         </div>
 
-        {/* Statistics Cards - 3 Kolom */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Statistics Cards - 2 Kolom (PDF-Only) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 1: Total Materi */}
           <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
             <div className="flex items-center justify-between">
@@ -214,19 +213,6 @@ export default function BukuDigitalPage() {
               </div>
               <div className="bg-blue-100 p-4 rounded-full">
                 <FileCheck size={32} className="text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Link Materi */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-amber-600 text-sm font-semibold mb-1">LINK MATERI</p>
-                <h3 className="text-4xl font-bold text-amber-700">{totalLinks}</h3>
-              </div>
-              <div className="bg-amber-100 p-4 rounded-full">
-                <LinkIcon size={32} className="text-amber-600" />
               </div>
             </div>
           </div>
