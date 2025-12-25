@@ -53,32 +53,49 @@ function PageHeader({ onRefresh, refreshing }) {
   );
 }
 
-// StatsCard Component
-function StatsCard({ icon: Icon, title, value, subtitle, color = 'emerald' }) {
-  const colorMap = {
-    emerald: 'bg-emerald-100 text-emerald-600',
-    blue: 'bg-blue-100 text-blue-600',
-    amber: 'bg-amber-100 text-amber-600',
+// StatsCard Component (sama dengan Tasmi style)
+function StatsCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
+  const variants = {
+    green: {
+      wrapper: 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 text-emerald-700',
+      title: 'text-emerald-600',
+      value: 'text-emerald-700',
+      subtitle: 'text-emerald-600/80',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+    },
+    blue: {
+      wrapper: 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 text-blue-700',
+      title: 'text-blue-600',
+      value: 'text-blue-700',
+      subtitle: 'text-blue-600/80',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+    },
+    orange: {
+      wrapper: 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 text-amber-700',
+      title: 'text-amber-600',
+      value: 'text-amber-700',
+      subtitle: 'text-amber-600/80',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
+    },
   };
 
+  const style = variants[variant];
+
   return (
-    <div className="rounded-2xl border border-emerald-100 bg-white/70 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-6">
-      <div className="flex items-center gap-4">
-        <div className={`w-14 h-14 rounded-2xl ${colorMap[color]} flex items-center justify-center shrink-0`}>
-          <Icon size={24} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">
-            {title}
-          </p>
-          <p className="text-3xl font-bold text-slate-800 mb-0.5">
-            {value}
-          </p>
+    <div className={`${style.wrapper} rounded-xl border-2 p-6 shadow-sm`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className={`${style.title} text-sm font-semibold mb-1`}>{title}</p>
+          <h3 className={`${style.value} text-4xl font-bold`}>{value}</h3>
           {subtitle && (
-            <p className="text-xs text-slate-500">
-              {subtitle}
-            </p>
+            <p className={`${style.subtitle} text-sm mt-1`}>{subtitle}</p>
           )}
+        </div>
+        <div className={`${style.iconBg} p-4 rounded-full`}>
+          <Icon size={32} className={style.iconColor} />
         </div>
       </div>
     </div>
@@ -375,27 +392,27 @@ export default function KelolaSiswaPage() {
         ) : (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatsCard
                 icon={Users}
-                title="Total Siswa"
+                title="TOTAL SISWA"
                 value={stats.totalSiswa}
                 subtitle="Siswa terdaftar"
-                color="emerald"
+                variant="green"
               />
               <StatsCard
                 icon={UserCheck}
-                title="Siswa Aktif"
+                title="SISWA AKTIF"
                 value={stats.siswaAktif}
                 subtitle="Siswa aktif belajar"
-                color="blue"
+                variant="blue"
               />
               <StatsCard
                 icon={Clock}
-                title="Menunggu Validasi"
+                title="MENUNGGU VALIDASI"
                 value={stats.menungguValidasi}
                 subtitle="Perlu persetujuan"
-                color="amber"
+                variant="orange"
               />
             </div>
 
