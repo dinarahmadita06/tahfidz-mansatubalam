@@ -327,36 +327,42 @@ export default function PenilaianHafalanPage() {
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-amber-50">
-        {/* Header Card */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-8 mb-8">
-          <div className="max-w-[1400px] mx-auto flex items-center gap-4">
-            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center">
-              <Bookmark className="w-8 h-8 text-white" strokeWidth={1.5} />
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header Card with Gradient - Consistent with Tahsin/Tasmi */}
+        <div className="max-w-6xl mx-auto rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-4 sm:p-6">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+              <Bookmark className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" strokeWidth={1.5} />
             </div>
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Penilaian Hafalan – Kelas {kelasInfo?.nama || 'Loading...'}</h1>
-              <p className="text-emerald-50 text-lg">Input penilaian hafalan per pertemuan</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight mb-1 sm:mb-2 whitespace-normal break-words">
+                Penilaian Hafalan
+              </h1>
+              <p className="text-white/90 text-sm sm:text-base lg:text-lg font-medium break-words">
+                Input penilaian hafalan per pertemuan — {kelasInfo?.nama || 'Loading...'}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-8 pb-8">
+        <div className="max-w-6xl mx-auto space-y-6">
 
           {/* Date Filter Card */}
-          <div className="bg-white rounded-2xl shadow-md border-2 border-emerald-100 p-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
             <div className="flex items-center gap-4">
-              <Calendar className="w-6 h-6 text-emerald-600" />
-              <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tanggal Pertemuan</label>
-                <div className="flex gap-4 items-center">
+              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                <Calendar className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tanggal Pertemuan</label>
+                <div className="flex gap-3 items-center flex-wrap">
                   <input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                    className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                   />
-                  <span className="text-gray-700 font-medium">
+                  <span className="text-sm text-slate-700 font-medium">
                     {new Date(selectedDate).toLocaleDateString('id-ID', {
                       weekday: 'long',
                       day: 'numeric',
@@ -370,10 +376,10 @@ export default function PenilaianHafalanPage() {
           </div>
 
           {/* Table Card */}
-          <div className="bg-white rounded-2xl shadow-md border-2 border-emerald-100 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-emerald-600 to-teal-600">
+                <thead className="bg-emerald-600">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-bold text-white w-12">No</th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-white">Nama Siswa</th>
@@ -383,7 +389,7 @@ export default function PenilaianHafalanPage() {
                     <th className="px-6 py-4 text-left text-sm font-bold text-white" style={{ minWidth: '200px' }}>Catatan</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-emerald-100">
+                <tbody className="divide-y divide-slate-200">
                   {siswaList.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="px-6 py-16 text-center">
@@ -431,14 +437,14 @@ export default function PenilaianHafalanPage() {
                       };
 
                       return (
-                    <tr key={siswa.id} className="hover:bg-emerald-50 transition-colors duration-200 border-l-4 border-l-emerald-300">
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-700">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">{siswa.user?.name || siswa.nama}</td>
+                    <tr key={siswa.id} className="hover:bg-emerald-50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-900">{siswa.user?.name || siswa.nama}</td>
                       <td className="px-6 py-4 text-center">
                         <select
                           value={statusKehadiran}
                           onChange={(e) => handleStatusChange(siswa.id, e.target.value)}
-                          className={`px-3 py-2 border-2 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all cursor-pointer ${getStatusStyle()}`}
+                          className={`px-3 py-2 border rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all cursor-pointer ${getStatusStyle()}`}
                         >
                           <option value="HADIR">Hadir</option>
                           <option value="SAKIT">Sakit</option>
@@ -449,7 +455,7 @@ export default function PenilaianHafalanPage() {
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => openPenilaianPopup(siswa)}
-                          className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all text-sm font-semibold shadow-md hover:shadow-lg"
+                          className="rounded-xl px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
                         >
                           {penilaian.surah ? 'Edit' : 'Input'}
                         </button>
@@ -465,12 +471,12 @@ export default function PenilaianHafalanPage() {
                             rataRata >= 90 ? 'bg-emerald-100 text-emerald-700' :
                             rataRata >= 80 ? 'bg-amber-100 text-amber-700' :
                             rataRata >= 70 ? 'bg-orange-100 text-orange-700' :
-                            'bg-gray-100 text-gray-700'
+                            'bg-slate-100 text-slate-700'
                           }`}>
                             {formatNilai(rataRata)}
                           </div>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-xs font-medium">Belum ada</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -487,8 +493,8 @@ export default function PenilaianHafalanPage() {
                             }));
                           }}
                           onBlur={(e) => handleCatatanChange(siswa.id, e.target.value)}
-                          placeholder="Tambahkan catatan..."
-                          className="w-full px-3 py-2 text-sm border-2 border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-all"
+                          placeholder="Tulis catatan singkat…"
+                          className="w-full max-w-xs px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors"
                         />
                       </td>
                     </tr>
