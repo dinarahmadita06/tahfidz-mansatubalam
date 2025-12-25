@@ -542,11 +542,12 @@ export default function TahsinDetailPage() {
             </div>
 
             {/* Badge Total Siswa */}
-            <div className="bg-white/20 rounded-xl px-4 py-3 w-full sm:w-auto">
-              <p className="text-[10px] font-semibold tracking-wide text-white/90 uppercase">
+            <div className="bg-white/20 rounded-xl px-4 py-3 w-full sm:w-auto max-[380px]:flex max-[380px]:items-center max-[380px]:justify-center max-[380px]:gap-2 max-[380px]:text-center">
+              <p className="text-[10px] font-semibold tracking-wide text-white/90 uppercase max-[380px]:inline">
                 Total Siswa
               </p>
-              <p className="text-xl font-bold text-white">
+              <span className="hidden max-[380px]:inline text-white/90 font-bold">:</span>
+              <p className="text-xl font-bold text-white max-[380px]:inline max-[380px]:text-base">
                 {siswaList.length}
               </p>
             </div>
