@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import PengumumanWidget from '@/components/PengumumanWidget';
@@ -10,78 +10,113 @@ import {
   CalendarCheck,
   MessageSquare,
   TrendingUp,
-  Award,
   Clock,
   Target,
   Sparkles,
   ChevronRight,
   BookMarked,
+  Lightbulb,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
-import MotivationalCard from '@/components/MotivationalCard';
 
-// Komponen Progress Ring untuk statistik
-function ProgressRing({ progress = 75, color = 'emerald', size = 120, strokeWidth = 8 }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (progress / 100) * circumference;
+// ===== CONSTANTS =====
+const PRIMARY_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-400 to-yellow-300';
+const CARD_BORDER = 'border border-emerald-100';
 
-  const colorClasses = {
-    emerald: 'text-emerald-500',
-    amber: 'text-amber-500',
-    sky: 'text-sky-500',
-    purple: 'text-purple-500',
+// ===== REUSABLE COMPONENTS =====
+
+// StatsCard - Card statistik dengan pastel lembut + icon besar
+const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald', delay = 0 }) => {
+  const colorConfig = {
+    emerald: {
+      bg: 'bg-gradient-to-br from-emerald-50 to-teal-50',
+      border: 'border-emerald-100',
+      iconBg: 'bg-emerald-500',
+      textValue: 'text-gray-900',
+      textSub: 'text-emerald-600',
+    },
+    amber: {
+      bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
+      border: 'border-amber-100',
+      iconBg: 'bg-amber-500',
+      textValue: 'text-gray-900',
+      textSub: 'text-amber-600',
+    },
+    sky: {
+      bg: 'bg-gradient-to-br from-sky-50 to-blue-50',
+      border: 'border-sky-100',
+      iconBg: 'bg-sky-500',
+      textValue: 'text-gray-900',
+      textSub: 'text-sky-600',
+    },
+    purple: {
+      bg: 'bg-gradient-to-br from-purple-50 to-violet-50',
+      border: 'border-purple-100',
+      iconBg: 'bg-purple-500',
+      textValue: 'text-gray-900',
+      textSub: 'text-purple-600',
+    },
+  };
+
+  const styles = colorConfig[color];
+
+  return (
+    <div className={`${styles.bg} rounded-2xl p-5 shadow-sm border ${styles.border}`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className={`p-4 ${styles.iconBg} rounded-2xl shadow-md`}>
+          <Icon className="text-white" size={28} />
+        </div>
+      </div>
+      <h3 className="text-sm font-semibold text-gray-600 mb-2">{title}</h3>
+      <p className={`text-3xl font-bold ${styles.textValue}`}>{value}</p>
+      {subtitle && <p className={`text-sm ${styles.textSub} font-medium mt-2`}>{subtitle}</p>}
+    </div>
+  );
+};
+
+// SectionHeader - Header untuk section card dengan icon
+const SectionHeader = ({ icon: Icon, title, subtitle, iconColor = 'emerald' }) => {
+  const iconBgColors = {
+    emerald: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
+    sky: 'bg-sky-50 text-sky-600',
   };
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg
-        className="transform -rotate-90"
-        width={size}
-        height={size}
-      >
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="none"
-          className="text-gray-200"
-        />
-        {/* Progress circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className={`${colorClasses[color]} transition-all duration-1000 ease-out`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xl font-bold text-gray-900">{progress}%</span>
+    <div className="flex items-center gap-4 mb-6">
+      <div className={`p-3.5 ${iconBgColors[iconColor]} rounded-xl`}>
+        <Icon size={28} />
+      </div>
+      <div>
+        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        <p className="text-xs text-gray-600">{subtitle}</p>
       </div>
     </div>
   );
-}
+};
 
+// DashboardCard - Card wrapper dengan styling konsisten
+const DashboardCard = ({ children, className = '' }) => {
+  return (
+    <div className={`bg-white rounded-2xl p-6 shadow-sm ${CARD_BORDER} ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+// ===== MAIN COMPONENT =====
 export default function DashboardSiswa() {
   const { data: session } = useSession();
   const [currentTime, setCurrentTime] = useState('');
   const [greeting, setGreeting] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Ambil nama depan dari nama user (mengambil kata pertama)
   const getFirstName = (fullName) => {
     if (!fullName) return 'Siswa';
     return fullName.split(' ')[0];
   };
+
   const stats = {
     hafalanSelesai: 15,
     totalHafalan: 30,
@@ -119,13 +154,15 @@ export default function DashboardSiswa() {
   ];
 
   const achievementData = [
-    { label: 'Juz 1', progress: 100, color: 'emerald' },
-    { label: 'Juz 2', progress: 75, color: 'emerald' },
-    { label: 'Juz 3', progress: 45, color: 'amber' },
-    { label: 'Juz 4', progress: 20, color: 'sky' },
+    { label: 'Juz 1', progress: 100 },
+    { label: 'Juz 2', progress: 75 },
+    { label: 'Juz 3', progress: 45 },
+    { label: 'Juz 4', progress: 20 },
   ];
 
   useEffect(() => {
+    setIsHydrated(true);
+
     // Set greeting based on time
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Selamat Pagi');
@@ -148,297 +185,173 @@ export default function DashboardSiswa() {
   }, []);
 
   const hafalanProgress = Math.round((stats.hafalanSelesai / stats.totalHafalan) * 100);
-  const kehadiranProgress = Math.round((stats.kehadiran / stats.totalHari) * 100);
-
-  // Prevent hydration mismatch by only showing time-dependent content after hydration
-  const [isHydrated, setIsHydrated] = useState(false);
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   return (
     <SiswaLayout>
-      <div className="min-h-screen bg-gradient-dashboard animate-fade-in overflow-x-hidden max-w-full">
-        {/* Greeting Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="mb-8"
-        >
-          <div className="bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 rounded-3xl md:rounded-3xl p-7 md:p-10 shadow-2xl relative overflow-hidden">
-          {/* Decorative Elements - contained to prevent overflow */}
-          <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-white/10 rounded-full -translate-y-1/3 translate-x-1/3"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 md:w-40 md:h-40 bg-white/10 rounded-full translate-y-1/3 -translate-x-1/3"></div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 md:gap-4 mb-4">
-              <Sparkles className="text-amber-300 flex-shrink-0" size={28} />
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white" suppressHydrationWarning>
-                {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
-              </h1>
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+        {/* Welcome Banner - Gradient Hijau ke Kuning */}
+        <div className={`${PRIMARY_GRADIENT} rounded-2xl shadow-md p-6 sm:p-8 text-white mb-6`}>
+          <div className="flex items-center gap-3 mb-3">
+            <Sparkles className="text-yellow-200 flex-shrink-0" size={28} />
+            <h1 className="text-2xl sm:text-3xl font-bold" suppressHydrationWarning>
+              {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
+            </h1>
+          </div>
+          <p className="text-green-50 text-sm sm:text-base mb-4" suppressHydrationWarning>
+            {isHydrated ? currentTime : ''}
+          </p>
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-full">
+              <BookMarked className="text-white flex-shrink-0" size={18} />
+              <span className="text-white font-medium text-sm">
+                {stats.hafalanSelesai} Hafalan Selesai
+              </span>
             </div>
-            <p className="text-emerald-50 text-sm md:text-base mb-5" suppressHydrationWarning>
-              {isHydrated ? currentTime : ''}
-            </p>
-            <div className="flex flex-wrap gap-4 md:gap-5 items-center">
-              <div className="flex items-center gap-2.5 bg-white/20 backdrop-blur-sm px-4 py-2.5 md:px-5 md:py-3 rounded-full">
-                <BookMarked className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-medium text-sm md:text-base">
-                  {stats.hafalanSelesai} Hafalan Selesai
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5 bg-white/20 backdrop-blur-sm px-4 py-2.5 md:px-5 md:py-3 rounded-full">
-                <Target className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-medium text-sm md:text-base">
-                  Target: {stats.totalHafalan} Hafalan
-                </span>
-              </div>
+            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-full">
+              <Target className="text-white flex-shrink-0" size={18} />
+              <span className="text-white font-medium text-sm">
+                Target: {stats.totalHafalan} Hafalan
+              </span>
             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* Motivational Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.2, ease: "easeOut" }}
-        className="mb-8"
-      >
-        <MotivationalCard theme="emerald" />
-      </motion.div>
-
-      {/* Pengumuman Widget */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.2, ease: "easeOut" }}
-        className="mb-8"
-      >
-        <PengumumanWidget limit={3} />
-      </motion.div>
-
-      {/* Statistics Cards - 4 Columns */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
-        {/* Card 1: Hafalan Selesai */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ y: -5, scale: 1.02 }}
-          className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-emerald-100 hover:shadow-xl transition-all min-h-[180px]"
-        >
-          <div className="flex items-center justify-between mb-5">
-            <div className="p-4 bg-emerald-500 rounded-2xl shadow-md">
-              <BookOpen className="text-white" size={28} />
+        {/* Motivasi - Biru Transparan */}
+        <div className="bg-sky-50/60 backdrop-blur-sm rounded-2xl shadow-sm border border-sky-100 p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center">
+              <Lightbulb className="text-sky-600" size={24} />
             </div>
-            <ProgressRing progress={hafalanProgress} color="emerald" size={90} strokeWidth={7} />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Hafalan Selesai</h3>
-          <p className="text-2xl font-bold text-gray-900">{stats.hafalanSelesai}</p>
-          <p className="text-sm text-emerald-600 font-medium mt-2">dari {stats.totalHafalan} target</p>
-        </motion.div>
-
-        {/* Card 2: Rata-rata Nilai */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, duration: 0.2, ease: "easeOut" }}
-          whileHover={{ y: -3, scale: 1.01 }}
-          className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-amber-100 hover:shadow-xl transition-all min-h-[180px]"
-        >
-          <div className="flex items-center justify-between mb-5">
-            <div className="p-4 bg-amber-500 rounded-2xl shadow-md">
-              <Star className="text-white" size={28} />
-            </div>
-            <ProgressRing progress={stats.rataRataNilai} color="amber" size={90} strokeWidth={7} />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Rata-rata Nilai</h3>
-          <p className="text-2xl font-bold text-gray-900">{stats.rataRataNilai}</p>
-          <p className="text-sm text-amber-600 font-medium mt-2">dari 100</p>
-        </motion.div>
-
-        {/* Card 3: Kehadiran */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15, duration: 0.2, ease: "easeOut" }}
-          whileHover={{ y: -3, scale: 1.01 }}
-          className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-sky-100 hover:shadow-xl transition-all min-h-[180px]"
-        >
-          <div className="flex items-center justify-between mb-5">
-            <div className="p-4 bg-sky-500 rounded-2xl shadow-md">
-              <CalendarCheck className="text-white" size={28} />
-            </div>
-            <ProgressRing progress={kehadiranProgress} color="sky" size={90} strokeWidth={7} />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Kehadiran</h3>
-          <p className="text-2xl font-bold text-gray-900">{stats.kehadiran}</p>
-          <p className="text-sm text-sky-600 font-medium mt-2">dari {stats.totalHari} hari</p>
-        </motion.div>
-
-        {/* Card 4: Catatan Guru */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.2, ease: "easeOut" }}
-          whileHover={{ y: -3, scale: 1.01 }}
-          className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-7 md:p-8 shadow-lg border-2 border-purple-100 hover:shadow-xl transition-all min-h-[180px]"
-        >
-          <div className="flex items-center justify-between mb-5">
-            <div className="p-4 bg-purple-500 rounded-2xl shadow-md">
-              <MessageSquare className="text-white" size={28} />
-            </div>
-            <div className="flex items-center justify-center w-24 h-24">
-              <div className="text-center">
-                <p className="text-4xl font-bold text-gray-900">{stats.catatanGuru}</p>
-                <p className="text-xs text-purple-600 font-medium mt-1">Catatan</p>
-              </div>
+            <div className="flex-1">
+              <p className="text-base sm:text-lg italic leading-relaxed text-sky-900 mb-2 font-medium">
+                "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
+              </p>
+              <p className="text-sm text-sky-700 font-semibold">
+                — HR. Bukhari
+              </p>
             </div>
           </div>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Catatan Guru</h3>
-          <Link
-            href="/siswa/penilaian-hafalan"
-            className="inline-flex items-center gap-1.5 text-sm text-purple-600 hover:text-purple-700 font-medium mt-2 transition-colors"
-          >
-            Lihat semua <ChevronRight size={18} />
-          </Link>
-        </motion.div>
-      </div>
+        </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
-        {/* Progress Hafalan per Juz */}
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.25, duration: 0.2, ease: "easeOut" }}
-          className="lg:col-span-2 bg-white rounded-3xl p-7 md:p-8 shadow-lg border-2 border-gray-100"
-        >
-          <div className="flex items-center gap-4 mb-7">
-            <div className="p-3.5 bg-emerald-100 rounded-xl">
-              <TrendingUp className="text-emerald-600" size={28} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Progress Hafalan per Juz</h2>
-              <p className="text-xs text-gray-600">Pantau perkembangan hafalanmu</p>
-            </div>
-          </div>
+        {/* Pengumuman Widget */}
+        <div className="mb-6">
+          <PengumumanWidget limit={3} />
+        </div>
 
-          <div className="space-y-5">
-            {achievementData.map((item, index) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.05, duration: 0.2, ease: "easeOut" }}
-                className="space-y-2.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">{item.label}</span>
-                  <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${item.progress}%` }}
-                    transition={{ duration: 0.5, delay: 0.4 + index * 0.05, ease: "easeOut" }}
-                    className={`h-full rounded-full ${
-                      item.color === 'emerald' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
-                      item.color === 'amber' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
-                      'bg-gradient-to-r from-sky-500 to-blue-500'
-                    }`}
-                  />
-                </div>
-              </motion.div>
-            ))}
-          </div>
+        {/* Statistics Cards - 4 Columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StatsCard
+            icon={BookOpen}
+            title="Hafalan Selesai"
+            value={stats.hafalanSelesai}
+            subtitle={`dari ${stats.totalHafalan} target`}
+            color="emerald"
+          />
+          <StatsCard
+            icon={Star}
+            title="Rata-rata Nilai"
+            value={stats.rataRataNilai}
+            subtitle="dari 100"
+            color="amber"
+          />
+          <StatsCard
+            icon={CalendarCheck}
+            title="Kehadiran"
+            value={stats.kehadiran}
+            subtitle={`dari ${stats.totalHari} hari`}
+            color="sky"
+          />
+          <StatsCard
+            icon={MessageSquare}
+            title="Catatan Guru"
+            value={stats.catatanGuru}
+            subtitle={
+              <Link href="/siswa/penilaian-hafalan" className="inline-flex items-center gap-1 hover:underline">
+                Lihat semua <ChevronRight size={16} />
+              </Link>
+            }
+            color="purple"
+          />
+        </div>
 
-          <Link
-            href="/siswa/laporan"
-            className="mt-7 inline-flex items-center gap-2.5 px-6 py-3.5 min-h-[48px] bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors shadow-md hover:shadow-lg"
-          >
-            Lihat Laporan Lengkap <ChevronRight size={20} />
-          </Link>
-        </motion.div>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Progress Hafalan per Juz */}
+          <DashboardCard className="lg:col-span-2">
+            <SectionHeader
+              icon={TrendingUp}
+              title="Progress Hafalan per Juz"
+              subtitle="Pantau perkembangan hafalanmu"
+              iconColor="emerald"
+            />
 
-        {/* Recent Activities */}
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.25, duration: 0.2, ease: "easeOut" }}
-          className="bg-white rounded-3xl p-7 md:p-8 shadow-lg border-2 border-gray-100"
-        >
-          <div className="flex items-center gap-4 mb-7">
-            <div className="p-3.5 bg-amber-100 rounded-xl">
-              <Clock className="text-amber-600" size={28} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Aktivitas Terkini</h2>
-              <p className="text-xs text-gray-600">Update terbaru</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {recentActivities.map((activity, index) => {
-              const Icon = activity.icon;
-              const statusColors = {
-                approved: 'bg-emerald-100 text-emerald-700',
-                info: 'bg-sky-100 text-sky-700',
-                warning: 'bg-amber-100 text-amber-700',
-              };
-
-              return (
-                <motion.div
-                  key={activity.id}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35 + index * 0.05, duration: 0.2, ease: "easeOut" }}
-                  className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <div className={`p-3 rounded-xl ${statusColors[activity.status]}`}>
-                    <Icon size={20} />
+            <div className="space-y-4">
+              {achievementData.map((item, index) => (
+                <div key={item.label} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-700">{item.label}</span>
+                    <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.title}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1.5">{activity.time}</p>
+                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                      style={{ width: `${item.progress}%` }}
+                    />
                   </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                </div>
+              ))}
+            </div>
 
-          <button className="mt-4 w-full py-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
-            Lihat Semua Aktivitas
-          </button>
-        </motion.div>
-      </div>
+            <Link
+              href="/siswa/laporan"
+              className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors shadow-md"
+            >
+              Lihat Laporan Lengkap <ChevronRight size={20} />
+            </Link>
+          </DashboardCard>
 
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          50% {
-            transform: translate(15px, -25px) scale(1.05);
-          }
-        }
+          {/* Recent Activities */}
+          <DashboardCard>
+            <SectionHeader
+              icon={Clock}
+              title="Aktivitas Terkini"
+              subtitle="Update terbaru"
+              iconColor="amber"
+            />
 
-        .animate-blob {
-          animation: blob 3s infinite;
-        }
+            <div className="space-y-3">
+              {recentActivities.map((activity) => {
+                const Icon = activity.icon;
+                const statusColors = {
+                  approved: 'bg-emerald-100 text-emerald-700',
+                  info: 'bg-sky-100 text-sky-700',
+                  warning: 'bg-amber-100 text-amber-700',
+                };
 
-        .animation-delay-2000 {
-          animation-delay: 1s;
-        }
+                return (
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    <div className={`p-2.5 rounded-xl ${statusColors[activity.status]}`}>
+                      <Icon size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {activity.title}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-        .animation-delay-4000 {
-          animation-delay: 2s;
-        }
-      `}</style>
+            <button className="mt-4 w-full py-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              Lihat Semua Aktivitas
+            </button>
+          </DashboardCard>
+        </div>
       </div>
     </SiswaLayout>
   );
