@@ -8,19 +8,293 @@ import {
   Phone,
   MapPin,
   Calendar,
-  Clock,
   Shield,
   Edit,
   Lock,
-  Home,
-  ChevronRight,
   BookOpen,
   FileSignature,
   Upload,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  Loader
 } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
+import { toast, Toaster } from 'react-hot-toast';
+
+// ProfileHeader Component
+function ProfileHeader() {
+  return (
+    <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            <User className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+          </div>
+
+          <div className="min-w-0">
+            <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
+              Profil Saya
+            </h1>
+            <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
+              Kelola informasi profil dan keamanan akun Anda
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ProfileSummaryCard Component
+function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      {/* Avatar & Info */}
+      <div className="flex flex-col items-center text-center mb-6">
+        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg mb-4">
+          <span className="text-white text-3xl font-bold">
+            {profileData?.name?.charAt(0)?.toUpperCase() || 'G'}
+          </span>
+        </div>
+
+        <h2 className="text-xl font-bold text-gray-900 mb-1 break-words">
+          {profileData?.name || 'Nama Guru'}
+        </h2>
+
+        <div className="flex items-center gap-2 text-gray-600 mb-3">
+          <Mail size={14} />
+          <span className="text-sm break-all">{profileData?.email}</span>
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <Shield size={16} />
+          Guru Tahfidz
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={onEditProfile}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Edit size={18} />
+          Edit Profil
+        </button>
+        <button
+          onClick={onChangePassword}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Lock size={18} />
+          Ubah Password
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// PersonalInfoForm Component
+function PersonalInfoForm({ profileData }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <div className="p-2 rounded-lg bg-emerald-50">
+          <User size={20} className="text-emerald-600" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900">Informasi Pribadi</h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nama Lengkap */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <User size={16} className="text-gray-400" />
+            Nama Lengkap
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.name || '-'}</p>
+          </div>
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Mail size={16} className="text-gray-400" />
+            Email
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
+          </div>
+        </div>
+
+        {/* Nomor Telepon */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Phone size={16} className="text-gray-400" />
+            Nomor Telepon
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.phone || '-'}</p>
+          </div>
+        </div>
+
+        {/* Bidang Keahlian */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <BookOpen size={16} className="text-gray-400" />
+            Bidang Keahlian
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.bidangKeahlian || '-'}</p>
+          </div>
+        </div>
+
+        {/* Mulai Mengajar */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Calendar size={16} className="text-gray-400" />
+            Mulai Mengajar
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.mulaiMengajar || '-'}</p>
+          </div>
+        </div>
+
+        {/* Alamat - Full Width */}
+        <div className="md:col-span-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <MapPin size={16} className="text-gray-400" />
+            Alamat
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.alamat || '-'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// SignatureUploader Component
+function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDelete }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <div className="p-2 rounded-lg bg-blue-50">
+          <FileSignature size={20} className="text-blue-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-bold text-gray-900">Tanda Tangan Digital</h3>
+          <p className="text-xs text-gray-500 mt-1">
+            Untuk ditampilkan otomatis di laporan
+          </p>
+        </div>
+      </div>
+
+      {tandaTanganUrl ? (
+        <div className="space-y-4">
+          {/* Preview */}
+          <div className="p-4 rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50/30">
+            <div className="flex flex-col items-center">
+              <CheckCircle size={24} className="text-emerald-600 mb-2" />
+              <p className="text-sm font-semibold text-gray-700 mb-3">
+                Tanda Tangan Aktif
+              </p>
+              <div className="bg-white p-3 rounded-lg border border-gray-200 inline-block">
+                <img
+                  src={tandaTanganUrl}
+                  alt="Tanda Tangan"
+                  className="max-h-24 mx-auto"
+                  style={{ maxWidth: '200px' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 flex-wrap">
+            <label className="flex-1 cursor-pointer">
+              <div className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200">
+                <Upload size={18} />
+                {uploadingSignature ? 'Mengupload...' : 'Ganti'}
+              </div>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={onUpload}
+                disabled={uploadingSignature}
+                className="hidden"
+              />
+            </label>
+
+            <button
+              onClick={onDelete}
+              disabled={uploadingSignature}
+              className="px-6 py-3 rounded-xl font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <label className="block cursor-pointer">
+          <div className="p-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all duration-200">
+            <div className="text-center">
+              <div className="mb-3 flex justify-center">
+                <div className="p-3 rounded-xl bg-emerald-50">
+                  <Upload size={24} className="text-emerald-600" />
+                </div>
+              </div>
+              <p className="text-sm font-bold text-gray-900 mb-1">
+                {uploadingSignature ? 'Mengupload...' : 'Klik untuk Upload Tanda Tangan'}
+              </p>
+              <p className="text-xs text-gray-500">
+                Format: PNG atau JPG • Maksimal 2MB
+              </p>
+            </div>
+          </div>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            onChange={onUpload}
+            disabled={uploadingSignature}
+            className="hidden"
+          />
+        </label>
+      )}
+
+      {/* Info Note */}
+      <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-100">
+        <p className="text-xs text-blue-900">
+          💡 Ukuran maksimal 2MB. PNG transparan disarankan.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// SecurityCard Component
+function SecurityCard() {
+  return (
+    <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5">
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center shadow-sm">
+            <Shield size={20} className="text-white" />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-sm mb-2 text-emerald-900">
+            Informasi Keamanan Akun
+          </h4>
+          <p className="text-sm leading-relaxed text-emerald-800">
+            💡 Pastikan informasi profil Anda selalu ter-update. Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProfilGuruPage() {
   const { data: session, status, update } = useSession();
@@ -35,14 +309,11 @@ export default function ProfilGuruPage() {
     confirmPassword: ''
   });
   const [saveLoading, setSaveLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [tandaTanganUrl, setTandaTanganUrl] = useState(null);
   const [uploadingSignature, setUploadingSignature] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated') {
-      // Load profile data from session
       setProfileData({
         name: session.user.name || '',
         email: session.user.email || '',
@@ -52,8 +323,6 @@ export default function ProfilGuruPage() {
         mulaiMengajar: session.user.mulaiMengajar || ''
       });
       setLoading(false);
-
-      // Load tanda tangan
       fetchTandaTangan();
     }
   }, [status, session]);
@@ -79,8 +348,6 @@ export default function ProfilGuruPage() {
       bidangKeahlian: profileData.bidangKeahlian,
       mulaiMengajar: profileData.mulaiMengajar
     });
-    setError('');
-    setSuccess('');
     setShowEditModal(true);
   };
 
@@ -90,8 +357,6 @@ export default function ProfilGuruPage() {
       newPassword: '',
       confirmPassword: ''
     });
-    setError('');
-    setSuccess('');
     setShowPasswordModal(true);
   };
 
@@ -99,7 +364,6 @@ export default function ProfilGuruPage() {
     e.preventDefault();
     try {
       setSaveLoading(true);
-      setError('');
 
       const response = await fetch('/api/user/profile', {
         method: 'PATCH',
@@ -110,20 +374,19 @@ export default function ProfilGuruPage() {
       });
 
       if (response.ok) {
-        setSuccess('Profil berhasil diperbarui!');
+        toast.success('Profil berhasil diperbarui!');
         setProfileData(editFormData);
         await update();
         setTimeout(() => {
           setShowEditModal(false);
-          setSuccess('');
-        }, 2000);
+        }, 1000);
       } else {
         const error = await response.json();
-        setError(error.error || 'Gagal memperbarui profil');
+        toast.error(error.error || 'Gagal memperbarui profil');
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      setError('Terjadi kesalahan saat memperbarui profil');
+      toast.error('Terjadi kesalahan saat memperbarui profil');
     } finally {
       setSaveLoading(false);
     }
@@ -133,18 +396,17 @@ export default function ProfilGuruPage() {
     e.preventDefault();
 
     if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
-      setError('Password baru dan konfirmasi tidak cocok');
+      toast.error('Password baru dan konfirmasi tidak cocok');
       return;
     }
 
     if (passwordFormData.newPassword.length < 6) {
-      setError('Password minimal 6 karakter');
+      toast.error('Password minimal 6 karakter');
       return;
     }
 
     try {
       setSaveLoading(true);
-      setError('');
 
       const response = await fetch('/api/user/change-password', {
         method: 'POST',
@@ -158,23 +420,22 @@ export default function ProfilGuruPage() {
       });
 
       if (response.ok) {
-        setSuccess('Password berhasil diubah!');
+        toast.success('Password berhasil diubah!');
         setTimeout(() => {
           setShowPasswordModal(false);
-          setSuccess('');
           setPasswordFormData({
             currentPassword: '',
             newPassword: '',
             confirmPassword: '',
           });
-        }, 2000);
+        }, 1000);
       } else {
         const error = await response.json();
-        setError(error.error || 'Gagal mengubah password');
+        toast.error(error.error || 'Gagal mengubah password');
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      setError('Terjadi kesalahan saat mengubah password');
+      toast.error('Terjadi kesalahan saat mengubah password');
     } finally {
       setSaveLoading(false);
     }
@@ -184,21 +445,18 @@ export default function ProfilGuruPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('File harus berupa gambar (PNG/JPG)');
+      toast.error('File harus berupa gambar (PNG/JPG)');
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setError('Ukuran file maksimal 2MB');
+      toast.error('Ukuran file maksimal 2MB');
       return;
     }
 
     try {
       setUploadingSignature(true);
-      setError('');
 
       const formData = new FormData();
       formData.append('tandaTangan', file);
@@ -211,15 +469,14 @@ export default function ProfilGuruPage() {
       if (response.ok) {
         const data = await response.json();
         setTandaTanganUrl(data.tandaTanganUrl);
-        setSuccess('Tanda tangan berhasil diupload!');
-        setTimeout(() => setSuccess(''), 3000);
+        toast.success('Tanda tangan berhasil diupload!');
       } else {
         const error = await response.json();
-        setError(error.error || 'Gagal mengupload tanda tangan');
+        toast.error(error.error || 'Gagal mengupload tanda tangan');
       }
     } catch (error) {
       console.error('Error uploading signature:', error);
-      setError('Terjadi kesalahan saat mengupload tanda tangan');
+      toast.error('Terjadi kesalahan saat mengupload tanda tangan');
     } finally {
       setUploadingSignature(false);
     }
@@ -232,7 +489,6 @@ export default function ProfilGuruPage() {
 
     try {
       setUploadingSignature(true);
-      setError('');
 
       const response = await fetch('/api/guru/upload-ttd', {
         method: 'DELETE'
@@ -240,15 +496,14 @@ export default function ProfilGuruPage() {
 
       if (response.ok) {
         setTandaTanganUrl(null);
-        setSuccess('Tanda tangan berhasil dihapus!');
-        setTimeout(() => setSuccess(''), 3000);
+        toast.success('Tanda tangan berhasil dihapus!');
       } else {
         const error = await response.json();
-        setError(error.error || 'Gagal menghapus tanda tangan');
+        toast.error(error.error || 'Gagal menghapus tanda tangan');
       }
     } catch (error) {
       console.error('Error deleting signature:', error);
-      setError('Terjadi kesalahan saat menghapus tanda tangan');
+      toast.error('Terjadi kesalahan saat menghapus tanda tangan');
     } finally {
       setUploadingSignature(false);
     }
@@ -258,7 +513,10 @@ export default function ProfilGuruPage() {
     return (
       <GuruLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200 border-t-emerald-600"></div>
+          <div className="text-center">
+            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
+            <p className="text-gray-600">Memuat profil...</p>
+          </div>
         </div>
       </GuruLayout>
     );
@@ -266,816 +524,270 @@ export default function ProfilGuruPage() {
 
   return (
     <GuruLayout>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+      <Toaster position="top-right" />
 
-        body, * {
-          font-family: 'Poppins', sans-serif;
-        }
+      <div className="space-y-6">
+        {/* Header */}
+        <ProfileHeader />
 
-        /* Islamic ornament pattern */
-        .islamic-ornament-topleft {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 300px;
-          height: 300px;
-          background-image:
-            radial-gradient(circle at center, rgba(16, 185, 129, 0.04) 0%, transparent 70%),
-            repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(16, 185, 129, 0.03) 20px, rgba(16, 185, 129, 0.03) 40px);
-          filter: blur(1px);
-          pointer-events: none;
-          opacity: 0.8;
-        }
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Profile Summary */}
+          <div className="lg:col-span-1">
+            <ProfileSummaryCard
+              profileData={profileData}
+              onEditProfile={handleEditProfile}
+              onChangePassword={handleChangePassword}
+            />
+          </div>
 
-        .islamic-ornament-bottomright {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 400px;
-          height: 400px;
-          background-image:
-            radial-gradient(circle at center, rgba(245, 158, 11, 0.05) 0%, transparent 70%),
-            repeating-linear-gradient(-45deg, transparent, transparent 25px, rgba(245, 158, 11, 0.04) 25px, rgba(245, 158, 11, 0.04) 50px);
-          filter: blur(2px);
-          pointer-events: none;
-          opacity: 0.7;
-        }
+          {/* Right Column: Info + Signature + Security */}
+          <div className="lg:col-span-2 space-y-6">
+            <PersonalInfoForm profileData={profileData} />
 
-        /* Card with enhanced shadow */
-        .profile-card {
-          box-shadow:
-            0 4px 20px rgba(0, 0, 0, 0.06),
-            0 1px 3px rgba(0, 0, 0, 0.03),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        }
+            <SignatureUploader
+              tandaTanganUrl={tandaTanganUrl}
+              uploadingSignature={uploadingSignature}
+              onUpload={handleUploadSignature}
+              onDelete={handleDeleteSignature}
+            />
 
-        .profile-card-hover {
-          transition: all 0.3s ease;
-        }
-
-        .profile-card-hover:hover {
-          transform: translateY(-2px);
-          box-shadow:
-            0 8px 30px rgba(0, 0, 0, 0.08),
-            0 2px 6px rgba(0, 0, 0, 0.04),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        }
-      `}</style>
-
-      <div
-        className="min-h-screen p-8 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
-          fontFamily: 'Poppins, sans-serif'
-        }}
-      >
-        {/* Islamic Ornaments */}
-        <div className="islamic-ornament-topleft"></div>
-        <div className="islamic-ornament-bottomright"></div>
-
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm mb-6 relative z-10">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-emerald-100/50 shadow-sm">
-            <Home size={16} className="text-emerald-600" strokeWidth={1.5} />
-            <ChevronRight size={14} className="text-gray-400" strokeWidth={2} />
-            <span className="font-semibold text-emerald-700">Profil Saya</span>
+            <SecurityCard />
           </div>
         </div>
-
-        {/* Header Section */}
-        <div
-          className="relative z-10 mb-8 p-8 profile-card"
-          style={{
-            background: 'linear-gradient(135deg, #FDFCF8 0%, #FFF9F0 100%)',
-            borderTop: '3px solid #10B981'
-          }}
-        >
-          <div className="flex items-start gap-5">
-            <div
-              className="p-4 rounded-2xl shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-              }}
-            >
-              <User className="text-white" size={32} strokeWidth={1.5} />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2" style={{ color: '#064E3B' }}>
-                Profil Saya
-              </h1>
-              <p className="text-sm font-medium" style={{ color: '#374151' }}>
-                Kelola informasi profil Anda
-              </p>
-              <div className="flex items-center gap-2 mt-3">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium text-emerald-700">Status: Aktif</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {success && (
-          <div className="relative z-10 mb-6 max-w-4xl mx-auto">
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
-              ✓ {success}
-            </div>
-          </div>
-        )}
-
-        {/* Main Profile Card */}
-        <div
-          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
-          style={{
-            background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
-            border: '1px solid rgba(16, 185, 129, 0.1)'
-          }}
-        >
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            {/* Profile Picture */}
-            <div className="flex-shrink-0">
-              <div
-                className="w-28 h-28 rounded-full flex items-center justify-center shadow-xl ring-4 ring-white"
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)'
-                }}
-              >
-                <span className="text-white text-4xl font-bold">
-                  {profileData?.name?.charAt(0)?.toUpperCase() || 'G'}
-                </span>
-              </div>
-            </div>
-
-            {/* Profile Info */}
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {profileData?.name || 'Nama Guru'}
-              </h2>
-              <div className="flex items-center gap-2 text-gray-600 mb-3">
-                <Mail size={16} />
-                <span className="text-sm">{profileData?.email}</span>
-              </div>
-
-              {/* Badge */}
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border mb-4 shadow-sm"
-                style={{
-                  background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
-                  borderColor: '#10B981',
-                  color: '#065F46'
-                }}
-              >
-                <Shield size={16} strokeWidth={2} />
-                Guru Tahfidz
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 mt-6">
-                <button
-                  onClick={handleEditProfile}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md hover:shadow-xl transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                  }}
-                >
-                  <Edit size={18} strokeWidth={2} />
-                  Edit Profil
-                </button>
-                <button
-                  onClick={handleChangePassword}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-                    color: '#92400E',
-                    border: '1px solid #F59E0B'
-                  }}
-                >
-                  <Lock size={18} strokeWidth={2} />
-                  Ubah Password
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Informasi Pribadi Section */}
-        <div
-          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
-          style={{
-            background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-            border: '1px solid rgba(245, 158, 11, 0.2)'
-          }}
-        >
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-200/50">
-            <div
-              className="p-2 rounded-lg"
-              style={{
-                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-              }}
-            >
-              <User size={20} className="text-white" strokeWidth={2} />
-            </div>
-            <h3 className="text-lg font-bold" style={{ color: '#92400E' }}>
-              Informasi Pribadi
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Nama Lengkap */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <User size={16} className="text-amber-600" strokeWidth={2} />
-                Nama Lengkap
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.name}</p>
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <Mail size={16} className="text-amber-600" strokeWidth={2} />
-                Email
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.email}</p>
-              </div>
-            </div>
-
-            {/* Nomor Telepon */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <Phone size={16} className="text-amber-600" strokeWidth={2} />
-                Nomor Telepon
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.phone || '-'}</p>
-              </div>
-            </div>
-
-            {/* Bidang Keahlian */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <BookOpen size={16} className="text-amber-600" strokeWidth={2} />
-                Bidang Keahlian
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.bidangKeahlian}</p>
-              </div>
-            </div>
-
-            {/* Mulai Mengajar */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <Calendar size={16} className="text-amber-600" strokeWidth={2} />
-                Mulai Mengajar
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.mulaiMengajar || '-'}</p>
-              </div>
-            </div>
-
-            {/* Alamat */}
-            <div className="space-y-2 md:col-span-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <MapPin size={16} className="text-amber-600" strokeWidth={2} />
-                Alamat
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat || '-'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tanda Tangan Digital Section */}
-        <div
-          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
-          style={{
-            background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.2)'
-          }}
-        >
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-blue-200/50">
-            <div
-              className="p-2 rounded-lg"
-              style={{
-                background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-              }}
-            >
-              <FileSignature size={20} className="text-white" strokeWidth={2} />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold" style={{ color: '#1E3A8A' }}>
-                Tanda Tangan Digital
-              </h3>
-              <p className="text-xs text-gray-600 mt-1">
-                Upload tanda tangan untuk ditampilkan otomatis di semua laporan
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {/* Preview Tanda Tangan */}
-            {tandaTanganUrl ? (
-              <div className="space-y-4">
-                <div
-                  className="p-6 rounded-xl border-2 border-dashed bg-white/50"
-                  style={{ borderColor: '#3B82F6' }}
-                >
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-3 flex justify-center">
-                        <CheckCircle size={32} className="text-emerald-600" strokeWidth={2} />
-                      </div>
-                      <p className="text-sm font-semibold text-gray-700 mb-4">
-                        Tanda Tangan Aktif
-                      </p>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200 inline-block">
-                        <img
-                          src={tandaTanganUrl}
-                          alt="Tanda Tangan"
-                          className="max-h-32 mx-auto"
-                          style={{ maxWidth: '300px' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <label
-                    className="flex-1 cursor-pointer"
-                  >
-                    <div
-                      className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md hover:shadow-xl transition-all duration-200 hover:scale-105"
-                      style={{
-                        background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-                      }}
-                    >
-                      <Upload size={18} strokeWidth={2} />
-                      {uploadingSignature ? 'Mengupload...' : 'Ganti Tanda Tangan'}
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg"
-                      onChange={handleUploadSignature}
-                      disabled={uploadingSignature}
-                      className="hidden"
-                    />
-                  </label>
-
-                  <button
-                    onClick={handleDeleteSignature}
-                    disabled={uploadingSignature}
-                    className="px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      background: 'linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)',
-                      color: '#991B1B',
-                      border: '1px solid #EF4444'
-                    }}
-                  >
-                    <Trash2 size={18} strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <label
-                  className="block cursor-pointer"
-                >
-                  <div
-                    className="p-8 rounded-xl border-2 border-dashed transition-all duration-200 hover:border-blue-500 hover:bg-blue-50/30"
-                    style={{
-                      borderColor: '#93C5FD',
-                      background: 'rgba(255, 255, 255, 0.5)'
-                    }}
-                  >
-                    <div className="text-center">
-                      <div className="mb-4 flex justify-center">
-                        <div
-                          className="p-4 rounded-2xl"
-                          style={{
-                            background: 'linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)'
-                          }}
-                        >
-                          <Upload size={32} className="text-blue-600" strokeWidth={2} />
-                        </div>
-                      </div>
-                      <p className="text-sm font-bold text-gray-900 mb-2">
-                        {uploadingSignature ? 'Mengupload...' : 'Klik untuk Upload Tanda Tangan'}
-                      </p>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Format: PNG atau JPG • Maksimal 2MB
-                      </p>
-                      <div
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md"
-                        style={{
-                          background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-                        }}
-                      >
-                        <Upload size={18} strokeWidth={2} />
-                        Pilih File
-                      </div>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg"
-                    onChange={handleUploadSignature}
-                    disabled={uploadingSignature}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            )}
-
-            {/* Info Box */}
-            <div
-              className="p-4 rounded-lg border"
-              style={{
-                background: 'rgba(239, 246, 255, 0.5)',
-                borderColor: '#BFDBFE'
-              }}
-            >
-              <p className="text-xs font-medium text-blue-900 mb-2">
-                💡 Informasi Penting:
-              </p>
-              <ul className="text-xs text-blue-800 space-y-1">
-                <li>• Tanda tangan akan otomatis muncul di semua laporan yang Anda buat</li>
-                <li>• Gunakan gambar dengan latar belakang transparan untuk hasil terbaik</li>
-                <li>• Pastikan tanda tangan jelas dan mudah dibaca</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Informasi Akun Card */}
-        <div
-          className="relative z-10 rounded-2xl p-6 max-w-4xl mx-auto border profile-card"
-          style={{
-            background: 'linear-gradient(135deg, #D1FAE5 0%, #FEF3C7 100%)',
-            borderColor: 'rgba(16, 185, 129, 0.3)'
-          }}
-        >
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                }}
-              >
-                <Shield size={22} className="text-white" strokeWidth={2} />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-base mb-2" style={{ color: '#065F46' }}>
-                Informasi Keamanan Akun
-              </h4>
-              <p className="text-sm leading-relaxed" style={{ color: '#374151' }}>
-                💡 Tips: Pastikan informasi profil Anda selalu ter-update.
-                Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
-              </p>
-              <div className="flex items-center gap-2 mt-3 text-xs font-semibold" style={{ color: '#047857' }}>
-                <Lock size={14} strokeWidth={2} />
-                <span>Login terenkripsi • Sesi aman</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Edit Profile Modal */}
-        {showEditModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div
-              className="rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
-              style={{
-                background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
-                border: '2px solid rgba(16, 185, 129, 0.2)'
-              }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="p-2 rounded-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                    }}
-                  >
-                    <Edit size={20} className="text-white" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-2xl font-bold" style={{ color: '#064E3B' }}>Edit Profil</h3>
-                </div>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Success/Error Message */}
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
-                  {success}
-                </div>
-              )}
-
-              <form onSubmit={handleSaveProfile}>
-                <div className="space-y-5">
-                  {/* Nama Lengkap */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nama Lengkap <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={editFormData.name || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      disabled
-                      value={editFormData.email || ''}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
-                  </div>
-
-                  {/* Nomor Telepon */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nomor Telepon
-                    </label>
-                    <input
-                      type="tel"
-                      value={editFormData.phone || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                      placeholder="08xx xxxx xxxx"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Bidang Keahlian */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bidang Keahlian
-                    </label>
-                    <input
-                      type="text"
-                      value={editFormData.bidangKeahlian || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, bidangKeahlian: e.target.value })}
-                      placeholder="Contoh: Tahfidz Al-Quran, Tahsin, dll"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Mulai Mengajar */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Mulai Mengajar
-                    </label>
-                    <input
-                      type="date"
-                      value={editFormData.mulaiMengajar || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, mulaiMengajar: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Alamat */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Alamat
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={editFormData.alamat || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
-                      placeholder="Alamat lengkap..."
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Modal Actions */}
-                <div className="flex gap-3 mt-8">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditModal(false)}
-                    disabled={saveLoading}
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
-                    style={{
-                      background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-                      color: '#374151'
-                    }}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saveLoading}
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
-                    style={{
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                    }}
-                  >
-                    {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Change Password Modal */}
-        {showPasswordModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div
-              className="rounded-2xl p-8 max-w-md w-full shadow-2xl"
-              style={{
-                background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-                border: '2px solid rgba(245, 158, 11, 0.3)'
-              }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="p-2 rounded-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                    }}
-                  >
-                    <Lock size={20} className="text-white" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-2xl font-bold" style={{ color: '#92400E' }}>Ubah Password</h3>
-                </div>
-                <button
-                  onClick={() => setShowPasswordModal(false)}
-                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Success/Error Message */}
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
-                  {success}
-                </div>
-              )}
-
-              <form onSubmit={handleChangePasswordSubmit}>
-                <div className="space-y-5">
-                  {/* Password Lama */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Password Lama <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Masukkan password lama"
-                      value={passwordFormData.currentPassword}
-                      onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Password Baru */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Password Baru <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      minLength={6}
-                      placeholder="Minimal 6 karakter"
-                      value={passwordFormData.newPassword}
-                      onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Konfirmasi Password */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Konfirmasi Password Baru <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      minLength={6}
-                      placeholder="Ketik ulang password baru"
-                      value={passwordFormData.confirmPassword}
-                      onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                {/* Password Requirements */}
-                <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                  <p className="text-xs font-medium text-amber-900 mb-2">Persyaratan Password:</p>
-                  <ul className="text-xs text-amber-800 space-y-1">
-                    <li>• Minimal 6 karakter</li>
-                  </ul>
-                </div>
-
-                {/* Modal Actions */}
-                <div className="flex gap-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordModal(false)}
-                    disabled={saveLoading}
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
-                    style={{
-                      background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-                      color: '#374151'
-                    }}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saveLoading}
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
-                    style={{
-                      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                    }}
-                  >
-                    {saveLoading ? 'Menyimpan...' : 'Ubah Password'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-50">
+                  <Edit size={20} className="text-emerald-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">Edit Profil</h3>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile}>
+              <div className="space-y-5">
+                {/* Nama Lengkap */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nama Lengkap <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.name || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    disabled
+                    value={editFormData.email || ''}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
+                </div>
+
+                {/* Nomor Telepon */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nomor Telepon
+                  </label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    placeholder="08xx xxxx xxxx"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Bidang Keahlian */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bidang Keahlian
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.bidangKeahlian || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, bidangKeahlian: e.target.value })}
+                    placeholder="Contoh: Tahfidz Al-Quran, Tahsin, dll"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Mulai Mengajar */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mulai Mengajar
+                  </label>
+                  <input
+                    type="date"
+                    value={editFormData.mulaiMengajar || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, mulaiMengajar: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Alamat */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Alamat
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editFormData.alamat || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
+                    placeholder="Alamat lengkap..."
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 mt-8">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={saveLoading}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveLoading}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-all duration-200 disabled:opacity-50"
+                >
+                  {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-50">
+                  <Lock size={20} className="text-amber-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">Ubah Password</h3>
+              </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all duration-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePasswordSubmit}>
+              <div className="space-y-5">
+                {/* Password Lama */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Password Lama <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Masukkan password lama"
+                    value={passwordFormData.currentPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Password Baru */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Password Baru <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="Minimal 6 karakter"
+                    value={passwordFormData.newPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Konfirmasi Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Konfirmasi Password Baru <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="Ketik ulang password baru"
+                    value={passwordFormData.confirmPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Password Requirements */}
+              <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <p className="text-xs font-medium text-amber-900 mb-2">Persyaratan Password:</p>
+                <ul className="text-xs text-amber-800 space-y-1">
+                  <li>• Minimal 6 karakter</li>
+                </ul>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  disabled={saveLoading}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveLoading}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-all duration-200 disabled:opacity-50"
+                >
+                  {saveLoading ? 'Menyimpan...' : 'Ubah Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </GuruLayout>
   );
 }
