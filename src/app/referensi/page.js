@@ -627,13 +627,13 @@ export default function ReferensiQuran() {
 
                       {!loading && surahData && (
                         <div className="space-y-6">
-                          {/* Surah Header - Nama Arab di kiri atas, tombol di kanan atas */}
-                          <div className="bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 rounded-3xl px-4 py-5 md:px-6 md:py-6 text-white shadow-xl relative overflow-hidden">
-                            {/* Tombol floating di pojok kanan atas - TIDAK mempengaruhi layout judul */}
-                            <div className="absolute top-4 right-4 md:top-5 md:right-6 flex gap-2 z-10">
+                          {/* Surah Header - Responsive Mobile-First */}
+                          <div className="bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 rounded-3xl px-4 py-5 md:px-10 md:py-8 text-white shadow-xl relative overflow-hidden">
+                            {/* Desktop Only: Tombol floating di pojok kanan atas */}
+                            <div className="hidden md:flex absolute top-5 right-6 gap-2 z-10">
                               <button
                                 onClick={() => setShowTajwid(!showTajwid)}
-                                className={`px-4 py-2 rounded-xl font-semibold transition-all text-xs md:text-sm shadow-lg hover:scale-105 ${
+                                className={`px-4 py-2 rounded-xl font-semibold transition-all text-sm shadow-lg hover:scale-105 ${
                                   showTajwid
                                     ? 'bg-white text-green-600'
                                     : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
@@ -644,32 +644,50 @@ export default function ReferensiQuran() {
 
                               <button
                                 onClick={handleBookmark}
-                                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 text-xs md:text-sm shadow-lg text-white hover:scale-105"
+                                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm shadow-lg text-white hover:scale-105"
                               >
                                 <Bookmark size={14} />
                                 Tandai
                               </button>
                             </div>
 
-                            {/* Area Judul - Align KIRI dengan flex flex-col items-start */}
-                            <div className="flex flex-col items-start space-y-2 pr-40 md:pr-48">
-                              {/* Baris 1: Nama Arab - KIRI ATAS */}
-                              <h2 className="text-4xl md:text-6xl font-arabic leading-tight drop-shadow-md text-left">
+                            {/* Wrapper Konten dengan spacing rapi */}
+                            <div className="flex flex-col gap-4">
+                              {/* Nama Arab */}
+                              <h2 className="text-4xl md:text-6xl font-arabic leading-tight drop-shadow-md">
                                 {surahData.name}
                               </h2>
 
-                              {/* Baris 2: Nama Latin - KIRI, di bawah Arab */}
-                              <h3 className="text-2xl md:text-4xl font-bold text-white text-left">
+                              {/* Nama Latin (max 2 baris) */}
+                              <h3 className="text-2xl md:text-4xl font-bold text-white line-clamp-2">
                                 {surahData.englishName}
                               </h3>
 
-                              {/* Baris 3: Info Jumlah Ayat + Kategori - KIRI, sejajar dalam 1 baris */}
-                              <div className="flex items-center gap-2 text-sm md:text-base text-green-50 font-medium">
-                                <span>Jumlah Ayat: {surahData.numberOfAyahs}</span>
-                                <span>•</span>
-                                <span>
-                                  Kategori: {surahData.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
-                                </span>
+                              {/* Info Ringkas */}
+                              <div className="text-sm md:text-base text-green-50 font-medium">
+                                {surahData.numberOfAyahs} Ayat • {surahData.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
+                              </div>
+
+                              {/* Mobile Only: Tombol Grid 2 Kolom */}
+                              <div className="grid grid-cols-2 gap-2 w-full md:hidden">
+                                <button
+                                  onClick={() => setShowTajwid(!showTajwid)}
+                                  className={`px-4 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-lg ${
+                                    showTajwid
+                                      ? 'bg-white text-green-600'
+                                      : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
+                                  }`}
+                                >
+                                  Mode Tajwid
+                                </button>
+
+                                <button
+                                  onClick={handleBookmark}
+                                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm shadow-lg text-white"
+                                >
+                                  <Bookmark size={14} />
+                                  Tandai
+                                </button>
                               </div>
                             </div>
 
