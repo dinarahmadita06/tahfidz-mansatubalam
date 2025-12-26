@@ -137,24 +137,30 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
 
   if (!children || children.length === 0) return null;
 
+  const hasMultipleChildren = children.length > 1;
+
   return (
-    <div className="relative">
+    <div className="relative flex-shrink-0">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300"
+        onClick={() => hasMultipleChildren && setIsOpen(!isOpen)}
+        className={`flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg transition-all duration-300 ${
+          hasMultipleChildren ? 'hover:shadow-xl cursor-pointer' : 'cursor-default'
+        }`}
       >
-        <User size={20} className="text-white flex-shrink-0" />
+        <User size={20} className="text-emerald-600 flex-shrink-0" />
         <div className="text-left">
-          <p className="text-sm text-emerald-100">Pilih Anak</p>
-          <p className="font-semibold text-white">{selectedChild?.name || 'Pilih Anak'}</p>
+          <p className="text-sm text-gray-600">Anak Aktif</p>
+          <p className="font-semibold text-gray-900">{selectedChild?.name || 'Pilih Anak'}</p>
         </div>
-        <ChevronDown
-          size={20}
-          className={`text-white transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-        />
+        {hasMultipleChildren && (
+          <ChevronDown
+            size={20}
+            className={`text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        )}
       </button>
 
-      {isOpen && (
+      {isOpen && hasMultipleChildren && (
         <>
           <div
             className="fixed inset-0 z-40"
@@ -393,7 +399,7 @@ export default function DashboardOrangTua() {
           {/* Banner Header - Hijau SIMTAQ Style */}
           <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-6 sm:p-8 text-white`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
                 <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
                   <BookMarked className="text-white" size={32} />
                 </div>
@@ -408,7 +414,7 @@ export default function DashboardOrangTua() {
               </div>
 
               {/* Child Selector Dropdown */}
-              {children.length > 1 && (
+              {selectedChild && (
                 <ChildSelector
                   children={children}
                   selectedChild={selectedChild}
@@ -416,23 +422,6 @@ export default function DashboardOrangTua() {
                 />
               )}
             </div>
-
-            {selectedChild && (
-              <div className="flex flex-wrap gap-3 items-center mt-5">
-                <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-                  <Target className="text-white flex-shrink-0" size={18} />
-                  <span className="text-white font-semibold text-sm whitespace-nowrap">
-                    {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-                  <CalendarCheck className="text-white flex-shrink-0" size={18} />
-                  <span className="text-white font-semibold text-sm whitespace-nowrap">
-                    Kehadiran {stats.kehadiran}/{stats.totalHari > 0 ? stats.totalHari : '-'}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Motivasi - Biru Transparan */}
@@ -443,10 +432,10 @@ export default function DashboardOrangTua() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-base sm:text-lg italic leading-relaxed text-slate-700 mb-2 font-medium break-words">
-                  "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
+                  "Didiklah anak-anakmu, karena mereka diciptakan untuk zaman yang berbeda dengan zamanmu."
                 </p>
                 <p className="text-sm text-slate-600 font-semibold">
-                  — HR. Bukhari
+                  — Ali bin Abi Thalib RA
                 </p>
               </div>
             </div>
