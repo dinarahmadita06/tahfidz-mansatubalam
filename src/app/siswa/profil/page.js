@@ -15,6 +15,7 @@ import {
   IdCard,
   UserCircle,
   Loader,
+  X,
 } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 
@@ -95,163 +96,8 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
   );
 }
 
-// PersonalInfoCard Component
-function PersonalInfoCard({ profileData, isEditMode, formData, onChange }) {
-  if (isEditMode) {
-    return (
-      <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-          <div className="p-2 rounded-lg bg-emerald-50">
-            <Edit size={20} className="text-emerald-600" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900">Edit Informasi Pribadi</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Nama Lengkap */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <User size={16} className="text-gray-400" />
-              Nama Lengkap
-            </label>
-            <input
-              type="text"
-              value={formData.nama || ''}
-              onChange={(e) => onChange({ ...formData, nama: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Mail size={16} className="text-gray-400" />
-              Email
-            </label>
-            <input
-              type="email"
-              value={formData.email || ''}
-              onChange={(e) => onChange({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-            />
-          </div>
-
-          {/* Nomor Telepon */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Phone size={16} className="text-gray-400" />
-              Nomor Telepon
-            </label>
-            <input
-              type="tel"
-              value={formData.phone || ''}
-              onChange={(e) => onChange({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-            />
-          </div>
-
-          {/* Jenis Kelamin (read-only) */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <UserCircle size={16} className="text-gray-400" />
-              Jenis Kelamin
-            </label>
-            <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-              <p className="font-medium text-gray-900">{profileData?.jenisKelamin || '-'}</p>
-            </div>
-          </div>
-
-          {/* NISN (read-only) */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <IdCard size={16} className="text-gray-400" />
-              NISN
-            </label>
-            <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-              <p className="font-medium text-gray-900 font-mono">{profileData?.nisn || '-'}</p>
-            </div>
-          </div>
-
-          {/* NIS (read-only) */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <IdCard size={16} className="text-gray-400" />
-              NIS
-            </label>
-            <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-              <p className="font-medium text-gray-900 font-mono">{profileData?.nis || '-'}</p>
-            </div>
-          </div>
-
-          {/* Tanggal Lahir (read-only) */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Calendar size={16} className="text-gray-400" />
-              Tanggal Lahir
-            </label>
-            <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-              <p className="font-medium text-gray-900">{profileData?.tanggalLahir || '-'}</p>
-            </div>
-          </div>
-
-          {/* Kelas (read-only) */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <BookOpen size={16} className="text-gray-400" />
-              Kelas
-            </label>
-            <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-              <p className="font-medium text-gray-900">{profileData?.kelas || '-'}</p>
-            </div>
-          </div>
-
-          {/* Alamat (full width) */}
-          <div className="md:col-span-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <MapPin size={16} className="text-gray-400" />
-              Alamat
-            </label>
-            <textarea
-              rows={3}
-              value={formData.alamat || ''}
-              onChange={(e) => onChange({ ...formData, alamat: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all"
-            />
-          </div>
-
-          {/* Nama Wali */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <User size={16} className="text-gray-400" />
-              Nama Wali
-            </label>
-            <input
-              type="text"
-              value={formData.namaWali || ''}
-              onChange={(e) => onChange({ ...formData, namaWali: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-            />
-          </div>
-
-          {/* No HP Wali */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Phone size={16} className="text-gray-400" />
-              No. HP Wali
-            </label>
-            <input
-              type="tel"
-              value={formData.phoneWali || ''}
-              onChange={(e) => onChange({ ...formData, phoneWali: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Read-only view
+// PersonalInfoCard Component (Read-only view only)
+function PersonalInfoCard({ profileData }) {
   return (
     <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
@@ -387,13 +233,306 @@ function PersonalInfoCard({ profileData, isEditMode, formData, onChange }) {
   );
 }
 
+// EditProfileModal Component
+function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
+  const [formData, setFormData] = useState({});
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Prefill form data when modal opens
+  useEffect(() => {
+    if (isOpen && profileData) {
+      setFormData({
+        nama: profileData.nama || '',
+        phone: profileData.phone || '',
+        jenisKelamin: profileData.jenisKelamin || '',
+        tanggalLahir: profileData.tanggalLahir || '',
+        alamat: profileData.alamat || '',
+        namaWali: profileData.namaWali || '',
+        phoneWali: profileData.phoneWali || '',
+      });
+      setError('');
+      setSuccess('');
+    }
+  }, [isOpen, profileData]);
+
+  // ESC key handler
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
+  const handleSave = async () => {
+    try {
+      setSaveLoading(true);
+      setError('');
+
+      // Validasi required fields
+      if (!formData.nama || !formData.phone) {
+        setError('Nama dan nomor telepon wajib diisi');
+        setSaveLoading(false);
+        return;
+      }
+
+      // Validasi format nomor
+      const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
+      if (!phoneRegex.test(formData.phone)) {
+        setError('Format nomor telepon tidak valid');
+        setSaveLoading(false);
+        return;
+      }
+
+      if (formData.phoneWali && !phoneRegex.test(formData.phoneWali)) {
+        setError('Format nomor HP wali tidak valid');
+        setSaveLoading(false);
+        return;
+      }
+
+      // Call onSave callback
+      await onSave(formData);
+
+      setSuccess('Profil berhasil diperbarui!');
+      setTimeout(() => {
+        setSuccess('');
+        onClose();
+      }, 1500);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setError('Terjadi kesalahan saat menyimpan profil');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white/80 backdrop-blur rounded-2xl border border-white/20 shadow-xl shadow-green-500/10 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 flex items-center justify-between rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20">
+              <Edit size={20} className="text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white">Edit Informasi Pribadi</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+          >
+            <X size={20} className="text-white" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          {/* Error/Success Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+              {success}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Nama Lengkap - Editable */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <User size={16} className="text-gray-400" />
+                Nama Lengkap <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nama || ''}
+                onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                placeholder="Masukkan nama lengkap"
+              />
+            </div>
+
+            {/* Nomor Telepon - Editable */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Phone size={16} className="text-gray-400" />
+                Nomor Telepon <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                value={formData.phone || ''}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                placeholder="Contoh: 0812-3456-7890"
+              />
+            </div>
+
+            {/* Jenis Kelamin - Editable */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <UserCircle size={16} className="text-gray-400" />
+                Jenis Kelamin
+              </label>
+              <select
+                value={formData.jenisKelamin || ''}
+                onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+              >
+                <option value="">Pilih Jenis Kelamin</option>
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+            </div>
+
+            {/* Tanggal Lahir - Editable */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Calendar size={16} className="text-gray-400" />
+                Tanggal Lahir
+              </label>
+              <input
+                type="text"
+                value={formData.tanggalLahir || ''}
+                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                placeholder="Contoh: 15 Mei 2010"
+              />
+            </div>
+
+            {/* Email - Read-only */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Mail size={16} className="text-gray-400" />
+                Email <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
+              </label>
+              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
+              </div>
+            </div>
+
+            {/* NISN - Read-only */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <IdCard size={16} className="text-gray-400" />
+                NISN <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
+              </label>
+              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                <p className="font-medium text-gray-900 font-mono">{profileData?.nisn || '-'}</p>
+              </div>
+            </div>
+
+            {/* NIS - Read-only */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <IdCard size={16} className="text-gray-400" />
+                NIS <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
+              </label>
+              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                <p className="font-medium text-gray-900 font-mono">{profileData?.nis || '-'}</p>
+              </div>
+            </div>
+
+            {/* Kelas - Read-only */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <BookOpen size={16} className="text-gray-400" />
+                Kelas <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
+              </label>
+              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                <p className="font-medium text-gray-900">{profileData?.kelas || '-'}</p>
+              </div>
+            </div>
+
+            {/* Alamat - Editable (full width) */}
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <MapPin size={16} className="text-gray-400" />
+                Alamat
+              </label>
+              <textarea
+                rows={3}
+                value={formData.alamat || ''}
+                onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all"
+                placeholder="Masukkan alamat lengkap"
+              />
+            </div>
+
+            {/* Nama Wali - Editable */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <User size={16} className="text-gray-400" />
+                Nama Wali
+              </label>
+              <input
+                type="text"
+                value={formData.namaWali || ''}
+                onChange={(e) => setFormData({ ...formData, namaWali: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                placeholder="Masukkan nama wali"
+              />
+            </div>
+
+            {/* No HP Wali - Editable */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Phone size={16} className="text-gray-400" />
+                No. HP Wali
+              </label>
+              <input
+                type="tel"
+                value={formData.phoneWali || ''}
+                onChange={(e) => setFormData({ ...formData, phoneWali: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                placeholder="Contoh: 0813-9876-5432"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 p-6 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            disabled={saveLoading}
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-all disabled:opacity-50"
+          >
+            Batal
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saveLoading}
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main Component
 export default function ProfileSiswaPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editFormData, setEditFormData] = useState({});
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordFormData, setPasswordFormData] = useState({
     oldPassword: '',
@@ -438,47 +577,21 @@ export default function ProfileSiswaPage() {
   };
 
   const handleEditProfile = () => {
-    setEditFormData({
-      nama: profileData.nama,
-      email: profileData.email,
-      phone: profileData.phone,
-      alamat: profileData.alamat,
-      namaWali: profileData.namaWali,
-      phoneWali: profileData.phoneWali,
-    });
-    setIsEditMode(true);
+    setShowEditModal(true);
     setError('');
     setSuccess('');
   };
 
-  const handleCancelEdit = () => {
-    setIsEditMode(false);
-    setEditFormData({});
-    setError('');
-    setSuccess('');
-  };
+  const handleSaveProfile = async (formData) => {
+    // Update profileData with edited data
+    const updatedData = { ...profileData, ...formData };
+    setProfileData(updatedData);
+    localStorage.setItem('siswa_profile', JSON.stringify(updatedData));
 
-  const handleSaveProfile = async () => {
-    try {
-      setSaveLoading(true);
-      setError('');
-
-      // Update profileData with edited data
-      const updatedData = { ...profileData, ...editFormData };
-      setProfileData(updatedData);
-      localStorage.setItem('siswa_profile', JSON.stringify(updatedData));
-
-      setSuccess('Profil berhasil diperbarui!');
-      setTimeout(() => {
-        setIsEditMode(false);
-        setSuccess('');
-      }, 2000);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      setError('Terjadi kesalahan saat menyimpan profil');
-    } finally {
-      setSaveLoading(false);
-    }
+    setSuccess('Profil berhasil diperbarui!');
+    setTimeout(() => {
+      setSuccess('');
+    }, 3000);
   };
 
   const handleChangePassword = () => {
@@ -567,38 +680,21 @@ export default function ProfileSiswaPage() {
               />
             </div>
 
-            {/* Right: Personal Info */}
+            {/* Right: Personal Info (Read-only) */}
             <div className="lg:col-span-2">
-              <PersonalInfoCard
-                profileData={profileData}
-                isEditMode={isEditMode}
-                formData={editFormData}
-                onChange={setEditFormData}
-              />
-
-              {/* Edit Mode Action Buttons */}
-              {isEditMode && (
-                <div className="mt-4 flex gap-3">
-                  <button
-                    onClick={handleCancelEdit}
-                    disabled={saveLoading}
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-all duration-200 disabled:opacity-50"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={saveLoading}
-                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-                  >
-                    {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                  </button>
-                </div>
-              )}
+              <PersonalInfoCard profileData={profileData} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        profileData={profileData}
+        onSave={handleSaveProfile}
+      />
 
       {/* Change Password Modal */}
       {showPasswordModal && (
