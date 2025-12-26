@@ -13,7 +13,6 @@ import {
   ChevronDown,
   Loader2,
   Check,
-  Hash,
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import JumpToAyahModal from '@/components/JumpToAyahModal';
@@ -403,8 +402,8 @@ export default function ReferensiQuranPage() {
     });
   };
 
-  // Handle jump to ayah
-  const handleJumpToAyah = (ayahNumber) => {
+  // Utility function for smooth scroll to ayah
+  const scrollToAyah = (ayahNumber) => {
     const ayahRef = ayahRefs.current[ayahNumber];
     if (ayahRef) {
       ayahRef.scrollIntoView({
@@ -412,12 +411,23 @@ export default function ReferensiQuranPage() {
         block: 'start',
         inline: 'nearest'
       });
-      // Highlight briefly
+      // Highlight briefly with ring effect
       ayahRef.classList.add('ring-4', 'ring-emerald-400', 'ring-offset-2');
       setTimeout(() => {
         ayahRef.classList.remove('ring-4', 'ring-emerald-400', 'ring-offset-2');
       }, 2000);
+      return true;
+    }
+    return false;
+  };
+
+  // Handle jump to ayah from modal
+  const handleJumpToAyah = (ayahNumber) => {
+    const success = scrollToAyah(ayahNumber);
+    if (success) {
       toast.success(`Pindah ke ayat ${ayahNumber}`, { icon: '📍' });
+    } else {
+      toast.error('Ayat tidak ditemukan');
     }
   };
 
@@ -658,25 +668,27 @@ export default function ReferensiQuranPage() {
                                   <div
                                     key={verse.number}
                                     ref={(el) => (ayahRefs.current[verse.numberInSurah] = el)}
-                                    className={`p-4 rounded-xl border-2 bg-white/90 backdrop-blur-sm transition-all relative ${
+                                    className={`p-4 rounded-xl border-2 bg-white/90 backdrop-blur-sm transition-all ${
                                       isCurrentAyat && isAudioPlaying
                                         ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_8px_20px_rgba(16,185,129,0.2)]'
                                         : 'border-gray-100 hover:border-emerald-200 shadow-sm'
                                     }`}
                                   >
-                                    {/* Ayah Number Badge - Top Left */}
-                                    <button
-                                      onClick={() => setShowJumpModal(true)}
-                                      className="absolute -top-2 -left-2 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-md hover:scale-110 transition-transform z-10 flex items-center gap-1"
-                                      title="Klik untuk pindah ke ayat"
-                                    >
-                                      <Hash size={12} />
-                                      {verse.numberInSurah}
-                                    </button>
-
                                     {/* Ayah Header */}
-                                    <div className="flex items-center justify-between mb-4 mt-2">
+                                    <div className="flex items-center justify-between mb-4">
                                       <div className="flex items-center gap-2">
+                                        {/* Circular Number Badge - Like Guru Page */}
+                                        <button
+                                          onClick={() => setShowJumpModal(true)}
+                                          className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                                          title="Klik untuk pindah ke ayat"
+                                        >
+                                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                                            <span className="text-white text-sm font-bold">{verse.numberInSurah}</span>
+                                          </div>
+                                          <ChevronDown size={14} className="text-gray-400" />
+                                        </button>
+
                                         {isCurrentAyat && isAudioPlaying && (
                                           <div className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
                                             <Volume2 size={14} className="animate-pulse" />
@@ -685,25 +697,24 @@ export default function ReferensiQuranPage() {
                                         )}
                                       </div>
 
-                                      {verse.numberInSurah && selectedSurah && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            playAudio(verse);
-                                          }}
-                                          className={`p-2 rounded-lg transition-all shadow-md ${
-                                            isCurrentAyat && isAudioPlaying
-                                              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white'
-                                              : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
-                                          }`}
-                                        >
-                                          {isCurrentAyat ? (
-                                            isAudioPlaying ? <Pause size={16} /> : <Play size={16} />
-                                          ) : (
-                                            <PlayCircle size={16} />
-                                          )}
-                                        </button>
-                                      )}
+                                      {/* Audio Button - Always Visible Like Guru Page */}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          playAudio(verse);
+                                        }}
+                                        disabled={loading}
+                                        className={`p-2 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
+                                          loading ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                        title={loading ? 'Memuat audio...' : 'Putar audio'}
+                                      >
+                                        {isCurrentAyat && isAudioPlaying ? (
+                                          <Pause size={16} className="text-green-700" />
+                                        ) : (
+                                          <Play size={16} className="text-green-700" />
+                                        )}
+                                      </button>
                                     </div>
 
                                     {/* Arabic Text */}
@@ -963,19 +974,21 @@ export default function ReferensiQuranPage() {
                                 : 'border-gray-100 hover:border-emerald-200 shadow-sm hover:shadow-md'
                             }`}
                           >
-                            {/* Ayah Number Badge - Top Left */}
-                            <button
-                              onClick={() => setShowJumpModal(true)}
-                              className="absolute -top-2 -left-2 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-md hover:scale-110 transition-transform z-10 flex items-center gap-1.5"
-                              title="Klik untuk pindah ke ayat"
-                            >
-                              <Hash size={14} />
-                              {verse.numberInSurah}
-                            </button>
-
                             {/* Ayah Header */}
-                            <div className="flex items-center justify-between mb-5 mt-2">
+                            <div className="flex items-center justify-between mb-5">
                               <div className="flex items-center gap-3">
+                                {/* Circular Number Badge - Like Guru Page */}
+                                <button
+                                  onClick={() => setShowJumpModal(true)}
+                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                  title="Klik untuk pindah ke ayat"
+                                >
+                                  <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                                    <span className="text-white text-sm font-bold">{verse.numberInSurah}</span>
+                                  </div>
+                                  <ChevronDown size={16} className="text-gray-400" />
+                                </button>
+
                                 {isCurrentAyat && isAudioPlaying && (
                                   <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
                                     <Volume2 size={16} className="animate-pulse" />
@@ -984,25 +997,24 @@ export default function ReferensiQuranPage() {
                                 )}
                               </div>
 
-                              {verse.numberInSurah && selectedSurah && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    playAudio(verse);
-                                  }}
-                                  className={`p-3 rounded-xl transition-all shadow-md hover:scale-110 ${
-                                    isCurrentAyat && isAudioPlaying
-                                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white'
-                                      : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
-                                  }`}
-                                >
-                                  {isCurrentAyat ? (
-                                    isAudioPlaying ? <Pause size={20} /> : <Play size={20} />
-                                  ) : (
-                                    <PlayCircle size={20} />
-                                  )}
-                                </button>
-                              )}
+                              {/* Audio Button - Always Visible Like Guru Page */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  playAudio(verse);
+                                }}
+                                disabled={loading}
+                                className={`p-2.5 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
+                                  loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                                title={loading ? 'Memuat audio...' : 'Putar audio'}
+                              >
+                                {isCurrentAyat && isAudioPlaying ? (
+                                  <Pause size={20} className="text-green-700" />
+                                ) : (
+                                  <Play size={20} className="text-green-700" />
+                                )}
+                              </button>
                             </div>
 
                             {/* Arabic Text */}
