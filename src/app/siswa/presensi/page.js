@@ -175,7 +175,6 @@ export default function PresensiSiswaPage() {
                   <h2 className="text-base sm:text-lg font-bold text-white leading-snug">Riwayat Kehadiran Mingguan</h2>
                   <p className="text-sm text-green-50 leading-snug">
                     Rekap presensi per minggu
-                    <span className="hidden sm:inline"> (4-5 minggu per bulan)</span>
                   </p>
                 </div>
 
