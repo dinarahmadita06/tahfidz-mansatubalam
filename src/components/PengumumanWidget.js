@@ -154,16 +154,6 @@ export default function PengumumanWidget({ title = "Pengumuman Terbaru", limit =
         </div>
       )}
 
-      {/* Footer Link */}
-      {pengumuman.length > 0 && (
-        <Link
-          href="/admin/pengumuman"
-          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
-        >
-          Lihat Semua Pengumuman
-          <ChevronRight size={16} />
-        </Link>
-      )}
     </div>
   );
 }
