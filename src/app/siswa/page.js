@@ -263,12 +263,21 @@ export default function DashboardSiswa() {
               </div>
               <Link
                 href="/siswa/pengumuman"
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+                className="hidden sm:inline-flex px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
               >
                 Lihat Semua
               </Link>
             </div>
             <PengumumanWidget limit={3} />
+
+            {/* Mobile CTA - Full Width Button */}
+            <Link
+              href="/siswa/pengumuman"
+              className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+            >
+              Lihat Semua Pengumuman
+              <ChevronRight size={20} />
+            </Link>
           </div>
 
           {/* Statistics Cards - 4 Columns */}
