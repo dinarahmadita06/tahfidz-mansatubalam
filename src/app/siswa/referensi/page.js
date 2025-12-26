@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   BookOpen,
@@ -42,6 +42,9 @@ export default function ReferensiQuranPage() {
   const [currentPlayingId, setCurrentPlayingId] = useState(null); // Format: "surah-ayah"
   const [currentAudio, setCurrentAudio] = useState(null); // Audio element reference
   const [isAudioPlaying, setIsAudioPlaying] = useState(false); // Track if audio is actually playing (not paused)
+
+  // Ref for auto-scrolling to verses panel
+  const versesPanelRef = useRef(null);
 
   // Fetch surahs on mount
   useEffect(() => {
@@ -114,6 +117,16 @@ export default function ReferensiQuranPage() {
       }
       setCurrentPlayingId(null);
       setIsAudioPlaying(false);
+
+      // Auto-scroll to verses panel on mobile/tablet for better UX
+      setTimeout(() => {
+        if (versesPanelRef.current) {
+          versesPanelRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 100);
 
     } catch (error) {
       console.error('Error fetching surah data:', error);
@@ -503,11 +516,14 @@ export default function ReferensiQuranPage() {
                   </div>
                 ) : (
                   <>
-                    {/* Surah Header - SIMTAQ Green Gradient (Soft) */}
-                    <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 sm:p-8 text-white rounded-t-2xl">
-                      <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
-                        <div className="flex-1">
-                          <h2 className="text-4xl sm:text-5xl font-bold mb-3 font-arabic">
+                    {/* Surah Header - SIMTAQ Green Gradient with Responsive Layout */}
+                    <div ref={versesPanelRef} className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 sm:p-8 text-white rounded-t-2xl shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_8px_24px_rgba(16,185,129,0.15)]">
+
+                      {/* Mobile Layout: Vertical Stacking */}
+                      <div className="flex flex-col gap-4 lg:hidden">
+                        {/* 1. Nama Surah (Arab + Latin) */}
+                        <div>
+                          <h2 className="text-4xl font-bold mb-2 font-arabic leading-tight">
                             {selectedSurah.name}
                           </h2>
                           <p className="text-xl font-semibold text-green-50">
@@ -515,13 +531,31 @@ export default function ReferensiQuranPage() {
                           </p>
                         </div>
 
-                        <div className="flex gap-2 w-full sm:w-auto">
+                        {/* 2. Meta Info (Jumlah Ayat & Kategori) */}
+                        <div className="flex items-center gap-3 text-sm text-green-50 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">Jumlah Ayat:</span>
+                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                              {selectedSurah.numberOfAyahs}
+                            </span>
+                          </div>
+                          <span>•</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">Kategori:</span>
+                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                              {selectedSurah.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 3. Tombol Mode Tajwid & Tandai */}
+                        <div className="flex gap-3 pt-2">
                           <button
                             onClick={() => setShowTajwid(!showTajwid)}
-                            className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-md ${
+                            className={`flex-1 px-4 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-md ${
                               showTajwid
                                 ? 'bg-white text-emerald-600'
-                                : 'bg-white/20 text-white hover:bg-white/30'
+                                : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
                             }`}
                           >
                             Mode Tajwid
@@ -529,7 +563,7 @@ export default function ReferensiQuranPage() {
 
                           <button
                             onClick={handleBookmark}
-                            className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm shadow-md"
+                            className="flex-1 px-4 py-2.5 bg-white/30 backdrop-blur-sm hover:bg-white/40 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm shadow-md"
                           >
                             <Bookmark size={16} />
                             Tandai
@@ -537,17 +571,58 @@ export default function ReferensiQuranPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 text-sm text-green-50 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">Jumlah Ayat:</span>
-                          <span className="bg-white/20 px-3 py-1 rounded-full">{selectedSurah.numberOfAyahs}</span>
+                      {/* Desktop Layout: 2-Row Structure */}
+                      <div className="hidden lg:block">
+                        {/* Row 1: Nama Surah (Arab + Latin) - Left Aligned */}
+                        <div className="mb-4">
+                          <h2 className="text-5xl font-bold mb-2 font-arabic leading-tight">
+                            {selectedSurah.name}
+                          </h2>
+                          <p className="text-2xl font-semibold text-green-50">
+                            {selectedSurah.englishName}
+                          </p>
                         </div>
-                        <span>•</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">Kategori:</span>
-                          <span className="bg-white/20 px-3 py-1 rounded-full">
-                            {selectedSurah.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
-                          </span>
+
+                        {/* Row 2: Meta Info (Left) + Buttons (Right) */}
+                        <div className="flex items-center justify-between gap-4">
+                          {/* Meta Info */}
+                          <div className="flex items-center gap-4 text-sm text-green-50">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Jumlah Ayat:</span>
+                              <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                                {selectedSurah.numberOfAyahs}
+                              </span>
+                            </div>
+                            <span>•</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Kategori:</span>
+                              <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                                {selectedSurah.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Buttons */}
+                          <div className="flex gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => setShowTajwid(!showTajwid)}
+                              className={`px-4 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-md ${
+                                showTajwid
+                                  ? 'bg-white text-emerald-600'
+                                  : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
+                              }`}
+                            >
+                              Mode Tajwid
+                            </button>
+
+                            <button
+                              onClick={handleBookmark}
+                              className="px-4 py-2.5 bg-white/30 backdrop-blur-sm hover:bg-white/40 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm shadow-md"
+                            >
+                              <Bookmark size={16} />
+                              Tandai
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
