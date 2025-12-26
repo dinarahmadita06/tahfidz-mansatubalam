@@ -318,7 +318,7 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
       onClick={onClose}
     >
       <div
-        className="bg-white/80 backdrop-blur rounded-2xl border border-white/20 shadow-xl shadow-green-500/10 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
