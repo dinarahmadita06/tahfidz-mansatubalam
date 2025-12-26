@@ -52,13 +52,6 @@ const menuItems = [
     color: 'sky'
   },
   {
-    title: 'Target Hafalan',
-    icon: Target,
-    href: '/orangtua/target-hafalan',
-    description: 'Target & progress anak',
-    color: 'amber'
-  },
-  {
     title: 'Laporan Hafalan',
     icon: ChartBar,
     href: '/orangtua/laporan-hafalan',
