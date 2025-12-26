@@ -165,22 +165,22 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
   const hasMultipleChildren = children.length > 1;
 
   return (
-    <div className="relative flex-shrink-0">
+    <div className="relative w-full">
       <button
         onClick={() => hasMultipleChildren && setIsOpen(!isOpen)}
-        className={`flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg transition-all duration-300 ${
+        className={`w-full flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg transition-all duration-300 ${
           hasMultipleChildren ? 'hover:shadow-xl cursor-pointer' : 'cursor-default'
         }`}
       >
-        <User size={20} className="text-emerald-600 flex-shrink-0" />
-        <div className="text-left">
-          <p className="text-sm text-gray-600">Anak Aktif</p>
-          <p className="font-semibold text-gray-900">{selectedChild?.nama || 'Pilih Anak'}</p>
+        <User size={18} className="text-emerald-600 flex-shrink-0" />
+        <div className="text-left flex-1 min-w-0">
+          <p className="text-xs sm:text-sm text-gray-600">Anak Aktif</p>
+          <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">{selectedChild?.nama || 'Pilih Anak'}</p>
         </div>
         {hasMultipleChildren && (
           <ChevronDown
-            size={20}
-            className={`text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+            size={18}
+            className={`text-gray-600 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
           />
         )}
       </button>
@@ -203,13 +203,13 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
                   selectedChild?.id === child.id ? 'bg-emerald-50' : ''
                 }`}
               >
-                <User size={20} className="text-emerald-600" />
-                <div className="text-left flex-1">
-                  <p className="font-semibold text-gray-900">{child.nama || child.namaLengkap}</p>
+                <User size={18} className="text-emerald-600 flex-shrink-0" />
+                <div className="text-left flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-gray-900 truncate">{child.nama || child.namaLengkap}</p>
                   <p className="text-xs text-gray-600">Kelas {child.kelas || child.kelas?.namaKelas}</p>
                 </div>
                 {selectedChild?.id === child.id && (
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0"></div>
                 )}
               </button>
             ))}
@@ -617,23 +617,31 @@ export default function RiwayatPerkembanganHarianPage() {
     <OrangtuaLayout>
       <div className="min-h-screen bg-gray-50">
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          {/* Header - Green SIMTAQ Style */}
-          <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-6 sm:p-8 text-white`}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
-                  <CalendarCheck className="text-white" size={32} />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold break-words">
-                    Riwayat Perkembangan Harian
-                  </h1>
-                  <p className="text-green-50 text-sm sm:text-base mt-1">
-                    Pantau presensi dan penilaian anak setiap hari
-                  </p>
-                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full mt-2">
-                    <Calendar size={16} className="text-white" />
-                    <span className="text-white text-sm font-medium">
+          {/* Header - Green SIMTAQ Style (Responsive) */}
+          <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 text-white w-full`}>
+            <div className="flex flex-col gap-4 w-full">
+              {/* Top Section: Icon + Title + Description */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 w-full">
+                <div className="flex flex-col gap-3 flex-1 min-w-0 w-full">
+                  {/* Icon + Title Row */}
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="bg-white/20 backdrop-blur-sm p-3 sm:p-4 rounded-2xl flex-shrink-0">
+                      <CalendarCheck className="text-white w-6 h-6 sm:w-8 sm:h-8" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight break-words">
+                        Riwayat Perkembangan Harian
+                      </h1>
+                      <p className="text-green-50 text-sm sm:text-base mt-1 leading-snug break-words">
+                        Pantau presensi dan penilaian anak setiap hari
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Month Badge */}
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full w-fit max-w-full">
+                    <Calendar size={14} className="text-white flex-shrink-0" />
+                    <span className="text-white text-xs sm:text-sm font-medium truncate">
                       {new Date(selectedMonth.formatted).toLocaleDateString('id-ID', {
                         month: 'long',
                         year: 'numeric',
@@ -641,20 +649,22 @@ export default function RiwayatPerkembanganHarianPage() {
                     </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Child Selector Dropdown */}
-              {childrenData?.children && selectedChild && (
-                <ChildSelector
-                  children={childrenData.children.map((c) => ({
-                    id: c.id,
-                    nama: c.namaLengkap,
-                    kelas: c.kelas?.namaKelas || '-',
-                  }))}
-                  selectedChild={selectedChild}
-                  onSelectChild={setSelectedChild}
-                />
-              )}
+                {/* Child Selector Dropdown */}
+                {childrenData?.children && selectedChild && (
+                  <div className="w-full sm:w-auto">
+                    <ChildSelector
+                      children={childrenData.children.map((c) => ({
+                        id: c.id,
+                        nama: c.namaLengkap,
+                        kelas: c.kelas?.namaKelas || '-',
+                      }))}
+                      selectedChild={selectedChild}
+                      onSelectChild={setSelectedChild}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
