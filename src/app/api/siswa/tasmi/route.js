@@ -79,7 +79,27 @@ export async function GET(request) {
       },
     });
 
-    return NextResponse.json({ tasmi });
+    // Calculate total juz hafalan from DISTINCT juz in Hafalan table
+    const hafalanData = await prisma.hafalan.findMany({
+      where: {
+        siswaId: siswa.id,
+      },
+      select: {
+        juz: true,
+      },
+      distinct: ['juz'],
+    });
+
+    const totalJuzHafalan = hafalanData.length;
+
+    // Target juz sekolah (default 3, could be from settings in the future)
+    const targetJuzSekolah = 3;
+
+    return NextResponse.json({
+      tasmi,
+      totalJuzHafalan,
+      targetJuzSekolah,
+    });
   } catch (error) {
     console.error('Error fetching tasmi:', error);
     return NextResponse.json(
