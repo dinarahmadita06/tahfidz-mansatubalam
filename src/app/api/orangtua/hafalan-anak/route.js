@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { getChildrenByParentId, getChildByParentId } from '@/lib/utils/parentHelpers';
 
 export async function GET(request) {
   try {
@@ -15,44 +16,31 @@ export async function GET(request) {
     const siswaId = searchParams.get('siswaId');
 
     // Validasi: pastikan user adalah orang tua
-    if (session.user.role !== 'orangtua') {
+    if (session.user.role !== 'orangtua' && session.user.role !== 'ORANGTUA' && session.user.role !== 'ORANG_TUA') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     // Jika siswaId tidak diberikan, ambil semua anak dari orang tua ini
     if (!siswaId) {
-      // Get all children of this parent
-      const children = await prisma.siswa.findMany({
-        where: {
-          orangTuaId: session.user.id,
-        },
-        select: {
-          id: true,
-          namaLengkap: true,
-          kelas: {
-            select: {
-              namaKelas: true,
-            },
-          },
-        },
-      });
-
+      const children = await getChildrenByParentId(session.user.id);
       return NextResponse.json({ children });
     }
 
-    // Validasi: pastikan siswa adalah anak dari orang tua ini
-    const siswa = await prisma.siswa.findFirst({
-      where: {
-        id: siswaId,
-        orangTuaId: session.user.id,
-      },
-    });
+    // Validasi: pastikan siswa adalah anak dari orang tua ini menggunakan orangTuaSiswa relation
+    const siswa = await getChildByParentId(siswaId, session.user.id);
 
     if (!siswa) {
-      return NextResponse.json(
-        { error: 'Student not found or not authorized' },
-        { status: 404 }
-      );
+      // Return empty data instead of error
+      return NextResponse.json({
+        siswa: null,
+        statistics: {
+          totalSetoran: 0,
+          totalHalaman: 0,
+          rataRataPerHari: 0,
+        },
+        hafalanData: [],
+        recentActivity: [],
+      });
     }
 
     // Get hafalan data untuk siswa tersebut

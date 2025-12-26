@@ -10,10 +10,10 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get anak (siswa) of this orang tua
+    // Get anak (siswa) of this orang tua using helper
     const orangTuaSiswa = await prisma.orangTuaSiswa.findMany({
       where: {
-        orangTuaId: session.user.orangTuaId
+        orangTuaId: session.user.id
       },
       include: {
         siswa: {
