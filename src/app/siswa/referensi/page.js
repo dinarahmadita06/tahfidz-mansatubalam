@@ -370,313 +370,155 @@ export default function ReferensiQuranPage() {
     <SiswaLayout>
       <Toaster position="top-right" />
 
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap');
+      <div className="min-h-screen bg-gray-50">
+        {/* Container - Full Width SIMTAQ Style */}
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        .arabic-text {
-          font-family: 'Scheherazade New', 'Amiri', serif;
-        }
-
-        .latin-text {
-          font-family: 'Poppins', 'Inter', sans-serif;
-        }
-
-        /* Smooth scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #ECFDF5;
-          border-radius: 10px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #10B981, #FBBF24);
-          border-radius: 10px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #059669, #F59E0B);
-        }
-
-        /* Card hover effect */
-        .surah-card {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .surah-card:hover {
-          transform: scale(1.02);
-          box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.2), 0 8px 10px -6px rgba(251, 191, 36, 0.1);
-        }
-
-        .ayah-card {
-          transition: all 0.3s ease;
-        }
-
-        .ayah-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px -8px rgba(16, 185, 129, 0.15);
-        }
-
-        .ayah-card-playing {
-          box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.4), 0 8px 20px -4px rgba(251, 191, 36, 0.3);
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-glow {
-          0%, 100% {
-            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.4), 0 8px 20px -4px rgba(251, 191, 36, 0.3);
-          }
-          50% {
-            box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.2), 0 12px 28px -6px rgba(251, 191, 36, 0.4);
-          }
-        }
-
-        /* Islamic pattern overlay */
-        .islamic-pattern {
-          background-image:
-            radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, rgba(219, 234, 254, 0.03) 0%, transparent 50%);
-        }
-
-        /* Tajweed color coding */
-        .tajweed-text {
-          font-family: 'Scheherazade New', 'Amiri', serif;
-        }
-
-        /* Tajweed rules colors based on AlQuran.cloud */
-        tajweed.ham_wasl, tajweed.silent, tajweed.laam_shamsiyah {
-          color: #AAAAAA; /* Gray - Hamza wasl, silent, lam shamsiyyah */
-        }
-
-        tajweed.madda_normal {
-          color: #537FFF; /* Blue - Normal elongation (2 vowels) */
-        }
-
-        tajweed.madda_permissible {
-          color: #4050FF; /* Dark blue - Permissible elongation (2,4,6 vowels) */
-        }
-
-        tajweed.madda_necessary {
-          color: #000EBC; /* Very dark blue - Necessary elongation (6 vowels) */
-        }
-
-        tajweed.madda_obligatory {
-          color: #2144C1; /* Medium blue - Obligatory elongation (4-5 vowels) */
-        }
-
-        tajweed.qalaqah {
-          color: #DD0008; /* Red - Qalqalah */
-          font-weight: 600;
-        }
-
-        tajweed.ikhafa_shafawi {
-          color: #D500B7; /* Pink - Ikhafa Shafawi (with Meem) */
-        }
-
-        tajweed.ikhafa {
-          color: #9400A8; /* Purple - Ikhafa (concealment) */
-        }
-
-        tajweed.idgham_shafawi {
-          color: #58B800; /* Light green - Idgham Shafawi (with Meem) */
-        }
-
-        tajweed.iqlab {
-          color: #26BFFD; /* Cyan - Iqlab (transformation) */
-        }
-
-        tajweed.idgham_ghunnah {
-          color: #169777; /* Teal - Idgham with Ghunnah */
-        }
-
-        tajweed.idgham_wo_ghunnah {
-          color: #169200; /* Green - Idgham without Ghunnah */
-        }
-
-        tajweed.idgham_mutajanisayn, tajweed.idgham_mutaqaribayn {
-          color: #A1A1A1; /* Gray - Similar/close articulation */
-        }
-
-        tajweed.ghunnah {
-          color: #FF7E1E; /* Orange - Ghunnah (2 vowels) */
-        }
-
-        /* Add subtle background highlight for better visibility */
-        .tajweed-text tajweed {
-          padding: 1px 2px;
-          border-radius: 2px;
-          transition: all 0.2s ease;
-        }
-
-        .tajweed-text tajweed:hover {
-          background-color: rgba(251, 191, 36, 0.1);
-          transform: scale(1.05);
-        }
-      `}</style>
-
-      <div className="min-h-screen bg-gradient-referensi islamic-pattern animate-fade-in">
-
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#ECFDF5] via-[#DBEAFE] to-[#E9D5FF] py-8 px-8 border-b border-emerald-100/50">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="p-3 bg-white rounded-2xl shadow-md">
-                <BookOpen className="text-emerald-600" size={32} strokeWidth={2.5} />
+          {/* Header - SIMTAQ Green Gradient */}
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                <BookOpen size={32} className="text-white" />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-emerald-800 latin-text">
-                  📘 Referensi Al-Qur'an
-                </h1>
-                <p className="text-emerald-600 mt-1 latin-text">
-                  Baca, dengarkan, dan pahami ayat suci Al-Qur'an dengan mudah.
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Referensi Al-Qur'an</h1>
+                <p className="text-green-50 text-sm sm:text-base mt-1">
+                  Baca, dengarkan, dan pahami ayat suci Al-Qur'an dengan mudah
                 </p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content - Two Column Layout */}
-        <div className="max-w-7xl mx-auto p-6 flex gap-6 h-[calc(100vh-180px)]">
+          {/* Main Content - Two Column Layout */}
+          <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-200px)]">
 
-          {/* LEFT COLUMN - Surah List (35%) */}
-          <div className="w-[35%] flex flex-col">
-            <div className="bg-gradient-to-br from-[#ECFDF5] to-[#FEFCE8] rounded-3xl shadow-lg border border-emerald-100/50 flex flex-col h-full overflow-hidden">
+            {/* LEFT COLUMN - Surah List (35%) */}
+            <div className="w-full lg:w-[35%] flex flex-col">
+              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full overflow-hidden">
 
-              {/* Search Bar */}
-              <div className="p-6 border-b border-emerald-100/50">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Cari surah atau ayat..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-emerald-200 focus:border-emerald-400 focus:outline-none bg-white/80 backdrop-blur-sm latin-text text-sm transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Surah List */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
-                {filteredSurahs.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 latin-text">
-                      {surahs.length === 0 ? 'Memuat daftar surah...' : 'Surah tidak ditemukan'}
-                    </p>
+                {/* Search Bar */}
+                <div className="p-6 border-b border-emerald-100/50">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={20} />
+                    <input
+                      type="text"
+                      placeholder="Cari surah atau ayat..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all"
+                    />
                   </div>
-                ) : (
-                  filteredSurahs.map((surah) => {
-                    const isActive = selectedSurah?.number === surah.number;
+                </div>
 
-                    return (
-                      <button
-                        key={surah.number}
-                        onClick={() => fetchSurahData(surah.number)}
-                        className={`surah-card w-full p-4 rounded-2xl text-left transition-all ${
-                          isActive
-                            ? 'bg-gradient-to-r from-emerald-100 to-amber-50 border-2 border-amber-400 shadow-md'
-                            : 'bg-white/70 hover:bg-white border border-emerald-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          {/* Number Circle */}
-                          <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-white shadow-md ${
+                {/* Surah List */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {filteredSurahs.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500">
+                        {surahs.length === 0 ? 'Memuat daftar surah...' : 'Surah tidak ditemukan'}
+                      </p>
+                    </div>
+                  ) : (
+                    filteredSurahs.map((surah) => {
+                      const isActive = selectedSurah?.number === surah.number;
+
+                      return (
+                        <button
+                          key={surah.number}
+                          onClick={() => fetchSurahData(surah.number)}
+                          className={`w-full p-4 rounded-xl text-left transition-all ${
                             isActive
-                              ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
-                              : 'bg-gradient-to-br from-emerald-400 to-emerald-500'
-                          }`}>
-                            <span className="latin-text">{surah.number}</span>
+                              ? 'bg-emerald-50/80 border-2 border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_8px_20px_rgba(16,185,129,0.15)]'
+                              : 'bg-white/70 hover:bg-white border border-gray-200/60 hover:border-emerald-200 shadow-sm'
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            {/* Number Circle */}
+                            <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-white shadow-md ${
+                              isActive
+                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+                                : 'bg-gradient-to-br from-emerald-400 to-emerald-500'
+                            }`}>
+                              <span>{surah.number}</span>
+                            </div>
+
+                            {/* Surah Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-baseline justify-between gap-2">
+                                <h3 className="font-bold text-gray-900 text-sm truncate">
+                                  {surah.englishName || surah.name}
+                                </h3>
+                                <span className="text-xl text-emerald-600 flex-shrink-0 font-arabic">
+                                  {surah.name}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-gray-600">
+                                  {surah.numberOfAyahs} ayat
+                                </span>
+                                <span className="text-xs text-gray-400">•</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                  surah.revelationType === 'Meccan'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-sky-100 text-sky-700'
+                                }`}>
+                                  {surah.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
+                                </span>
+                              </div>
+                            </div>
                           </div>
 
-                          {/* Surah Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <h3 className="font-bold text-gray-900 latin-text text-sm truncate">
-                                {surah.englishName || surah.name}
-                              </h3>
-                              <span className="text-xl text-emerald-600 arabic-text flex-shrink-0">
-                                {surah.name}
-                              </span>
+                          {isActive && (
+                            <div className="mt-2 flex items-center gap-2 text-xs text-emerald-600 font-medium">
+                              <Check size={14} />
+                              <span>Sedang dibaca</span>
                             </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-gray-600 latin-text">
-                                {surah.numberOfAyahs} ayat
-                              </span>
-                              <span className="text-xs text-gray-400">•</span>
-                              <span className={`text-xs px-2 py-0.5 rounded-full latin-text ${
-                                surah.revelationType === 'Meccan'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-sky-100 text-sky-700'
-                              }`}>
-                                {surah.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {isActive && (
-                          <div className="mt-2 flex items-center gap-2 text-xs text-emerald-600 latin-text font-medium">
-                            <Check size={14} />
-                            <span>Sedang dibaca</span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })
-                )}
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* RIGHT COLUMN - Surah Detail (65%) */}
-          <div className="w-[65%] flex flex-col">
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 flex flex-col h-full overflow-hidden">
+            {/* RIGHT COLUMN - Surah Detail (65%) */}
+            <div className="w-full lg:w-[65%] flex flex-col">
+              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full overflow-hidden">
 
-              {loading ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <Loader2 className="animate-spin text-emerald-600 mx-auto mb-4" size={48} />
-                    <p className="text-gray-600 latin-text">Memuat surah...</p>
-                  </div>
-                </div>
-              ) : !selectedSurah ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center px-8">
-                    <BookOpen className="text-gray-300 mx-auto mb-4" size={64} />
-                    <p className="text-xl font-bold text-gray-700 mb-2 latin-text">Pilih Surah</p>
-                    <p className="text-gray-500 latin-text">Pilih surah dari daftar di sebelah kiri untuk mulai membaca</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Surah Header */}
-                  <div className="bg-gradient-to-br from-emerald-500 via-emerald-400 to-amber-400 p-8 text-white relative overflow-hidden">
-                    {/* Islamic pattern overlay */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute inset-0" style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='white' stroke-width='1'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='white' stroke-width='1'/%3E%3C/svg%3E")`,
-                        backgroundSize: '60px 60px'
-                      }} />
+                {loading ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <Loader2 className="animate-spin text-emerald-600 mx-auto mb-4" size={48} />
+                      <p className="text-gray-600">Memuat surah...</p>
                     </div>
-
-                    <div className="relative z-10">
-                      <div className="flex items-start justify-between mb-4">
+                  </div>
+                ) : !selectedSurah ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center px-8">
+                      <BookOpen className="text-gray-300 mx-auto mb-4" size={64} />
+                      <p className="text-xl font-bold text-gray-700 mb-2">Pilih Surah</p>
+                      <p className="text-gray-500">Pilih surah dari daftar di sebelah kiri untuk mulai membaca</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Surah Header - SIMTAQ Green Gradient (Soft) */}
+                    <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 sm:p-8 text-white rounded-t-2xl">
+                      <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
                         <div className="flex-1">
-                          <h2 className="text-5xl font-bold arabic-text mb-3 drop-shadow-lg">
+                          <h2 className="text-4xl sm:text-5xl font-bold mb-3 font-arabic">
                             {selectedSurah.name}
                           </h2>
-                          <p className="text-xl font-semibold latin-text text-emerald-50">
+                          <p className="text-xl font-semibold text-green-50">
                             {selectedSurah.englishName}
                           </p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto">
                           <button
                             onClick={() => setShowTajwid(!showTajwid)}
-                            className={`px-4 py-2 rounded-xl font-semibold transition-all latin-text text-sm ${
+                            className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-md ${
                               showTajwid
                                 ? 'bg-white text-emerald-600'
                                 : 'bg-white/20 text-white hover:bg-white/30'
@@ -687,7 +529,7 @@ export default function ReferensiQuranPage() {
 
                           <button
                             onClick={handleBookmark}
-                            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-xl font-semibold transition-all flex items-center gap-2 latin-text text-sm shadow-lg"
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm shadow-md"
                           >
                             <Bookmark size={16} />
                             Tandai
@@ -695,7 +537,7 @@ export default function ReferensiQuranPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 text-sm latin-text text-emerald-50">
+                      <div className="flex items-center gap-4 text-sm text-green-50 flex-wrap">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">Jumlah Ayat:</span>
                           <span className="bg-white/20 px-3 py-1 rounded-full">{selectedSurah.numberOfAyahs}</span>
@@ -709,148 +551,224 @@ export default function ReferensiQuranPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Tajweed Legend */}
-                  {showTajwid && (
-                    <div className="px-6 py-4 bg-gradient-to-r from-emerald-50 to-amber-50 border-b border-emerald-100">
-                      <h3 className="text-sm font-bold text-gray-700 mb-3 latin-text">📚 Panduan Warna Tajwid:</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs latin-text">
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#9400A8'}}></span>
-                          <span>Ikhfa (Samar)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#26BFFD'}}></span>
-                          <span>Iqlab (Penukaran)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169777'}}></span>
-                          <span>Idgham + Ghunnah</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169200'}}></span>
-                          <span>Idgham - Ghunnah</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#DD0008'}}></span>
-                          <span>Qalqalah</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#FF7E1E'}}></span>
-                          <span>Ghunnah</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#537FFF'}}></span>
-                          <span>Mad Normal (2)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#4050FF'}}></span>
-                          <span>Mad Jaiz (2,4,6)</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-2 italic">
-                        💡 Hover pada huruf berwarna untuk melihat highlight
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Verses List */}
-                  <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-gradient-to-br from-white via-sky-50/30 to-lilac-50/30">
-                    {verses.map((verse) => {
-                      const playingId = `${selectedSurah.number}-${verse.numberInSurah}`;
-                      const isCurrentAyat = currentPlayingId === playingId;
-
-                      return (
-                        <div
-                          key={verse.number}
-                          className={`ayah-card p-6 rounded-2xl border-2 bg-white ${
-                            isCurrentAyat && isAudioPlaying
-                              ? 'ayah-card-playing border-amber-400'
-                              : 'border-gray-100 hover:border-emerald-200'
-                          }`}
-                        >
-                          {/* Ayah Header */}
-                          <div className="flex items-center justify-between mb-5">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center font-bold shadow-md latin-text">
-                                {verse.numberInSurah}
-                              </div>
-                              {/* HANYA tampilkan "Sedang diputar" jika ayat INI yang sedang diputar DAN audio benar-benar playing */}
-                              {isCurrentAyat && isAudioPlaying && (
-                                <div className="flex items-center gap-2 text-amber-600 latin-text text-sm font-semibold">
-                                  <Volume2 size={16} className="animate-pulse" />
-                                  <span>Sedang diputar</span>
-                                </div>
-                              )}
-                            </div>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                playAudio(verse);
-                              }}
-                              className={`p-3 rounded-xl transition-all shadow-md hover:scale-110 ${
-                                isCurrentAyat && isAudioPlaying
-                                  ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                                  : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
-                              }`}
-                            >
-                              {isCurrentAyat ? (
-                                isAudioPlaying ? <Pause size={20} /> : <Play size={20} />
-                              ) : (
-                                <PlayCircle size={20} />
-                              )}
-                            </button>
+                    {/* Tajweed Legend */}
+                    {showTajwid && (
+                      <div className="px-6 py-4 bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100">
+                        <h3 className="text-sm font-bold text-gray-700 mb-3">Panduan Warna Tajwid:</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#9400A8'}}></span>
+                            <span>Ikhfa (Samar)</span>
                           </div>
-
-                          {/* Arabic Text */}
-                          <div className="text-right mb-5 leading-loose arabic-text text-3xl text-gray-900">
-                            {showTajwid && verse.textTajweed ? (
-                              <div
-                                className="tajweed-text"
-                                dangerouslySetInnerHTML={{ __html: parseTajweedText(verse.textTajweed) }}
-                              />
-                            ) : (
-                              verse.text
-                            )}
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#26BFFD'}}></span>
+                            <span>Iqlab (Penukaran)</span>
                           </div>
-
-                          {/* Translation */}
-                          {verse.translation && (
-                            <div className="p-4 rounded-xl bg-gradient-to-r from-sky-50 to-lilac-50 border border-sky-100">
-                              <p className="text-gray-700 leading-relaxed latin-text text-sm">
-                                {verse.translation}
-                              </p>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169777'}}></span>
+                            <span>Idgham + Ghunnah</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169200'}}></span>
+                            <span>Idgham - Ghunnah</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#DD0008'}}></span>
+                            <span>Qalqalah</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#FF7E1E'}}></span>
+                            <span>Ghunnah</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#537FFF'}}></span>
+                            <span>Mad Normal (2)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#4050FF'}}></span>
+                            <span>Mad Jaiz (2,4,6)</span>
+                          </div>
                         </div>
-                      );
-                    })}
-
-                    {verses.length === 0 && !loading && (
-                      <div className="text-center py-12">
-                        <p className="text-gray-500 latin-text">Tidak ada ayat untuk ditampilkan</p>
+                        <p className="text-xs text-gray-600 mt-2 italic">
+                          Hover pada huruf berwarna untuk melihat highlight
+                        </p>
                       </div>
                     )}
-                  </div>
-                </>
-              )}
+
+                    {/* Verses List */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20">
+                      {verses.map((verse) => {
+                        const playingId = `${selectedSurah.number}-${verse.numberInSurah}`;
+                        const isCurrentAyat = currentPlayingId === playingId;
+
+                        return (
+                          <div
+                            key={verse.number}
+                            className={`p-6 rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all ${
+                              isCurrentAyat && isAudioPlaying
+                                ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_12px_28px_rgba(16,185,129,0.2)]'
+                                : 'border-gray-100 hover:border-emerald-200 shadow-sm hover:shadow-md'
+                            }`}
+                          >
+                            {/* Ayah Header */}
+                            <div className="flex items-center justify-between mb-5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center font-bold shadow-md">
+                                  {verse.numberInSurah}
+                                </div>
+                                {isCurrentAyat && isAudioPlaying && (
+                                  <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
+                                    <Volume2 size={16} className="animate-pulse" />
+                                    <span>Sedang diputar</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  playAudio(verse);
+                                }}
+                                className={`p-3 rounded-xl transition-all shadow-md hover:scale-110 ${
+                                  isCurrentAyat && isAudioPlaying
+                                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white'
+                                    : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
+                                }`}
+                              >
+                                {isCurrentAyat ? (
+                                  isAudioPlaying ? <Pause size={20} /> : <Play size={20} />
+                                ) : (
+                                  <PlayCircle size={20} />
+                                )}
+                              </button>
+                            </div>
+
+                            {/* Arabic Text */}
+                            <div className="text-right mb-5 leading-loose text-3xl text-gray-900 font-arabic">
+                              {showTajwid && verse.textTajweed ? (
+                                <div
+                                  className="tajweed-text"
+                                  dangerouslySetInnerHTML={{ __html: parseTajweedText(verse.textTajweed) }}
+                                />
+                              ) : (
+                                verse.text
+                              )}
+                            </div>
+
+                            {/* Translation */}
+                            {verse.translation && (
+                              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border border-emerald-100">
+                                <p className="text-gray-700 leading-relaxed text-sm">
+                                  {verse.translation}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {verses.length === 0 && !loading && (
+                        <div className="text-center py-12">
+                          <p className="text-gray-500">Tidak ada ayat untuk ditampilkan</p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Last Read Indicator (Bottom Right) */}
+        {/* Last Read Toast - Bottom Right (Pastel) */}
         {lastRead && (
-          <div className="fixed bottom-6 right-6 bg-gradient-to-r from-amber-400 to-amber-500 text-white px-6 py-3 rounded-2xl shadow-2xl border-2 border-amber-300 flex items-center gap-3 z-50">
-            <Bookmark size={20} className="flex-shrink-0" />
-            <div className="latin-text text-sm">
-              <p className="font-semibold">Terakhir dibaca:</p>
-              <p className="text-amber-50">{lastRead.surah} - Ayat {lastRead.verse}</p>
+          <div className="fixed bottom-6 right-6 bg-emerald-50/95 backdrop-blur-sm border-2 border-emerald-200 text-emerald-900 px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 max-w-xs">
+            <Bookmark size={18} className="flex-shrink-0 text-emerald-600" />
+            <div className="text-sm">
+              <p className="font-semibold text-emerald-800">Terakhir dibaca:</p>
+              <p className="text-emerald-700">{lastRead.surah} - Ayat {lastRead.verse}</p>
             </div>
           </div>
         )}
       </div>
+
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap');
+
+        .font-arabic {
+          font-family: 'Scheherazade New', 'Amiri', serif;
+        }
+
+        /* Tajweed rules colors based on AlQuran.cloud */
+        tajweed.ham_wasl, tajweed.silent, tajweed.laam_shamsiyah {
+          color: #AAAAAA;
+        }
+
+        tajweed.madda_normal {
+          color: #537FFF;
+        }
+
+        tajweed.madda_permissible {
+          color: #4050FF;
+        }
+
+        tajweed.madda_necessary {
+          color: #000EBC;
+        }
+
+        tajweed.madda_obligatory {
+          color: #2144C1;
+        }
+
+        tajweed.qalqalah {
+          color: #DD0008;
+          font-weight: 600;
+        }
+
+        tajweed.ikhafa_shafawi {
+          color: #D500B7;
+        }
+
+        tajweed.ikhafa {
+          color: #9400A8;
+        }
+
+        tajweed.idgham_shafawi {
+          color: #58B800;
+        }
+
+        tajweed.iqlab {
+          color: #26BFFD;
+        }
+
+        tajweed.idgham_ghunnah {
+          color: #169777;
+        }
+
+        tajweed.idgham_wo_ghunnah {
+          color: #169200;
+        }
+
+        tajweed.idgham_mutajanisayn, tajweed.idgham_mutaqaribayn {
+          color: #A1A1A1;
+        }
+
+        tajweed.ghunnah {
+          color: #FF7E1E;
+        }
+
+        .tajweed-text tajweed {
+          padding: 1px 2px;
+          border-radius: 2px;
+          transition: all 0.2s ease;
+        }
+
+        .tajweed-text tajweed:hover {
+          background-color: rgba(16, 185, 129, 0.1);
+          transform: scale(1.05);
+        }
+      `}</style>
     </SiswaLayout>
   );
 }
