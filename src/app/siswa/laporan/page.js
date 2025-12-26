@@ -4,13 +4,10 @@ import { useState } from 'react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   BarChart3,
-  TrendingUp,
   BookOpen,
   Target,
   Award,
   Flame,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 
 // ============================================================
@@ -110,16 +107,11 @@ function HorizontalBarChart({ data }) {
 export default function LaporanHafalanPage() {
   // Real-time timezone-aware current date
   const getCurrentDate = () => new Date();
+  const currentDate = getCurrentDate();
 
   const [selectedPeriod, setSelectedPeriod] = useState('bulanan');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Date filter states
-  const currentDate = getCurrentDate();
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth()); // 0-11
-  const [selectedWeek, setSelectedWeek] = useState(0); // 0-3 (week of month)
 
   // Helper: Generate year options (last 3 years + current year)
   const getYearOptions = () => {
@@ -149,102 +141,46 @@ export default function LaporanHafalanPage() {
     ];
   };
 
-  // Helper: Generate week options for selected month
-  const getWeekOptions = () => {
-    const weeks = [];
-    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-    const weeksCount = Math.ceil(daysInMonth / 7);
-
-    for (let i = 0; i < weeksCount; i++) {
-      const startDay = i * 7 + 1;
-      const endDay = Math.min((i + 1) * 7, daysInMonth);
-      weeks.push({
-        value: i,
-        label: `Minggu ${i + 1} (${startDay}-${endDay})`,
-      });
-    }
-    return weeks;
-  };
-
   // Reset to current date when period changes
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
     const now = getCurrentDate();
     setSelectedYear(now.getFullYear());
     setSelectedMonth(now.getMonth());
-    setSelectedWeek(0);
   };
 
-  // Sample data (dalam praktik real, ini akan di-fetch dari API berdasarkan periode)
-  const juzDistribution = [
-    { label: 'Juz 30', value: 15, color: '#10b981' },
-    { label: 'Juz 29', value: 12, color: '#f59e0b' },
-    { label: 'Juz 28', value: 8, color: '#8b5cf6' },
-    { label: 'Juz 27', value: 5, color: '#06b6d4' },
-  ];
+  // Default data - EMPTY (akan di-fetch dari API berdasarkan periode)
+  // Set semua data = empty/0 agar tidak tampil dummy data
+  const juzDistribution = [];
 
   const aspectScores = [
-    { label: 'Tajwid', value: 92, color: 'bg-emerald-500' },
-    { label: 'Kelancaran', value: 88, color: 'bg-amber-500' },
-    { label: 'Makhraj', value: 85, color: 'bg-purple-500' },
-    { label: 'Implementasi', value: 95, color: 'bg-sky-500' },
+    { label: 'Tajwid', value: 0, color: 'bg-emerald-500' },
+    { label: 'Kelancaran', value: 0, color: 'bg-amber-500' },
+    { label: 'Makhraj', value: 0, color: 'bg-purple-500' },
+    { label: 'Implementasi', value: 0, color: 'bg-sky-500' },
   ];
 
-  // Stats data berdasarkan periode (akan berubah sesuai filter)
+  // Stats data berdasarkan periode - DEFAULT EMPTY
   const periodStats = {
-    mingguan: {
-      totalSetoran: 6,
-      rataRataNilai: 88,
-      targetTercapai: 75,
-      konsistensi: 5,
-    },
     bulanan: {
-      totalSetoran: 24,
-      rataRataNilai: 90,
-      targetTercapai: 85,
-      konsistensi: 22,
+      totalSetoran: 0,
+      rataRataNilai: 0,
+      targetTercapai: 0,
+      konsistensi: 0,
     },
     tahunan: {
-      totalSetoran: 288,
-      rataRataNilai: 89,
-      targetTercapai: 80,
-      konsistensi: 260,
+      totalSetoran: 0,
+      rataRataNilai: 0,
+      targetTercapai: 0,
+      konsistensi: 0,
     },
   };
 
-  const currentStats = periodStats[selectedPeriod];
-
-  // Sample detail data (akan di-fetch dari API)
-  const detailData = [
-    { tanggal: '26 Des 2025', juz: 'Juz 30 - An-Nas', nilai: 95, catatan: 'Sangat baik, tajwid sempurna' },
-    { tanggal: '25 Des 2025', juz: 'Juz 30 - Al-Falaq', nilai: 92, catatan: 'Baik, perlu perbaiki makhraj' },
-    { tanggal: '24 Des 2025', juz: 'Juz 30 - Al-Ikhlas', nilai: 90, catatan: 'Baik' },
-    { tanggal: '23 Des 2025', juz: 'Juz 29 - Al-Mulk', nilai: 88, catatan: 'Cukup baik' },
-    { tanggal: '22 Des 2025', juz: 'Juz 29 - At-Tahrim', nilai: 85, catatan: 'Perlu latihan lebih' },
-    { tanggal: '21 Des 2025', juz: 'Juz 29 - At-Talaq', nilai: 92, catatan: 'Baik sekali' },
-    { tanggal: '20 Des 2025', juz: 'Juz 29 - At-Taghabun', nilai: 90, catatan: 'Baik' },
-    { tanggal: '19 Des 2025', juz: 'Juz 28 - Al-Mujadilah', nilai: 87, catatan: 'Cukup baik' },
-    { tanggal: '18 Des 2025', juz: 'Juz 28 - Al-Hadid', nilai: 93, catatan: 'Sangat baik' },
-    { tanggal: '17 Des 2025', juz: 'Juz 28 - Ar-Rahman', nilai: 91, catatan: 'Baik' },
-  ];
-
-  const totalPages = Math.ceil(detailData.length / itemsPerPage);
-  const paginatedData = detailData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const getPeriodLabel = () => {
-    const monthNames = getMonthOptions();
-
-    if (selectedPeriod === 'mingguan') {
-      const weekInfo = getWeekOptions()[selectedWeek];
-      return `${weekInfo.label}, ${monthNames[selectedMonth].label} ${selectedYear}`;
-    } else if (selectedPeriod === 'bulanan') {
-      return `${monthNames[selectedMonth].label} ${selectedYear}`;
-    } else {
-      return `Tahun ${selectedYear}`;
-    }
+  const currentStats = periodStats[selectedPeriod] || {
+    totalSetoran: 0,
+    rataRataNilai: 0,
+    targetTercapai: 0,
+    konsistensi: 0,
   };
 
   return (
@@ -269,17 +205,16 @@ export default function LaporanHafalanPage() {
             </div>
           </div>
 
-          {/* Period Filter Tabs */}
-          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-4 space-y-4">
-            {/* Period Tabs */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-gray-700 mr-2">Periode:</span>
-              <div className="flex gap-2 flex-wrap">
-                {['mingguan', 'bulanan', 'tahunan'].map((period) => (
+          {/* Period Filter - Compact */}
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              {/* Tab Kecil - Kiri */}
+              <div className="flex items-center gap-2">
+                {['bulanan', 'tahunan'].map((period) => (
                   <button
                     key={period}
                     onClick={() => handlePeriodChange(period)}
-                    className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                    className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-all ${
                       selectedPeriod === period
                         ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -289,70 +224,16 @@ export default function LaporanHafalanPage() {
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Dynamic Date Dropdowns */}
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Mingguan: Month + Year + Week Selector */}
-              {selectedPeriod === 'mingguan' && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">Bulan:</label>
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => {
-                        setSelectedMonth(Number(e.target.value));
-                        setSelectedWeek(0);
-                      }}
-                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    >
-                      {getMonthOptions().map((month) => (
-                        <option key={month.value} value={month.value}>
-                          {month.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">Tahun:</label>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    >
-                      {getYearOptions().map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">Minggu:</label>
-                    <select
-                      value={selectedWeek}
-                      onChange={(e) => setSelectedWeek(Number(e.target.value))}
-                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    >
-                      {getWeekOptions().map((week) => (
-                        <option key={week.value} value={week.value}>
-                          {week.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {/* Bulanan: Month + Year Selector */}
-              {selectedPeriod === 'bulanan' && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">Bulan:</label>
+              {/* Dropdown - Kanan */}
+              <div className="flex items-center gap-2">
+                {/* Bulanan: Bulan + Tahun */}
+                {selectedPeriod === 'bulanan' && (
+                  <>
                     <select
                       value={selectedMonth}
                       onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     >
                       {getMonthOptions().map((month) => (
                         <option key={month.value} value={month.value}>
@@ -360,13 +241,10 @@ export default function LaporanHafalanPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">Tahun:</label>
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     >
                       {getYearOptions().map((year) => (
                         <option key={year} value={year}>
@@ -374,18 +252,15 @@ export default function LaporanHafalanPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
 
-              {/* Tahunan: Year Selector Only */}
-              {selectedPeriod === 'tahunan' && (
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Tahun:</label>
+                {/* Tahunan: Tahun saja */}
+                {selectedPeriod === 'tahunan' && (
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   >
                     {getYearOptions().map((year) => (
                       <option key={year} value={year}>
@@ -393,8 +268,8 @@ export default function LaporanHafalanPage() {
                       </option>
                     ))}
                   </select>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
@@ -408,8 +283,8 @@ export default function LaporanHafalanPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm text-emerald-700 font-medium">Total Setoran</p>
-                  <p className="text-2xl font-bold text-emerald-900">{currentStats.totalSetoran}</p>
-                  <p className="text-xs text-emerald-600 mt-0.5">{getPeriodLabel()}</p>
+                  <p className="text-2xl font-bold text-emerald-900">{currentStats.totalSetoran || 0}</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">setoran</p>
                 </div>
               </div>
             </div>
@@ -422,8 +297,8 @@ export default function LaporanHafalanPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm text-amber-700 font-medium">Rata-rata Nilai</p>
-                  <p className="text-2xl font-bold text-amber-900">{currentStats.rataRataNilai}</p>
-                  <p className="text-xs text-amber-600 mt-0.5">{getPeriodLabel()}</p>
+                  <p className="text-2xl font-bold text-amber-900">{currentStats.rataRataNilai || 0}</p>
+                  <p className="text-xs text-amber-600 mt-0.5">dari 100</p>
                 </div>
               </div>
             </div>
@@ -436,8 +311,8 @@ export default function LaporanHafalanPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm text-purple-700 font-medium">Target Tercapai</p>
-                  <p className="text-2xl font-bold text-purple-900">{currentStats.targetTercapai}%</p>
-                  <p className="text-xs text-purple-600 mt-0.5">{getPeriodLabel()}</p>
+                  <p className="text-2xl font-bold text-purple-900">{currentStats.targetTercapai || 0}%</p>
+                  <p className="text-xs text-purple-600 mt-0.5">progress</p>
                 </div>
               </div>
             </div>
@@ -450,10 +325,8 @@ export default function LaporanHafalanPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm text-sky-700 font-medium">Konsistensi</p>
-                  <p className="text-2xl font-bold text-sky-900">{currentStats.konsistensi}</p>
-                  <p className="text-xs text-sky-600 mt-0.5">
-                    {selectedPeriod === 'mingguan' ? 'hari' : selectedPeriod === 'bulanan' ? 'hari' : 'hari'}
-                  </p>
+                  <p className="text-2xl font-bold text-sky-900">{currentStats.konsistensi || 0}</p>
+                  <p className="text-xs text-sky-600 mt-0.5">hari</p>
                 </div>
               </div>
             </div>
@@ -473,16 +346,21 @@ export default function LaporanHafalanPage() {
                   <DonutChart data={juzDistribution} size={200} />
                 </div>
 
-                <div className="space-y-2">
-                  {juzDistribution.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                        <span className="text-sm text-gray-700">{item.label}</span>
+                {/* Horizontal chips/tags */}
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {juzDistribution.length > 0 ? (
+                    juzDistribution.map((item, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-1 rounded-full bg-white/70 border border-white/20 text-sm flex items-center gap-2"
+                      >
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                        <span className="font-semibold text-gray-700">{item.label}</span>
                       </div>
-                      <span className="text-sm font-bold text-gray-900">{item.value} hal</span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center">Belum ada data juz</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -496,100 +374,8 @@ export default function LaporanHafalanPage() {
 
               <div className="p-6">
                 <HorizontalBarChart data={aspectScores} />
-
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
-                    <p className="text-xs text-emerald-700 font-semibold mb-1">Nilai Tertinggi</p>
-                    <p className="text-lg font-bold text-emerald-900">Implementasi</p>
-                    <p className="text-sm text-emerald-600">95%</p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl">
-                    <p className="text-xs text-purple-700 font-semibold mb-1">Perlu Ditingkatkan</p>
-                    <p className="text-lg font-bold text-purple-900">Makhraj</p>
-                    <p className="text-sm text-purple-600">85%</p>
-                  </div>
-                </div>
               </div>
             </div>
-          </div>
-
-          {/* Detail Table - Riwayat Setoran */}
-          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
-            <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
-              <h2 className="text-lg font-bold text-white">Riwayat Setoran Detail</h2>
-              <p className="text-sm text-green-50 mt-1">Daftar setoran hafalan {getPeriodLabel().toLowerCase()}</p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Tanggal
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Juz / Surah
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Nilai
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Catatan Guru
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {paginatedData.map((item, index) => (
-                    <tr key={index} className="hover:bg-emerald-50/30 transition-colors">
-                      <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
-                        {item.tanggal}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {item.juz}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
-                          item.nilai >= 90 ? 'bg-emerald-100 text-emerald-700' :
-                          item.nilai >= 80 ? 'bg-amber-100 text-amber-700' :
-                          'bg-sky-100 text-sky-700'
-                        }`}>
-                          {item.nilai}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {item.catatan}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Halaman <span className="font-semibold">{currentPage}</span> dari{' '}
-                  <span className="font-semibold">{totalPages}</span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
