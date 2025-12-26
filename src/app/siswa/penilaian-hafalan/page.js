@@ -156,22 +156,44 @@ export default function PenilaianHafalanPage() {
 
   const getAspekColor = (aspek) => {
     const colors = {
-      tajwid: { bg: 'bg-emerald-100', text: 'text-emerald-700', badge: 'bg-emerald-500' },
-      kelancaran: { bg: 'bg-sky-100', text: 'text-sky-700', badge: 'bg-sky-500' },
-      makhraj: { bg: 'bg-purple-100', text: 'text-purple-700', badge: 'bg-purple-500' },
-      implementasi: { bg: 'bg-amber-100', text: 'text-amber-700', badge: 'bg-amber-500' },
+      tajwid: {
+        bg: 'bg-emerald-50/70',
+        text: 'text-emerald-700',
+        badge: 'bg-emerald-500',
+        border: 'border-emerald-200/60',
+        glow: 'shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_12px_40px_rgba(16,185,129,0.12)]',
+      },
+      kelancaran: {
+        bg: 'bg-sky-50/70',
+        text: 'text-sky-700',
+        badge: 'bg-sky-500',
+        border: 'border-sky-200/60',
+        glow: 'shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)]',
+      },
+      makhraj: {
+        bg: 'bg-purple-50/70',
+        text: 'text-purple-700',
+        badge: 'bg-purple-500',
+        border: 'border-purple-200/60',
+        glow: 'shadow-[0_0_0_1px_rgba(168,85,247,0.25),0_12px_40px_rgba(168,85,247,0.12)]',
+      },
+      implementasi: {
+        bg: 'bg-amber-50/70',
+        text: 'text-amber-700',
+        badge: 'bg-amber-500',
+        border: 'border-amber-200/60',
+        glow: 'shadow-[0_0_0_1px_rgba(245,158,11,0.25),0_12px_40px_rgba(245,158,11,0.12)]',
+      },
     };
     return colors[aspek];
   };
 
   const getNilaiColor = (nilai) => {
-    if (nilai >= 90) return 'bg-emerald-500';
-    if (nilai >= 80) return 'bg-sky-500';
-    if (nilai >= 70) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (nilai >= 90) return { bg: 'bg-emerald-500', text: 'text-white' };
+    if (nilai >= 80) return { bg: 'bg-sky-500', text: 'text-white' };
+    if (nilai >= 70) return { bg: 'bg-amber-500', text: 'text-white' };
+    return { bg: 'bg-red-500', text: 'text-white' };
   };
-
-
 
   const filteredData = filterBulan === 'semua'
     ? penilaianData
@@ -181,284 +203,235 @@ export default function PenilaianHafalanPage() {
 
   return (
     <SiswaLayout>
-      {/* Background Decorations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-sky-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Container - Full Width SIMTAQ Style */}
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+          {/* Header - SIMTAQ Gradient */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
                 <Star className="text-white" size={32} />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-white">Penilaian Hafalan</h1>
-                <div className="h-1 w-32 bg-white/30 rounded-full mt-2"></div>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Penilaian Hafalan</h1>
+                <p className="text-green-50 text-sm sm:text-base mt-1 flex items-center gap-2 whitespace-normal">
+                  <Sparkles size={18} className="flex-shrink-0" />
+                  Pantau nilai dan feedback dari guru
+                </p>
               </div>
             </div>
-            <p className="text-emerald-50 text-lg flex items-center gap-2">
-              <Sparkles size={18} />
-              Pantau nilai dan feedback dari guru
-            </p>
-          </div>
-        </div>
-      </motion.div>
+          </motion.div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        {/* Rata-rata Keseluruhan */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-lg text-white"
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <Award size={24} />
-            <span className="text-sm font-medium opacity-90">Rata-rata</span>
-          </div>
-          <p className="text-5xl font-bold">{rataRataNilai}</p>
-          <p className="text-sm opacity-80 mt-1">dari {penilaianData.length} penilaian</p>
-        </motion.div>
-
-        {/* Tajwid */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className={`${getAspekColor('tajwid').bg} rounded-2xl p-6 shadow-lg`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className={`text-sm font-semibold ${getAspekColor('tajwid').text}`}>Tajwid</span>
-          </div>
-          <p className={`text-4xl font-bold ${getAspekColor('tajwid').text}`}>{rataRataTajwid}</p>
-        </motion.div>
-
-        {/* Kelancaran */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className={`${getAspekColor('kelancaran').bg} rounded-2xl p-6 shadow-lg`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className={`text-sm font-semibold ${getAspekColor('kelancaran').text}`}>Kelancaran</span>
-          </div>
-          <p className={`text-4xl font-bold ${getAspekColor('kelancaran').text}`}>{rataRataKelancaran}</p>
-        </motion.div>
-
-        {/* Makhraj */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4 }}
-          className={`${getAspekColor('makhraj').bg} rounded-2xl p-6 shadow-lg`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className={`text-sm font-semibold ${getAspekColor('makhraj').text}`}>Makhraj</span>
-          </div>
-          <p className={`text-4xl font-bold ${getAspekColor('makhraj').text}`}>{rataRataMakhraj}</p>
-        </motion.div>
-
-        {/* Implementasi */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
-          className={`${getAspekColor('implementasi').bg} rounded-2xl p-6 shadow-lg`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className={`text-sm font-semibold ${getAspekColor('implementasi').text}`}>Implementasi</span>
-          </div>
-          <p className={`text-4xl font-bold ${getAspekColor('implementasi').text}`}>{rataRataImplementasi}</p>
-        </motion.div>
-      </div>
-
-      {/* Chart Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8"
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <TrendingUp className="text-emerald-600" size={24} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Perkembangan Nilai Bulanan</h2>
-            <p className="text-sm text-gray-600">Grafik rata-rata nilai 4 bulan terakhir</p>
-          </div>
-        </div>
-
-        <MiniBarChart data={chartData} color="emerald" />
-      </motion.div>
-
-      {/* Filter */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-        className="mb-6"
-      >
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <button
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-xl hover:border-emerald-400 transition-all"
+          {/* Stats Cards - Pastel Transparent + Glow */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Rata-rata Keseluruhan */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="col-span-2 sm:col-span-2 lg:col-span-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 backdrop-blur-sm rounded-2xl p-5 shadow-sm text-white hover:-translate-y-1 transition-all duration-300"
             >
-              <Filter size={18} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
-                {filterBulan === 'semua' ? 'Semua Bulan' : filterBulan}
-              </span>
-              <ChevronDown size={16} className="text-gray-500" />
-            </button>
+              <div className="flex items-center gap-2 mb-3">
+                <Award size={20} />
+                <span className="text-xs font-bold opacity-90 uppercase tracking-wider">Rata-rata</span>
+              </div>
+              <p className="text-4xl font-bold mb-1">{rataRataNilai}</p>
+              <p className="text-sm opacity-80">{penilaianData.length} penilaian</p>
+            </motion.div>
 
-            {showFilterDropdown && (
-              <div className="absolute z-10 mt-2 w-48 bg-white border-2 border-gray-200 rounded-xl shadow-xl">
-                {bulanOptions.map((bulan) => (
-                  <button
-                    key={bulan}
-                    onClick={() => {
-                      setFilterBulan(bulan);
-                      setShowFilterDropdown(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm hover:bg-emerald-50 transition-colors ${
-                      filterBulan === bulan ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700'
-                    } first:rounded-t-xl last:rounded-b-xl`}
-                  >
-                    {bulan === 'semua' ? 'Semua Bulan' : bulan}
-                  </button>
-                ))}
+            {/* Tajwid */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className={`${getAspekColor('tajwid').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('tajwid').border} ${getAspekColor('tajwid').glow} hover:-translate-y-1 transition-all duration-300`}
+            >
+              <span className={`text-xs font-bold ${getAspekColor('tajwid').text} uppercase tracking-wider block mb-2`}>Tajwid</span>
+              <p className={`text-3xl font-bold ${getAspekColor('tajwid').text}`}>{rataRataTajwid}</p>
+            </motion.div>
+
+            {/* Kelancaran */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className={`${getAspekColor('kelancaran').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('kelancaran').border} ${getAspekColor('kelancaran').glow} hover:-translate-y-1 transition-all duration-300`}
+            >
+              <span className={`text-xs font-bold ${getAspekColor('kelancaran').text} uppercase tracking-wider block mb-2`}>Kelancaran</span>
+              <p className={`text-3xl font-bold ${getAspekColor('kelancaran').text}`}>{rataRataKelancaran}</p>
+            </motion.div>
+
+            {/* Makhraj */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 }}
+              className={`${getAspekColor('makhraj').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('makhraj').border} ${getAspekColor('makhraj').glow} hover:-translate-y-1 transition-all duration-300`}
+            >
+              <span className={`text-xs font-bold ${getAspekColor('makhraj').text} uppercase tracking-wider block mb-2`}>Makhraj</span>
+              <p className={`text-3xl font-bold ${getAspekColor('makhraj').text}`}>{rataRataMakhraj}</p>
+            </motion.div>
+
+            {/* Implementasi */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className={`${getAspekColor('implementasi').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('implementasi').border} ${getAspekColor('implementasi').glow} hover:-translate-y-1 transition-all duration-300`}
+            >
+              <span className={`text-xs font-bold ${getAspekColor('implementasi').text} uppercase tracking-wider block mb-2`}>Implementasi</span>
+              <p className={`text-3xl font-bold ${getAspekColor('implementasi').text}`}>{rataRataImplementasi}</p>
+            </motion.div>
+          </div>
+
+          {/* Chart Section - Dashboard Card Style */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-emerald-50 rounded-xl">
+                <TrendingUp className="text-emerald-600" size={24} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Perkembangan Nilai Bulanan</h2>
+                <p className="text-xs text-gray-600">Grafik rata-rata nilai 4 bulan terakhir</p>
+              </div>
+            </div>
+
+            <MiniBarChart data={chartData} color="emerald" />
+          </motion.div>
+
+          {/* Filter */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="flex items-center gap-3"
+          >
+            <div className="relative">
+              <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl hover:border-emerald-400 transition-all shadow-sm"
+              >
+                <Filter size={18} className="text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {filterBulan === 'semua' ? 'Semua Bulan' : filterBulan}
+                </span>
+                <ChevronDown size={16} className="text-gray-500" />
+              </button>
+
+              {showFilterDropdown && (
+                <div className="absolute z-10 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl">
+                  {bulanOptions.map((bulan) => (
+                    <button
+                      key={bulan}
+                      onClick={() => {
+                        setFilterBulan(bulan);
+                        setShowFilterDropdown(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-emerald-50 transition-colors ${
+                        filterBulan === bulan ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700'
+                      } first:rounded-t-xl last:rounded-b-xl`}
+                    >
+                      {bulan === 'semua' ? 'Semua Bulan' : bulan}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-gray-600">
+              Menampilkan {filteredData.length} penilaian
+            </p>
+          </motion.div>
+
+          {/* Daftar Penilaian - Dashboard Card Style */}
+          <div className="space-y-4">
+            {filteredData.map((penilaian, index) => {
+              const gradeColor = getNilaiColor(penilaian.nilaiTotal);
+
+              return (
+                <motion.div
+                  key={penilaian.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 hover:shadow-md transition-all duration-300"
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-100">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1 break-words">
+                        {penilaian.surah}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">Ayat {penilaian.ayat}</p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Calendar size={14} />
+                          <span>{penilaian.tanggal}</span>
+                        </div>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="whitespace-normal">Dinilai oleh {penilaian.guru}</span>
+                      </div>
+                    </div>
+                    {/* Badge Nilai - Pill Style */}
+                    <div className={`flex-shrink-0 ml-4 px-5 py-2 ${gradeColor.bg} ${gradeColor.text} rounded-full shadow-md`}>
+                      <p className="text-2xl font-bold">{penilaian.nilaiTotal}</p>
+                    </div>
+                  </div>
+
+                  {/* Nilai per Aspek - Pastel Transparent */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    {Object.entries(penilaian.nilaiAspek).map(([aspek, nilai]) => {
+                      const color = getAspekColor(aspek);
+                      return (
+                        <div key={aspek} className={`${color.bg} backdrop-blur-sm rounded-xl p-4 border ${color.border}`}>
+                          <p className={`text-xs font-bold ${color.text} uppercase mb-1 tracking-wider`}>
+                            {aspek}
+                          </p>
+                          <p className={`text-2xl font-bold ${color.text}`}>{nilai}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Catatan Guru - Pastel Subtle */}
+                  <div className="bg-orange-50/50 backdrop-blur-sm rounded-xl p-4 border border-orange-100">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-orange-200 rounded-lg flex-shrink-0">
+                        <MessageSquare className="text-orange-700" size={18} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-orange-900 mb-1">Catatan dari Guru:</p>
+                        <p className="text-sm text-orange-800/90 leading-relaxed break-words">
+                          {penilaian.catatan}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {filteredData.length === 0 && (
+              <div className="bg-white rounded-2xl p-12 text-center border-2 border-dashed border-gray-200">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                  <BookOpen className="text-gray-400" size={32} />
+                </div>
+                <p className="text-gray-600 font-medium">Tidak ada penilaian untuk filter ini</p>
+                <p className="text-sm text-gray-500 mt-1">Coba pilih bulan yang berbeda</p>
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-600">
-            Menampilkan {filteredData.length} penilaian
-          </p>
         </div>
-      </motion.div>
-
-      {/* Tabel Penilaian */}
-      <div className="space-y-4">
-        {filteredData.map((penilaian, index) => {
-          const gradeInfoBg = getNilaiColor(penilaian.nilaiTotal);
-
-          return (
-            <motion.div
-              key={penilaian.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 + index * 0.1 }}
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-100">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {penilaian.surah}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">Ayat {penilaian.ayat}</p>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      <span>{penilaian.tanggal}</span>
-                    </div>
-                    <span>•</span>
-                    <span>Dinilai oleh {penilaian.guru}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className={`px-4 py-2 ${gradeInfoBg} text-white rounded-xl`}>
-                    <p className="text-3xl font-bold">{penilaian.nilaiTotal}</p>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Nilai per Aspek */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                {Object.entries(penilaian.nilaiAspek).map(([aspek, nilai]) => {
-                  const color = getAspekColor(aspek);
-                  return (
-                    <div key={aspek} className={`${color.bg} rounded-xl p-4`}>
-                      <p className={`text-xs font-semibold ${color.text} uppercase mb-1`}>
-                        {aspek}
-                      </p>
-                      <div className="flex items-end gap-2">
-                        <p className={`text-3xl font-bold ${color.text}`}>{nilai}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Catatan Guru */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-amber-500 rounded-lg flex-shrink-0">
-                    <MessageSquare className="text-white" size={18} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-amber-900 mb-1">Catatan dari Guru:</p>
-                    <p className="text-sm text-amber-800 leading-relaxed">
-                      {penilaian.catatan}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-
-        {filteredData.length === 0 && (
-          <div className="bg-white rounded-2xl p-12 text-center border-2 border-dashed border-gray-200">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <BookOpen className="text-gray-400" size={32} />
-            </div>
-            <p className="text-gray-600 font-medium">Tidak ada penilaian untuk filter ini</p>
-            <p className="text-sm text-gray-500 mt-1">Coba pilih bulan yang berbeda</p>
-          </div>
-        )}
       </div>
-
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </SiswaLayout>
   );
 }
