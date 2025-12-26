@@ -32,8 +32,11 @@ function EmptyState() {
 // MAIN PAGE COMPONENT
 // ============================================================
 export default function PresensiSiswaPage() {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear] = useState(new Date().getFullYear());
+  // Real-time timezone-aware current date
+  const getCurrentDate = () => new Date();
+
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentDate().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(getCurrentDate().getFullYear());
 
   // Data presensi mingguan (kosong = belum ada presensi)
   // Dalam praktik real, data ini akan di-fetch dari API
@@ -166,20 +169,23 @@ export default function PresensiSiswaPage() {
           {/* Riwayat Presensi - SIMTAQ Table Style */}
           <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
             {/* Table Header - SIMTAQ Green Gradient */}
-            <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-bold text-white">Riwayat Kehadiran Mingguan</h2>
-                  <p className="text-sm text-green-50 mt-1">Rekap presensi per minggu (4-5 minggu per bulan)</p>
+            <div className="px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div className="space-y-1">
+                  <h2 className="text-base sm:text-lg font-bold text-white leading-snug">Riwayat Kehadiran Mingguan</h2>
+                  <p className="text-sm text-green-50 leading-snug">
+                    Rekap presensi per minggu
+                    <span className="hidden sm:inline"> (4-5 minggu per bulan)</span>
+                  </p>
                 </div>
 
                 {/* Filter Bulan */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <label className="text-sm font-medium text-white">Bulan:</label>
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="px-4 py-2 border border-white/30 rounded-xl text-sm font-medium text-gray-700 bg-white/90 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                    className="px-3 sm:px-4 py-2 border border-white/30 rounded-xl text-sm font-medium text-gray-700 bg-white/90 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
                   >
                     {monthNames.map((month, index) => (
                       <option key={index} value={index + 1}>
