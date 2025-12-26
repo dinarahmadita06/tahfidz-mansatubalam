@@ -16,6 +16,8 @@ import {
   AlertCircle,
   BookMarked,
   XCircle,
+  MessageSquare,
+  X,
 } from 'lucide-react';
 
 // ===== CONSTANTS - SIMTAQ BASELINE =====
@@ -23,6 +25,16 @@ const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal
 const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
 
 // ===== REUSABLE COMPONENTS =====
+
+// InfoRow component untuk modal detail
+const InfoRow = ({ label, value }) => {
+  return (
+    <div className="bg-gray-50/70 border border-gray-200/50 rounded-xl px-4 py-3">
+      <p className="text-xs font-medium text-gray-600 mb-1">{label}</p>
+      <p className="text-sm font-semibold text-gray-900">{value}</p>
+    </div>
+  );
+};
 
 // Summary Card dengan pastel transparent style
 const SummaryCard = ({ icon: Icon, iconBg, title, value, subtitle, color = 'emerald' }) => {
@@ -166,9 +178,40 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
   );
 };
 
-// Modal Detail Catatan Guru
+// Modal Detail Catatan Guru - SIMTAQ Glass Style
 const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
   if (!isOpen || !catatan) return null;
+
+  // Check if note is recent (< 7 days)
+  const isRecentNote = () => {
+    if (!catatan.tanggal || catatan.tanggal === '-') return false;
+
+    try {
+      // Parse Indonesian date format (e.g., "15 Okt 2025")
+      const months = {
+        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'Mei': 4, 'Jun': 5,
+        'Jul': 6, 'Agt': 7, 'Sep': 8, 'Okt': 9, 'Nov': 10, 'Des': 11
+      };
+
+      const parts = catatan.tanggal.split(' ');
+      if (parts.length !== 3) return false;
+
+      const day = parseInt(parts[0]);
+      const month = months[parts[1]];
+      const year = parseInt(parts[2]);
+
+      if (isNaN(day) || month === undefined || isNaN(year)) return false;
+
+      const noteDate = new Date(year, month, day);
+      const today = new Date();
+      const diffTime = Math.abs(today - noteDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      return diffDays <= 7;
+    } catch (error) {
+      return false;
+    }
+  };
 
   return (
     <div
@@ -177,29 +220,51 @@ const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl"
+        className="bg-white/80 backdrop-blur rounded-2xl border border-white/20 shadow-xl shadow-green-500/10 p-5 sm:p-6 max-w-lg w-full"
       >
-        <div className="flex items-start justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-900">Catatan Guru</h3>
+        {/* Header dengan icon dan subtitle */}
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start gap-3">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-md">
+              <MessageSquare className="text-white" size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Catatan Guru</h3>
+              <p className="text-sm text-gray-600 mt-1">Feedback dari guru</p>
+            </div>
+          </div>
+
+          {/* Icon button close */}
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100/70 rounded-xl transition-all duration-200 hover:shadow-md group"
           >
-            <XCircle className="text-gray-500" size={24} />
+            <X className="text-gray-500 group-hover:text-gray-700" size={20} />
           </button>
         </div>
-        <div className="space-y-3">
-          <div>
-            <p className="text-sm text-gray-600">Guru:</p>
-            <p className="font-semibold text-gray-900">{catatan.guru}</p>
+
+        {/* Badge "Catatan terbaru" (opsional) */}
+        {isRecentNote() && (
+          <div className="mb-4">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <Clock size={14} className="text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700">Catatan terbaru</span>
+            </span>
           </div>
-          <div>
-            <p className="text-sm text-gray-600">Tanggal:</p>
-            <p className="font-semibold text-gray-900">{catatan.tanggal}</p>
+        )}
+
+        {/* Body - Info blocks */}
+        <div className="space-y-4">
+          {/* Info blocks untuk Guru dan Tanggal */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <InfoRow label="Guru Pengajar" value={catatan.guru} />
+            <InfoRow label="Tanggal Setor" value={catatan.tanggal} />
           </div>
-          <div>
-            <p className="text-sm text-gray-600">Catatan:</p>
-            <p className="text-gray-900 leading-relaxed">{catatan.text}</p>
+
+          {/* Catatan utama dengan highlight dan green accent */}
+          <div className="border-l-4 border-emerald-500 bg-emerald-50/60 rounded-r-xl p-4">
+            <p className="text-xs font-medium text-emerald-700 mb-2">Catatan Penilaian</p>
+            <p className="text-sm text-gray-900 leading-relaxed">{catatan.text}</p>
           </div>
         </div>
       </div>
