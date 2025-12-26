@@ -36,42 +36,48 @@ const InfoRow = ({ label, value }) => {
   );
 };
 
-// Summary Card dengan pastel transparent style
-const SummaryCard = ({ icon: Icon, iconBg, title, value, subtitle, color = 'emerald' }) => {
-  const colorConfig = {
+// StatCard - Compact & Bright Pastel with Glow (SIMTAQ baseline)
+const StatCard = ({ icon: Icon, iconBg, title, value, subtitle, variant = 'emerald' }) => {
+  const variantConfig = {
     emerald: {
-      bg: 'bg-emerald-50/60',
-      border: 'border-emerald-200/40',
-      shadow: 'shadow-emerald-500/10',
+      bg: 'bg-emerald-50/80',
+      border: 'border-emerald-300/60',
+      ring: 'ring-emerald-500/20',
+      shadow: 'shadow-emerald-500/15',
       textValue: 'text-emerald-600',
+      iconBg: iconBg || 'bg-emerald-500',
     },
     amber: {
-      bg: 'bg-amber-50/60',
-      border: 'border-amber-200/40',
-      shadow: 'shadow-amber-500/10',
+      bg: 'bg-amber-50/80',
+      border: 'border-amber-300/60',
+      ring: 'ring-amber-500/20',
+      shadow: 'shadow-amber-500/15',
       textValue: 'text-amber-600',
+      iconBg: iconBg || 'bg-amber-500',
     },
     sky: {
-      bg: 'bg-sky-50/60',
-      border: 'border-sky-200/40',
-      shadow: 'shadow-sky-500/10',
+      bg: 'bg-sky-50/80',
+      border: 'border-sky-300/60',
+      ring: 'ring-sky-500/20',
+      shadow: 'shadow-sky-500/15',
       textValue: 'text-sky-600',
+      iconBg: iconBg || 'bg-sky-500',
     },
   };
 
-  const styles = colorConfig[color];
+  const styles = variantConfig[variant];
 
   return (
-    <div className={`${styles.bg} border ${styles.border} backdrop-blur-sm rounded-2xl p-6 shadow-lg ${styles.shadow} hover:-translate-y-1 transition-all duration-300`}>
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`p-3 ${iconBg} rounded-xl shadow-md`}>
-          <Icon className="text-white" size={24} />
+    <div className={`${styles.bg} border ${styles.border} ring-1 ${styles.ring} backdrop-blur-sm rounded-2xl p-4 shadow-lg ${styles.shadow} hover:-translate-y-1 transition-all duration-300`}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`w-12 h-12 ${styles.iconBg} rounded-xl shadow-md flex items-center justify-center`}>
+          <Icon className="text-white" size={20} />
         </div>
         <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
       </div>
-      <div className="mt-4">
-        <p className={`text-4xl font-bold ${styles.textValue}`}>{value}</p>
-        <p className="text-sm text-gray-600 mt-2">{subtitle}</p>
+      <div className="mt-3">
+        <p className={`text-3xl font-bold ${styles.textValue}`}>{value}</p>
+        <p className="text-sm text-gray-600 mt-1.5">{subtitle}</p>
       </div>
     </div>
   );
@@ -414,31 +420,28 @@ export default function HafalanAnakPage() {
             </div>
           </div>
 
-          {/* Summary Cards - 3 Columns */}
+          {/* Summary Cards - 3 Columns (Compact & Bright Pastel) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <SummaryCard
+            <StatCard
               icon={BookOpen}
-              iconBg="bg-emerald-500"
               title="Total Hafalan Selesai"
               value={stats.totalHafalanSelesai}
               subtitle={`Dari ${stats.targetHafalan} target`}
-              color="emerald"
+              variant="emerald"
             />
-            <SummaryCard
+            <StatCard
               icon={Star}
-              iconBg="bg-amber-500"
               title="Rata-rata Nilai Hafalan"
               value={stats.rataRataNilai}
               subtitle="Dari 100"
-              color="amber"
+              variant="amber"
             />
-            <SummaryCard
+            <StatCard
               icon={Clock}
-              iconBg="bg-sky-500"
               title="Status Terakhir Setoran"
-              value={<span className="text-2xl">{stats.statusTerakhir.surah}</span>}
+              value={<span className="text-xl">{stats.statusTerakhir.surah}</span>}
               subtitle={`Ayat ${stats.statusTerakhir.ayat} • ${stats.statusTerakhir.tanggal}`}
-              color="sky"
+              variant="sky"
             />
           </div>
 
