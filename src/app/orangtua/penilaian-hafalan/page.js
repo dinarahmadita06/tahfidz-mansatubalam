@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import {
   BookOpen,
@@ -19,36 +20,26 @@ import {
   TrendingUp,
   Award,
 } from 'lucide-react';
+import {
+  safeNumber,
+  calcAvg,
+  mapAssessmentToRow,
+  formatTanggal,
+} from '@/lib/utils/penilaianHelpers';
 
 // ===== CONSTANTS - SIMTAQ BASELINE =====
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
 
-// ===== HELPER FUNCTIONS =====
-
-// Map assessment data to table row format
-const mapAssessmentToRow = (assessment) => {
-  if (!assessment) return null;
-
-  const { tajwid = 0, kelancaran = 0, makhraj = 0, implementasi = 0 } = assessment;
-  const avgScore = tajwid && kelancaran && makhraj && implementasi
-    ? Math.round((tajwid + kelancaran + makhraj + implementasi) / 4)
-    : 0;
-
-  return {
-    id: assessment.id,
-    tanggal: assessment.tanggal || '-',
-    surah: assessment.surah || '-',
-    ayat: assessment.ayat || '-',
-    tajwid: tajwid || 0,
-    kelancaran: kelancaran || 0,
-    makhraj: makhraj || 0,
-    implementasi: implementasi || 0,
-    rataRata: avgScore,
-    status: assessment.status || 'belum',
-    catatan: assessment.catatan || '-',
-    guru: assessment.guru || '-',
-  };
+// ===== DATA FETCHER =====
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const error = new Error('Failed to fetch data');
+    error.status = res.status;
+    throw error;
+  }
+  return res.json();
 };
 
 // ===== REUSABLE COMPONENTS =====
@@ -149,7 +140,7 @@ const StatusBadge = ({ status }) => {
 
 // ScoreBadge Component - untuk nilai dengan warna berdasarkan range
 const ScoreBadge = ({ score }) => {
-  const numScore = parseInt(score) || 0;
+  const numScore = safeNumber(score, 0);
 
   const getScoreConfig = (score) => {
     if (score >= 90) {
@@ -226,7 +217,7 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
         <User size={20} className="text-emerald-600 flex-shrink-0" />
         <div className="text-left">
           <p className="text-sm text-gray-600">Anak Aktif</p>
-          <p className="font-semibold text-gray-900">{selectedChild?.name || 'Pilih Anak'}</p>
+          <p className="font-semibold text-gray-900">{selectedChild?.nama || 'Pilih Anak'}</p>
         </div>
         {hasMultipleChildren && (
           <ChevronDown
@@ -245,7 +236,7 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
           <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-[999] max-h-[300px] overflow-y-auto">
             {children.map((child, index) => (
               <button
-                key={index}
+                key={child.id || index}
                 onClick={() => {
                   onSelectChild(child);
                   setIsOpen(false);
@@ -256,8 +247,8 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
               >
                 <User size={20} className="text-emerald-600" />
                 <div className="text-left flex-1">
-                  <p className="font-semibold text-gray-900">{child.name}</p>
-                  <p className="text-xs text-gray-600">Kelas {child.kelas}</p>
+                  <p className="font-semibold text-gray-900">{child.nama || child.namaLengkap}</p>
+                  <p className="text-xs text-gray-600">Kelas {child.kelas || child.kelas?.namaKelas}</p>
                 </div>
                 {selectedChild?.id === child.id && (
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -378,83 +369,36 @@ export default function PenilaianHafalanPage() {
     }
   }, [status, router]);
 
-  // Mock data - replace with real API
-  const children = [
-    { id: 1, name: 'Ahmad Fauzan', kelas: '5A' },
-    { id: 2, name: 'Fatimah Azzahra', kelas: '3B' },
-  ];
+  // Fetch children list
+  const { data: childrenData, error: childrenError } = useSWR(
+    status === 'authenticated' ? '/api/orangtua/penilaian' : null,
+    fetcher,
+    { revalidateOnFocus: true }
+  );
 
-  // Mock penilaian data - akan diganti dengan API real
-  const assessmentsData = [
+  // Fetch penilaian data for selected child
+  const { data: penilaianData, error: penilaianError, mutate } = useSWR(
+    selectedChild?.id ? `/api/orangtua/penilaian?siswaId=${selectedChild.id}` : null,
+    fetcher,
     {
-      id: 1,
-      tanggal: '15 Okt 2025',
-      surah: 'Al-Fatihah',
-      ayat: '1-7',
-      tajwid: 95,
-      kelancaran: 92,
-      makhraj: 90,
-      implementasi: 93,
-      status: 'lulus',
-      catatan: 'Tajwid sangat baik, bacaan lancar dan fasih. Makhraj huruf sudah tepat.',
-      guru: 'Ustadz Yusuf',
-    },
-    {
-      id: 2,
-      tanggal: '28 Okt 2025',
-      surah: 'Al-Baqarah',
-      ayat: '1-10',
-      tajwid: 85,
-      kelancaran: 80,
-      makhraj: 90,
-      implementasi: 85,
-      status: 'revisi',
-      catatan: 'Kurang jelas pada ayat 5, perlu perbaikan mad dan qalqalah. Kelancaran masih tersendat di beberapa ayat.',
-      guru: 'Ustadz Ahmad',
-    },
-    {
-      id: 3,
-      tanggal: '20 Okt 2025',
-      surah: 'Ali Imran',
-      ayat: '1-20',
-      tajwid: 92,
-      kelancaran: 88,
-      makhraj: 95,
-      implementasi: 90,
-      status: 'lulus',
-      catatan: 'Sangat baik, muroja\'ah juga lancar. Penguasaan makharijul huruf sempurna.',
-      guru: 'Ustadzah Aisyah',
-    },
-  ];
-
-  // Map assessments to table rows
-  const penilaianRows = assessmentsData.map(mapAssessmentToRow);
-
-  // Calculate stats (default to 0 if no data)
-  const stats = {
-    totalPenilaian: penilaianRows.length || 0,
-    rataRataNilai: penilaianRows.length > 0
-      ? Math.round(penilaianRows.reduce((sum, row) => sum + row.rataRata, 0) / penilaianRows.length)
-      : 0,
-    penilaianTerakhir: penilaianRows.length > 0
-      ? {
-          surah: penilaianRows[0].surah,
-          ayat: penilaianRows[0].ayat,
-          tanggal: penilaianRows[0].tanggal,
-        }
-      : {
-          surah: '-',
-          ayat: '-',
-          tanggal: '-',
-        },
-  };
-
-  useEffect(() => {
-    if (children.length > 0 && !selectedChild) {
-      setSelectedChild(children[0]);
+      revalidateOnFocus: true,
+      refreshInterval: 30000, // Auto-refresh every 30 seconds
     }
-  }, []);
+  );
 
+  // Set initial selected child when children data loads
+  useEffect(() => {
+    if (childrenData?.children && childrenData.children.length > 0 && !selectedChild) {
+      const firstChild = childrenData.children[0];
+      setSelectedChild({
+        id: firstChild.id,
+        nama: firstChild.namaLengkap,
+        kelas: firstChild.kelas?.namaKelas || '-',
+      });
+    }
+  }, [childrenData, selectedChild]);
+
+  // Loading state
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -470,8 +414,37 @@ export default function PenilaianHafalanPage() {
     return null;
   }
 
+  // Map penilaian data to table rows using helper function
+  const penilaianRows = penilaianData?.penilaianData
+    ? penilaianData.penilaianData.map((assessment) => {
+        const mapped = mapAssessmentToRow(assessment);
+        return {
+          ...mapped,
+          tanggal: formatTanggal(assessment.tanggal),
+        };
+      })
+    : [];
+
+  // Calculate stats with safe fallbacks (DEFAULT TO 0)
+  const stats = {
+    totalPenilaian: safeNumber(penilaianData?.statistics?.totalPenilaian, 0),
+    rataRataNilai: safeNumber(penilaianData?.statistics?.rataRataNilai, 0),
+    penilaianTerakhir:
+      penilaianRows.length > 0
+        ? {
+            surah: penilaianRows[0].surah || '-',
+            ayat: penilaianRows[0].ayat || '-',
+            tanggal: penilaianRows[0].tanggal || '-',
+          }
+        : {
+            surah: '-',
+            ayat: '-',
+            tanggal: '-',
+          },
+  };
+
   const handleOpenCatatan = (row) => {
-    if (row.status !== 'belum') {
+    if (row.status !== 'belum' && row.catatan && row.catatan !== '-') {
       setSelectedCatatan({
         text: row.catatan,
         guru: row.guru,
@@ -479,6 +452,15 @@ export default function PenilaianHafalanPage() {
       });
       setIsModalOpen(true);
     }
+  };
+
+  const handleDownload = () => {
+    if (penilaianRows.length === 0) {
+      alert('Belum ada data untuk diunduh');
+      return;
+    }
+    // TODO: Implement download functionality
+    alert('Fitur unduh akan segera tersedia');
   };
 
   return (
@@ -503,9 +485,13 @@ export default function PenilaianHafalanPage() {
               </div>
 
               {/* Child Selector Dropdown */}
-              {selectedChild && (
+              {childrenData?.children && selectedChild && (
                 <ChildSelector
-                  children={children}
+                  children={childrenData.children.map((c) => ({
+                    id: c.id,
+                    nama: c.namaLengkap,
+                    kelas: c.kelas?.namaKelas || '-',
+                  }))}
                   selectedChild={selectedChild}
                   onSelectChild={setSelectedChild}
                 />
@@ -533,7 +519,11 @@ export default function PenilaianHafalanPage() {
               icon={Clock}
               title="Penilaian Terakhir"
               value={<span className="text-xl">{stats.penilaianTerakhir.surah}</span>}
-              subtitle={stats.penilaianTerakhir.tanggal !== '-' ? `Ayat ${stats.penilaianTerakhir.ayat} • ${stats.penilaianTerakhir.tanggal}` : 'Belum ada penilaian'}
+              subtitle={
+                stats.penilaianTerakhir.tanggal !== '-'
+                  ? `Ayat ${stats.penilaianTerakhir.ayat} • ${stats.penilaianTerakhir.tanggal}`
+                  : 'Belum ada penilaian'
+              }
               variant="sky"
             />
           </div>
@@ -552,13 +542,30 @@ export default function PenilaianHafalanPage() {
               </div>
 
               {/* Download Button - Green Theme */}
-              {penilaianRows.length > 0 && (
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl transition-all duration-300 shadow-md hover:shadow-lg">
-                  <Download size={18} />
-                  <span className="font-semibold text-sm">Unduh Penilaian</span>
-                </button>
-              )}
+              <button
+                onClick={handleDownload}
+                disabled={penilaianRows.length === 0}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md ${
+                  penilaianRows.length === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white hover:shadow-lg'
+                }`}
+                title={penilaianRows.length === 0 ? 'Belum ada data untuk diunduh' : 'Unduh Penilaian'}
+              >
+                <Download size={18} />
+                <span className="font-semibold text-sm">Unduh Penilaian</span>
+              </button>
             </div>
+
+            {/* Show loading state while fetching */}
+            {!penilaianData && !penilaianError && selectedChild && (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600">Memuat data penilaian...</p>
+                </div>
+              </div>
+            )}
 
             {/* Desktop Table or Empty State */}
             {penilaianRows.length > 0 ? (
@@ -631,7 +638,7 @@ export default function PenilaianHafalanPage() {
                           <StatusBadge status={row.status} />
                         </td>
                         <td className="py-4 px-4">
-                          {row.status !== 'belum' ? (
+                          {row.catatan && row.catatan !== '-' ? (
                             <button
                               onClick={() => handleOpenCatatan(row)}
                               className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
@@ -648,13 +655,13 @@ export default function PenilaianHafalanPage() {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : penilaianData && penilaianRows.length === 0 ? (
               <EmptyState
                 icon={BookOpen}
                 title="Belum Ada Penilaian Hafalan"
-                description="Penilaian dari guru akan muncul di sini setelah anak menyelesaikan setoran hafalan."
+                description="Penilaian dari guru akan muncul di sini setelah anak menyelesaikan setoran hafalan dan dinilai oleh guru."
               />
-            )}
+            ) : null}
 
             {/* Mobile Cards */}
             {penilaianRows.length > 0 && (
@@ -699,7 +706,7 @@ export default function PenilaianHafalanPage() {
                       <StatusBadge status={row.status} />
                     </div>
 
-                    {row.status !== 'belum' && (
+                    {row.catatan && row.catatan !== '-' && (
                       <button
                         onClick={() => handleOpenCatatan(row)}
                         className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
