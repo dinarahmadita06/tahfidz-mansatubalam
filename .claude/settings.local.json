@@ -93,7 +93,11 @@
       "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|guru/dashboard\\)\")",
       "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|hafalan|tanggal\\)\")",
       "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|presensi\\)\")",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|referensi\\)\")",
+      "Bash(1 bagi Allah, Tuhan3 semesta alam.\"\nAfter: \"Segala puji bagi Allah, Tuhan semesta alam.\"\n\nRegex patterns used:\n- />>\\\\d+/g - removes footnote markers\n- /\\([a-zA-Z]\\)\\\\d+/g - removes digits after letters\n- /\\\\s{2,}/g - removes double spaces\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|siswa/pengumuman\\)\")",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|profil\\)\")"
     ],
     "deny": [],
     "ask": []
