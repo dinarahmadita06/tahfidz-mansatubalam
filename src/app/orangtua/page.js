@@ -74,6 +74,9 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald' }) =>
 
   const styles = colorConfig[color];
 
+  // Safe value with fallback to 0
+  const safeValue = value ?? 0;
+
   return (
     <div className={`${styles.bg} backdrop-blur-sm rounded-2xl p-5 border ${styles.border} ${styles.glow} ${styles.hoverGlow} hover:-translate-y-1 transition-all duration-300 cursor-default`}>
       <div className="flex items-center justify-between mb-4">
@@ -82,7 +85,7 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald' }) =>
         </div>
       </div>
       <h3 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">{title}</h3>
-      <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+      <p className="text-3xl font-bold text-gray-900 mb-1">{safeValue}</p>
       {subtitle && <p className={`text-sm ${styles.textSub} font-semibold mt-2 min-w-0 break-words`}>{subtitle}</p>}
     </div>
   );
@@ -212,7 +215,7 @@ const JuzProgressSection = ({ juzProgress, loading }) => {
             <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
           ))}
         </div>
-      ) : juzProgress.length === 0 ? (
+      ) : !juzProgress || juzProgress.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title="Belum ada progress hafalan"
@@ -267,10 +270,10 @@ const RecentActivities = ({ activities, loading }) => {
             <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
           ))}
         </div>
-      ) : activities.length === 0 ? (
+      ) : !activities || activities.length === 0 ? (
         <EmptyState
           icon={Clock}
-          title="Belum ada aktivitas"
+          title="Belum ada aktivitas terbaru"
           description="Aktivitas anak akan muncul di sini"
         />
       ) : (
@@ -317,41 +320,21 @@ export default function DashboardOrangTua() {
     { id: 2, name: 'Fatimah Azzahra', kelas: '3B' },
   ];
 
+  // Default stats - all zero when no data
   const stats = {
-    hafalanSelesai: 18,
-    totalHafalan: 30,
-    rataRataNilai: 88,
-    kehadiran: 25,
-    totalHari: 30,
-    catatanGuru: 5,
+    hafalanSelesai: 0,
+    totalHafalan: 0,
+    rataRataNilai: 0,
+    kehadiran: 0,
+    totalHari: 0,
+    catatanGuru: 0,
   };
 
-  const juzProgress = [
-    { label: 'Juz 30', progress: 100 },
-    { label: 'Juz 29', progress: 75 },
-    { label: 'Juz 28', progress: 45 },
-  ];
+  // Default juz progress - empty array when no data
+  const juzProgress = [];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'setor',
-      title: 'Setor Hafalan Al-Baqarah 10-15',
-      time: '2 jam yang lalu',
-    },
-    {
-      id: 2,
-      type: 'nilai',
-      title: 'Nilai Hafalan: 88/100',
-      time: '5 jam yang lalu',
-    },
-    {
-      id: 3,
-      type: 'catatan',
-      title: 'Catatan dari Ustadz Yusuf',
-      time: '1 hari yang lalu',
-    },
-  ];
+  // Default recent activities - empty array when no data
+  const recentActivities = [];
 
   const getFirstName = (fullName) => {
     if (!fullName) return 'Orang Tua';
@@ -464,29 +447,29 @@ export default function DashboardOrangTua() {
             <StatsCard
               icon={BookOpen}
               title="Hafalan Selesai"
-              value={stats.hafalanSelesai}
-              subtitle={stats.totalHafalan > 0 ? `dari ${stats.totalHafalan} target` : 'Belum ada target'}
+              value={stats.hafalanSelesai ?? 0}
+              subtitle={stats.totalHafalan > 0 ? `dari ${stats.totalHafalan} target` : 'Belum ada data'}
               color="emerald"
             />
             <StatsCard
               icon={Star}
               title="Rata-rata Nilai"
-              value={stats.rataRataNilai}
+              value={stats.rataRataNilai ?? 0}
               subtitle="dari 100"
               color="amber"
             />
             <StatsCard
               icon={CalendarCheck}
               title="Kehadiran"
-              value={stats.kehadiran}
+              value={stats.kehadiran ?? 0}
               subtitle={stats.totalHari > 0 ? `dari ${stats.totalHari} hari` : 'Belum ada data'}
               color="sky"
             />
             <StatsCard
               icon={MessageSquare}
               title="Catatan Guru"
-              value={stats.catatanGuru}
-              subtitle="catatan terbaru"
+              value={stats.catatanGuru ?? 0}
+              subtitle="Lihat riwayat"
               color="purple"
             />
           </div>
