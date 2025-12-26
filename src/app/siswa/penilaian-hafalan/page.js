@@ -157,32 +157,32 @@ export default function PenilaianHafalanPage() {
   const getAspekColor = (aspek) => {
     const colors = {
       tajwid: {
-        bg: 'bg-emerald-50/70',
+        bg: 'bg-emerald-100',
         text: 'text-emerald-700',
         badge: 'bg-emerald-500',
-        border: 'border-emerald-200/60',
-        glow: 'shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_12px_40px_rgba(16,185,129,0.12)]',
+        border: 'border-emerald-200',
+        glow: 'shadow-sm',
       },
       kelancaran: {
-        bg: 'bg-sky-50/70',
+        bg: 'bg-sky-100',
         text: 'text-sky-700',
         badge: 'bg-sky-500',
-        border: 'border-sky-200/60',
-        glow: 'shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)]',
+        border: 'border-sky-200',
+        glow: 'shadow-sm',
       },
       makhraj: {
-        bg: 'bg-purple-50/70',
+        bg: 'bg-purple-100',
         text: 'text-purple-700',
         badge: 'bg-purple-500',
-        border: 'border-purple-200/60',
-        glow: 'shadow-[0_0_0_1px_rgba(168,85,247,0.25),0_12px_40px_rgba(168,85,247,0.12)]',
+        border: 'border-purple-200',
+        glow: 'shadow-sm',
       },
       implementasi: {
-        bg: 'bg-amber-50/70',
+        bg: 'bg-amber-100',
         text: 'text-amber-700',
         badge: 'bg-amber-500',
-        border: 'border-amber-200/60',
-        glow: 'shadow-[0_0_0_1px_rgba(245,158,11,0.25),0_12px_40px_rgba(245,158,11,0.12)]',
+        border: 'border-amber-200',
+        glow: 'shadow-sm',
       },
     };
     return colors[aspek];
@@ -227,21 +227,21 @@ export default function PenilaianHafalanPage() {
             </div>
           </motion.div>
 
-          {/* Stats Cards - Pastel Transparent + Glow */}
+          {/* Stats Cards - Pastel Solid (Clear Colors) */}
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Rata-rata Keseluruhan */}
+            {/* Rata-rata Keseluruhan - Violet Pastel */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="col-span-2 sm:col-span-2 lg:col-span-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 backdrop-blur-sm rounded-2xl p-5 shadow-sm text-white hover:-translate-y-1 transition-all duration-300"
+              className="col-span-2 sm:col-span-2 lg:col-span-1 bg-violet-100 border-2 border-violet-200 rounded-2xl p-5 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-center gap-2 mb-3">
-                <Award size={20} />
-                <span className="text-xs font-bold opacity-90 uppercase tracking-wider">Rata-rata</span>
+                <Award size={20} className="text-violet-600" />
+                <span className="text-xs font-bold text-violet-600 uppercase tracking-wider">Rata-rata</span>
               </div>
-              <p className="text-4xl font-bold mb-1">{rataRataNilai}</p>
-              <p className="text-sm opacity-80">{penilaianData.length} penilaian</p>
+              <p className="text-4xl font-bold text-violet-700 mb-1">{rataRataNilai}</p>
+              <p className="text-sm text-violet-600">{penilaianData.length} penilaian</p>
             </motion.div>
 
             {/* Tajwid */}
@@ -249,7 +249,7 @@ export default function PenilaianHafalanPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className={`${getAspekColor('tajwid').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('tajwid').border} ${getAspekColor('tajwid').glow} hover:-translate-y-1 transition-all duration-300`}
+              className={`${getAspekColor('tajwid').bg} rounded-2xl p-5 border-2 ${getAspekColor('tajwid').border} ${getAspekColor('tajwid').glow} hover:-translate-y-1 hover:shadow-md transition-all duration-300`}
             >
               <span className={`text-xs font-bold ${getAspekColor('tajwid').text} uppercase tracking-wider block mb-2`}>Tajwid</span>
               <p className={`text-3xl font-bold ${getAspekColor('tajwid').text}`}>{rataRataTajwid}</p>
@@ -260,7 +260,7 @@ export default function PenilaianHafalanPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className={`${getAspekColor('kelancaran').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('kelancaran').border} ${getAspekColor('kelancaran').glow} hover:-translate-y-1 transition-all duration-300`}
+              className={`${getAspekColor('kelancaran').bg} rounded-2xl p-5 border-2 ${getAspekColor('kelancaran').border} ${getAspekColor('kelancaran').glow} hover:-translate-y-1 hover:shadow-md transition-all duration-300`}
             >
               <span className={`text-xs font-bold ${getAspekColor('kelancaran').text} uppercase tracking-wider block mb-2`}>Kelancaran</span>
               <p className={`text-3xl font-bold ${getAspekColor('kelancaran').text}`}>{rataRataKelancaran}</p>
@@ -271,7 +271,7 @@ export default function PenilaianHafalanPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4 }}
-              className={`${getAspekColor('makhraj').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('makhraj').border} ${getAspekColor('makhraj').glow} hover:-translate-y-1 transition-all duration-300`}
+              className={`${getAspekColor('makhraj').bg} rounded-2xl p-5 border-2 ${getAspekColor('makhraj').border} ${getAspekColor('makhraj').glow} hover:-translate-y-1 hover:shadow-md transition-all duration-300`}
             >
               <span className={`text-xs font-bold ${getAspekColor('makhraj').text} uppercase tracking-wider block mb-2`}>Makhraj</span>
               <p className={`text-3xl font-bold ${getAspekColor('makhraj').text}`}>{rataRataMakhraj}</p>
@@ -282,7 +282,7 @@ export default function PenilaianHafalanPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-              className={`${getAspekColor('implementasi').bg} backdrop-blur-sm rounded-2xl p-5 border ${getAspekColor('implementasi').border} ${getAspekColor('implementasi').glow} hover:-translate-y-1 transition-all duration-300`}
+              className={`${getAspekColor('implementasi').bg} rounded-2xl p-5 border-2 ${getAspekColor('implementasi').border} ${getAspekColor('implementasi').glow} hover:-translate-y-1 hover:shadow-md transition-all duration-300`}
             >
               <span className={`text-xs font-bold ${getAspekColor('implementasi').text} uppercase tracking-wider block mb-2`}>Implementasi</span>
               <p className={`text-3xl font-bold ${getAspekColor('implementasi').text}`}>{rataRataImplementasi}</p>
@@ -387,12 +387,12 @@ export default function PenilaianHafalanPage() {
                     </div>
                   </div>
 
-                  {/* Nilai per Aspek - Pastel Transparent */}
+                  {/* Nilai per Aspek - Pastel Solid */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                     {Object.entries(penilaian.nilaiAspek).map(([aspek, nilai]) => {
                       const color = getAspekColor(aspek);
                       return (
-                        <div key={aspek} className={`${color.bg} backdrop-blur-sm rounded-xl p-4 border ${color.border}`}>
+                        <div key={aspek} className={`${color.bg} rounded-xl p-4 border-2 ${color.border}`}>
                           <p className={`text-xs font-bold ${color.text} uppercase mb-1 tracking-wider`}>
                             {aspek}
                           </p>
