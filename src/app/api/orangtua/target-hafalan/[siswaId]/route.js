@@ -16,7 +16,7 @@ export async function GET(request, { params }) {
     const orangTuaSiswa = await prisma.orangTuaSiswa.findUnique({
       where: {
         orangTuaId_siswaId: {
-          orangTuaId: session.user.orangTuaId,
+          orangTuaId: session.user.id,
           siswaId: siswaId
         }
       }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { getChildrenByParentId, getChildByParentId, createEmptyStatistics } from '@/lib/utils/parentHelpers';
 
 export async function GET(request) {
   try {
@@ -23,44 +24,27 @@ export async function GET(request) {
 
     // Jika siswaId tidak diberikan, ambil semua anak dari orang tua ini
     if (!siswaId) {
-      const children = await prisma.siswa.findMany({
-        where: {
-          orangTuaId: session.user.id,
-        },
-        select: {
-          id: true,
-          namaLengkap: true,
-          kelas: {
-            select: {
-              namaKelas: true,
-            },
-          },
-        },
-      });
-
+      const children = await getChildrenByParentId(session.user.id);
       return NextResponse.json({ children });
     }
 
-    // Validasi: pastikan siswa adalah anak dari orang tua ini
-    const siswa = await prisma.siswa.findFirst({
-      where: {
-        id: siswaId,
-        orangTuaId: session.user.id,
-      },
-      include: {
-        kelas: {
-          select: {
-            namaKelas: true,
-          },
-        },
-      },
-    });
+    // Validasi: pastikan siswa adalah anak dari orang tua ini menggunakan orangTuaSiswa relation
+    const siswa = await getChildByParentId(siswaId, session.user.id);
 
     if (!siswa) {
-      return NextResponse.json(
-        { error: 'Student not found or not authorized' },
-        { status: 404 }
-      );
+      // Return empty data instead of error
+      return NextResponse.json({
+        siswa: null,
+        statistics: createEmptyStatistics(),
+        presensiList: [],
+        penilaianList: [],
+        chartData: [
+          { label: 'Hadir', value: 0, color: '#10b981' },
+          { label: 'Izin', value: 0, color: '#f59e0b' },
+          { label: 'Sakit', value: 0, color: '#0ea5e9' },
+          { label: 'Alfa', value: 0, color: '#f43f5e' },
+        ],
+      });
     }
 
     // Build date filter
