@@ -100,6 +100,38 @@ export async function GET(request) {
       },
     });
 
+    // Get penilaian data for the same period (merged with presensi)
+    const penilaianWhere = { siswaId: siswaId };
+    if (whereClause.tanggal) {
+      penilaianWhere.createdAt = whereClause.tanggal;
+    }
+
+    const penilaianData = await prisma.penilaian.findMany({
+      where: penilaianWhere,
+      include: {
+        hafalan: {
+          select: {
+            tanggal: true,
+            surah: true,
+            ayatMulai: true,
+            ayatSelesai: true,
+          },
+        },
+        guru: {
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
     // Calculate statistics
     const totalHadir = presensiData.filter((p) => p.status === 'HADIR').length;
     const totalIzin = presensiData.filter((p) => p.status === 'IZIN').length;
@@ -109,12 +141,44 @@ export async function GET(request) {
     const persentaseKehadiran =
       totalHari > 0 ? Math.round((totalHadir / totalHari) * 100) : 0;
 
+    // Calculate average score from penilaian
+    let rataRataNilai = 0;
+    if (penilaianData.length > 0) {
+      const totalNilai = penilaianData.reduce((sum, p) => sum + (p.nilaiAkhir || 0), 0);
+      rataRataNilai = Math.round(totalNilai / penilaianData.length);
+    }
+
+    // Format presensi list
+    const presensiList = presensiData.map((p) => ({
+      id: p.id,
+      tanggal: p.tanggal,
+      kegiatan: p.jadwal?.namaKegiatan || 'Kegiatan Tahfidz',
+      status: p.status,
+      jam: p.jamPresensi || p.jadwal?.jamMulai,
+      catatan: p.keterangan || '',
+    }));
+
+    // Format penilaian list
+    const penilaianList = penilaianData.map((p) => ({
+      id: p.id,
+      tanggal: p.hafalan?.tanggal || p.createdAt,
+      surah: p.hafalan?.surah || '-',
+      ayat: p.hafalan ? `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}` : '-',
+      guru: p.guru?.user?.name || 'Unknown',
+      tajwid: p.tajwid || 0,
+      kelancaran: p.kelancaran || 0,
+      makhraj: p.makhraj || 0,
+      implementasi: p.adab || 0,
+      nilaiAkhir: p.nilaiAkhir || 0,
+      catatan: p.catatan || '',
+    }));
+
     // Format response
     const response = {
       siswa: {
         id: siswa.id,
         nama: siswa.namaLengkap,
-        kelas: siswa.kelas?.namaKelas,
+        kelas: siswa.kelas?.namaKelas || '-',
       },
       statistics: {
         totalHadir,
@@ -123,15 +187,11 @@ export async function GET(request) {
         totalAlfa,
         totalHari,
         persentaseKehadiran,
+        rataRataNilai,
+        totalPenilaian: penilaianData.length,
       },
-      presensiList: presensiData.map((p) => ({
-        id: p.id,
-        tanggal: p.tanggal,
-        kegiatan: p.jadwal?.namaKegiatan || 'Kegiatan Tahfidz',
-        status: p.status,
-        jam: p.jamPresensi || p.jadwal?.jamMulai,
-        catatan: p.keterangan,
-      })),
+      presensiList,
+      penilaianList,
       chartData: [
         { label: 'Hadir', value: totalHadir, color: '#10b981' },
         { label: 'Izin', value: totalIzin, color: '#f59e0b' },
