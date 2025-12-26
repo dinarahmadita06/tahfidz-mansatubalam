@@ -19,6 +19,7 @@ import {
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 
 // Single Source of Truth: Profile Fields Configuration
+// Layout order: Row 1 (Nama | Telepon), Row 2 (Email | Status), Row 3 (Alamat full-width)
 const PROFILE_FIELDS_CONFIG = [
   {
     key: 'namaLengkap',
@@ -28,17 +29,7 @@ const PROFILE_FIELDS_CONFIG = [
     required: true,
     type: 'text',
     placeholder: 'Masukkan nama lengkap',
-    gridCols: 'md:col-span-2',
-  },
-  {
-    key: 'email',
-    label: 'Email',
-    icon: Mail,
-    editable: false,
-    required: false,
-    type: 'email',
-    readOnlyNote: '(Tidak dapat diubah)',
-    gridCols: 'md:col-span-1',
+    gridCols: 'md:col-span-1', // Changed from md:col-span-2 for balanced layout
   },
   {
     key: 'noTelepon',
@@ -53,6 +44,16 @@ const PROFILE_FIELDS_CONFIG = [
       const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
       return phoneRegex.test(value) ? null : 'Format nomor telepon tidak valid';
     },
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    icon: Mail,
+    editable: false,
+    required: false,
+    type: 'email',
+    readOnlyNote: '(Tidak dapat diubah)',
+    gridCols: 'md:col-span-1',
   },
   {
     key: 'status',
@@ -165,17 +166,33 @@ function PersonalInfoCard({ profileData }) {
         <h3 className="text-lg font-bold text-gray-900">Informasi Pribadi</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {PROFILE_FIELDS_CONFIG.map((field) => {
           const IconComponent = field.icon;
+          const isReadOnly = !field.editable;
+          const isTextarea = field.type === 'textarea';
+
           return (
             <div key={field.key} className={field.gridCols}>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                 <IconComponent size={16} className="text-gray-400" />
                 {field.label}
+                {isReadOnly && (
+                  <span className="text-xs text-gray-500 italic">{field.readOnlyNote}</span>
+                )}
               </label>
-              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                <p className="font-medium text-gray-900 break-all">
+              <div
+                className={`px-4 rounded-xl border ${
+                  isReadOnly
+                    ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
+                    : 'bg-white border-gray-300'
+                } ${isTextarea ? 'py-3 min-h-[88px]' : 'py-3 h-[48px] flex items-center'}`}
+              >
+                <p
+                  className={`font-medium break-all ${
+                    isReadOnly ? 'text-gray-600' : 'text-gray-900'
+                  }`}
+                >
                   {profileData?.[field.key] || '-'}
                 </p>
               </div>
@@ -376,11 +393,12 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {PROFILE_FIELDS_CONFIG.map((field, index) => {
               const IconComponent = field.icon;
               const isEditable = field.editable;
               const isFirstEditableField = index === 0;
+              const isTextarea = field.type === 'textarea';
 
               return (
                 <div key={field.key} className={field.gridCols}>
@@ -389,12 +407,12 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
                     {field.label}
                     {field.required && <span className="text-red-500">*</span>}
                     {field.readOnlyNote && (
-                      <span className="text-xs text-gray-500 ml-1">{field.readOnlyNote}</span>
+                      <span className="text-xs text-gray-500 italic ml-1">{field.readOnlyNote}</span>
                     )}
                   </label>
 
                   {isEditable ? (
-                    field.type === 'textarea' ? (
+                    isTextarea ? (
                       <textarea
                         ref={isFirstEditableField ? firstInputRef : null}
                         rows={field.rows || 3}
@@ -402,7 +420,7 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
                         onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                         placeholder={field.placeholder}
                         disabled={saveLoading}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm min-h-[88px]"
                       />
                     ) : (
                       <input
@@ -412,12 +430,12 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
                         onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                         placeholder={field.placeholder}
                         disabled={saveLoading}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm h-[48px]"
                       />
                     )
                   ) : (
-                    <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                      <p className="font-medium text-gray-900 break-all">
+                    <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 cursor-not-allowed h-[48px] flex items-center">
+                      <p className="font-medium text-gray-600 break-all">
                         {profileData?.[field.key] || '-'}
                       </p>
                     </div>
