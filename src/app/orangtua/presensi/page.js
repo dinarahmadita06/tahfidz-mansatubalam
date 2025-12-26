@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
-import ParentingMotivationalCard from '@/components/ParentingMotivationalCard';
 import {
   CalendarCheck,
   User,
@@ -16,277 +16,556 @@ import {
   Clock,
   AlertCircle,
   UserCheck,
+  ChevronRight,
+  BookOpen,
+  MessageSquare,
+  X,
+  TrendingUp,
+  Award,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  safeNumber,
+  formatTanggal,
+  mergeAttendanceWithAssessmentsByDate,
+} from '@/lib/utils/penilaianHelpers';
 
-// Komponen Donut Chart
-function DonutChart({ data, percentage }) {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-  let currentAngle = -90;
+// ===== CONSTANTS - SIMTAQ BASELINE =====
+const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 
-  const slices = data.map((item, index) => {
-    const angle = (item.value / total) * 360;
-    const startAngle = currentAngle;
-    currentAngle += angle;
+// ===== DATA FETCHER =====
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const error = new Error('Failed to fetch data');
+    error.status = res.status;
+    throw error;
+  }
+  return res.json();
+};
 
-    const startRad = (startAngle * Math.PI) / 180;
-    const endRad = (currentAngle * Math.PI) / 180;
+// ===== HELPER FUNCTIONS =====
+const getCurrentMonthYear = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return { year, month, formatted: `${year}-${month}` };
+};
 
-    const x1 = 50 + 40 * Math.cos(startRad);
-    const y1 = 50 + 40 * Math.sin(startRad);
-    const x2 = 50 + 40 * Math.cos(endRad);
-    const y2 = 50 + 40 * Math.sin(endRad);
+// ===== REUSABLE COMPONENTS =====
 
-    const largeArc = angle > 180 ? 1 : 0;
+// Status Badge Component
+const AttendanceStatusBadge = ({ status }) => {
+  const statusConfig = {
+    HADIR: {
+      icon: CheckCircle,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      label: 'Hadir',
+    },
+    IZIN: {
+      icon: AlertCircle,
+      color: 'text-amber-600',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      label: 'Izin',
+    },
+    SAKIT: {
+      icon: AlertCircle,
+      color: 'text-sky-600',
+      bg: 'bg-sky-50',
+      border: 'border-sky-200',
+      label: 'Sakit',
+    },
+    ALFA: {
+      icon: XCircle,
+      color: 'text-rose-600',
+      bg: 'bg-rose-50',
+      border: 'border-rose-200',
+      label: 'Alfa',
+    },
+  };
 
-    const pathData = [
-      `M 50 50`,
-      `L ${x1} ${y1}`,
-      `A 40 40 0 ${largeArc} 1 ${x2} ${y2}`,
-      `Z`,
-    ].join(' ');
-
-    return {
-      path: pathData,
-      color: item.color,
-      label: item.label,
-      value: item.value,
-    };
-  });
+  const config = statusConfig[status] || statusConfig.ALFA;
+  const Icon = config.icon;
 
   return (
-    <div className="relative w-64 h-64 mx-auto">
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        {/* Background circle */}
-        <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="12" />
-
-        {/* Slices */}
-        {slices.map((slice, index) => (
-          <motion.path
-            key={index}
-            d={slice.path}
-            fill={slice.color}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="hover:opacity-80 transition-opacity cursor-pointer"
-          />
-        ))}
-
-        {/* Inner circle (donut hole) */}
-        <circle cx="50" cy="50" r="28" fill="white" />
-      </svg>
-
-      {/* Percentage in center */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-3xl font-bold text-emerald-600">{percentage}%</p>
-        <p className="text-xs text-gray-600">Kehadiran</p>
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: item.color }}
-            ></div>
-            <span className="text-xs text-gray-700">
-              {item.label}: {item.value}
-            </span>
-          </div>
-        ))}
-      </div>
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 ${config.bg} ${config.border} border rounded-lg`}>
+      <Icon size={16} className={config.color} />
+      <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>
     </div>
   );
-}
+};
 
-// Modal Detail Presensi
-function PresensiModal({ isOpen, onClose, presensi }) {
-  if (!isOpen || !presensi) return null;
+// Assessment Status Badge
+const AssessmentStatusBadge = ({ hasAssessment }) => {
+  if (hasAssessment) {
+    return (
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border-emerald-200 border rounded-lg">
+        <CheckCircle size={16} className="text-emerald-600" />
+        <span className="text-sm font-semibold text-emerald-600">Dinilai</span>
+      </div>
+    );
+  }
 
-  const getStatusConfig = (status) => {
-    switch (status.toLowerCase()) {
-      case 'hadir':
-        return { icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', label: 'Hadir' };
-      case 'izin':
-        return { icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', label: 'Izin' };
-      case 'sakit':
-        return { icon: AlertCircle, color: 'text-sky-600', bg: 'bg-sky-50', label: 'Sakit' };
-      default:
-        return { icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50', label: 'Alfa' };
+  return (
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 border-gray-200 border rounded-lg">
+      <XCircle size={16} className="text-gray-500" />
+      <span className="text-sm font-semibold text-gray-500">Belum Dinilai</span>
+    </div>
+  );
+};
+
+// Score Badge Component
+const ScoreBadge = ({ score }) => {
+  const numScore = safeNumber(score, 0);
+
+  const getScoreConfig = (score) => {
+    if (score >= 90) {
+      return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' };
+    } else if (score >= 75) {
+      return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' };
+    } else if (score >= 60) {
+      return { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' };
+    } else if (score > 0) {
+      return { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700' };
+    } else {
+      return { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-500' };
     }
   };
 
-  const statusConfig = getStatusConfig(presensi.status);
-  const StatusIcon = statusConfig.icon;
+  const config = getScoreConfig(numScore);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Detail Presensi</h3>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <XCircle className="text-gray-500" size={24} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Tanggal</p>
-                  <p className="font-semibold text-gray-900">{presensi.tanggal}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Jam Presensi</p>
-                  <p className="font-semibold text-gray-900">{presensi.jam || '08:00'}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-600">Kegiatan</p>
-                <p className="font-semibold text-gray-900">{presensi.kegiatan}</p>
-              </div>
-
-              <div className={`${statusConfig.bg} p-4 rounded-lg flex items-center gap-3`}>
-                <StatusIcon className={statusConfig.color} size={32} />
-                <div>
-                  <p className="text-sm text-gray-600">Status Kehadiran</p>
-                  <p className={`text-xl font-bold ${statusConfig.color}`}>
-                    {statusConfig.label}
-                  </p>
-                </div>
-              </div>
-
-              {presensi.catatan && (
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Catatan Guru:</p>
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <p className="text-gray-900 leading-relaxed">{presensi.catatan}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <span className={`inline-flex items-center justify-center min-w-[3rem] px-3 py-1 ${config.bg} ${config.border} border rounded-lg font-bold ${config.text} text-sm`}>
+      {numScore > 0 ? numScore : '-'}
+    </span>
   );
-}
+};
 
-export default function PresensiPage() {
+// Empty State Component
+const EmptyState = ({ icon: Icon, title, description }) => {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <Icon className="text-gray-400" size={40} />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-600 text-center max-w-md">{description}</p>
+    </div>
+  );
+};
+
+// Child Selector Dropdown
+const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!children || children.length === 0) return null;
+
+  const hasMultipleChildren = children.length > 1;
+
+  return (
+    <div className="relative flex-shrink-0">
+      <button
+        onClick={() => hasMultipleChildren && setIsOpen(!isOpen)}
+        className={`flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg transition-all duration-300 ${
+          hasMultipleChildren ? 'hover:shadow-xl cursor-pointer' : 'cursor-default'
+        }`}
+      >
+        <User size={20} className="text-emerald-600 flex-shrink-0" />
+        <div className="text-left">
+          <p className="text-sm text-gray-600">Anak Aktif</p>
+          <p className="font-semibold text-gray-900">{selectedChild?.nama || 'Pilih Anak'}</p>
+        </div>
+        {hasMultipleChildren && (
+          <ChevronDown
+            size={20}
+            className={`text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        )}
+      </button>
+
+      {isOpen && hasMultipleChildren && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-[999] max-h-[300px] overflow-y-auto">
+            {children.map((child, index) => (
+              <button
+                key={child.id || index}
+                onClick={() => {
+                  onSelectChild(child);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors ${
+                  selectedChild?.id === child.id ? 'bg-emerald-50' : ''
+                }`}
+              >
+                <User size={20} className="text-emerald-600" />
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-gray-900">{child.nama || child.namaLengkap}</p>
+                  <p className="text-xs text-gray-600">Kelas {child.kelas || child.kelas?.namaKelas}</p>
+                </div>
+                {selectedChild?.id === child.id && (
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// Summary Stat Card
+const StatCard = ({ icon: Icon, title, value, subtitle, variant = 'emerald' }) => {
+  const variantConfig = {
+    emerald: {
+      bg: 'bg-emerald-50/80',
+      border: 'border-emerald-300/60',
+      ring: 'ring-emerald-500/20',
+      shadow: 'shadow-emerald-500/15',
+      textValue: 'text-emerald-600',
+      iconBg: 'bg-emerald-500',
+    },
+    amber: {
+      bg: 'bg-amber-50/80',
+      border: 'border-amber-300/60',
+      ring: 'ring-amber-500/20',
+      shadow: 'shadow-amber-500/15',
+      textValue: 'text-amber-600',
+      iconBg: 'bg-amber-500',
+    },
+    sky: {
+      bg: 'bg-sky-50/80',
+      border: 'border-sky-300/60',
+      ring: 'ring-sky-500/20',
+      shadow: 'shadow-sky-500/15',
+      textValue: 'text-sky-600',
+      iconBg: 'bg-sky-500',
+    },
+    rose: {
+      bg: 'bg-rose-50/80',
+      border: 'border-rose-300/60',
+      ring: 'ring-rose-500/20',
+      shadow: 'shadow-rose-500/15',
+      textValue: 'text-rose-600',
+      iconBg: 'bg-rose-500',
+    },
+  };
+
+  const styles = variantConfig[variant];
+
+  return (
+    <div className={`${styles.bg} border ${styles.border} ring-1 ${styles.ring} backdrop-blur-sm rounded-2xl p-4 shadow-lg ${styles.shadow} hover:-translate-y-1 transition-all duration-300`}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`w-12 h-12 ${styles.iconBg} rounded-xl shadow-md flex items-center justify-center`}>
+          <Icon className="text-white" size={20} />
+        </div>
+        <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
+      </div>
+      <div className="mt-3">
+        <p className={`text-3xl font-bold ${styles.textValue}`}>{value}</p>
+        <p className="text-sm text-gray-600 mt-1.5">{subtitle}</p>
+      </div>
+    </div>
+  );
+};
+
+// Expandable Row Component
+const ExpandableRow = ({ row, onOpenNoteModal }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <>
+      <tr
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="border-b border-gray-100 hover:bg-emerald-50/30 transition-colors cursor-pointer"
+      >
+        <td className="py-4 px-4">
+          <div className="flex items-center gap-2">
+            <ChevronRight
+              size={20}
+              className={`text-gray-600 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+            />
+            <span className="font-medium text-gray-900">{formatTanggal(row.tanggal)}</span>
+          </div>
+        </td>
+        <td className="py-4 px-4">
+          <AttendanceStatusBadge status={row.status} />
+        </td>
+        <td className="py-4 px-4">
+          <span className="text-sm text-gray-700">{row.kegiatan}</span>
+        </td>
+        <td className="py-4 px-4 text-center">
+          <AssessmentStatusBadge hasAssessment={row.hasAssessment} />
+        </td>
+      </tr>
+
+      {/* Expanded Assessment Details */}
+      {isExpanded && (
+        <tr className="bg-emerald-50/20">
+          <td colSpan="4" className="px-4 py-4">
+            {row.hasAssessment && row.assessments.length > 0 ? (
+              <div className="space-y-4">
+                {row.assessments.map((assessment, idx) => (
+                  <div key={assessment.id || idx} className="bg-white/70 rounded-xl p-4 border border-emerald-100">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-1">
+                          {assessment.surah} - Ayat {assessment.ayat}
+                        </h4>
+                        <p className="text-sm text-gray-600">Guru: {assessment.guru}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-purple-600">{assessment.nilaiAkhir}</p>
+                        <p className="text-xs text-gray-600">Nilai Akhir</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                      <div className="text-center p-2 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Tajwid</p>
+                        <ScoreBadge score={assessment.tajwid} />
+                      </div>
+                      <div className="text-center p-2 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Kelancaran</p>
+                        <ScoreBadge score={assessment.kelancaran} />
+                      </div>
+                      <div className="text-center p-2 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Makhraj</p>
+                        <ScoreBadge score={assessment.makhraj} />
+                      </div>
+                      <div className="text-center p-2 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Implementasi</p>
+                        <ScoreBadge score={assessment.implementasi} />
+                      </div>
+                    </div>
+
+                    {assessment.catatan && assessment.catatan !== '' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenNoteModal(assessment);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                      >
+                        <MessageSquare size={16} />
+                        <span className="text-sm font-medium">Lihat Catatan Guru</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-gray-500 text-sm">Belum ada penilaian pada hari ini</p>
+              </div>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
+  );
+};
+
+// Mobile Expandable Card
+const MobileExpandableCard = ({ row, onOpenNoteModal }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="bg-white/70 rounded-xl p-4 shadow-sm border border-gray-200">
+      <div
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="cursor-pointer"
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <ChevronRight
+                size={20}
+                className={`text-gray-600 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+              />
+              <h3 className="font-bold text-gray-900">{formatTanggal(row.tanggal)}</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-2">{row.kegiatan}</p>
+            <div className="flex flex-wrap gap-2">
+              <AttendanceStatusBadge status={row.status} />
+              <AssessmentStatusBadge hasAssessment={row.hasAssessment} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded Assessment Details */}
+      {isExpanded && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          {row.hasAssessment && row.assessments.length > 0 ? (
+            <div className="space-y-4">
+              {row.assessments.map((assessment, idx) => (
+                <div key={assessment.id || idx} className="bg-emerald-50/50 rounded-lg p-3">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-sm mb-1">
+                        {assessment.surah} - Ayat {assessment.ayat}
+                      </h4>
+                      <p className="text-xs text-gray-600">Guru: {assessment.guru}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-purple-600">{assessment.nilaiAkhir}</p>
+                      <p className="text-xs text-gray-600">Nilai</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="text-center p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Tajwid</p>
+                      <ScoreBadge score={assessment.tajwid} />
+                    </div>
+                    <div className="text-center p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Kelancaran</p>
+                      <ScoreBadge score={assessment.kelancaran} />
+                    </div>
+                    <div className="text-center p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Makhraj</p>
+                      <ScoreBadge score={assessment.makhraj} />
+                    </div>
+                    <div className="text-center p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Implementasi</p>
+                      <ScoreBadge score={assessment.implementasi} />
+                    </div>
+                  </div>
+
+                  {assessment.catatan && assessment.catatan !== '' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenNoteModal(assessment);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                    >
+                      <MessageSquare size={16} />
+                      <span className="text-xs font-medium">Lihat Catatan</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-500 text-sm">Belum ada penilaian</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Modal Catatan Guru
+const NoteModal = ({ isOpen, onClose, note }) => {
+  if (!isOpen || !note) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white/80 backdrop-blur rounded-2xl border border-white/20 shadow-xl shadow-green-500/10 p-5 sm:p-6 max-w-lg w-full"
+      >
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start gap-3">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-md">
+              <MessageSquare className="text-white" size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Catatan Guru</h3>
+              <p className="text-sm text-gray-600 mt-1">Feedback dari guru</p>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100/70 rounded-xl transition-all duration-200 hover:shadow-md group"
+          >
+            <X className="text-gray-500 group-hover:text-gray-700" size={20} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="bg-gray-50/70 border border-gray-200/50 rounded-xl px-4 py-3">
+              <p className="text-xs font-medium text-gray-600 mb-1">Guru Pengajar</p>
+              <p className="text-sm font-semibold text-gray-900">{note.guru}</p>
+            </div>
+            <div className="bg-gray-50/70 border border-gray-200/50 rounded-xl px-4 py-3">
+              <p className="text-xs font-medium text-gray-600 mb-1">Surah/Ayat</p>
+              <p className="text-sm font-semibold text-gray-900">{note.surah} - {note.ayat}</p>
+            </div>
+          </div>
+
+          <div className="border-l-4 border-emerald-500 bg-emerald-50/60 rounded-r-xl p-4">
+            <p className="text-xs font-medium text-emerald-700 mb-2">Catatan Penilaian</p>
+            <p className="text-sm text-gray-900 leading-relaxed">{note.catatan}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ===== MAIN COMPONENT =====
+export default function RiwayatPerkembanganHarianPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [selectedChild, setSelectedChild] = useState(null);
-  const [showChildSelector, setShowChildSelector] = useState(false);
-  const [selectedPresensi, setSelectedPresensi] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState('Oktober 2025');
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthYear());
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
 
-  // Check authentication
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
 
-  // Data dummy anak
-  const children = [
-    { id: 1, name: 'Ahmad Fauzan', kelas: '5A', avatar: '👦' },
-    { id: 2, name: 'Fatimah Azzahra', kelas: '3B', avatar: '👧' },
-  ];
+  // Fetch children list
+  const { data: childrenData, error: childrenError } = useSWR(
+    status === 'authenticated' ? '/api/orangtua/presensi' : null,
+    fetcher,
+    { revalidateOnFocus: true }
+  );
 
-  // Data dummy presensi
-  const presensiData = [
+  // Fetch presensi + penilaian data for selected child
+  const { data: progressData, error: progressError, mutate } = useSWR(
+    selectedChild?.id
+      ? `/api/orangtua/presensi?siswaId=${selectedChild.id}&bulan=${selectedMonth.month}&tahun=${selectedMonth.year}`
+      : null,
+    fetcher,
     {
-      id: 1,
-      tanggal: '28 Okt 2025',
-      kegiatan: 'Setoran Hafalan',
-      status: 'Hadir',
-      catatan: 'Lancar & disiplin, hafalan Al-Baqarah ayat 1-10',
-      jam: '08:00',
-    },
-    {
-      id: 2,
-      tanggal: '27 Okt 2025',
-      kegiatan: 'Muroja\'ah',
-      status: 'Izin',
-      catatan: 'Ada kegiatan keluarga, sudah izin sejak kemarin',
-      jam: '-',
-    },
-    {
-      id: 3,
-      tanggal: '26 Okt 2025',
-      kegiatan: 'Setoran Hafalan',
-      status: 'Alfa',
-      catatan: 'Tidak hadir tanpa keterangan',
-      jam: '-',
-    },
-    {
-      id: 4,
-      tanggal: '25 Okt 2025',
-      kegiatan: 'Setoran Hafalan',
-      status: 'Hadir',
-      catatan: 'Sangat baik, hafalan lancar',
-      jam: '08:15',
-    },
-    {
-      id: 5,
-      tanggal: '24 Okt 2025',
-      kegiatan: 'Muroja\'ah',
-      status: 'Hadir',
-      catatan: 'Aktif dalam muroja\'ah kelompok',
-      jam: '08:00',
-    },
-    {
-      id: 6,
-      tanggal: '23 Okt 2025',
-      kegiatan: 'Setoran Hafalan',
-      status: 'Sakit',
-      catatan: 'Demam, ada surat keterangan dokter',
-      jam: '-',
-    },
-  ];
-
-  // Hitung ringkasan
-  const totalHadir = presensiData.filter((p) => p.status === 'Hadir').length;
-  const totalIzin = presensiData.filter((p) => p.status === 'Izin').length;
-  const totalSakit = presensiData.filter((p) => p.status === 'Sakit').length;
-  const totalAlfa = presensiData.filter((p) => p.status === 'Alfa').length;
-  const totalHari = presensiData.length;
-  const persentaseKehadiran = Math.round((totalHadir / totalHari) * 100);
-
-  // Data untuk donut chart
-  const chartData = [
-    { label: 'Hadir', value: totalHadir, color: '#10b981' },
-    { label: 'Izin', value: totalIzin, color: '#f59e0b' },
-    { label: 'Sakit', value: totalSakit, color: '#0ea5e9' },
-    { label: 'Alfa', value: totalAlfa, color: '#f43f5e' },
-  ];
-
-  useEffect(() => {
-    if (children.length > 0) {
-      setSelectedChild(children[0]);
+      revalidateOnFocus: true,
+      refreshInterval: 30000,
     }
-  }, []);
+  );
 
+  // Set initial selected child when children data loads
+  useEffect(() => {
+    if (childrenData?.children && childrenData.children.length > 0 && !selectedChild) {
+      const firstChild = childrenData.children[0];
+      setSelectedChild({
+        id: firstChild.id,
+        nama: firstChild.namaLengkap,
+        kelas: firstChild.kelas?.namaKelas || '-',
+      });
+    }
+  }, [childrenData, selectedChild]);
+
+  // Loading state
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -302,367 +581,255 @@ export default function PresensiPage() {
     return null;
   }
 
-  const handleOpenModal = (presensi) => {
-    setSelectedPresensi(presensi);
-    setIsModalOpen(true);
+  // Merge presensi and penilaian data
+  const mergedProgressData = mergeAttendanceWithAssessmentsByDate(
+    progressData?.presensiList || [],
+    progressData?.penilaianList || []
+  );
+
+  // Calculate stats with safe fallbacks
+  const stats = {
+    totalHadir: safeNumber(progressData?.statistics?.totalHadir, 0),
+    totalIzin: safeNumber(progressData?.statistics?.totalIzin, 0),
+    totalSakit: safeNumber(progressData?.statistics?.totalSakit, 0),
+    totalAlfa: safeNumber(progressData?.statistics?.totalAlfa, 0),
+    totalHari: safeNumber(progressData?.statistics?.totalHari, 0),
+    persentaseKehadiran: safeNumber(progressData?.statistics?.persentaseKehadiran, 0),
+    rataRataNilai: safeNumber(progressData?.statistics?.rataRataNilai, 0),
+    totalPenilaian: safeNumber(progressData?.statistics?.totalPenilaian, 0),
   };
 
-  const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
-      case 'hadir':
-        return <span className="text-emerald-500">●</span>;
-      case 'izin':
-        return <span className="text-amber-500">●</span>;
-      case 'sakit':
-        return <span className="text-sky-500">●</span>;
-      default:
-        return <span className="text-rose-500">●</span>;
+  const handleOpenNoteModal = (note) => {
+    setSelectedNote(note);
+    setIsNoteModalOpen(true);
+  };
+
+  const handleDownloadReport = () => {
+    if (mergedProgressData.length === 0) {
+      alert('Belum ada data untuk diunduh');
+      return;
     }
+    // TODO: Implement download functionality
+    alert('Fitur unduh laporan akan segera tersedia');
   };
 
   return (
     <OrangtuaLayout>
-      <div className="min-h-screen animate-fade-in">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 relative"
-        >
-          <div className="bg-gradient-to-r from-emerald-400 via-mint-400 to-amber-300 rounded-3xl p-6 md:p-8 shadow-lg relative overflow-visible">
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
-            <div className="relative z-10">
-              {/* Header Content */}
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4">
-                {/* Left: Title */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CalendarCheck className="text-white flex-shrink-0" size={28} />
-                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
-                      Presensi Siswa
-                    </h1>
-                  </div>
-                  <p className="text-emerald-50 text-base md:text-lg mb-2">
-                    Pantau kehadiran anak Anda dalam kegiatan tahfidz setiap hari.
+      <div className="min-h-screen bg-gray-50">
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* Header - Green SIMTAQ Style */}
+          <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-6 sm:p-8 text-white`}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                  <CalendarCheck className="text-white" size={32} />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold break-words">
+                    Riwayat Perkembangan Harian
+                  </h1>
+                  <p className="text-green-50 text-sm sm:text-base mt-1">
+                    Pantau presensi dan penilaian anak setiap hari
                   </p>
-                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full mt-2">
                     <Calendar size={16} className="text-white" />
-                    <span className="text-white text-sm font-medium">{selectedMonth}</span>
+                    <span className="text-white text-sm font-medium">
+                      {new Date(selectedMonth.formatted).toLocaleDateString('id-ID', {
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </span>
                   </div>
                 </div>
-
-                {/* Right: Info Anak Card */}
-                {selectedChild && (
-                  <div className="w-full lg:w-auto flex-shrink-0">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-md hover:bg-white/25 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{selectedChild.avatar}</span>
-                        <div>
-                          <p className="text-white font-bold text-lg">{selectedChild.name}</p>
-                          <p className="text-emerald-100 text-sm">Kelas {selectedChild.kelas}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Child Selector Dropdown */}
-              {children.length > 1 && (
-                <div className="relative mt-2">
-                  <button
-                    onClick={() => setShowChildSelector(!showChildSelector)}
-                    className="flex items-center gap-2 px-5 py-3 bg-white/90 hover:bg-white hover:ring-1 hover:ring-emerald-400/60 backdrop-blur-sm rounded-xl transition-all duration-200 ease-in-out shadow-md min-w-[180px] max-w-[320px] w-full lg:w-auto"
-                  >
-                    <User size={18} className="text-emerald-600 flex-shrink-0" />
-                    <span className="text-emerald-900 font-semibold text-sm flex-1 truncate">
-                      {selectedChild ? selectedChild.name : 'Pilih Anak'}
-                    </span>
-                    <ChevronDown
-                      size={18}
-                      className={`text-emerald-600 flex-shrink-0 transition-transform duration-200 ${
-                        showChildSelector ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {showChildSelector && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2, ease: 'easeInOut' }}
-                        className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl overflow-hidden z-50 min-w-[280px] max-w-[400px] w-full md:w-auto border border-emerald-100"
-                      >
-                        {children.map((child) => (
-                          <button
-                            key={child.id}
-                            onClick={() => {
-                              setSelectedChild(child);
-                              setShowChildSelector(false);
-                            }}
-                            className={`w-full px-5 py-4 flex items-center gap-3 hover:bg-emerald-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0 ${
-                              selectedChild?.id === child.id ? 'bg-emerald-50' : 'bg-white'
-                            }`}
-                          >
-                            <span className="text-3xl flex-shrink-0">{child.avatar}</span>
-                            <div className="text-left flex-1 min-w-0">
-                              <p className="font-bold text-gray-900 truncate">{child.name}</p>
-                              <p className="text-sm text-gray-600">Kelas {child.kelas}</p>
-                            </div>
-                            {selectedChild?.id === child.id && (
-                              <CheckCircle size={20} className="text-emerald-600 flex-shrink-0" />
-                            )}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              {childrenData?.children && selectedChild && (
+                <ChildSelector
+                  children={childrenData.children.map((c) => ({
+                    id: c.id,
+                    nama: c.namaLengkap,
+                    kelas: c.kelas?.namaKelas || '-',
+                  }))}
+                  selectedChild={selectedChild}
+                  onSelectChild={setSelectedChild}
+                />
               )}
             </div>
           </div>
-        </motion.div>
 
-        {/* Motivational Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8"
-        >
-          <ParentingMotivationalCard theme="lilac" />
-        </motion.div>
+          {/* Summary Cards - 5 Columns */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <StatCard
+              icon={CheckCircle}
+              title="Hadir"
+              value={stats.totalHadir}
+              subtitle="Hari"
+              variant="emerald"
+            />
+            <StatCard
+              icon={AlertCircle}
+              title="Izin"
+              value={stats.totalIzin}
+              subtitle="Hari"
+              variant="amber"
+            />
+            <StatCard
+              icon={AlertCircle}
+              title="Sakit"
+              value={stats.totalSakit}
+              subtitle="Hari"
+              variant="sky"
+            />
+            <StatCard
+              icon={XCircle}
+              title="Alfa"
+              value={stats.totalAlfa}
+              subtitle="Hari"
+              variant="rose"
+            />
+            <StatCard
+              icon={TrendingUp}
+              title="Rata-rata Nilai"
+              value={stats.rataRataNilai}
+              subtitle="Dari 100"
+              variant="emerald"
+            />
+          </div>
 
-        {/* Ringkasan Presensi - 4 Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-          {/* Card 1: Hadir */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15 }}
-            whileHover={{ y: -5 }}
-            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-sm border border-emerald-100 hover:shadow-md transition-all duration-300"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="text-2xl md:text-3xl">✅</div>
-              <h3 className="text-xs md:text-sm font-medium text-gray-600">Hadir</h3>
-            </div>
-            <p className="text-2xl md:text-3xl font-bold text-emerald-600">{totalHadir}</p>
-            <p className="text-xs text-gray-600 mt-1">Hari</p>
-          </motion.div>
-
-          {/* Card 2: Izin */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ y: -5 }}
-            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-sm border border-amber-100 hover:shadow-md transition-all duration-300"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="text-2xl md:text-3xl">🟡</div>
-              <h3 className="text-xs md:text-sm font-medium text-gray-600">Izin</h3>
-            </div>
-            <p className="text-2xl md:text-3xl font-bold text-amber-600">{totalIzin}</p>
-            <p className="text-xs text-gray-600 mt-1">Hari</p>
-          </motion.div>
-
-          {/* Card 3: Sakit */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25 }}
-            whileHover={{ y: -5 }}
-            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-sm border border-sky-100 hover:shadow-md transition-all duration-300"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="text-2xl md:text-3xl">🔵</div>
-              <h3 className="text-xs md:text-sm font-medium text-gray-600">Sakit</h3>
-            </div>
-            <p className="text-2xl md:text-3xl font-bold text-sky-600">{totalSakit}</p>
-            <p className="text-xs text-gray-600 mt-1">Hari</p>
-          </motion.div>
-
-          {/* Card 4: Alfa */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ y: -5 }}
-            className="bg-white/80 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-sm border border-rose-100 hover:shadow-md transition-all duration-300"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="text-2xl md:text-3xl">🔴</div>
-              <h3 className="text-xs md:text-sm font-medium text-gray-600">Alfa</h3>
-            </div>
-            <p className="text-2xl md:text-3xl font-bold text-rose-600">{totalAlfa}</p>
-            <p className="text-xs text-gray-600 mt-1">Hari</p>
-          </motion.div>
-        </div>
-
-        {/* Total Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="bg-gradient-to-br from-emerald-50 to-mint-50 rounded-2xl p-6 mb-8 border border-emerald-100"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Hari Belajar</p>
-              <p className="text-3xl font-bold text-gray-900">{totalHari} Hari</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <UserCheck className="text-emerald-600" size={32} />
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Persentase Kehadiran</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-3xl font-bold text-emerald-600">
-                    {persentaseKehadiran}%
-                  </span>
-                  <span className="bg-emerald-100 text-emerald-800 font-semibold rounded-full px-3 py-1 text-sm">
-                    Sangat Baik
-                  </span>
+          {/* Progress Summary */}
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-100">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white rounded-xl shadow-sm">
+                  <UserCheck className="text-emerald-600" size={32} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Hari Belajar</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.totalHari} Hari</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white rounded-xl shadow-sm">
+                  <Award className="text-emerald-600" size={32} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Persentase Kehadiran</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-bold text-emerald-600">
+                      {stats.persentaseKehadiran}%
+                    </span>
+                    {stats.persentaseKehadiran >= 80 && (
+                      <span className="bg-emerald-100 text-emerald-800 font-semibold rounded-full px-3 py-1 text-sm">
+                        Sangat Baik
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </motion.div>
 
-        {/* Grid: Grafik & Tabel */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Grafik Donut */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <CalendarCheck className="text-emerald-600" size={24} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-emerald-800">Rekap Kehadiran</h2>
-                <p className="text-xs text-gray-600">Bulan Ini</p>
-              </div>
-            </div>
-
-            <DonutChart data={chartData} percentage={persentaseKehadiran} />
-          </motion.div>
-
-          {/* Tabel Riwayat Presensi */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.45 }}
-            className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-          >
+          {/* Table Riwayat Perkembangan */}
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <Clock className="text-amber-600" size={24} />
+                <div className="p-3 bg-emerald-50 rounded-xl">
+                  <BookOpen className="text-emerald-600" size={24} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-emerald-800">Riwayat Presensi</h2>
-                  <p className="text-xs text-gray-600">Detail kehadiran harian</p>
+                  <h2 className="text-xl font-bold text-gray-900">Riwayat Harian</h2>
+                  <p className="text-sm text-gray-600">Presensi & penilaian per hari</p>
                 </div>
               </div>
 
               {/* Download Button */}
-              <button className="flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-500 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-sm">
-                <Download size={16} />
-                <span className="font-semibold">Unduh Laporan</span>
+              <button
+                onClick={handleDownloadReport}
+                disabled={mergedProgressData.length === 0}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md ${
+                  mergedProgressData.length === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white hover:shadow-lg'
+                }`}
+                title={mergedProgressData.length === 0 ? 'Belum ada data untuk diunduh' : 'Unduh Laporan'}
+              >
+                <Download size={18} />
+                <span className="font-semibold text-sm">Unduh Laporan</span>
               </button>
             </div>
 
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-emerald-50">
-                  <tr>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-emerald-700">
-                      Tanggal
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-emerald-700">
-                      Kegiatan
-                    </th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-emerald-700">
-                      Status
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-emerald-700">
-                      Catatan
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {presensiData.map((item, index) => (
-                    <motion.tr
-                      key={item.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.05 }}
-                      onClick={() => handleOpenModal(item)}
-                      className="border-b border-gray-100 hover:bg-mint-50 transition-all duration-200 ease-in-out cursor-pointer"
-                    >
-                      <td className="py-3 px-4 font-medium text-gray-900">{item.tanggal}</td>
-                      <td className="py-3 px-4 text-gray-700">{item.kegiatan}</td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {getStatusIcon(item.status)}
-                          <span className="text-sm font-medium">{item.status}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm truncate max-w-xs">
-                        {item.catatan}
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Show loading state while fetching */}
+            {!progressData && !progressError && selectedChild && (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600">Memuat data perkembangan...</p>
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Table or Empty State */}
+            {mergedProgressData.length > 0 ? (
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-emerald-50/60 backdrop-blur">
+                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800 rounded-tl-xl">
+                        Tanggal
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800">
+                        Presensi
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800">
+                        Kegiatan
+                      </th>
+                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800 rounded-tr-xl">
+                        Status Penilaian
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mergedProgressData.map((row) => (
+                      <ExpandableRow
+                        key={row.id}
+                        row={row}
+                        onOpenNoteModal={handleOpenNoteModal}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : progressData && mergedProgressData.length === 0 ? (
+              <EmptyState
+                icon={CalendarCheck}
+                title="Belum Ada Data"
+                description="Belum ada data presensi & penilaian pada periode ini. Data akan muncul setelah anak mengikuti kegiatan."
+              />
+            ) : null}
 
             {/* Mobile Cards */}
-            <div className="md:hidden space-y-3">
-              {presensiData.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.05 }}
-                  onClick={() => handleOpenModal(item)}
-                  className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100 cursor-pointer hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-bold text-gray-900">{item.tanggal}</p>
-                      <p className="text-sm text-gray-600">{item.kegiatan}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {getStatusIcon(item.status)}
-                      <span className="text-sm font-medium">{item.status}</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-700">{item.catatan}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+            {mergedProgressData.length > 0 && (
+              <div className="md:hidden space-y-4">
+                {mergedProgressData.map((row) => (
+                  <MobileExpandableCard
+                    key={row.id}
+                    row={row}
+                    onOpenNoteModal={handleOpenNoteModal}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-
-        {/* Modal Presensi */}
-        <PresensiModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          presensi={selectedPresensi}
-        />
       </div>
+
+      {/* Modal Catatan Guru */}
+      <NoteModal
+        isOpen={isNoteModalOpen}
+        onClose={() => setIsNoteModalOpen(false)}
+        note={selectedNote}
+      />
     </OrangtuaLayout>
   );
 }
