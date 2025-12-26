@@ -16,7 +16,6 @@ import {
   X,
   ChevronLeft,
   Sparkles,
-  Target,
   LogOut,
   Award,
   Megaphone,
@@ -64,13 +63,6 @@ const menuItems = [
     href: '/siswa/presensi',
     description: 'Riwayat kehadiran',
     color: 'sky'
-  },
-  {
-    title: 'Target Hafalanku',
-    icon: Target,
-    href: '/siswa/target-hafalan',
-    description: 'Target & capaian pribadi',
-    color: 'amber'
   },
   {
     title: 'Laporan Hafalan',
