@@ -45,10 +45,10 @@ const menuItems = [
     color: 'purple'
   },
   {
-    title: 'Presensi',
+    title: 'Riwayat Perkembangan Harian',
     icon: CalendarCheck,
     href: '/orangtua/presensi',
-    description: 'Riwayat kehadiran',
+    description: 'Presensi & penilaian harian',
     color: 'sky'
   },
   {
