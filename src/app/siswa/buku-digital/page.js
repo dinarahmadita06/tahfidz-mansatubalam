@@ -9,129 +9,180 @@ import {
   Download,
   X,
   BookOpen,
-  Sparkles,
   Filter,
   FileText,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'react-hot-toast';
-import MotivationalCard from '@/components/MotivationalCard';
 
 const CATEGORIES = [
   'Semua',
-  'Tajwid',
-  'Tahsin',
-  'Doa Harian',
-  'Panduan Hafalan',
+  'TAJWID',
+  'TAHSIN',
+  'DOA_HARIAN',
+  'PANDUAN_HAFALAN',
+  'LAINNYA',
 ];
 
-// Konfigurasi warna per kategori
-const CATEGORY_COLORS = {
-  'Tajwid': {
-    gradient: 'from-emerald-400 via-green-400 to-teal-400',
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    button: 'bg-emerald-500 hover:bg-emerald-600',
-  },
-  'Tahsin': {
-    gradient: 'from-blue-400 via-sky-400 to-cyan-400',
-    bg: 'bg-blue-50',
-    text: 'text-blue-700',
-    button: 'bg-blue-500 hover:bg-blue-600',
-  },
-  'Doa Harian': {
-    gradient: 'from-amber-300 via-yellow-300 to-amber-400',
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    button: 'bg-amber-500 hover:bg-amber-600',
-  },
-  'Panduan Hafalan': {
-    gradient: 'from-purple-400 via-violet-400 to-purple-500',
-    bg: 'bg-purple-50',
-    text: 'text-purple-700',
-    button: 'bg-purple-500 hover:bg-purple-600',
-  },
+const CATEGORY_LABELS = {
+  TAJWID: 'Tajwid',
+  TAHSIN: 'Tahsin',
+  DOA_HARIAN: 'Doa Harian',
+  PANDUAN_HAFALAN: 'Panduan Hafalan',
+  LAINNYA: 'Lainnya',
 };
+
+// ============================================================
+// REUSABLE COMPONENTS
+// ============================================================
+
+// Loading State
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="text-center">
+        <Loader2 className="animate-spin text-emerald-600 mx-auto mb-4" size={48} />
+        <p className="text-gray-600 font-medium">Memuat buku digital...</p>
+      </div>
+    </div>
+  );
+}
+
+// Empty State
+function EmptyState({ hasFilter }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-white rounded-2xl p-16 text-center border-2 border-dashed border-gray-200 shadow-sm"
+    >
+      <div className="flex justify-center mb-6">
+        <div className="p-6 bg-gray-100 rounded-full">
+          <BookOpen className="text-gray-400" size={64} />
+        </div>
+      </div>
+      <h3 className="text-2xl font-bold text-gray-700 mb-3">
+        {hasFilter ? 'Tidak ada buku yang sesuai' : 'Belum ada buku digital'}
+      </h3>
+      <p className="text-gray-500 max-w-md mx-auto">
+        {hasFilter
+          ? 'Coba gunakan kata kunci atau filter yang berbeda'
+          : 'Belum ada buku digital yang di-upload oleh guru pengampu Anda'}
+      </p>
+    </motion.div>
+  );
+}
+
+// Book Card Component (Pastel Transparent Style)
+function BookCard({ book, index, onView, onDownload }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: 20 }}
+      transition={{ delay: index * 0.05 }}
+      whileHover={{ y: -8 }}
+      className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden border border-slate-200/60 transition-all duration-300 hover:shadow-lg hover:border-emerald-200"
+    >
+      {/* Book Thumbnail - Pastel Gradient */}
+      <div className="h-52 bg-gradient-to-br from-emerald-50 via-sky-50 to-purple-50 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
+        <Book className="text-emerald-300 relative z-10" size={96} />
+
+        {/* Category Badge */}
+        <div className="absolute top-4 right-4">
+          <span className="px-3 py-1.5 bg-white/80 backdrop-blur-sm text-emerald-700 text-xs font-bold rounded-full shadow-sm border border-emerald-200/60">
+            {CATEGORY_LABELS[book.category] || book.category}
+          </span>
+        </div>
+      </div>
+
+      {/* Book Info */}
+      <div className="p-6">
+        <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-2">
+          {book.title}
+        </h3>
+
+        <p className="text-sm text-gray-600 line-clamp-2 mb-3 min-h-[40px]">
+          {book.description}
+        </p>
+
+        <p className="text-xs text-gray-500 mb-4">
+          Oleh: {book.guruName}
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onView(book)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+          >
+            <Eye size={16} />
+            Lihat
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onDownload(book)}
+            className="flex items-center justify-center px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all shadow-sm"
+            title="Unduh"
+          >
+            <Download size={16} />
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================
+// MAIN PAGE COMPONENT
+// ============================================================
 
 export default function BukuDigitalSiswaPage() {
   const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [showViewerModal, setShowViewerModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
 
-  // Load books from localStorage
+  // Fetch books from API
   useEffect(() => {
-    const savedBooks = localStorage.getItem('tahfidz_books');
-    if (savedBooks) {
-      try {
-        const parsedBooks = JSON.parse(savedBooks);
-        setBooks(parsedBooks);
-      } catch (e) {
-        console.error('Error loading books:', e);
-      }
-    } else {
-      // Sample data for demo
-      const sampleBooks = [
-        {
-          id: 'book_1',
-          title: 'Panduan Tajwid Lengkap',
-          description: 'Penjelasan lengkap tentang makharijul huruf dan hukum bacaan Al-Qur\'an',
-          category: 'Tajwid',
-          fileUrl: '',
-          uploadDate: '2025-10-20',
-        },
-        {
-          id: 'book_2',
-          title: 'Cara Tahsin Al-Qur\'an',
-          description: 'Metode praktis memperbaiki bacaan Al-Qur\'an dengan benar',
-          category: 'Tahsin',
-          fileUrl: '',
-          uploadDate: '2025-10-18',
-        },
-        {
-          id: 'book_3',
-          title: 'Kumpulan Doa Harian',
-          description: 'Doa-doa harian yang dianjurkan dari Al-Qur\'an dan Hadits',
-          category: 'Doa Harian',
-          fileUrl: '',
-          uploadDate: '2025-10-15',
-        },
-        {
-          id: 'book_4',
-          title: 'Strategi Menghafal Al-Qur\'an',
-          description: 'Tips dan trik menghafal Al-Qur\'an dengan mudah dan efektif',
-          category: 'Panduan Hafalan',
-          fileUrl: '',
-          uploadDate: '2025-10-12',
-        },
-        {
-          id: 'book_5',
-          title: 'Hukum Nun Mati dan Tanwin',
-          description: 'Penjelasan detail tentang Idzhar, Idgham, Iqlab, dan Ikhfa',
-          category: 'Tajwid',
-          fileUrl: '',
-          uploadDate: '2025-10-10',
-        },
-        {
-          id: 'book_6',
-          title: 'Muraja\'ah Hafalan',
-          description: 'Panduan mengulang hafalan agar tidak mudah lupa',
-          category: 'Panduan Hafalan',
-          fileUrl: '',
-          uploadDate: '2025-10-08',
-        },
-      ];
-      setBooks(sampleBooks);
-    }
+    fetchBooks();
   }, []);
+
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/siswa/buku-digital');
+
+      if (!res.ok) {
+        throw new Error('Gagal memuat data buku');
+      }
+
+      const data = await res.json();
+      setBooks(data.books || []);
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      toast.error('Gagal memuat data buku');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter books
   const filteredBooks = books.filter((book) => {
-    const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'Semua' || book.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === 'Semua' || book.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -140,226 +191,128 @@ export default function BukuDigitalSiswaPage() {
     setShowViewerModal(true);
   };
 
-  const handleDownload = (book) => {
+  const handleDownload = async (book) => {
     if (book.fileUrl) {
-      const link = document.createElement('a');
-      link.href = book.fileUrl;
-      link.download = book.fileName || book.title + '.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Mengunduh file...');
+      try {
+        const link = document.createElement('a');
+        link.href = book.fileUrl;
+        link.download = book.fileName || book.title + '.pdf';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Mengunduh file...');
+
+        // Increment download count
+        await fetch(`/api/siswa/buku-digital/${book.id}/download`, {
+          method: 'POST',
+        }).catch(() => {});
+      } catch (error) {
+        toast.error('Gagal mengunduh file');
+      }
     } else {
       toast.error('File tidak tersedia untuk diunduh');
     }
   };
 
-  const getCategoryStyle = (category) => {
-    return CATEGORY_COLORS[category] || {
-      gradient: 'from-gray-300 via-gray-400 to-gray-400',
-      bg: 'bg-gray-50',
-      text: 'text-gray-700',
-      button: 'bg-gray-500 hover:bg-gray-600',
-    };
-  };
+  const hasFilter = searchQuery !== '' || selectedCategory !== 'Semua';
 
   return (
     <SiswaLayout>
       <Toaster position="top-right" />
 
-      {/* Background Decorations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-96 h-96 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-20 left-1/3 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Container - Full Width SIMTAQ Style */}
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex items-center gap-4 mb-3">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl blur opacity-40 animate-pulse"></div>
-            <div className="relative p-3 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl shadow-lg">
-              <Book className="text-white" size={32} />
-            </div>
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent">
-              Buku Digital
-            </h1>
-            <div className="h-1 w-32 bg-gradient-to-r from-sky-500 via-amber-400 to-transparent rounded-full mt-2"></div>
-            <p className="text-gray-600 mt-2 flex items-center gap-2">
-              <Sparkles size={16} className="text-amber-500" />
-              Akses materi pembelajaran Tahfidz kapan saja
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Motivational Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="mb-8"
-      >
-        <MotivationalCard theme="sky" />
-      </motion.div>
-
-      {/* Search & Filter Bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mb-8 flex flex-col sm:flex-row gap-4"
-      >
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Cari buku atau materi..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none transition-all bg-white shadow-sm hover:shadow-md"
-          />
-        </div>
-
-        {/* Filter Category */}
-        <div className="relative min-w-[200px]">
-          <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none appearance-none bg-white cursor-pointer shadow-sm hover:shadow-md transition-all font-medium"
-          >
-            {CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-      </motion.div>
-
-      {/* Books Grid */}
-      {filteredBooks.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-br from-white via-sky-50 to-amber-50 rounded-3xl p-16 text-center border-2 border-dashed border-sky-200 shadow-xl"
-        >
+          {/* Header - SIMTAQ Green Gradient */}
           <motion.div
-            animate={{
-              y: [0, -10, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="flex justify-center mb-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-400 to-blue-400 rounded-full blur-2xl opacity-30"></div>
-              <div className="relative p-6 bg-gradient-to-br from-white to-sky-50 rounded-full shadow-lg">
-                <BookOpen className="text-sky-600" size={64} />
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                <Book size={32} className="text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Buku Digital</h1>
+                <p className="text-green-50 text-sm sm:text-base mt-1">
+                  Akses materi pembelajaran Tahfidz dari guru pengampu
+                </p>
               </div>
             </div>
           </motion.div>
-          <h3 className="text-2xl font-bold text-gray-700 mb-3">
-            {searchQuery || selectedCategory !== 'Semua'
-              ? 'Tidak ada buku yang sesuai'
-              : 'Belum ada buku digital'}
-          </h3>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            {searchQuery || selectedCategory !== 'Semua'
-              ? 'Coba gunakan kata kunci atau filter yang berbeda'
-              : 'Belum ada buku digital. Yuk, mulai belajar hari ini!'}
-          </p>
-        </motion.div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredBooks.map((book, index) => {
-              const categoryStyle = getCategoryStyle(book.category);
-              return (
-                <motion.div
-                  key={book.id}
-                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl"
-                >
-                  {/* Book Thumbnail with Category Gradient */}
-                  <div className={`h-52 bg-gradient-to-br ${categoryStyle.gradient} flex items-center justify-center relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.1, 1],
-                        rotate: [0, 5, 0],
-                      }}
-                      transition={{
-                        duration: 4,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <Book className="text-white/40 relative z-10" size={96} />
-                    </motion.div>
 
-                    {/* Category Badge */}
-                    <div className="absolute top-4 right-4">
-                      <span className={`px-3 py-1.5 ${categoryStyle.bg} ${categoryStyle.text} text-xs font-bold rounded-full shadow-md backdrop-blur-sm`}>
-                        {book.category}
-                      </span>
-                    </div>
-                  </div>
+          {/* Search & Filter Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-col sm:flex-row gap-4"
+          >
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Cari buku atau materi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white shadow-sm"
+              />
+            </div>
 
-                  {/* Book Info */}
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-2">
-                      {book.title}
-                    </h3>
+            {/* Filter Category */}
+            <div className="relative min-w-[200px]">
+              <Filter
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full pl-12 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none appearance-none bg-white cursor-pointer shadow-sm transition-all font-medium"
+              >
+                {CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category === 'Semua' ? 'Semua Kategori' : CATEGORY_LABELS[category] || category}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </motion.div>
 
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-5 min-h-[40px]">
-                      {book.description}
-                    </p>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleView(book)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 ${categoryStyle.button} text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg`}
-                      >
-                        <Eye size={16} />
-                        Lihat
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleDownload(book)}
-                        className="flex items-center justify-center px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
-                      >
-                        <Download size={16} />
-                      </motion.button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+          {/* Books Grid or Empty State */}
+          {loading ? (
+            <LoadingState />
+          ) : filteredBooks.length === 0 ? (
+            <EmptyState hasFilter={hasFilter} />
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredBooks.map((book, index) => (
+                  <BookCard
+                    key={book.id}
+                    book={book}
+                    index={index}
+                    onView={handleView}
+                    onDownload={handleDownload}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Viewer Modal */}
       <AnimatePresence>
@@ -376,10 +329,10 @@ export default function BukuDigitalSiswaPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full h-[90vh] overflow-hidden flex flex-col"
+              className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[90vh] overflow-hidden flex flex-col"
             >
-              {/* Viewer Header with Category Color */}
-              <div className={`bg-gradient-to-r ${getCategoryStyle(selectedBook.category).gradient} px-6 py-4 flex items-center justify-between`}>
+              {/* Viewer Header - SIMTAQ Green */}
+              <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                     <Book className="text-white" size={24} />
@@ -388,7 +341,9 @@ export default function BukuDigitalSiswaPage() {
                     <h2 className="text-xl font-bold text-white truncate">
                       {selectedBook.title}
                     </h2>
-                    <p className="text-white/80 text-sm">{selectedBook.category}</p>
+                    <p className="text-white/80 text-sm">
+                      {CATEGORY_LABELS[selectedBook.category] || selectedBook.category}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
@@ -430,13 +385,19 @@ export default function BukuDigitalSiswaPage() {
                       </div>
                       <p className="text-gray-600 text-lg mb-2">File preview tidak tersedia</p>
                       <p className="text-sm text-gray-500 mb-6">File belum diunggah oleh guru</p>
-                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-md mx-auto">
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 max-w-md mx-auto">
                         <div className="flex items-start gap-3">
-                          <FileText className="text-amber-600 flex-shrink-0" size={20} />
+                          <FileText className="text-emerald-600 flex-shrink-0" size={20} />
                           <div className="text-left">
-                            <p className="text-sm font-semibold text-amber-900 mb-1">Informasi Buku:</p>
-                            <p className="text-sm text-amber-800 mb-2">{selectedBook.description}</p>
-                            <p className="text-xs text-amber-700">Kategori: {selectedBook.category}</p>
+                            <p className="text-sm font-semibold text-emerald-900 mb-1">
+                              Informasi Buku:
+                            </p>
+                            <p className="text-sm text-emerald-800 mb-2">
+                              {selectedBook.description}
+                            </p>
+                            <p className="text-xs text-emerald-700">
+                              Kategori: {CATEGORY_LABELS[selectedBook.category] || selectedBook.category}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -448,32 +409,6 @@ export default function BukuDigitalSiswaPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </SiswaLayout>
   );
 }
