@@ -2,644 +2,717 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import {
-  UserCircle,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Shield,
   Edit,
   Lock,
-  ShieldCheck,
-  BookOpen,
-  Home,
-  Phone,
-  Mail,
-  Calendar,
-  Clock,
   IdCard,
-  CheckCircle,
-  XCircle,
-  Eye,
-  EyeOff,
+  UserCircle,
+  Loader,
+  X,
+  BookOpen,
+  Users,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 
-// Modal Edit Profil
-function EditProfilModal({ isOpen, onClose, userData, onSave }) {
-  const [formData, setFormData] = useState({
-    namaLengkap: userData?.namaLengkap || '',
-    email: userData?.email || '',
-    noTelepon: userData?.noTelepon || '',
-    alamat: userData?.alamat || '',
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
+// ProfileHeader Component
+function ProfileHeader() {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Edit className="text-emerald-600" size={24} />
-                Edit Profil
-              </h3>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <XCircle className="text-gray-500" size={24} />
-              </button>
-            </div>
+    <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            <User className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Lengkap
-                </label>
-                <input
-                  type="text"
-                  value={formData.namaLengkap}
-                  onChange={(e) => setFormData({ ...formData, namaLengkap: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nomor Telepon
-                </label>
-                <input
-                  type="tel"
-                  value={formData.noTelepon}
-                  onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Alamat Rumah
-                </label>
-                <textarea
-                  value={formData.alamat}
-                  onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
-                >
-                  Simpan Perubahan
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          <div className="min-w-0">
+            <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
+              Profil Orang Tua
+            </h1>
+            <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
+              Kelola informasi profil dan data anak Anda
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-// Modal Ganti Password
-function GantiPasswordModal({ isOpen, onClose, onSave }) {
-  const [showPasswords, setShowPasswords] = useState({
-    old: false,
-    new: false,
-    confirm: false,
-  });
-  const [formData, setFormData] = useState({
-    passwordLama: '',
-    passwordBaru: '',
-    konfirmasiPassword: '',
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (formData.passwordBaru !== formData.konfirmasiPassword) {
-      alert('Password baru dan konfirmasi tidak cocok!');
-      return;
-    }
-    onSave(formData);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
+// ProfileSummaryCard Component
+function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={onClose}
+    <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
+      {/* Avatar & Info */}
+      <div className="flex flex-col items-center text-center mb-6">
+        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg mb-4">
+          <span className="text-white text-3xl font-bold">
+            {profileData?.namaLengkap?.charAt(0)?.toUpperCase() || 'O'}
+          </span>
+        </div>
+
+        <h2 className="text-xl font-bold text-gray-900 mb-1 break-words">
+          {profileData?.namaLengkap || 'Nama Orang Tua'}
+        </h2>
+
+        <div className="flex items-center gap-2 text-gray-600 mb-3">
+          <Mail size={14} />
+          <span className="text-sm break-all">{profileData?.email || '-'}</span>
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-1">
+          <Shield size={16} />
+          Orang Tua / Wali Siswa
+        </div>
+
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          Status Aktif
+        </span>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={onEditProfile}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm hover:shadow-md transition-all duration-200"
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Lock className="text-amber-600" size={24} />
-                Ganti Password
-              </h3>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <XCircle className="text-gray-500" size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password Lama
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPasswords.old ? 'text' : 'password'}
-                    value={formData.passwordLama}
-                    onChange={(e) => setFormData({ ...formData, passwordLama: e.target.value })}
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswords({ ...showPasswords, old: !showPasswords.old })}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPasswords.old ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password Baru
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPasswords.new ? 'text' : 'password'}
-                    value={formData.passwordBaru}
-                    onChange={(e) => setFormData({ ...formData, passwordBaru: e.target.value })}
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Konfirmasi Password Baru
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPasswords.confirm ? 'text' : 'password'}
-                    value={formData.konfirmasiPassword}
-                    onChange={(e) =>
-                      setFormData({ ...formData, konfirmasiPassword: e.target.value })
-                    }
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPasswords.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-amber-400 text-white rounded-lg hover:bg-amber-500 transition-colors"
-                >
-                  Ganti Password
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          <Edit size={18} />
+          Edit Profil
+        </button>
+        <button
+          onClick={onChangePassword}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Lock size={18} />
+          Ubah Password
+        </button>
+      </div>
+    </div>
   );
 }
 
-export default function ProfilPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
+// PersonalInfoCard Component (Read-only view)
+function PersonalInfoCard({ profileData }) {
+  return (
+    <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <div className="p-2 rounded-lg bg-emerald-50">
+          <User size={20} className="text-emerald-600" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900">Informasi Pribadi</h3>
+      </div>
 
-  // Check authentication
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Nama Lengkap */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <User size={16} className="text-gray-400" />
+            Nama Lengkap
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.namaLengkap || '-'}</p>
+          </div>
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Mail size={16} className="text-gray-400" />
+            Email
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
+          </div>
+        </div>
+
+        {/* Nomor Telepon */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Phone size={16} className="text-gray-400" />
+            Nomor Telepon
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.noTelepon || '-'}</p>
+          </div>
+        </div>
+
+        {/* ID Wali */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <IdCard size={16} className="text-gray-400" />
+            ID Wali
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900 font-mono">{profileData?.idWali || '-'}</p>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Shield size={16} className="text-gray-400" />
+            Status Keanggotaan
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.status || 'Aktif'}</p>
+          </div>
+        </div>
+
+        {/* Alamat (full width) */}
+        <div className="md:col-span-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <MapPin size={16} className="text-gray-400" />
+            Alamat Rumah
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.alamat || '-'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Children Connected Section
+function ChildrenConnectedCard({ children }) {
+  return (
+    <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <div className="p-2 rounded-lg bg-emerald-50">
+          <Users size={20} className="text-emerald-600" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900">Anak yang Terhubung</h3>
+      </div>
+
+      {!children || children.length === 0 ? (
+        <div className="text-center py-8">
+          <Users className="mx-auto text-gray-300 mb-2" size={48} />
+          <p className="text-gray-500 text-sm">Belum ada anak yang terhubung</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {children.map((child, index) => {
+            const percentage = Math.round((child.progressHafalan / child.targetHafalan) * 100);
+
+            return (
+              <div
+                key={index}
+                className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 transition-all"
+              >
+                <div className="flex items-start gap-4 mb-3">
+                  {/* Avatar */}
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-md flex-shrink-0">
+                    <span className="text-white text-lg font-bold">
+                      {child.nama?.charAt(0)?.toUpperCase() || 'A'}
+                    </span>
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-gray-900 mb-1">{child.nama}</h4>
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <BookOpen size={14} />
+                        <span>Kelas {child.kelas}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <User size={14} />
+                        <span>{child.guruPembimbing}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-gray-700">Progress Hafalan</span>
+                    <span className="text-xs font-bold text-emerald-600">{percentage}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {child.progressHafalan} dari {child.targetHafalan} Juz
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// EditProfileModal Component
+function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
+  const [formData, setFormData] = useState({});
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (isOpen && profileData) {
+      setFormData({
+        namaLengkap: profileData.namaLengkap || '',
+        noTelepon: profileData.noTelepon || '',
+        alamat: profileData.alamat || '',
+      });
+      setError('');
+      setSuccess('');
     }
-  }, [status, router]);
+  }, [isOpen, profileData]);
 
-  // Data dummy orang tua
-  const userData = {
-    namaLengkap: 'Ali Rahman',
-    email: 'ali.rahman@wali.sch.id',
-    role: 'Orang Tua / Wali Siswa',
-    noTelepon: '0812-3456-7890',
-    alamat: 'Jl. Pahlawan No. 23, Bandar Lampung',
-    idWali: 'WLI.2024.013',
-    bergabungSejak: '12 Oktober 2025',
-    terakhirLogin: '29 Oktober 2025 pukul 21.22 WIB',
-    status: 'Aktif',
+  const handleSave = async () => {
+    try {
+      setSaveLoading(true);
+      setError('');
+
+      if (!formData.namaLengkap || !formData.noTelepon) {
+        setError('Nama dan nomor telepon wajib diisi');
+        setSaveLoading(false);
+        return;
+      }
+
+      const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
+      if (!phoneRegex.test(formData.noTelepon)) {
+        setError('Format nomor telepon tidak valid');
+        setSaveLoading(false);
+        return;
+      }
+
+      await onSave(formData);
+
+      setSuccess('Profil berhasil diperbarui!');
+      setTimeout(() => {
+        setSuccess('');
+        onClose();
+      }, 1500);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setError('Terjadi kesalahan saat menyimpan profil');
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
-  // Data dummy anak
-  const anakData = [
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 flex items-center justify-between rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20">
+              <Edit size={20} className="text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white">Edit Informasi Pribadi</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+          >
+            <X size={20} className="text-white" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+              {success}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Nama Lengkap */}
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <User size={16} className="text-gray-400" />
+                Nama Lengkap <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.namaLengkap || ''}
+                onChange={(e) => setFormData({ ...formData, namaLengkap: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                placeholder="Masukkan nama lengkap"
+              />
+            </div>
+
+            {/* Nomor Telepon */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Phone size={16} className="text-gray-400" />
+                Nomor Telepon <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                value={formData.noTelepon || ''}
+                onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                placeholder="Contoh: 0812-3456-7890"
+              />
+            </div>
+
+            {/* Email - Read-only */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Mail size={16} className="text-gray-400" />
+                Email <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
+              </label>
+              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
+              </div>
+            </div>
+
+            {/* Alamat */}
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <MapPin size={16} className="text-gray-400" />
+                Alamat Rumah
+              </label>
+              <textarea
+                rows={3}
+                value={formData.alamat || ''}
+                onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all"
+                placeholder="Masukkan alamat lengkap"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 p-6 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            disabled={saveLoading}
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-all disabled:opacity-50"
+          >
+            Batal
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saveLoading}
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ChangePasswordModal Component
+function ChangePasswordModal({ isOpen, onClose, onSave }) {
+  const [formData, setFormData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleSubmit = async () => {
+    try {
+      setSaveLoading(true);
+      setError('');
+
+      if (formData.newPassword !== formData.confirmPassword) {
+        setError('Password baru dan konfirmasi tidak cocok');
+        setSaveLoading(false);
+        return;
+      }
+
+      if (formData.newPassword.length < 6) {
+        setError('Password minimal 6 karakter');
+        setSaveLoading(false);
+        return;
+      }
+
+      await onSave(formData);
+
+      setSuccess('Password berhasil diubah!');
+      setTimeout(() => {
+        setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setSuccess('');
+        onClose();
+      }, 1500);
+    } catch (err) {
+      setError('Terjadi kesalahan saat mengubah password');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-amber-50">
+              <Lock size={20} className="text-amber-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Ganti Password</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+            {success}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
+            <input
+              type="password"
+              value={formData.oldPassword}
+              onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
+            <input
+              type="password"
+              value={formData.newPassword}
+              onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Konfirmasi Password Baru
+            </label>
+            <input
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+
+          <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <p className="text-xs font-medium text-amber-900 mb-1">Persyaratan Password:</p>
+            <ul className="text-xs text-amber-800 space-y-1">
+              <li>• Minimal 6 karakter</li>
+              <li>• Gunakan kombinasi huruf dan angka</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onClose}
+            disabled={saveLoading}
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-all disabled:opacity-50"
+          >
+            Batal
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saveLoading}
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            {saveLoading ? 'Mengubah...' : 'Ubah Password'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main Component
+export default function ProfilOrangtuaPage() {
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Children data
+  const children = [
     {
-      id: 1,
       nama: 'Ahmad Fauzan',
-      kelas: 'X A1',
+      kelas: '10 A',
       guruPembimbing: 'Ustadz Ahmad',
       progressHafalan: 15,
       targetHafalan: 30,
-      avatar: '👦',
     },
     {
-      id: 2,
       nama: 'Fatimah Azzahra',
-      kelas: 'XI A2',
+      kelas: '11 B',
       guruPembimbing: 'Ustadzah Siti',
       progressHafalan: 8,
       targetHafalan: 20,
-      avatar: '👧',
     },
   ];
 
-  const handleSaveProfile = (data) => {
-    console.log('Saving profile:', data);
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 3000);
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      const saved = localStorage.getItem('orangtua_profile');
+      if (saved) {
+        setProfileData(JSON.parse(saved));
+      } else {
+        setProfileData({
+          namaLengkap: 'Ali Rahman',
+          email: 'ali.rahman@wali.sch.id',
+          noTelepon: '0812-3456-7890',
+          alamat: 'Jl. Pahlawan No. 23, Bandar Lampung',
+          idWali: 'WLI.2024.013',
+          status: 'Aktif',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSavePassword = (data) => {
-    console.log('Changing password:', data);
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 3000);
+  const handleEditProfile = () => {
+    setShowEditModal(true);
+    setError('');
+    setSuccess('');
   };
 
-  if (status === 'loading') {
+  const handleSaveProfile = async (formData) => {
+    const updatedData = { ...profileData, ...formData };
+    setProfileData(updatedData);
+    localStorage.setItem('orangtua_profile', JSON.stringify(updatedData));
+
+    setSuccess('Profil berhasil diperbarui!');
+    setTimeout(() => {
+      setSuccess('');
+    }, 3000);
+  };
+
+  const handleChangePassword = () => {
+    setError('');
+    setSuccess('');
+    setShowPasswordModal(true);
+  };
+
+  const handleChangePasswordSubmit = async (formData) => {
+    setSuccess('Password berhasil diubah!');
+    setTimeout(() => {
+      setSuccess('');
+    }, 3000);
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat...</p>
+      <OrangtuaLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader className="animate-spin h-12 w-12 text-emerald-600" />
         </div>
-      </div>
+      </OrangtuaLayout>
     );
-  }
-
-  if (status === 'unauthenticated') {
-    return null;
   }
 
   return (
     <OrangtuaLayout>
-      <div className="min-h-screen animate-fade-in md:px-8" style={{ padding: '20px' }}>
-        {/* Notification */}
-        <AnimatePresence>
-          {showNotification && (
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              className="fixed top-4 right-4 z-50 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2"
-            >
-              <CheckCircle size={20} />
-              <span className="font-medium">✅ Perubahan profil berhasil disimpan</span>
-            </motion.div>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-10 py-6 space-y-6">
+          {/* Header */}
+          <ProfileHeader />
+
+          {/* Success/Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
+              {error}
+            </div>
           )}
-        </AnimatePresence>
-
-        {/* Breadcrumb */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 flex items-center gap-2">
-            <Home size={16} />
-            <span>›</span>
-            <span className="text-emerald-600 font-medium">Profil Orang Tua</span>
-          </p>
-        </div>
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="bg-gradient-to-r from-emerald-400 via-mint-400 to-amber-200 rounded-3xl shadow-lg" style={{ padding: '20px' }}>
-            <div className="flex items-center gap-3 mb-3">
-              <UserCircle className="text-white flex-shrink-0" size={42} style={{ minWidth: '42px', minHeight: '42px' }} />
-              <h1 className="font-bold text-white md:text-2xl" style={{ fontSize: '20px' }}>
-                Profil Orang Tua
-              </h1>
+          {success && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-4">
+              {success}
             </div>
-            <p className="text-emerald-50 text-base md:text-lg mb-3">
-              Lihat dan kelola informasi akun Anda serta data anak yang terhubung.
-            </p>
-            <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 font-semibold rounded-full px-3 py-1">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-sm">Status: {userData.status}</span>
+          )}
+
+          {/* 2 Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left: Profile Summary */}
+            <div className="lg:col-span-1">
+              <ProfileSummaryCard
+                profileData={profileData}
+                onEditProfile={handleEditProfile}
+                onChangePassword={handleChangePassword}
+              />
+            </div>
+
+            {/* Right: Personal Info */}
+            <div className="lg:col-span-2 space-y-6">
+              <PersonalInfoCard profileData={profileData} />
+
+              {/* Children Connected */}
+              <ChildrenConnectedCard children={children} />
             </div>
           </div>
-        </motion.div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Card Informasi Akun */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-1"
-          >
-            <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 md:rounded-xl" style={{ padding: '20px', borderRadius: '16px' }}>
-              <div className="flex flex-col items-center gap-4">
-                {/* Avatar */}
-                <div className="bg-gradient-to-br from-emerald-400 to-mint-400 rounded-full flex items-center justify-center text-white shadow-lg md:w-20 md:h-20" style={{ width: '64px', height: '64px' }}>
-                  <UserCircle size={44} />
-                </div>
-
-                {/* Info */}
-                <div className="text-center">
-                  <h2 className="font-bold text-gray-900 mb-2 md:text-2xl" style={{ fontSize: '18px' }}>{userData.namaLengkap}</h2>
-                  <p className="text-gray-600 mb-2 flex items-center gap-2 justify-center" style={{ fontSize: '13px' }}>
-                    <Mail size={14} className="text-emerald-500" />
-                    {userData.email}
-                  </p>
-                  <span className="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-semibold md:text-sm" style={{ fontSize: '13px' }}>
-                    {userData.role}
-                  </span>
-                </div>
-
-                {/* Stats */}
-                <div className="w-full space-y-2 mt-2">
-                  <div className="bg-emerald-50 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar size={16} className="text-emerald-600" />
-                      <p className="text-xs text-gray-600">Bergabung Sejak</p>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-900">{userData.bergabungSejak}</p>
-                  </div>
-                  <div className="bg-amber-50 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock size={16} className="text-amber-600" />
-                      <p className="text-xs text-gray-600">Terakhir Login</p>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-900">{userData.terakhirLogin}</p>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="w-full space-y-2 mt-2">
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors md:px-5 md:text-sm"
-                    style={{ padding: '10px 18px', minHeight: '44px', fontSize: '13px' }}
-                  >
-                    <Edit size={18} />
-                    <span>Edit Profil</span>
-                  </button>
-                  <button
-                    onClick={() => setIsPasswordModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-500 text-white rounded-lg transition-colors md:px-5 md:text-sm"
-                    style={{ padding: '10px 18px', minHeight: '44px', fontSize: '13px' }}
-                  >
-                    <Lock size={18} />
-                    <span>Ganti Password</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right Column - Cards */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Biodata Lengkap */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 md:rounded-xl md:p-8 md:gap-5"
-              style={{ padding: '20px', borderRadius: '16px' }}
-            >
-              <h3 className="font-semibold text-emerald-700 border-b border-gray-200 pb-3 mb-4 flex items-center gap-2 md:text-lg" style={{ fontSize: '16px' }}>
-                <BookOpen size={22} />
-                Biodata Lengkap
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '16px' }}>
-                {/* Kolom Kiri */}
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
-                    <Phone size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Nomor Telepon</p>
-                      <p className="font-semibold text-gray-900">{userData.noTelepon}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
-                    <IdCard size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">ID Wali</p>
-                      <p className="font-semibold text-gray-900">{userData.idWali}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Kolom Kanan */}
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
-                    <Home size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Alamat Rumah</p>
-                      <p className="font-semibold text-gray-900">{userData.alamat}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
-                    <CheckCircle size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-600 mb-1">Status Keanggotaan</p>
-                      <p className="font-semibold text-gray-900">{userData.status}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Informasi Anak Terhubung */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 md:rounded-xl md:p-8"
-              style={{ padding: '20px', borderRadius: '16px' }}
-            >
-              <h3 className="font-semibold text-emerald-700 border-b border-gray-200 pb-3 mb-4 flex items-center gap-2 md:text-lg" style={{ fontSize: '16px' }}>
-                <UserCircle size={22} />
-                Anak yang Terhubung dengan Akun Anda
-              </h3>
-
-              <div style={{ gap: '16px' }} className="space-y-4">
-                {anakData.map((anak) => {
-                  const percentage = Math.round((anak.progressHafalan / anak.targetHafalan) * 100);
-
-                  return (
-                    <div
-                      key={anak.id}
-                      className="bg-mint-50 border border-emerald-100 rounded-lg p-4 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="text-3xl">{anak.avatar}</div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-900">{anak.nama}</h4>
-                          <p className="text-sm text-gray-600">Kelas {anak.kelas}</p>
-                          <p className="text-xs text-emerald-600 mt-1">
-                            Guru: {anak.guruPembimbing}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-700">Progress Hafalan</span>
-                          <span className="text-sm font-bold text-emerald-600">{percentage}%</span>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-emerald-400 rounded-full transition-all duration-500"
-                            style={{ width: `${percentage}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">
-                          🌿 {anak.progressHafalan}/{anak.targetHafalan} Hafalan
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-
-            {/* Informasi Keamanan */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-emerald-50 border border-emerald-200 rounded-lg md:rounded-xl"
-              style={{ padding: '20px', borderRadius: '16px' }}
-            >
-              <div className="flex items-start gap-3">
-                <ShieldCheck size={22} className="text-emerald-600 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-emerald-800 mb-2 text-sm">Informasi Keamanan Akun</h3>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-2">
-                    Akun ini digunakan untuk memantau perkembangan hafalan anak Anda di Tahfidz MAN 1
-                    Bandar Lampung. Pastikan untuk menjaga kerahasiaan kredensial dan segera hubungi
-                    admin jika ada aktivitas mencurigakan.
-                  </p>
-                  <div className="flex items-center gap-2 text-emerald-700">
-                    <Lock size={14} />
-                    <span className="text-xs font-medium">Login terenkripsi – Sesi aman</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
         </div>
-
-        {/* Modals */}
-        <EditProfilModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          userData={userData}
-          onSave={handleSaveProfile}
-        />
-
-        <GantiPasswordModal
-          isOpen={isPasswordModalOpen}
-          onClose={() => setIsPasswordModalOpen(false)}
-          onSave={handleSavePassword}
-        />
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        profileData={profileData}
+        onSave={handleSaveProfile}
+      />
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSave={handleChangePasswordSubmit}
+      />
     </OrangtuaLayout>
   );
 }
