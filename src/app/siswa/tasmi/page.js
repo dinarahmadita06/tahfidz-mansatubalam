@@ -2,14 +2,65 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import SiswaLayout from '@/components/layout/SiswaLayout';
-import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2, FileText, Star } from 'lucide-react';
+import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2, FileText, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
 // ============================================================
 // REUSABLE COMPONENTS
 // ============================================================
+
+// Skeleton Loaders
+function StatsCardSkeleton() {
+  return (
+    <div className="bg-gray-50/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+        <div className="flex-1">
+          <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+          <div className="h-8 bg-gray-200 rounded w-16 mb-1"></div>
+          <div className="h-3 bg-gray-200 rounded w-32"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TableRowSkeleton() {
+  return (
+    <tr className="animate-pulse">
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+          <div>
+            <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-16"></div>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-32"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-8 bg-gray-200 rounded-lg w-32 mx-auto"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-full max-w-xs"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex items-center justify-center gap-2">
+          <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+          <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+        </div>
+      </td>
+    </tr>
+  );
+}
 
 // Stats Card Component (Transparent Pastel with Border Glow)
 function StatsCard({ icon: Icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
@@ -208,13 +259,9 @@ function TasmiTableRow({ tasmi, onEdit, onDelete }) {
 
 export default function SiswaTasmiPage() {
   const { data: session } = useSession();
-  const [loading, setLoading] = useState(true);
-  const [siswaData, setSiswaData] = useState(null);
-  const [totalJuzHafalan, setTotalJuzHafalan] = useState(0);
-  const [targetJuzSekolah, setTargetJuzSekolah] = useState(3);
-  const [tasmiList, setTasmiList] = useState([]);
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [guruList, setGuruList] = useState([]);
   const [formData, setFormData] = useState({
     jumlahHafalan: 0,
     juzYangDitasmi: '',
@@ -226,71 +273,98 @@ export default function SiswaTasmiPage() {
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
 
-  useEffect(() => {
-    if (session) {
-      fetchData();
-    }
-  }, [session]);
+  // Fetch Siswa Data
+  const { data: siswaData } = useQuery({
+    queryKey: ['siswa'],
+    queryFn: async () => {
+      const res = await fetch('/api/siswa');
+      if (!res.ok) throw new Error('Failed to fetch siswa');
+      const data = await res.json();
 
-  const fetchData = async () => {
-    try {
-      // Fetch siswa data & total juz with guruKelas info
-      const siswaRes = await fetch('/api/siswa', {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' }
+      // Fetch kelas info if available
+      if (data.siswa?.kelasId) {
+        const kelasRes = await fetch(`/api/admin/kelas/${data.siswa.kelasId}`);
+        if (kelasRes.ok) {
+          const kelasData = await kelasRes.json();
+          data.siswa.kelas = kelasData.kelas;
+        }
+      }
+
+      return data.siswa;
+    },
+    enabled: !!session,
+  });
+
+  // Fetch Guru List
+  const { data: guruList = [] } = useQuery({
+    queryKey: ['guru-list'],
+    queryFn: async () => {
+      const res = await fetch('/api/guru');
+      if (!res.ok) throw new Error('Failed to fetch guru');
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: !!session,
+  });
+
+  // Fetch Tasmi Data with Pagination
+  const {
+    data: tasmiData,
+    isLoading: tasmiLoading,
+    error: tasmiError
+  } = useQuery({
+    queryKey: ['tasmi', page],
+    queryFn: async () => {
+      const res = await fetch(`/api/siswa/tasmi?page=${page}&limit=10`);
+      if (!res.ok) throw new Error('Failed to fetch tasmi');
+      return res.json();
+    },
+    enabled: !!session,
+    keepPreviousData: true,
+  });
+
+  const tasmiList = tasmiData?.tasmi || [];
+  const totalJuzHafalan = tasmiData?.totalJuzHafalan || 0;
+  const targetJuzSekolah = tasmiData?.targetJuzSekolah || 3;
+  const pagination = tasmiData?.pagination || {};
+
+  // Update formData when totalJuzHafalan changes
+  useEffect(() => {
+    if (totalJuzHafalan > 0) {
+      setFormData(prev => ({ ...prev, jumlahHafalan: totalJuzHafalan }));
+    }
+  }, [totalJuzHafalan]);
+
+  // Submit Mutation
+  const submitMutation = useMutation({
+    mutationFn: async (data) => {
+      const url = editMode ? `/api/siswa/tasmi/${editId}` : '/api/siswa/tasmi';
+      const method = editMode ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
 
-      if (siswaRes.ok) {
-        const siswaJson = await siswaRes.json();
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasmi'] });
+      toast.success(editMode ? 'Pendaftaran Tasmi\' berhasil diupdate!' : 'Pendaftaran Tasmi\' berhasil! Menunggu persetujuan guru.');
+      setShowModal(false);
+      setEditMode(false);
+      setEditId(null);
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Gagal menyimpan pendaftaran Tasmi\'');
+    },
+  });
 
-        // Fetch kelas info with guru
-        if (siswaJson.siswa?.kelasId) {
-          const kelasRes = await fetch(`/api/admin/kelas/${siswaJson.siswa.kelasId}`, {
-            cache: 'no-store',
-          });
-          if (kelasRes.ok) {
-            const kelasData = await kelasRes.json();
-            siswaJson.siswa.kelas = kelasData.kelas;
-          }
-        }
-
-        setSiswaData(siswaJson.siswa);
-      }
-
-      // Fetch guru tahfidz list
-      try {
-        const guruRes = await fetch('/api/guru', {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-
-        if (guruRes.ok) {
-          const guruData = await guruRes.json();
-          setGuruList(Array.isArray(guruData) ? guruData : []);
-        }
-      } catch (guruError) {
-        console.error('Error fetching guru list:', guruError);
-      }
-
-      // Fetch tasmi history with totalJuzHafalan and targetJuzSekolah
-      const tasmiRes = await fetch('/api/siswa/tasmi');
-      if (tasmiRes.ok) {
-        const tasmiData = await tasmiRes.json();
-        setTasmiList(tasmiData.tasmi || []);
-        setTotalJuzHafalan(tasmiData.totalJuzHafalan || 0);
-        setTargetJuzSekolah(tasmiData.targetJuzSekolah || 3);
-        // Update formData with totalJuzHafalan for modal
-        setFormData(prev => ({ ...prev, jumlahHafalan: tasmiData.totalJuzHafalan || 0 }));
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Gagal memuat data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!formData.juzYangDitasmi || !formData.jamTasmi || !formData.tanggalTasmi || !formData.guruId) {
@@ -298,39 +372,14 @@ export default function SiswaTasmiPage() {
       return;
     }
 
-    try {
-      const url = editMode ? `/api/siswa/tasmi/${editId}` : '/api/siswa/tasmi';
-      const method = editMode ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jumlahHafalan: parseInt(formData.jumlahHafalan),
-          juzYangDitasmi: formData.juzYangDitasmi,
-          guruId: formData.guruId,
-          jamTasmi: formData.jamTasmi,
-          tanggalTasmi: formData.tanggalTasmi,
-          catatan: formData.catatan,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(editMode ? 'Pendaftaran Tasmi\' berhasil diupdate!' : 'Pendaftaran Tasmi\' berhasil! Menunggu persetujuan guru.');
-        setShowModal(false);
-        setEditMode(false);
-        setEditId(null);
-        resetForm();
-        fetchData();
-      } else {
-        toast.error(data.message || 'Gagal menyimpan pendaftaran Tasmi\'');
-      }
-    } catch (error) {
-      console.error('Error submitting:', error);
-      toast.error('Terjadi kesalahan saat menyimpan data');
-    }
+    submitMutation.mutate({
+      jumlahHafalan: parseInt(formData.jumlahHafalan),
+      juzYangDitasmi: formData.juzYangDitasmi,
+      guruId: formData.guruId,
+      jamTasmi: formData.jamTasmi,
+      tanggalTasmi: formData.tanggalTasmi,
+      catatan: formData.catatan,
+    });
   };
 
   const handleEdit = (tasmi) => {
@@ -352,28 +401,30 @@ export default function SiswaTasmiPage() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await fetch(`/api/siswa/tasmi/${id}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasmi'] });
+      toast.success('Pendaftaran Tasmi\' berhasil dihapus');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Gagal menghapus pendaftaran Tasmi\'');
+    },
+  });
+
+  const handleDelete = (id) => {
     if (!confirm('Yakin ingin menghapus pendaftaran Tasmi\' ini?')) {
       return;
     }
-
-    try {
-      const response = await fetch(`/api/siswa/tasmi/${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Pendaftaran Tasmi\' berhasil dihapus');
-        fetchData();
-      } else {
-        toast.error(data.message || 'Gagal menghapus pendaftaran Tasmi\'');
-      }
-    } catch (error) {
-      console.error('Error deleting:', error);
-      toast.error('Terjadi kesalahan saat menghapus data');
-    }
+    deleteMutation.mutate(id);
   };
 
   const resetForm = () => {
@@ -403,15 +454,7 @@ export default function SiswaTasmiPage() {
     ? `${totalJuzHafalan} dari ${targetJuzSekolah} juz terpenuhi`
     : `Minimal ${targetJuzSekolah} juz diperlukan`;
 
-  if (loading) {
-    return (
-      <SiswaLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <p className="text-gray-600">Memuat data...</p>
-        </div>
-      </SiswaLayout>
-    );
-  }
+  const isInitialLoading = tasmiLoading && !tasmiData;
 
   return (
     <SiswaLayout>
@@ -442,30 +485,40 @@ export default function SiswaTasmiPage() {
 
           {/* Stats Cards - Transparent Pastel with Border Glow */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatsCard
-              icon={Award}
-              title="Total Juz Hafalan"
-              value={`${totalJuzHafalan} Juz`}
-              subtitle={`Dari ${targetJuzSekolah} juz target`}
-              color="emerald"
-              delay={0.1}
-            />
-            <StatsCard
-              icon={Calendar}
-              title="Total Pendaftaran"
-              value={tasmiList.length}
-              subtitle="Pendaftaran Tasmi'"
-              color="purple"
-              delay={0.2}
-            />
-            <StatsCard
-              icon={CheckCircle}
-              title="Status Pendaftaran"
-              value={statusPendaftaran}
-              subtitle={statusSubtitle}
-              color={isSiapMendaftar ? 'sky' : 'purple'}
-              delay={0.3}
-            />
+            {isInitialLoading ? (
+              <>
+                <StatsCardSkeleton />
+                <StatsCardSkeleton />
+                <StatsCardSkeleton />
+              </>
+            ) : (
+              <>
+                <StatsCard
+                  icon={Award}
+                  title="Total Juz Hafalan"
+                  value={`${totalJuzHafalan} Juz`}
+                  subtitle={`Dari ${targetJuzSekolah} juz target`}
+                  color="emerald"
+                  delay={0.1}
+                />
+                <StatsCard
+                  icon={Calendar}
+                  title="Total Pendaftaran"
+                  value={pagination.totalCount || 0}
+                  subtitle="Pendaftaran Tasmi'"
+                  color="purple"
+                  delay={0.2}
+                />
+                <StatsCard
+                  icon={CheckCircle}
+                  title="Status Pendaftaran"
+                  value={statusPendaftaran}
+                  subtitle={statusSubtitle}
+                  color={isSiapMendaftar ? 'sky' : 'purple'}
+                  delay={0.3}
+                />
+              </>
+            )}
           </div>
 
           {/* Action Button - SIMTAQ Green Gradient */}
@@ -522,7 +575,15 @@ export default function SiswaTasmiPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {tasmiList.length === 0 ? (
+                  {isInitialLoading ? (
+                    <>
+                      <TableRowSkeleton />
+                      <TableRowSkeleton />
+                      <TableRowSkeleton />
+                      <TableRowSkeleton />
+                      <TableRowSkeleton />
+                    </>
+                  ) : tasmiList.length === 0 ? (
                     <EmptyState />
                   ) : (
                     tasmiList.map((tasmi) => (
@@ -537,6 +598,37 @@ export default function SiswaTasmiPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {!isInitialLoading && pagination.totalPages > 1 && (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Halaman <span className="font-semibold">{pagination.page}</span> dari{' '}
+                    <span className="font-semibold">{pagination.totalPages}</span>
+                    {' '}({pagination.totalCount} total)
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={!pagination.hasPreviousPage || tasmiLoading}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    >
+                      <ChevronLeft size={16} />
+                      Sebelumnya
+                    </button>
+                    <button
+                      onClick={() => setPage(p => p + 1)}
+                      disabled={!pagination.hasNextPage || tasmiLoading}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    >
+                      Selanjutnya
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

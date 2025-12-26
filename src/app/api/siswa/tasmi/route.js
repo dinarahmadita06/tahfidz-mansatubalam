@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 
-// GET - Fetch siswa's own tasmi history
+// GET - Fetch siswa's own tasmi history with pagination
 export async function GET(request) {
   try {
     const session = await auth();
@@ -13,6 +13,12 @@ export async function GET(request) {
         { status: 401 }
       );
     }
+
+    // Get pagination params
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
 
     // Get siswa data
     const siswa = await prisma.siswa.findUnique({
@@ -26,79 +32,101 @@ export async function GET(request) {
       );
     }
 
-    // Fetch tasmi history
-    const tasmi = await prisma.tasmi.findMany({
-      where: {
-        siswaId: siswa.id,
-      },
-      include: {
-        guruPengampu: {
-          include: {
-            user: {
-              select: {
-                name: true,
+    // Parallel fetch for independent data
+    const [tasmi, totalCount, hafalanData] = await Promise.all([
+      // Fetch tasmi history with pagination
+      prisma.tasmi.findMany({
+        where: {
+          siswaId: siswa.id,
+        },
+        include: {
+          guruPengampu: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          guruVerifikasi: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          guruPenguji: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          siswa: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+              kelas: {
+                select: {
+                  nama: true,
+                },
               },
             },
           },
         },
-        guruVerifikasi: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
+        orderBy: {
+          tanggalDaftar: 'desc',
         },
-        guruPenguji: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-        siswa: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-            kelas: {
-              select: {
-                nama: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        tanggalDaftar: 'desc',
-      },
-    });
+        skip,
+        take: limit,
+      }),
 
-    // Calculate total juz hafalan from DISTINCT juz in Hafalan table
-    const hafalanData = await prisma.hafalan.findMany({
-      where: {
-        siswaId: siswa.id,
-      },
-      select: {
-        juz: true,
-      },
-      distinct: ['juz'],
-    });
+      // Count total tasmi records
+      prisma.tasmi.count({
+        where: {
+          siswaId: siswa.id,
+        },
+      }),
+
+      // Calculate total juz hafalan from DISTINCT juz in Hafalan table
+      prisma.hafalan.findMany({
+        where: {
+          siswaId: siswa.id,
+        },
+        select: {
+          juz: true,
+        },
+        distinct: ['juz'],
+      }),
+    ]);
 
     const totalJuzHafalan = hafalanData.length;
 
     // Target juz sekolah (default 3, could be from settings in the future)
     const targetJuzSekolah = 3;
 
+    const totalPages = Math.ceil(totalCount / limit);
+
     return NextResponse.json({
       tasmi,
       totalJuzHafalan,
       targetJuzSekolah,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
     });
   } catch (error) {
     console.error('Error fetching tasmi:', error);
