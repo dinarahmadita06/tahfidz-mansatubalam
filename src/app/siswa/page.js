@@ -15,6 +15,9 @@ import {
   BookMarked,
   Lightbulb,
   ChevronRight,
+  FileText,
+  CheckCircle,
+  UserCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -22,6 +25,26 @@ import Link from 'next/link';
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
+
+// ===== HELPER FUNCTIONS =====
+const formatTimeAgo = (timestamp) => {
+  if (!timestamp) return '';
+
+  const now = new Date();
+  const past = new Date(timestamp);
+  const diffMs = now - past;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Baru saja';
+  if (diffMins < 60) return `${diffMins} menit yang lalu`;
+  if (diffHours < 24) return `${diffHours} jam yang lalu`;
+  if (diffDays === 1) return 'Kemarin';
+  if (diffDays < 7) return `${diffDays} hari yang lalu`;
+
+  return past.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
 // ===== REUSABLE COMPONENTS - TASMI STYLE =====
 
@@ -116,6 +139,19 @@ const Card = ({ children, className = '' }) => {
   );
 };
 
+// Empty State Component
+const EmptyState = ({ icon: Icon, title, description }) => {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="p-4 bg-gray-100 rounded-full mb-4">
+        <Icon className="text-gray-400" size={32} />
+      </div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{title}</h3>
+      <p className="text-xs text-gray-500">{description}</p>
+    </div>
+  );
+};
+
 // ===== MAIN COMPONENT =====
 export default function DashboardSiswa() {
   const { data: session } = useSession();
@@ -123,54 +159,66 @@ export default function DashboardSiswa() {
   const [greeting, setGreeting] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
 
+  // Data states with default values = 0
+  const [stats, setStats] = useState({
+    hafalanSelesai: 0,
+    totalHafalan: 0,
+    rataRataNilai: 0,
+    kehadiran: 0,
+    totalHari: 0,
+    catatanGuru: 0,
+  });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [juzProgress, setJuzProgress] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const getFirstName = (fullName) => {
     if (!fullName) return 'Siswa';
     return fullName.split(' ')[0];
   };
 
-  const stats = {
-    hafalanSelesai: 15,
-    totalHafalan: 30,
-    rataRataNilai: 85,
-    kehadiran: 92,
-    totalHari: 30,
-    catatanGuru: 3,
-  };
+  // Fetch Dashboard Data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'setor',
-      title: 'Setor Hafalan Al-Baqarah 1-5',
-      status: 'approved',
-      time: '2 jam yang lalu',
-      icon: BookOpen,
-    },
-    {
-      id: 2,
-      type: 'nilai',
-      title: 'Nilai Hafalan: 88/100',
-      status: 'info',
-      time: '5 jam yang lalu',
-      icon: Star,
-    },
-    {
-      id: 3,
-      type: 'catatan',
-      title: 'Catatan dari Ustadz Yusuf',
-      status: 'warning',
-      time: '1 hari yang lalu',
-      icon: MessageSquare,
-    },
-  ];
+        const response = await fetch('/api/siswa/dashboard');
 
-  const achievementData = [
-    { label: 'Juz 1', progress: 100 },
-    { label: 'Juz 2', progress: 75 },
-    { label: 'Juz 3', progress: 45 },
-    { label: 'Juz 4', progress: 20 },
-  ];
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
 
+        const data = await response.json();
+
+        // Set stats with default values = 0
+        setStats({
+          hafalanSelesai: data.stats?.hafalanSelesai || 0,
+          totalHafalan: data.stats?.totalHafalan || 0,
+          rataRataNilai: data.stats?.rataRataNilai || 0,
+          kehadiran: data.stats?.kehadiran || 0,
+          totalHari: data.stats?.totalHari || 0,
+          catatanGuru: data.stats?.catatanGuru || 0,
+        });
+
+        // Set recent activities (already sorted and limited to 5 from API)
+        setRecentActivities(data.recentActivities || []);
+
+        // Set juz progress (already filtered for progress > 0 from API)
+        setJuzProgress(data.juzProgress || []);
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Keep default values (0) on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Greeting and time setup
   useEffect(() => {
     setIsHydrated(true);
 
@@ -192,6 +240,18 @@ export default function DashboardSiswa() {
     };
     updateTime();
   }, []);
+
+  // Activity type config
+  const getActivityConfig = (type) => {
+    const configs = {
+      tasmi: { icon: FileText, status: 'info', color: 'bg-blue-100 text-blue-700' },
+      setor: { icon: BookOpen, status: 'approved', color: 'bg-emerald-100 text-emerald-700' },
+      nilai: { icon: Star, status: 'info', color: 'bg-amber-100 text-amber-700' },
+      catatan: { icon: MessageSquare, status: 'warning', color: 'bg-purple-100 text-purple-700' },
+      presensi: { icon: CheckCircle, status: 'approved', color: 'bg-sky-100 text-sky-700' },
+    };
+    return configs[type] || configs.setor;
+  };
 
   return (
     <SiswaLayout>
@@ -218,13 +278,13 @@ export default function DashboardSiswa() {
               <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
                 <Target className="text-white flex-shrink-0" size={18} />
                 <span className="text-white font-semibold text-sm whitespace-nowrap">
-                  {stats.hafalanSelesai} / {stats.totalHafalan} Hafalan
+                  {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
                 </span>
               </div>
               <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
                 <CalendarCheck className="text-white flex-shrink-0" size={18} />
                 <span className="text-white font-semibold text-sm whitespace-nowrap">
-                  Kehadiran {stats.kehadiran}/{stats.totalHari}
+                  Kehadiran {stats.kehadiran}/{stats.totalHari > 0 ? stats.totalHari : '-'}
                 </span>
               </div>
             </div>
@@ -286,7 +346,7 @@ export default function DashboardSiswa() {
               icon={BookOpen}
               title="Hafalan Selesai"
               value={stats.hafalanSelesai}
-              subtitle={`dari ${stats.totalHafalan} target`}
+              subtitle={stats.totalHafalan > 0 ? `dari ${stats.totalHafalan} target` : 'Belum ada target'}
               color="emerald"
             />
             <StatsCard
@@ -300,7 +360,7 @@ export default function DashboardSiswa() {
               icon={CalendarCheck}
               title="Kehadiran"
               value={stats.kehadiran}
-              subtitle={`dari ${stats.totalHari} hari`}
+              subtitle={stats.totalHari > 0 ? `dari ${stats.totalHari} hari` : 'Belum ada data'}
               color="sky"
             />
             <StatsCard
@@ -327,29 +387,45 @@ export default function DashboardSiswa() {
                 iconColor="emerald"
               />
 
-              <div className="space-y-4">
-                {achievementData.map((item) => (
-                  <div key={item.label} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-700">{item.label}</span>
-                      <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                      <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${item.progress}%` }}
-                      />
-                    </div>
+              {loading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : juzProgress.length === 0 ? (
+                <EmptyState
+                  icon={BookOpen}
+                  title="Belum ada progress hafalan"
+                  description="Mulai setoran hafalan untuk melihat progress per juz"
+                />
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {juzProgress.map((item) => (
+                      <div key={item.label} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-gray-700">{item.label}</span>
+                          <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(item.progress, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <Link
-                href="/siswa/laporan"
-                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white font-semibold rounded-xl transition-all duration-300 shadow-md"
-              >
-                Lihat Laporan Lengkap <ChevronRight size={20} />
-              </Link>
+                  <Link
+                    href="/siswa/laporan"
+                    className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white font-semibold rounded-xl transition-all duration-300 shadow-md"
+                  >
+                    Lihat Laporan Lengkap <ChevronRight size={20} />
+                  </Link>
+                </>
+              )}
             </Card>
 
             {/* Recent Activities */}
@@ -361,37 +437,51 @@ export default function DashboardSiswa() {
                 iconColor="amber"
               />
 
-              <div className="space-y-3">
-                {recentActivities.map((activity) => {
-                  const Icon = activity.icon;
-                  const statusColors = {
-                    approved: 'bg-emerald-100 text-emerald-700',
-                    info: 'bg-sky-100 text-sky-700',
-                    warning: 'bg-amber-100 text-amber-700',
-                  };
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : recentActivities.length === 0 ? (
+                <EmptyState
+                  icon={Clock}
+                  title="Belum ada aktivitas"
+                  description="Aktivitas Anda akan muncul di sini"
+                />
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {recentActivities.map((activity) => {
+                      const config = getActivityConfig(activity.type);
+                      const Icon = config.icon;
 
-                  return (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
-                    >
-                      <div className={`p-2.5 rounded-xl ${statusColors[activity.status]}`}>
-                        <Icon size={18} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {activity.title}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      return (
+                        <div
+                          key={activity.id}
+                          className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <div className={`p-2.5 rounded-xl ${config.color}`}>
+                            <Icon size={18} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                              {activity.title}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatTimeAgo(activity.timestamp)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-              <button className="mt-4 w-full py-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
-                Lihat Semua Aktivitas
-              </button>
+                  <button className="mt-4 w-full py-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+                    Lihat Semua Aktivitas
+                  </button>
+                </>
+              )}
             </Card>
           </div>
         </div>
