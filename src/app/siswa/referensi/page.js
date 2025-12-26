@@ -421,20 +421,6 @@ export default function ReferensiQuranPage() {
     surah.number.toString().includes(searchTerm)
   );
 
-  // Cleanup audio on unmount or surah change
-  useEffect(() => {
-    return () => {
-      if (currentAudio) {
-        console.log('🧹 Cleanup: Stopping audio on unmount');
-        currentAudio.pause();
-        currentAudio.onended = null;
-        currentAudio.onerror = null;
-        currentAudio.onpause = null;
-        currentAudio.onplay = null;
-      }
-    };
-  }, [currentAudio, selectedSurah]);
-
   return (
     <SiswaLayout>
       <Toaster position="top-right" />
