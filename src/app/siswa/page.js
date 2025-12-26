@@ -273,9 +273,9 @@ export default function DashboardSiswa() {
             {/* Mobile CTA - Full Width Button */}
             <Link
               href="/siswa/pengumuman"
-              className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+              className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
             >
-              Lihat Semua Pengumuman
+              Lihat Semua
               <ChevronRight size={20} />
             </Link>
           </div>
