@@ -31,18 +31,11 @@ const menuItems = [
     color: 'emerald'
   },
   {
-    title: 'Hafalan Anak',
-    icon: BookOpen,
-    href: '/orangtua/hafalan-anak',
-    description: 'Detail hafalan',
-    color: 'emerald'
-  },
-  {
-    title: 'Penilaian',
+    title: 'Penilaian Hafalan',
     icon: Star,
-    href: '/orangtua/penilaian',
-    description: 'Nilai dari guru',
-    color: 'amber'
+    href: '/orangtua/penilaian-hafalan',
+    description: 'Hasil penilaian dari guru',
+    color: 'emerald'
   },
   {
     title: 'Tasmi\'',
