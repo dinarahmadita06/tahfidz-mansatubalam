@@ -322,6 +322,8 @@ export default function DashboardOrangTua() {
 
   // Default stats - all zero when no data
   const stats = {
+    targetSekolah: 3, // Default 3 Juz - will be fetched from API later
+    progressAnak: 0,  // Progress dari target sekolah
     hafalanSelesai: 0,
     totalHafalan: 0,
     rataRataNilai: 0,
@@ -440,6 +442,36 @@ export default function DashboardOrangTua() {
               </div>
             </div>
             <PengumumanWidget limit={3} />
+          </div>
+
+          {/* Target Sekolah Card - Prominent Display */}
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 shadow-lg border border-emerald-200/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                  <Target className="text-white" size={28} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-emerald-900 mb-1">Target Sekolah Tahun Ini</h3>
+                  <p className="text-3xl font-bold text-emerald-700">{stats.targetSekolah ?? 3} Juz</p>
+                </div>
+              </div>
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-emerald-200/40 flex-shrink-0">
+                <p className="text-xs font-semibold text-emerald-900 mb-2">Progress Anak</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-emerald-700">{stats.progressAnak ?? 0}</span>
+                  <span className="text-lg text-gray-600">/</span>
+                  <span className="text-lg text-gray-600">{stats.targetSekolah ?? 3}</span>
+                  <span className="text-sm text-emerald-600 ml-2">Juz</span>
+                </div>
+                <div className="mt-3 w-full bg-emerald-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(((stats.progressAnak ?? 0) / (stats.targetSekolah ?? 3)) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Statistics Cards - 4 Columns */}

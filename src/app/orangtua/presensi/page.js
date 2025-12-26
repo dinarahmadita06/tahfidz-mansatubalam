@@ -638,15 +638,23 @@ export default function RiwayatPerkembanganHarianPage() {
                     </div>
                   </div>
 
-                  {/* Month Badge */}
-                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full w-fit max-w-full">
-                    <Calendar size={14} className="text-white flex-shrink-0" />
-                    <span className="text-white text-xs sm:text-sm font-medium truncate">
-                      {new Date(selectedMonth.formatted).toLocaleDateString('id-ID', {
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </span>
+                  {/* Month Badge & Target Summary */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full w-fit max-w-full">
+                      <Calendar size={14} className="text-white flex-shrink-0" />
+                      <span className="text-white text-xs sm:text-sm font-medium truncate">
+                        {new Date(selectedMonth.formatted).toLocaleDateString('id-ID', {
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full w-fit">
+                      <Target size={14} className="text-white flex-shrink-0" />
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        Target: <span className="font-bold">3 Juz</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
 
