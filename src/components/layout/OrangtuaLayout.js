@@ -38,25 +38,11 @@ const menuItems = [
     color: 'emerald'
   },
   {
-    title: 'Tasmi\'',
-    icon: Award,
-    href: '/orangtua/tasmi',
-    description: 'Status ujian hafalan',
-    color: 'purple'
-  },
-  {
     title: 'Riwayat Perkembangan Harian',
     icon: CalendarCheck,
     href: '/orangtua/presensi',
     description: 'Presensi & penilaian harian',
     color: 'sky'
-  },
-  {
-    title: 'Laporan Hafalan',
-    icon: ChartBar,
-    href: '/orangtua/laporan-hafalan',
-    description: 'Statistik & laporan',
-    color: 'emerald'
   },
   {
     title: 'Pengumuman',
