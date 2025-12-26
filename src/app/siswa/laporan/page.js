@@ -5,90 +5,31 @@ import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   BarChart3,
   TrendingUp,
-  Calendar,
   BookOpen,
   Target,
   Award,
-  Sparkles,
-  Filter,
-  ChevronDown,
+  Flame,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
-import MotivationalCard from '@/components/MotivationalCard';
 
-// Line Chart Component
-function LineChart({ data, color = 'emerald' }) {
-  const maxValue = Math.max(...data.map(d => d.value));
-  const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 100 - (d.value / maxValue) * 80;
-    return `${x},${y}`;
-  }).join(' ');
-
-  const colorClasses = {
-    emerald: { line: 'stroke-emerald-500', fill: 'fill-emerald-500', gradient: 'from-emerald-500/20' },
-    amber: { line: 'stroke-amber-500', fill: 'fill-amber-500', gradient: 'from-amber-500/20' },
-    purple: { line: 'stroke-purple-500', fill: 'fill-purple-500', gradient: 'from-purple-500/20' },
-    sky: { line: 'stroke-sky-500', fill: 'fill-sky-500', gradient: 'from-sky-500/20' },
-  };
-
-  return (
-    <div className="relative h-48">
-      <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id={`gradient-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" className={colorClasses[color].gradient} />
-            <stop offset="100%" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        <polyline
-          fill={`url(#gradient-${color})`}
-          points={`0,100 ${points} 100,100`}
-        />
-
-        <polyline
-          fill="none"
-          stroke="currentColor"
-          className={colorClasses[color].line}
-          strokeWidth="0.5"
-          points={points}
-        />
-
-        {data.map((d, i) => {
-          const x = (i / (data.length - 1)) * 100;
-          const y = 100 - (d.value / maxValue) * 80;
-          return (
-            <motion.circle
-              key={i}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: i * 0.1 }}
-              cx={x}
-              cy={y}
-              r="1"
-              className={colorClasses[color].fill}
-            />
-          );
-        })}
-      </svg>
-
-      {/* Labels */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-600 mt-2">
-        {data.map((d, i) => (
-          <span key={i} className={i === 0 || i === data.length - 1 ? '' : 'hidden md:block'}>
-            {d.label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
+// ============================================================
+// CHART COMPONENTS
+// ============================================================
 
 // Donut Chart Component
 function DonutChart({ data, size = 200 }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center" style={{ width: size, height: size }}>
+        <BookOpen size={48} className="text-gray-300 mb-2" />
+        <p className="text-sm text-gray-500">Belum ada data</p>
+      </div>
+    );
+  }
+
   let currentAngle = -90;
 
   return (
@@ -107,11 +48,8 @@ function DonutChart({ data, size = 200 }) {
           const largeArc = angle > 180 ? 1 : 0;
 
           return (
-            <motion.path
+            <path
               key={index}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1, delay: index * 0.2 }}
               d={`M 50 50 L ${startX} ${startY} A 40 40 0 ${largeArc} 1 ${endX} ${endY} Z`}
               fill={item.color}
               className="hover:opacity-80 transition-opacity cursor-pointer"
@@ -134,51 +72,110 @@ function DonutChart({ data, size = 200 }) {
 
 // Bar Chart Component
 function HorizontalBarChart({ data }) {
-  const maxValue = Math.max(...data.map(d => d.value));
+  const maxValue = Math.max(...data.map(d => d.value), 1);
+
+  if (data.every(d => d.value === 0)) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Award size={48} className="text-gray-300 mb-2" />
+        <p className="text-sm text-gray-500">Belum ada penilaian</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       {data.map((item, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="space-y-2"
-        >
+        <div key={index} className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold text-gray-700">{item.label}</span>
             <span className="text-gray-600">{item.value}%</span>
           </div>
           <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${(item.value / maxValue) * 100}%` }}
-              transition={{ duration: 1, delay: index * 0.1 }}
-              className={`h-full ${item.color} rounded-full`}
+            <div
+              className={`h-full ${item.color} rounded-full transition-all duration-500`}
+              style={{ width: `${(item.value / maxValue) * 100}%` }}
             />
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
 }
 
+// ============================================================
+// MAIN PAGE COMPONENT
+// ============================================================
+
 export default function LaporanHafalanPage() {
+  // Real-time timezone-aware current date
+  const getCurrentDate = () => new Date();
+
   const [selectedPeriod, setSelectedPeriod] = useState('bulanan');
-  const [showFilter, setShowFilter] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  // Sample data
-  const progressData = [
-    { label: 'Jan', value: 45 },
-    { label: 'Feb', value: 52 },
-    { label: 'Mar', value: 58 },
-    { label: 'Apr', value: 65 },
-    { label: 'Mei', value: 71 },
-    { label: 'Jun', value: 78 },
-    { label: 'Jul', value: 85 },
-  ];
+  // Date filter states
+  const currentDate = getCurrentDate();
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth()); // 0-11
+  const [selectedWeek, setSelectedWeek] = useState(0); // 0-3 (week of month)
 
+  // Helper: Generate year options (last 3 years + current year)
+  const getYearOptions = () => {
+    const years = [];
+    const currentYear = currentDate.getFullYear();
+    for (let i = 0; i < 4; i++) {
+      years.push(currentYear - i);
+    }
+    return years;
+  };
+
+  // Helper: Generate month options
+  const getMonthOptions = () => {
+    return [
+      { value: 0, label: 'Januari' },
+      { value: 1, label: 'Februari' },
+      { value: 2, label: 'Maret' },
+      { value: 3, label: 'April' },
+      { value: 4, label: 'Mei' },
+      { value: 5, label: 'Juni' },
+      { value: 6, label: 'Juli' },
+      { value: 7, label: 'Agustus' },
+      { value: 8, label: 'September' },
+      { value: 9, label: 'Oktober' },
+      { value: 10, label: 'November' },
+      { value: 11, label: 'Desember' },
+    ];
+  };
+
+  // Helper: Generate week options for selected month
+  const getWeekOptions = () => {
+    const weeks = [];
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    const weeksCount = Math.ceil(daysInMonth / 7);
+
+    for (let i = 0; i < weeksCount; i++) {
+      const startDay = i * 7 + 1;
+      const endDay = Math.min((i + 1) * 7, daysInMonth);
+      weeks.push({
+        value: i,
+        label: `Minggu ${i + 1} (${startDay}-${endDay})`,
+      });
+    }
+    return weeks;
+  };
+
+  // Reset to current date when period changes
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+    const now = getCurrentDate();
+    setSelectedYear(now.getFullYear());
+    setSelectedMonth(now.getMonth());
+    setSelectedWeek(0);
+  };
+
+  // Sample data (dalam praktik real, ini akan di-fetch dari API berdasarkan periode)
   const juzDistribution = [
     { label: 'Juz 30', value: 15, color: '#10b981' },
     { label: 'Juz 29', value: 12, color: '#f59e0b' },
@@ -193,266 +190,409 @@ export default function LaporanHafalanPage() {
     { label: 'Implementasi', value: 95, color: 'bg-sky-500' },
   ];
 
-  const monthlyStats = [
-    { label: 'Total Setoran', value: '24', subtitle: 'kali setor', icon: BookOpen, color: 'emerald', gradient: 'from-emerald-400 to-teal-400' },
-    { label: 'Rata-rata Nilai', value: '90', subtitle: 'dari 100', icon: Award, color: 'amber', gradient: 'from-amber-400 to-orange-400' },
-    { label: 'Target Tercapai', value: '85%', subtitle: 'progress', icon: Target, color: 'purple', gradient: 'from-purple-400 to-indigo-400' },
-    { label: 'Hari Berturut', value: '12', subtitle: 'hari', icon: TrendingUp, color: 'sky', gradient: 'from-sky-400 to-blue-400' },
+  // Stats data berdasarkan periode (akan berubah sesuai filter)
+  const periodStats = {
+    mingguan: {
+      totalSetoran: 6,
+      rataRataNilai: 88,
+      targetTercapai: 75,
+      konsistensi: 5,
+    },
+    bulanan: {
+      totalSetoran: 24,
+      rataRataNilai: 90,
+      targetTercapai: 85,
+      konsistensi: 22,
+    },
+    tahunan: {
+      totalSetoran: 288,
+      rataRataNilai: 89,
+      targetTercapai: 80,
+      konsistensi: 260,
+    },
+  };
+
+  const currentStats = periodStats[selectedPeriod];
+
+  // Sample detail data (akan di-fetch dari API)
+  const detailData = [
+    { tanggal: '26 Des 2025', juz: 'Juz 30 - An-Nas', nilai: 95, catatan: 'Sangat baik, tajwid sempurna' },
+    { tanggal: '25 Des 2025', juz: 'Juz 30 - Al-Falaq', nilai: 92, catatan: 'Baik, perlu perbaiki makhraj' },
+    { tanggal: '24 Des 2025', juz: 'Juz 30 - Al-Ikhlas', nilai: 90, catatan: 'Baik' },
+    { tanggal: '23 Des 2025', juz: 'Juz 29 - Al-Mulk', nilai: 88, catatan: 'Cukup baik' },
+    { tanggal: '22 Des 2025', juz: 'Juz 29 - At-Tahrim', nilai: 85, catatan: 'Perlu latihan lebih' },
+    { tanggal: '21 Des 2025', juz: 'Juz 29 - At-Talaq', nilai: 92, catatan: 'Baik sekali' },
+    { tanggal: '20 Des 2025', juz: 'Juz 29 - At-Taghabun', nilai: 90, catatan: 'Baik' },
+    { tanggal: '19 Des 2025', juz: 'Juz 28 - Al-Mujadilah', nilai: 87, catatan: 'Cukup baik' },
+    { tanggal: '18 Des 2025', juz: 'Juz 28 - Al-Hadid', nilai: 93, catatan: 'Sangat baik' },
+    { tanggal: '17 Des 2025', juz: 'Juz 28 - Ar-Rahman', nilai: 91, catatan: 'Baik' },
   ];
 
-  const recentAchievementsData = [
-    { title: 'Hafal 1 Juz', date: '15 Okt 2025', icon: '🏆', color: 'emerald' },
-    { title: 'Nilai Sempurna', date: '10 Okt 2025', icon: '⭐', color: 'amber' },
-    { title: 'Konsisten 7 Hari', date: '5 Okt 2025', icon: '🔥', color: 'purple' },
-  ];
+  const totalPages = Math.ceil(detailData.length / itemsPerPage);
+  const paginatedData = detailData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  const handleDownloadReport = () => {
-    toast.success('Laporan sedang diunduh...');
+  const getPeriodLabel = () => {
+    const monthNames = getMonthOptions();
+
+    if (selectedPeriod === 'mingguan') {
+      const weekInfo = getWeekOptions()[selectedWeek];
+      return `${weekInfo.label}, ${monthNames[selectedMonth].label} ${selectedYear}`;
+    } else if (selectedPeriod === 'bulanan') {
+      return `${monthNames[selectedMonth].label} ${selectedYear}`;
+    } else {
+      return `Tahun ${selectedYear}`;
+    }
   };
 
   return (
     <SiswaLayout>
-      {/* Background Decorations */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 right-1/3 w-96 h-96 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+      {/* Background Gradient - SIMTAQ Style */}
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        {/* Container - Full Width SIMTAQ Style */}
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-10 py-6 space-y-6">
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-green-600 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-                <BarChart3 className="text-white" size={32} />
+          {/* Header - SIMTAQ Green Gradient */}
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                <BarChart3 size={32} className="text-white" />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-white">Laporan Hafalan</h1>
-                <div className="h-1 w-24 bg-white/30 rounded-full mt-2"></div>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Laporan Hafalan</h1>
+                <p className="text-green-50 text-sm sm:text-base mt-1">
+                  Statistik dan analisis progress hafalan Al-Qur'an
+                </p>
               </div>
             </div>
-            <p className="text-emerald-50 text-lg flex items-center gap-2">
-              <Sparkles size={18} />
-              Statistik dan progress hafalan Al-Qur'an
-            </p>
+          </div>
+
+          {/* Period Filter Tabs */}
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-4 space-y-4">
+            {/* Period Tabs */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-gray-700 mr-2">Periode:</span>
+              <div className="flex gap-2 flex-wrap">
+                {['mingguan', 'bulanan', 'tahunan'].map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => handlePeriodChange(period)}
+                    className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                      selectedPeriod === period
+                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dynamic Date Dropdowns */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Mingguan: Month + Year + Week Selector */}
+              {selectedPeriod === 'mingguan' && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Bulan:</label>
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => {
+                        setSelectedMonth(Number(e.target.value));
+                        setSelectedWeek(0);
+                      }}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {getMonthOptions().map((month) => (
+                        <option key={month.value} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Tahun:</label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {getYearOptions().map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Minggu:</label>
+                    <select
+                      value={selectedWeek}
+                      onChange={(e) => setSelectedWeek(Number(e.target.value))}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {getWeekOptions().map((week) => (
+                        <option key={week.value} value={week.value}>
+                          {week.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Bulanan: Month + Year Selector */}
+              {selectedPeriod === 'bulanan' && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Bulan:</label>
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {getMonthOptions().map((month) => (
+                        <option key={month.value} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Tahun:</label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {getYearOptions().map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Tahunan: Year Selector Only */}
+              {selectedPeriod === 'tahunan' && (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">Tahun:</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  >
+                    {getYearOptions().map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Stats Cards - Period Data */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Setoran */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <BookOpen size={24} className="text-emerald-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-emerald-700 font-medium">Total Setoran</p>
+                  <p className="text-2xl font-bold text-emerald-900">{currentStats.totalSetoran}</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">{getPeriodLabel()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Rata-rata Nilai */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Award size={24} className="text-amber-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-amber-700 font-medium">Rata-rata Nilai</p>
+                  <p className="text-2xl font-bold text-amber-900">{currentStats.rataRataNilai}</p>
+                  <p className="text-xs text-amber-600 mt-0.5">{getPeriodLabel()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Target Tercapai */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target size={24} className="text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-purple-700 font-medium">Target Tercapai</p>
+                  <p className="text-2xl font-bold text-purple-900">{currentStats.targetTercapai}%</p>
+                  <p className="text-xs text-purple-600 mt-0.5">{getPeriodLabel()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Konsistensi */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Flame size={24} className="text-sky-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-sky-700 font-medium">Konsistensi</p>
+                  <p className="text-2xl font-bold text-sky-900">{currentStats.konsistensi}</p>
+                  <p className="text-xs text-sky-600 mt-0.5">
+                    {selectedPeriod === 'mingguan' ? 'hari' : selectedPeriod === 'bulanan' ? 'hari' : 'hari'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Section - 2 Columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Donut Chart - Distribusi Juz */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
+              <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
+                <h2 className="text-lg font-bold text-white">Distribusi Juz</h2>
+                <p className="text-sm text-green-50 mt-1">Hafalan per juz</p>
+              </div>
+
+              <div className="p-6">
+                <div className="flex justify-center mb-6">
+                  <DonutChart data={juzDistribution} size={200} />
+                </div>
+
+                <div className="space-y-2">
+                  {juzDistribution.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                        <span className="text-sm text-gray-700">{item.label}</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900">{item.value} hal</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bar Chart - Nilai per Aspek */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
+              <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
+                <h2 className="text-lg font-bold text-white">Nilai per Aspek</h2>
+                <p className="text-sm text-green-50 mt-1">Rata-rata berdasarkan aspek penilaian</p>
+              </div>
+
+              <div className="p-6">
+                <HorizontalBarChart data={aspectScores} />
+
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
+                    <p className="text-xs text-emerald-700 font-semibold mb-1">Nilai Tertinggi</p>
+                    <p className="text-lg font-bold text-emerald-900">Implementasi</p>
+                    <p className="text-sm text-emerald-600">95%</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl">
+                    <p className="text-xs text-purple-700 font-semibold mb-1">Perlu Ditingkatkan</p>
+                    <p className="text-lg font-bold text-purple-900">Makhraj</p>
+                    <p className="text-sm text-purple-600">85%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Detail Table - Riwayat Setoran */}
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
+            <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
+              <h2 className="text-lg font-bold text-white">Riwayat Setoran Detail</h2>
+              <p className="text-sm text-green-50 mt-1">Daftar setoran hafalan {getPeriodLabel().toLowerCase()}</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Tanggal
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Juz / Surah
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Nilai
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Catatan Guru
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {paginatedData.map((item, index) => (
+                    <tr key={index} className="hover:bg-emerald-50/30 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
+                        {item.tanggal}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        {item.juz}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                          item.nilai >= 90 ? 'bg-emerald-100 text-emerald-700' :
+                          item.nilai >= 80 ? 'bg-amber-100 text-amber-700' :
+                          'bg-sky-100 text-sky-700'
+                        }`}>
+                          {item.nilai}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {item.catatan}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Halaman <span className="font-semibold">{currentPage}</span> dari{' '}
+                  <span className="font-semibold">{totalPages}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </motion.div>
-
-      {/* Motivational Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="mb-8"
-      >
-        <MotivationalCard theme="amber" />
-      </motion.div>
-
-      {/* Period Filter */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mb-6 flex items-center gap-3"
-      >
-        <button
-          onClick={() => setShowFilter(!showFilter)}
-          className="px-4 py-2 bg-white border border-gray-200 rounded-xl flex items-center gap-2 hover:bg-gray-50 transition-colors"
-        >
-          <Filter size={18} />
-          <span className="font-semibold text-gray-700">
-            {selectedPeriod === 'mingguan' ? 'Mingguan' : selectedPeriod === 'bulanan' ? 'Bulanan' : 'Tahunan'}
-          </span>
-          <ChevronDown size={18} className={`transition-transform ${showFilter ? 'rotate-180' : ''}`} />
-        </button>
-
-        {showFilter && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex gap-2"
-          >
-            {['mingguan', 'bulanan', 'tahunan'].map((period) => (
-              <button
-                key={period}
-                onClick={() => {
-                  setSelectedPeriod(period);
-                  setShowFilter(false);
-                }}
-                className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                  selectedPeriod === period
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {period.charAt(0).toUpperCase() + period.slice(1)}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {monthlyStats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 + index * 0.1 }}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`p-3 bg-gradient-to-br ${stat.gradient} rounded-xl`}>
-                  <Icon className="text-white" size={24} />
-                </div>
-              </div>
-              <p className="text-4xl font-bold text-gray-900 mb-1">{stat.value}</p>
-              <p className="text-sm font-semibold text-gray-700">{stat.label}</p>
-              <p className="text-xs text-gray-500">{stat.subtitle}</p>
-            </motion.div>
-          );
-        })}
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Progress Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <TrendingUp className="text-emerald-600" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Progress Hafalan</h2>
-              <p className="text-sm text-gray-600">Perkembangan 7 bulan terakhir</p>
-            </div>
-          </div>
-
-          <LineChart data={progressData} color="emerald" />
-
-          <div className="mt-6 p-4 bg-emerald-50 rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-emerald-700 font-semibold">Peningkatan Bulan Ini</p>
-                <p className="text-2xl font-bold text-emerald-900">+7 Halaman</p>
-              </div>
-              <div className="p-3 bg-emerald-500 rounded-xl">
-                <TrendingUp className="text-white" size={24} />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Juz Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <BookOpen className="text-amber-600" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Distribusi Juz</h2>
-              <p className="text-sm text-gray-600">Hafalan per juz</p>
-            </div>
-          </div>
-
-          <div className="flex justify-center mb-6">
-            <DonutChart data={juzDistribution} size={180} />
-          </div>
-
-          <div className="space-y-2">
-            {juzDistribution.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-sm text-gray-700">{item.label}</span>
-                </div>
-                <span className="text-sm font-bold text-gray-900">{item.value} hal</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        {/* Aspect Scores */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Award className="text-purple-600" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Nilai per Aspek</h2>
-              <p className="text-sm text-gray-600">Rata-rata nilai berdasarkan aspek penilaian</p>
-            </div>
-          </div>
-
-          <HorizontalBarChart data={aspectScores} />
-
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
-              <p className="text-sm text-emerald-700 font-semibold mb-1">Nilai Tertinggi</p>
-              <p className="text-2xl font-bold text-emerald-900">Implementasi (95)</p>
-            </div>
-            <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl">
-              <p className="text-sm text-purple-700 font-semibold mb-1">Perlu Ditingkatkan</p>
-              <p className="text-2xl font-bold text-purple-900">Makhraj (85)</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </SiswaLayout>
   );
 }
