@@ -52,10 +52,13 @@ export default function ReferensiQuranPage() {
   const [lastRead, setLastRead] = useState(null);
   const [showTajwid, setShowTajwid] = useState(false);
 
-  // Single audio state management
+  // Global singleton audio player state
   const [currentPlayingId, setCurrentPlayingId] = useState(null); // Format: "surah-ayah"
-  const [currentAudio, setCurrentAudio] = useState(null); // Audio element reference
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false); // Track if audio is actually playing (not paused)
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false); // Track if audio is actually playing
+  const [audioLoading, setAudioLoading] = useState(false); // Track audio loading state
+
+  // Singleton audio player ref (created once, never recreated)
+  const audioRef = useRef(null);
 
   // Jump to ayah modal state
   const [showJumpModal, setShowJumpModal] = useState(false);
@@ -66,6 +69,27 @@ export default function ReferensiQuranPage() {
 
   // Ref map for ayahs (for jump functionality)
   const ayahRefs = useRef({});
+
+  // Initialize singleton audio player on mount
+  useEffect(() => {
+    // Create audio element once
+    const audio = new Audio();
+    audio.preload = 'auto';
+    audioRef.current = audio;
+
+    console.log('🎵 Audio player initialized (singleton)');
+
+    // Cleanup on unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current.load();
+        audioRef.current = null;
+        console.log('🎵 Audio player cleaned up');
+      }
+    };
+  }, []);
 
   // Fetch surahs on mount
   useEffect(() => {
@@ -122,16 +146,15 @@ export default function ReferensiQuranPage() {
       setVerses(data.ayahs || []);
       setSelectedSurah(surahNumber);
 
-      // Stop any playing audio when changing surah
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentAudio.src = '';
-        currentAudio.load();
-        setCurrentAudio(null);
+      // Stop any playing audio when changing surah (using singleton)
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.src = '';
       }
       setCurrentPlayingId(null);
       setIsAudioPlaying(false);
+      setAudioLoading(false);
 
       // Auto-scroll for desktop only
       if (!isMobileAccordion) {
@@ -178,7 +201,7 @@ export default function ReferensiQuranPage() {
     }
   };
 
-  const playAudio = (ayahNo) => {
+  const playAudio = async (ayahNo) => {
     try {
       console.log('🎵 playAudio called with ayahNo:', ayahNo);
 
@@ -186,6 +209,12 @@ export default function ReferensiQuranPage() {
       if (!selectedSurah || !ayahNo) {
         console.error('❌ Invalid data:', { selectedSurah, ayahNo });
         toast.error('Data audio tidak valid');
+        return;
+      }
+
+      if (!audioRef.current) {
+        console.error('❌ Audio player not initialized');
+        toast.error('Audio player belum siap');
         return;
       }
 
@@ -206,186 +235,131 @@ export default function ReferensiQuranPage() {
       }
 
       const playingId = `${surahNo}-${ayahNo}`;
-
-      console.log('📌 State SEBELUM playAudio:', {
-        currentPlayingId,
-        playingId,
-        isAudioPlaying,
-        hasCurrentAudio: !!currentAudio,
-        surahNo,
-        ayahNo
-      });
+      const audio = audioRef.current;
 
       // Case 1: Clicking the same ayat - toggle play/pause
-      if (currentPlayingId === playingId && currentAudio) {
-        if (currentAudio.paused) {
+      if (currentPlayingId === playingId) {
+        if (audio.paused) {
           console.log('▶️ Resume audio');
-          currentAudio.play()
-            .then(() => {
-              setIsAudioPlaying(true);
-              toast.success('Audio dilanjutkan', { icon: '▶️' });
-            })
-            .catch(err => {
-              console.error('❌ Resume error:', err);
+          setAudioLoading(true);
+          try {
+            await audio.play();
+            setIsAudioPlaying(true);
+            setAudioLoading(false);
+            toast.success('Audio dilanjutkan', { icon: '▶️' });
+          } catch (err) {
+            console.error('❌ Resume error:', err);
+            setAudioLoading(false);
+            // Don't show toast for AbortError (user clicked again quickly)
+            if (err.name !== 'AbortError') {
               toast.error('Gagal melanjutkan audio');
-            });
+            }
+          }
         } else {
           console.log('⏸️ Pause audio');
-          currentAudio.pause();
+          audio.pause();
           setIsAudioPlaying(false);
           toast.success('Audio dijeda', { icon: '⏸️' });
         }
         return;
       }
 
-      // Case 2: Different ayat - stop previous audio completely
-      if (currentAudio) {
-        console.log('🧹 Stopping previous audio');
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentAudio.src = '';
-        currentAudio.load();
-      }
+      // Case 2: Different ayat - stop previous and play new
+      console.log('🧹 Stopping previous audio and loading new');
+      audio.pause();
+      audio.currentTime = 0;
 
       // Clear previous state
-      setCurrentAudio(null);
       setCurrentPlayingId(null);
       setIsAudioPlaying(false);
+      setAudioLoading(true);
 
-      // Build audio ID with proper 6-digit format (3-digit surah + 3-digit ayah)
+      // Build audio ID with proper 6-digit format
       const audioId = `${pad3(surahNo)}${pad3(ayahNo)}`;
 
-      // Audio sources to try (EveryAyah primary, then fallbacks)
+      // Audio sources to try
       const audioSources = [
         `https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/${audioId}.mp3`,
         `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${audioId}.mp3`,
       ];
 
       console.log('🎵 Audio ID:', audioId);
-      console.log('🎵 Audio URLs:', audioSources);
 
-      console.log('🎵 Audio URLs to try:', audioSources);
+      // Try each source sequentially
+      let playSuccess = false;
+      for (let i = 0; i < audioSources.length; i++) {
+        const audioUrl = audioSources[i];
+        console.log(`🎵 Trying source ${i + 1}/${audioSources.length}:`, audioUrl);
 
-      let currentSourceIndex = 0;
+        audio.src = audioUrl;
 
-      const tryNextSource = () => {
-        if (currentSourceIndex >= audioSources.length) {
-          console.error('❌ All audio sources failed');
-          toast.error('Audio tidak tersedia. Coba ayat lain atau refresh halaman.');
-          setCurrentPlayingId(null);
-          setCurrentAudio(null);
-          setIsAudioPlaying(false);
-          return;
+        try {
+          // Attempt to play
+          await audio.play();
+
+          // Success!
+          playSuccess = true;
+          setCurrentPlayingId(playingId);
+          setIsAudioPlaying(true);
+          setAudioLoading(false);
+          console.log('✅ Playing successfully!');
+          toast.success(`Memutar ayat ${ayahNo}`, { icon: '🔊' });
+          break;
+
+        } catch (err) {
+          console.error(`❌ Source ${i + 1} failed:`, err.name, err.message);
+
+          // If this is the last source, show error (unless it's AbortError)
+          if (i === audioSources.length - 1) {
+            setAudioLoading(false);
+            setCurrentPlayingId(null);
+            setIsAudioPlaying(false);
+
+            // Only show toast for real errors, not AbortError
+            if (err.name !== 'AbortError') {
+              toast.error('Audio tidak tersedia untuk ayat ini');
+            }
+          }
+          // Otherwise, continue to next source
         }
+      }
 
-        const audioUrl = audioSources[currentSourceIndex];
-        console.log(`🎵 Trying audio source ${currentSourceIndex + 1}/${audioSources.length}:`, audioUrl);
+      // Setup event listeners (only once, not on every play)
+      if (!audio.hasAttribute('data-listeners-attached')) {
+        audio.setAttribute('data-listeners-attached', 'true');
 
-        // Create new audio element
-        const audio = new Audio();
-        audio.preload = 'auto';
-
-        let loadTimeout = setTimeout(() => {
-          console.warn('⏱️ Loading timeout, trying next source...');
-          currentSourceIndex++;
-          tryNextSource();
-        }, 10000);
-
-        audio.addEventListener('loadstart', () => {
-          console.log('📥 Loading started...');
-        });
-
-        audio.addEventListener('loadeddata', () => {
-          console.log('📦 Audio data loaded');
-          clearTimeout(loadTimeout);
-        });
-
-        audio.addEventListener('canplay', () => {
-          console.log('✅ Can play, attempting to play...');
-          clearTimeout(loadTimeout);
-          audio.play()
-            .then(() => {
-              console.log('▶️ Playing successfully!');
-              setCurrentAudio(audio);
-              setCurrentPlayingId(playingId);
-              setIsAudioPlaying(true);
-              console.log('✅ State SETELAH berhasil play:', {
-                playingId,
-                message: 'State updated: currentAudio, currentPlayingId, isAudioPlaying = true'
-              });
-              toast.success(`Memutar ayat ${ayahNumberInSurah}`, { icon: '🔊' });
-            })
-            .catch(err => {
-              console.error('❌ Play error:', err);
-              currentSourceIndex++;
-              console.log(`⏭️ Trying next source (${currentSourceIndex + 1}/${audioSources.length})...`);
-              tryNextSource();
-            });
+        audio.addEventListener('ended', () => {
+          console.log('⏹️ Playback ended');
+          setCurrentPlayingId(null);
+          setIsAudioPlaying(false);
         });
 
         audio.addEventListener('error', (e) => {
-          clearTimeout(loadTimeout);
-
-          if (!audio.src || audio.src === '' || audio.src === window.location.href) {
-            console.log('⚠️ Error on cleanup audio element (empty src), ignoring');
-            return;
-          }
-
           const errorCode = audio.error?.code;
-          const errorMessages = {
-            1: 'MEDIA_ERR_ABORTED - Loading dibatalkan',
-            2: 'MEDIA_ERR_NETWORK - Error jaringan',
-            3: 'MEDIA_ERR_DECODE - Error decoding',
-            4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - Format tidak didukung'
-          };
+          console.error('❌ Audio error:', errorCode);
 
-          console.error(`❌ Audio error from source ${currentSourceIndex + 1}:`, errorMessages[errorCode] || 'Unknown error');
-
-          currentSourceIndex++;
-          if (currentSourceIndex < audioSources.length) {
-            console.log(`⏭️ Trying next source (${currentSourceIndex + 1}/${audioSources.length})...`);
-            tryNextSource();
-          } else {
-            toast.error('Audio tidak tersedia untuk ayat ini');
-            setCurrentPlayingId(null);
-            setCurrentAudio(null);
+          // Only show error toast for real errors (not ABORTED)
+          if (errorCode !== 1) { // 1 = MEDIA_ERR_ABORTED
+            setAudioLoading(false);
             setIsAudioPlaying(false);
+
+            if (errorCode === 4) { // MEDIA_ERR_SRC_NOT_SUPPORTED
+              console.error('Format not supported');
+            } else if (errorCode === 2) { // MEDIA_ERR_NETWORK
+              console.error('Network error');
+            }
           }
         });
-
-        audio.addEventListener('ended', () => {
-          console.log('⏹️ Playback ended - clearing state');
-          setCurrentPlayingId(null);
-          setCurrentAudio(null);
-          setIsAudioPlaying(false);
-        });
-
-        audio.addEventListener('pause', () => {
-          console.log('⏸️ Paused');
-          setIsAudioPlaying(false);
-        });
-
-        audio.addEventListener('play', () => {
-          console.log('▶️ Play event fired');
-          setIsAudioPlaying(true);
-        });
-
-        // Set source and load
-        audio.src = audioUrl;
-        audio.load();
-
-        console.log('🎵 Audio element created and loading...');
-      };
-
-      // Start trying sources
-      tryNextSource();
+      }
 
     } catch (error) {
       console.error('❌ Error in playAudio:', error);
-      toast.error('Terjadi kesalahan saat memutar audio');
-      setCurrentPlayingId(null);
-      setCurrentAudio(null);
+      setAudioLoading(false);
       setIsAudioPlaying(false);
+      // Don't show toast for AbortError
+      if (error.name !== 'AbortError') {
+        toast.error('Terjadi kesalahan saat memutar audio');
+      }
     }
   };
 
@@ -714,13 +688,15 @@ export default function ReferensiQuranPage() {
                                           e.stopPropagation();
                                           playAudio(ayahNo);
                                         }}
-                                        disabled={loading}
+                                        disabled={audioLoading}
                                         className={`p-2 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
-                                          loading ? 'opacity-50 cursor-not-allowed' : ''
+                                          audioLoading ? 'opacity-50 cursor-not-allowed' : ''
                                         }`}
-                                        title={loading ? 'Memuat audio...' : 'Putar audio'}
+                                        title={audioLoading ? 'Memuat audio...' : 'Putar audio'}
                                       >
-                                        {isCurrentAyat && isAudioPlaying ? (
+                                        {audioLoading ? (
+                                          <Loader2 size={16} className="text-green-700 animate-spin" />
+                                        ) : isCurrentAyat && isAudioPlaying ? (
                                           <Pause size={16} className="text-green-700" />
                                         ) : (
                                           <Play size={16} className="text-green-700" />
@@ -1015,13 +991,15 @@ export default function ReferensiQuranPage() {
                                   e.stopPropagation();
                                   playAudio(ayahNo);
                                 }}
-                                disabled={loading}
+                                disabled={audioLoading}
                                 className={`p-2.5 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
-                                  loading ? 'opacity-50 cursor-not-allowed' : ''
+                                  audioLoading ? 'opacity-50 cursor-not-allowed' : ''
                                 }`}
-                                title={loading ? 'Memuat audio...' : 'Putar audio'}
+                                title={audioLoading ? 'Memuat audio...' : 'Putar audio'}
                               >
-                                {isCurrentAyat && isAudioPlaying ? (
+                                {audioLoading ? (
+                                  <Loader2 size={20} className="text-green-700 animate-spin" />
+                                ) : isCurrentAyat && isAudioPlaying ? (
                                   <Pause size={20} className="text-green-700" />
                                 ) : (
                                   <Play size={20} className="text-green-700" />
