@@ -41,6 +41,22 @@ const getRevelationTypeIndonesian = (revelationType) => {
 // Helper to pad numbers to 3 digits for audio URLs
 const pad3 = (n) => String(n).padStart(3, '0');
 
+// Helper to clean translation text from footnotes and embedded numbers
+const cleanTranslation = (text) => {
+  if (!text) return '';
+
+  return text
+    // Remove footnote markers like >>1, >>2, >>123
+    .replace(/>>\d+/g, '')
+    // Remove numbers embedded in words (e.g., "Tuhan3" -> "Tuhan", "bagi1" -> "bagi")
+    // Match: letter followed by digit(s), capture the letter, remove the digit(s)
+    .replace(/([a-zA-Z])\d+/g, '$1')
+    // Remove any remaining double spaces
+    .replace(/\s{2,}/g, ' ')
+    // Trim whitespace
+    .trim();
+};
+
 export default function ReferensiQuranPage() {
   const [surahs, setSurahs] = useState([]);
   const [selectedSurah, setSelectedSurah] = useState(null);
@@ -706,7 +722,7 @@ export default function ReferensiQuranPage() {
                                     {verse.translation && (
                                       <div className="p-3 rounded-lg bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border border-emerald-100">
                                         <p className="text-gray-700 leading-relaxed text-xs">
-                                          {verse.translation}
+                                          {cleanTranslation(verse.translation)}
                                         </p>
                                       </div>
                                     )}
@@ -1009,7 +1025,7 @@ export default function ReferensiQuranPage() {
                             {verse.translation && (
                               <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border border-emerald-100">
                                 <p className="text-gray-700 leading-relaxed text-sm">
-                                  {verse.translation}
+                                  {cleanTranslation(verse.translation)}
                                 </p>
                               </div>
                             )}
