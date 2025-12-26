@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   User,
@@ -10,7 +10,6 @@ import {
   Shield,
   Edit,
   Lock,
-  IdCard,
   UserCircle,
   Loader,
   X,
@@ -18,6 +17,65 @@ import {
   Users,
 } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
+
+// Single Source of Truth: Profile Fields Configuration
+const PROFILE_FIELDS_CONFIG = [
+  {
+    key: 'namaLengkap',
+    label: 'Nama Lengkap',
+    icon: User,
+    editable: true,
+    required: true,
+    type: 'text',
+    placeholder: 'Masukkan nama lengkap',
+    gridCols: 'md:col-span-2',
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    icon: Mail,
+    editable: false,
+    required: false,
+    type: 'email',
+    readOnlyNote: '(Tidak dapat diubah)',
+    gridCols: 'md:col-span-1',
+  },
+  {
+    key: 'noTelepon',
+    label: 'Nomor Telepon',
+    icon: Phone,
+    editable: true,
+    required: true,
+    type: 'tel',
+    placeholder: 'Contoh: 0812-3456-7890',
+    gridCols: 'md:col-span-1',
+    validate: (value) => {
+      const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
+      return phoneRegex.test(value) ? null : 'Format nomor telepon tidak valid';
+    },
+  },
+  {
+    key: 'status',
+    label: 'Status Keanggotaan',
+    icon: Shield,
+    editable: false,
+    required: false,
+    type: 'text',
+    readOnlyNote: '(Tidak dapat diubah)',
+    gridCols: 'md:col-span-1',
+  },
+  {
+    key: 'alamat',
+    label: 'Alamat Rumah',
+    icon: MapPin,
+    editable: true,
+    required: false,
+    type: 'textarea',
+    placeholder: 'Masukkan alamat lengkap',
+    gridCols: 'md:col-span-2',
+    rows: 3,
+  },
+];
 
 // ProfileHeader Component
 function ProfileHeader() {
@@ -96,7 +154,7 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
   );
 }
 
-// PersonalInfoCard Component (Read-only view)
+// PersonalInfoCard Component (Read-only view using fieldsConfig)
 function PersonalInfoCard({ profileData }) {
   return (
     <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
@@ -108,71 +166,22 @@ function PersonalInfoCard({ profileData }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Nama Lengkap */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <User size={16} className="text-gray-400" />
-            Nama Lengkap
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.namaLengkap || '-'}</p>
-          </div>
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Mail size={16} className="text-gray-400" />
-            Email
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
-          </div>
-        </div>
-
-        {/* Nomor Telepon */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Phone size={16} className="text-gray-400" />
-            Nomor Telepon
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.noTelepon || '-'}</p>
-          </div>
-        </div>
-
-        {/* ID Wali */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <IdCard size={16} className="text-gray-400" />
-            ID Wali
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900 font-mono">{profileData?.idWali || '-'}</p>
-          </div>
-        </div>
-
-        {/* Status */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Shield size={16} className="text-gray-400" />
-            Status Keanggotaan
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.status || 'Aktif'}</p>
-          </div>
-        </div>
-
-        {/* Alamat (full width) */}
-        <div className="md:col-span-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <MapPin size={16} className="text-gray-400" />
-            Alamat Rumah
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.alamat || '-'}</p>
-          </div>
-        </div>
+        {PROFILE_FIELDS_CONFIG.map((field) => {
+          const IconComponent = field.icon;
+          return (
+            <div key={field.key} className={field.gridCols}>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <IconComponent size={16} className="text-gray-400" />
+                {field.label}
+              </label>
+              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                <p className="font-medium text-gray-900 break-all">
+                  {profileData?.[field.key] || '-'}
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -253,22 +262,31 @@ function ChildrenConnectedCard({ children }) {
   );
 }
 
-// EditProfileModal Component
+// EditProfileModal Component (Using fieldsConfig)
 function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
   const [formData, setFormData] = useState({});
   const [saveLoading, setSaveLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const firstInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && profileData) {
-      setFormData({
-        namaLengkap: profileData.namaLengkap || '',
-        noTelepon: profileData.noTelepon || '',
-        alamat: profileData.alamat || '',
+      // Initialize formData with only editable fields
+      const initialData = {};
+      PROFILE_FIELDS_CONFIG.filter((f) => f.editable).forEach((field) => {
+        initialData[field.key] = profileData[field.key] || '';
       });
+      setFormData(initialData);
       setError('');
       setSuccess('');
+
+      // Autofocus first input after modal opens
+      setTimeout(() => {
+        if (firstInputRef.current) {
+          firstInputRef.current.focus();
+        }
+      }, 100);
     }
   }, [isOpen, profileData]);
 
@@ -277,17 +295,23 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
       setSaveLoading(true);
       setError('');
 
-      if (!formData.namaLengkap || !formData.noTelepon) {
-        setError('Nama dan nomor telepon wajib diisi');
-        setSaveLoading(false);
-        return;
-      }
+      // Validate required fields
+      for (const field of PROFILE_FIELDS_CONFIG.filter((f) => f.editable)) {
+        if (field.required && !formData[field.key]?.trim()) {
+          setError(`${field.label} wajib diisi`);
+          setSaveLoading(false);
+          return;
+        }
 
-      const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
-      if (!phoneRegex.test(formData.noTelepon)) {
-        setError('Format nomor telepon tidak valid');
-        setSaveLoading(false);
-        return;
+        // Custom validation
+        if (field.validate && formData[field.key]) {
+          const validationError = field.validate(formData[field.key]);
+          if (validationError) {
+            setError(validationError);
+            setSaveLoading(false);
+            return;
+          }
+        }
       }
 
       await onSave(formData);
@@ -305,19 +329,25 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
     }
   };
 
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && !saveLoading) {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      onClick={handleBackdropClick}
     >
       <div
         className="bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 flex items-center justify-between rounded-t-2xl">
+        {/* Header - Green Gradient */}
+        <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 flex items-center justify-between rounded-t-2xl z-10">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-white/20">
               <Edit size={20} className="text-white" />
@@ -326,99 +356,100 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+            disabled={saveLoading}
+            className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-50"
           >
             <X size={20} className="text-white" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6">
+        {/* Body - Solid White Background */}
+        <div className="p-6 bg-white">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium">
               {success}
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Nama Lengkap */}
-            <div className="md:col-span-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <User size={16} className="text-gray-400" />
-                Nama Lengkap <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.namaLengkap || ''}
-                onChange={(e) => setFormData({ ...formData, namaLengkap: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                placeholder="Masukkan nama lengkap"
-              />
-            </div>
+            {PROFILE_FIELDS_CONFIG.map((field, index) => {
+              const IconComponent = field.icon;
+              const isEditable = field.editable;
+              const isFirstEditableField = index === 0;
 
-            {/* Nomor Telepon */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <Phone size={16} className="text-gray-400" />
-                Nomor Telepon <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="tel"
-                value={formData.noTelepon || ''}
-                onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                placeholder="Contoh: 0812-3456-7890"
-              />
-            </div>
+              return (
+                <div key={field.key} className={field.gridCols}>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <IconComponent size={16} className="text-gray-400" />
+                    {field.label}
+                    {field.required && <span className="text-red-500">*</span>}
+                    {field.readOnlyNote && (
+                      <span className="text-xs text-gray-500 ml-1">{field.readOnlyNote}</span>
+                    )}
+                  </label>
 
-            {/* Email - Read-only */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <Mail size={16} className="text-gray-400" />
-                Email <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
-              </label>
-              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
-              </div>
-            </div>
-
-            {/* Alamat */}
-            <div className="md:col-span-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <MapPin size={16} className="text-gray-400" />
-                Alamat Rumah
-              </label>
-              <textarea
-                rows={3}
-                value={formData.alamat || ''}
-                onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all"
-                placeholder="Masukkan alamat lengkap"
-              />
-            </div>
+                  {isEditable ? (
+                    field.type === 'textarea' ? (
+                      <textarea
+                        ref={isFirstEditableField ? firstInputRef : null}
+                        rows={field.rows || 3}
+                        value={formData[field.key] || ''}
+                        onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                        placeholder={field.placeholder}
+                        disabled={saveLoading}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      />
+                    ) : (
+                      <input
+                        ref={isFirstEditableField ? firstInputRef : null}
+                        type={field.type}
+                        value={formData[field.key] || ''}
+                        onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                        placeholder={field.placeholder}
+                        disabled={saveLoading}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      />
+                    )
+                  ) : (
+                    <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                      <p className="font-medium text-gray-900 break-all">
+                        {profileData?.[field.key] || '-'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t border-gray-100">
+        <div className="flex gap-3 p-6 border-t border-gray-100 bg-white rounded-b-2xl">
           <button
             onClick={onClose}
             disabled={saveLoading}
-            className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-all disabled:opacity-50"
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Batal
           </button>
           <button
             onClick={handleSave}
             disabled={saveLoading}
-            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+            {saveLoading ? (
+              <>
+                <Loader className="animate-spin" size={18} />
+                Menyimpan...
+              </>
+            ) : (
+              'Simpan Perubahan'
+            )}
           </button>
         </div>
       </div>
@@ -437,10 +468,24 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setError('');
+      setSuccess('');
+    }
+  }, [isOpen]);
+
   const handleSubmit = async () => {
     try {
       setSaveLoading(true);
       setError('');
+
+      if (!formData.oldPassword || !formData.newPassword || !formData.confirmPassword) {
+        setError('Semua field wajib diisi');
+        setSaveLoading(false);
+        return;
+      }
 
       if (formData.newPassword !== formData.confirmPassword) {
         setError('Password baru dan konfirmasi tidak cocok');
@@ -469,12 +514,25 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
     }
   };
 
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && !saveLoading) {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-6">
+    <div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-amber-50">
               <Lock size={20} className="text-amber-600" />
@@ -483,66 +541,81 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all"
+            disabled={saveLoading}
+            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50"
           >
             <X size={20} />
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
-            {success}
-          </div>
-        )}
+        {/* Body */}
+        <div className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium">
+              {success}
+            </div>
+          )}
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
-            <input
-              type="password"
-              value={formData.oldPassword}
-              onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password Lama <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={formData.oldPassword}
+                onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
+                disabled={saveLoading}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                placeholder="Masukkan password lama"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
-            <input
-              type="password"
-              value={formData.newPassword}
-              onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password Baru <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={formData.newPassword}
+                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                disabled={saveLoading}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                placeholder="Masukkan password baru"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Konfirmasi Password Baru
-            </label>
-            <input
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Konfirmasi Password Baru <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                disabled={saveLoading}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                placeholder="Konfirmasi password baru"
+              />
+            </div>
 
-          <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-            <p className="text-xs font-medium text-amber-900 mb-1">Persyaratan Password:</p>
-            <ul className="text-xs text-amber-800 space-y-1">
-              <li>• Minimal 6 karakter</li>
-              <li>• Gunakan kombinasi huruf dan angka</li>
-            </ul>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+              <p className="text-xs font-medium text-amber-900 mb-1">Persyaratan Password:</p>
+              <ul className="text-xs text-amber-800 space-y-1">
+                <li>• Minimal 6 karakter</li>
+                <li>• Gunakan kombinasi huruf dan angka</li>
+              </ul>
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
+        {/* Footer */}
+        <div className="flex gap-3 p-6 border-t border-gray-100">
           <button
             onClick={onClose}
             disabled={saveLoading}
@@ -553,9 +626,16 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
           <button
             onClick={handleSubmit}
             disabled={saveLoading}
-            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {saveLoading ? 'Mengubah...' : 'Ubah Password'}
+            {saveLoading ? (
+              <>
+                <Loader className="animate-spin" size={18} />
+                Mengubah...
+              </>
+            ) : (
+              'Ubah Password'
+            )}
           </button>
         </div>
       </div>
@@ -573,7 +653,7 @@ export default function ProfilOrangtuaPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Children data
+  // Children data (demo data)
   const children = [
     {
       nama: 'Ahmad Fauzan',
@@ -602,17 +682,20 @@ export default function ProfilOrangtuaPage() {
       if (saved) {
         setProfileData(JSON.parse(saved));
       } else {
+        // Default demo data (ID Wali still in data but not displayed)
         setProfileData({
           namaLengkap: 'Ali Rahman',
           email: 'ali.rahman@wali.sch.id',
           noTelepon: '0812-3456-7890',
           alamat: 'Jl. Pahlawan No. 23, Bandar Lampung',
-          idWali: 'WLI.2024.013',
           status: 'Aktif',
+          // idWali exists in data but is NOT displayed in UI
+          idWali: 'WLI.2024.013',
         });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setError('Gagal memuat data profil');
     } finally {
       setLoading(false);
     }
@@ -625,7 +708,16 @@ export default function ProfilOrangtuaPage() {
   };
 
   const handleSaveProfile = async (formData) => {
-    const updatedData = { ...profileData, ...formData };
+    // Merge only editable fields, keep read-only fields unchanged
+    const updatedData = {
+      ...profileData,
+      ...formData,
+      // Ensure read-only fields are NOT overwritten
+      email: profileData.email,
+      status: profileData.status,
+      idWali: profileData.idWali, // Keep in data but not displayed
+    };
+
     setProfileData(updatedData);
     localStorage.setItem('orangtua_profile', JSON.stringify(updatedData));
 
@@ -642,6 +734,9 @@ export default function ProfilOrangtuaPage() {
   };
 
   const handleChangePasswordSubmit = async (formData) => {
+    // TODO: Implement actual password change API call
+    console.log('Change password:', formData);
+
     setSuccess('Password berhasil diubah!');
     setTimeout(() => {
       setSuccess('');
@@ -667,12 +762,12 @@ export default function ProfilOrangtuaPage() {
 
           {/* Success/Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 shadow-sm">
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-4">
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-4 shadow-sm">
               {success}
             </div>
           )}
@@ -688,11 +783,9 @@ export default function ProfilOrangtuaPage() {
               />
             </div>
 
-            {/* Right: Personal Info */}
+            {/* Right: Personal Info + Children */}
             <div className="lg:col-span-2 space-y-6">
               <PersonalInfoCard profileData={profileData} />
-
-              {/* Children Connected */}
               <ChildrenConnectedCard children={children} />
             </div>
           </div>
