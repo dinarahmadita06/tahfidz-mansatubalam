@@ -210,7 +210,8 @@ export default function SiswaTasmiPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [siswaData, setSiswaData] = useState(null);
-  const [totalJuz, setTotalJuz] = useState(0);
+  const [totalJuzHafalan, setTotalJuzHafalan] = useState(0);
+  const [targetJuzSekolah, setTargetJuzSekolah] = useState(3);
   const [tasmiList, setTasmiList] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [guruList, setGuruList] = useState([]);
@@ -254,24 +255,6 @@ export default function SiswaTasmiPage() {
         }
 
         setSiswaData(siswaJson.siswa);
-
-        // Calculate total juz from hafalan
-        if (siswaJson.siswa?.id) {
-          const timestamp = new Date().getTime();
-          const hafalanRes = await fetch(`/api/siswa/hafalan-summary?t=${timestamp}`, {
-            cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache' }
-          });
-
-          if (hafalanRes.ok) {
-            const hafalanData = await hafalanRes.json();
-            const juzCount = hafalanData.totalJuz || 0;
-            setTotalJuz(juzCount);
-            setFormData(prev => ({ ...prev, jumlahHafalan: juzCount }));
-          } else {
-            setTotalJuz(0);
-          }
-        }
       }
 
       // Fetch guru tahfidz list
@@ -289,11 +272,15 @@ export default function SiswaTasmiPage() {
         console.error('Error fetching guru list:', guruError);
       }
 
-      // Fetch tasmi history
+      // Fetch tasmi history with totalJuzHafalan and targetJuzSekolah
       const tasmiRes = await fetch('/api/siswa/tasmi');
       if (tasmiRes.ok) {
         const tasmiData = await tasmiRes.json();
         setTasmiList(tasmiData.tasmi || []);
+        setTotalJuzHafalan(tasmiData.totalJuzHafalan || 0);
+        setTargetJuzSekolah(tasmiData.targetJuzSekolah || 3);
+        // Update formData with totalJuzHafalan for modal
+        setFormData(prev => ({ ...prev, jumlahHafalan: tasmiData.totalJuzHafalan || 0 }));
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -391,7 +378,7 @@ export default function SiswaTasmiPage() {
 
   const resetForm = () => {
     setFormData({
-      jumlahHafalan: totalJuz,
+      jumlahHafalan: totalJuzHafalan,
       juzYangDitasmi: '',
       guruId: '',
       jamTasmi: '',
@@ -406,6 +393,15 @@ export default function SiswaTasmiPage() {
     resetForm();
     setShowModal(true);
   };
+
+  // Calculate registration status dynamically
+  const isSiapMendaftar = totalJuzHafalan >= targetJuzSekolah;
+  const statusPendaftaran = isSiapMendaftar
+    ? 'Siap Mendaftar'
+    : 'Belum Siap Mendaftar';
+  const statusSubtitle = isSiapMendaftar
+    ? `${totalJuzHafalan} dari ${targetJuzSekolah} juz terpenuhi`
+    : `Minimal ${targetJuzSekolah} juz diperlukan`;
 
   if (loading) {
     return (
@@ -449,7 +445,8 @@ export default function SiswaTasmiPage() {
             <StatsCard
               icon={Award}
               title="Total Juz Hafalan"
-              value={`${totalJuz} Juz`}
+              value={`${totalJuzHafalan} Juz`}
+              subtitle={`Dari ${targetJuzSekolah} juz target`}
               color="emerald"
               delay={0.1}
             />
@@ -457,14 +454,16 @@ export default function SiswaTasmiPage() {
               icon={Calendar}
               title="Total Pendaftaran"
               value={tasmiList.length}
+              subtitle="Pendaftaran Tasmi'"
               color="purple"
               delay={0.2}
             />
             <StatsCard
               icon={CheckCircle}
               title="Status Pendaftaran"
-              value="Siap Mendaftar"
-              color="sky"
+              value={statusPendaftaran}
+              subtitle={statusSubtitle}
+              color={isSiapMendaftar ? 'sky' : 'purple'}
               delay={0.3}
             />
           </div>
