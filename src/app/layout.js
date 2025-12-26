@@ -4,6 +4,7 @@ import "@/styles/responsive.css";
 import "@/styles/charts-responsive.css";
 import SessionProvider from "@/components/providers/SessionProvider";
 import SWRProvider from "@/components/providers/SWRProvider";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -27,7 +28,9 @@ export default function RootLayout({ children }) {
       <body className={`${poppins.className} ${poppins.variable} ${amiri.variable} antialiased`}>
         <SessionProvider>
           <SWRProvider>
-            {children}
+            <QueryProvider>
+              {children}
+            </QueryProvider>
           </SWRProvider>
         </SessionProvider>
       </body>
