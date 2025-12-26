@@ -109,3 +109,58 @@ export const getStatusFromScore = (score) => {
   if (safeScore >= 60) return 'revisi';
   return 'belum';
 };
+
+/**
+ * Merge attendance and assessment data by date
+ * @param {Array} attendanceList - Array of attendance records
+ * @param {Array} assessmentList - Array of assessment records
+ * @returns {Array} - Merged daily progress data sorted by date (newest first)
+ */
+export const mergeAttendanceWithAssessmentsByDate = (attendanceList = [], assessmentList = []) => {
+  if (!Array.isArray(attendanceList) || !Array.isArray(assessmentList)) {
+    return [];
+  }
+
+  // Create a map of assessments by date
+  const assessmentsByDate = new Map();
+  assessmentList.forEach((assessment) => {
+    if (!assessment.tanggal) return;
+
+    const dateKey = new Date(assessment.tanggal).toISOString().split('T')[0];
+    if (!assessmentsByDate.has(dateKey)) {
+      assessmentsByDate.set(dateKey, []);
+    }
+    assessmentsByDate.get(dateKey).push(assessment);
+  });
+
+  // Merge attendance with assessments
+  const mergedData = attendanceList.map((attendance) => {
+    const dateKey = new Date(attendance.tanggal).toISOString().split('T')[0];
+    const dailyAssessments = assessmentsByDate.get(dateKey) || [];
+
+    return {
+      id: attendance.id,
+      tanggal: attendance.tanggal,
+      kegiatan: attendance.kegiatan || 'Kegiatan Tahfidz',
+      status: attendance.status,
+      jam: attendance.jam,
+      catatan: attendance.catatan,
+      assessments: dailyAssessments.map((a) => ({
+        id: a.id,
+        surah: a.surah,
+        ayat: a.ayat,
+        tajwid: safeNumber(a.tajwid, 0),
+        kelancaran: safeNumber(a.kelancaran, 0),
+        makhraj: safeNumber(a.makhraj, 0),
+        implementasi: safeNumber(a.implementasi, 0),
+        nilaiAkhir: safeNumber(a.nilaiAkhir, 0),
+        catatan: a.catatan || '',
+        guru: a.guru || '-',
+      })),
+      hasAssessment: dailyAssessments.length > 0,
+    };
+  });
+
+  // Sort by date (newest first)
+  return mergedData.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+};
