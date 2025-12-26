@@ -61,22 +61,25 @@ export async function GET(request) {
       );
     }
 
-    // Get penilaian data untuk siswa tersebut
-    const penilaianData = await prisma.penilaian.findMany({
+    // Get penilaian data untuk siswa tersebut (SAME AS SISWA API)
+    const penilaianList = await prisma.penilaian.findMany({
       where: {
         siswaId: siswaId,
       },
       include: {
-        setoran: {
+        hafalan: {
+          select: {
+            tanggal: true,
+            surah: true,
+            ayatMulai: true,
+            ayatSelesai: true,
+          },
+        },
+        guru: {
           include: {
-            surah: {
+            user: {
               select: {
-                namaSurah: true,
-              },
-            },
-            guru: {
-              select: {
-                namaLengkap: true,
+                name: true,
               },
             },
           },
@@ -87,61 +90,70 @@ export async function GET(request) {
       },
     });
 
-    // Calculate averages
-    const totalPenilaian = penilaianData.length;
-    let totalTajwid = 0;
-    let totalKelancaran = 0;
-    let totalAdab = 0;
+    // Calculate statistics (SAME LOGIC AS SISWA API)
+    const totalPenilaian = penilaianList.length;
 
-    penilaianData.forEach((p) => {
-      totalTajwid += p.nilaiTajwid || 0;
-      totalKelancaran += p.nilaiKelancaran || 0;
-      totalAdab += p.nilaiAdab || 0;
-    });
+    let rataRataNilai = 0;
+    let rataRataTajwid = 0;
+    let rataRataKelancaran = 0;
+    let rataRataMakhraj = 0;
+    let rataRataImplementasi = 0;
 
-    const rataRataTajwid = totalPenilaian > 0 ? Math.round(totalTajwid / totalPenilaian) : 0;
-    const rataRataKelancaran =
-      totalPenilaian > 0 ? Math.round(totalKelancaran / totalPenilaian) : 0;
-    const rataRataAdab = totalPenilaian > 0 ? Math.round(totalAdab / totalPenilaian) : 0;
+    if (totalPenilaian > 0) {
+      let totalNilai = 0;
+      let totalTajwid = 0;
+      let totalKelancaran = 0;
+      let totalMakhraj = 0;
+      let totalAdab = 0;
 
-    // Format response
-    const response = {
+      penilaianList.forEach((p) => {
+        totalNilai += p.nilaiAkhir || 0;
+        totalTajwid += p.tajwid || 0;
+        totalKelancaran += p.kelancaran || 0;
+        totalMakhraj += p.makhraj || 0;
+        totalAdab += p.adab || 0;
+      });
+
+      rataRataNilai = Math.round(totalNilai / totalPenilaian);
+      rataRataTajwid = Math.round(totalTajwid / totalPenilaian);
+      rataRataKelancaran = Math.round(totalKelancaran / totalPenilaian);
+      rataRataMakhraj = Math.round(totalMakhraj / totalPenilaian);
+      rataRataImplementasi = Math.round(totalAdab / totalPenilaian);
+    }
+
+    // Format penilaian data (FULLY CONSISTENT WITH SISWA API)
+    const penilaianData = penilaianList.map((p) => ({
+      id: p.id,
+      surah: p.hafalan?.surah || '-',
+      ayat: p.hafalan ? `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}` : '-',
+      tanggal: p.hafalan?.tanggal || p.createdAt,
+      guru: p.guru?.user?.name || 'Unknown',
+      tajwid: p.tajwid || 0,
+      kelancaran: p.kelancaran || 0,
+      makhraj: p.makhraj || 0,
+      implementasi: p.adab || 0,
+      nilaiAkhir: p.nilaiAkhir || 0,
+      catatan: p.catatan || '',
+      status: (p.nilaiAkhir || 0) >= 75 ? 'lulus' : (p.nilaiAkhir || 0) >= 60 ? 'revisi' : 'belum',
+    }));
+
+    // Return response
+    return NextResponse.json({
       siswa: {
         id: siswa.id,
         nama: siswa.namaLengkap,
-        kelas: siswa.kelas?.namaKelas,
+        kelas: siswa.kelas?.namaKelas || '-',
       },
       statistics: {
+        totalPenilaian,
+        rataRataNilai,
         rataRataTajwid,
         rataRataKelancaran,
-        rataRataAdab,
-        totalPenilaian,
+        rataRataMakhraj,
+        rataRataImplementasi,
       },
-      penilaianList: penilaianData.map((p) => ({
-        id: p.id,
-        tanggal: p.createdAt,
-        surah: p.setoran?.surah?.namaSurah || 'Unknown',
-        ayat: p.setoran
-          ? `${p.setoran.ayatMulai}-${p.setoran.ayatSelesai}`
-          : 'Unknown',
-        tajwid: p.nilaiTajwid,
-        kelancaran: p.nilaiKelancaran,
-        adab: p.nilaiAdab,
-        catatan: p.catatan,
-        guru: p.setoran?.guru?.namaLengkap || 'Unknown',
-      })),
-      chartData: penilaianData
-        .slice(0, 10)
-        .reverse()
-        .map((p) => ({
-          tanggal: p.createdAt,
-          nilaiRataRata: Math.round(
-            ((p.nilaiTajwid || 0) + (p.nilaiKelancaran || 0) + (p.nilaiAdab || 0)) / 3
-          ),
-        })),
-    };
-
-    return NextResponse.json(response);
+      penilaianData,
+    });
   } catch (error) {
     console.error('Error fetching penilaian data:', error);
     return NextResponse.json(
