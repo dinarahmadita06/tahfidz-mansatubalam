@@ -38,6 +38,9 @@ const getRevelationTypeIndonesian = (revelationType) => {
   return 'Makkiyah'; // default
 };
 
+// Helper to pad numbers to 3 digits for audio URLs
+const pad3 = (n) => String(n).padStart(3, '0');
+
 export default function ReferensiQuranPage() {
   const [surahs, setSurahs] = useState([]);
   const [selectedSurah, setSelectedSurah] = useState(null);
@@ -175,36 +178,42 @@ export default function ReferensiQuranPage() {
     }
   };
 
-  const playAudio = (ayah) => {
+  const playAudio = (ayahNo) => {
     try {
-      console.log('🎵 playAudio called:', ayah);
+      console.log('🎵 playAudio called with ayahNo:', ayahNo);
 
       // Validation: ensure all required data exists
-      if (!selectedSurah || !ayah || !ayah.numberInSurah) {
-        console.error('❌ Invalid data:', { selectedSurah, ayah });
+      if (!selectedSurah || !ayahNo) {
+        console.error('❌ Invalid data:', { selectedSurah, ayahNo });
         toast.error('Data audio tidak valid');
         return;
       }
 
-      const surahNumber = selectedSurah;
-      const ayahNumberInSurah = ayah.numberInSurah;
+      const surahNo = selectedSurah;
 
       // Additional validation: ensure numbers are valid
-      if (typeof surahNumber !== 'number' || typeof ayahNumberInSurah !== 'number') {
-        console.error('❌ Invalid number types:', { surahNumber, ayahNumberInSurah });
-        toast.error('Data audio tidak valid');
+      if (typeof surahNo !== 'number' || typeof ayahNo !== 'number') {
+        console.error('❌ Invalid number types:', { surahNo, ayahNo });
+        toast.error('Nomor surah atau ayat tidak valid');
         return;
       }
 
-      const playingId = `${surahNumber}-${ayahNumberInSurah}`;
+      // Ensure numbers are positive
+      if (surahNo <= 0 || ayahNo <= 0) {
+        console.error('❌ Invalid number values:', { surahNo, ayahNo });
+        toast.error('Nomor surah atau ayat tidak valid');
+        return;
+      }
+
+      const playingId = `${surahNo}-${ayahNo}`;
 
       console.log('📌 State SEBELUM playAudio:', {
         currentPlayingId,
         playingId,
         isAudioPlaying,
         hasCurrentAudio: !!currentAudio,
-        surahNumber,
-        ayahNumberInSurah
+        surahNo,
+        ayahNo
       });
 
       // Case 1: Clicking the same ayat - toggle play/pause
@@ -243,16 +252,17 @@ export default function ReferensiQuranPage() {
       setCurrentPlayingId(null);
       setIsAudioPlaying(false);
 
-      // Format with leading zeros
-      const formattedSurah = String(surahNumber).padStart(3, '0');
-      const formattedAyah = String(ayahNumberInSurah).padStart(3, '0');
+      // Build audio ID with proper 6-digit format (3-digit surah + 3-digit ayah)
+      const audioId = `${pad3(surahNo)}${pad3(ayahNo)}`;
 
-      // Audio sources to try
+      // Audio sources to try (EveryAyah primary, then fallbacks)
       const audioSources = [
-        `https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/${formattedSurah}${formattedAyah}.mp3`,
-        `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${formattedSurah}${formattedAyah}.mp3`,
-        `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,
+        `https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/${audioId}.mp3`,
+        `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${audioId}.mp3`,
       ];
+
+      console.log('🎵 Audio ID:', audioId);
+      console.log('🎵 Audio URLs:', audioSources);
 
       console.log('🎵 Audio URLs to try:', audioSources);
 
@@ -702,7 +712,7 @@ export default function ReferensiQuranPage() {
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          playAudio(verse);
+                                          playAudio(ayahNo);
                                         }}
                                         disabled={loading}
                                         className={`p-2 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
@@ -1003,7 +1013,7 @@ export default function ReferensiQuranPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  playAudio(verse);
+                                  playAudio(ayahNo);
                                 }}
                                 disabled={loading}
                                 className={`p-2.5 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
