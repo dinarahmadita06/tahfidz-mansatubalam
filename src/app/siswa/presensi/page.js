@@ -9,40 +9,42 @@ import {
   Thermometer,
   XCircle,
   Calendar,
-  Sparkles,
 } from 'lucide-react';
 
+// ============================================================
+// EMPTY STATE COMPONENT
+// ============================================================
+function EmptyState() {
+  return (
+    <tr>
+      <td colSpan="6" className="px-6 py-12">
+        <div className="flex flex-col items-center gap-3">
+          <CalendarCheck size={48} className="text-gray-300" />
+          <p className="text-gray-500 font-medium">Belum ada data presensi</p>
+          <p className="text-sm text-gray-400">Data presensi akan muncul setelah Anda mengikuti kegiatan tahfidz</p>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// ============================================================
+// MAIN PAGE COMPONENT
+// ============================================================
 export default function PresensiSiswaPage() {
-  const [selectedMonth, setSelectedMonth] = useState(10); // Oktober = 10
-  const [selectedYear] = useState(2025);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear] = useState(new Date().getFullYear());
 
-  // Data presensi lengkap (seminggu sekali = 4x per bulan)
-  const allPresensiData = [
-    // Oktober 2025
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-27', hari: 'Senin', status: 'hadir', waktu: '07:45', keterangan: '-', bulan: 10, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-20', hari: 'Senin', status: 'hadir', waktu: '07:50', keterangan: '-', bulan: 10, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-13', hari: 'Senin', status: 'izin', waktu: null, keterangan: 'Keperluan keluarga', bulan: 10, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-10-06', hari: 'Senin', status: 'hadir', waktu: '07:40', keterangan: '-', bulan: 10, tahun: 2025 },
-
-    // September 2025
-    { nama: 'Abdullah Rahman', tanggal: '2025-09-29', hari: 'Senin', status: 'hadir', waktu: '07:48', keterangan: '-', bulan: 9, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-09-22', hari: 'Senin', status: 'sakit', waktu: null, keterangan: 'Demam', bulan: 9, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-09-15', hari: 'Senin', status: 'hadir', waktu: '07:42', keterangan: '-', bulan: 9, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-09-08', hari: 'Senin', status: 'hadir', waktu: '07:55', keterangan: '-', bulan: 9, tahun: 2025 },
-
-    // Agustus 2025
-    { nama: 'Abdullah Rahman', tanggal: '2025-08-25', hari: 'Senin', status: 'hadir', waktu: '07:38', keterangan: '-', bulan: 8, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-08-18', hari: 'Senin', status: 'hadir', waktu: '07:45', keterangan: '-', bulan: 8, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-08-11', hari: 'Senin', status: 'alfa', waktu: null, keterangan: 'Tidak ada keterangan', bulan: 8, tahun: 2025 },
-    { nama: 'Abdullah Rahman', tanggal: '2025-08-04', hari: 'Senin', status: 'hadir', waktu: '07:50', keterangan: '-', bulan: 8, tahun: 2025 },
-  ];
+  // Data presensi mingguan (kosong = belum ada presensi)
+  // Dalam praktik real, data ini akan di-fetch dari API
+  const allPresensiData = [];
 
   // Filter data berdasarkan bulan yang dipilih
   const presensiData = allPresensiData.filter(
     p => p.bulan === selectedMonth && p.tahun === selectedYear
   );
 
-  // Statistik
+  // Statistik (default semua 0 karena belum ada data)
   const stats = {
     hadir: presensiData.filter(p => p.status === 'hadir').length,
     izin: presensiData.filter(p => p.status === 'izin').length,
@@ -51,7 +53,7 @@ export default function PresensiSiswaPage() {
   };
 
   const totalHari = presensiData.length;
-  const persentaseHadir = Math.round((stats.hadir / totalHari) * 100);
+  const persentaseHadir = totalHari > 0 ? Math.round((stats.hadir / totalHari) * 100) : 0;
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -82,159 +84,185 @@ export default function PresensiSiswaPage() {
 
   return (
     <SiswaLayout>
-      <div className="w-full max-w-7xl mx-auto space-y-6 py-6 px-4 sm:px-6">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-              <CalendarCheck className="text-white" size={28} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Presensi</h1>
-              <p className="text-white/80 text-sm mt-1 flex items-center gap-2">
-                <Sparkles size={14} />
-                Riwayat kehadiran dan statistik bulanan
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Background Gradient - SIMTAQ Style */}
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        {/* Container - Full Width SIMTAQ Style */}
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-10 py-6 space-y-6">
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Hadir */}
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 shadow-sm border border-emerald-100/50 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl">
-                <CheckCircle className="text-emerald-600" size={20} />
+          {/* Header - SIMTAQ Green Gradient */}
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                <CalendarCheck size={32} className="text-white" />
               </div>
-              <span className="text-sm font-semibold text-emerald-700">Hadir</span>
-            </div>
-            <p className="text-3xl font-bold text-emerald-900">{stats.hadir}</p>
-            <p className="text-xs text-emerald-600 mt-1">{persentaseHadir}% kehadiran</p>
-          </div>
-
-          {/* Izin */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 shadow-sm border border-amber-100/50 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl">
-                <Clock className="text-amber-600" size={20} />
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Presensi Kehadiran</h1>
+                <p className="text-green-50 text-sm sm:text-base mt-1">
+                  Riwayat kehadiran mingguan dan statistik bulanan
+                </p>
               </div>
-              <span className="text-sm font-semibold text-amber-700">Izin</span>
             </div>
-            <p className="text-3xl font-bold text-amber-900">{stats.izin}</p>
-            <p className="text-xs text-amber-600 mt-1">hari</p>
           </div>
 
-          {/* Sakit */}
-          <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-5 shadow-sm border border-sky-100/50 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl">
-                <Thermometer className="text-sky-600" size={20} />
-              </div>
-              <span className="text-sm font-semibold text-sky-700">Sakit</span>
-            </div>
-            <p className="text-3xl font-bold text-sky-900">{stats.sakit}</p>
-            <p className="text-xs text-sky-600 mt-1">hari</p>
-          </div>
-
-          {/* Alfa */}
-          <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl p-5 shadow-sm border border-rose-100/50 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-gradient-to-br from-rose-100 to-rose-200 rounded-xl">
-                <XCircle className="text-rose-600" size={20} />
-              </div>
-              <span className="text-sm font-semibold text-rose-700">Alfa</span>
-            </div>
-            <p className="text-3xl font-bold text-rose-900">{stats.alfa}</p>
-            <p className="text-xs text-rose-600 mt-1">hari</p>
-          </div>
-        </div>
-
-        {/* Attendance Table */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100/50 overflow-hidden">
-          <div className="p-6 border-b border-gray-100/50">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Stats Cards - SIMTAQ Standard Style */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Hadir */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 rounded-xl">
-                  <Calendar className="text-emerald-600" size={22} />
+                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <CheckCircle size={24} className="text-emerald-600" />
                 </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-emerald-700 font-medium">Hadir</p>
+                  <p className="text-2xl font-bold text-emerald-900">{stats.hadir}</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">{persentaseHadir}% kehadiran</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Izin */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Clock size={24} className="text-amber-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-amber-700 font-medium">Izin</p>
+                  <p className="text-2xl font-bold text-amber-900">{stats.izin}</p>
+                  <p className="text-xs text-amber-600 mt-0.5">minggu</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sakit */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Thermometer size={24} className="text-sky-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-sky-700 font-medium">Sakit</p>
+                  <p className="text-2xl font-bold text-sky-900">{stats.sakit}</p>
+                  <p className="text-xs text-sky-600 mt-0.5">minggu</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Alfa */}
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <XCircle size={24} className="text-rose-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-rose-700 font-medium">Alfa</p>
+                  <p className="text-2xl font-bold text-rose-900">{stats.alfa}</p>
+                  <p className="text-xs text-rose-600 mt-0.5">minggu</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Riwayat Presensi - SIMTAQ Table Style */}
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
+            {/* Table Header - SIMTAQ Green Gradient */}
+            <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Riwayat Kehadiran</h2>
-                  <p className="text-sm text-gray-600">Detail presensi harian</p>
+                  <h2 className="text-lg font-bold text-white">Riwayat Kehadiran Mingguan</h2>
+                  <p className="text-sm text-green-50 mt-1">Rekap presensi per minggu (4-5 minggu per bulan)</p>
+                </div>
+
+                {/* Filter Bulan */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-white">Bulan:</label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                    className="px-4 py-2 border border-white/30 rounded-xl text-sm font-medium text-gray-700 bg-white/90 hover:bg-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                  >
+                    {monthNames.map((month, index) => (
+                      <option key={index} value={index + 1}>
+                        {month} {selectedYear}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
+            </div>
 
-              {/* Filter Bulan */}
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-gray-700">Filter Bulan:</label>
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                >
-                  {monthNames.map((month, index) => (
-                    <option key={index} value={index + 1}>
-                      {month} {selectedYear}
-                    </option>
-                  ))}
-                </select>
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Minggu Ke-
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Periode
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Status Kehadiran
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Jam Kehadiran
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Keterangan
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {presensiData.length === 0 ? (
+                    <EmptyState />
+                  ) : (
+                    presensiData.map((presensi, index) => {
+                      const statusBadge = getStatusBadge(presensi.status);
+
+                      return (
+                        <tr key={index} className="hover:bg-emerald-50/30 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span className="text-emerald-700 font-bold text-sm">{index + 1}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{presensi.periode}</span>
+                              <span className="text-xs text-gray-500">{presensi.tanggal}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-lg border font-medium text-sm ${statusBadge.className}`}>
+                              {statusBadge.label}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {presensi.jamKehadiran || '-'}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {presensi.keterangan || '-'}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Table Footer */}
+            {presensiData.length > 0 && (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold text-gray-700">Total Minggu:</span>
+                  <span className="font-bold text-emerald-600">{presensiData.length} minggu</span>
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 backdrop-blur-sm border-b border-emerald-100/50">
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900">No</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900">Nama</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900">Tanggal</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-emerald-900">Status Kehadiran</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900">Keterangan</th>
-                </tr>
-              </thead>
-              <tbody>
-                {presensiData.map((presensi, index) => {
-                  const statusBadge = getStatusBadge(presensi.status);
-
-                  return (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-100/50 hover:bg-emerald-50/40 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                        {index + 1}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
-                        {presensi.nama}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{presensi.hari}</span>
-                          <span className="text-xs text-gray-500">{presensi.tanggal}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold ${statusBadge.className}`}>
-                          {statusBadge.label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {presensi.keterangan}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Table Footer - Total */}
-          <div className="px-6 py-4 bg-gray-50/50 backdrop-blur-sm border-t border-gray-100/50">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-semibold text-gray-700">Total Data:</span>
-              <span className="font-bold text-emerald-600">{presensiData.length} hari</span>
-            </div>
+            )}
           </div>
         </div>
       </div>
