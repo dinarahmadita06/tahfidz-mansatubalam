@@ -1,10 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Megaphone, BookOpen, Star, Award, Bell } from 'lucide-react';
+import {
+  Megaphone,
+  Search,
+  Calendar,
+  Clock,
+  X,
+  Bell,
+  BookOpen,
+  Award,
+  Star,
+} from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 
-const categoryIcons = {
+// Category config
+const CATEGORY_CONFIG = {
   UMUM: { icon: Bell, color: 'bg-blue-100 text-blue-600' },
   AKADEMIK: { icon: BookOpen, color: 'bg-purple-100 text-purple-600' },
   KEGIATAN: { icon: Star, color: 'bg-amber-100 text-amber-600' },
@@ -13,186 +24,274 @@ const categoryIcons = {
 
 export default function SiswaPengumumanPage() {
   const [pengumuman, setPengumuman] = useState([]);
+  const [filteredPengumuman, setFilteredPengumuman] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState('terbaru');
+  const [selectedPengumuman, setSelectedPengumuman] = useState(null);
 
   useEffect(() => {
-    fetchAllPengumuman();
+    fetchPengumuman();
   }, []);
 
-  const fetchAllPengumuman = async () => {
+  useEffect(() => {
+    filterAndSortPengumuman();
+  }, [searchQuery, sortOrder, pengumuman]);
+
+  const fetchPengumuman = async () => {
     try {
       setLoading(true);
-      setError('');
       const res = await fetch('/api/pengumuman?limit=100');
-      
+
       if (!res.ok) {
         throw new Error('Gagal memuat pengumuman');
       }
-      
+
       const data = await res.json();
       setPengumuman(data.pengumuman || []);
     } catch (err) {
       console.error('Error:', err);
-      setError('Gagal memuat riwayat pengumuman');
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterAndSortPengumuman = () => {
+    let filtered = [...pengumuman];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(
+        (p) =>
+          p.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.isi.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return sortOrder === 'terbaru' ? dateB - dateA : dateA - dateB;
+    });
+
+    setFilteredPengumuman(filtered);
   };
 
   const formatDate = (date) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('id-ID', {
       day: 'numeric',
-      month: 'short',
-      year: 'numeric'
+      month: 'long',
+      year: 'numeric',
     });
   };
 
-  const getCategoryIcon = (kategori) => {
-    return categoryIcons[kategori] || categoryIcons.UMUM;
+  const truncateText = (text, length = 120) => {
+    if (!text || text.length <= length) return text;
+    return text.substring(0, length) + '...';
   };
 
-  const truncateText = (text, length = 100) => {
-    if (text.length <= length) return text;
-    return text.substring(0, length) + '...';
+  const isNew = (date) => {
+    const now = new Date();
+    const created = new Date(date);
+    const diffDays = (now - created) / (1000 * 60 * 60 * 24);
+    return diffDays < 3;
+  };
+
+  const getCategoryIcon = (kategori) => {
+    return CATEGORY_CONFIG[kategori] || CATEGORY_CONFIG.UMUM;
   };
 
   return (
     <SiswaLayout>
-      <div className="space-y-8">
-        {/* Header Banner */}
-        <div className="relative overflow-hidden rounded-2xl shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 opacity-90"></div>
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)'
-          }}></div>
-          
-          <div className="relative px-8 py-12 sm:px-12 sm:py-16">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-4 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Megaphone size={40} className="text-white" />
+      {/* Background Gradient - SIMTAQ Style */}
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-10 py-6 space-y-6">
+          {/* Header - SIMTAQ Green Gradient */}
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                <Megaphone size={32} className="text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
-                  Pengumuman
-                </h1>
-                <p className="text-white/90 text-sm mt-2">Jangan lewatkan informasi penting dan kabar terbaru</p>
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Pengumuman</h1>
+                <p className="text-green-50 text-sm sm:text-base mt-1">
+                  Informasi dan kabar terbaru dari sekolah
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Filter - Compact */}
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              {/* Search */}
+              <div className="flex-1 min-w-[200px]">
+                <div className="relative">
+                  <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Cari pengumuman..."
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Sort Filter */}
+              <div className="flex items-center gap-2">
+                {['terbaru', 'terlama'].map((sort) => (
+                  <button
+                    key={sort}
+                    onClick={() => setSortOrder(sort)}
+                    className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-all ${
+                      sortOrder === sort
+                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {sort.charAt(0).toUpperCase() + sort.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          {loading ? (
+            <div className="grid grid-cols-1 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-40 bg-white/70 backdrop-blur rounded-2xl border border-white/20 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : filteredPengumuman.length === 0 ? (
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-12 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-emerald-100 rounded-full">
+                  <Megaphone className="text-emerald-600" size={48} />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-700 mb-2">
+                {searchQuery ? 'Tidak Ada Hasil' : 'Belum Ada Pengumuman'}
+              </h3>
+              <p className="text-gray-500">
+                {searchQuery
+                  ? 'Tidak ditemukan pengumuman yang sesuai dengan pencarian'
+                  : 'Belum ada pengumuman dari admin'}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Card List */}
+              <div className="space-y-4">
+                {filteredPengumuman.map((item) => {
+                  const categoryData = getCategoryIcon(item.kategori);
+                  const CategoryIcon = categoryData.icon;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                      onClick={() => setSelectedPengumuman(item)}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Icon */}
+                        <div className={`p-3 rounded-xl ${categoryData.color} flex-shrink-0`}>
+                          <CategoryIcon size={24} />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <h3 className="font-bold text-gray-900 text-lg line-clamp-2">
+                              {item.judul}
+                            </h3>
+                            {isNew(item.createdAt) && (
+                              <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full flex-shrink-0">
+                                Baru
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                            {truncateText(item.isi, 150)}
+                          </p>
+
+                          <div className="flex items-center gap-3 text-sm text-gray-500">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar size={16} />
+                              <span>{formatDate(item.createdAt)}</span>
+                            </div>
+                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                              {item.kategori}
+                            </span>
+                          </div>
+
+                          <button className="mt-3 text-emerald-600 hover:text-emerald-700 font-semibold text-sm flex items-center gap-1">
+                            Lihat Detail →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer Info */}
+              <div className="bg-emerald-50 rounded-lg p-4 text-center border border-emerald-100">
+                <p className="text-sm text-gray-700">
+                  Menampilkan{' '}
+                  <span className="font-bold text-emerald-700">{filteredPengumuman.length}</span> dari{' '}
+                  <span className="font-bold text-emerald-700">{pengumuman.length}</span> pengumuman
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Modal Detail */}
+      {selectedPengumuman && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 flex items-start justify-between">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {selectedPengumuman.judul}
+                </h2>
+                <div className="flex items-center gap-3 text-sm text-white/90">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={16} />
+                    <span>{formatDate(selectedPengumuman.createdAt)}</span>
+                  </div>
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">
+                    {selectedPengumuman.kategori}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPengumuman(null)}
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              >
+                <X size={24} className="text-white" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="prose prose-emerald max-w-none">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedPengumuman.isi}
+                </p>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Content Area */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-48 rounded-2xl animate-pulse"
-                style={{ backgroundColor: '#E8F4F8' }}
-              />
-            ))}
-          </div>
-        ) : error ? (
-          <div className="rounded-2xl overflow-hidden shadow-md border-2 border-red-200 bg-red-50 p-8">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-                <Bell size={32} className="text-red-600" />
-              </div>
-              <p className="text-red-700 text-lg font-semibold">Terjadi Kesalahan</p>
-              <p className="text-red-600 mt-2">{error}</p>
-            </div>
-          </div>
-        ) : pengumuman.length === 0 ? (
-          <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-emerald-100 bg-gradient-to-br from-emerald-50 via-amber-50 to-cyan-50 p-12">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 mb-6">
-                <Megaphone size={48} className="text-emerald-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Belum Ada Pengumuman</h3>
-              <p className="text-gray-600 text-base">Nantikan kabar terbaru di sini! 📢</p>
-              <p className="text-gray-500 text-xs mt-3">Admin akan segera mengirimkan informasi penting untuk kamu</p>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {/* Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {pengumuman.map((item, index) => {
-                const categoryData = getCategoryIcon(item.kategori);
-                const CategoryIcon = categoryData.icon;
-
-                return (
-                  <div
-                    key={item.id}
-                    className="group rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-white/80"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 253, 250, 0.8) 100%)',
-                    }}
-                  >
-                    {/* Color Top Border */}
-                    <div className="h-2 bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300"></div>
-
-                    <div className="p-6 sm:p-8">
-                      {/* Header dengan Icon dan Badge */}
-                      <div className="flex items-start justify-between gap-4 mb-4">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className={`p-3 rounded-xl ${categoryData.color} flex-shrink-0`}>
-                            <CategoryIcon size={24} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-gray-900 text-base line-clamp-2 group-hover:text-emerald-700 transition-colors">
-                              {item.judul}
-                            </h3>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Kategori Badge */}
-                      <div className="mb-4">
-                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border border-emerald-200">
-                          <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-                          {item.kategori}
-                        </span>
-                      </div>
-
-                      {/* Konten */}
-                      <p className="text-gray-700 text-xs leading-relaxed mb-6 line-clamp-3">
-                        {truncateText(item.isi, 120)}
-                      </p>
-
-                      {/* Divider */}
-                      <div className="w-full h-px bg-gradient-to-r from-transparent via-emerald-200 to-transparent mb-4"></div>
-
-                      {/* Meta Info */}
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
-                        <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg">
-                          <Calendar size={16} className="text-amber-600" />
-                          <span className="font-medium">{formatDate(item.createdAt)}</span>
-                        </div>
-                        {item.tanggalSelesai && (
-                          <div className="flex items-center gap-2 bg-sky-50 px-3 py-1.5 rounded-lg">
-                            <Calendar size={16} className="text-sky-600" />
-                            <span className="text-xs">Hingga {formatDate(item.tanggalSelesai)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Info Footer */}
-            <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 text-center">
-              <p className="text-gray-700 text-xs">
-                📚 Total <span className="font-bold text-emerald-700">{pengumuman.length}</span> pengumuman
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </SiswaLayout>
   );
 }
