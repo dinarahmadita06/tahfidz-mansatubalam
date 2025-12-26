@@ -660,14 +660,15 @@ export default function ReferensiQuranPage() {
                           ) : (
                             /* Verses List */
                             <div className="p-4 space-y-3 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20 max-h-[600px] overflow-y-auto">
-                              {verses.map((verse) => {
-                                const playingId = `${selectedSurah}-${verse.numberInSurah}`;
+                              {verses.map((verse, index) => {
+                                const ayahNo = verse?.numberInSurah ?? (index + 1);
+                                const playingId = `${selectedSurah}-${ayahNo}`;
                                 const isCurrentAyat = currentPlayingId === playingId;
 
                                 return (
                                   <div
-                                    key={verse.number}
-                                    ref={(el) => (ayahRefs.current[verse.numberInSurah] = el)}
+                                    key={verse.number || index}
+                                    ref={(el) => (ayahRefs.current[ayahNo] = el)}
                                     className={`p-4 rounded-xl border-2 bg-white/90 backdrop-blur-sm transition-all ${
                                       isCurrentAyat && isAudioPlaying
                                         ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_8px_20px_rgba(16,185,129,0.2)]'
@@ -683,8 +684,8 @@ export default function ReferensiQuranPage() {
                                           className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                                           title="Klik untuk pindah ke ayat"
                                         >
-                                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
-                                            <span className="text-white text-sm font-bold">{verse.numberInSurah}</span>
+                                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                                            <span className="text-white text-sm font-bold leading-none">{ayahNo}</span>
                                           </div>
                                           <ChevronDown size={14} className="text-gray-400" />
                                         </button>
@@ -960,14 +961,15 @@ export default function ReferensiQuranPage() {
 
                     {/* Verses List */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20">
-                      {verses.map((verse) => {
-                        const playingId = `${selectedSurah}-${verse.numberInSurah}`;
+                      {verses.map((verse, index) => {
+                        const ayahNo = verse?.numberInSurah ?? (index + 1);
+                        const playingId = `${selectedSurah}-${ayahNo}`;
                         const isCurrentAyat = currentPlayingId === playingId;
 
                         return (
                           <div
-                            key={verse.number}
-                            ref={(el) => (ayahRefs.current[verse.numberInSurah] = el)}
+                            key={verse.number || index}
+                            ref={(el) => (ayahRefs.current[ayahNo] = el)}
                             className={`p-6 rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative ${
                               isCurrentAyat && isAudioPlaying
                                 ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_12px_28px_rgba(16,185,129,0.2)]'
@@ -983,8 +985,8 @@ export default function ReferensiQuranPage() {
                                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                                   title="Klik untuk pindah ke ayat"
                                 >
-                                  <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
-                                    <span className="text-white text-sm font-bold">{verse.numberInSurah}</span>
+                                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                                    <span className="text-white text-sm font-bold leading-none">{ayahNo}</span>
                                   </div>
                                   <ChevronDown size={16} className="text-gray-400" />
                                 </button>
