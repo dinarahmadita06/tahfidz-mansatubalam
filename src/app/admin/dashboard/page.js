@@ -116,7 +116,7 @@ function MotivationCard() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold italic leading-relaxed mb-2 text-blue-900">
-            "Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya."
+            &quot;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&quot;
           </p>
           <p className="text-xs font-medium text-blue-700">
             — HR. Bukhari

@@ -101,7 +101,8 @@
       "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|orangtua/dashboard\\)\")",
       "Bash(git cherry-pick:*)",
       "Bash(git merge:*)",
-      "Bash(Select-String -Pattern \"\\\\\\(Compiled|Error|warn|✓|✗|Build|hafalan-anak\\\\\\)\")"
+      "Bash(Select-String -Pattern \"\\\\\\(Compiled|Error|warn|✓|✗|Build|hafalan-anak\\\\\\)\")",
+      "Bash(vercel inspect:*)"
     ],
     "deny": [],
     "ask": []
