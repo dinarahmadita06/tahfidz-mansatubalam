@@ -264,7 +264,7 @@ export default function PengumumanPage() {
           <div className="text-center py-16 bg-white rounded-2xl" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
             <Megaphone className="mx-auto text-gray-300 mb-4" size={64} />
             <p className="text-gray-500 text-lg font-medium">Belum ada pengumuman</p>
-            <p className="text-gray-400 text-sm mt-1">Klik tombol "Buat Pengumuman" untuk memulai</p>
+            <p className="text-gray-400 text-sm mt-1">Klik tombol &quot;Buat Pengumuman&quot; untuk memulai</p>
           </div>
         ) : (
           <div className="grid gap-5">
