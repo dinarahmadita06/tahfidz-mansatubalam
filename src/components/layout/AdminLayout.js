@@ -313,7 +313,7 @@ function AdminLayout({ children }) {
 
           {/* Menu Navigation */}
           <nav className="flex-1 overflow-y-auto py-5 px-4">
-            <div className="space-y-2">
+            <div className="space-y-1">
               {menuItems.map((item, index) => {
                 const isMenuActive = item.submenu ? isSubmenuActive(item.submenu) : isActive(item.href);
                 const showDivider = index === 0 || index === 3 || index === 4; // Divider after Dashboard, Monitoring, Activity
@@ -321,14 +321,14 @@ function AdminLayout({ children }) {
                 return (
                   <div key={item.title}>
                     {showDivider && index !== 0 && (
-                      <div className="my-4 border-t border-gray-200/30"></div>
+                      <div className="my-2 border-t border-gray-200/30"></div>
                     )}
 
                     {item.submenu ? (
                       <div>
                         <button
                           onClick={() => sidebarOpen ? toggleSubmenu(item.title) : setSidebarOpen(true)}
-                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'} py-3 rounded-xl transition-all duration-200 group relative ${
+                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'} py-2 rounded-xl transition-all duration-200 group relative ${
                             isMenuActive
                               ? 'bg-emerald-50/80 text-emerald-800'
                               : 'text-gray-700 hover:bg-emerald-50/40 hover:text-emerald-700'
@@ -336,7 +336,7 @@ function AdminLayout({ children }) {
                           title={!sidebarOpen ? item.title : ''}
                         >
                           {isMenuActive && sidebarOpen && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-600 rounded-r-full"></div>
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-600 rounded-r-full"></div>
                           )}
                           <div className="flex items-center gap-3">
                             <item.icon
@@ -363,7 +363,7 @@ function AdminLayout({ children }) {
                           <div
                             className={`ml-6 border-l-2 border-emerald-100 pl-4 overflow-hidden transition-all duration-300 ease-in-out ${
                               expandedMenus[item.title]
-                                ? 'mt-2 max-h-96 opacity-100'
+                                ? 'mt-1 max-h-96 opacity-100'
                                 : 'mt-0 max-h-0 opacity-0'
                             }`}
                           >
@@ -374,7 +374,7 @@ function AdminLayout({ children }) {
                                   href={subitem.href}
                                   prefetch={false}
                                   onClick={handleLinkClick}
-                                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
+                                  className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 group relative ${
                                     isActive(subitem.href)
                                       ? 'bg-amber-50 text-amber-900'
                                       : 'text-gray-600 hover:bg-emerald-50/40 hover:text-emerald-700'
@@ -400,7 +400,7 @@ function AdminLayout({ children }) {
                         href={item.href}
                         prefetch={false}
                         onClick={handleLinkClick}
-                        className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} py-3 rounded-xl transition-all duration-200 group relative ${
+                        className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} py-2 rounded-xl transition-all duration-200 group relative ${
                           isActive(item.href)
                             ? 'text-amber-900 shadow-inner'
                             : 'text-gray-700 hover:bg-emerald-50/40 hover:text-emerald-700'
@@ -412,7 +412,7 @@ function AdminLayout({ children }) {
                         title={!sidebarOpen ? item.title : ''}
                       >
                         {isActive(item.href) && sidebarOpen && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-amber-500 rounded-r-full"></div>
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
                         )}
                         <item.icon
                           size={20}
