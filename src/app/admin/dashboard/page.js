@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import AdminLayout from '@/components/layout/AdminLayout';
 import PengumumanWidget from '@/components/PengumumanWidget';
 import {
@@ -15,6 +16,8 @@ import {
   Calendar,
   TrendingUp,
   Sparkles,
+  Megaphone,
+  ChevronRight,
 } from 'lucide-react';
 
 // ============================================================================
@@ -24,93 +27,138 @@ import {
 // Skeleton Loading Card
 function SkeletonCard() {
   return (
-    <div className="bg-gray-100 rounded-2xl p-5 animate-pulse border border-gray-200">
+    <div className="bg-gray-100 rounded-xl p-5 animate-pulse border-2 border-gray-200">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="h-3 w-20 bg-gray-300 rounded mb-3"></div>
           <div className="h-8 w-16 bg-gray-300 rounded"></div>
         </div>
-        <div className="w-12 h-12 bg-gray-300 rounded-xl"></div>
+        <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
       </div>
       <div className="h-3 w-28 bg-gray-300 rounded"></div>
     </div>
   );
 }
 
-// Modern Stat Card - Compact Pastel Style
-function StatCard({ icon: Icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
-  const colorStyles = {
-    emerald: 'bg-emerald-50/80 border-emerald-200 shadow-emerald-100/50',
-    emeraldIcon: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
-    emeraldText: 'text-emerald-700',
-    amber: 'bg-amber-50/80 border-amber-200 shadow-amber-100/50',
-    amberIcon: 'bg-gradient-to-br from-amber-400 to-amber-500',
-    amberText: 'text-amber-700',
-    purple: 'bg-purple-50/80 border-purple-200 shadow-purple-100/50',
-    purpleIcon: 'bg-gradient-to-br from-purple-500 to-purple-600',
-    purpleText: 'text-purple-700',
-    blue: 'bg-sky-50/80 border-sky-200 shadow-sky-100/50',
-    blueIcon: 'bg-gradient-to-br from-sky-500 to-sky-600',
-    blueText: 'text-sky-700',
-    teal: 'bg-teal-50/80 border-teal-200 shadow-teal-100/50',
-    tealIcon: 'bg-gradient-to-br from-teal-500 to-teal-600',
-    tealText: 'text-teal-700',
+// Modern Stat Card - Following Guru Dashboard Style
+function StatCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
+  const variants = {
+    green: {
+      wrapper: 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      title: 'text-emerald-600',
+      value: 'text-emerald-700',
+    },
+    blue: {
+      wrapper: 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      title: 'text-blue-600',
+      value: 'text-blue-700',
+    },
+    violet: {
+      wrapper: 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200',
+      iconBg: 'bg-violet-100',
+      iconColor: 'text-violet-600',
+      title: 'text-violet-600',
+      value: 'text-violet-700',
+    },
+    amber: {
+      wrapper: 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
+      title: 'text-amber-600',
+      value: 'text-amber-700',
+    },
+    sky: {
+      wrapper: 'bg-gradient-to-br from-sky-50 to-blue-50 border-sky-200',
+      iconBg: 'bg-sky-100',
+      iconColor: 'text-sky-600',
+      title: 'text-sky-600',
+      value: 'text-sky-700',
+    },
   };
 
-  const cardClass = colorStyles[color] || colorStyles.emerald;
-  const iconClass = colorStyles[`${color}Icon`] || colorStyles.emeraldIcon;
-  const textClass = colorStyles[`${color}Text`] || colorStyles.emeraldText;
+  const style = variants[variant] || variants.green;
 
   return (
     <div
-      className={`${cardClass} rounded-2xl p-5 border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
-      style={{ animationDelay: `${delay}s` }}
+      className={`${style.wrapper} rounded-xl border-2 p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all`}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className={`${style.title} text-sm font-semibold mb-1 uppercase`}>
             {title}
           </p>
-          <p className={`text-3xl font-bold ${textClass} leading-none`}>
+          <h3 className={`${style.value} text-4xl font-bold`}>
             {value}
-          </p>
+          </h3>
+          {subtitle && (
+            <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
+          )}
         </div>
-        <div className={`${iconClass} rounded-xl p-3 shadow-lg`}>
-          <Icon size={20} className="text-white" strokeWidth={2} />
+        <div className={`${style.iconBg} p-4 rounded-full`}>
+          <Icon size={32} className={style.iconColor} />
         </div>
       </div>
-      <p className="text-xs font-medium text-gray-600">
-        {subtitle}
-      </p>
     </div>
   );
 }
 
-// Motivational Quote Card - Glass Effect
+// Motivational Quote Card - BLUE TRANSPARENT (Following Guru Dashboard)
 function MotivationCard() {
   return (
-    <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 shadow-lg shadow-emerald-500/10 overflow-hidden">
-      {/* Glow Effect */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-400/20 rounded-full blur-3xl"></div>
-
-      {/* Left Accent Bar */}
-      <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-emerald-400 to-teal-500 rounded-r-full"></div>
-
-      <div className="relative flex items-start gap-4 pl-4">
-        {/* Icon Badge */}
-        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-          <Sparkles size={24} className="text-white" strokeWidth={2} />
+    <div className="rounded-2xl bg-blue-50/60 backdrop-blur-sm border border-blue-200/60 shadow-[0_0_0_2px_rgba(59,130,246,0.12)] p-5 sm:p-6">
+      <div className="flex items-start gap-3">
+        <div className="w-12 h-12 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center shrink-0 border border-blue-200/40">
+          <Sparkles size={22} className="text-blue-600" />
         </div>
-
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-700 italic leading-relaxed mb-2">
-            &ldquo;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&rdquo;
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold italic leading-relaxed mb-2 text-blue-900">
+            "Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya."
           </p>
-          <p className="text-xs font-semibold text-emerald-600">
+          <p className="text-xs font-medium text-blue-700">
             — HR. Bukhari
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Announcement Section - ORANGE (Following Siswa Dashboard)
+function AnnouncementSection() {
+  return (
+    <div className="bg-orange-50/60 backdrop-blur-sm rounded-2xl border border-orange-200 ring-2 ring-orange-200/40 shadow-[0_0_0_3px_rgba(245,158,11,0.12)] border-l-4 border-l-orange-400 p-6">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className="p-3.5 bg-orange-500 rounded-xl shadow-lg ring-2 ring-orange-300/50">
+            <Megaphone size={22} className="text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-orange-900">Pengumuman Terbaru</h2>
+            <p className="text-xs text-orange-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
+          </div>
+        </div>
+        <Link
+          href="/admin/pengumuman"
+          className="hidden sm:inline-flex px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+        >
+          Lihat Semua
+        </Link>
+      </div>
+
+      <PengumumanWidget limit={3} />
+
+      {/* Mobile CTA - Full Width Button (Green like Siswa) */}
+      <Link
+        href="/admin/pengumuman"
+        className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+      >
+        Lihat Semua Pengumuman
+        <ChevronRight size={20} />
+      </Link>
     </div>
   );
 }
@@ -312,12 +360,10 @@ export default function AdminDashboardPage() {
           {/* Hero Header */}
           <DashboardHeader userName={session?.user?.name} />
 
-          {/* Motivation Card + Pengumuman - Side by Side on Desktop */}
+          {/* Motivation Card (Blue) + Pengumuman (Orange) - Side by Side on Desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <MotivationCard />
-            <div>
-              <PengumumanWidget limit={3} />
-            </div>
+            <AnnouncementSection />
           </div>
 
           {/* Error State */}
@@ -344,8 +390,8 @@ export default function AdminDashboardPage() {
           {/* Main Content */}
           {!error && (
             <>
-              {/* Stat Cards - Compact Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              {/* Stat Cards - Following Guru Dashboard Style */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
                 {loading ? (
                   <>
                     <SkeletonCard />
@@ -361,40 +407,35 @@ export default function AdminDashboardPage() {
                       title="Total Siswa"
                       value={data.stats.totalSiswa || 0}
                       subtitle={`${data.stats.siswaAktif || 0} siswa aktif`}
-                      color="emerald"
-                      delay={0}
+                      variant="green"
                     />
                     <StatCard
                       icon={UserCog}
                       title="Total Guru"
                       value={data.stats.totalGuru || 0}
                       subtitle="Guru aktif mengajar"
-                      color="amber"
-                      delay={0.05}
+                      variant="amber"
                     />
                     <StatCard
                       icon={BookOpen}
                       title="Total Hafalan"
                       value={`${data.stats.totalJuz || 0} Juz`}
                       subtitle="Keseluruhan siswa"
-                      color="purple"
-                      delay={0.1}
+                      variant="violet"
                     />
                     <StatCard
                       icon={Award}
                       title="Rata² Nilai"
                       value={data.stats.rataRataNilai || 0}
                       subtitle="Nilai keseluruhan"
-                      color="blue"
-                      delay={0.15}
+                      variant="blue"
                     />
                     <StatCard
                       icon={CheckCircle2}
                       title="Rata² Kehadiran"
                       value={`${data.stats.rataRataKehadiran || 0}%`}
                       subtitle="Kehadiran siswa"
-                      color="teal"
-                      delay={0.2}
+                      variant="sky"
                     />
                   </>
                 )}
@@ -405,7 +446,7 @@ export default function AdminDashboardPage() {
                 {/* Siswa Progress */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-2.5">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 rounded-xl">
                       <Target size={20} className="text-white" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-800">
@@ -444,7 +485,7 @@ export default function AdminDashboardPage() {
                 {/* Kelas Progress */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-2.5">
+                    <div className="bg-gradient-to-br from-teal-500 to-teal-600 p-3 rounded-xl">
                       <TrendingUp size={20} className="text-white" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-800">
@@ -480,20 +521,6 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
-
-      {/* Animation Keyframes */}
-      <style jsx global>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 }
