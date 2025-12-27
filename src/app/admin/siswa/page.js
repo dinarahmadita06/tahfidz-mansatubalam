@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { UserPlus, Upload, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen, CheckCircle, XCircle, ArrowUpRight, Award } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import SmartImport from '@/components/SmartImport';
+import StudentCreateModal from '@/components/admin/StudentCreateModal';
 import * as XLSX from 'xlsx';
 import { getStatusBadgeConfig } from '@/lib/helpers/statusHelpers';
 
@@ -147,16 +148,6 @@ export default function AdminSiswaPage() {
   const [selectedSiswa, setSelectedSiswa] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [editingSiswa, setEditingSiswa] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    nisn: '',
-    jenisKelamin: 'L',
-    tanggalLahir: '',
-    kelasId: '',
-  });
 
   useEffect(() => {
     fetchSiswa();
@@ -186,13 +177,6 @@ export default function AdminSiswaPage() {
     } catch (error) {
       console.error('Error fetching kelas:', error);
     }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // TODO: Implement tambah siswa
-    alert('Fitur tambah siswa akan segera tersedia. Silakan gunakan menu Kelas → Kelola Siswa untuk menambah siswa.');
-    setShowModal(false);
   };
 
   const handleImport = async (e) => {
@@ -303,19 +287,6 @@ export default function AdminSiswaPage() {
       setSelectedSiswa(null);
       setNewStatus('');
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      nisn: '',
-      jenisKelamin: 'L',
-      tanggalLahir: '',
-      kelasId: '',
-    });
-    setEditingSiswa(null);
   };
 
   // Filter data
@@ -430,10 +401,7 @@ export default function AdminSiswaPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }} className="action-buttons-container">
               {/* Row 1: Tambah Siswa Button - Full Width */}
               <button
-                onClick={() => {
-                  resetForm();
-                  setShowModal(true);
-                }}
+                onClick={() => setShowModal(true)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1158,107 +1126,12 @@ export default function AdminSiswaPage() {
         </div>
       </div>
 
-      {/* Modal Tambah Siswa */}
-      {showModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: colors.white,
-            borderRadius: '24px',
-            padding: '32px',
-            maxWidth: '640px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            border: `2px solid ${colors.emerald[100]}`,
-            animation: 'modalSlideIn 0.3s ease-out',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px'
-            }}>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: colors.text.primary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Tambah Siswa Baru
-              </h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  resetForm();
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  color: colors.text.tertiary,
-                  cursor: 'pointer',
-                  padding: '4px',
-                  transition: 'all 0.2s ease',
-                }}
-                className="close-btn"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{
-              background: colors.amber[50],
-              border: `2px solid ${colors.amber[200]}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '20px',
-            }}>
-              <p style={{
-                fontSize: '14px',
-                color: colors.text.secondary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                <strong>Catatan:</strong> Untuk menambah siswa, silakan gunakan menu{' '}
-                <strong>Kelas → Kelola Siswa</strong> untuk manajemen yang lebih lengkap.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <button
-                type="submit"
-                style={{
-                  width: '100%',
-                  padding: '12px 24px',
-                  border: 'none',
-                  borderRadius: '12px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  color: colors.white,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                }}
-                className="submit-btn"
-              >
-                Lanjut ke Menu Kelas
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Student Create Modal */}
+      <StudentCreateModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={fetchSiswa}
+      />
 
       {/* Smart Import Modal */}
       {showImportModal && (

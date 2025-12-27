@@ -1,0 +1,791 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { X, UserPlus, Key, Users, BookOpen, User } from 'lucide-react';
+import PasswordField from './PasswordField';
+import ParentLinkSection from './ParentLinkSection';
+import AccountSuccessModal from './AccountSuccessModal';
+import { generateSiswaEmail } from '@/lib/siswaUtils';
+
+const colors = {
+  emerald: {
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    500: '#1A936F',
+    600: '#059669',
+    700: '#047857',
+  },
+  amber: {
+    50: '#FEF3C7',
+    200: '#FCD34D',
+  },
+  white: '#FFFFFF',
+  gray: {
+    100: '#F3F4F6',
+    200: '#E5E7EB',
+    300: '#D1D5DB',
+  },
+  text: {
+    primary: '#1B1B1B',
+    secondary: '#444444',
+    tertiary: '#6B7280',
+  },
+};
+
+export default function StudentCreateModal({ isOpen, onClose, onSuccess }) {
+  const [kelas, setKelas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAccounts, setCreatedAccounts] = useState(null);
+
+  // Parent mode: 'select' or 'create'
+  const [parentMode, setParentMode] = useState('select');
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [newParentData, setNewParentData] = useState({
+    name: '',
+    noTelepon: '',
+    email: '',
+    password: '',
+  });
+
+  // Student form data
+  const [formData, setFormData] = useState({
+    name: '',
+    password: '',
+    nis: '',
+    nisn: '',
+    kelasId: '',
+    jenisKelamin: 'LAKI_LAKI',
+    tanggalLahir: '',
+    alamat: '',
+    noTelepon: '',
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchKelas();
+    }
+  }, [isOpen]);
+
+  const fetchKelas = async () => {
+    try {
+      const response = await fetch('/api/kelas');
+      const data = await response.json();
+      setKelas(data || []);
+    } catch (error) {
+      console.error('Error fetching kelas:', error);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      password: '',
+      nis: '',
+      nisn: '',
+      kelasId: '',
+      jenisKelamin: 'LAKI_LAKI',
+      tanggalLahir: '',
+      alamat: '',
+      noTelepon: '',
+    });
+    setParentMode('select');
+    setSelectedParentId('');
+    setNewParentData({
+      name: '',
+      noTelepon: '',
+      email: '',
+      password: '',
+    });
+  };
+
+  const handleClose = () => {
+    if (!loading) {
+      resetForm();
+      onClose();
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // 1. Create student
+      const siswaPayload = {
+        ...formData,
+        email: generateSiswaEmail(formData.name, formData.nis),
+      };
+
+      const siswaResponse = await fetch('/api/admin/siswa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(siswaPayload),
+      });
+
+      const siswaResult = await siswaResponse.json();
+
+      if (!siswaResponse.ok) {
+        throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
+      }
+
+      const siswaId = siswaResult.id;
+      const siswaEmail = siswaResult.user.email;
+
+      let parentEmail = '';
+      let parentPassword = '';
+      let parentName = '';
+
+      // 2. Handle parent linking
+      if (parentMode === 'select') {
+        // Link to existing parent
+        if (!selectedParentId) {
+          throw new Error('Silakan pilih orang tua');
+        }
+
+        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            siswaId,
+            orangTuaId: selectedParentId,
+            hubungan: 'Orang Tua',
+          }),
+        });
+
+        if (!linkResponse.ok) {
+          const linkError = await linkResponse.json();
+          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+        }
+
+        // Fetch parent data for display
+        const parentData = await fetch(`/api/admin/orangtua/${selectedParentId}`);
+        const parent = await parentData.json();
+        parentEmail = parent.user?.email || '';
+        parentName = parent.user?.name || '';
+        parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
+      } else {
+        // Create new parent
+        const parentPayload = {
+          ...newParentData,
+          nik: `NIK-${Date.now()}`, // Generate temporary NIK
+          jenisKelamin: 'LAKI_LAKI', // Default, could be enhanced
+        };
+
+        const parentResponse = await fetch('/api/admin/orangtua', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parentPayload),
+        });
+
+        const parentResult = await parentResponse.json();
+
+        if (!parentResponse.ok) {
+          throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
+        }
+
+        const orangTuaId = parentResult.id;
+        parentEmail = parentResult.user.email;
+        parentPassword = newParentData.password;
+        parentName = parentResult.user.name;
+
+        // Link new parent to student
+        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            siswaId,
+            orangTuaId,
+            hubungan: 'Orang Tua',
+          }),
+        });
+
+        if (!linkResponse.ok) {
+          const linkError = await linkResponse.json();
+          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+        }
+      }
+
+      // 3. Show success modal with account details
+      setCreatedAccounts({
+        student: {
+          name: formData.name,
+          email: siswaEmail,
+          password: formData.password,
+        },
+        parent: {
+          name: parentName,
+          email: parentEmail,
+          password: parentPassword,
+          isNew: parentMode === 'create',
+        },
+      });
+      setShowSuccessModal(true);
+
+      // 4. Call onSuccess callback
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error creating student:', error);
+      alert(`❌ ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    resetForm();
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Main Modal */}
+      <div
+        onClick={handleClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50,
+          animation: 'fadeIn 0.2s ease-out',
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: colors.white,
+            borderRadius: '24px',
+            width: '100%',
+            maxWidth: '800px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: `2px solid ${colors.emerald[100]}`,
+            animation: 'modalSlideIn 0.3s ease-out',
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              position: 'sticky',
+              top: 0,
+              background: colors.white,
+              borderBottom: `2px solid ${colors.gray[100]}`,
+              padding: '24px 32px',
+              borderRadius: '24px 24px 0 0',
+              zIndex: 10,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '14px',
+                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <UserPlus size={24} color={colors.white} />
+                </div>
+                <div>
+                  <h2
+                    style={{
+                      fontSize: '24px',
+                      fontWeight: 700,
+                      color: colors.text.primary,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      marginBottom: '2px',
+                    }}
+                  >
+                    Tambah Siswa Baru
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: colors.text.tertiary,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    }}
+                  >
+                    Lengkapi data siswa dan hubungkan dengan orang tua
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleClose}
+                disabled={loading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease',
+                  opacity: loading ? 0.5 : 1,
+                }}
+                className="close-modal-btn"
+              >
+                <X size={24} color={colors.text.tertiary} />
+              </button>
+            </div>
+          </div>
+
+          {/* Form Content */}
+          <form onSubmit={handleSubmit}>
+            <div style={{ padding: '32px' }}>
+              {/* Section 1: Data Siswa */}
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                  <User size={20} color={colors.emerald[600]} />
+                  <h3
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: colors.text.primary,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    }}
+                  >
+                    Data Siswa
+                  </h3>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  {/* Name */}
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: colors.text.secondary,
+                        marginBottom: '8px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}
+                    >
+                      Nama Lengkap
+                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Contoh: Ahmad Zaki"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="form-input"
+                    />
+                  </div>
+
+                  {/* NIS */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: colors.text.secondary,
+                        marginBottom: '8px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}
+                    >
+                      NIS
+                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nis}
+                      onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                      placeholder="Nomor Induk Siswa"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="form-input"
+                    />
+                  </div>
+
+                  {/* NISN */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: colors.text.secondary,
+                        marginBottom: '8px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}
+                    >
+                      NISN (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nisn}
+                      onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                      placeholder="Nomor Induk Siswa Nasional"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="form-input"
+                    />
+                  </div>
+
+                  {/* Kelas */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: colors.text.secondary,
+                        marginBottom: '8px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}
+                    >
+                      Kelas
+                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
+                    </label>
+                    <select
+                      value={formData.kelasId}
+                      onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        background: colors.white,
+                      }}
+                      className="form-input"
+                    >
+                      <option value="">-- Pilih Kelas --</option>
+                      {kelas.map((k) => (
+                        <option key={k.id} value={k.id}>
+                          {k.nama}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Jenis Kelamin */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: colors.text.secondary,
+                        marginBottom: '8px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}
+                    >
+                      Jenis Kelamin
+                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
+                    </label>
+                    <select
+                      value={formData.jenisKelamin}
+                      onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        background: colors.white,
+                      }}
+                      className="form-input"
+                    >
+                      <option value="LAKI_LAKI">Laki-laki</option>
+                      <option value="PEREMPUAN">Perempuan</option>
+                    </select>
+                  </div>
+
+                  {/* Tanggal Lahir */}
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: colors.text.secondary,
+                        marginBottom: '8px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}
+                    >
+                      Tanggal Lahir (Opsional)
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.tanggalLahir}
+                      onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: `2px solid ${colors.gray[200]}`,
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                      }}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Akun Siswa */}
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                  <Key size={20} color={colors.emerald[600]} />
+                  <h3
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: colors.text.primary,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    }}
+                  >
+                    Akun Siswa
+                  </h3>
+                </div>
+
+                {/* Email (Auto) */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: colors.text.secondary,
+                      marginBottom: '8px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    }}
+                  >
+                    Email (Otomatis)
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.name && formData.nis ? generateSiswaEmail(formData.name, formData.nis) : ''}
+                    disabled
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `2px solid ${colors.gray[200]}`,
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      outline: 'none',
+                      background: colors.gray[100],
+                      color: colors.text.tertiary,
+                    }}
+                  />
+                  <p
+                    style={{
+                      fontSize: '12px',
+                      color: colors.text.tertiary,
+                      marginTop: '6px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    }}
+                  >
+                    Email otomatis dibuat dari Nama + NIS siswa
+                  </p>
+                </div>
+
+                {/* Password */}
+                <PasswordField
+                  label="Password Akun Siswa"
+                  value={formData.password}
+                  onChange={(password) => setFormData({ ...formData, password })}
+                  placeholder="Password untuk akun siswa"
+                  required={true}
+                  helperText="Gunakan password kuat. Bisa generate otomatis."
+                />
+              </div>
+
+              {/* Section 3: Parent Linking */}
+              <ParentLinkSection
+                mode={parentMode}
+                onModeChange={setParentMode}
+                selectedParentId={selectedParentId}
+                onSelectParent={setSelectedParentId}
+                newParentData={newParentData}
+                onNewParentChange={setNewParentData}
+              />
+            </div>
+
+            {/* Footer Actions */}
+            <div
+              style={{
+                position: 'sticky',
+                bottom: 0,
+                background: colors.white,
+                borderTop: `2px solid ${colors.gray[100]}`,
+                padding: '20px 32px',
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+                borderRadius: '0 0 24px 24px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={loading}
+                style={{
+                  padding: '12px 24px',
+                  border: `2px solid ${colors.gray[200]}`,
+                  borderRadius: '12px',
+                  background: colors.white,
+                  color: colors.text.secondary,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  opacity: loading ? 0.5 : 1,
+                }}
+                className="cancel-btn"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '12px 32px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  color: colors.white,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins', "Nunito", system-ui, sans-serif',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  opacity: loading ? 0.7 : 1,
+                }}
+                className="submit-btn"
+              >
+                {loading && (
+                  <div
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid transparent',
+                      borderTopColor: colors.white,
+                      borderRadius: '50%',
+                      animation: 'spin 0.6s linear infinite',
+                    }}
+                  />
+                )}
+                {loading ? 'Menyimpan...' : 'Simpan Siswa'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && createdAccounts && (
+        <AccountSuccessModal accounts={createdAccounts} onClose={handleSuccessModalClose} />
+      )}
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .close-modal-btn:hover {
+          background: ${colors.gray[100]} !important;
+        }
+
+        .form-input:focus {
+          border-color: ${colors.emerald[500]} !important;
+          box-shadow: 0 0 0 3px ${colors.emerald[500]}20 !important;
+        }
+
+        .cancel-btn:hover {
+          background: ${colors.gray[100]} !important;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(26, 147, 111, 0.3) !important;
+        }
+      `}</style>
+    </>
+  );
+}
