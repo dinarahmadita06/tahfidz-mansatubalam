@@ -647,7 +647,7 @@ export default function LaporanKehadiranPage() {
           <div className="preview-empty text-center">
             <FileText size={48} className="mx-auto mb-4" style={{ color: '#00C98D', opacity: 0.9 }} />
             <p style={{ color: '#6B7E75', fontSize: '15px' }}>
-              Pilih kelas dan klik 'Tampilkan Laporan' untuk melihat laporan kehadiran
+              Pilih kelas dan klik &apos;Tampilkan Laporan&apos; untuk melihat laporan kehadiran
             </p>
           </div>
         )}

@@ -774,7 +774,7 @@ export default function LaporanHafalanPage() {
           <div className="preview-empty text-center">
             <FileText size={48} className="mx-auto mb-4" style={{ color: '#00C98D', opacity: 0.9 }} />
             <p style={{ color: '#6B7E75', fontSize: '15px' }}>
-              Pilih kelas dan klik "Generate Preview" untuk melihat laporan hafalan
+              Pilih kelas dan klik &quot;Generate Preview&quot; untuk melihat laporan hafalan
             </p>
           </div>
         )}
