@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Upload, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen } from 'lucide-react';
+import { UserPlus, Upload, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen, CheckCircle, XCircle, ArrowUpRight, Award } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import SmartImport from '@/components/SmartImport';
 import * as XLSX from 'xlsx';
+import { getStatusBadgeConfig } from '@/lib/helpers/statusHelpers';
 
 // Islamic Modern Color Palette (sama dengan Dashboard & Guru)
 const colors = {
@@ -139,8 +140,13 @@ export default function AdminSiswaPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterKelas, setFilterKelas] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, unvalidated
+  const [filterStatusSiswa, setFilterStatusSiswa] = useState('all'); // all, AKTIF, LULUS, PINDAH, KELUAR
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedSiswa, setSelectedSiswa] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [editingSiswa, setEditingSiswa] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -260,6 +266,45 @@ export default function AdminSiswaPage() {
     alert('Fitur hapus akan segera tersedia.');
   };
 
+  const handleChangeStatus = (siswaItem, status) => {
+    setSelectedSiswa(siswaItem);
+    setNewStatus(status);
+    setShowStatusModal(true);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!selectedSiswa || !newStatus) return;
+
+    setIsUpdatingStatus(true);
+    try {
+      const response = await fetch(`/api/admin/siswa/${selectedSiswa.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statusSiswa: newStatus }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Refresh data
+        await fetchSiswa();
+
+        // Close modal and show success message
+        setShowStatusModal(false);
+        alert(`✅ ${result.message}`);
+      } else {
+        alert(`❌ Gagal mengubah status: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('❌ Terjadi kesalahan saat mengubah status siswa');
+    } finally {
+      setIsUpdatingStatus(false);
+      setSelectedSiswa(null);
+      setNewStatus('');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -286,7 +331,10 @@ export default function AdminSiswaPage() {
       (filterStatus === 'active' && s.status === 'approved') ||
       (filterStatus === 'unvalidated' && s.status !== 'approved');
 
-    return matchSearch && matchKelas && matchStatus;
+    const matchStatusSiswa = filterStatusSiswa === 'all' ||
+      s.statusSiswa === filterStatusSiswa;
+
+    return matchSearch && matchKelas && matchStatus && matchStatusSiswa;
   });
 
   // Calculate total hafalan for each siswa
@@ -307,6 +355,12 @@ export default function AdminSiswaPage() {
     total: siswa.length,
     active: siswa.filter(s => s.status === 'approved').length,
     unvalidated: siswa.filter(s => s.status !== 'approved').length,
+    statusCounts: {
+      AKTIF: siswa.filter(s => s.statusSiswa === 'AKTIF').length,
+      LULUS: siswa.filter(s => s.statusSiswa === 'LULUS').length,
+      PINDAH: siswa.filter(s => s.statusSiswa === 'PINDAH').length,
+      KELUAR: siswa.filter(s => s.statusSiswa === 'KELUAR').length,
+    },
   };
 
   if (loading) {
@@ -541,7 +595,7 @@ export default function AdminSiswaPage() {
             }}>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr',
+                gridTemplateColumns: '2fr 1fr 1fr 1fr',
                 gap: '16px',
                 alignItems: 'end',
               }}>
@@ -636,7 +690,7 @@ export default function AdminSiswaPage() {
                     marginBottom: '8px',
                     fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                   }}>
-                    Filter Status
+                    Filter Validasi
                   </label>
                   <select
                     value={filterStatus}
@@ -654,9 +708,45 @@ export default function AdminSiswaPage() {
                     }}
                     className="filter-select"
                   >
-                    <option value="all">Semua Status</option>
-                    <option value="active">Aktif</option>
+                    <option value="all">Semua</option>
+                    <option value="active">Tervalidasi</option>
                     <option value="unvalidated">Belum Divalidasi</option>
+                  </select>
+                </div>
+
+                {/* Filter Status Siswa (Lifecycle) */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    marginBottom: '8px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
+                    Status Siswa
+                  </label>
+                  <select
+                    value={filterStatusSiswa}
+                    onChange={(e) => setFilterStatusSiswa(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: `2px solid ${colors.gray[200]}`,
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                    className="filter-select"
+                  >
+                    <option value="all">Semua ({siswa.length})</option>
+                    <option value="AKTIF">✅ Aktif ({stats.statusCounts.AKTIF})</option>
+                    <option value="LULUS">🎓 Lulus ({stats.statusCounts.LULUS})</option>
+                    <option value="PINDAH">↗️ Pindah ({stats.statusCounts.PINDAH})</option>
+                    <option value="KELUAR">❌ Keluar ({stats.statusCounts.KELUAR})</option>
                   </select>
                 </div>
               </div>
@@ -723,7 +813,19 @@ export default function AdminSiswaPage() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                       }}>
-                        Status
+                        Validasi
+                      </th>
+                      <th style={{
+                        padding: '18px 24px',
+                        textAlign: 'left',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.emerald[700],
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      }}>
+                        Status Siswa
                       </th>
                       <th style={{
                         padding: '18px 24px',
@@ -766,7 +868,7 @@ export default function AdminSiswaPage() {
                   <tbody>
                     {filteredSiswa.length === 0 ? (
                       <tr>
-                        <td colSpan="7" style={{
+                        <td colSpan="8" style={{
                           padding: '48px 24px',
                           textAlign: 'center',
                           color: colors.text.tertiary,
@@ -780,6 +882,7 @@ export default function AdminSiswaPage() {
                       filteredSiswa.map((siswaItem, index) => {
                         const totalHafalan = getSiswaHafalan(siswaItem);
                         const isValidated = siswaItem.status === 'approved';
+                        const statusBadge = getStatusBadgeConfig(siswaItem.statusSiswa || 'AKTIF');
 
                         return (
                           <tr
@@ -886,7 +989,25 @@ export default function AdminSiswaPage() {
                                 display: 'inline-block',
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
                               }}>
-                                {isValidated ? 'Aktif' : 'Belum Divalidasi'}
+                                {isValidated ? 'Tervalidasi' : 'Pending'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '20px 24px' }}>
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '8px 14px',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  borderRadius: '100px',
+                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                                }}
+                                className={`${statusBadge.bgColor} ${statusBadge.textColor} border ${statusBadge.borderColor}`}
+                              >
+                                {statusBadge.emoji} {statusBadge.label}
                               </span>
                             </td>
                             <td style={{
@@ -925,44 +1046,104 @@ export default function AdminSiswaPage() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '8px'
+                                gap: '6px',
+                                flexWrap: 'wrap'
                               }}>
-                                <button
-                                  onClick={() => handleEdit(siswaItem)}
-                                  style={{
-                                    padding: '8px',
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    background: `${colors.emerald[500]}15`,
-                                    color: colors.emerald[600],
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                  }}
-                                  className="action-btn-edit"
-                                >
-                                  <Edit size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(siswaItem.id)}
-                                  style={{
-                                    padding: '8px',
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    background: '#FEE2E2',
-                                    color: '#DC2626',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                  }}
-                                  className="action-btn-delete"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
+                                {/* Status Quick Actions */}
+                                {siswaItem.statusSiswa !== 'AKTIF' && (
+                                  <button
+                                    onClick={() => handleChangeStatus(siswaItem, 'AKTIF')}
+                                    title="Aktifkan Siswa"
+                                    style={{
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      border: 'none',
+                                      background: `${colors.emerald[500]}20`,
+                                      color: colors.emerald[700],
+                                      cursor: 'pointer',
+                                      transition: 'all 0.3s ease',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      fontSize: '12px',
+                                      fontWeight: 600,
+                                    }}
+                                    className="action-btn-status"
+                                  >
+                                    <CheckCircle size={14} />
+                                    <span>Aktifkan</span>
+                                  </button>
+                                )}
+                                {siswaItem.statusSiswa === 'AKTIF' && (
+                                  <>
+                                    <button
+                                      onClick={() => handleChangeStatus(siswaItem, 'LULUS')}
+                                      title="Luluskan Siswa"
+                                      style={{
+                                        padding: '6px 10px',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        background: '#F3F4F620',
+                                        color: '#6B7280',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                      }}
+                                      className="action-btn-status"
+                                    >
+                                      <Award size={14} />
+                                      <span>Lulus</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleChangeStatus(siswaItem, 'PINDAH')}
+                                      title="Pindah Sekolah"
+                                      style={{
+                                        padding: '6px 10px',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        background: `${colors.amber[400]}20`,
+                                        color: colors.amber[700],
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                      }}
+                                      className="action-btn-status"
+                                    >
+                                      <ArrowUpRight size={14} />
+                                      <span>Pindah</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleChangeStatus(siswaItem, 'KELUAR')}
+                                      title="Keluarkan Siswa"
+                                      style={{
+                                        padding: '6px 10px',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        background: '#FEE2E2',
+                                        color: '#DC2626',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                      }}
+                                      className="action-btn-status"
+                                    >
+                                      <XCircle size={14} />
+                                      <span>Keluar</span>
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -1102,6 +1283,278 @@ export default function AdminSiswaPage() {
         </div>
       )}
 
+      {/* Status Change Confirmation Modal */}
+      {showStatusModal && selectedSiswa && (
+        <div
+          onClick={() => !isUpdatingStatus && setShowStatusModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: colors.white,
+              borderRadius: '24px',
+              padding: '32px',
+              maxWidth: '480px',
+              width: '100%',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+              border: `2px solid ${colors.emerald[100]}`,
+              animation: 'modalSlideIn 0.3s ease-out',
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'start',
+              gap: '16px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '14px',
+                background: `linear-gradient(135deg, ${colors.emerald[400]} 0%, ${colors.emerald[600]} 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <AlertCircle size={24} color={colors.white} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  color: colors.text.primary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  marginBottom: '6px',
+                }}>
+                  Konfirmasi Perubahan Status
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: colors.text.secondary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  lineHeight: '1.5',
+                }}>
+                  Anda akan mengubah status siswa berikut:
+                </p>
+              </div>
+            </div>
+
+            {/* Student Info */}
+            <div style={{
+              background: colors.emerald[50],
+              border: `2px solid ${colors.emerald[100]}`,
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '20px',
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${colors.emerald[400]} 0%, ${colors.emerald[600]} 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: colors.white,
+                  fontWeight: 700,
+                  fontSize: '18px',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                }}>
+                  {selectedSiswa.user.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: colors.text.primary,
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    marginBottom: '2px',
+                  }}>
+                    {selectedSiswa.user.name}
+                  </p>
+                  <p style={{
+                    fontSize: '13px',
+                    color: colors.text.tertiary,
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}>
+                    {selectedSiswa.user.email}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                padding: '12px 16px',
+                background: colors.white,
+                borderRadius: '12px',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: colors.text.tertiary,
+                    marginBottom: '4px',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                  }}>
+                    Status Saat Ini
+                  </p>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      borderRadius: '100px',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
+                    }}
+                    className={`${getStatusBadgeConfig(selectedSiswa.statusSiswa || 'AKTIF').bgColor} ${getStatusBadgeConfig(selectedSiswa.statusSiswa || 'AKTIF').textColor} border ${getStatusBadgeConfig(selectedSiswa.statusSiswa || 'AKTIF').borderColor}`}
+                  >
+                    {getStatusBadgeConfig(selectedSiswa.statusSiswa || 'AKTIF').emoji} {getStatusBadgeConfig(selectedSiswa.statusSiswa || 'AKTIF').label}
+                  </span>
+                </div>
+                <div style={{
+                  fontSize: '24px',
+                  color: colors.text.tertiary,
+                }}>→</div>
+                <div style={{ flex: 1 }}>
+                  <p style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: colors.text.tertiary,
+                    marginBottom: '4px',
+                    fontFamily: '"Poppins", system-ui, sans-serif',
+                  }}>
+                    Status Baru
+                  </p>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      borderRadius: '100px',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
+                    }}
+                    className={`${getStatusBadgeConfig(newStatus).bgColor} ${getStatusBadgeConfig(newStatus).textColor} border ${getStatusBadgeConfig(newStatus).borderColor}`}
+                  >
+                    {getStatusBadgeConfig(newStatus).emoji} {getStatusBadgeConfig(newStatus).label}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Warning Message */}
+            {newStatus !== 'AKTIF' && (
+              <div style={{
+                background: '#FEF3C7',
+                border: '2px solid #FCD34D',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+              }}>
+                <p style={{
+                  fontSize: '13px',
+                  color: '#92400E',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  lineHeight: '1.5',
+                }}>
+                  <strong>⚠️ Perhatian:</strong> Mengubah status menjadi <strong>{getStatusBadgeConfig(newStatus).label}</strong> akan menonaktifkan akun siswa ini. Siswa tidak akan bisa login sampai status diubah kembali ke Aktif.
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'flex-end',
+            }}>
+              <button
+                onClick={() => setShowStatusModal(false)}
+                disabled={isUpdatingStatus}
+                style={{
+                  padding: '12px 24px',
+                  border: `2px solid ${colors.gray[200]}`,
+                  borderRadius: '12px',
+                  background: colors.white,
+                  color: colors.text.secondary,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: isUpdatingStatus ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  opacity: isUpdatingStatus ? 0.5 : 1,
+                }}
+                className="cancel-btn"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                disabled={isUpdatingStatus}
+                style={{
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
+                  color: colors.white,
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  cursor: isUpdatingStatus ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  opacity: isUpdatingStatus ? 0.7 : 1,
+                }}
+                className="submit-btn"
+              >
+                {isUpdatingStatus && (
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid transparent',
+                    borderTopColor: colors.white,
+                    borderRadius: '50%',
+                    animation: 'spin 0.6s linear infinite',
+                  }} />
+                )}
+                {isUpdatingStatus ? 'Mengubah...' : 'Ya, Ubah Status'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
@@ -1125,6 +1578,21 @@ export default function AdminSiswaPage() {
           to {
             opacity: 1;
             transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
           }
         }
 
@@ -1167,6 +1635,12 @@ export default function AdminSiswaPage() {
         .action-btn-delete:hover {
           background: #FEE2E2 !important;
           transform: scale(1.1);
+        }
+
+        .action-btn-status:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+          filter: brightness(0.95);
         }
 
         /* Modal Close Button Hover */
