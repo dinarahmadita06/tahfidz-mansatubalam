@@ -32,7 +32,7 @@ const colors = {
   },
 };
 
-export default function StudentCreateModal({ isOpen, onClose, onSuccess }) {
+export default function StudentCreateModal({ isOpen, onClose, onSuccess, defaultKelasId = null }) {
   const [kelas, setKelas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -54,7 +54,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess }) {
     password: '',
     nis: '',
     nisn: '',
-    kelasId: '',
+    kelasId: defaultKelasId || '',
     jenisKelamin: 'LAKI_LAKI',
     tanggalLahir: '',
     alamat: '',
@@ -64,8 +64,12 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       fetchKelas();
+      // Set defaultKelasId when modal opens
+      if (defaultKelasId) {
+        setFormData(prev => ({ ...prev, kelasId: defaultKelasId }));
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, defaultKelasId]);
 
   const fetchKelas = async () => {
     try {
@@ -83,7 +87,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess }) {
       password: '',
       nis: '',
       nisn: '',
-      kelasId: '',
+      kelasId: defaultKelasId || '',
       jenisKelamin: 'LAKI_LAKI',
       tanggalLahir: '',
       alamat: '',
