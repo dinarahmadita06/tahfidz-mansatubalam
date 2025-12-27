@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter, useParams } from 'next/navigation';
+import StudentCreateModal from '@/components/admin/StudentCreateModal';
 import * as XLSX from 'xlsx';
 import {
   generateSiswaEmail,
@@ -527,15 +528,13 @@ export default function KelolaSiswaPage() {
         </div>
 
         {/* Modal Form Siswa */}
-        {showModal && (
-          <ModalFormSiswa
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={handleSubmit}
-            onClose={() => { setShowModal(false); resetForm(); }}
-            isEditing={!!editingSiswa}
-          />
-        )}
+        {/* Student Create Modal */}
+        <StudentCreateModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSuccess={fetchSiswa}
+          defaultKelasId={kelasId}
+        />
 
         {/* Modal Preview Excel */}
         {showPreviewModal && previewData.length > 0 && (
@@ -598,128 +597,6 @@ const actionButtonStyle = (color, bgColor) => ({
 });
 
 // ============ SUB-COMPONENTS ============
-function ModalFormSiswa({ formData, setFormData, onSubmit, onClose, isEditing }) {
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
-      <div style={{ background: colors.white, borderRadius: '24px', padding: '32px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', color: colors.gray[900] }}>
-            {isEditing ? 'Edit Siswa' : 'Tambah Siswa Baru'}
-          </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
-            <X size={24} />
-          </button>
-        </div>
-
-        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Nama */}
-          <FormField label="Nama Lengkap *" required>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              style={inputStyle}
-              placeholder="Contoh: Ahmad Fauzi"
-            />
-          </FormField>
-
-          {/* NISN & NIS */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FormField label="NISN *" required>
-              <input
-                type="text"
-                required
-                value={formData.nisn}
-                onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
-                style={inputStyle}
-                placeholder="10 digit"
-                maxLength="10"
-              />
-            </FormField>
-
-            <FormField label="NIS *" required>
-              <input
-                type="text"
-                required
-                value={formData.nis}
-                onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
-                style={inputStyle}
-                placeholder="Contoh: 2024001"
-              />
-            </FormField>
-          </div>
-
-          {/* Email (Auto-generated, read-only) */}
-          <FormField label="Email (Otomatis)">
-            <input
-              type="email"
-              value={formData.email}
-              readOnly
-              style={{ ...inputStyle, background: colors.gray[50], cursor: 'not-allowed' }}
-              placeholder="Akan otomatis dibuat dari nama dan NIS"
-            />
-            <p style={{ fontSize: '11px', color: colors.gray[500], marginTop: '4px' }}>
-              Format: katapertama.NIS@siswa.tahfidz.sch.id
-            </p>
-          </FormField>
-
-          {/* Jenis Kelamin & Tanggal Lahir */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FormField label="Jenis Kelamin *" required>
-              <select
-                required
-                value={formData.jenisKelamin}
-                onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
-                style={inputStyle}
-              >
-                <option value="LAKI_LAKI">Laki-laki</option>
-                <option value="PEREMPUAN">Perempuan</option>
-              </select>
-            </FormField>
-
-            <FormField label="Tanggal Lahir">
-              <input
-                type="date"
-                value={formData.tanggalLahir}
-                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-                style={inputStyle}
-              />
-            </FormField>
-          </div>
-
-          {/* Alamat */}
-          <FormField label="Alamat">
-            <textarea
-              value={formData.alamat}
-              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-              style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
-              placeholder="Alamat lengkap siswa"
-            />
-          </FormField>
-
-          {/* Buttons */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ flex: 1, padding: '12px', border: `2px solid ${colors.gray[300]}`, borderRadius: '12px', background: colors.white, fontWeight: '600', cursor: 'pointer' }}
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', background: `linear-gradient(135deg, ${colors.emerald[500]}, ${colors.emerald[600]})`, color: colors.white, fontWeight: '600', cursor: 'pointer' }}
-            >
-              {isEditing ? 'Update' : 'Simpan'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
