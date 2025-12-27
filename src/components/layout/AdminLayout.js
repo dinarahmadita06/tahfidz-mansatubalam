@@ -361,10 +361,10 @@ function AdminLayout({ children }) {
 
                         {sidebarOpen && (
                           <div
-                            className={`ml-6 border-l-2 border-emerald-100 pl-4 overflow-hidden transition-all duration-300 ease-in-out ${
+                            className={`overflow-hidden transition-all duration-300 ease-in-out ${
                               expandedMenus[item.title]
-                                ? 'mt-1 max-h-96 opacity-100'
-                                : 'mt-0 max-h-0 opacity-0'
+                                ? 'mt-1 ml-6 pl-4 max-h-96 opacity-100 border-l-2 border-emerald-100'
+                                : 'mt-0 ml-0 pl-0 max-h-0 opacity-0 border-l-0'
                             }`}
                           >
                             <div className="space-y-1">
