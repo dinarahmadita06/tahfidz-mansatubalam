@@ -102,7 +102,8 @@
       "Bash(git cherry-pick:*)",
       "Bash(git merge:*)",
       "Bash(Select-String -Pattern \"\\\\\\(Compiled|Error|warn|✓|✗|Build|hafalan-anak\\\\\\)\")",
-      "Bash(vercel inspect:*)"
+      "Bash(vercel inspect:*)",
+      "Bash(Select-String -Pattern \"\\(Compiled|Error|warn|✓|✗|Build|admin/siswa\\)\")"
     ],
     "deny": [],
     "ask": []
