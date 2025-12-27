@@ -7,7 +7,9 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter, useParams } from 'next/navigation';
-import StudentCreateModal from '@/components/admin/StudentCreateModal';
+import PasswordField from '@/components/admin/PasswordField';
+import ParentLinkSection from '@/components/admin/ParentLinkSection';
+import AccountSuccessModal from '@/components/admin/AccountSuccessModal';
 import * as XLSX from 'xlsx';
 import {
   generateSiswaEmail,
@@ -17,6 +19,7 @@ import {
   validateNIS,
   matchesSearch
 } from '@/lib/siswaUtils';
+import { generateParentEmail } from '@/lib/passwordUtils';
 
 // Modern Pastel Color Palette (SIMTAQ Style)
 const colors = {
@@ -57,11 +60,24 @@ export default function KelolaSiswaPage() {
     nisn: '',
     nis: '',
     email: '', // Auto-generated
+    password: '', // Password akun siswa
     jenisKelamin: 'LAKI_LAKI',
     tanggalLahir: '',
     alamat: '',
     noTelepon: ''
   });
+
+  // Parent Linking State
+  const [parentMode, setParentMode] = useState('select'); // 'select' or 'create'
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [newParentData, setNewParentData] = useState({
+    name: '',
+    noTelepon: '',
+    email: '',
+    password: ''
+  });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAccounts, setCreatedAccounts] = useState(null);
 
   // ============ EFFECTS ============
   useEffect(() => {
@@ -78,6 +94,14 @@ export default function KelolaSiswaPage() {
       setFormData(prev => ({ ...prev, email: generatedEmail }));
     }
   }, [formData.name, formData.nis]);
+
+  // Auto-generate email orang tua when name or phone changes
+  useEffect(() => {
+    if (parentMode === 'create' && newParentData.name && newParentData.noTelepon) {
+      const generatedEmail = generateParentEmail(newParentData.name, newParentData.noTelepon);
+      setNewParentData(prev => ({ ...prev, email: generatedEmail }));
+    }
+  }, [parentMode, newParentData.name, newParentData.noTelepon]);
 
   // ============ DATA FETCHING ============
   const fetchKelasDetail = async () => {
@@ -110,6 +134,11 @@ export default function KelolaSiswaPage() {
     e.preventDefault();
 
     // Validations
+    if (!formData.password || formData.password.length < 8) {
+      alert('Password siswa minimal 8 karakter');
+      return;
+    }
+
     const nisnValidation = validateNISN(formData.nisn);
     if (!nisnValidation.valid) {
       alert(nisnValidation.error);
@@ -122,37 +151,137 @@ export default function KelolaSiswaPage() {
       return;
     }
 
-    try {
-      const url = editingSiswa
-        ? `/api/admin/siswa/${editingSiswa.id}`
-        : '/api/admin/siswa';
-      const method = editingSiswa ? 'PUT' : 'POST';
+    // Validate parent
+    if (parentMode === 'select' && !selectedParentId) {
+      alert('Silakan pilih orang tua atau buat orang tua baru');
+      return;
+    }
 
-      const submitData = {
+    if (parentMode === 'create') {
+      if (!newParentData.name || !newParentData.noTelepon || !newParentData.password) {
+        alert('Data orang tua tidak lengkap');
+        return;
+      }
+      if (newParentData.password.length < 8) {
+        alert('Password orang tua minimal 8 karakter');
+        return;
+      }
+    }
+
+    try {
+      // 1. Create student
+      const siswaPayload = {
         ...formData,
         kelasId,
         jenisKelamin: normalizeGender(formData.jenisKelamin),
-        password: formData.nis // Default password = NIS
       };
 
-      const response = await fetch(url, {
-        method,
+      const siswaResponse = await fetch('/api/admin/siswa', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(siswaPayload),
       });
 
-      if (response.ok) {
-        alert(editingSiswa ? 'Siswa berhasil diupdate' : 'Siswa berhasil ditambahkan');
-        setShowModal(false);
-        resetForm();
-        fetchSiswa();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menyimpan data siswa');
+      const siswaResult = await siswaResponse.json();
+
+      if (!siswaResponse.ok) {
+        throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
       }
+
+      const siswaId = siswaResult.id;
+      const siswaEmail = siswaResult.user.email;
+
+      let parentEmail = '';
+      let parentPassword = '';
+      let parentName = '';
+
+      // 2. Handle parent linking
+      if (parentMode === 'select') {
+        // Link to existing parent
+        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            siswaId,
+            orangTuaId: selectedParentId,
+            hubungan: 'Orang Tua',
+          }),
+        });
+
+        if (!linkResponse.ok) {
+          const linkError = await linkResponse.json();
+          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+        }
+
+        // Fetch parent data for display
+        const parentData = await fetch(`/api/admin/orangtua/${selectedParentId}`);
+        const parent = await parentData.json();
+        parentEmail = parent.user?.email || '';
+        parentName = parent.user?.name || '';
+        parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
+      } else {
+        // Create new parent
+        const parentPayload = {
+          ...newParentData,
+          nik: `NIK-${Date.now()}`, // Generate temporary NIK
+          jenisKelamin: 'LAKI_LAKI', // Default
+        };
+
+        const parentResponse = await fetch('/api/admin/orangtua', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parentPayload),
+        });
+
+        const parentResult = await parentResponse.json();
+
+        if (!parentResponse.ok) {
+          throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
+        }
+
+        const orangTuaId = parentResult.id;
+        parentEmail = parentResult.user.email;
+        parentPassword = newParentData.password;
+        parentName = parentResult.user.name;
+
+        // Link new parent to student
+        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            siswaId,
+            orangTuaId,
+            hubungan: 'Orang Tua',
+          }),
+        });
+
+        if (!linkResponse.ok) {
+          const linkError = await linkResponse.json();
+          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+        }
+      }
+
+      // 3. Show success modal with account details
+      setCreatedAccounts({
+        student: {
+          name: formData.name,
+          email: siswaEmail,
+          password: formData.password,
+        },
+        parent: {
+          name: parentName,
+          email: parentEmail,
+          password: parentPassword,
+          isNew: parentMode === 'create',
+        },
+      });
+      setShowSuccessModal(true);
+      setShowModal(false);
+      resetForm();
+      fetchSiswa();
     } catch (error) {
-      console.error('Error saving siswa:', error);
-      alert('Gagal menyimpan data siswa');
+      console.error('Error creating student:', error);
+      alert(`❌ ${error.message}`);
     }
   };
 
@@ -195,10 +324,19 @@ export default function KelolaSiswaPage() {
       nisn: '',
       nis: '',
       email: '',
+      password: '',
       jenisKelamin: 'LAKI_LAKI',
       tanggalLahir: '',
       alamat: '',
       noTelepon: ''
+    });
+    setParentMode('select');
+    setSelectedParentId('');
+    setNewParentData({
+      name: '',
+      noTelepon: '',
+      email: '',
+      password: ''
     });
     setEditingSiswa(null);
   };
@@ -528,13 +666,29 @@ export default function KelolaSiswaPage() {
         </div>
 
         {/* Modal Form Siswa */}
-        {/* Student Create Modal */}
-        <StudentCreateModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onSuccess={fetchSiswa}
-          defaultKelasId={kelasId}
-        />
+        {showModal && (
+          <ModalFormSiswa
+            formData={formData}
+            setFormData={setFormData}
+            parentMode={parentMode}
+            setParentMode={setParentMode}
+            selectedParentId={selectedParentId}
+            setSelectedParentId={setSelectedParentId}
+            newParentData={newParentData}
+            setNewParentData={setNewParentData}
+            onSubmit={handleSubmit}
+            onClose={() => { setShowModal(false); resetForm(); }}
+            isEditing={!!editingSiswa}
+          />
+        )}
+
+        {/* Success Modal */}
+        {showSuccessModal && createdAccounts && (
+          <AccountSuccessModal
+            accounts={createdAccounts}
+            onClose={() => setShowSuccessModal(false)}
+          />
+        )}
 
         {/* Modal Preview Excel */}
         {showPreviewModal && previewData.length > 0 && (
@@ -597,6 +751,172 @@ const actionButtonStyle = (color, bgColor) => ({
 });
 
 // ============ SUB-COMPONENTS ============
+function ModalFormSiswa({
+  formData,
+  setFormData,
+  parentMode,
+  setParentMode,
+  selectedParentId,
+  setSelectedParentId,
+  newParentData,
+  setNewParentData,
+  onSubmit,
+  onClose,
+  isEditing
+}) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px', backdropFilter: 'blur(4px)' }}>
+      <div style={{ background: colors.white, borderRadius: '24px', padding: '32px', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: colors.gray[900] }}>
+            {isEditing ? 'Edit Siswa' : 'Tambah Siswa Baru'}
+          </h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Nama */}
+          <FormField label="Nama Lengkap *" required>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              style={inputStyle}
+              placeholder="Contoh: Ahmad Fauzi"
+            />
+          </FormField>
+
+          {/* NISN & NIS */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <FormField label="NISN *" required>
+              <input
+                type="text"
+                required
+                value={formData.nisn}
+                onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                style={inputStyle}
+                placeholder="10 digit"
+                maxLength="10"
+              />
+            </FormField>
+
+            <FormField label="NIS *" required>
+              <input
+                type="text"
+                required
+                value={formData.nis}
+                onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                style={inputStyle}
+                placeholder="Contoh: 2024001"
+              />
+            </FormField>
+          </div>
+
+          {/* Email (Auto-generated, read-only) */}
+          <FormField label="Email (Otomatis)">
+            <input
+              type="email"
+              value={formData.email}
+              readOnly
+              style={{ ...inputStyle, background: colors.gray[50], cursor: 'not-allowed' }}
+              placeholder="Akan otomatis dibuat dari nama dan NIS"
+            />
+            <p style={{ fontSize: '11px', color: colors.gray[500], marginTop: '4px' }}>
+              Format: katapertama.NIS@siswa.tahfidz.sch.id
+            </p>
+          </FormField>
+
+          {/* PASSWORD FIELD - BARU! */}
+          <PasswordField
+            label="Password Akun Siswa"
+            value={formData.password}
+            onChange={(password) => setFormData({ ...formData, password })}
+            placeholder="Password untuk akun siswa"
+            required={true}
+            helperText="Gunakan password kuat. Bisa generate otomatis."
+          />
+
+          {/* Jenis Kelamin & Tanggal Lahir */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <FormField label="Jenis Kelamin *" required>
+              <select
+                required
+                value={formData.jenisKelamin}
+                onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                style={inputStyle}
+              >
+                <option value="LAKI_LAKI">Laki-laki</option>
+                <option value="PEREMPUAN">Perempuan</option>
+              </select>
+            </FormField>
+
+            <FormField label="Tanggal Lahir">
+              <input
+                type="date"
+                value={formData.tanggalLahir}
+                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                style={inputStyle}
+              />
+            </FormField>
+          </div>
+
+          {/* Alamat */}
+          <FormField label="Alamat">
+            <textarea
+              value={formData.alamat}
+              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+              style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
+              placeholder="Alamat lengkap siswa"
+            />
+          </FormField>
+
+          {/* PARENT LINK SECTION - BARU! */}
+          <ParentLinkSection
+            mode={parentMode}
+            onModeChange={setParentMode}
+            selectedParentId={selectedParentId}
+            onSelectParent={setSelectedParentId}
+            newParentData={newParentData}
+            onNewParentChange={setNewParentData}
+          />
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ flex: 1, padding: '12px', border: `2px solid ${colors.gray[300]}`, borderRadius: '12px', background: colors.white, fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease' }}
+              className="btn-cancel"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', background: `linear-gradient(135deg, ${colors.emerald[500]}, ${colors.emerald[600]})`, color: colors.white, fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)' }}
+              className="btn-submit"
+            >
+              {isEditing ? 'Update' : 'Simpan'}
+            </button>
+          </div>
+        </form>
+
+        <style jsx>{`
+          .btn-cancel:hover {
+            background: ${colors.gray[50]} !important;
+          }
+          .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 147, 111, 0.3) !important;
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
+
 function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
