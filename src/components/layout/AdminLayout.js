@@ -84,11 +84,7 @@ function AdminLayout({ children }) {
   const [notificationQueue, setNotificationQueue] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
   const [isMobile, setIsMobile] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState({
-    'Manajemen Pengguna': true,
-    'Kelas & Tahun Ajaran': true,
-    'Monitoring & Laporan': true
-  });
+  const [expandedMenus, setExpandedMenus] = useState({}); // Default: all collapsed
   const pathname = usePathname();
 
   // Detect mobile screen
