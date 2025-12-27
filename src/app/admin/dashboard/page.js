@@ -40,40 +40,40 @@ function SkeletonCard() {
   );
 }
 
-// Modern Stat Card - Following Guru Dashboard Style
+// Modern Stat Card - Following Guru Dashboard Style with Pastel Glow
 function StatCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
   const variants = {
     green: {
-      wrapper: 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200',
-      iconBg: 'bg-emerald-100',
+      wrapper: 'bg-emerald-50/70 backdrop-blur-sm border-emerald-200/60 shadow-md shadow-emerald-200/25',
+      iconBg: 'bg-white/70 shadow-sm',
       iconColor: 'text-emerald-600',
       title: 'text-emerald-600',
       value: 'text-emerald-700',
     },
     blue: {
-      wrapper: 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200',
-      iconBg: 'bg-blue-100',
+      wrapper: 'bg-blue-50/70 backdrop-blur-sm border-blue-200/60 shadow-md shadow-blue-200/25',
+      iconBg: 'bg-white/70 shadow-sm',
       iconColor: 'text-blue-600',
       title: 'text-blue-600',
       value: 'text-blue-700',
     },
     violet: {
-      wrapper: 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200',
-      iconBg: 'bg-violet-100',
+      wrapper: 'bg-violet-50/70 backdrop-blur-sm border-violet-200/60 shadow-md shadow-violet-200/25',
+      iconBg: 'bg-white/70 shadow-sm',
       iconColor: 'text-violet-600',
       title: 'text-violet-600',
       value: 'text-violet-700',
     },
     amber: {
-      wrapper: 'bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200',
-      iconBg: 'bg-amber-100',
+      wrapper: 'bg-amber-50/70 backdrop-blur-sm border-amber-200/60 shadow-md shadow-amber-200/25',
+      iconBg: 'bg-white/70 shadow-sm',
       iconColor: 'text-amber-600',
       title: 'text-amber-600',
       value: 'text-amber-700',
     },
     sky: {
-      wrapper: 'bg-gradient-to-br from-sky-50 to-blue-50 border-sky-200',
-      iconBg: 'bg-sky-100',
+      wrapper: 'bg-sky-50/70 backdrop-blur-sm border-sky-200/60 shadow-md shadow-sky-200/25',
+      iconBg: 'bg-white/70 shadow-sm',
       iconColor: 'text-sky-600',
       title: 'text-sky-600',
       value: 'text-sky-700',
@@ -84,22 +84,22 @@ function StatCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
 
   return (
     <div
-      className={`${style.wrapper} rounded-xl border-2 p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all`}
+      className={`${style.wrapper} rounded-2xl border p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300`}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className={`${style.title} text-sm font-semibold mb-1 uppercase`}>
+          <p className={`${style.title} text-xs font-semibold mb-1 uppercase tracking-wide`}>
             {title}
           </p>
-          <h3 className={`${style.value} text-4xl font-bold`}>
+          <h3 className={`${style.value} text-3xl font-bold`}>
             {value}
           </h3>
           {subtitle && (
             <p className="text-slate-500 text-sm mt-1">{subtitle}</p>
           )}
         </div>
-        <div className={`${style.iconBg} p-4 rounded-full`}>
-          <Icon size={32} className={style.iconColor} />
+        <div className={`${style.iconBg} p-3 rounded-xl`}>
+          <Icon size={28} className={style.iconColor} />
         </div>
       </div>
     </div>
@@ -127,23 +127,23 @@ function MotivationCard() {
   );
 }
 
-// Announcement Section - ORANGE (Following Siswa Dashboard)
+// Announcement Section - AMBER (Following Siswa Dashboard)
 function AnnouncementSection() {
   return (
-    <div className="bg-orange-50/60 backdrop-blur-sm rounded-2xl border border-orange-200 ring-2 ring-orange-200/40 shadow-[0_0_0_3px_rgba(245,158,11,0.12)] border-l-4 border-l-orange-400 p-6">
+    <div className="bg-amber-50/70 backdrop-blur-sm rounded-2xl border border-amber-200 ring-2 ring-amber-200/40 shadow-[0_0_0_3px_rgba(245,158,11,0.12)] border-l-4 border-l-amber-400 p-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="p-3.5 bg-orange-500 rounded-xl shadow-lg ring-2 ring-orange-300/50">
+          <div className="p-3.5 bg-amber-500 rounded-xl shadow-lg ring-2 ring-amber-300/50">
             <Megaphone size={22} className="text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-orange-900">Pengumuman Terbaru</h2>
-            <p className="text-xs text-orange-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
+            <h2 className="text-xl font-bold text-amber-900">Pengumuman Terbaru</h2>
+            <p className="text-xs text-amber-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
           </div>
         </div>
         <Link
           href="/admin/pengumuman"
-          className="hidden sm:inline-flex px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+          className="hidden sm:inline-flex px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
         >
           Lihat Semua
         </Link>
@@ -151,10 +151,10 @@ function AnnouncementSection() {
 
       <PengumumanWidget limit={3} />
 
-      {/* Mobile CTA - Full Width Button (Green like Siswa) */}
+      {/* Mobile CTA - Full Width Button (Amber like Siswa) */}
       <Link
         href="/admin/pengumuman"
-        className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+        className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
       >
         Lihat Semua Pengumuman
         <ChevronRight size={20} />
@@ -259,6 +259,9 @@ function ProgressBar({ percentage, label, total, achieved }) {
 // ============================================================================
 
 export default function AdminDashboardPage() {
+  // Debug: Confirm this is the active page
+  console.log("ADMIN DASHBOARD PAGE ACTIVE ✅");
+
   const { data: session } = useSession();
   const [data, setData] = useState({
     stats: {
