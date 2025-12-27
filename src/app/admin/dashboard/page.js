@@ -127,23 +127,23 @@ function MotivationCard() {
   );
 }
 
-// Announcement Section - AMBER (Following Siswa Dashboard)
+// Announcement Section - ORANGE
 function AnnouncementSection() {
   return (
-    <div className="bg-amber-50/70 backdrop-blur-sm rounded-2xl border border-amber-200 ring-2 ring-amber-200/40 shadow-[0_0_0_3px_rgba(245,158,11,0.12)] border-l-4 border-l-amber-400 p-6">
+    <div className="bg-orange-50/70 backdrop-blur-sm rounded-2xl border border-orange-200 shadow-lg shadow-orange-200/30 p-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="p-3.5 bg-amber-500 rounded-xl shadow-lg ring-2 ring-amber-300/50">
+          <div className="p-3.5 bg-orange-500 rounded-xl shadow-lg">
             <Megaphone size={22} className="text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-amber-900">Pengumuman Terbaru</h2>
-            <p className="text-xs text-amber-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
+            <h2 className="text-xl font-bold text-orange-900">Pengumuman Terbaru</h2>
+            <p className="text-xs text-orange-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
           </div>
         </div>
         <Link
           href="/admin/pengumuman"
-          className="hidden sm:inline-flex px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+          className="hidden sm:inline-flex px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
         >
           Lihat Semua
         </Link>
@@ -151,10 +151,10 @@ function AnnouncementSection() {
 
       <PengumumanWidget limit={3} />
 
-      {/* Mobile CTA - Full Width Button (Amber like Siswa) */}
+      {/* Mobile CTA - Full Width Button (Orange) */}
       <Link
         href="/admin/pengumuman"
-        className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+        className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
       >
         Lihat Semua Pengumuman
         <ChevronRight size={20} />
@@ -163,28 +163,34 @@ function AnnouncementSection() {
   );
 }
 
-// Hero Header Card
+// Hero Header Card - Fixed Hydration
 function DashboardHeader({ userName }) {
-  const getGreeting = () => {
+  const [greeting, setGreeting] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+
+    // Set greeting based on hour
     const hour = new Date().getHours();
-    if (hour < 11) return 'Selamat Pagi';
-    if (hour < 15) return 'Selamat Siang';
-    if (hour < 18) return 'Selamat Sore';
-    return 'Selamat Malam';
-  };
+    if (hour < 11) setGreeting('Selamat Pagi');
+    else if (hour < 15) setGreeting('Selamat Siang');
+    else if (hour < 18) setGreeting('Selamat Sore');
+    else setGreeting('Selamat Malam');
+
+    // Set current date
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    setCurrentDate(new Date().toLocaleDateString('id-ID', options));
+  }, []);
 
   const getFirstName = (fullName) => {
     if (!fullName) return 'Admin';
     return fullName.split(' ')[0];
   };
 
-  const getCurrentDate = () => {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date().toLocaleDateString('id-ID', options);
-  };
-
   return (
-    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 md:p-8 shadow-xl shadow-emerald-500/20 overflow-hidden">
+    <div className="relative bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl p-6 md:p-8 shadow-lg shadow-emerald-500/15 border border-white/20 overflow-hidden">
       {/* Decorative Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -206,8 +212,8 @@ function DashboardHeader({ userName }) {
               </p>
             </div>
           </div>
-          <p className="text-white/90 text-base font-medium">
-            {getGreeting()}, <span className="font-bold">{getFirstName(userName)}</span>
+          <p className="text-white/90 text-base font-medium" suppressHydrationWarning>
+            {isClient && greeting ? `${greeting}, ` : ''}<span className="font-bold">{getFirstName(userName)}</span>
           </p>
         </div>
 
@@ -217,8 +223,8 @@ function DashboardHeader({ userName }) {
             <Calendar size={14} />
             <span>Hari Ini</span>
           </div>
-          <p className="text-white font-semibold text-sm">
-            {getCurrentDate()}
+          <p className="text-white font-semibold text-sm" suppressHydrationWarning>
+            {isClient && currentDate ? currentDate : '...'}
           </p>
         </div>
       </div>
