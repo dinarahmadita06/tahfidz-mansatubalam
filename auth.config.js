@@ -65,7 +65,13 @@ export const authConfig = {
             throw new Error("Email atau password salah");
           }
 
-          console.log('✅ [AUTH] User found:', { id: user.id, email: user.email, role: user.role });
+          console.log('✅ [AUTH] User found:', { id: user.id, email: user.email, role: user.role, isActive: user.isActive });
+
+          // Check if user account is active (applies to all roles)
+          if (!user.isActive) {
+            console.warn('⚠️  [AUTH] User account is not active:', user.email);
+            throw new Error("Akun Anda tidak aktif. Silakan hubungi admin sekolah.");
+          }
 
           // Check if user account is active based on role
           if (user.role === 'SISWA') {
@@ -76,6 +82,17 @@ export const authConfig = {
             if (user.siswa.status !== 'approved') {
               console.warn('⚠️  [AUTH] Siswa account status:', user.siswa.status);
               throw new Error(`Akun Anda sedang dalam status ${user.siswa.status}. Hubungi admin untuk persetujuan.`);
+            }
+            // Check student lifecycle status
+            if (user.siswa.statusSiswa !== 'AKTIF') {
+              const statusMessages = {
+                LULUS: 'Akun Anda tidak aktif karena telah lulus. Silakan hubungi admin sekolah.',
+                PINDAH: 'Akun Anda tidak aktif karena telah pindah sekolah. Silakan hubungi admin sekolah.',
+                KELUAR: 'Akun Anda sudah tidak aktif. Silakan hubungi admin sekolah.'
+              };
+              const message = statusMessages[user.siswa.statusSiswa] || 'Akun Anda sudah tidak aktif. Silakan hubungi admin sekolah.';
+              console.warn('⚠️  [AUTH] Siswa status:', user.siswa.statusSiswa);
+              throw new Error(message);
             }
           }
 
@@ -121,9 +138,11 @@ export const authConfig = {
             name: user.name,
             role: user.role,
             image: user.image,
+            isActive: user.isActive,
             siswaId: user.siswa?.id,
             guruId: user.guru?.id,
             orangTuaId: user.orangTua?.id,
+            statusSiswa: user.siswa?.statusSiswa,
           };
         } catch (error) {
           console.error('💥 [AUTH] Error in authorize:', error.message);
@@ -136,23 +155,27 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log('🔑 [JWT] Creating token for user:', { id: user.id, role: user.role });
+        console.log('🔑 [JWT] Creating token for user:', { id: user.id, role: user.role, isActive: user.isActive });
         token.id = user.id;
         token.role = user.role;
+        token.isActive = user.isActive;
         token.siswaId = user.siswaId;
         token.guruId = user.guruId;
         token.orangTuaId = user.orangTuaId;
+        token.statusSiswa = user.statusSiswa;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        console.log('📦 [SESSION] Creating session for token:', { id: token.id, role: token.role });
+        console.log('📦 [SESSION] Creating session for token:', { id: token.id, role: token.role, isActive: token.isActive });
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.isActive = token.isActive;
         session.user.siswaId = token.siswaId;
         session.user.guruId = token.guruId;
         session.user.orangTuaId = token.orangTuaId;
+        session.user.statusSiswa = token.statusSiswa;
       }
       return session;
     },
