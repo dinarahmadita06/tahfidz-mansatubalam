@@ -706,7 +706,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess }) {
                   color: colors.white,
                   fontSize: '14px',
                   fontWeight: 600,
-                  fontFamily: '"Poppins', "Nunito", system-ui, sans-serif',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   transition: 'all 0.3s ease',
                   boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
