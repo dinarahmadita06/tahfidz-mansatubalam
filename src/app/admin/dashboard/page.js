@@ -12,411 +12,111 @@ import {
   CheckCircle2,
   Target,
   Trophy,
+  Calendar,
+  TrendingUp,
+  Sparkles,
 } from 'lucide-react';
-import { PieChart, Pie, BarChart, Bar, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
-// Islamic Modern Color Palette - Emerald & Amber Pastel
-const colors = {
-  emerald: {
-    50: '#F0FDF4',
-    100: '#D8FBE5',
-    200: '#A7F3D0',
-    300: '#6EE7B7',
-    400: '#34D399',
-    500: '#10B981',
-    600: '#059669',
-    700: '#047857',
-  },
-  amber: {
-    50: '#FFF9E9',
-    100: '#FFF3CD',
-    200: '#FDE68A',
-    300: '#FCD34D',
-    400: '#FBBF24',
-    500: '#F59E0B',
-    600: '#D97706',
-  },
-  lavender: {
-    100: '#E9E5FF',
-    200: '#DDD6FE',
-  },
-  blue: {
-    100: '#E1F2FF',
-    200: '#BFDBFE',
-  },
-  mint: {
-    100: '#D1FAE5',
-  },
-  teal: {
-    50: '#F0FDFA',
-    100: '#E6FFF4',
-    200: '#CCFBF1',
-    300: '#99F6E4',
-    400: '#5EEAD4',
-    500: '#14B8A6',
-    600: '#0D9488',
-  },
-  gold: {
-    50: '#FFFBEB',
-    100: '#FFF7D1',
-    200: '#FEF3C7',
-    300: '#FDE68A',
-    400: '#FCD34D',
-    500: '#F59E0B',
-    600: '#D97706',
-  },
-  white: '#FFFFFF',
-  gray: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#374151',
-  },
-  text: {
-    primary: '#1F2937',
-    secondary: '#4B5563',
-    tertiary: '#9CA3AF',
-  },
-};
+// ============================================================================
+// REUSABLE COMPONENTS
+// ============================================================================
 
-// Komponen Skeleton Card untuk loading state
-function SkeletonCard({ delay = 0 }) {
+// Skeleton Loading Card
+function SkeletonCard() {
+  return (
+    <div className="bg-gray-100 rounded-2xl p-5 animate-pulse border border-gray-200">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="h-3 w-20 bg-gray-300 rounded mb-3"></div>
+          <div className="h-8 w-16 bg-gray-300 rounded"></div>
+        </div>
+        <div className="w-12 h-12 bg-gray-300 rounded-xl"></div>
+      </div>
+      <div className="h-3 w-28 bg-gray-300 rounded"></div>
+    </div>
+  );
+}
+
+// Modern Stat Card - Compact Pastel Style
+function StatCard({ icon: Icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
+  const colorStyles = {
+    emerald: 'bg-emerald-50/80 border-emerald-200 shadow-emerald-100/50',
+    emeraldIcon: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+    emeraldText: 'text-emerald-700',
+    amber: 'bg-amber-50/80 border-amber-200 shadow-amber-100/50',
+    amberIcon: 'bg-gradient-to-br from-amber-400 to-amber-500',
+    amberText: 'text-amber-700',
+    purple: 'bg-purple-50/80 border-purple-200 shadow-purple-100/50',
+    purpleIcon: 'bg-gradient-to-br from-purple-500 to-purple-600',
+    purpleText: 'text-purple-700',
+    blue: 'bg-sky-50/80 border-sky-200 shadow-sky-100/50',
+    blueIcon: 'bg-gradient-to-br from-sky-500 to-sky-600',
+    blueText: 'text-sky-700',
+    teal: 'bg-teal-50/80 border-teal-200 shadow-teal-100/50',
+    tealIcon: 'bg-gradient-to-br from-teal-500 to-teal-600',
+    tealText: 'text-teal-700',
+  };
+
+  const cardClass = colorStyles[color] || colorStyles.emerald;
+  const iconClass = colorStyles[`${color}Icon`] || colorStyles.emeraldIcon;
+  const textClass = colorStyles[`${color}Text`] || colorStyles.emeraldText;
+
   return (
     <div
-      style={{
-        background: `linear-gradient(135deg, ${colors.gray[100]} 0%, ${colors.gray[200]} 100%)`,
-        borderRadius: '16px',
-        padding: '24px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-        border: `1px solid ${colors.gray[200]}`,
-        animation: `fadeInUp 0.5s ease-out ${delay}s both, pulse 1.5s ease-in-out infinite`,
-      }}
+      className={`${cardClass} rounded-2xl p-5 border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+      style={{ animationDelay: `${delay}s` }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              height: '14px',
-              width: '80px',
-              background: colors.gray[300],
-              borderRadius: '4px',
-              marginBottom: '12px',
-            }} />
-            <div style={{
-              height: '32px',
-              width: '60px',
-              background: colors.gray[300],
-              borderRadius: '4px',
-            }} />
-          </div>
-          <div style={{
-            background: colors.gray[300],
-            borderRadius: '12px',
-            width: '46px',
-            height: '46px',
-          }} />
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            {title}
+          </p>
+          <p className={`text-3xl font-bold ${textClass} leading-none`}>
+            {value}
+          </p>
         </div>
-        <div style={{
-          height: '12px',
-          width: '120px',
-          background: colors.gray[300],
-          borderRadius: '4px',
-        }} />
+        <div className={`${iconClass} rounded-xl p-3 shadow-lg`}>
+          <Icon size={20} className="text-white" strokeWidth={2} />
+        </div>
+      </div>
+      <p className="text-xs font-medium text-gray-600">
+        {subtitle}
+      </p>
+    </div>
+  );
+}
+
+// Motivational Quote Card - Glass Effect
+function MotivationCard() {
+  return (
+    <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 shadow-lg shadow-emerald-500/10 overflow-hidden">
+      {/* Glow Effect */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-400/20 rounded-full blur-3xl"></div>
+
+      {/* Left Accent Bar */}
+      <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-emerald-400 to-teal-500 rounded-r-full"></div>
+
+      <div className="relative flex items-start gap-4 pl-4">
+        {/* Icon Badge */}
+        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+          <Sparkles size={24} className="text-white" strokeWidth={2} />
+        </div>
+
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-700 italic leading-relaxed mb-2">
+            &ldquo;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&rdquo;
+          </p>
+          <p className="text-xs font-semibold text-emerald-600">
+            — HR. Bukhari
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-// Komponen StatCard
-function StatCard({ icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
-  const colorMap = {
-    emerald: {
-      bg: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-      value: colors.emerald[700],
-      border: colors.emerald[200],
-    },
-    amber: {
-      bg: `linear-gradient(135deg, ${colors.amber[100]} 0%, ${colors.amber[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-      value: colors.amber[600],
-      border: colors.amber[200],
-    },
-    lavender: {
-      bg: `linear-gradient(135deg, ${colors.lavender[100]} 0%, ${colors.lavender[200]} 100%)`,
-      iconBg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-      value: '#6D28D9',
-      border: colors.lavender[200],
-    },
-    blue: {
-      bg: `linear-gradient(135deg, ${colors.blue[100]} 0%, ${colors.blue[200]} 100%)`,
-      iconBg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-      value: '#1E40AF',
-      border: colors.blue[200],
-    },
-    mint: {
-      bg: `linear-gradient(135deg, ${colors.mint[100]} 0%, ${colors.emerald[100]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.emerald[400]} 0%, ${colors.emerald[500]} 100%)`,
-      value: colors.emerald[600],
-      border: colors.emerald[200],
-    },
-    teal: {
-      bg: `linear-gradient(135deg, ${colors.teal[100]} 0%, ${colors.teal[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.teal[500]} 0%, ${colors.teal[600]} 100%)`,
-      value: colors.teal[600],
-      border: colors.teal[200],
-    },
-    gold: {
-      bg: `linear-gradient(135deg, ${colors.gold[100]} 0%, ${colors.gold[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.gold[500]} 0%, ${colors.gold[600]} 100%)`,
-      value: colors.gold[600],
-      border: colors.gold[200],
-    },
-  };
-
-  const scheme = colorMap[color];
-
-  return (
-    <div
-      style={{
-        background: scheme.bg,
-        borderRadius: '16px',
-        padding: '24px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-        border: `1px solid ${scheme.border}`,
-        transition: 'all 0.3s ease',
-        animation: `fadeInUp 0.5s ease-out ${delay}s both`,
-      }}
-      className="stat-card"
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <div style={{ flex: 1 }}>
-            <p style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: colors.text.tertiary,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              marginBottom: '8px',
-              fontFamily: '"Poppins", system-ui, sans-serif',
-            }}>
-              {title}
-            </p>
-            <p style={{
-              fontSize: '32px',
-              fontWeight: 700,
-              color: scheme.value,
-              fontFamily: '"Poppins", system-ui, sans-serif',
-              lineHeight: 1.2,
-            }}>
-              {value}
-            </p>
-          </div>
-          <div style={{
-            background: scheme.iconBg,
-            borderRadius: '12px',
-            padding: '12px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-          }}>
-            {icon}
-          </div>
-        </div>
-        <p style={{
-          fontSize: '12px',
-          fontWeight: 500,
-          color: colors.text.secondary,
-          fontFamily: '"Poppins", system-ui, sans-serif',
-        }}>
-          {subtitle}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export default function AdminDashboardPage() {
-  const { data: session } = useSession();
-  const [data, setData] = useState({
-    stats: {
-      totalSiswa: 0,
-      siswaAktif: 0,
-      totalGuru: 0,
-      totalHafalan: 0,
-      totalJuz: 0,
-      rataRataNilai: 0,
-      rataRataKehadiran: 0,
-      siswaMencapaiTarget: 0,
-      persentaseSiswaMencapaiTarget: 0,
-      kelasMencapaiTarget: 0,
-      totalKelas: 0,
-    },
-  });
-  const [chartData, setChartData] = useState({
-    donutData: [],
-    barData: [],
-    siswaStats: {
-      mencapai: 0,
-      belum: 0,
-    },
-    kelasStats: {
-      mencapai: 0,
-      total: 0,
-      persentase: 0,
-    },
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Fetch from /api/admin/dashboard
-      const response = await fetch('/api/admin/dashboard');
-
-      if (!response.ok) {
-        throw new Error('Gagal memuat data dashboard');
-      }
-
-      const result = await response.json();
-      setData(result);
-
-      // Fetch chart data separately
-      await fetchChartData();
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError(error.message || 'Gagal memuat data dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchChartData = async () => {
-    try {
-      // Fetch siswa data untuk donut chart
-      const siswRes = await fetch('/api/siswa');
-      let siswData = siswRes.ok ? await siswRes.json() : [];
-      console.log('Siswa API Response:', siswData);
-      
-      // Handle if response is wrapped in data property
-      if (siswData && typeof siswData === 'object' && siswData.data && Array.isArray(siswData.data)) {
-        siswData = siswData.data;
-      }
-      
-      // Ensure it's an array
-      if (!Array.isArray(siswData)) {
-        siswData = [];
-      }
-      console.log('Processed Siswa Data:', siswData);
-      
-      // Fetch kelas data untuk bar chart
-      const kelasRes = await fetch('/api/kelas');
-      let kelasData = kelasRes.ok ? await kelasRes.json() : [];
-      console.log('Kelas API Response:', kelasData);
-      
-      // Ensure it's an array
-      if (!Array.isArray(kelasData)) {
-        kelasData = [];
-      }
-      console.log('Processed Kelas Data:', kelasData);
-      
-      // Hitung statistik siswa mencapai target (≥ 3 juz)
-      let siswaMencapai = 0;
-      let siswaBelum = 0;
-      
-      if (Array.isArray(siswData) && siswData.length > 0) {
-        siswData.forEach(siswa => {
-          try {
-            const totalJuzSiswa = siswa.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
-            if (totalJuzSiswa >= 3) {
-              siswaMencapai++;
-            } else {
-              siswaBelum++;
-            }
-          } catch (e) {
-            console.warn('Error processing siswa:', siswa, e);
-            siswaBelum++;
-          }
-        });
-      }
-      
-      // Hitung statistik kelas mencapai target (≥ 50% siswa mencapai target)
-      let kelasMencapai = 0;
-      let totalKelasAktif = 0;
-      
-      if (Array.isArray(kelasData) && kelasData.length > 0) {
-        kelasData.forEach(kelas => {
-          try {
-            if (kelas.status === 'AKTIF') {
-              totalKelasAktif++;
-              const siswaDiKelas = siswData.filter(s => s.kelasId === kelas.id) || [];
-              const siswaMencapaiDiKelas = siswaDiKelas.filter(s => {
-                const totalJuzSiswa = s.hafalan?.reduce((sum, h) => sum + (h.juz || 0), 0) || 0;
-                return totalJuzSiswa >= 3;
-              }).length;
-              
-              const persentaseMencapai = siswaDiKelas.length > 0 
-                ? (siswaMencapaiDiKelas / siswaDiKelas.length) * 100 
-                : 0;
-              
-              if (persentaseMencapai >= 50) {
-                kelasMencapai++;
-              }
-            }
-          } catch (e) {
-            console.warn('Error processing kelas:', kelas, e);
-          }
-        });
-      }
-      
-      const kelasPersentase = totalKelasAktif > 0 
-        ? Math.round((kelasMencapai / totalKelasAktif) * 100) 
-        : 0;
-      
-      // Prepare donut chart data
-      const donutChartData = [
-        { name: 'Mencapai Target', value: siswaMencapai, fill: colors.emerald[500] },
-        { name: 'Belum Mencapai', value: siswaBelum, fill: colors.gray[300] },
-      ];
-      
-      // Prepare bar chart data
-      const barChartData = [
-        { 
-          name: 'Kelas Mencapai Target', 
-          value: kelasMencapai, 
-          total: totalKelasAktif,
-          persentase: kelasPersentase,
-        },
-      ];
-      
-      setChartData({
-        donutData: donutChartData,
-        barData: barChartData,
-        siswaStats: { mencapai: siswaMencapai, belum: siswaBelum },
-        kelasStats: { mencapai: kelasMencapai, total: totalKelasAktif, persentase: kelasPersentase },
-      });
-    } catch (error) {
-      console.error('Error fetching chart data:', error);
-      // Set default empty chart data
-      setChartData({
-        donutData: [],
-        barData: [],
-        siswaStats: { mencapai: 0, belum: 0 },
-        kelasStats: { mencapai: 0, total: 0, persentase: 0 },
-      });
-    }
-  };
-
+// Hero Header Card
+function DashboardHeader({ userName }) {
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 11) return 'Selamat Pagi';
@@ -430,473 +130,359 @@ export default function AdminDashboardPage() {
     return fullName.split(' ')[0];
   };
 
-  const greeting = getGreeting();
+  const getCurrentDate = () => {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date().toLocaleDateString('id-ID', options);
+  };
+
+  return (
+    <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl p-6 md:p-8 shadow-xl shadow-emerald-500/20 overflow-hidden">
+      {/* Decorative Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-300 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+      </div>
+
+      <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5">
+              <Trophy size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                Dashboard Tahfidz
+              </h1>
+              <p className="text-emerald-50 text-sm font-medium mt-0.5">
+                Sistem Manajemen Tahfidz Al-Qur&apos;an
+              </p>
+            </div>
+          </div>
+          <p className="text-white/90 text-base font-medium">
+            {getGreeting()}, <span className="font-bold">{getFirstName(userName)}</span>
+          </p>
+        </div>
+
+        {/* Date Info */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+          <div className="flex items-center gap-2 text-white/80 text-xs font-medium mb-1">
+            <Calendar size={14} />
+            <span>Hari Ini</span>
+          </div>
+          <p className="text-white font-semibold text-sm">
+            {getCurrentDate()}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Progress Bar Component
+function ProgressBar({ percentage, label, total, achieved }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-semibold text-gray-700">{label}</span>
+        <span className="font-bold text-emerald-600">{percentage}%</span>
+      </div>
+      <div className="relative h-8 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500 flex items-center justify-center"
+          style={{ width: `${percentage}%` }}
+        >
+          {percentage > 15 && (
+            <span className="text-xs font-bold text-white px-2">
+              {percentage}%
+            </span>
+          )}
+        </div>
+      </div>
+      <p className="text-xs text-gray-600">
+        <span className="font-bold text-emerald-600">{achieved}</span> dari{' '}
+        <span className="font-semibold">{total}</span> {label.toLowerCase()}
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export default function AdminDashboardPage() {
+  const { data: session } = useSession();
+  const [data, setData] = useState({
+    stats: {
+      totalSiswa: 0,
+      siswaAktif: 0,
+      totalGuru: 0,
+      totalHafalan: 0,
+      totalJuz: 0,
+      rataRataNilai: 0,
+      rataRataKehadiran: 0,
+    },
+  });
+  const [chartData, setChartData] = useState({
+    siswaStats: { mencapai: 0, belum: 0 },
+    kelasStats: { mencapai: 0, total: 0, persentase: 0 },
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await fetch('/api/admin/dashboard');
+      if (!res.ok) throw new Error('Gagal mengambil data dashboard');
+
+      const result = await res.json();
+      setData(result);
+
+      // Fetch chart data
+      await fetchChartData();
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchChartData = async () => {
+    try {
+      const [siswaRes, kelasRes] = await Promise.all([
+        fetch('/api/admin/siswa?perPage=1000'),
+        fetch('/api/admin/kelas?perPage=1000'),
+      ]);
+
+      if (!siswaRes.ok || !kelasRes.ok) {
+        throw new Error('Gagal mengambil data chart');
+      }
+
+      const siswaData = await siswaRes.json();
+      const kelasData = await kelasRes.json();
+
+      const siswaList = siswaData.siswa || [];
+      const kelasList = kelasData.kelas || [];
+
+      // Calculate siswa stats
+      const siswaMencapai = siswaList.filter((s) => (s.totalJuz || 0) >= 3).length;
+      const siswaBelum = siswaList.length - siswaMencapai;
+
+      // Calculate kelas stats
+      const kelasAktif = kelasList.filter((k) => k.isActive);
+      const kelasMencapai = kelasAktif.filter((kelas) => {
+        const siswaKelas = siswaList.filter((s) => s.kelasId === kelas.id);
+        if (siswaKelas.length === 0) return false;
+        const siswaMencapaiTarget = siswaKelas.filter((s) => (s.totalJuz || 0) >= 3).length;
+        return (siswaMencapaiTarget / siswaKelas.length) >= 0.5;
+      }).length;
+
+      const kelasPersentase = kelasAktif.length > 0
+        ? Math.round((kelasMencapai / kelasAktif.length) * 100)
+        : 0;
+
+      setChartData({
+        siswaStats: { mencapai: siswaMencapai, belum: siswaBelum },
+        kelasStats: { mencapai: kelasMencapai, total: kelasAktif.length, persentase: kelasPersentase },
+      });
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+      setChartData({
+        siswaStats: { mencapai: 0, belum: 0 },
+        kelasStats: { mencapai: 0, total: 0, persentase: 0 },
+      });
+    }
+  };
 
   return (
     <AdminLayout>
-      <div style={{
-        background: `linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)`,
-        minHeight: '100vh',
-        position: 'relative',
-      }}>
-        {/* Subtle Pattern Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l20 20-20 20L0 20z' fill='none' stroke='%2310B981' stroke-width='0.3' opacity='0.03'/%3E%3C/svg%3E")`,
-          backgroundSize: '40px 40px',
-          pointerEvents: 'none',
-          opacity: 0.5,
-        }} />
+      {/* Background with Gradient */}
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        {/* Main Container - Wider Layout */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        {/* Header */}
-        <div style={{
-          position: 'relative',
-          padding: '32px 40px 20px',
-          zIndex: 1,
-        }} className="dashboard-header">
-          <div>
-            <h1 style={{
-              fontSize: '32px',
-              fontWeight: 700,
-              background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              marginBottom: '6px',
-              fontFamily: '"Poppins", system-ui, sans-serif',
-            }}>
-              Dashboard Tahfidz
-            </h1>
-            <p style={{
-              fontSize: '14px',
-              fontWeight: 500,
-              color: colors.text.secondary,
-              fontFamily: '"Poppins", system-ui, sans-serif',
-            }}>
-              {greeting}, {getFirstName(session?.user?.name)} • Sistem Manajemen Tahfidz Al-Qur&apos;an
-            </p>
-          </div>
-        </div>
+          {/* Hero Header */}
+          <DashboardHeader userName={session?.user?.name} />
 
-        {/* Quote Al-Qur'an */}
-        <div style={{
-          position: 'relative',
-          padding: '0 40px 20px',
-          zIndex: 1,
-        }} className="dashboard-quote">
-          <div style={{
-            background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-            borderRadius: '16px',
-            padding: '20px 24px',
-            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.12)',
-            border: `1px solid ${colors.emerald[400]}`,
-            position: 'relative',
-            overflow: 'hidden',
-          }}>
-            {/* Subtle Light Effect */}
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              right: '-10%',
-              width: '200px',
-              height: '200px',
-              background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
-              borderRadius: '50%',
-              pointerEvents: 'none',
-            }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', position: 'relative' }}>
-              <div style={{
-                fontSize: '28px',
-                flexShrink: 0,
-              }}>
-                📖
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  color: colors.white,
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                  fontStyle: 'italic',
-                  marginBottom: '6px',
-                  lineHeight: '1.6',
-                }}>
-                  &ldquo;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&rdquo;
-                </p>
-                <p style={{
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  color: colors.amber[100],
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
-                  — HR. Bukhari
-                </p>
-              </div>
+          {/* Motivation Card + Pengumuman - Side by Side on Desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MotivationCard />
+            <div>
+              <PengumumanWidget limit={3} />
             </div>
           </div>
-        </div>
 
-        {/* Pengumuman Widget */}
-        <div style={{
-          position: 'relative',
-          padding: '0 40px 20px',
-          zIndex: 1,
-        }} className="dashboard-pengumuman">
-          <PengumumanWidget limit={3} />
-        </div>
-
-        {/* Error State */}
-        {error && (
-          <div style={{
-            position: 'relative',
-            padding: '0 40px 20px',
-            zIndex: 1,
-          }}>
-            <div style={{
-              background: '#FEE2E2',
-              borderRadius: '16px',
-              padding: '24px',
-              border: '1px solid #FCA5A5',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px',
-            }}>
-              <div style={{
-                fontSize: '48px',
-              }}>
-                ⚠️
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <h3 style={{
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  color: '#991B1B',
-                  marginBottom: '8px',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
-                  Gagal Memuat Data
-                </h3>
-                <p style={{
-                  fontSize: '14px',
-                  color: '#DC2626',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                  marginBottom: '16px',
-                }}>
-                  {error}
-                </p>
-                <button
-                  onClick={fetchDashboardData}
-                  style={{
-                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                    color: colors.white,
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseOver={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-                  }}
-                >
-                  Coba Lagi
-                </button>
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 rounded-2xl p-6 border border-red-200 shadow-lg">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="text-5xl">⚠️</div>
+                <div>
+                  <h3 className="text-lg font-bold text-red-900 mb-2">
+                    Gagal Memuat Data
+                  </h3>
+                  <p className="text-sm text-red-700 mb-4">{error}</p>
+                  <button
+                    onClick={fetchDashboardData}
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-6 py-2 rounded-full font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5"
+                  >
+                    Coba Lagi
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Main Content */}
-        {!error && (
-        <>
-          <div style={{
-            position: 'relative',
-            zIndex: 1,
-            padding: '0 40px 40px',
-          }} className="dashboard-main-content">
-            {/* Stats Cards Grid - 7 Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: '20px',
-            }}>
-              {loading ? (
-                <>
-                  <SkeletonCard delay={0} />
-                  <SkeletonCard delay={0.05} />
-                  <SkeletonCard delay={0.1} />
-                  <SkeletonCard delay={0.15} />
-                  <SkeletonCard delay={0.2} />
-                </>
-              ) : (
-                <>
-                  <StatCard
-                    icon={<Users size={22} color={colors.white} />}
-                    title="Total Siswa"
-                    value={data.stats.totalSiswa}
-                    subtitle={`${data.stats.siswaAktif} siswa aktif`}
-                    color="emerald"
-                    delay={0}
-                  />
-                  <StatCard
-                    icon={<UserCog size={22} color={colors.white} />}
-                    title="Total Guru Tahfidz"
-                    value={data.stats.totalGuru}
-                    subtitle="Guru aktif mengajar"
-                    color="amber"
-                    delay={0.05}
-                  />
-                  <StatCard
-                    icon={<BookOpen size={22} color={colors.white} />}
-                    title="Total Hafalan"
-                    value={`${data.stats.totalJuz} Juz`}
-                    subtitle="Keseluruhan siswa"
-                    color="lavender"
-                    delay={0.1}
-                  />
-                  <StatCard
-                    icon={<Award size={22} color={colors.white} />}
-                    title="Rata-rata Nilai"
-                    value={data.stats.rataRataNilai}
-                    subtitle="Nilai keseluruhan"
-                    color="blue"
-                    delay={0.15}
-                  />
-                  <StatCard
-                    icon={<CheckCircle2 size={22} color={colors.white} />}
-                    title="Rata-rata Kehadiran"
-                    value={`${data.stats.rataRataKehadiran}%`}
-                    subtitle="Kehadiran siswa"
-                    color="mint"
-                    delay={0.2}
-                  />
-                </>
-              )}
-            </div>
-          </div>
-          {/* Chart Sections - 2 Column Layout */}
-          <div style={{
-            position: 'relative',
-            zIndex: 1,
-            padding: '20px 40px 40px',
-          }} className="dashboard-charts">
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '24px',
-          }} className="charts-grid">
-            {/* Left: Bar Chart - Kelas Mencapai Target */}
-            {chartData.kelasStats.total > 0 && (
-              <div style={{
-                background: colors.white,
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                border: `1px solid ${colors.gray[200]}`,
-              }}>
-                <h3 style={{
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  color: colors.text.primary,
-                  marginBottom: '20px',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
-                  Statistik Kelas Mencapai Target
-                </h3>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '20px',
-                  minHeight: '300px',
-                  justifyContent: 'center',
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      marginBottom: '16px',
-                    }}>
-                      <div style={{
-                        flex: 1,
-                        height: '40px',
-                        background: colors.gray[100],
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        position: 'relative',
-                      }}>
-                        <div style={{
-                          height: '100%',
-                          width: `${chartData.kelasStats.persentase}%`,
-                          background: `linear-gradient(90deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                          borderRadius: '8px',
-                          transition: 'width 0.3s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                          {chartData.kelasStats.persentase > 0 && (
-                            <span style={{
-                              fontSize: '12px',
-                              fontWeight: 700,
-                              color: colors.white,
-                              fontFamily: '"Poppins", system-ui, sans-serif',
-                            }}>
-                              {chartData.kelasStats.persentase}%
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span style={{
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: colors.text.primary,
-                        minWidth: '60px',
-                        textAlign: 'right',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                      }}>
-                        {chartData.kelasStats.persentase}%
-                      </span>
+          {/* Main Content */}
+          {!error && (
+            <>
+              {/* Stat Cards - Compact Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {loading ? (
+                  <>
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                  </>
+                ) : (
+                  <>
+                    <StatCard
+                      icon={Users}
+                      title="Total Siswa"
+                      value={data.stats.totalSiswa || 0}
+                      subtitle={`${data.stats.siswaAktif || 0} siswa aktif`}
+                      color="emerald"
+                      delay={0}
+                    />
+                    <StatCard
+                      icon={UserCog}
+                      title="Total Guru"
+                      value={data.stats.totalGuru || 0}
+                      subtitle="Guru aktif mengajar"
+                      color="amber"
+                      delay={0.05}
+                    />
+                    <StatCard
+                      icon={BookOpen}
+                      title="Total Hafalan"
+                      value={`${data.stats.totalJuz || 0} Juz`}
+                      subtitle="Keseluruhan siswa"
+                      color="purple"
+                      delay={0.1}
+                    />
+                    <StatCard
+                      icon={Award}
+                      title="Rata² Nilai"
+                      value={data.stats.rataRataNilai || 0}
+                      subtitle="Nilai keseluruhan"
+                      color="blue"
+                      delay={0.15}
+                    />
+                    <StatCard
+                      icon={CheckCircle2}
+                      title="Rata² Kehadiran"
+                      value={`${data.stats.rataRataKehadiran || 0}%`}
+                      subtitle="Kehadiran siswa"
+                      color="teal"
+                      delay={0.2}
+                    />
+                  </>
+                )}
+              </div>
+
+              {/* Charts Section - Better Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Siswa Progress */}
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-2.5">
+                      <Target size={20} className="text-white" />
                     </div>
-                    <p style={{
-                      fontSize: '13px',
-                      color: colors.text.secondary,
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      marginBottom: '16px',
-                    }}>
-                      {chartData.kelasStats.mencapai} dari {chartData.kelasStats.total} kelas aktif mencapai target
+                    <h3 className="text-lg font-bold text-gray-800">
+                      Siswa Mencapai Target
+                    </h3>
+                  </div>
+
+                  {chartData.siswaStats.mencapai + chartData.siswaStats.belum === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="text-6xl mb-4">📊</div>
+                      <p className="text-gray-500 font-medium">
+                        Belum ada data siswa
+                      </p>
+                    </div>
+                  ) : (
+                    <ProgressBar
+                      percentage={Math.round(
+                        (chartData.siswaStats.mencapai /
+                          (chartData.siswaStats.mencapai + chartData.siswaStats.belum)) *
+                          100
+                      )}
+                      label="Siswa Mencapai Target (≥3 Juz)"
+                      total={chartData.siswaStats.mencapai + chartData.siswaStats.belum}
+                      achieved={chartData.siswaStats.mencapai}
+                    />
+                  )}
+
+                  <div className="mt-6 p-4 bg-emerald-50 rounded-xl border-l-4 border-emerald-500">
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      <span className="font-bold text-emerald-600">Target:</span>{' '}
+                      Siswa dianggap mencapai target jika telah menghafal ≥ 3 juz
                     </p>
                   </div>
                 </div>
-                <div style={{
-                  padding: '16px',
-                  background: colors.emerald[50],
-                  borderRadius: '8px',
-                  borderLeft: `4px solid ${colors.emerald[500]}`,
-                }}>
-                  <p style={{
-                    fontSize: '12px',
-                    color: colors.text.secondary,
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                    margin: 0,
-                    lineHeight: '1.5',
-                  }}>
-                    <span style={{ fontWeight: 700, color: colors.emerald[600] }}>Target:</span> Kelas dianggap mencapai target jika ≥ 50% siswanya telah mencapai target hafalan (≥ 3 juz)
-                  </p>
-                </div>
-              </div>
-            )}
 
-            {/* Right: Donut Chart - Siswa Mencapai Target */}
-            {chartData.donutData.length > 0 && (chartData.siswaStats.mencapai > 0 || chartData.siswaStats.belum > 0) && (
-              <div style={{
-                background: colors.white,
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                border: `1px solid ${colors.gray[200]}`,
-              }}>
-                <h3 style={{
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  color: colors.text.primary,
-                  marginBottom: '20px',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                }}>
-                  Statistik Siswa Mencapai Target
-                </h3>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  minHeight: '300px',
-                }}>
-                  {typeof window !== 'undefined' && (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={chartData.donutData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={80}
-                          outerRadius={120}
-                          dataKey="value"
-                          label={(entry) => `${entry.name}: ${entry.value}`}
-                        >
-                          {chartData.donutData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value) => `${value} siswa`}
-                          contentStyle={{
-                            background: colors.white,
-                            border: `1px solid ${colors.gray[200]}`,
-                            borderRadius: '8px',
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '30px',
-                  marginTop: '20px',
-                }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.emerald[500],
-                      marginBottom: '4px',
-                    }}>Mencapai Target</p>
-                    <p style={{
-                      fontSize: '20px',
-                      fontWeight: 700,
-                      color: colors.text.primary,
-                    }}>{chartData.siswaStats.mencapai}</p>
+                {/* Kelas Progress */}
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-2.5">
+                      <TrendingUp size={20} className="text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800">
+                      Kelas Mencapai Target
+                    </h3>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.gray[400],
-                      marginBottom: '4px',
-                    }}>Belum Mencapai</p>
-                    <p style={{
-                      fontSize: '20px',
-                      fontWeight: 700,
-                      color: colors.text.primary,
-                    }}>{chartData.siswaStats.belum}</p>
+
+                  {chartData.kelasStats.total === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="text-6xl mb-4">🏫</div>
+                      <p className="text-gray-500 font-medium">
+                        Belum ada data kelas
+                      </p>
+                    </div>
+                  ) : (
+                    <ProgressBar
+                      percentage={chartData.kelasStats.persentase}
+                      label="Kelas Mencapai Target"
+                      total={chartData.kelasStats.total}
+                      achieved={chartData.kelasStats.mencapai}
+                    />
+                  )}
+
+                  <div className="mt-6 p-4 bg-teal-50 rounded-xl border-l-4 border-teal-500">
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      <span className="font-bold text-teal-600">Target:</span>{' '}
+                      Kelas mencapai target jika ≥ 50% siswanya telah menghafal ≥ 3 juz
+                    </p>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
-        </>
-        )}
       </div>
 
+      {/* Animation Keyframes */}
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-
-        /* Animations */
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -905,96 +491,6 @@ export default function AdminDashboardPage() {
           to {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.7;
-          }
-        }
-
-        /* Stat Card Hover */
-        .stat-card {
-          cursor: default;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08) !important;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          /* Reduce padding on mobile for wider content */
-          .dashboard-header {
-            padding: 24px 16px 16px !important;
-          }
-          
-          .dashboard-quote {
-            padding: 0 16px 16px !important;
-          }
-          
-          .dashboard-pengumuman {
-            padding: 0 16px 16px !important;
-          }
-          
-          .dashboard-main-content {
-            padding: 0 16px 24px !important;
-          }
-          
-          .dashboard-charts {
-            padding: 16px 16px 24px !important;
-          }
-          
-          .dashboard-stats-grid {
-            grid-template-columns: 1fr !important;
-          }
-          
-          .chart-container {
-            padding: 16px;
-          }
-          
-          /* Chart Grid Horizontal Scroll on Mobile */
-          .charts-grid {
-            display: flex !important;
-            grid-template-columns: unset !important;
-            gap: 24px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            scroll-behavior: smooth;
-            padding-bottom: 8px;
-            /* Hide scrollbar but keep functionality */
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
-          }
-          
-          /* Chrome/Safari scrollbar styling */
-          .charts-grid::-webkit-scrollbar {
-            height: 6px;
-          }
-          
-          .charts-grid::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          
-          .charts-grid::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 3px;
-          }
-          
-          .charts-grid::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.2);
-          }
-          
-          /* Chart items on mobile */
-          .charts-grid > div {
-            flex-shrink: 0;
-            width: min(calc(100vw - 60px), 100%);
-            min-width: 350px;
           }
         }
       `}</style>
