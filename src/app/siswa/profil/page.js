@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import { getStatusBadgeConfig } from '@/lib/helpers/statusHelpers';
 
 // ProfileHeader Component
 function ProfileHeader() {
@@ -45,6 +46,8 @@ function ProfileHeader() {
 
 // ProfileSummaryCard Component
 function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
+  const statusBadge = getStatusBadgeConfig(profileData?.statusSiswa || 'AKTIF');
+
   return (
     <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
       {/* Avatar & Info */}
@@ -64,14 +67,17 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
           <span className="text-sm break-all">{profileData?.email || '-'}</span>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-1">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
           <Shield size={16} />
           {profileData?.kelas || 'Siswa'}
         </div>
 
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          Status Aktif
+        {/* Dynamic Status Badge */}
+        <span
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${statusBadge.bgColor} ${statusBadge.textColor} ${statusBadge.borderColor}`}
+        >
+          <span className="text-sm">{statusBadge.emoji}</span>
+          Status: {statusBadge.label}
         </span>
       </div>
 
@@ -554,7 +560,7 @@ export default function ProfileSiswaPage() {
       if (saved) {
         setProfileData(JSON.parse(saved));
       } else {
-        // Fallback to default data
+        // Fallback to default data with statusSiswa from session
         setProfileData({
           nama: 'Ahmad Fauzi',
           email: 'ahmad.fauzi@student.tahfidz.sch.id',
@@ -567,6 +573,7 @@ export default function ProfileSiswaPage() {
           nis: '2024001',
           namaWali: 'Bapak Hasan',
           phoneWali: '0813-9876-5432',
+          statusSiswa: session?.user?.statusSiswa || 'AKTIF', // Get from session
         });
       }
     } catch (error) {
