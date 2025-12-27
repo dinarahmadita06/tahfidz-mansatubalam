@@ -163,10 +163,14 @@ function AdminLayout({ children }) {
   };
 
   const toggleSubmenu = (title) => {
-    setExpandedMenus(prev => ({
-      ...prev,
-      [title]: !prev[title]
-    }));
+    setExpandedMenus(prev => {
+      // If clicking the same menu that's open, close it
+      if (prev[title]) {
+        return { ...prev, [title]: false };
+      }
+      // Otherwise, close all others and open only this one
+      return { [title]: true };
+    });
   };
 
   const handleLogout = async () => {
@@ -188,16 +192,18 @@ function AdminLayout({ children }) {
     }
   };
 
-  // Auto-expand menu yang aktif
+  // Auto-expand menu yang aktif, close yang lain
   useEffect(() => {
-    menuItems.forEach((item) => {
-      if (item.submenu && isSubmenuActive(item.submenu)) {
-        setExpandedMenus(prev => ({
-          ...prev,
-          [item.title]: true
-        }));
-      }
-    });
+    const activeMenu = menuItems.find((item) =>
+      item.submenu && isSubmenuActive(item.submenu)
+    );
+
+    if (activeMenu) {
+      setExpandedMenus({ [activeMenu.title]: true });
+    } else {
+      // Close all if no active submenu
+      setExpandedMenus({});
+    }
   }, [pathname]);
 
   return (
@@ -353,31 +359,39 @@ function AdminLayout({ children }) {
                           )}
                         </button>
 
-                        {sidebarOpen && expandedMenus[item.title] && (
-                          <div className="ml-6 mt-2 space-y-1 border-l-2 border-emerald-100 pl-4">
-                            {item.submenu.map((subitem) => (
-                              <Link
-                                key={subitem.href}
-                                href={subitem.href}
-                                prefetch={false}
-                                onClick={handleLinkClick}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
-                                  isActive(subitem.href)
-                                    ? 'bg-amber-50 text-amber-900'
-                                    : 'text-gray-600 hover:bg-emerald-50/40 hover:text-emerald-700'
-                                }`}
-                              >
-                                {isActive(subitem.href) && (
-                                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
-                                )}
-                                <subitem.icon
-                                  size={18}
-                                  strokeWidth={1.5}
-                                  className={isActive(subitem.href) ? 'text-amber-700' : 'text-gray-500 group-hover:text-emerald-600'}
-                                />
-                                <span className="font-medium">{subitem.title}</span>
-                              </Link>
-                            ))}
+                        {sidebarOpen && (
+                          <div
+                            className={`ml-6 border-l-2 border-emerald-100 pl-4 overflow-hidden transition-all duration-300 ease-in-out ${
+                              expandedMenus[item.title]
+                                ? 'mt-2 max-h-96 opacity-100'
+                                : 'mt-0 max-h-0 opacity-0'
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              {item.submenu.map((subitem) => (
+                                <Link
+                                  key={subitem.href}
+                                  href={subitem.href}
+                                  prefetch={false}
+                                  onClick={handleLinkClick}
+                                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative ${
+                                    isActive(subitem.href)
+                                      ? 'bg-amber-50 text-amber-900'
+                                      : 'text-gray-600 hover:bg-emerald-50/40 hover:text-emerald-700'
+                                  }`}
+                                >
+                                  {isActive(subitem.href) && (
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
+                                  )}
+                                  <subitem.icon
+                                    size={18}
+                                    strokeWidth={1.5}
+                                    className={isActive(subitem.href) ? 'text-amber-700' : 'text-gray-500 group-hover:text-emerald-600'}
+                                  />
+                                  <span className="font-medium">{subitem.title}</span>
+                                </Link>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
