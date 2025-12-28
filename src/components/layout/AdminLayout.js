@@ -246,7 +246,7 @@ function AdminLayout({ children }) {
         }
       `}</style>
 
-      <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }}>
+      <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }} suppressHydrationWarning>
         {/* Mobile Overlay - Only show when sidebar is open on mobile AND component is mounted */}
         {isMounted && isMobile && sidebarOpen && (
           <div
