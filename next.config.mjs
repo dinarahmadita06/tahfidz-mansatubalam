@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  reactStrictMode: false, // Disable to prevent hydration errors
+  reactStrictMode: false,
 
   eslint: {
     ignoreDuringBuilds: true,
@@ -12,13 +12,16 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
 
-  // Disable source maps in development to reduce file operations
-  productionBrowserSourceMaps: false,
-
+  // TEMPORARILY DISABLE MINIFICATION TO SEE FULL ERRORS
+  productionBrowserSourceMaps: true,
+  
   // Optimize compilation
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: false, // Keep console logs to debug
   },
+  
+  // Disable minification temporarily
+  swcMinify: false,
 
   // Optimize images and fonts
   images: {

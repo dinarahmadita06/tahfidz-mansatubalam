@@ -25,6 +25,10 @@ const pageTransition = {
 };
 
 export default function PageTransition({ children }) {
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  return <>{children}</>;
+  
+  /* 
   const pathname = usePathname();
 
   return (
@@ -40,4 +44,5 @@ export default function PageTransition({ children }) {
       </motion.div>
     </AnimatePresence>
   );
+  */
 }
