@@ -244,6 +244,7 @@ function DashboardHeader({ userName }) {
 
   useEffect(() => {
     setIsClient(true);
+    console.log("🚀 DASHBOARD UI LOADED: GREEN GRADIENT VERSION v2"); // Debug log verify update
     const hour = new Date().getHours();
     if (hour < 11) setGreeting('Selamat Pagi');
     else if (hour < 15) setGreeting('Selamat Siang');
@@ -268,7 +269,7 @@ function DashboardHeader({ userName }) {
       <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">
-            Dashboard Tahfidz
+            Dashboard Tahfidz v2
           </h1>
           <p className="text-white/90 text-lg font-medium">
             {isClient && greeting ? `${greeting}, ` : ''}{getFirstName(userName)}
