@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  reactStrictMode: false, // Disable to prevent hydration errors
 
   eslint: {
     ignoreDuringBuilds: true,
