@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 import dynamicImport from 'next/dynamic';
 
@@ -9,19 +9,17 @@ const DashboardClient = dynamicImport(() => import('./DashboardClient'), {
   loading: () => (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <div className={`inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4`}></div>
-        <p className="text-gray-600 font-medium">Memuat Dashboard v3...</p>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+        <p className="text-gray-600 font-medium">Memuat Dashboard v4 (Fresh Build)...</p>
       </div>
     </div>
   ),
 });
 
 export default function Page() {
-  // Render langsung tanpa Suspense untuk menghindari hydration error
   return (
     <>
-      {/* Watermark Build Version (Hidden in UI, visible in DOM/Console) */}
-      <meta name="build-version" content={`PROD-BUILD-${new Date().getTime()}`} />
+      <meta name="build-version" content={`PROD-BUILD-V4-${new Date().getTime()}`} />
       <DashboardClient />
     </>
   );
