@@ -1,10 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
-import './build-marker'; // Force rebuild
 
-// Import dashboard client dengan ssr: false untuk menghindari hydration error
+// Import dashboard client dengan ssr: false DAN loading fallback yang static
 const DashboardClient = dynamic(() => import('./DashboardClient'), {
   ssr: false,
   loading: () => (
@@ -18,16 +16,6 @@ const DashboardClient = dynamic(() => import('./DashboardClient'), {
 });
 
 export default function Page() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-          <p className="text-gray-600 font-medium">Memuat Dashboard...</p>
-        </div>
-      </div>
-    }>
-      <DashboardClient />
-    </Suspense>
-  );
+  // Render langsung tanpa Suspense untuk menghindari hydration error
+  return <DashboardClient />;
 }
