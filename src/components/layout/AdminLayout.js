@@ -82,12 +82,13 @@ const menuItems = [
 function AdminLayout({ children }) {
   const [currentNotification, setCurrentNotification] = useState(null);
   const [notificationQueue, setNotificationQueue] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
-  const [isMobile, setIsMobile] = useState(false);
+  // Initialize with false to match SSR (no window available on server)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(true); // Assume mobile initially to match SSR
   const [expandedMenus, setExpandedMenus] = useState({}); // Default: all collapsed
   const pathname = usePathname();
 
-  // Detect mobile screen
+  // Detect mobile screen - runs only on client
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024; // lg breakpoint
