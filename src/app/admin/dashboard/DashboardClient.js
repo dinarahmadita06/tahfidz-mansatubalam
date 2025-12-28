@@ -349,10 +349,17 @@ export default function AdminDashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     fetchDashboardData();
   }, []);
+
+  if (!isClient) {
+    return null; // or a loading spinner strictly for client mount
+  }
+
 
   const fetchDashboardData = async () => {
     try {
