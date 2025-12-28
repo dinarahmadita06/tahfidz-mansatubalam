@@ -24,8 +24,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id">
-      <body className={`${poppins.className} ${poppins.variable} ${amiri.variable} antialiased`}>
+    <html lang="id" suppressHydrationWarning>
+      <body className={`${poppins.className} ${poppins.variable} ${amiri.variable} antialiased`} suppressHydrationWarning>
         <SessionProvider>
           <SWRProvider>
             <QueryProvider>
