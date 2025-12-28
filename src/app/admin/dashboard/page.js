@@ -21,9 +21,7 @@ import {
   Star,
 } from 'lucide-react';
 
-// Force dynamic rendering to prevent stale cache issues
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Segment config removed to prevent build error
 
 // ============================================================================
 // REUSABLE COMPONENTS
