@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AdminLayout from '@/components/layout/AdminLayout';
+
+// Verify correct version is loaded
+console.log('🎯 Dashboard Client Loaded - Build:', new Date().toISOString());
 import {
   BookOpen,
   Users,

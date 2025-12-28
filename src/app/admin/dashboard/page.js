@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
+import './build-marker'; // Force rebuild
 
 // Import dashboard client dengan ssr: false untuk menghindari hydration error
 const DashboardClient = dynamic(() => import('./DashboardClient'), {
