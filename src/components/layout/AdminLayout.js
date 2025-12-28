@@ -82,28 +82,35 @@ const menuItems = [
 function AdminLayout({ children }) {
   const [currentNotification, setCurrentNotification] = useState(null);
   const [notificationQueue, setNotificationQueue] = useState([]);
-  // Initialize with false to match SSR (no window available on server)
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(true); // Assume mobile initially to match SSR
-  const [expandedMenus, setExpandedMenus] = useState({}); // Default: all collapsed
+  const [isMobile, setIsMobile] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState({});
+  const [isMounted, setIsMounted] = useState(false); // NEW: Track if component is mounted
   const pathname = usePathname();
+
+  // Mark component as mounted - runs only once on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Detect mobile screen - runs only on client
   useEffect(() => {
+    if (!isMounted) return; // Wait until mounted
+    
     const checkMobile = () => {
-      const mobile = window.innerWidth < 1024; // lg breakpoint
+      const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
       if (!mobile) {
-        setSidebarOpen(true); // Auto-open on desktop
+        setSidebarOpen(true);
       } else {
-        setSidebarOpen(false); // Auto-close on mobile
+        setSidebarOpen(false);
       }
     };
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [isMounted]);
 
   // Polling for new notifications every 10 seconds
   useEffect(() => {
@@ -240,8 +247,8 @@ function AdminLayout({ children }) {
       `}</style>
 
       <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }}>
-        {/* Mobile Overlay - Only show when sidebar is open on mobile */}
-        {isMobile && sidebarOpen && (
+        {/* Mobile Overlay - Only show when sidebar is open on mobile AND component is mounted */}
+        {isMounted && isMobile && sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
