@@ -21,6 +21,10 @@ import {
   Star,
 } from 'lucide-react';
 
+// Force dynamic rendering to prevent stale cache issues
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // ============================================================================
 // REUSABLE COMPONENTS
 // ============================================================================
@@ -354,7 +358,7 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/dashboard');
+      const res = await fetch('/api/admin/dashboard', { cache: 'no-store' }); // Disable cache
       if (!res.ok) throw new Error('Gagal mengambil data dashboard');
       const result = await res.json();
       setData(result);
@@ -370,8 +374,8 @@ export default function AdminDashboardPage() {
   const fetchChartData = async () => {
     try {
       const [siswaRes, kelasRes] = await Promise.all([
-        fetch('/api/admin/siswa?perPage=1000'),
-        fetch('/api/admin/kelas?perPage=1000'),
+        fetch('/api/admin/siswa?perPage=1000', { cache: 'no-store' }),
+        fetch('/api/admin/kelas?perPage=1000', { cache: 'no-store' }),
       ]);
 
       if (!siswaRes.ok || !kelasRes.ok) throw new Error('Gagal mengambil data chart');
