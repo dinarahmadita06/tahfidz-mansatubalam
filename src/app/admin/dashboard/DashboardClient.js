@@ -351,33 +351,6 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-    fetchDashboardData();
-  }, []);
-
-  if (!isClient) {
-    return null; // or a loading spinner strictly for client mount
-  }
-
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch('/api/admin/dashboard', { cache: 'no-store' }); // Disable cache
-      if (!res.ok) throw new Error('Gagal mengambil data dashboard');
-      const result = await res.json();
-      setData(result);
-      await fetchChartData();
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchChartData = async () => {
     try {
       const [siswaRes, kelasRes] = await Promise.all([
@@ -418,6 +391,32 @@ export default function AdminDashboardPage() {
       console.error(error);
     }
   };
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/admin/dashboard', { cache: 'no-store' }); // Disable cache
+      if (!res.ok) throw new Error('Gagal mengambil data dashboard');
+      const result = await res.json();
+      setData(result);
+      await fetchChartData();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setIsClient(true);
+    fetchDashboardData();
+  }, []);
+
+  if (!isClient) {
+    return null; // or a loading spinner strictly for client mount
+  }
 
   return (
     <AdminLayout>
