@@ -273,7 +273,7 @@ function DashboardHeader({ userName }) {
       <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">
-            Dashboard Tahfidz - v2 baru
+            Dashboard Tahfidz - v3 Final
           </h1>
           <p className="text-white/90 text-lg font-medium">
             {greeting}, {getFirstName(userName)}
