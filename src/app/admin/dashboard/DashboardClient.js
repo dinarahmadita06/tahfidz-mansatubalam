@@ -1,0 +1,528 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import AdminLayout from '@/components/layout/AdminLayout';
+import {
+  BookOpen,
+  Users,
+  Award,
+  UserCog,
+  CheckCircle2,
+  Target,
+  Trophy,
+  Calendar,
+  TrendingUp,
+  Sparkles,
+  Megaphone,
+  ChevronRight,
+  Bell,
+  Star,
+} from 'lucide-react';
+
+// Segment config removed to prevent build error
+
+// ============================================================================
+// REUSABLE COMPONENTS
+// ============================================================================
+
+// Skeleton Loading Card
+function SkeletonCard() {
+  return (
+    <div className="bg-white/60 backdrop-blur-md rounded-2xl p-6 border border-white/70 shadow-sm animate-pulse">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="h-3 w-20 bg-gray-300 rounded mb-3"></div>
+          <div className="h-8 w-16 bg-gray-300 rounded"></div>
+        </div>
+        <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+      </div>
+      <div className="h-3 w-28 bg-gray-300 rounded"></div>
+    </div>
+  );
+}
+
+// Modern Stat Card - Pastel Transparent + Border Glow
+function StatCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
+  const variants = {
+    green: {
+      wrapper: 'bg-emerald-50/50 border-emerald-200/60 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      title: 'text-emerald-800',
+      value: 'text-emerald-900',
+      subtitle: 'text-emerald-700/80'
+    },
+    yellow: {
+      wrapper: 'bg-yellow-50/50 border-yellow-200/60 shadow-[0_0_0_4px_rgba(234,179,8,0.12)]',
+      iconBg: 'bg-yellow-100',
+      iconColor: 'text-yellow-600',
+      title: 'text-yellow-800',
+      value: 'text-yellow-900',
+      subtitle: 'text-yellow-700/80'
+    },
+    purple: {
+      wrapper: 'bg-purple-50/50 border-purple-200/60 shadow-[0_0_0_4px_rgba(168,85,247,0.12)]',
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600',
+      title: 'text-purple-800',
+      value: 'text-purple-900',
+      subtitle: 'text-purple-700/80'
+    },
+    blue: {
+      wrapper: 'bg-blue-50/50 border-blue-200/60 shadow-[0_0_0_4px_rgba(59,130,246,0.12)]',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      title: 'text-blue-800',
+      value: 'text-blue-900',
+      subtitle: 'text-blue-700/80'
+    },
+    teal: {
+      wrapper: 'bg-teal-50/50 border-teal-200/60 shadow-[0_0_0_4px_rgba(20,184,166,0.12)]',
+      iconBg: 'bg-teal-100',
+      iconColor: 'text-teal-600',
+      title: 'text-teal-800',
+      value: 'text-teal-900',
+      subtitle: 'text-teal-700/80'
+    },
+  };
+
+  const style = variants[variant] || variants.green;
+
+  return (
+    <div
+      className={`relative bg-white/60 backdrop-blur-md border border-white/70 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${style.wrapper}`}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className={`${style.title} text-xs font-bold mb-1 uppercase tracking-wider`}>
+            {title}
+          </p>
+          <h3 className={`${style.value} text-3xl font-extrabold`}>
+            {value}
+          </h3>
+          {subtitle && (
+            <p className={`${style.subtitle} text-xs font-medium mt-1`}>{subtitle}</p>
+          )}
+        </div>
+        <div className={`${style.iconBg} p-3 rounded-xl shadow-sm`}>
+          <Icon size={24} className={style.iconColor} strokeWidth={2.5} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Motivational Quote Card - Blue Transparent + Glow
+function MotivationCard() {
+  return (
+    <div className="rounded-2xl bg-blue-50/60 backdrop-blur-md border border-blue-200/70 shadow-[0_0_0_4px_rgba(59,130,246,0.08)] p-6 flex flex-col justify-center h-full">
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 text-blue-600 shadow-sm">
+          <Sparkles size={24} strokeWidth={2} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-blue-900 font-semibold text-lg italic leading-relaxed mb-3">
+            &quot;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&quot;
+          </p>
+          <p className="text-sm font-medium text-blue-700/80 flex items-center gap-2">
+            <span className="w-6 h-[2px] bg-blue-400 rounded-full"></span>
+            HR. Bukhari
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Local Announcement Section - Orange Pastel
+// Re-implemented data fetching locally to ensure Orange styling without touching external components
+function AnnouncementSection() {
+  const [pengumuman, setPengumuman] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPengumuman = async () => {
+      try {
+        const res = await fetch('/api/pengumuman?limit=3');
+        if (res.ok) {
+          const data = await res.json();
+          setPengumuman(data.pengumuman || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch pengumuman', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPengumuman();
+  }, []);
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const CATEGORY_ICONS = {
+    UMUM: Bell,
+    AKADEMIK: BookOpen,
+    KEGIATAN: Star,
+    PENTING: Award,
+  };
+
+  return (
+    <div className="bg-orange-50/60 backdrop-blur-sm rounded-3xl border border-orange-200/70 shadow-[0_0_0_4px_rgba(251,146,60,0.12)] p-6 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-orange-100 rounded-xl text-orange-600">
+            <Megaphone size={24} strokeWidth={2.5} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-orange-900">Pengumuman</h2>
+            <p className="text-xs text-orange-700/80 font-medium">Informasi terbaru sekolah</p>
+          </div>
+        </div>
+        <Link
+          href="/admin/pengumuman"
+          className="hidden sm:inline-flex px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+        >
+          Lihat Semua
+        </Link>
+      </div>
+
+      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+        {loading ? (
+          <>
+            <div className="h-20 bg-white/50 rounded-2xl animate-pulse"></div>
+            <div className="h-20 bg-white/50 rounded-2xl animate-pulse"></div>
+          </>
+        ) : pengumuman.length === 0 ? (
+          <div className="text-center py-8 text-orange-800/60 font-medium">Belum ada pengumuman</div>
+        ) : (
+          pengumuman.map((item) => {
+            const Icon = CATEGORY_ICONS[item.kategori] || CATEGORY_ICONS.UMUM;
+            return (
+              <div key={item.id} className="bg-white/70 border border-orange-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-orange-50 rounded-lg text-orange-500 shrink-0 mt-0.5">
+                    <Icon size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900 line-clamp-1 mb-1">{item.judul}</h4>
+                    <p className="text-xs text-gray-600 line-clamp-2 mb-2 leading-relaxed">{item.isi}</p>
+                    <div className="flex items-center gap-2 text-[10px] font-medium text-gray-400">
+                      <Calendar size={10} />
+                      <span>{formatDate(item.createdAt)}</span>
+                      <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full">{item.kategori}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+      
+      {/* Mobile only button */}
+       <Link
+          href="/admin/pengumuman"
+          className="sm:hidden mt-4 w-full inline-flex items-center justify-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+        >
+          Lihat Semua
+        </Link>
+    </div>
+  );
+}
+
+// Hero Header Card - Green Gradient
+function DashboardHeader({ userName }) {
+  // Initialize with static default values to match SSR
+  const [greeting, setGreeting] = useState('Selamat Datang');
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    // Logic that depends on browser/time runs only on client
+    const hour = new Date().getHours();
+    if (hour < 11) setGreeting('Selamat Pagi');
+    else if (hour < 15) setGreeting('Selamat Siang');
+    else if (hour < 18) setGreeting('Selamat Sore');
+    else setGreeting('Selamat Malam');
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    setCurrentDate(new Date().toLocaleDateString('id-ID', options));
+  }, []);
+
+  const getFirstName = (fullName) => {
+    if (!fullName) return 'Admin';
+    return fullName.split(' ')[0];
+  };
+
+  return (
+    <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-3xl shadow-[0_18px_45px_-25px_rgba(16,185,129,0.75)] px-6 py-8 md:px-10 md:py-10 overflow-hidden">
+      {/* Decorative Circles */}
+      <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
+
+      <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">
+            Dashboard Tahfidz
+          </h1>
+          <p className="text-white/90 text-lg font-medium">
+            {greeting}, {getFirstName(userName)}
+          </p>
+        </div>
+        
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/20 text-white/90 text-sm font-medium flex items-center gap-2">
+          <Calendar size={18} />
+          <span>{currentDate || '...'}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Progress Bar Component
+function ProgressBar({ percentage, label, total, achieved, color = 'emerald' }) {
+  const colors = {
+    emerald: {
+      bar: 'from-emerald-500 to-teal-500',
+      text: 'text-emerald-600',
+    },
+    teal: {
+      bar: 'from-teal-500 to-cyan-500',
+      text: 'text-teal-600',
+    }
+  };
+  
+  const theme = colors[color] || colors.emerald;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-end justify-between">
+        <div>
+           <h4 className="font-bold text-gray-800 text-lg">{percentage}%</h4>
+           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
+        </div>
+        <div className={`text-xs font-bold ${theme.text} bg-white px-2 py-1 rounded-lg shadow-sm border border-gray-100`}>
+          {achieved} / {total}
+        </div>
+      </div>
+      
+      <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+        <div
+          className={`absolute inset-y-0 left-0 bg-gradient-to-r ${theme.bar} rounded-full transition-all duration-1000 ease-out`}
+          style={{ width: `${percentage}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export default function AdminDashboardPage() {
+  const { data: session } = useSession();
+  const [data, setData] = useState({
+    stats: {
+      totalSiswa: 0,
+      siswaAktif: 0,
+      totalGuru: 0,
+      totalHafalan: 0,
+      totalJuz: 0,
+      rataRataNilai: 0,
+      rataRataKehadiran: 0,
+    },
+  });
+  const [chartData, setChartData] = useState({
+    siswaStats: { mencapai: 0, belum: 0 },
+    kelasStats: { mencapai: 0, total: 0, persentase: 0 },
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/admin/dashboard', { cache: 'no-store' }); // Disable cache
+      if (!res.ok) throw new Error('Gagal mengambil data dashboard');
+      const result = await res.json();
+      setData(result);
+      await fetchChartData();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchChartData = async () => {
+    try {
+      const [siswaRes, kelasRes] = await Promise.all([
+        fetch('/api/admin/siswa?perPage=1000', { cache: 'no-store' }),
+        fetch('/api/admin/kelas?perPage=1000', { cache: 'no-store' }),
+      ]);
+
+      if (!siswaRes.ok || !kelasRes.ok) throw new Error('Gagal mengambil data chart');
+
+      const siswaData = await siswaRes.json();
+      const kelasData = await kelasRes.json();
+
+      const siswaList = siswaData.siswa || [];
+      const kelasList = kelasData.kelas || [];
+
+      // Calculate siswa stats
+      const siswaMencapai = siswaList.filter((s) => (s.totalJuz || 0) >= 3).length;
+      const siswaBelum = siswaList.length - siswaMencapai;
+
+      // Calculate kelas stats
+      const kelasAktif = kelasList.filter((k) => k.isActive);
+      const kelasMencapai = kelasAktif.filter((kelas) => {
+        const siswaKelas = siswaList.filter((s) => s.kelasId === kelas.id);
+        if (siswaKelas.length === 0) return false;
+        const siswaMencapaiTarget = siswaKelas.filter((s) => (s.totalJuz || 0) >= 3).length;
+        return (siswaMencapaiTarget / siswaKelas.length) >= 0.5;
+      }).length;
+
+      const kelasPersentase = kelasAktif.length > 0
+        ? Math.round((kelasMencapai / kelasAktif.length) * 100)
+        : 0;
+
+      setChartData({
+        siswaStats: { mencapai: siswaMencapai, belum: siswaBelum },
+        kelasStats: { mencapai: kelasMencapai, total: kelasAktif.length, persentase: kelasPersentase },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <AdminLayout>
+      <div className="min-h-screen bg-transparent">
+        <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-8">
+
+          {/* 1. Hero Header */}
+          <DashboardHeader userName={session?.user?.name} />
+
+          {/* 2. Motivation & Announcement Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+             {/* Motivation takes 7 cols */}
+            <div className="lg:col-span-7 h-full">
+               <MotivationCard />
+            </div>
+             {/* Announcement takes 5 cols */}
+            <div className="lg:col-span-5 h-full">
+               <AnnouncementSection />
+            </div>
+          </div>
+
+          {/* 3. Stat Cards - Pastel Transparent + Glow */}
+          {!error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+              {loading ? (
+                Array(5).fill(0).map((_, i) => <SkeletonCard key={i} />)
+              ) : (
+                <>
+                  <StatCard
+                    icon={Users}
+                    title="Total Siswa"
+                    value={data.stats.totalSiswa || 0}
+                    subtitle={`${data.stats.siswaAktif || 0} siswa aktif`}
+                    variant="green"
+                  />
+                  <StatCard
+                    icon={UserCog}
+                    title="Total Guru"
+                    value={data.stats.totalGuru || 0}
+                    subtitle="Guru aktif"
+                    variant="yellow"
+                  />
+                  <StatCard
+                    icon={BookOpen}
+                    title="Total Hafalan"
+                    value={`${data.stats.totalJuz || 0} Juz`}
+                    subtitle="Akumulasi hafalan"
+                    variant="purple"
+                  />
+                  <StatCard
+                    icon={Award}
+                    title="Rata² Nilai"
+                    value={data.stats.rataRataNilai || 0}
+                    subtitle="Kualitas hafalan"
+                    variant="blue"
+                  />
+                  <StatCard
+                    icon={CheckCircle2}
+                    title="Rata² Kehadiran"
+                    value={`${data.stats.rataRataKehadiran || 0}%`}
+                    subtitle="Tingkat kehadiran"
+                    variant="teal"
+                  />
+                </>
+              )}
+            </div>
+          )}
+
+          {/* 4. Charts Section */}
+          {!error && !loading && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Siswa Chart */}
+              <div className="bg-white/60 backdrop-blur-md rounded-3xl p-8 border border-white/70 shadow-sm">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3 bg-emerald-100 rounded-2xl text-emerald-600">
+                    <Target size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Target Siswa</h3>
+                </div>
+                
+                <ProgressBar
+                  percentage={Math.round(
+                    (chartData.siswaStats.mencapai /
+                      (chartData.siswaStats.mencapai + chartData.siswaStats.belum || 1)) *
+                      100
+                  )}
+                  label="SIswa Mencapai Target (≥3 Juz)"
+                  total={chartData.siswaStats.mencapai + chartData.siswaStats.belum}
+                  achieved={chartData.siswaStats.mencapai}
+                  color="emerald"
+                />
+              </div>
+
+               {/* Kelas Chart */}
+               <div className="bg-white/60 backdrop-blur-md rounded-3xl p-8 border border-white/70 shadow-sm">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3 bg-teal-100 rounded-2xl text-teal-600">
+                    <TrendingUp size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800">Target Kelas</h3>
+                </div>
+                
+                <ProgressBar
+                  percentage={chartData.kelasStats.persentase}
+                  label="Kelas Mencapai Target"
+                  total={chartData.kelasStats.total}
+                  achieved={chartData.kelasStats.mencapai}
+                  color="teal"
+                />
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}
