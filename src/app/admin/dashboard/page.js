@@ -240,13 +240,12 @@ function AnnouncementSection() {
 
 // Hero Header Card - Green Gradient
 function DashboardHeader({ userName }) {
-  const [greeting, setGreeting] = useState('');
+  // Initialize with static default values to match SSR
+  const [greeting, setGreeting] = useState('Selamat Datang');
   const [currentDate, setCurrentDate] = useState('');
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    console.log("🚀 DASHBOARD UI LOADED: GREEN GRADIENT VERSION v2"); // Debug log verify update
+    // Logic that depends on browser/time runs only on client
     const hour = new Date().getHours();
     if (hour < 11) setGreeting('Selamat Pagi');
     else if (hour < 15) setGreeting('Selamat Siang');
@@ -270,17 +269,17 @@ function DashboardHeader({ userName }) {
 
       <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight" suppressHydrationWarning>
-            Dashboard Tahfidz v2
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">
+            Dashboard Tahfidz
           </h1>
           <p className="text-white/90 text-lg font-medium">
-            {isClient && greeting ? `${greeting}, ` : ''}{getFirstName(userName)}
+            {greeting}, {getFirstName(userName)}
           </p>
         </div>
         
         <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/20 text-white/90 text-sm font-medium flex items-center gap-2">
           <Calendar size={18} />
-          <span>{isClient && currentDate}</span>
+          <span>{currentDate || '...'}</span>
         </div>
       </div>
     </div>
