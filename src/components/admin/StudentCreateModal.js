@@ -228,9 +228,11 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
         // Create new parent
         const parentPayload = {
           ...newParentData,
-          nik: `NIK-${Date.now()}`, // Generate temporary NIK
-          jenisKelamin: 'LAKI_LAKI', // Default, could be enhanced
+          nik: `NIK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,  // Ensure unique NIK
+          jenisKelamin: 'LAKI_LAKI',  // Default, could be enhanced
         };
+
+        console.log('Creating parent with payload:', parentPayload);
 
         const parentResponse = await fetch('/api/admin/orangtua', {
           method: 'POST',
@@ -240,7 +242,10 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
 
         const parentResult = await parentResponse.json();
 
+        console.log('Parent creation response:', parentResult);
+
         if (!parentResponse.ok) {
+          console.error('❌ Parent creation failed:', parentResult);
           throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
         }
 
@@ -248,6 +253,8 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
         parentEmail = parentResult.user.email;
         parentPassword = newParentData.password;
         parentName = parentResult.user.name;
+
+        console.log('✅ Parent created successfully:', { orangTuaId, parentName, parentEmail });
 
         // Link new parent to student
         const linkResponse = await fetch('/api/admin/orangtua-siswa', {
@@ -260,10 +267,14 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
           }),
         });
 
+        const linkResult = await linkResponse.json();
+
         if (!linkResponse.ok) {
-          const linkError = await linkResponse.json();
-          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+          console.error('❌ Link creation failed:', linkResult);
+          throw new Error(linkResult.error || 'Gagal menghubungkan dengan orang tua');
         }
+
+        console.log('✅ Parent linked to student successfully');
       }
 
       // 3. Show success modal with account details

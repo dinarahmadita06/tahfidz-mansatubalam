@@ -314,9 +314,16 @@ export async function POST(request) {
       );
     }
 
+    // Provide detailed error for debugging
+    const errorMessage = error.meta?.cause || error.message || 'Unknown error';
+    const statusCode = error.code === 'P2002' ? 400 : 500;
+    
     return NextResponse.json(
-      { error: 'Gagal menambahkan siswa' },
-      { status: 500 }
+      {
+        error: statusCode === 400 ? 'Data duplikat atau tidak valid' : 'Gagal menambahkan siswa',
+        ...(process.env.NODE_ENV === 'development' && { details: errorMessage })
+      },
+      { status: statusCode }
     );
   }
 }
