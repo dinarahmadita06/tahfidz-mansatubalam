@@ -34,6 +34,7 @@ export default function PasswordField({
   helperText = 'Gunakan password kuat. Bisa generate otomatis.',
   showGenerateButton = true,
   autoFocus = false,
+  error = null,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -72,6 +73,7 @@ export default function PasswordField({
         <div style={{ position: 'relative', flex: 1 }}>
           <input
             type={showPassword ? 'text' : 'password'}
+            name="password"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
@@ -83,7 +85,7 @@ export default function PasswordField({
               paddingRight: '48px',
               paddingTop: '12px',
               paddingBottom: '12px',
-              border: `2px solid ${colors.gray[200]}`,
+              border: error ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
               borderRadius: '12px',
               fontSize: '14px',
               fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -172,8 +174,22 @@ export default function PasswordField({
         )}
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <p
+          style={{
+            fontSize: '12px',
+            color: '#dc2626',
+            marginTop: '6px',
+            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+          }}
+        >
+          {error}
+        </p>
+      )}
+
       {/* Helper Text */}
-      {helperText && (
+      {helperText && !error && (
         <p
           style={{
             fontSize: '12px',
@@ -188,8 +204,8 @@ export default function PasswordField({
 
       <style jsx>{`
         .password-input:focus {
-          border-color: ${colors.emerald[500]} !important;
-          box-shadow: 0 0 0 3px ${colors.emerald[500]}20 !important;
+          border-color: ${error ? '#ef4444' : colors.emerald[500]} !important;
+          box-shadow: 0 0 0 3px ${error ? '#ef444420' : colors.emerald[500]}20 !important;
         }
 
         .toggle-password-btn:hover {
