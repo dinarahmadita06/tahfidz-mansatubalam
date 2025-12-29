@@ -121,7 +121,7 @@ function StatCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
 // Motivational Quote Card - Blue Transparent + Glow (SIMTAQ Baseline)
 function MotivationCard() {
   return (
-    <div className="rounded-2xl bg-blue-50/70 backdrop-blur-sm border border-blue-200 shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)] p-6 flex flex-col justify-center h-full">
+    <div className="w-full rounded-2xl bg-blue-50/70 backdrop-blur-sm border border-blue-200 shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)] p-6">
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 text-blue-600">
           <Lightbulb size={24} strokeWidth={2} />
@@ -426,19 +426,13 @@ export default function AdminDashboardPage() {
           {/* 1. Hero Header */}
           <DashboardHeader userName={session?.user?.name} />
 
-          {/* 2. Motivation & Announcement Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-             {/* Motivation takes 7 cols */}
-            <div className="lg:col-span-7 h-full">
-               <MotivationCard />
-            </div>
-             {/* Announcement takes 5 cols */}
-            <div className="lg:col-span-5 h-full">
-               <AnnouncementSection />
-            </div>
-          </div>
+          {/* 2. Motivation Card - FULL WIDTH */}
+          <MotivationCard />
 
-          {/* 3. Stat Cards - Pastel Transparent + Glow */}
+          {/* 3. Announcement Card - FULL WIDTH */}
+          <AnnouncementSection />
+
+          {/* 4. Stat Cards - Pastel Transparent + Glow */}
           {!error && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {loading ? (
@@ -485,7 +479,7 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* 4. Charts Section */}
+          {/* 5. Target Charts Section */}
           {!error && !loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Siswa Chart */}
