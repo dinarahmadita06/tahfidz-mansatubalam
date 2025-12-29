@@ -65,6 +65,9 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
     noTelepon: '',
   });
 
+  // Error state for field-level validation
+  const [fieldErrors, setFieldErrors] = useState({});
+
   useEffect(() => {
     if (isOpen) {
       fetchKelas();
@@ -105,6 +108,34 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
       email: '',
       password: '',
     });
+    setFieldErrors({});
+  };
+
+  // Clear error for specific field when user starts typing
+  const handleFieldChange = (fieldName, value) => {
+    setFormData(prev => ({ ...prev, [fieldName]: value }));
+    // Clear error for this field when user starts typing
+    if (fieldErrors[fieldName]) {
+      setFieldErrors(prev => {
+        const updated = { ...prev };
+        delete updated[fieldName];
+        return updated;
+      });
+    }
+  };
+
+  // Scroll to first error field
+  const scrollToFirstError = (errorMap) => {
+    const firstErrorField = Object.keys(errorMap)[0];
+    if (firstErrorField) {
+      setTimeout(() => {
+        const element = document.querySelector(`[name="${firstErrorField}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.focus();
+        }
+      }, 100);
+    }
   };
 
   const handleClose = () => {
@@ -117,6 +148,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setFieldErrors({}); // Clear previous errors
 
     try {
       // 1. Create student
@@ -134,6 +166,26 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
       const siswaResult = await siswaResponse.json();
 
       if (!siswaResponse.ok) {
+        // Handle validation errors from backend
+        if (siswaResponse.status === 400) {
+          // Missing fields error
+          if (siswaResult.missingFields) {
+            const errors = {};
+            siswaResult.missingFields.forEach(field => {
+              errors[field] = 'Wajib diisi';
+            });
+            setFieldErrors(errors);
+            scrollToFirstError(errors);
+            throw new Error('Beberapa field masih kosong. Silakan periksa kembali.');
+          }
+        } else if (siswaResponse.status === 422) {
+          // Invalid format error
+          if (siswaResult.invalidFields) {
+            setFieldErrors(siswaResult.invalidFields);
+            scrollToFirstError(siswaResult.invalidFields);
+            throw new Error('Beberapa field memiliki format yang tidak valid.');
+          }
+        }
         throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
       }
 
@@ -388,14 +440,15 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                     </label>
                     <input
                       type="text"
+                      name="name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => handleFieldChange('name', e.target.value)}
                       placeholder="Contoh: Ahmad Zaki"
                       required
                       style={{
                         width: '100%',
                         padding: '12px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
+                        border: fieldErrors.name ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
                         borderRadius: '12px',
                         fontSize: '14px',
                         fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -404,6 +457,16 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                       }}
                       className="form-input"
                     />
+                    {fieldErrors.name && (
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#dc2626',
+                        marginTop: '6px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}>
+                        {fieldErrors.name}
+                      </p>
+                    )}
                   </div>
 
                   {/* NIS */}
@@ -423,14 +486,15 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                     </label>
                     <input
                       type="text"
+                      name="nis"
                       value={formData.nis}
-                      onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                      onChange={(e) => handleFieldChange('nis', e.target.value)}
                       placeholder="Nomor Induk Siswa"
                       required
                       style={{
                         width: '100%',
                         padding: '12px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
+                        border: fieldErrors.nis ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
                         borderRadius: '12px',
                         fontSize: '14px',
                         fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -439,6 +503,16 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                       }}
                       className="form-input"
                     />
+                    {fieldErrors.nis && (
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#dc2626',
+                        marginTop: '6px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}>
+                        {fieldErrors.nis}
+                      </p>
+                    )}
                   </div>
 
                   {/* NISN */}
@@ -457,13 +531,14 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                     </label>
                     <input
                       type="text"
+                      name="nisn"
                       value={formData.nisn}
-                      onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                      onChange={(e) => handleFieldChange('nisn', e.target.value)}
                       placeholder="Nomor Induk Siswa Nasional"
                       style={{
                         width: '100%',
                         padding: '12px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
+                        border: fieldErrors.nisn ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
                         borderRadius: '12px',
                         fontSize: '14px',
                         fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -472,6 +547,16 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                       }}
                       className="form-input"
                     />
+                    {fieldErrors.nisn && (
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#dc2626',
+                        marginTop: '6px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}>
+                        {fieldErrors.nisn}
+                      </p>
+                    )}
                   </div>
 
                   {/* Kelas */}
@@ -490,13 +575,14 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                       <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
                     </label>
                     <select
+                      name="kelasId"
                       value={formData.kelasId}
-                      onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
+                      onChange={(e) => handleFieldChange('kelasId', e.target.value)}
                       required
                       style={{
                         width: '100%',
                         padding: '12px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
+                        border: fieldErrors.kelasId ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
                         borderRadius: '12px',
                         fontSize: '14px',
                         fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -514,6 +600,16 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                         </option>
                       ))}
                     </select>
+                    {fieldErrors.kelasId && (
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#dc2626',
+                        marginTop: '6px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}>
+                        {fieldErrors.kelasId}
+                      </p>
+                    )}
                   </div>
 
                   {/* Jenis Kelamin */}
@@ -532,13 +628,14 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                       <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
                     </label>
                     <select
+                      name="jenisKelamin"
                       value={formData.jenisKelamin}
-                      onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                      onChange={(e) => handleFieldChange('jenisKelamin', e.target.value)}
                       required
                       style={{
                         width: '100%',
                         padding: '12px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
+                        border: fieldErrors.jenisKelamin ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
                         borderRadius: '12px',
                         fontSize: '14px',
                         fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
@@ -552,6 +649,16 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                       <option value="LAKI_LAKI">Laki-laki</option>
                       <option value="PEREMPUAN">Perempuan</option>
                     </select>
+                    {fieldErrors.jenisKelamin && (
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#dc2626',
+                        marginTop: '6px',
+                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      }}>
+                        {fieldErrors.jenisKelamin}
+                      </p>
+                    )}
                   </div>
 
                   {/* Tanggal Lahir */}
@@ -650,10 +757,11 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                 <PasswordField
                   label="Password Akun Siswa"
                   value={formData.password}
-                  onChange={(password) => setFormData({ ...formData, password })}
+                  onChange={(password) => handleFieldChange('password', password)}
                   placeholder="Password untuk akun siswa"
                   required={true}
                   helperText="Gunakan kombinasi angka dan huruf. Bisa generate otomatis."
+                  error={fieldErrors.password}
                 />
               </div>
 
@@ -782,8 +890,8 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
         }
 
         .form-input:focus {
-          border-color: ${colors.emerald[500]} !important;
-          box-shadow: 0 0 0 3px ${colors.emerald[500]}20 !important;
+          border-color: ${fieldErrors.name || fieldErrors.nis || fieldErrors.nisn || fieldErrors.kelasId || fieldErrors.jenisKelamin ? '#ef4444' : colors.emerald[500]} !important;
+          box-shadow: 0 0 0 3px ${fieldErrors.name || fieldErrors.nis || fieldErrors.nisn || fieldErrors.kelasId || fieldErrors.jenisKelamin ? '#ef444420' : colors.emerald[500]}20 !important;
         }
 
         .cancel-btn:hover {
