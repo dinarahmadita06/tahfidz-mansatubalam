@@ -198,86 +198,56 @@ function DropdownMenu({ buttonRef, onEdit, onToggleStatus, onDelete, isActive, o
   );
 }
 
-// Komponen StatCard
-function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
-  const colorMap = {
+// Modern Stat Card - Pastel Solid (Tasmi Design System)
+function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
+  const themeConfig = {
     emerald: {
-      bg: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-      value: colors.emerald[700],
-      border: colors.emerald[200],
+      bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
+      border: 'border-2 border-emerald-200',
+      titleColor: 'text-emerald-600',
+      valueColor: 'text-emerald-700',
+      subtitleColor: 'text-emerald-700',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
     },
     amber: {
-      bg: `linear-gradient(135deg, ${colors.amber[100]} 0%, ${colors.amber[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-      value: colors.amber[600],
-      border: colors.amber[200],
+      bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
+      border: 'border-2 border-amber-200',
+      titleColor: 'text-amber-600',
+      valueColor: 'text-amber-700',
+      subtitleColor: 'text-amber-700',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
     },
     blue: {
-      bg: `linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)`,
-      iconBg: `linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)`,
-      value: '#1E40AF',
-      border: '#BFDBFE',
+      bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+      border: 'border-2 border-blue-200',
+      titleColor: 'text-blue-600',
+      valueColor: 'text-blue-700',
+      subtitleColor: 'text-blue-700',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
     },
   };
 
-  const scheme = colorMap[color];
+  const config = themeConfig[theme] || themeConfig.emerald;
 
   return (
-    <div style={{
-      background: scheme.bg,
-      borderRadius: '20px',
-      padding: '28px',
-      boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
-      border: `2px solid ${scheme.border}`,
-      transition: 'all 0.3s ease',
-      animation: 'fadeInUp 0.6s ease-out',
-    }}
-    className="stats-card">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-        <div style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '18px',
-          background: scheme.iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-        }}>
-          {icon}
-        </div>
-        <div style={{ flex: 1 }}>
-          <p style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: colors.text.secondary,
-            marginBottom: '6px',
-            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-            letterSpacing: '0.3px',
-          }}>
+    <div className={`${config.bg} rounded-2xl ${config.border} p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className={`${config.titleColor} text-xs font-bold mb-2 uppercase tracking-wide`}>
             {title}
           </p>
-          <p style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: scheme.value,
-            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-            lineHeight: '1.1',
-            marginBottom: subtitle ? '4px' : '0',
-          }}>
+          <h3 className={`${config.valueColor} text-3xl font-bold`}>
             {value}
-          </p>
+          </h3>
           {subtitle && (
-            <p style={{
-              fontSize: '12px',
-              color: colors.text.tertiary,
-              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-            }}>
-              {subtitle}
-            </p>
+            <p className={`${config.subtitleColor} text-xs font-medium mt-2`}>{subtitle}</p>
           )}
+        </div>
+        <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
+          <Icon size={28} className={config.iconColor} strokeWidth={2} />
         </div>
       </div>
     </div>
@@ -676,302 +646,142 @@ export default function AdminKelasPage() {
 
   return (
     <AdminLayout>
-      <div style={{
-        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
-        minHeight: '100vh',
-        position: 'relative',
-      }}>
-        {/* Geometris Islamic Pattern Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%231A936F' stroke-width='1' opacity='0.08'%3E%3Ccircle cx='40' cy='40' r='30'/%3E%3Cpath d='M40 10 L70 40 L40 70 L10 40 Z'/%3E%3Cpath d='M40 25 L55 40 L40 55 L25 40 Z'/%3E%3Ccircle cx='40' cy='40' r='5' fill='%23F59E0B'/%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '80px 80px',
-          pointerEvents: 'none',
-          opacity: 0.4,
-          zIndex: 0,
-        }} />
+      <div className="min-h-screen bg-gray-50">
+        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* Header Section */}
+          <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
+            {/* Decorative Circles */}
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
 
-        {/* Header with Islamic Pattern */}
-        <div style={{
-          position: 'relative',
-          padding: '32px 48px 24px',
-          borderBottom: `1px solid ${colors.gray[200]}`,
-          background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
-          backdropFilter: 'blur(10px)',
-          zIndex: 2,
-        }} className="page-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-            <div>
-              <h1 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.gold[600]} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '8px',
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Manajemen Kelas
-              </h1>
-              <p style={{
-                fontSize: '15px',
-                fontWeight: 500,
-                color: colors.text.secondary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Kelola kelas tahfidz, wali kelas, dan siswa dengan mudah
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={handleExport}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: colors.white,
-                  color: colors.emerald[600],
-                  border: `2px solid ${colors.emerald[500]}`,
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                }}
-                className="export-btn"
-              >
-                <Download size={18} />
-                Export Data
-              </button>
-              <button
-                onClick={() => {
-                  resetKelasForm();
-                  setShowKelasModal(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                }}
-                className="add-btn"
-              >
-                <Plus size={18} />
-                Tambah Kelas
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div style={{ position: 'relative', zIndex: 2 }} className="page-main-content">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-            {/* Stats Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '24px',
-            }}>
-              <StatCard
-                icon={<BookOpen size={24} color={colors.white} />}
-                title="Total Kelas"
-                value={stats.total}
-                subtitle="Semua kelas terdaftar"
-                color="blue"
-              />
-              <StatCard
-                icon={<GraduationCap size={24} color={colors.white} />}
-                title="Aktif"
-                value={stats.active}
-                subtitle="Kelas yang sedang berjalan"
-                color="emerald"
-              />
-              <StatCard
-                icon={<Clock size={24} color={colors.white} />}
-                title="Tidak Aktif"
-                value={stats.inactive}
-                subtitle="Kelas nonaktif"
-                color="amber"
-              />
-            </div>
-
-            {/* Search & Filter Section */}
-            <div style={{
-              background: colors.white,
-              borderRadius: '20px',
-              padding: '24px',
-              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
-              border: `2px solid ${colors.emerald[100]}`,
-              animation: 'fadeInUp 0.6s ease-out 0.1s both',
-            }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr',
-                gap: '16px',
-                alignItems: 'end',
-              }}>
-                {/* Search Input */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Cari Kelas
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <Search
-                      style={{
-                        position: 'absolute',
-                        left: '14px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: colors.text.tertiary
-                      }}
-                      size={20}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Cari berdasarkan nama kelas..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{
-                        width: '100%',
-                        paddingLeft: '44px',
-                        paddingRight: '16px',
-                        paddingTop: '12px',
-                        paddingBottom: '12px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.3s ease',
-                      }}
-                      className="search-input"
-                    />
-                  </div>
-                </div>
-
-                {/* Filter Guru */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Filter Guru
-                  </label>
-                  <select
-                    value={filterGuru}
-                    onChange={(e) => setFilterGuru(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="filter-select"
-                  >
-                    <option value="all">Semua Guru</option>
-                    {guruList.map(g => (
-                      <option key={g.id} value={g.id}>{g.user.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filter Status */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Filter Status
-                  </label>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="filter-select"
-                  >
-                    <option value="all">Semua Status</option>
-                    <option value="active">Aktif</option>
-                    <option value="inactive">Tidak Aktif</option>
-                  </select>
-                </div>
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Manajemen Kelas</h1>
+                <p className="text-green-50 text-sm sm:text-sm">Kelola kelas tahfidz, wali kelas, dan siswa dengan mudah</p>
+              </div>
+              {/* Action Buttons */}
+              <div className="flex gap-3 flex-shrink-0">
+                <button
+                  onClick={handleExport}
+                  className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-300 shadow-md"
+                >
+                  <Download size={18} />
+                  <span className="hidden sm:inline">Export Data</span>
+                </button>
+                <button
+                  onClick={() => {
+                    resetKelasForm();
+                    setShowKelasModal(true);
+                  }}
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 shadow-md"
+                >
+                  <Plus size={18} />
+                  <span className="hidden sm:inline">Tambah Kelas</span>
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Grid Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '24px',
-              animation: 'slideUp 0.6s ease-out 0.2s both',
-            }}>
+          {/* Stats Cards - Pastel Style */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard
+              icon={BookOpen}
+              title="Total Kelas"
+              value={stats.total}
+              subtitle="Semua kelas terdaftar"
+              theme="blue"
+            />
+            <StatCard
+              icon={GraduationCap}
+              title="Aktif"
+              value={stats.active}
+              subtitle="Kelas yang sedang berjalan"
+              theme="emerald"
+            />
+            <StatCard
+              icon={Clock}
+              title="Tidak Aktif"
+              value={stats.inactive}
+              subtitle="Kelas nonaktif"
+              theme="amber"
+            />
+          </div>
+
+          {/* Filter Section */}
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md shadow-emerald-100/30 p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                  Cari Kelas
+                </label>
+                <div className="relative">
+                  <Search
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 flex-shrink-0"
+                    size={18}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Cari berdasarkan nama kelas..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-base"
+                  />
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                  Filter Guru
+                </label>
+                <select
+                  value={filterGuru}
+                  onChange={(e) => setFilterGuru(e.target.value)}
+                  className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer text-sm appearance-none bg-white"
+                  style={{
+                    backgroundImage: 'url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath fill=%27none%27 stroke=%27%23333%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M2 5l6 6 6-6%27/%3E%3C/svg%3E")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 0.75rem center',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem',
+                  }}
+                >
+                  <option value="all">Semua Guru</option>
+                  {guruList.map(g => (
+                    <option key={g.id} value={g.id}>{g.user.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                  Filter Status
+                </label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer text-sm appearance-none bg-white"
+                  style={{
+                    backgroundImage: 'url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath fill=%27none%27 stroke=%27%23333%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M2 5l6 6 6-6%27/%3E%3C/svg%3E")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 0.75rem center',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem',
+                  }}
+                >
+                  <option value="all">Semua Status</option>
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Tidak Aktif</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredKelas.length === 0 ? (
-                <div style={{
-                  gridColumn: '1 / -1',
-                  background: colors.white,
-                  borderRadius: '20px',
-                  padding: '48px 24px',
-                  textAlign: 'center',
-                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
-                  border: `2px solid ${colors.gray[100]}`,
-                }}>
-                  <BookOpen size={48} color={colors.gray[400]} style={{ margin: '0 auto 16px' }} />
-                  <p style={{
-                    fontSize: '14px',
-                    color: colors.text.tertiary,
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Tidak ada kelas yang ditemukan
-                  </p>
+                <div className="col-span-full bg-white rounded-2xl p-12 text-center shadow-lg border border-slate-100">
+                  <BookOpen size={48} className="mx-auto mb-4 text-slate-300" />
+                  <p className="text-slate-500 font-medium">Tidak ada kelas yang ditemukan</p>
                 </div>
               ) : (
                 filteredKelas.map((kelasItem, index) => {
@@ -1185,30 +995,9 @@ export default function AdminKelasPage() {
                           e.stopPropagation();
                           router.push(`/admin/kelas/${kelasItem.id}`);
                         }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          padding: '12px',
-                          background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                          color: colors.white,
-                          border: 'none',
-                          borderRadius: '12px',
-                          fontWeight: 600,
-                          fontSize: '14px',
-                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                          position: 'relative',
-                          zIndex: 1,
-                        }}
-                        className="view-detail-btn"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600 text-white rounded-xl font-semibold shadow-md transition-all duration-300 relative z-1"
                       >
-                        Kelola Siswa
-                        <ArrowRight size={18} />
+                        Kelola Siswa →
                       </button>
                     </div>
                   );
@@ -1217,7 +1006,6 @@ export default function AdminKelasPage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Dropdown Menu dengan Portal */}
       {openMenuId && buttonRefs.current[openMenuId] && (() => {
