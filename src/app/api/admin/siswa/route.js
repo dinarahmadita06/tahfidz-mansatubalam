@@ -156,8 +156,44 @@ export async function POST(request) {
     console.log(`⏱️ Parse body: ${Date.now() - parseStart}ms`);
 
     // Validate required fields
-    if (!name || !password || !nis || !kelasId || !jenisKelamin) {
-      return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+    const missingFields = [];
+    if (!name || name.trim() === '') missingFields.push('name');
+    if (!password || password.trim() === '') missingFields.push('password');
+    if (!nis || nis.trim() === '') missingFields.push('nis');
+    if (!kelasId || kelasId.trim() === '') missingFields.push('kelasId');
+    if (!jenisKelamin || jenisKelamin.trim() === '') missingFields.push('jenisKelamin');
+
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Data tidak lengkap',
+          missingFields,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate field formats
+    const invalidFields = {};
+
+    // Validate NIS format (should be numeric)
+    if (nis && isNaN(nis)) {
+      invalidFields.nis = 'NIS harus berupa angka';
+    }
+
+    // Validate NISN format if provided (should be numeric)
+    if (nisn && nisn.trim() !== '' && isNaN(nisn)) {
+      invalidFields.nisn = 'NISN harus berupa angka';
+    }
+
+    if (Object.keys(invalidFields).length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Validasi gagal',
+          invalidFields,
+        },
+        { status: 422 }
+      );
     }
 
     // Auto-generate email based on name and NIS
@@ -172,16 +208,27 @@ export async function POST(request) {
     ]);
     console.log(`⏱️ Validation queries: ${Date.now() - validationStart}ms`);
 
+    // Check for duplicate fields
     if (existingUser) {
-      return NextResponse.json({ error: 'Email sudah terdaftar (NIS atau Nama mungkin duplikat)' }, { status: 400 });
+      invalidFields.name = 'Email sudah terdaftar (NIS atau Nama mungkin duplikat)';
     }
 
     if (existingSiswaByNisn) {
-      return NextResponse.json({ error: 'NISN sudah terdaftar' }, { status: 400 });
+      invalidFields.nisn = 'NISN sudah terdaftar';
     }
 
     if (existingSiswaByNis) {
-      return NextResponse.json({ error: 'NIS sudah terdaftar' }, { status: 400 });
+      invalidFields.nis = 'NIS sudah terdaftar';
+    }
+
+    if (Object.keys(invalidFields).length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Validasi gagal',
+          invalidFields,
+        },
+        { status: 422 }
+      );
     }
 
     // OPTIMIZED: Hash password dengan saltRounds explicit (10 untuk balance security vs speed)
@@ -258,6 +305,15 @@ export async function POST(request) {
   } catch (error) {
     const totalTime = Date.now() - startTime;
     console.error(`❌ Error creating siswa (${totalTime}ms):`, error);
+
+    // Check if it's a JSON parsing error
+    if (error instanceof SyntaxError && error.message.includes('JSON')) {
+      return NextResponse.json(
+        { error: 'Format JSON tidak valid' },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Gagal menambahkan siswa' },
       { status: 500 }
