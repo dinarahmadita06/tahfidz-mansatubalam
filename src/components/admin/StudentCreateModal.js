@@ -47,7 +47,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
   const [selectedParentId, setSelectedParentId] = useState('');
   const [newParentData, setNewParentData] = useState({
     name: '',
-    noTelepon: '',
+    noHP: '',
     email: '',
     password: '',
   });
@@ -104,7 +104,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
     setSelectedParentId('');
     setNewParentData({
       name: '',
-      noTelepon: '',
+      noHP: '',
       email: '',
       password: '',
     });
