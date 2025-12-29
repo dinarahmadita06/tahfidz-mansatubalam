@@ -47,12 +47,13 @@ export async function GET(request) {
               name: true,
               email: true,
               image: true,
-              isActive: true
+              isActive: true,
+              createdAt: true
             }
           },
-          _count: {
+          orangTuaSiswa: {
             select: {
-              siswa: true
+              siswaId: true
             }
           }
         },
@@ -65,8 +66,17 @@ export async function GET(request) {
       prisma.orangTua.count({ where: whereClause })
     ]);
 
+    // Transform response to include _count
+    const transformedOrangTua = orangTua.map(ot => ({
+      ...ot,
+      _count: {
+        siswa: ot.orangTuaSiswa?.length || 0
+      },
+      orangTuaSiswa: undefined  // Remove the array, only use count
+    }));
+
     return NextResponse.json({
-      data: orangTua,
+      data: transformedOrangTua,
       pagination: {
         total,
         page,
@@ -152,7 +162,8 @@ export async function POST(request) {
             name: true,
             email: true,
             image: true,
-            isActive: true
+            isActive: true,
+            createdAt: true
           }
         },
         _count: {
@@ -160,7 +171,7 @@ export async function POST(request) {
             siswa: true
           }
         }
-      }
+      },
     });
 
     // Log activity
