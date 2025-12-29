@@ -41,52 +41,61 @@ function formatTanggal(dateValue) {
 }
 
 // Komponen StatCard (Reusable - Tasmi Style)
-function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
+function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
   const themeConfig = {
-    emerald: {
-      bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
-      border: 'border-2 border-emerald-200',
-      titleColor: 'text-emerald-600',
-      valueColor: 'text-emerald-700',
-      subtitleColor: 'text-emerald-700',
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600',
+    cyan: {
+      bg: 'bg-yellow-50/80',
+      border: 'border-2 border-yellow-200/70',
+      titleColor: 'text-yellow-900',
+      valueColor: 'text-yellow-900',
+      subtitleColor: 'text-yellow-900',
+      iconBg: 'bg-yellow-100',
+      iconColor: 'text-yellow-900',
     },
     sky: {
-      bg: 'bg-gradient-to-br from-sky-50 to-blue-50',
-      border: 'border-2 border-sky-200',
-      titleColor: 'text-sky-600',
-      valueColor: 'text-sky-700',
-      subtitleColor: 'text-sky-700',
+      bg: 'bg-sky-50/70',
+      border: 'border-2 border-sky-200/70',
+      titleColor: 'text-sky-800',
+      valueColor: 'text-sky-800',
+      subtitleColor: 'text-sky-800',
       iconBg: 'bg-sky-100',
-      iconColor: 'text-sky-600',
+      iconColor: 'text-sky-800',
     },
-    amber: {
-      bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
-      border: 'border-2 border-amber-200',
-      titleColor: 'text-amber-600',
-      valueColor: 'text-amber-700',
-      subtitleColor: 'text-amber-700',
-      iconBg: 'bg-amber-100',
-      iconColor: 'text-amber-600',
+    orange: {
+      bg: 'bg-orange-50/70',
+      border: 'border-2 border-orange-200/70',
+      titleColor: 'text-orange-800',
+      valueColor: 'text-orange-800',
+      subtitleColor: 'text-orange-800',
+      iconBg: 'bg-orange-100',
+      iconColor: 'text-orange-800',
     },
-    purple: {
-      bg: 'bg-gradient-to-br from-purple-50 to-pink-50',
-      border: 'border-2 border-purple-200',
-      titleColor: 'text-purple-600',
-      valueColor: 'text-purple-700',
-      subtitleColor: 'text-purple-700',
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600',
+    emerald: {
+      bg: 'bg-stone-50/80',
+      border: 'border-2 border-stone-200/70',
+      titleColor: 'text-stone-900',
+      valueColor: 'text-stone-900',
+      subtitleColor: 'text-stone-900',
+      iconBg: 'bg-stone-100',
+      iconColor: 'text-stone-900',
     },
-    blue: {
-      bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
-      border: 'border-2 border-blue-200',
-      titleColor: 'text-blue-600',
-      valueColor: 'text-blue-700',
-      subtitleColor: 'text-blue-700',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
+    fuchsia: {
+      bg: 'bg-fuchsia-50/70',
+      border: 'border-2 border-fuchsia-200/70',
+      titleColor: 'text-fuchsia-800',
+      valueColor: 'text-fuchsia-800',
+      subtitleColor: 'text-fuchsia-800',
+      iconBg: 'bg-fuchsia-100',
+      iconColor: 'text-fuchsia-800',
+    },
+    rose: {
+      bg: 'bg-rose-50/70',
+      border: 'border-2 border-rose-200/70',
+      titleColor: 'text-rose-800',
+      valueColor: 'text-rose-800',
+      subtitleColor: 'text-rose-800',
+      iconBg: 'bg-rose-100',
+      iconColor: 'text-rose-800',
     },
   };
 
@@ -404,7 +413,7 @@ export default function AdminSiswaPage() {
                 title="Total Siswa"
                 value={stats.total}
                 subtitle="Total siswa terdaftar"
-                theme="emerald"
+                theme="cyan"
               />
               <StatCard
                 icon={UserCheck}
@@ -418,7 +427,28 @@ export default function AdminSiswaPage() {
                 title="Belum Divalidasi"
                 value={stats.unvalidated}
                 subtitle="Menunggu validasi"
-                theme="amber"
+                theme="orange"
+              />
+              <StatCard
+                icon={GraduationCap}
+                title="Siswa Lulus"
+                value={stats.statusCounts.LULUS}
+                subtitle="Siswa yang telah lulus"
+                theme="emerald"
+              />
+              <StatCard
+                icon={ArrowUpRight}
+                title="Siswa Pindah"
+                value={stats.statusCounts.PINDAH}
+                subtitle="Siswa yang pindah sekolah"
+                theme="fuchsia"
+              />
+              <StatCard
+                icon={XCircle}
+                title="Siswa Keluar"
+                value={stats.statusCounts.KELUAR}
+                subtitle="Siswa yang keluar/non-aktif"
+                theme="rose"
               />
             </div>
 
