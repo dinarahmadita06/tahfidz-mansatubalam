@@ -1,176 +1,299 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Eye, CheckCircle, XCircle, Users, Clock, UserCheck, Search, FileText } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Eye, CheckCircle, XCircle, Users, Clock, UserCheck, Search, Filter, Plus } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import Toast from '@/components/ui/Toast';
 
-// Islamic Modern Color Palette
-const colors = {
-  emerald: {
-    50: '#ECFDF5',
-    100: '#D1FAE5',
-    200: '#A7F3D0',
-    300: '#6EE7B7',
-    400: '#34D399',
-    500: '#1A936F',
-    600: '#059669',
-    700: '#047857',
-    bright: '#A3E4D7', // Custom untuk status Divalidasi
-  },
-  amber: {
-    50: '#FEF3C7',
-    100: '#FDE68A',
-    200: '#FCD34D',
-    300: '#FBBF24',
-    400: '#F7C873',
-    500: '#F59E0B',
-    600: '#D97706',
-    light: '#FFD78C', // Custom untuk status Menunggu
-  },
-  red: {
-    50: '#FEF2F2',
-    100: '#FEE2E2',
-    200: '#FECACA',
-    300: '#FCA5A5',
-    400: '#F87171',
-    500: '#EF4444',
-    600: '#DC2626',
-    pastel: '#FFB3A7', // Custom untuk status Ditolak
-  },
-  white: '#FFFFFF',
-  gray: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-  },
-  text: {
-    primary: '#1B1B1B',
-    secondary: '#444444',
-    tertiary: '#6B7280',
-  },
-};
+function formatTanggal(dateValue) {
+  if (!dateValue) return '-';
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return '-';
+  }
+}
 
-// Toast Notification Component
-function Toast({ message, type = 'success', onClose }) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
+// Stat Card Component - Pastel dengan color matching
+function StatCard({ icon: Icon, title, value, subtitle, theme = 'mint' }) {
+  const themeConfig = {
+    mint: {
+      bg: 'bg-gradient-to-br from-emerald-50 to-teal-50',
+      border: 'border-2 border-emerald-200',
+      titleColor: 'text-emerald-700',
+      valueColor: 'text-emerald-800',
+      subtitleColor: 'text-emerald-600',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+    },
+    orange: {
+      bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
+      border: 'border-2 border-amber-200',
+      titleColor: 'text-amber-700',
+      valueColor: 'text-amber-800',
+      subtitleColor: 'text-amber-600',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
+    },
+    sky: {
+      bg: 'bg-gradient-to-br from-sky-50 to-blue-50',
+      border: 'border-2 border-sky-200',
+      titleColor: 'text-sky-700',
+      valueColor: 'text-sky-800',
+      subtitleColor: 'text-sky-600',
+      iconBg: 'bg-sky-100',
+      iconColor: 'text-sky-600',
+    },
+  };
 
-  const bgColor = type === 'success' ? colors.emerald[500] : colors.red[500];
-  const icon = type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />;
+  const config = themeConfig[theme] || themeConfig.mint;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: '24px',
-      right: '24px',
-      background: bgColor,
-      color: colors.white,
-      padding: '16px 24px',
-      borderRadius: '12px',
-      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      zIndex: 1000,
-      animation: 'slideInRight 0.3s ease-out',
-      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-      fontWeight: 600,
-      fontSize: '14px',
-    }}>
-      {icon}
-      {message}
+    <div className={`${config.bg} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all ${config.border}`}>
+      <div className="flex items-center gap-4">
+        <div className={`${config.iconBg} w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
+          <Icon size={24} className={config.iconColor} />
+        </div>
+        <div className="flex-1">
+          <p className={`${config.titleColor} text-xs font-bold mb-1 tracking-wide uppercase`}>
+            {title}
+          </p>
+          <p className={`${config.valueColor} text-3xl font-bold leading-tight mb-1`}>
+            {value}
+          </p>
+          {subtitle && (
+            <p className={`${config.subtitleColor} text-xs font-medium`}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-// Komponen StatCard
-function StatCard({ icon, title, value, subtitle, color = 'emerald' }) {
-  const colorMap = {
-    emerald: {
-      bg: `linear-gradient(135deg, ${colors.emerald[100]} 0%, ${colors.emerald[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-      value: colors.emerald[700],
-      border: colors.emerald[200],
-    },
-    amber: {
-      bg: `linear-gradient(135deg, ${colors.amber[100]} 0%, ${colors.amber[200]} 100%)`,
-      iconBg: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-      value: colors.amber[600],
-      border: colors.amber[200],
-    },
-    blue: {
-      bg: `linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)`,
-      iconBg: `linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)`,
-      value: '#1E40AF',
-      border: '#BFDBFE',
-    },
+// Reusable Info Field Card Component
+function InfoFieldCard({ label, value }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+      <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">{ label }</p>
+      <p className="text-sm font-semibold text-slate-900 break-words">{ value || '-' }</p>
+    </div>
+  );
+}
+
+// Detail Modal Component - Field lengkap dengan sections rapi
+function DetailModal({ siswa, onClose, onApprove, onReject }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleCopyPassword = () => {
+    // Password tidak bisa di-copy (security), tapi bisa show UI feedback
+    alert('Password tidak dapat di-copy untuk keamanan akun');
   };
 
-  const scheme = colorMap[color];
-
   return (
-    <div style={{
-      background: scheme.bg,
-      borderRadius: '20px',
-      padding: '28px',
-      boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
-      border: `2px solid ${scheme.border}`,
-      transition: 'all 0.3s ease',
-      animation: 'fadeInUp 0.6s ease-out',
-    }}
-    className="stats-card">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-        <div style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '18px',
-          background: scheme.iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-        }}>
-          {icon}
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-xl flex flex-col">
+        
+        {/* HEADER */}
+        <div className="sticky top-0 bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              {siswa.user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-slate-900 truncate">{siswa.user.name}</p>
+              <p className="text-sm text-slate-500 truncate">{siswa.user.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 text-2xl flex-shrink-0 transition-colors ml-4"
+          >
+            ✕
+          </button>
         </div>
-        <div style={{ flex: 1 }}>
-          <p style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: colors.text.secondary,
-            marginBottom: '6px',
-            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-            letterSpacing: '0.3px',
-          }}>
-            {title}
-          </p>
-          <p style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: scheme.value,
-            fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-            lineHeight: '1.1',
-            marginBottom: subtitle ? '4px' : '0',
-          }}>
-            {value}
-          </p>
-          {subtitle && (
-            <p style={{
-              fontSize: '12px',
-              color: colors.text.tertiary,
-              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-            }}>
-              {subtitle}
-            </p>
+
+        {/* CONTENT - Scrollable */}
+        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+          
+          {/* SECTION 1: Identitas Siswa */}
+          <div>
+            <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Identitas Siswa</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoFieldCard label="Nama Lengkap" value={siswa.user.name} />
+              <InfoFieldCard label="NIS" value={siswa.nis} />
+              <InfoFieldCard label="NISN" value={siswa.nisn} />
+              <InfoFieldCard label="Email" value={siswa.user.email} />
+            </div>
+          </div>
+
+          {/* SECTION 2: Informasi Akun */}
+          <div>
+            <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Informasi Akun</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                <p className="text-xs font-bold text-slate-600 mb-3 uppercase tracking-wide">Password</p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-semibold ${showPassword ? 'text-slate-900 font-mono' : 'text-slate-500 italic'}`}>
+                    {showPassword ? '••••••••' : '••••••••'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">*Password tidak dapat ditampilkan untuk keamanan</p>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: Data Akademik */}
+          <div>
+            <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Data Akademik</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoFieldCard label="Kelas" value={siswa.kelas?.nama} />
+              <InfoFieldCard label="Jenis Kelamin" value={siswa.jenisKelamin === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan'} />
+              <InfoFieldCard label="Tanggal Lahir" value={formatTanggal(siswa.tanggalLahir)} />
+              <InfoFieldCard label="Tempat Lahir" value={siswa.tempatLahir} />
+            </div>
+          </div>
+
+          {/* SECTION 4: Tambahan (Optional) */}
+          {(siswa.noTelepon || siswa.alamat) && (
+            <div>
+              <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Tambahan</h3>
+              <div className="space-y-4">
+                {siswa.noTelepon && (
+                  <InfoFieldCard label="Nomor HP" value={siswa.noTelepon} />
+                )}
+                {siswa.alamat && (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Alamat</p>
+                    <p className="text-sm font-semibold text-slate-900 break-words whitespace-pre-wrap">{siswa.alamat}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
+
+          {/* SECTION 5: Tanggal Pendaftaran */}
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-sm">
+            <p className="text-xs font-bold text-blue-700 mb-2 uppercase tracking-wide">Tanggal Pendaftaran</p>
+            <p className="text-sm font-semibold text-blue-900">{formatTanggal(siswa.createdAt)}</p>
+          </div>
+
+        </div>
+
+        {/* FOOTER - Sticky */}
+        <div className="sticky bottom-0 bg-white border-t border-slate-200 px-8 py-4 flex gap-3">
+          <button
+            onClick={onReject}
+            className="flex-1 px-4 py-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 hover:text-red-700 rounded-2xl font-semibold text-sm transition-all"
+          >
+            Tolak
+          </button>
+          <button
+            onClick={onApprove}
+            className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold text-sm shadow-md hover:shadow-lg transition-all"
+          >
+            Validasi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Approve Modal
+function ApproveModal({ siswa, onConfirm, onCancel, isLoading }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+            <CheckCircle className="text-emerald-600" size={24} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">Validasi Siswa</h2>
+          <p className="text-xs text-gray-500 mt-1">{siswa?.user.name}</p>
+        </div>
+
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
+          <p className="text-sm text-emerald-700">
+            <strong>Akun siswa akan divalidasi</strong> dan siswa dapat langsung menggunakan akun mereka untuk login ke sistem.
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+          >
+            Batal
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            {isLoading ? 'Memproses...' : 'Ya, Validasi'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reject Modal
+function RejectModal({ siswa, onConfirm, onCancel, reason, setReason, isLoading }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center mx-auto mb-3">
+            <XCircle className="text-red-600" size={24} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">Tolak Siswa</h2>
+          <p className="text-xs text-gray-500 mt-1">{siswa?.user.name}</p>
+        </div>
+
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+          <p className="text-sm text-red-700">
+            <strong>Akun siswa akan ditolak.</strong> Pastikan Anda memberikan alasan yang jelas.
+          </p>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2">
+            Alasan Penolakan
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Tuliskan alasan penolakan..."
+            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+            rows="3"
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+          >
+            Batal
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading || !reason.trim()}
+            className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            {isLoading ? 'Memproses...' : 'Ya, Tolak'}
+          </button>
         </div>
       </div>
     </div>
@@ -181,33 +304,36 @@ export default function ValidasiSiswaPage() {
   const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, PENDING, APPROVED, REJECTED
+  const [filterStatus, setFilterStatus] = useState('pending');
   const [filterKelas, setFilterKelas] = useState('all');
   const [kelas, setKelas] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [selectedSiswa, setSelectedSiswa] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [selectedSiswa, setSelectedSiswa] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [toast, setToast] = useState(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
-  useEffect(() => {
-    fetchSiswa();
-    fetchKelas();
-  }, []);
-
-  const fetchSiswa = async () => {
+  // Fetch siswa
+  const fetchSiswa = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/siswa');
+      const params = new URLSearchParams();
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+      if (filterKelas !== 'all') params.append('kelasId', filterKelas);
+      if (searchTerm) params.append('search', searchTerm);
+
+      const url = `/api/admin/siswa?${params.toString()}`;
+      const response = await fetch(url);
       const result = await response.json();
-      // API returns { data: siswa, pagination: {...} }
       setSiswa(Array.isArray(result.data) ? result.data : []);
     } catch (error) {
       console.error('Error fetching siswa:', error);
+      setToast({ type: 'error', message: 'Gagal memuat data siswa' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterStatus, filterKelas, searchTerm]);
 
   const fetchKelas = async () => {
     try {
@@ -219,28 +345,21 @@ export default function ValidasiSiswaPage() {
     }
   };
 
-  const handleViewDetail = (siswaItem) => {
-    setSelectedSiswa(siswaItem);
-    setShowDetailModal(true);
-  };
+  useEffect(() => {
+    fetchKelas();
+  }, []);
 
-  const handleApproveClick = (siswaItem) => {
-    setSelectedSiswa(siswaItem);
-    setShowApproveModal(true);
-  };
-
-  const handleRejectClick = (siswaItem) => {
-    setSelectedSiswa(siswaItem);
-    setShowRejectModal(true);
-  };
+  useEffect(() => {
+    fetchSiswa();
+  }, [fetchSiswa]);
 
   const handleApprove = async () => {
+    if (!selectedSiswa) return;
+    setIsActionLoading(true);
     try {
       const response = await fetch('/api/siswa/validate', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siswaId: selectedSiswa.id,
           action: 'approve',
@@ -248,31 +367,29 @@ export default function ValidasiSiswaPage() {
       });
 
       if (response.ok) {
+        setToast({ type: 'success', message: '✓ Siswa berhasil divalidasi' });
         setShowApproveModal(false);
-        setToast({ message: 'Siswa berhasil disetujui!', type: 'success' });
+        setShowDetailModal(false);
         fetchSiswa();
       } else {
         const error = await response.json();
-        setToast({ message: error.error || 'Gagal menyetujui siswa', type: 'error' });
+        setToast({ type: 'error', message: error.error || 'Gagal validasi siswa' });
       }
     } catch (error) {
       console.error('Error approving siswa:', error);
-      setToast({ message: 'Terjadi kesalahan', type: 'error' });
+      setToast({ type: 'error', message: 'Terjadi kesalahan' });
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
   const handleReject = async () => {
-    if (!rejectionReason.trim()) {
-      setToast({ message: 'Mohon masukkan alasan penolakan', type: 'error' });
-      return;
-    }
-
+    if (!selectedSiswa || !rejectionReason.trim()) return;
+    setIsActionLoading(true);
     try {
       const response = await fetch('/api/siswa/validate', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siswaId: selectedSiswa.id,
           action: 'reject',
@@ -281,39 +398,28 @@ export default function ValidasiSiswaPage() {
       });
 
       if (response.ok) {
+        setToast({ type: 'success', message: '✓ Siswa berhasil ditolak' });
         setShowRejectModal(false);
+        setShowDetailModal(false);
         setRejectionReason('');
-        setToast({ message: 'Siswa berhasil ditolak', type: 'success' });
         fetchSiswa();
       } else {
         const error = await response.json();
-        setToast({ message: error.error || 'Gagal menolak siswa', type: 'error' });
+        setToast({ type: 'error', message: error.error || 'Gagal menolak siswa' });
       }
     } catch (error) {
       console.error('Error rejecting siswa:', error);
-      setToast({ message: 'Terjadi kesalahan', type: 'error' });
+      setToast({ type: 'error', message: 'Terjadi kesalahan' });
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
-  // Filter data
-  const filteredSiswa = siswa.filter(s => {
-    const matchSearch = s.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.nis && s.nis.includes(searchTerm));
-
-    const matchStatus = filterStatus === 'all' || s.status === filterStatus;
-
-    const matchKelas = filterKelas === 'all' ||
-      (s.kelasId && s.kelasId.toString() === filterKelas);
-
-    return matchSearch && matchStatus && matchKelas;
-  });
-
-  // Statistics
+  // Stats - Hitung berdasarkan data terbaru
   const stats = {
     total: siswa.length,
-    pending: siswa.filter(s => s.status === 'pending').length,
-    approved: siswa.filter(s => s.status === 'approved').length,
+    menunggu: siswa.filter(s => s.status === 'pending').length,
+    divalidasi: siswa.filter(s => s.status === 'approved').length,
   };
 
   if (loading) {
@@ -328,189 +434,114 @@ export default function ValidasiSiswaPage() {
 
   return (
     <AdminLayout>
-      <div style={{
-        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
-        minHeight: '100vh',
-        position: 'relative',
-      }}>
-        {/* Toast Notification */}
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 relative overflow-x-hidden">
+        {/* Toast */}
         {toast && (
           <Toast
             message={toast.message}
             type={toast.type}
+            duration={3000}
             onClose={() => setToast(null)}
           />
         )}
 
-        {/* Subtle Pattern Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%231A936F' stroke-width='0.5' opacity='0.05'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%23F7C873' stroke-width='0.5' opacity='0.05'/%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px',
-          pointerEvents: 'none',
-          opacity: 0.3,
-          zIndex: 0,
-        }} />
-
         {/* Header */}
-        <div style={{
-          position: 'relative',
-          padding: '32px 48px 24px',
-          borderBottom: `1px solid ${colors.gray[200]}`,
-          background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
-          backdropFilter: 'blur(10px)',
-          zIndex: 2,
-        }} className="page-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-            <div>
-              <h1 style={{
-                fontSize: '36px',
-                fontWeight: 700,
-                background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '8px',
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Validasi Siswa
-              </h1>
-              <p style={{
-                fontSize: '15px',
-                fontWeight: 500,
-                color: colors.text.secondary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Verifikasi dan kelola akun siswa baru tahfidz
-              </p>
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-4 sm:px-6 lg:px-8 py-8 rounded-3xl shadow-lg mx-4 sm:mx-6 lg:mx-8">
+          <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="w-full max-w-none relative z-10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="bg-white/20 backdrop-blur-md rounded-full p-3 shadow-lg">
+                    <CheckCircle size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white">Validasi Siswa</h1>
+                    <p className="text-white/90 text-sm mt-1">Verifikasi dan kelola pendaftaran siswa baru</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div style={{ position: 'relative', zIndex: 2 }} className="page-main-content">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="relative z-10 w-full max-w-none px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
 
-            {/* Stats Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '24px',
-            }}>
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <StatCard
-                icon={<Users size={24} color={colors.white} />}
+                icon={Users}
                 title="Total Pendaftar"
                 value={stats.total}
-                subtitle="Total siswa terdaftar"
-                color="blue"
+                subtitle="Seluruh siswa terdaftar"
+                theme="mint"
               />
               <StatCard
-                icon={<Clock size={24} color={colors.white} />}
+                icon={Clock}
                 title="Menunggu Validasi"
-                value={stats.pending}
-                subtitle="Perlu direview"
-                color="amber"
+                value={stats.menunggu}
+                subtitle="Perlu tindakan admin"
+                theme="orange"
               />
               <StatCard
-                icon={<UserCheck size={24} color={colors.white} />}
+                icon={UserCheck}
                 title="Sudah Divalidasi"
-                value={stats.approved}
-                subtitle="Siswa aktif"
-                color="emerald"
+                value={stats.divalidasi}
+                subtitle="Akun aktif"
+                theme="sky"
               />
             </div>
 
-            {/* Search & Filter Section */}
-            <div style={{
-              background: colors.white,
-              borderRadius: '20px',
-              padding: '24px',
-              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.06)',
-              border: `2px solid ${colors.emerald[100]}`,
-              animation: 'fadeInUp 0.6s ease-out 0.1s both',
-            }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr',
-                gap: '16px',
-                alignItems: 'end',
-              }}>
-                {/* Search Input */}
+            {/* Filter Section */}
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 p-6 shadow-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Search */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2 tracking-wide">
                     Cari Siswa
                   </label>
-                  <div style={{ position: 'relative' }}>
-                    <Search
-                      style={{
-                        position: 'absolute',
-                        left: '14px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: colors.text.tertiary
-                      }}
-                      size={20}
-                    />
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="text"
-                      placeholder="Cari berdasarkan nama, email, atau NISN..."
+                      placeholder="Nama, email, atau NIS..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{
-                        width: '100%',
-                        paddingLeft: '44px',
-                        paddingRight: '16px',
-                        paddingTop: '12px',
-                        paddingBottom: '12px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.3s ease',
-                      }}
-                      className="search-input"
+                      className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white/50 hover:bg-white/70"
                     />
                   </div>
                 </div>
 
-                {/* Filter Kelas */}
+                {/* Status Filter */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Filter Kelas
+                  <label className="block text-xs font-semibold text-gray-700 mb-2 tracking-wide">
+                    Status
+                  </label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
+                  >
+                    <option value="all">Semua Status</option>
+                    <option value="pending">Menunggu Validasi</option>
+                    <option value="approved">Sudah Divalidasi</option>
+                    <option value="rejected">Ditolak</option>
+                  </select>
+                </div>
+
+                {/* Kelas Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2 tracking-wide">
+                    Kelas
                   </label>
                   <select
                     value={filterKelas}
                     onChange={(e) => setFilterKelas(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="filter-select"
+                    className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
                   >
                     <option value="all">Semua Kelas</option>
                     {kelas.map(k => (
@@ -518,345 +549,83 @@ export default function ValidasiSiswaPage() {
                     ))}
                   </select>
                 </div>
-
-                {/* Filter Status */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: colors.text.secondary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Filter Status
-                  </label>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                    }}
-                    className="filter-select"
-                  >
-                    <option value="all">Semua Status</option>
-                    <option value="PENDING">Menunggu</option>
-                    <option value="APPROVED">Divalidasi</option>
-                    <option value="REJECTED">Ditolak</option>
-                  </select>
-                </div>
               </div>
             </div>
 
             {/* Table */}
-            <div style={{
-              background: colors.white,
-              borderRadius: '20px',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.06)',
-              border: `2px solid ${colors.emerald[100]}`,
-              overflow: 'hidden',
-              animation: 'fadeInUp 0.6s ease-out 0.2s both',
-            }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{
-                      background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.emerald[100]} 100%)`,
-                    }}>
-                      <th style={{
-                        padding: '18px 24px',
-                        textAlign: 'left',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}>
-                        Nama Lengkap
-                      </th>
-                      <th style={{
-                        padding: '18px 24px',
-                        textAlign: 'left',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}>
-                        Email
-                      </th>
-                      <th style={{
-                        padding: '18px 24px',
-                        textAlign: 'left',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}>
-                        Kelas Tujuan
-                      </th>
-                      <th style={{
-                        padding: '18px 24px',
-                        textAlign: 'left',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}>
-                        Status
-                      </th>
-                      <th style={{
-                        padding: '18px 24px',
-                        textAlign: 'left',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}>
-                        Tanggal Pendaftaran
-                      </th>
-                      <th style={{
-                        padding: '18px 24px',
-                        textAlign: 'center',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: colors.emerald[700],
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}>
-                        Aksi
-                      </th>
+                    <tr className="bg-emerald-50/50 border-b border-emerald-100/40">
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Nama Siswa</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">NIS</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Kelas</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSiswa.length === 0 ? (
+                    {siswa.length === 0 ? (
                       <tr>
-                        <td colSpan="6" style={{
-                          padding: '48px 24px',
-                          textAlign: 'center',
-                          color: colors.text.tertiary,
-                          fontSize: '14px',
-                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        }}>
-                          Tidak ada data siswa yang ditemukan
+                        <td colSpan="6" className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center justify-center gap-3">
+                            <Users size={48} className="text-gray-300" />
+                            <div>
+                              <p className="text-gray-500 font-semibold">Tidak ada data</p>
+                              <p className="text-gray-400 text-sm">Tidak ada siswa yang sesuai dengan filter</p>
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     ) : (
-                      filteredSiswa.map((siswaItem, index) => {
-                        const getStatusStyle = () => {
-                          switch (siswaItem.status) {
-                            case 'approved':
-                              return {
-                                bg: colors.emerald.bright,
-                                color: colors.emerald[700],
-                                label: 'Divalidasi'
-                              };
-                            case 'rejected':
-                              return {
-                                bg: colors.red.pastel,
-                                color: colors.red[700],
-                                label: 'Ditolak'
-                              };
-                            default:
-                              return {
-                                bg: colors.amber.light,
-                                color: colors.amber[700],
-                                label: 'Menunggu'
-                              };
-                          }
-                        };
-
-                        const statusStyle = getStatusStyle();
-
-                        return (
-                          <tr
-                            key={siswaItem.id}
-                            style={{
-                              borderBottom: `1px solid ${colors.gray[100]}`,
-                              transition: 'all 0.2s ease',
-                              animation: `fadeInUp 0.4s ease-out ${0.3 + (index * 0.05)}s both`,
-                            }}
-                            className="table-row"
-                          >
-                            <td style={{
-                              padding: '20px 24px',
-                            }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                              }}>
-                                <div style={{
-                                  width: '40px',
-                                  height: '40px',
-                                  borderRadius: '12px',
-                                  background: `linear-gradient(135deg, ${colors.emerald[400]} 0%, ${colors.emerald[600]} 100%)`,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  flexShrink: 0,
-                                  color: colors.white,
-                                  fontWeight: 700,
-                                  fontSize: '16px',
-                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                                }}>
-                                  {siswaItem.user.name.charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                  <div style={{
-                                    fontSize: '14px',
-                                    fontWeight: 600,
-                                    color: colors.text.primary,
-                                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                                    marginBottom: '2px',
-                                  }}>
-                                    {siswaItem.user.name}
-                                  </div>
-                                  {siswaItem.nisn && (
-                                    <div style={{
-                                      fontSize: '12px',
-                                      color: colors.text.tertiary,
-                                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                                    }}>
-                                      NISN: {siswaItem.nisn}
-                                    </div>
-                                  )}
+                      siswa.map((s) => (
+                        <tr key={s.id} className="hover:bg-emerald-50/30 border-b border-emerald-100/20 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                                {s.user.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {s.user.name}
                                 </div>
                               </div>
-                            </td>
-                            <td style={{
-                              padding: '20px 24px',
-                              fontSize: '14px',
-                              color: colors.text.secondary,
-                              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                            }}>
-                              {siswaItem.user.email}
-                            </td>
-                            <td style={{
-                              padding: '20px 24px',
-                              fontSize: '14px',
-                              color: colors.text.secondary,
-                              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                            }}>
-                              {siswaItem.kelas?.nama || '-'}
-                            </td>
-                            <td style={{ padding: '20px 24px' }}>
-                              <span style={{
-                                padding: '8px 16px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                borderRadius: '100px',
-                                background: statusStyle.bg,
-                                color: statusStyle.color,
-                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                                display: 'inline-block',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                              }}>
-                                {statusStyle.label}
-                              </span>
-                            </td>
-                            <td style={{
-                              padding: '20px 24px',
-                              fontSize: '14px',
-                              color: colors.text.secondary,
-                              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                            }}>
-                              {siswaItem.createdAt ? new Date(siswaItem.createdAt).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              }) : '-'}
-                            </td>
-                            <td style={{ padding: '20px 24px' }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px'
-                              }}>
-                                <button
-                                  onClick={() => handleViewDetail(siswaItem)}
-                                  style={{
-                                    padding: '8px',
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    background: `${colors.emerald[500]}15`,
-                                    color: colors.emerald[600],
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                  }}
-                                  className="action-btn-view"
-                                  title="Lihat Detail"
-                                >
-                                  <Eye size={16} />
-                                </button>
-                                {siswaItem.status === 'pending' && (
-                                  <>
-                                    <button
-                                      onClick={() => handleApproveClick(siswaItem)}
-                                      style={{
-                                        padding: '8px',
-                                        borderRadius: '10px',
-                                        border: 'none',
-                                        background: `${colors.emerald[500]}15`,
-                                        color: colors.emerald[600],
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                      }}
-                                      className="action-btn-approve"
-                                      title="Setujui"
-                                    >
-                                      <CheckCircle size={16} />
-                                    </button>
-                                    <button
-                                      onClick={() => handleRejectClick(siswaItem)}
-                                      style={{
-                                        padding: '8px',
-                                        borderRadius: '10px',
-                                        border: 'none',
-                                        background: '#FEE2E2',
-                                        color: '#DC2626',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                      }}
-                                      className="action-btn-reject"
-                                      title="Tolak"
-                                    >
-                                      <XCircle size={16} />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {s.user.email}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {s.nis}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {s.kelas?.nama || '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                              s.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                              s.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {s.status === 'pending' ? 'Menunggu' : s.status === 'approved' ? 'Validasi' : 'Ditolak'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => {
+                                setSelectedSiswa(s);
+                                setShowDetailModal(true);
+                              }}
+                              className="inline-flex items-center gap-2 px-3 py-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors text-sm font-semibold"
+                            >
+                              <Eye size={16} />
+                              Lihat
+                            </button>
+                          </td>
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </table>
@@ -866,602 +635,41 @@ export default function ValidasiSiswaPage() {
         </div>
       </div>
 
-      {/* Modal Detail */}
+      {/* Modals */}
       {showDetailModal && selectedSiswa && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: colors.white,
-            borderRadius: '24px',
-            padding: '32px',
-            maxWidth: '640px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            border: `2px solid ${colors.emerald[100]}`,
-            animation: 'modalSlideIn 0.3s ease-out',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px'
-            }}>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: colors.text.primary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Detail Siswa
-              </h2>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  color: colors.text.tertiary,
-                  cursor: 'pointer',
-                  padding: '4px',
-                  transition: 'all 0.2s ease',
-                }}
-                className="close-btn"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: colors.text.tertiary,
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  textTransform: 'uppercase',
-                }}>
-                  Nama Lengkap
-                </label>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.text.primary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  {selectedSiswa.user.name}
-                </p>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: colors.text.tertiary,
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  textTransform: 'uppercase',
-                }}>
-                  Email
-                </label>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.text.primary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  {selectedSiswa.user.email}
-                </p>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: colors.text.tertiary,
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  textTransform: 'uppercase',
-                }}>
-                  NISN
-                </label>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.text.primary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  {selectedSiswa.nisn || '-'}
-                </p>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: colors.text.tertiary,
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  textTransform: 'uppercase',
-                }}>
-                  Kelas
-                </label>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.text.primary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  {selectedSiswa.kelas?.nama || '-'}
-                </p>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: colors.text.tertiary,
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  textTransform: 'uppercase',
-                }}>
-                  Jenis Kelamin
-                </label>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.text.primary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  {selectedSiswa.jenisKelamin === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan'}
-                </p>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: colors.text.tertiary,
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  textTransform: 'uppercase',
-                }}>
-                  Tanggal Lahir
-                </label>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.text.primary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  {selectedSiswa.tanggalLahir ? new Date(selectedSiswa.tanggalLahir).toLocaleDateString('id-ID') : '-'}
-                </p>
-              </div>
-
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: colors.text.tertiary,
-                  marginBottom: '4px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  textTransform: 'uppercase',
-                }}>
-                  Status Validasi
-                </label>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.text.primary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  {selectedSiswa.status === 'approved' ? 'Divalidasi' :
-                   selectedSiswa.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
-                </p>
-              </div>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              marginTop: '24px'
-            }}>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                style={{
-                  padding: '12px 24px',
-                  border: `2px solid ${colors.gray[300]}`,
-                  borderRadius: '12px',
-                  background: colors.white,
-                  color: colors.text.secondary,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                className="cancel-btn"
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
+        <DetailModal
+          siswa={selectedSiswa}
+          onClose={() => setShowDetailModal(false)}
+          onApprove={() => {
+            setShowDetailModal(false);
+            setShowApproveModal(true);
+          }}
+          onReject={() => {
+            setShowDetailModal(false);
+            setShowRejectModal(true);
+          }}
+        />
       )}
 
-      {/* Modal Approve Confirmation */}
       {showApproveModal && selectedSiswa && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: colors.white,
-            borderRadius: '24px',
-            padding: '32px',
-            maxWidth: '480px',
-            width: '100%',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            border: `2px solid ${colors.emerald[100]}`,
-            animation: 'modalSlideIn 0.3s ease-out',
-          }}>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              marginBottom: '24px'
-            }}>
-              <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                background: `linear-gradient(135deg, ${colors.emerald[400]} 0%, ${colors.emerald[600]} 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px',
-              }}>
-                <CheckCircle size={32} color={colors.white} />
-              </div>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: colors.text.primary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                marginBottom: '8px',
-              }}>
-                Setujui Siswa?
-              </h2>
-              <p style={{
-                fontSize: '14px',
-                color: colors.text.secondary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Anda akan menyetujui pendaftaran <strong>{selectedSiswa.user.name}</strong>. Siswa akan mendapatkan akses ke sistem.
-              </p>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-            }}>
-              <button
-                onClick={() => setShowApproveModal(false)}
-                style={{
-                  flex: 1,
-                  padding: '12px 24px',
-                  border: `2px solid ${colors.gray[300]}`,
-                  borderRadius: '12px',
-                  background: colors.white,
-                  color: colors.text.secondary,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                className="cancel-btn"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleApprove}
-                style={{
-                  flex: 1,
-                  padding: '12px 24px',
-                  border: 'none',
-                  borderRadius: '12px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  color: colors.white,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                }}
-                className="submit-btn"
-              >
-                Ya, Setujui
-              </button>
-            </div>
-          </div>
-        </div>
+        <ApproveModal
+          siswa={selectedSiswa}
+          onConfirm={handleApprove}
+          onCancel={() => setShowApproveModal(false)}
+          isLoading={isActionLoading}
+        />
       )}
 
-      {/* Modal Reject Confirmation */}
       {showRejectModal && selectedSiswa && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: colors.white,
-            borderRadius: '24px',
-            padding: '32px',
-            maxWidth: '540px',
-            width: '100%',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            border: `2px solid ${colors.red[100]}`,
-            animation: 'modalSlideIn 0.3s ease-out',
-          }}>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              marginBottom: '24px'
-            }}>
-              <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                background: `linear-gradient(135deg, ${colors.red[400]} 0%, ${colors.red[600]} 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px',
-              }}>
-                <XCircle size={32} color={colors.white} />
-              </div>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: colors.text.primary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                marginBottom: '8px',
-              }}>
-                Tolak Siswa?
-              </h2>
-              <p style={{
-                fontSize: '14px',
-                color: colors.text.secondary,
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                marginBottom: '20px',
-              }}>
-                Anda akan menolak pendaftaran <strong>{selectedSiswa.user.name}</strong>. Mohon berikan alasan penolakan.
-              </p>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: colors.text.secondary,
-                marginBottom: '8px',
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              }}>
-                Alasan Penolakan *
-              </label>
-              <textarea
-                rows={4}
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Masukkan alasan penolakan..."
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: `2px solid ${colors.gray[200]}`,
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 0.3s ease',
-                  resize: 'vertical',
-                }}
-                className="form-input"
-              />
-            </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-            }}>
-              <button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectionReason('');
-                }}
-                style={{
-                  flex: 1,
-                  padding: '12px 24px',
-                  border: `2px solid ${colors.gray[300]}`,
-                  borderRadius: '12px',
-                  background: colors.white,
-                  color: colors.text.secondary,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                className="cancel-btn"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleReject}
-                style={{
-                  flex: 1,
-                  padding: '12px 24px',
-                  border: 'none',
-                  borderRadius: '12px',
-                  background: `linear-gradient(135deg, ${colors.red[500]} 0%, ${colors.red[600]} 100%)`,
-                  color: colors.white,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
-                }}
-                className="submit-btn-danger"
-              >
-                Ya, Tolak
-              </button>
-            </div>
-          </div>
-        </div>
+        <RejectModal
+          siswa={selectedSiswa}
+          onConfirm={handleReject}
+          onCancel={() => setShowRejectModal(false)}
+          reason={rejectionReason}
+          setReason={setRejectionReason}
+          isLoading={isActionLoading}
+        />
       )}
-
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-
-        /* Keyframe Animations */
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(100px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes modalSlideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-
-        /* Stats Card Hover */
-        .stats-card:hover {
-          transform: translateY(-8px) scale(1.02);
-          box-shadow: 0 12px 28px rgba(26, 147, 111, 0.15);
-        }
-
-        /* Input Focus */
-        .search-input:focus,
-        .filter-select:focus,
-        .form-input:focus {
-          border-color: ${colors.emerald[500]} !important;
-          box-shadow: 0 0 0 3px ${colors.emerald[500]}20 !important;
-        }
-
-        /* Table Row Hover */
-        .table-row:hover {
-          background: ${colors.emerald[50]}40 !important;
-        }
-
-        /* Action Button Hover */
-        .action-btn-view:hover,
-        .action-btn-approve:hover {
-          background: ${colors.emerald[500]}30 !important;
-          transform: scale(1.1);
-        }
-
-        .action-btn-reject:hover {
-          background: #FEE2E2 !important;
-          transform: scale(1.1);
-        }
-
-        /* Modal Close Button Hover */
-        .close-btn:hover {
-          color: ${colors.text.primary} !important;
-          transform: rotate(90deg);
-        }
-
-        /* Form Button Hover */
-        .cancel-btn:hover {
-          background: ${colors.gray[50]} !important;
-        }
-
-        .submit-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(26, 147, 111, 0.3) !important;
-        }
-
-        .submit-btn-danger:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3) !important;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          .stats-card {
-            min-width: 100%;
-          }
-          
-          .page-header {
-            padding: 24px 16px 20px !important;
-          }
-          
-          .page-main-content {
-            padding: 24px 16px 32px !important;
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 }

@@ -354,6 +354,19 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const fetchPendingCount = async () => {
+    try {
+      const res = await fetch('/api/admin/siswa?status=pending&limit=1');
+      if (res.ok) {
+        const data = await res.json();
+        setPendingCount(data.pagination?.totalCount || 0);
+      }
+    } catch (error) {
+      // Silently fail
+    }
+  };
 
   const fetchChartData = async () => {
     try {
@@ -416,6 +429,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     setIsClient(true);
     fetchDashboardData();
+    fetchPendingCount();
   }, []);
 
   if (!isClient) {
@@ -429,6 +443,30 @@ export default function AdminDashboardPage() {
 
           {/* 1. Hero Header */}
           <DashboardHeader userName={session?.user?.name} />
+
+          {/* 1.5 Pending Validation Alert */}
+          {pendingCount > 0 && (
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 shadow-md">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="bg-red-100 rounded-xl p-3 flex-shrink-0">
+                    <Bell size={24} className="text-red-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-bold text-red-700">Siswa Menunggu Validasi</h3>
+                    <p className="text-sm text-red-600 mt-0.5">Ada {pendingCount} siswa baru yang belum divalidasi. Segera tinjau data mereka.</p>
+                  </div>
+                </div>
+                <Link
+                  href="/admin/validasi-siswa"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex-shrink-0"
+                >
+                  Lihat Sekarang
+                  <ChevronRight size={18} />
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* 2. Motivation Card - FULL WIDTH */}
           <MotivationCard />
