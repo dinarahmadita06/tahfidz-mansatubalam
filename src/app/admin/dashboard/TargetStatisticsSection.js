@@ -1,0 +1,258 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { TrendingUp, Users, Trophy } from 'lucide-react';
+
+// ============================================================================
+// TARGET KELAS CHART CARD - Horizontal Bar Chart
+// ============================================================================
+function TargetKelasChartCard({ data, loading }) {
+  const chartData = data || [];
+  const hasData = chartData.length > 0;
+
+  return (
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-emerald-100/60 shadow-sm">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="p-3 bg-emerald-500 rounded-xl text-white shadow-md ring-2 ring-emerald-200">
+          <TrendingUp size={24} />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-gray-800">Statistik Kelas Mencapai Target</h3>
+          <p className="text-xs text-gray-600 font-medium">Top 5 kelas dengan progres terbaik</p>
+        </div>
+      </div>
+
+      {/* Chart Content */}
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded-full animate-pulse w-24"></div>
+              <div className="h-6 bg-gray-100 rounded-lg animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+      ) : !hasData ? (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <div className="p-4 bg-emerald-50 rounded-full mb-4">
+            <TrendingUp className="text-emerald-400" size={32} />
+          </div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-1">Belum ada data kelas</h4>
+          <p className="text-xs text-gray-500">Data akan muncul setelah siswa menyelesaikan hafalan</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {chartData.map((kelas, index) => {
+            const isHighest = index === 0;
+            return (
+              <div key={kelas.id} className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-gray-700 truncate flex-1">
+                    {kelas.nama}
+                  </span>
+                  {isHighest && (
+                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">
+                      TERTINGGI
+                    </span>
+                  )}
+                  <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                    {kelas.persen}%
+                  </span>
+                </div>
+                
+                {/* Bar Chart */}
+                <div className="relative h-8 bg-emerald-100/60 rounded-full overflow-hidden shadow-inner">
+                  <div
+                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${
+                      isHighest
+                        ? 'from-emerald-600 to-emerald-500'
+                        : 'from-emerald-500 to-teal-500'
+                    } rounded-full transition-all duration-500 ease-out flex items-center justify-end pr-3`}
+                    style={{ width: `${kelas.persen}%` }}
+                  >
+                    {kelas.persen > 15 && (
+                      <span className="text-white text-xs font-bold">{kelas.mencapai}/{kelas.total}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Info Box */}
+      <div className="mt-6 bg-emerald-50 border-l-4 border-emerald-500 rounded-xl p-4">
+        <p className="text-sm text-emerald-800 font-medium">
+          <span className="font-bold">Target Kelas:</span> Kelas dianggap mencapai target jika ≥ 50% siswanya telah mencapai target hafalan (≥ 3 juz)
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// TARGET SISWA DONUT CARD
+// ============================================================================
+function TargetSiswaDonutCard({ data, loading }) {
+  const siswaData = data || { mencapai: 0, belum: 0, total: 0, persen: 0 };
+  const { mencapai, belum, total, persen } = siswaData;
+
+  // Calculate angles for donut
+  const mencapaiAngle = total > 0 ? (mencapai / total) * 360 : 0;
+  const belumAngle = total > 0 ? (belum / total) * 360 : 0;
+
+  return (
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-blue-100/60 shadow-sm">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="p-3 bg-blue-500 rounded-xl text-white shadow-md ring-2 ring-blue-200">
+          <Users size={24} />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-gray-800">Statistik Siswa Mencapai Target</h3>
+          <p className="text-xs text-gray-600 font-medium">Distribusi pencapaian siswa</p>
+        </div>
+      </div>
+
+      {/* Chart Content */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-32 h-32 rounded-full bg-gray-200 animate-pulse"></div>
+          <div className="mt-4 h-4 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+        </div>
+      ) : total === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <div className="p-4 bg-blue-50 rounded-full mb-4">
+            <Users className="text-blue-400" size={32} />
+          </div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-1">Belum ada siswa mencapai target</h4>
+          <p className="text-xs text-gray-500">Data akan muncul setelah siswa menyelesaikan hafalan</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* SVG Donut Chart */}
+          <div className="flex justify-center">
+            <svg className="w-40 h-40" viewBox="0 0 200 200">
+              {/* Mencapai Target - Green */}
+              <circle
+                cx="100"
+                cy="100"
+                r="70"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="28"
+                strokeDasharray={`${(mencapaiAngle / 360) * 440} 440`}
+                strokeDashoffset="0"
+                style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }}
+              />
+              {/* Belum Mencapai - Gray */}
+              <circle
+                cx="100"
+                cy="100"
+                r="70"
+                fill="none"
+                stroke="#d1d5db"
+                strokeWidth="28"
+                strokeDasharray={`${(belumAngle / 360) * 440} 440`}
+                strokeDashoffset={-((mencapaiAngle / 360) * 440)}
+                style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }}
+              />
+              {/* Center Circle */}
+              <circle cx="100" cy="100" r="45" fill="white" />
+              {/* Percentage Text */}
+              <text
+                x="100"
+                y="100"
+                textAnchor="middle"
+                dy="0.3em"
+                className="text-3xl font-bold fill-gray-900"
+                fontSize="32"
+              >
+                {persen}%
+              </text>
+              <text
+                x="100"
+                y="125"
+                textAnchor="middle"
+                className="text-xs fill-gray-600"
+                fontSize="12"
+              >
+                Mencapai
+              </text>
+            </svg>
+          </div>
+
+          {/* Statistics */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Mencapai Target */}
+            <div className="bg-emerald-50/70 rounded-xl p-4 border border-emerald-100/60">
+              <p className="text-xs font-bold text-emerald-800 uppercase mb-1">Mencapai Target</p>
+              <p className="text-2xl font-bold text-gray-900">{mencapai}</p>
+              <p className="text-xs text-emerald-700 font-medium mt-1">Siswa</p>
+            </div>
+
+            {/* Belum Mencapai */}
+            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-200/60">
+              <p className="text-xs font-bold text-gray-800 uppercase mb-1">Belum Mencapai</p>
+              <p className="text-2xl font-bold text-gray-900">{belum}</p>
+              <p className="text-xs text-gray-600 font-medium mt-1">Siswa</p>
+            </div>
+          </div>
+
+          {/* Total Info */}
+          <div className="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-4">
+            <p className="text-sm text-blue-800">
+              <span className="font-bold">Total Siswa:</span> {total} siswa
+            </p>
+            <p className="text-sm text-blue-800 mt-2">
+              <span className="font-bold">Target Siswa:</span> Siswa dianggap mencapai target jika hafalan ≥ 3 juz
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN TARGET STATISTICS SECTION
+// ============================================================================
+export default function TargetStatisticsSection() {
+  const [data, setData] = useState({
+    kelasTop5: [],
+    siswa: { mencapai: 0, belum: 0, total: 0, persen: 0 },
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch('/api/admin/statistik/target', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Gagal mengambil data statistik target');
+        const result = await res.json();
+        if (result.success) {
+          setData(result);
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <TargetKelasChartCard data={data.kelasTop5} loading={loading} />
+      <TargetSiswaDonutCard data={data.siswa} loading={loading} />
+    </div>
+  );
+}
