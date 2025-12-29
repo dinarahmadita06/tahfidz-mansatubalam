@@ -47,7 +47,7 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
     throw new Error(`Invalid status: ${newStatusSiswa}. Valid: ${validStatuses.join(', ')}`);
   }
 
-  // Get current siswa data
+  // Get current siswa data and admin info
   const siswa = await prisma.siswa.findUnique({
     where: { id: siswaId },
     include: {
@@ -66,6 +66,16 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
 
   if (!siswa) {
     throw new Error('Siswa tidak ditemukan');
+  }
+
+  // Get admin user data for role field in LogActivity
+  const adminUser = await prisma.user.findUnique({
+    where: { id: adminId },
+    select: { role: true },
+  });
+
+  if (!adminUser) {
+    throw new Error('Admin tidak ditemukan');
   }
 
   const isBecomingActive = newStatusSiswa === 'AKTIF';
@@ -111,12 +121,14 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
       }
     }
 
-    // 4. Log activity
+    // 4. Log activity with correct fields
     await tx.logActivity.create({
       data: {
         userId: adminId,
-        jenis: 'UPDATE',
-        detail: `Mengubah status siswa ${siswa.user.name} (${siswa.nis}) dari ${siswa.statusSiswa} ke ${newStatusSiswa}`,
+        role: adminUser.role,
+        aktivitas: 'UPDATE',
+        modul: 'Manajemen Siswa',
+        deskripsi: `Mengubah status siswa ${siswa.user.name} (${siswa.nis}) dari ${siswa.statusSiswa} ke ${newStatusSiswa}`,
       },
     });
 
