@@ -86,6 +86,7 @@ function AdminLayout({ children }) {
   const [isMobile, setIsMobile] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [isMounted, setIsMounted] = useState(false); // NEW: Track if component is mounted
+  const [pendingCount, setPendingCount] = useState(0);
   const pathname = usePathname();
 
   // Mark component as mounted - runs only once on client
@@ -110,6 +111,27 @@ function AdminLayout({ children }) {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, [isMounted]);
+
+  // Fetch pending siswa count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch('/api/admin/siswa?status=pending&limit=1');
+        if (res.ok) {
+          const data = await res.json();
+          setPendingCount(data.pagination?.totalCount || 0);
+        }
+      } catch (error) {
+        // Silently fail
+      }
+    };
+
+    if (isMounted) {
+      fetchPendingCount();
+      const interval = setInterval(fetchPendingCount, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
+    }
   }, [isMounted]);
 
   // Polling for new notifications every 10 seconds
@@ -382,21 +404,28 @@ function AdminLayout({ children }) {
                                   href={subitem.href}
                                   prefetch={false}
                                   onClick={handleLinkClick}
-                                  className={`w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 group relative ${
+                                  className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 group relative ${
                                     isActive(subitem.href)
                                       ? 'bg-amber-50 text-amber-900'
                                       : 'text-gray-600 hover:bg-emerald-50/40 hover:text-emerald-700'
                                   }`}
                                 >
-                                  {isActive(subitem.href) && (
-                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
+                                  <div className="flex items-center gap-3">
+                                    {isActive(subitem.href) && (
+                                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
+                                    )}
+                                    <subitem.icon
+                                      size={18}
+                                      strokeWidth={1.5}
+                                      className={isActive(subitem.href) ? 'text-amber-700' : 'text-gray-500 group-hover:text-emerald-600'}
+                                    />
+                                    <span className="font-medium">{subitem.title}</span>
+                                  </div>
+                                  {subitem.href === '/admin/validasi-siswa' && pendingCount > 0 && (
+                                    <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                      {pendingCount > 99 ? '99+' : pendingCount}
+                                    </span>
                                   )}
-                                  <subitem.icon
-                                    size={18}
-                                    strokeWidth={1.5}
-                                    className={isActive(subitem.href) ? 'text-amber-700' : 'text-gray-500 group-hover:text-emerald-600'}
-                                  />
-                                  <span className="font-medium">{subitem.title}</span>
                                 </Link>
                               ))}
                             </div>
