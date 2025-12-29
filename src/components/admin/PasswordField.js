@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff, RefreshCw, Copy, Check } from 'lucide-react';
-import { generateStrongPassword, copyToClipboard } from '@/lib/passwordUtils';
+import { generatePasswordMixed, copyToClipboard } from '@/lib/passwordUtils';
 
 const colors = {
   emerald: {
@@ -39,7 +39,7 @@ export default function PasswordField({
   const [copied, setCopied] = useState(false);
 
   const handleGenerate = () => {
-    const newPassword = generateStrongPassword();
+    const newPassword = generatePasswordMixed();
     onChange(newPassword);
   };
 

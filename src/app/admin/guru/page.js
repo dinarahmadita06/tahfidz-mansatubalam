@@ -6,84 +6,93 @@ import AdminLayout from '@/components/layout/AdminLayout';
 
 // ===== REUSABLE COMPONENTS =====
 
-// Modern Stat Card with Pastel Transparent Style
-function StatCard({ icon: Icon, title, value, subtitle, variant = 'emerald' }) {
-  const variants = {
+// Modern Stat Card - Align with Dashboard Admin Style (Pastel Solid, Border-2, Icon Badge Right)
+function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
+  const themeConfig = {
     emerald: {
-      wrapper: 'bg-emerald-50/70 border-emerald-200/60 shadow-emerald-500/10',
-      iconBg: 'bg-emerald-500/15 ring-emerald-400/30',
+      bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
+      border: 'border-2 border-emerald-200',
+      titleColor: 'text-emerald-600',
+      valueColor: 'text-emerald-700',
+      subtitleColor: 'text-emerald-700',
+      iconBg: 'bg-emerald-100',
       iconColor: 'text-emerald-600',
-      value: 'text-emerald-700',
     },
     sky: {
-      wrapper: 'bg-sky-50/70 border-sky-200/60 shadow-sky-500/10',
-      iconBg: 'bg-sky-500/15 ring-sky-400/30',
+      bg: 'bg-gradient-to-br from-sky-50 to-cyan-50',
+      border: 'border-2 border-sky-200',
+      titleColor: 'text-sky-600',
+      valueColor: 'text-sky-700',
+      subtitleColor: 'text-sky-700',
+      iconBg: 'bg-sky-100',
       iconColor: 'text-sky-600',
-      value: 'text-sky-700',
     },
     amber: {
-      wrapper: 'bg-amber-50/70 border-amber-200/60 shadow-amber-500/10',
-      iconBg: 'bg-amber-500/15 ring-amber-400/30',
+      bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
+      border: 'border-2 border-amber-200',
+      titleColor: 'text-amber-600',
+      valueColor: 'text-amber-700',
+      subtitleColor: 'text-amber-700',
+      iconBg: 'bg-amber-100',
       iconColor: 'text-amber-600',
-      value: 'text-amber-700',
     },
   };
 
-  const style = variants[variant];
+  const config = themeConfig[theme] || themeConfig.emerald;
 
   return (
-    <div className={`${style.wrapper} backdrop-blur-xl rounded-2xl border p-5 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}>
+    <div className={`${config.bg} rounded-2xl ${config.border} p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+        <div>
+          <p className={`${config.titleColor} text-xs font-bold mb-2 uppercase tracking-wide`}>
             {title}
           </p>
-          <h3 className={`text-3xl font-extrabold ${style.value}`}>
+          <h3 className={`${config.valueColor} text-3xl font-bold`}>
             {value}
           </h3>
           {subtitle && (
-            <p className="text-sm text-slate-600 mt-1">{subtitle}</p>
+            <p className={`${config.subtitleColor} text-xs font-medium mt-2`}>{subtitle}</p>
           )}
         </div>
-        <div className={`${style.iconBg} p-4 rounded-2xl ring-1 ${style.iconColor}`}>
-          <Icon size={28} />
+        <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
+          <Icon size={28} className={config.iconColor} strokeWidth={2} />
         </div>
       </div>
     </div>
   );
 }
 
-// Search & Filter Toolbar
+// Search & Filter Toolbar - Glass Effect
 function SearchFilterBar({ searchTerm, setSearchTerm, filterStatus, setFilterStatus }) {
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 p-6">
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 p-6 shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
         {/* Search Input */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+          <label className="block text-xs font-bold text-emerald-700 mb-2 uppercase tracking-wide">
             Cari Guru
           </label>
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400" size={20} />
             <input
               type="text"
               placeholder="Cari berdasarkan nama, email, atau NIP..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+              className="w-full pl-12 pr-4 py-3 border border-emerald-200/60 rounded-xl bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
             />
           </div>
         </div>
 
         {/* Filter Status */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+          <label className="block text-xs font-bold text-emerald-700 mb-2 uppercase tracking-wide">
             Filter Status
           </label>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full md:w-48 px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+            className="w-full md:w-48 px-4 py-3 border border-emerald-200/60 rounded-xl bg-white/70 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           >
             <option value="all">Semua Status</option>
             <option value="active">Aktif</option>
@@ -262,22 +271,26 @@ export default function AdminGuruPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-emerald-50">
-        {/* Page Container */}
-        <div className="max-w-[1200px] mx-auto px-6 lg:px-10 py-8 space-y-6">
+      <div className="min-h-screen bg-gray-50">
+        {/* Page Container - Full Width */}
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-          {/* Header Card - Modern Gradient */}
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-6 md:p-8 shadow-lg shadow-emerald-500/20 text-white">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          {/* Header Card - Modern Gradient Hero */}
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden relative">
+            {/* Decorative Circles */}
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
+
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
-                  <Users size={32} className="text-white" />
+                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
+                  <Users className="text-white" size={32} />
                 </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold">
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white break-words">
                     Manajemen Guru
                   </h1>
-                  <p className="text-emerald-50 text-sm md:text-base mt-1">
+                  <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal">
                     Kelola data guru tahfidz dengan mudah dan efisien
                   </p>
                 </div>
@@ -331,27 +344,27 @@ export default function AdminGuruPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard
               icon={Users}
               title="Total Guru"
               value={stats.total}
               subtitle="Total guru terdaftar"
-              variant="emerald"
+              theme="emerald"
             />
             <StatCard
               icon={UserCheck}
               title="Guru Aktif"
               value={stats.active}
               subtitle="Guru yang aktif mengajar"
-              variant="sky"
+              theme="sky"
             />
             <StatCard
               icon={UserX}
               title="Guru Non-Aktif"
               value={stats.inactive}
               subtitle="Guru yang tidak aktif"
-              variant="amber"
+              theme="amber"
             />
           </div>
 
@@ -363,12 +376,12 @@ export default function AdminGuruPage() {
             setFilterStatus={setFilterStatus}
           />
 
-          {/* Table - Modern Upgrade */}
-          <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm overflow-hidden">
+          {/* Table - Modern Glass Card */}
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-emerald-50 text-emerald-700">
+                  <tr className="bg-emerald-50/50 text-emerald-800">
                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Nama Lengkap</th>
                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Email</th>
                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Kelas Binaan</th>
@@ -377,37 +390,37 @@ export default function AdminGuruPage() {
                     <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-emerald-100/40">
                   {filteredGuru.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center text-slate-500 text-sm">
+                      <td colSpan="6" className="px-6 py-12 text-center text-emerald-700/60 font-medium text-sm">
                         Tidak ada data guru yang ditemukan
                       </td>
                     </tr>
                   ) : (
-                    filteredGuru.map((guruItem, index) => (
+                    filteredGuru.map((guruItem) => (
                       <tr
                         key={guruItem.id}
-                        className={`${index % 2 === 0 ? 'bg-white' : 'bg-emerald-50/20'} hover:bg-emerald-50/40 transition-colors`}
+                        className="hover:bg-emerald-50/30 transition-colors duration-200"
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm ring-2 ring-emerald-400/30 shadow-sm">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm ring-2 ring-emerald-200/60 shadow-sm">
                               {guruItem.user.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className="font-semibold text-slate-900 text-sm">
+                              <div className="font-semibold text-gray-900 text-sm">
                                 {guruItem.user.name}
                               </div>
                               {guruItem.nip && (
-                                <div className="text-xs text-slate-500">
+                                <div className="text-xs text-gray-500">
                                   NIP: {guruItem.nip}
                                 </div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
+                        <td className="px-6 py-4 text-sm text-gray-600">
                           {guruItem.user.email}
                         </td>
                         <td className="px-6 py-4">
@@ -416,7 +429,7 @@ export default function AdminGuruPage() {
                               {guruItem.guruKelas.map((gk) => (
                                 <span
                                   key={gk.id}
-                                  className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center gap-1"
+                                  className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-50/70 border border-emerald-100/60 text-emerald-700 flex items-center gap-1"
                                 >
                                   <GraduationCap size={12} />
                                   {gk.kelas.nama}
@@ -424,17 +437,17 @@ export default function AdminGuruPage() {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-gray-400">
                               Belum ada kelas
                             </span>
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex px-4 py-1.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex px-4 py-1.5 text-xs font-semibold rounded-full bg-emerald-100/70 text-emerald-700 border border-emerald-200/60">
                             Aktif
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
+                        <td className="px-6 py-4 text-sm text-gray-600">
                           {new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
                             day: 'numeric',
                             month: 'long',
@@ -445,13 +458,13 @@ export default function AdminGuruPage() {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleEdit(guruItem)}
-                              className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-md transition-all"
+                              className="p-2 rounded-lg bg-emerald-50/70 text-emerald-600 hover:bg-emerald-100/70 hover:shadow-md transition-all"
                             >
                               <Edit size={16} />
                             </button>
                             <button
                               onClick={() => handleDelete(guruItem.id)}
-                              className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-md transition-all"
+                              className="p-2 rounded-lg bg-rose-50/70 text-rose-600 hover:bg-rose-100/70 hover:shadow-md transition-all"
                             >
                               <Trash2 size={16} />
                             </button>
