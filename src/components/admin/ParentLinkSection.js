@@ -73,17 +73,17 @@ export default function ParentLinkSection({
 
   // Auto-generate email when name or phone changes (fallback to phone-based for compatibility)
   useEffect(() => {
-    if (mode === 'create' && newParentData.name && newParentData.noTelepon && !siswaFormData.nis) {
-      const email = generateParentEmail(newParentData.name, newParentData.noTelepon);
+    if (mode === 'create' && newParentData.name && newParentData.noHP && !siswaFormData.nis) {
+      const email = generateParentEmail(newParentData.name, newParentData.noHP);
       onNewParentChange({ ...newParentData, email });
     }
-  }, [newParentData.name, newParentData.noTelepon]);
+  }, [newParentData.name, newParentData.noHP]);
 
   const filteredParents = parents.filter(
     (p) =>
       p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.noTelepon && p.noTelepon.includes(searchTerm))
+      (p.noHP && p.noHP.includes(searchTerm))
   );
 
   return (
@@ -301,7 +301,7 @@ export default function ParentLinkSection({
               filteredParents.map((parent) => (
                 <option key={parent.id} value={parent.id}>
                   {parent.user.name} - {parent.user.email}
-                  {parent.noTelepon ? ` (${parent.noTelepon})` : ''}
+                  {parent.noHP ? ` (${parent.noHP})` : ''}
                 </option>
               ))
             )}
@@ -439,8 +439,8 @@ export default function ParentLinkSection({
               </label>
               <input
                 type="tel"
-                value={newParentData.noTelepon}
-                onChange={(e) => onNewParentChange({ ...newParentData, noTelepon: e.target.value })}
+                value={newParentData.noHP}
+                onChange={(e) => onNewParentChange({ ...newParentData, noHP: e.target.value })}
                 placeholder="Contoh: 081234567890"
                 required={mode === 'create'}
                 style={{
