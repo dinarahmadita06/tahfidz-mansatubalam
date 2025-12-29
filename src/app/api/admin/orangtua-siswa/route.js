@@ -107,6 +107,8 @@ export async function POST(request) {
       },
     });
 
+    console.log('✅ Successfully linked orangTua to siswa:', { siswaId, orangTuaId, hubungan });
+
     // Log activity
     await logActivity({
       userId: session.user.id,
@@ -132,10 +134,18 @@ export async function POST(request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error linking orangtua-siswa:', error);
+    console.error('❌ Error linking orangtua-siswa:', error);
+    
+    // Provide detailed error message for debugging
+    const errorMessage = error.meta?.cause || error.message || 'Unknown error';
+    const statusCode = error.code === 'P2002' ? 400 : 500;
+    
     return NextResponse.json(
-      { error: 'Gagal menghubungkan siswa dengan orang tua' },
-      { status: 500 }
+      {
+        error: statusCode === 400 ? 'Hubungan sudah ada atau data tidak valid' : 'Gagal menghubungkan siswa dengan orang tua',
+        ...(process.env.NODE_ENV === 'development' && { details: errorMessage })
+      },
+      { status: statusCode }
     );
   }
 }

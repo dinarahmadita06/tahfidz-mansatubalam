@@ -191,10 +191,18 @@ export async function POST(request) {
 
     return NextResponse.json(orangTua, { status: 201 });
   } catch (error) {
-    console.error('Error creating orang tua:', error);
+    console.error('❌ Error creating orang tua:', error);
+    
+    // Provide detailed error message for debugging
+    const errorMessage = error.meta?.cause || error.message || 'Unknown error';
+    const statusCode = error.code === 'P2002' ? 400 : 500;
+    
     return NextResponse.json(
-      { error: 'Gagal menambahkan orang tua' },
-      { status: 500 }
+      {
+        error: statusCode === 400 ? 'Data sudah terdaftar atau tidak valid' : 'Gagal menambahkan orang tua',
+        ...(process.env.NODE_ENV === 'development' && { details: errorMessage })
+      },
+      { status: statusCode }
     );
   }
 }
