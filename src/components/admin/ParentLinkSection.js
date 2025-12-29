@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Users, UserPlus } from 'lucide-react';
 import PasswordField from './PasswordField';
-import { generateParentEmail } from '@/lib/passwordUtils';
+import { generateParentEmail, generateWaliEmail } from '@/lib/passwordUtils';
 
 const colors = {
   emerald: {
@@ -12,6 +12,10 @@ const colors = {
     500: '#1A936F',
     600: '#059669',
     700: '#047857',
+  },
+  teal: {
+    500: '#14b8a6',
+    600: '#0d9488',
   },
   white: '#FFFFFF',
   gray: {
@@ -33,10 +37,13 @@ export default function ParentLinkSection({
   onSelectParent,
   newParentData,
   onNewParentChange,
+  siswaFormData = {}, // Receive siswa form data to access NIS
 }) {
   const [parents, setParents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [waliType, setWaliType] = useState('Ayah'); // 'Ayah', 'Ibu', 'Wali Lainnya'
+  const [emailWaliManuallyEdited, setEmailWaliManuallyEdited] = useState(false); // Track if email was manually edited
 
   useEffect(() => {
     fetchParents();
@@ -54,9 +61,19 @@ export default function ParentLinkSection({
     }
   };
 
-  // Auto-generate email when name or phone changes
+  // Auto-generate email when name or NIS changes (if not manually edited)
   useEffect(() => {
-    if (mode === 'create' && newParentData.name && newParentData.noTelepon) {
+    if (mode === 'create' && newParentData.name && siswaFormData.nis && !emailWaliManuallyEdited) {
+      const email = generateWaliEmail(newParentData.name, siswaFormData.nis);
+      if (email) {
+        onNewParentChange({ ...newParentData, email });
+      }
+    }
+  }, [newParentData.name, siswaFormData.nis, emailWaliManuallyEdited, mode]);
+
+  // Auto-generate email when name or phone changes (fallback to phone-based for compatibility)
+  useEffect(() => {
+    if (mode === 'create' && newParentData.name && newParentData.noTelepon && !siswaFormData.nis) {
       const email = generateParentEmail(newParentData.name, newParentData.noTelepon);
       onNewParentChange({ ...newParentData, email });
     }
@@ -74,7 +91,7 @@ export default function ParentLinkSection({
       {/* Section Header */}
       <div style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-          <Users size={20} color={colors.emerald[600]} />
+          <Users size={20} color={colors.teal[600]} />
           <h3
             style={{
               fontSize: '16px',
@@ -318,6 +335,55 @@ export default function ParentLinkSection({
               gap: '16px',
             }}
           >
+            {/* Wali Type Selector */}
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text.secondary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}
+              >
+                Jenis Wali
+                <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
+              </label>
+              <select
+                value={waliType}
+                onChange={(e) => setWaliType(e.target.value)}
+                required={mode === 'create'}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: `2px solid ${colors.gray[200]}`,
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: colors.white,
+                }}
+                className="parent-input"
+              >
+                <option value="Ayah">Ayah</option>
+                <option value="Ibu">Ibu</option>
+                <option value="Wali Lainnya">Wali Lainnya</option>
+              </select>
+              <p
+                style={{
+                  fontSize: '12px',
+                  color: colors.text.tertiary,
+                  marginTop: '6px',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
+                }}
+              >
+                Pilih jenis wali utama untuk siswa
+              </p>
+            </div>
+          
             {/* Name */}
             <div>
               <label
@@ -394,7 +460,7 @@ export default function ParentLinkSection({
               />
             </div>
 
-            {/* Email (Auto-generated, editable) */}
+            {/* Email (Auto-generated based on NIS, editable) */}
             <div>
               <label
                 style={{
@@ -406,14 +472,17 @@ export default function ParentLinkSection({
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}
               >
-                Email (Otomatis)
+                Email (Otomatis dari Nama + NIS Siswa)
                 <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
               </label>
               <input
                 type="email"
                 value={newParentData.email}
-                onChange={(e) => onNewParentChange({ ...newParentData, email: e.target.value })}
-                placeholder="Email akan digenerate otomatis"
+                onChange={(e) => {
+                  onNewParentChange({ ...newParentData, email: e.target.value });
+                  setEmailWaliManuallyEdited(true); // Mark as manually edited
+                }}
+                placeholder="Email akan digenerate otomatis dari nama + NIS siswa"
                 required={mode === 'create'}
                 style={{
                   width: '100%',
@@ -435,22 +504,37 @@ export default function ParentLinkSection({
                   fontSize: '12px',
                   color: colors.text.tertiary,
                   marginTop: '6px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  fontFamily: '"Poppins", system-ui, sans-serif',
                 }}
               >
-                Email otomatis dibuat dari nama + nomor HP. Bisa diedit manual jika diperlukan.
+                Format: namapertama.NIS@wali.tahfidz.sch.id. Bisa diedit manual jika diperlukan.
               </p>
             </div>
 
             {/* Password */}
             <PasswordField
-              label="Password Akun Orang Tua"
+              label="Password Akun Wali Utama"
               value={newParentData.password}
               onChange={(password) => onNewParentChange({ ...newParentData, password })}
-              placeholder="Password untuk akun orang tua"
+              placeholder="Password untuk akun wali utama"
               required={mode === 'create'}
-              helperText="Password untuk login orang tua. Generate otomatis untuk keamanan."
+              helperText="Password untuk login wali. Satu akun wali dapat digunakan bersama oleh ayah/ibu untuk mengakses data siswa."
             />
+
+            {/* Info about shared wali account */}
+            <div
+              style={{
+                padding: '12px',
+                background: colors.emerald[50],
+                border: `1px solid ${colors.emerald[100]}`,
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: colors.text.secondary,
+                fontFamily: '"Poppins", system-ui, sans-serif',
+              }}
+            >
+              ✅ <strong>Akun Wali Utama:</strong> Satu akun ini dapat digunakan bersama oleh {waliType.toLowerCase()} dan keluarganya (misalnya ayah dan ibu) untuk mengakses data siswa dari perangkat berbeda.
+            </div>
           </div>
         </div>
       )}
