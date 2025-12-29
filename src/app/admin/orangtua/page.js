@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Upload, Search, Users, UserCheck, UserX } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import RowActionMenu from '@/components/admin/RowActionMenu';
+import ParentActionMenu from '@/components/admin/ParentActionMenu';
+import ParentDetailModal from '@/components/admin/ParentDetailModal';
+import ResetPasswordModal from '@/components/admin/ResetPasswordModal';
+import LinkStudentModal from '@/components/admin/LinkStudentModal';
+import ToggleStatusModal from '@/components/admin/ToggleStatusModal';
+import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal';
+import Toast from '@/components/ui/Toast';
 
 /**
  * Format tanggal ke format Indonesia (dd Bulan yyyy)
@@ -84,6 +90,7 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
 
 export default function AdminOrangTuaPage() {
   const [orangTua, setOrangTua] = useState([]);
+  const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -99,9 +106,32 @@ export default function AdminOrangTuaPage() {
     alamat: '',
   });
 
+  // Modal states
+  const [modalState, setModalState] = useState({
+    detailModal: null,
+    resetPasswordModal: null,
+    linkStudentModal: null,
+    toggleStatusModal: null,
+    deleteConfirmModal: null,
+  });
+
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+
   useEffect(() => {
     fetchOrangTua();
+    fetchSiswa();
   }, []);
+
+  const fetchSiswa = async () => {
+    try {
+      const response = await fetch('/api/admin/siswa?page=1&limit=1000&include=kelas');
+      const result = await response.json();
+      setSiswa(result.data || []);
+    } catch (error) {
+      console.error('Error fetching siswa:', error);
+    }
+  };
 
   const fetchOrangTua = async () => {
     try {
@@ -160,39 +190,22 @@ export default function AdminOrangTuaPage() {
     setShowModal(true);
   };
 
-  const handleDelete = async (orangTuaItem) => {
-    const childrenCount = orangTuaItem._count?.siswa || 0;
-    let confirmMessage = 'Yakin ingin menghapus orang tua ini?';
-    if (childrenCount > 0) {
-      confirmMessage = `Orang tua ini memiliki ${childrenCount} anak terhubung. Jika dihapus, koneksi dengan anak-anak akan diputus. Yakin ingin melanjutkan?`;
-    }
-    if (!confirm(confirmMessage)) return;
-
-    try {
-      const response = await fetch(`/api/admin/orangtua/${orangTuaItem.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        alert('Orang tua berhasil dihapus');
-        fetchOrangTua();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menghapus orang tua');
-      }
-    } catch (error) {
-      console.error('Error deleting orang tua:', error);
-      alert('Gagal menghapus orang tua');
-    }
+  const handleViewDetail = (orangTuaItem) => {
+    setModalState(prev => ({
+      ...prev,
+      detailModal: orangTuaItem
+    }));
   };
 
-  const handleResetPassword = async (orangTuaItem) => {
-    const newPassword = prompt('Masukkan password baru:', '');
-    if (!newPassword || newPassword.length < 6) {
-      alert('Password harus minimal 6 karakter');
-      return;
-    }
+  const handleResetPassword = (orangTuaItem) => {
+    setModalState(prev => ({
+      ...prev,
+      resetPasswordModal: orangTuaItem
+    }));
+  };
 
+  const confirmResetPassword = async (orangTuaItem, newPassword) => {
+    setIsActionLoading(true);
     try {
       const response = await fetch(`/api/admin/orangtua/${orangTuaItem.id}`, {
         method: 'PUT',
@@ -208,15 +221,123 @@ export default function AdminOrangTuaPage() {
       });
 
       if (response.ok) {
-        alert('Password berhasil direset');
+        setToast({ type: 'success', message: '✓ Password berhasil direset' });
+        setModalState(prev => ({ ...prev, resetPasswordModal: null }));
         fetchOrangTua();
       } else {
         const error = await response.json();
-        alert(error.error || 'Gagal mereset password');
+        setToast({ type: 'error', message: error.error || 'Gagal mereset password' });
       }
     } catch (error) {
       console.error('Error resetting password:', error);
-      alert('Gagal mereset password');
+      setToast({ type: 'error', message: 'Gagal mereset password' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleLinkStudent = (orangTuaItem) => {
+    setModalState(prev => ({
+      ...prev,
+      linkStudentModal: orangTuaItem
+    }));
+  };
+
+  const confirmLinkStudent = async (orangTuaItem, siswaId) => {
+    setIsActionLoading(true);
+    try {
+      const response = await fetch('/api/admin/orangtua-siswa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orangTuaId: orangTuaItem.id,
+          siswaId: siswaId,
+          hubungan: 'ORANG_TUA'
+        }),
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: '✓ Siswa berhasil dihubungkan' });
+        setModalState(prev => ({ ...prev, linkStudentModal: null }));
+        fetchOrangTua();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.error || 'Gagal menghubungkan siswa' });
+      }
+    } catch (error) {
+      console.error('Error linking student:', error);
+      setToast({ type: 'error', message: 'Gagal menghubungkan siswa' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleToggleStatus = (orangTuaItem) => {
+    setModalState(prev => ({
+      ...prev,
+      toggleStatusModal: orangTuaItem
+    }));
+  };
+
+  const confirmToggleStatus = async (orangTuaItem, newStatus) => {
+    setIsActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/orangtua/${orangTuaItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: orangTuaItem.user.name,
+          email: orangTuaItem.user.email,
+          noHP: orangTuaItem.noHP || '',
+          pekerjaan: orangTuaItem.pekerjaan || '',
+          alamat: orangTuaItem.alamat || '',
+          isActive: newStatus
+        }),
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: `✓ Akun berhasil di${newStatus ? 'aktifkan' : 'nonaktifkan'}` });
+        setModalState(prev => ({ ...prev, toggleStatusModal: null }));
+        fetchOrangTua();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.error || 'Gagal mengubah status akun' });
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      setToast({ type: 'error', message: 'Gagal mengubah status akun' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = (orangTuaItem) => {
+    setModalState(prev => ({
+      ...prev,
+      deleteConfirmModal: orangTuaItem
+    }));
+  };
+
+  const confirmDeleteAccount = async (orangTuaItem) => {
+    setIsActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/orangtua/${orangTuaItem.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: '✓ Akun berhasil dihapus' });
+        setModalState(prev => ({ ...prev, deleteConfirmModal: null }));
+        fetchOrangTua();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.error || 'Gagal menghapus akun' });
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setToast({ type: 'error', message: 'Gagal menghapus akun' });
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
@@ -468,22 +589,13 @@ export default function AdminOrangTuaPage() {
                               {formatTanggal(orangTuaItem.user.createdAt)}
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <RowActionMenu
-                                items={[
-                                  {
-                                    label: 'Edit',
-                                    onClick: () => handleEdit(orangTuaItem)
-                                  },
-                                  {
-                                    label: 'Reset Password',
-                                    onClick: () => handleResetPassword(orangTuaItem)
-                                  },
-                                  {
-                                    label: 'Hapus',
-                                    onClick: () => handleDelete(orangTuaItem),
-                                    isDangerous: true
-                                  }
-                                ]}
+                              <ParentActionMenu
+                                orangTuaItem={orangTuaItem}
+                                onViewDetail={handleViewDetail}
+                                onResetPassword={handleResetPassword}
+                                onLinkStudent={handleLinkStudent}
+                                onToggleStatus={handleToggleStatus}
+                                onDelete={handleDeleteAccount}
                               />
                             </td>
                           </tr>
@@ -497,6 +609,52 @@ export default function AdminOrangTuaPage() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {modalState.detailModal && (
+        <ParentDetailModal
+          orangTuaItem={modalState.detailModal}
+          siswaList={siswa}
+          onClose={() => setModalState(prev => ({ ...prev, detailModal: null }))}
+        />
+      )}
+
+      {modalState.resetPasswordModal && (
+        <ResetPasswordModal
+          orangTuaItem={modalState.resetPasswordModal}
+          onConfirm={confirmResetPassword}
+          onClose={() => setModalState(prev => ({ ...prev, resetPasswordModal: null }))}
+          isLoading={isActionLoading}
+        />
+      )}
+
+      {modalState.linkStudentModal && (
+        <LinkStudentModal
+          orangTuaItem={modalState.linkStudentModal}
+          siswaList={siswa}
+          onConfirm={confirmLinkStudent}
+          onClose={() => setModalState(prev => ({ ...prev, linkStudentModal: null }))}
+          isLoading={isActionLoading}
+        />
+      )}
+
+      {modalState.toggleStatusModal && (
+        <ToggleStatusModal
+          orangTuaItem={modalState.toggleStatusModal}
+          onConfirm={confirmToggleStatus}
+          onClose={() => setModalState(prev => ({ ...prev, toggleStatusModal: null }))}
+          isLoading={isActionLoading}
+        />
+      )}
+
+      {modalState.deleteConfirmModal && (
+        <ConfirmDeleteModal
+          orangTuaItem={modalState.deleteConfirmModal}
+          onConfirm={confirmDeleteAccount}
+          onClose={() => setModalState(prev => ({ ...prev, deleteConfirmModal: null }))}
+          isLoading={isActionLoading}
+        />
+      )}
 
       {/* Modal Add/Edit */}
       {showModal && (
@@ -659,6 +817,16 @@ export default function AdminOrangTuaPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={3000}
+          onClose={() => setToast(null)}
+        />
       )}
     </AdminLayout>
   );
