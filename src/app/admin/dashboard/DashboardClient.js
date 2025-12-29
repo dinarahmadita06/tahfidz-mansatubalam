@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AdminLayout from '@/components/layout/AdminLayout';
+import TargetStatisticsSection from './TargetStatisticsSection';
 
 // Verify correct version is loaded
 console.log('🎯 Dashboard Client Loaded - Build:', new Date().toISOString());
@@ -47,71 +48,74 @@ function SkeletonCard() {
   );
 }
 
-// Modern Stat Card - Pastel Transparent + Border Glow (SIMTAQ Baseline)
-function StatCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
-  const variants = {
-    green: {
-      wrapper: 'bg-emerald-50/70 border-emerald-200/60 shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_12px_40px_rgba(16,185,129,0.12)]',
-      iconBg: 'bg-emerald-500 ring-2 ring-emerald-200',
-      iconColor: 'text-white',
-      title: 'text-emerald-800',
-      value: 'text-gray-900',
-      subtitle: 'text-emerald-600'
+// Modern Stat Card - Align with Tasmi Guru Style (Pastel Solid, Border-2, Icon Badge Right)
+function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
+  const themeConfig = {
+    emerald: {
+      bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
+      border: 'border-2 border-emerald-200',
+      titleColor: 'text-emerald-600',
+      valueColor: 'text-emerald-700',
+      subtitleColor: 'text-emerald-700',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
     },
     amber: {
-      wrapper: 'bg-amber-50/70 border-amber-200/60 shadow-[0_0_0_1px_rgba(245,158,11,0.25),0_12px_40px_rgba(245,158,11,0.12)]',
-      iconBg: 'bg-amber-500 ring-2 ring-amber-200',
-      iconColor: 'text-white',
-      title: 'text-amber-800',
-      value: 'text-gray-900',
-      subtitle: 'text-amber-600'
+      bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
+      border: 'border-2 border-amber-200',
+      titleColor: 'text-amber-600',
+      valueColor: 'text-amber-700',
+      subtitleColor: 'text-amber-700',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
     },
     purple: {
-      wrapper: 'bg-purple-50/70 border-purple-200/60 shadow-[0_0_0_1px_rgba(168,85,247,0.25),0_12px_40px_rgba(168,85,247,0.12)]',
-      iconBg: 'bg-purple-500 ring-2 ring-purple-200',
-      iconColor: 'text-white',
-      title: 'text-purple-800',
-      value: 'text-gray-900',
-      subtitle: 'text-purple-600'
+      bg: 'bg-gradient-to-br from-purple-50 to-purple-50',
+      border: 'border-2 border-purple-200',
+      titleColor: 'text-purple-600',
+      valueColor: 'text-purple-700',
+      subtitleColor: 'text-purple-700',
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600',
     },
     blue: {
-      wrapper: 'bg-blue-50/70 border-blue-200/60 shadow-[0_0_0_1px_rgba(59,130,246,0.25),0_12px_40px_rgba(59,130,246,0.12)]',
-      iconBg: 'bg-blue-500 ring-2 ring-blue-200',
-      iconColor: 'text-white',
-      title: 'text-blue-800',
-      value: 'text-gray-900',
-      subtitle: 'text-blue-600'
+      bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+      border: 'border-2 border-blue-200',
+      titleColor: 'text-blue-600',
+      valueColor: 'text-blue-700',
+      subtitleColor: 'text-blue-700',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
     },
     sky: {
-      wrapper: 'bg-sky-50/70 border-sky-200/60 shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)]',
-      iconBg: 'bg-sky-500 ring-2 ring-sky-200',
-      iconColor: 'text-white',
-      title: 'text-sky-800',
-      value: 'text-gray-900',
-      subtitle: 'text-sky-600'
+      bg: 'bg-gradient-to-br from-sky-50 to-cyan-50',
+      border: 'border-2 border-sky-200',
+      titleColor: 'text-sky-600',
+      valueColor: 'text-sky-700',
+      subtitleColor: 'text-sky-700',
+      iconBg: 'bg-sky-100',
+      iconColor: 'text-sky-600',
     },
   };
 
-  const style = variants[variant] || variants.green;
+  const config = themeConfig[theme] || themeConfig.emerald;
 
   return (
-    <div
-      className={`relative bg-white/70 backdrop-blur-md border border-emerald-100/60 rounded-2xl p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${style.wrapper}`}
-    >
+    <div className={`${config.bg} rounded-2xl ${config.border} p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className={`${style.title} text-xs font-bold mb-1 uppercase tracking-wider`}>
+          <p className={`${config.titleColor} text-xs font-bold mb-2 uppercase tracking-wide`}>
             {title}
           </p>
-          <h3 className={`${style.value} text-3xl font-bold`}>
+          <h3 className={`${config.valueColor} text-3xl font-bold`}>
             {value}
           </h3>
           {subtitle && (
-            <p className={`${style.subtitle} text-xs font-semibold mt-2`}>{subtitle}</p>
+            <p className={`${config.subtitleColor} text-xs font-medium mt-2`}>{subtitle}</p>
           )}
         </div>
-        <div className={`${style.iconBg} p-3 rounded-xl shadow-md flex-shrink-0`}>
-          <Icon size={28} className={style.iconColor} strokeWidth={2} />
+        <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
+          <Icon size={28} className={config.iconColor} strokeWidth={2} />
         </div>
       </div>
     </div>
@@ -444,85 +448,43 @@ export default function AdminDashboardPage() {
                     title="Total Siswa"
                     value={data.stats.totalSiswa || 0}
                     subtitle={`${data.stats.siswaAktif || 0} aktif`}
-                    variant="green"
+                    theme="emerald"
                   />
                   <StatCard
                     icon={UserCog}
                     title="Total Guru"
                     value={data.stats.totalGuru || 0}
                     subtitle="Guru aktif"
-                    variant="amber"
+                    theme="amber"
                   />
                   <StatCard
                     icon={BookOpen}
                     title="Total Hafalan"
                     value={`${data.stats.totalJuz || 0} Juz`}
                     subtitle="Akumulasi"
-                    variant="purple"
+                    theme="purple"
                   />
                   <StatCard
                     icon={Award}
                     title="Rata² Nilai"
                     value={data.stats.rataRataNilai || 0}
                     subtitle="Kualitas hafalan"
-                    variant="blue"
+                    theme="blue"
                   />
                   <StatCard
                     icon={CheckCircle2}
                     title="Rata² Kehadiran"
                     value={`${data.stats.rataRataKehadiran || 0}%`}
                     subtitle="Tingkat kehadiran"
-                    variant="sky"
+                    theme="sky"
                   />
                 </>
               )}
             </div>
           )}
 
-          {/* 5. Target Charts Section */}
-          {!error && !loading && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Siswa Chart */}
-              <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-emerald-100/60 shadow-sm">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 bg-emerald-500 rounded-xl text-white shadow-md ring-2 ring-emerald-200">
-                    <Target size={24} />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-800">Target Siswa</h3>
-                </div>
-                
-                <ProgressBar
-                  percentage={Math.round(
-                    (chartData.siswaStats.mencapai /
-                      (chartData.siswaStats.mencapai + chartData.siswaStats.belum || 1)) *
-                      100
-                  )}
-                  label="Siswa Mencapai Target (≥3 Juz)"
-                  total={chartData.siswaStats.mencapai + chartData.siswaStats.belum}
-                  achieved={chartData.siswaStats.mencapai}
-                  color="emerald"
-                />
-              </div>
-
-               {/* Kelas Chart */}
-               <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-emerald-100/60 shadow-sm">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 bg-teal-500 rounded-xl text-white shadow-md ring-2 ring-teal-200">
-                    <TrendingUp size={24} />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-800">Target Kelas</h3>
-                </div>
-                
-                <ProgressBar
-                  percentage={chartData.kelasStats.persentase}
-                  label="Kelas Mencapai Target"
-                  total={chartData.kelasStats.total}
-                  achieved={chartData.kelasStats.mencapai}
-                  color="teal"
-                />
-              </div>
-            </div>
-          )}
+          {/* 5. Target Statistics Section (New) */}
+          <TargetStatisticsSection />
 
         </div>
       </div>
