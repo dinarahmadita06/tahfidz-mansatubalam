@@ -243,6 +243,12 @@ export default function AdminSiswaPage() {
 
     setIsUpdatingStatus(true);
     try {
+      console.log('📤 Sending status update request:', {
+        siswaId: selectedSiswa.id,
+        siswaName: selectedSiswa.user.name,
+        newStatus,
+      });
+
       const response = await fetch(`/api/admin/siswa/${selectedSiswa.id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -250,6 +256,7 @@ export default function AdminSiswaPage() {
       });
 
       const result = await response.json();
+      console.log('📥 Response received:', { status: response.status, result });
 
       if (response.ok) {
         // Refresh data
@@ -259,11 +266,16 @@ export default function AdminSiswaPage() {
         setShowStatusModal(false);
         alert(`✅ ${result.message}`);
       } else {
-        alert(`❌ Gagal mengubah status: ${result.error}`);
+        // Show detailed error message
+        const errorMsg = result.details
+          ? `${result.error}\n\n${JSON.stringify(result.details, null, 2)}`
+          : result.error || 'Gagal mengubah status';
+        console.error('❌ API Error:', result);
+        alert(`❌ Gagal mengubah status:\n${errorMsg}`);
       }
     } catch (error) {
-      console.error('Error updating status:', error);
-      alert('❌ Terjadi kesalahan saat mengubah status siswa');
+      console.error('❌ Network/Parse Error:', error);
+      alert(`❌ Terjadi kesalahan saat mengubah status siswa:\n${error.message}`);
     } finally {
       setIsUpdatingStatus(false);
       setSelectedSiswa(null);

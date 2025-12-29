@@ -26,10 +26,22 @@ export async function PATCH(request, { params }) {
     }
 
     const { id: siswaId } = params;
+    console.log('📝 Update Status Request:', { siswaId, params });
 
     // 2. Validate Request Body
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      console.error('❌ JSON parsing error:', e.message);
+      return NextResponse.json(
+        { error: 'Invalid JSON body', details: e.message },
+        { status: 400 }
+      );
+    }
+
     const { statusSiswa } = body;
+    console.log('📋 Received payload:', { statusSiswa, body });
 
     if (!statusSiswa) {
       return NextResponse.json(
@@ -50,11 +62,25 @@ export async function PATCH(request, { params }) {
     }
 
     // 3. Update Student Status via Service Layer
-    const updatedSiswa = await updateStudentStatus(
-      siswaId,
-      statusSiswa,
-      session.user.id
-    );
+    console.log('🔄 Calling updateStudentStatus with:', { siswaId, statusSiswa, adminId: session.user.id });
+    
+    let updatedSiswa;
+    try {
+      updatedSiswa = await updateStudentStatus(
+        siswaId,
+        statusSiswa,
+        session.user.id
+      );
+      console.log('✅ Update successful:', { siswaId, newStatus: updatedSiswa.statusSiswa });
+    } catch (serviceError) {
+      console.error('❌ Service layer error:', {
+        message: serviceError.message,
+        siswaId,
+        statusSiswa,
+        stack: serviceError.stack
+      });
+      throw serviceError;
+    }
 
     // 4. Return Success Response
     const badge = getStudentStatusBadge(statusSiswa);
@@ -73,22 +99,40 @@ export async function PATCH(request, { params }) {
       },
     });
   } catch (error) {
-    console.error('Error updating student status:', error);
+    console.error('❌ PATCH /api/admin/siswa/[id]/status Error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
 
     // Handle specific errors
     if (error.message === 'Siswa tidak ditemukan') {
-      return NextResponse.json({ error: error.message }, { status: 404 });
+      return NextResponse.json(
+        { error: error.message, errorType: 'NOT_FOUND' },
+        { status: 404 }
+      );
     }
 
     if (error.message.startsWith('Invalid status')) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json(
+        { error: error.message, errorType: 'INVALID_STATUS' },
+        { status: 400 }
+      );
     }
 
-    // Generic error
+    // Generic error with detailed message for development
+    const isDev = process.env.NODE_ENV === 'development';
     return NextResponse.json(
       {
         error: 'Failed to update student status',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        errorType: 'INTERNAL_ERROR',
+        message: error.message,
+        details: isDev ? {
+          code: error.code,
+          prismaCode: error.code,
+          meta: error.meta,
+        } : undefined,
       },
       { status: 500 }
     );
