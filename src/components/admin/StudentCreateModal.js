@@ -15,6 +15,10 @@ const colors = {
     600: '#059669',
     700: '#047857',
   },
+  teal: {
+    500: '#14b8a6',
+    600: '#0d9488',
+  },
   amber: {
     50: '#FEF3C7',
     200: '#FCD34D',
@@ -353,7 +357,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
               {/* Section 1: Data Siswa */}
               <div style={{ marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                  <User size={20} color={colors.emerald[600]} />
+                  <User size={20} color={colors.teal[600]} />
                   <h3
                     style={{
                       fontSize: '16px',
@@ -587,7 +591,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
               {/* Section 2: Akun Siswa */}
               <div style={{ marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                  <Key size={20} color={colors.emerald[600]} />
+                  <Key size={20} color={colors.teal[600]} />
                   <h3
                     style={{
                       fontSize: '16px',
@@ -649,7 +653,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                   onChange={(password) => setFormData({ ...formData, password })}
                   placeholder="Password untuk akun siswa"
                   required={true}
-                  helperText="Gunakan password kuat. Bisa generate otomatis."
+                  helperText="Gunakan kombinasi angka dan huruf. Bisa generate otomatis."
                 />
               </div>
 
@@ -661,6 +665,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                 onSelectParent={setSelectedParentId}
                 newParentData={newParentData}
                 onNewParentChange={setNewParentData}
+                siswaFormData={formData}
               />
             </div>
 
