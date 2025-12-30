@@ -223,47 +223,143 @@ export default function KelolaSiswaByKelas() {
   const activeStudents = filteredStudents.filter(s => s.status === 'Aktif').length;
   const studentsWithParents = filteredStudents.filter(s => s.orangTua).length;
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-10 py-6 space-y-6">
-        {/* Header Section - Hero Card */}
-        <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
-          {/* Decorative Circles */}
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
+  const colors = {
+    white: '#FFFFFF',
+    emerald: { 50: '#F0FDF4', 100: '#DCFCE7', 200: '#BBFBDA', 500: '#10B981', 600: '#059669', 900: '#064E3B' },
+    gray: { 200: '#E5E7EB', 400: '#9CA3AF', 500: '#6B7280', 600: '#4B5563' },
+  };
 
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                Kelola Siswa – {kelas.name}
-              </h1>
-              <p className="text-green-50 text-sm sm:text-base">
-                Tahun Ajaran {kelas.tahunAjaran} • Target {kelas.targetJuz} Juz
-              </p>
-            </div>
-            <div className="flex gap-3 flex-shrink-0">
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#F9FAFB', padding: '24px' }}>
+      <div style={{ maxWidth: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+        {/* ============ HEADER SECTION ============ */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+            borderRadius: '20px',
+            padding: '32px',
+            color: colors.white,
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(16, 185, 129, 0.2)'
+          }}
+        >
+          {/* Decorative Circles */}
+          <div style={{
+            position: 'absolute',
+            top: '-50px',
+            right: '-50px',
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            zIndex: 0
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-30px',
+            left: '-30px',
+            width: '150px',
+            height: '150px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.08)',
+            zIndex: 0
+          }} />
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            {/* Back Button & Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               <button
                 onClick={() => router.back()}
-                className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-300 shadow-md"
-                title="Kembali"
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: colors.white,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
               >
-                <ArrowLeft size={18} />
-                <span className="hidden sm:inline">Kembali</span>
+                <ArrowLeft size={20} />
               </button>
-              <button className="flex items-center gap-2 px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-300 shadow-md">
-                <Download size={18} />
-                <span className="hidden sm:inline">Template</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-300 shadow-md">
+              <div>
+                <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0', lineHeight: '1.2' }}>
+                  Kelola Siswa – {kelas.name}
+                </h1>
+                <p style={{ fontSize: '14px', margin: '4px 0 0 0', opacity: 0.95 }}>
+                  Tahun Ajaran {kelas.tahunAjaran} • Target {kelas.targetJuz} Juz
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '20px' }}>
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 18px',
+                background: 'rgba(255, 255, 255, 0.2)', color: colors.white, borderRadius: '12px',
+                fontWeight: '600', cursor: 'pointer', fontSize: '14px', border: '1px solid rgba(255, 255, 255, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+              >
                 <Upload size={18} />
-                <span className="hidden sm:inline">Import</span>
+                Import Excel
+                <input type="file" accept=".xlsx,.xls" style={{ display: 'none' }} />
+              </label>
+
+              <button
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 18px',
+                  background: 'rgba(255, 255, 255, 0.2)', color: colors.white, border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '12px', fontWeight: '600', cursor: 'pointer', fontSize: '14px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                }}
+              >
+                <Download size={18} />
+                Template Excel
               </button>
+
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-300 shadow-md"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 18px',
+                  background: colors.white, color: colors.emerald[600], border: 'none',
+                  borderRadius: '12px', fontWeight: '600', cursor: 'pointer', fontSize: '14px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
                 <UserPlus size={18} />
-                <span className="hidden sm:inline">Tambah Siswa</span>
+                Tambah Siswa
               </button>
             </div>
           </div>
@@ -297,40 +393,67 @@ export default function KelolaSiswaByKelas() {
           />
         </div>
 
-        {/* Filter Search Card */}
-        <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md shadow-emerald-100/30 p-6">
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                  Cari Siswa
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 flex-shrink-0" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Cari berdasarkan nama, email, NIS, NISN, atau nama orang tua..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                  Jenis Kelamin
-                </label>
-                <select
-                  value={filterJenisKelamin}
-                  onChange={(e) => setFilterJenisKelamin(e.target.value)}
-                  className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-                >
-                  <option value="">Semua</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
+        {/* ============ FILTER SECTION ============ */}
+        <div style={{
+          background: `${colors.white}B3`,
+          backdropFilter: 'blur(10px)',
+          borderRadius: '20px',
+          padding: '24px',
+          border: `1px solid ${colors.emerald[100]}`,
+          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.05)'
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            {/* Search Input */}
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: colors.gray[600], marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Cari Siswa
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: colors.gray[400], flexShrink: 0 }} size={18} />
+                <input
+                  type="text"
+                  placeholder="Cari berdasarkan nama, email, NIS, NISN, atau nama orang tua..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%', paddingLeft: '44px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px',
+                    border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'inherit'
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = colors.emerald[500]}
+                  onBlur={(e) => e.currentTarget.style.borderColor = colors.gray[200]}
+                />
               </div>
             </div>
+
+            {/* Gender Filter */}
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: colors.gray[600], marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Filter Jenis Kelamin
+              </label>
+              <select
+                value={filterJenisKelamin}
+                onChange={(e) => setFilterJenisKelamin(e.target.value)}
+                style={{
+                  width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px',
+                  fontSize: '14px', outline: 'none', cursor: 'pointer', background: colors.white,
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'inherit'
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = colors.emerald[500]}
+                onBlur={(e) => e.currentTarget.style.borderColor = colors.gray[200]}
+              >
+                <option value="">Semua</option>
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Info Text */}
+          <div style={{ fontSize: '13px', color: colors.gray[500], fontWeight: '500' }}>
+            Menampilkan {filteredStudents.length} dari {students.length} siswa
           </div>
         </div>
 
