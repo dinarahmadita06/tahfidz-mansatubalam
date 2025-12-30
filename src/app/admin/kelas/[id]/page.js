@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   UserPlus, Edit, Trash2, Search, ArrowLeft, Upload, Download,
-  Users, Link as LinkIcon, X, MoreVertical
+  Users, Link as LinkIcon, X, MoreVertical, GraduationCap
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter, useParams } from 'next/navigation';
@@ -747,243 +747,136 @@ export default function KelolaSiswaPage() {
 
   return (
     <AdminLayout>
-      <div style={{ minHeight: '100vh', backgroundColor: '#F9FAFB', padding: '24px' }}>
-        <div style={{ maxWidth: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="min-h-screen bg-white relative overflow-x-hidden">
+        {/* Hero Header with Green Gradient */}
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-4 sm:px-6 lg:px-8 py-8 rounded-3xl shadow-lg mx-4 sm:mx-6 lg:mx-8 mt-4">
+          {/* Decorative Blur Circles */}
+          <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
-          {/* ============ HEADER SECTION ============ */}
-          <div
-            style={{
-              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-              borderRadius: '20px',
-              padding: '32px',
-              color: colors.white,
-              position: 'relative',
-              overflow: 'hidden',
-              boxShadow: '0 4px 20px rgba(16, 185, 129, 0.2)'
-            }}
-          >
-            {/* Decorative Circles */}
-            <div style={{
-              position: 'absolute',
-              top: '-50px',
-              right: '-50px',
-              width: '200px',
-              height: '200px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.1)',
-              zIndex: 0
-            }} />
-            <div style={{
-              position: 'absolute',
-              bottom: '-30px',
-              left: '-30px',
-              width: '150px',
-              height: '150px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.08)',
-              zIndex: 0
-            }} />
-
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              {/* Back Button & Title */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                <button
-                  onClick={() => router.back()}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: colors.white,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <div>
-                  <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0', lineHeight: '1.2' }}>
-                    Kelola Siswa – {kelas?.nama}
-                  </h1>
-                  <p style={{ fontSize: '14px', margin: '4px 0 0 0', opacity: 0.95 }}>
-                    Tahun Ajaran {kelas?.tahunAjaran?.nama} • Target {kelas?.targetJuz || 1} Juz
-                  </p>
+          <div className="w-full max-w-none relative z-10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="bg-white/20 backdrop-blur-md rounded-full p-3 shadow-lg">
+                    <GraduationCap size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white">Kelola Siswa</h1>
+                    <p className="text-white/90 text-sm mt-1">{kelas?.nama} • Tahun Ajaran {kelas?.tahunAjaran?.nama}</p>
+                  </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '20px' }}>
-                <label style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 18px',
-                  background: 'rgba(255, 255, 255, 0.2)', color: colors.white, borderRadius: '12px',
-                  fontWeight: '600', cursor: 'pointer', fontSize: '14px', border: '1px solid rgba(255, 255, 255, 0.3)',
-                  transition: 'all 0.2s ease'
-                }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                >
-                  <Upload size={18} />
-                  Import Excel
-                  <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} style={{ display: 'none' }} />
-                </label>
-
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <button
-                  onClick={downloadTemplate}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 18px',
-                    background: 'rgba(255, 255, 255, 0.2)', color: colors.white, border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '12px', fontWeight: '600', cursor: 'pointer', fontSize: '14px',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
+                  onClick={() => downloadTemplate()}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
                 >
                   <Download size={18} />
-                  Template Excel
+                  <span>Template</span>
                 </button>
-
+                <label
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm hover:bg-white/30 backdrop-blur-sm transition-all cursor-pointer"
+                >
+                  <Upload size={18} />
+                  <span>Import</span>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                </label>
                 <button
-                  onClick={() => { resetForm(); setShowModal(true); }}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 18px',
-                    background: colors.white, color: colors.emerald[600], border: 'none',
-                    borderRadius: '12px', fontWeight: '600', cursor: 'pointer', fontSize: '14px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
+                  onClick={() => setShowModal(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-sm hover:bg-emerald-50 shadow-md hover:shadow-lg transition-all"
                 >
                   <UserPlus size={18} />
-                  Tambah Siswa
+                  <span>Tambah Siswa</span>
                 </button>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* ============ FILTER SECTION ============ */}
-          <div style={{
-            background: `${colors.white}B3`,
-            backdropFilter: 'blur(10px)',
-            borderRadius: '20px',
-            padding: '24px',
-            border: `1px solid ${colors.emerald[100]}`,
-            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.05)'
-          }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '16px' }}>
-              {/* Search Input */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: colors.gray[600], marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Cari Siswa
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Search style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: colors.gray[400], flexShrink: 0 }} size={18} />
-                  <input
-                    type="text"
-                    placeholder="Cari berdasarkan nama, email, NIS, NISN, atau nama orang tua..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                      width: '100%', paddingLeft: '44px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px',
-                      border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none',
-                      transition: 'all 0.2s ease',
-                      fontFamily: 'inherit'
-                    }}
-                    onFocus={(e) => e.currentTarget.style.borderColor = colors.emerald[500]}
-                    onBlur={(e) => e.currentTarget.style.borderColor = colors.gray[200]}
-                  />
+        <div className="relative z-10 w-full max-w-none px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
+            {/* Search & Filter - Horizontal Split Layout */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-6 shadow-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Search Input */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2 tracking-wide uppercase">
+                    Cari Siswa
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Nama, email, NIS, NISN..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white/50 hover:bg-white/70"
+                    />
+                  </div>
+                </div>
+
+                {/* Gender Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2 tracking-wide uppercase">
+                    Filter Jenis Kelamin
+                  </label>
+                  <select
+                    value={filterGender}
+                    onChange={(e) => setFilterGender(e.target.value)}
+                    className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
+                  >
+                    <option value="all">Semua</option>
+                    <option value="LAKI_LAKI">Laki-laki</option>
+                    <option value="PEREMPUAN">Perempuan</option>
+                  </select>
                 </div>
               </div>
-
-              {/* Gender Filter */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: colors.gray[600], marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Filter Jenis Kelamin
-                </label>
-                <select
-                  value={filterGender}
-                  onChange={(e) => setFilterGender(e.target.value)}
-                  style={{
-                    width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px',
-                    fontSize: '14px', outline: 'none', cursor: 'pointer', background: colors.white,
-                    transition: 'all 0.2s ease',
-                    fontFamily: 'inherit'
-                  }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = colors.emerald[500]}
-                  onBlur={(e) => e.currentTarget.style.borderColor = colors.gray[200]}
-                >
-                  <option value="all">Semua</option>
-                  <option value="LAKI_LAKI">Laki-laki</option>
-                  <option value="PEREMPUAN">Perempuan</option>
-                </select>
+              
+              {/* Info Text */}
+              <div className="mt-4 text-xs text-gray-600 font-medium">
+                Menampilkan {filteredSiswa.length} dari {siswaList.length} siswa
               </div>
-            </div>
-
-            {/* Info Text */}
-            <div style={{ fontSize: '13px', color: colors.gray[500], fontWeight: '500' }}>
-              Menampilkan {filteredSiswa.length} dari {siswaList.length} siswa
             </div>
           </div>
 
           {/* ============ TABLE SECTION ============ */}
-          <div style={{
-            background: `${colors.white}B3`,
-            backdropFilter: 'blur(10px)',
-            borderRadius: '20px',
-            overflow: 'hidden',
-            border: `1px solid ${colors.emerald[100]}`,
-            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.05)'
-          }}>
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 overflow-hidden shadow-sm">
             {/* Table Header Card */}
-            <div style={{ padding: '24px', borderBottom: `1px solid ${colors.emerald[100]}` }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', color: colors.emerald[900], margin: 0 }}>
+            <div className="px-6 py-4 border-b border-slate-200/60">
+              <h2 className="text-lg font-bold text-gray-900 m-0">
                 Daftar Siswa {kelas?.nama}
               </h2>
             </div>
 
             {/* Table Wrapper */}
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ background: `linear-gradient(135deg, ${colors.emerald[50]}80 0%, ${colors.emerald[50]}40 100%)` }}>
-                    <th style={tableHeaderStyle}>NO</th>
-                    <th style={tableHeaderStyle}>NAMA SISWA</th>
-                    <th style={tableHeaderStyle}>EMAIL</th>
-                    <th style={tableHeaderStyle}>NISN</th>
-                    <th style={tableHeaderStyle}>NIS</th>
-                    <th style={tableHeaderStyle}>JENIS KELAMIN</th>
-                    <th style={tableHeaderStyle}>ORANG TUA</th>
-                    <th style={tableHeaderStyle}>AKSI</th>
+                  <tr className="bg-emerald-50/50 border-b border-slate-200/60">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NO</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NAMA SISWA</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">EMAIL</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NISN</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NIS</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">JENIS KELAMIN</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">ORANG TUA</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-emerald-700 uppercase tracking-wider">AKSI</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSiswa.length === 0 ? (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', padding: '48px 24px', color: colors.gray[400] }}>
-                        <Users size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-                        <p style={{ margin: 0, fontSize: '16px', fontWeight: '500' }}>Tidak ada data siswa</p>
+                      <td colSpan="8" className="px-6 py-12 text-center text-gray-400 text-sm">
+                        <Users size={48} className="mx-auto mb-4 opacity-50" />
+                        <p className="m-0 text-base font-medium">Tidak ada data siswa</p>
                       </td>
                     </tr>
                   ) : (
@@ -993,41 +886,31 @@ export default function KelolaSiswaPage() {
                       return (
                         <tr
                           key={siswa.id}
-                          style={{
-                            borderBottom: `1px solid ${colors.gray[100]}`,
-                            transition: 'all 0.2s ease',
-                            background: 'transparent'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = `${colors.white}50`}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          className="border-b border-slate-200/60 hover:bg-white/50 transition-colors"
                         >
-                          <td style={tableCellStyle}>{index + 1}</td>
-                          <td style={tableCellStyle}>
-                            <div style={{ fontWeight: '600', color: colors.gray[900] }}>{siswa.user.name}</div>
+                          <td className="px-6 py-3 text-sm text-gray-700">{index + 1}</td>
+                          <td className="px-6 py-3">
+                            <div className="font-semibold text-gray-900">{siswa.user.name}</div>
                           </td>
-                          <td style={tableCellStyle}>
-                            <span style={{ fontSize: '13px', color: colors.gray[600] }}>{siswa.user.email}</span>
+                          <td className="px-6 py-3">
+                            <span className="text-xs text-gray-600">{siswa.user.email}</span>
                           </td>
-                          <td style={tableCellStyle}>{siswa.nisn || '-'}</td>
-                          <td style={tableCellStyle}>
-                            <span style={{ fontWeight: '600', color: colors.emerald[700] }}>{siswa.nis}</span>
+                          <td className="px-6 py-3 text-sm text-gray-700">{siswa.nisn || '-'}</td>
+                          <td className="px-6 py-3">
+                            <span className="font-semibold text-emerald-700 text-sm">{siswa.nis}</span>
                           </td>
-                          <td style={tableCellStyle}>
-                            <span style={{
-                              padding: '6px 14px',
-                              borderRadius: '20px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              background: siswa.jenisKelamin === 'LAKI_LAKI' ? `${colors.blue[50]}80` : `${colors.amber[50]}80`,
-                              color: siswa.jenisKelamin === 'LAKI_LAKI' ? colors.blue[700] : colors.amber[700],
-                              border: `1px solid ${siswa.jenisKelamin === 'LAKI_LAKI' ? colors.blue[200] : colors.amber[200]}`
-                            }}>
+                          <td className="px-6 py-3">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                              siswa.jenisKelamin === 'LAKI_LAKI'
+                                ? 'bg-blue-100/70 text-blue-700 border border-blue-200'
+                                : 'bg-amber-100/70 text-amber-700 border border-amber-200'
+                            }`}>
                               {formatGender(siswa.jenisKelamin)}
                             </span>
                           </td>
-                          <td style={tableCellStyle}>{parentName}</td>
-                          <td style={tableCellStyle}>
-                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                          <td className="px-6 py-3 text-sm text-gray-700">{parentName}</td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="flex justify-center">
                               <ActionDropdown
                                 siswaId={siswa.id}
                                 siswa={siswa}
