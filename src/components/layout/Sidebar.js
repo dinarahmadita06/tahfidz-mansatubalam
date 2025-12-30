@@ -58,7 +58,7 @@ const menuItems = [
     description: 'Catat kehadiran siswa'
   },
   {
-    title: 'Referensi Al-Qur\'an',
+    title: 'Al-Qur\'an Digital',
     icon: BookOpen,
     href: '/referensi',
     description: 'Teks & audio Qur\'an'
