@@ -1,432 +1,296 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import GuruLayout from '@/components/layout/GuruLayout';
-import {
-  Users,
-  UserCheck,
-  Clock,
-  Search,
-  RefreshCw,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle2,
-  AlertCircle,
-  BookOpen,
+import { 
+  Users, 
+  Search, 
+  ArrowRight,
   UserPlus,
+  TrendingUp,
+  Award,
+  CheckCircle,
+  XCircle,
+  BookOpen,
+  Calendar,
+  Eye,
+  Edit,
+  Trash2,
+  Link
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-// PageHeader Component
-function PageHeader({ onRefresh, refreshing }) {
-  return (
-    <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
-            Kelola Siswa
-          </h1>
-          <p className="text-white/90 text-sm sm:text-base mt-1">
-            Monitoring siswa kelas binaan dan tracking progress hafalan
-          </p>
-        </div>
+// Mock data for classes
+const mockClasses = [
+  { id: 'cmj5e0vj40001jm04gnqslpzs', name: 'X A1', tahunAjaran: '2024/2025', targetJuz: 1, totalSiswa: 25, progress: 45 },
+  { id: 'cmj5e0vj40001jm04gnqslpzt', name: 'X A2', tahunAjaran: '2024/2025', targetJuz: 1, totalSiswa: 24, progress: 52 },
+  { id: 'cmj5e0vj40001jm04gnqslpzu', name: 'XI A1', tahunAjaran: '2024/2025', targetJuz: 2, totalSiswa: 26, progress: 38 },
+  { id: 'cmj5e0vj40001jm04gnqslpzv', name: 'XI A2', tahunAjaran: '2024/2025', targetJuz: 2, totalSiswa: 23, progress: 41 },
+  { id: 'cmj5e0vj40001jm04gnqslpzw', name: 'XII A1', tahunAjaran: '2024/2025', targetJuz: 3, totalSiswa: 22, progress: 65 },
+];
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 self-start sm:self-auto">
-          <button
-            onClick={onRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
-            Refresh
-          </button>
-          <Link href="/guru/tambah-siswa">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-700 hover:bg-white/90 rounded-xl font-semibold text-sm transition-all shadow-md">
-              <UserPlus size={18} />
-              Tambah Siswa
-            </button>
-          </Link>
+export default function KelolaSiswa() {
+  const router = useRouter();
+  const [classes, setClasses] = useState([]);
+  const [filteredClasses, setFilteredClasses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTahunAjaran, setSelectedTahunAjaran] = useState('');
+
+  useEffect(() => {
+    setClasses(mockClasses);
+    setFilteredClasses(mockClasses);
+  }, []);
+
+  useEffect(() => {
+    let result = classes;
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(term) ||
+        c.tahunAjaran.toLowerCase().includes(term)
+      );
+    }
+    
+    // Apply tahun ajaran filter
+    if (selectedTahunAjaran) {
+      result = result.filter(c => c.tahunAjaran === selectedTahunAjaran);
+    }
+    
+    setFilteredClasses(result);
+  }, [searchTerm, selectedTahunAjaran, classes]);
+
+  // Get unique tahun ajaran values
+  const tahunAjaranOptions = [...new Set(mockClasses.map(c => c.tahunAjaran))];
+
+  const StatCard = ({ icon: Icon, title, value, theme = 'emerald' }) => {
+    const themeConfig = {
+      emerald: {
+        bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
+        border: 'border-2 border-emerald-200',
+        titleColor: 'text-emerald-600',
+        valueColor: 'text-emerald-700',
+        iconBg: 'bg-emerald-100',
+        iconColor: 'text-emerald-600',
+      },
+      amber: {
+        bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
+        border: 'border-2 border-amber-200',
+        titleColor: 'text-amber-600',
+        valueColor: 'text-amber-700',
+        iconBg: 'bg-amber-100',
+        iconColor: 'text-amber-600',
+      },
+      blue: {
+        bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
+        border: 'border-2 border-blue-200',
+        titleColor: 'text-blue-600',
+        valueColor: 'text-blue-700',
+        iconBg: 'bg-blue-100',
+        iconColor: 'text-blue-600',
+      },
+    };
+
+    const config = themeConfig[theme] || themeConfig.emerald;
+
+    return (
+      <div className={`${config.bg} rounded-2xl ${config.border} p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={`${config.titleColor} text-xs font-bold mb-2 uppercase tracking-wide`}>
+              {title}
+            </p>
+            <h3 className={`${config.valueColor} text-3xl font-bold`}>
+              {value}
+            </h3>
+          </div>
+          <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
+            <Icon size={28} className={config.iconColor} strokeWidth={2} />
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// StatsCard Component
-function StatsCard({ icon: Icon, title, value, subtitle, color = 'emerald' }) {
-  const colorMap = {
-    emerald: 'bg-emerald-100 text-emerald-600',
-    blue: 'bg-blue-100 text-blue-600',
-    amber: 'bg-amber-100 text-amber-600',
+    );
   };
 
+  // Calculate statistics
+  const totalKelas = filteredClasses.length;
+  const totalSiswa = filteredClasses.reduce((acc, c) => acc + c.totalSiswa, 0);
+  const avgProgress = totalKelas > 0 
+    ? Math.round(filteredClasses.reduce((acc, c) => acc + c.progress, 0) / totalKelas)
+    : 0;
+  const activeKelas = filteredClasses.length; // All are considered active
+
   return (
-    <div className="rounded-2xl border border-emerald-100 bg-white/70 backdrop-blur shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-6">
-      <div className="flex items-center gap-4">
-        <div className={`w-14 h-14 rounded-2xl ${colorMap[color]} flex items-center justify-center shrink-0`}>
-          <Icon size={24} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-10 py-6 space-y-6">
+        {/* Header Section - Hero Card */}
+        <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
+          {/* Decorative Circles */}
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                Kelola Siswa
+              </h1>
+              <p className="text-green-50 text-sm sm:text-base">
+                Manajemen data siswa berdasarkan kelas
+              </p>
+            </div>
+            <div className="flex gap-3 flex-shrink-0">
+              <button
+                onClick={() => router.push('/guru')}
+                className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-300 shadow-md"
+              >
+                <span className="hidden sm:inline">Kembali</span>
+              </button>
+              <button className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-300 shadow-md">
+                <UserPlus size={18} />
+                <span className="hidden sm:inline">Tambah Siswa</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">
-            {title}
-          </p>
-          <p className="text-3xl font-bold text-slate-800 mb-0.5">
-            {value}
-          </p>
-          {subtitle && (
-            <p className="text-xs text-slate-500">
-              {subtitle}
-            </p>
+
+        {/* Statistics Cards - Pastel Style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard 
+            icon={Users}
+            title="Total Kelas"
+            value={totalKelas}
+            theme="emerald"
+          />
+          <StatCard 
+            icon={TrendingUp}
+            title="Total Siswa"
+            value={totalSiswa}
+            theme="amber"
+          />
+          <StatCard 
+            icon={Users}
+            title="Rata-rata Progress"
+            value={`${avgProgress}%`}
+            theme="blue"
+          />
+          <StatCard 
+            icon={Award}
+            title="Kelas Aktif"
+            value={activeKelas}
+            theme="emerald"
+          />
+        </div>
+
+        {/* Filter Search Card */}
+        <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md shadow-emerald-100/30 p-6">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                  Cari Kelas
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 flex-shrink-0" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Cari berdasarkan nama kelas atau tahun ajaran..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                  Tahun Ajaran
+                </label>
+                <select
+                  value={selectedTahunAjaran}
+                  onChange={(e) => setSelectedTahunAjaran(e.target.value)}
+                  className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+                >
+                  <option value="">Semua</option>
+                  {tahunAjaranOptions.map(tahun => (
+                    <option key={tahun} value={tahun}>{tahun}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Classes List Card */}
+        <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-md overflow-hidden border border-emerald-100/30">
+          <div className="p-6 border-b border-emerald-100/30">
+            <h2 className="text-xl font-bold text-emerald-900">Daftar Kelas</h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b-2 border-emerald-200">
+                <tr>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Kelas</th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Tahun Ajaran</th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Target Juz</th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Jumlah Siswa</th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Rata-rata Progress</th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-emerald-100/50">
+                {filteredClasses.map((kelas, index) => (
+                  <tr key={kelas.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-4 px-6">
+                      <span className="text-gray-600">{index + 1}</span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div>
+                        <p className="font-medium text-gray-900">{kelas.name}</p>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <p className="text-sm text-gray-600">{kelas.tahunAjaran}</p>
+                    </td>
+                    <td className="py-4 px-6">
+                      <p className="text-sm font-medium text-emerald-600">{kelas.targetJuz} Juz</p>
+                    </td>
+                    <td className="py-4 px-6">
+                      <p className="text-sm font-medium text-blue-600">{kelas.totalSiswa} siswa</p>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center">
+                        <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                          <div 
+                            className="bg-emerald-500 h-2 rounded-full" 
+                            style={{ width: `${kelas.progress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium">{kelas.progress}%</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <button
+                        onClick={() => router.push(`/guru/kelola-siswa/${kelas.id}`)}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors text-sm"
+                      >
+                        <span>Detail</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {filteredClasses.length === 0 && (
+            <div className="p-12 text-center">
+              <p className="text-gray-500">Tidak ada kelas ditemukan</p>
+            </div>
           )}
         </div>
       </div>
     </div>
-  );
-}
-
-// FilterBar Component
-function FilterBar({ searchQuery, onSearchChange, filterStatus, onFilterChange, onExport }) {
-  return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
-      <div className="flex flex-col lg:flex-row gap-3">
-        {/* Search Input */}
-        <div className="relative flex-1 min-w-0">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Cari nama siswa atau kelas..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 outline-none transition-all"
-          />
-        </div>
-
-        {/* Filter Status */}
-        <select
-          value={filterStatus}
-          onChange={(e) => onFilterChange(e.target.value)}
-          className="w-full sm:w-auto px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 outline-none transition-all font-medium"
-        >
-          <option value="all">Semua Status</option>
-          <option value="aktif">Aktif</option>
-          <option value="menunggu_validasi">Menunggu Validasi</option>
-          <option value="tidak_aktif">Tidak Aktif</option>
-        </select>
-
-        {/* Export Button */}
-        <button
-          onClick={onExport}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl font-semibold text-sm transition-all"
-        >
-          <Download size={18} />
-          Export
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// EmptyState Component
-function EmptyState({ message }) {
-  return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Users size={32} className="text-slate-400" />
-      </div>
-      <p className="text-slate-600 font-medium">{message}</p>
-    </div>
-  );
-}
-
-// StudentTable Component
-function StudentTable({ students, currentPage, onPageChange }) {
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(students.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedStudents = students.slice(startIndex, startIndex + itemsPerPage);
-
-  const getStatusConfig = (status) => {
-    const configs = {
-      aktif: {
-        bg: 'bg-emerald-50',
-        text: 'text-emerald-700',
-        label: 'Aktif',
-        icon: CheckCircle2,
-      },
-      menunggu_validasi: {
-        bg: 'bg-amber-50',
-        text: 'text-amber-700',
-        label: 'Menunggu Validasi',
-        icon: Clock,
-      },
-      tidak_aktif: {
-        bg: 'bg-slate-50',
-        text: 'text-slate-700',
-        label: 'Tidak Aktif',
-        icon: AlertCircle,
-      },
-    };
-    return configs[status] || configs.aktif;
-  };
-
-  return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
-              <th className="px-6 py-4 text-left text-sm font-bold">Nama Siswa</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Kelas</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Status</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Total Juz</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Total Setoran</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedStudents.length === 0 ? (
-              <tr>
-                <td colSpan="6">
-                  <EmptyState message="Tidak ada siswa yang ditemukan" />
-                </td>
-              </tr>
-            ) : (
-              paginatedStudents.map((student, index) => {
-                const statusConfig = getStatusConfig(student.status);
-                const StatusIcon = statusConfig.icon;
-
-                return (
-                  <tr
-                    key={student.id}
-                    className="even:bg-emerald-50/30 hover:bg-emerald-100/40 transition-colors border-b border-slate-100 last:border-b-0"
-                  >
-                    <td className="px-6 py-4 text-sm font-semibold text-slate-800">
-                      {student.nama}
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm text-slate-600">
-                      {student.kelas}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${statusConfig.bg} ${statusConfig.text} text-xs font-semibold`}
-                      >
-                        <StatusIcon size={14} />
-                        {statusConfig.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-emerald-700">
-                      {student.totalJuz}
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm font-semibold text-slate-600">
-                      {student.totalSetoran}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <Link href={`/guru/kelola-siswa/${student.id}`}>
-                        <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:brightness-110 text-white rounded-lg text-xs font-semibold transition-all shadow-sm">
-                          <BookOpen size={14} />
-                          Detail
-                        </button>
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {students.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4 border-t border-slate-200 bg-slate-50/50">
-          <p className="text-sm text-slate-600">
-            Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, students.length)} dari {students.length} siswa
-          </p>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-full border border-slate-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <ChevronLeft size={18} />
-            </button>
-
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => onPageChange(i + 1)}
-                className={`min-w-[40px] px-3 py-2 rounded-full text-sm font-semibold transition-all ${
-                  currentPage === i + 1
-                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md'
-                    : 'border border-slate-200 hover:bg-emerald-50'
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-full border border-slate-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Main Component
-export default function KelolaSiswaPage() {
-  const [students, setStudents] = useState([]);
-  const [stats, setStats] = useState({
-    totalSiswa: 0,
-    siswaAktif: 0,
-    menungguValidasi: 0,
-  });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Fetch siswa dari kelas binaan guru
-  useEffect(() => {
-    fetchSiswa();
-  }, []);
-
-  const fetchSiswa = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/siswa');
-      if (!response.ok) throw new Error('Failed to fetch siswa');
-
-      const data = await response.json();
-
-      // Transform data
-      const transformedData = data.map((siswa) => ({
-        id: siswa.id,
-        nama: siswa.user.name,
-        kelas: siswa.kelas?.nama || '-',
-        status:
-          siswa.status === 'approved'
-            ? 'aktif'
-            : siswa.status === 'pending'
-            ? 'menunggu_validasi'
-            : 'tidak_aktif',
-        totalJuz: siswa.totalJuz || 0,
-        totalSetoran: siswa.totalSetoran || 0,
-      }));
-
-      setStudents(transformedData);
-
-      // Hitung statistik
-      const totalSiswa = transformedData.length;
-      const siswaAktif = transformedData.filter((s) => s.status === 'aktif').length;
-      const menungguValidasi = transformedData.filter(
-        (s) => s.status === 'menunggu_validasi'
-      ).length;
-
-      setStats({
-        totalSiswa,
-        siswaAktif,
-        menungguValidasi,
-      });
-    } catch (error) {
-      console.error('Error fetching siswa:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchSiswa();
-    setRefreshing(false);
-  };
-
-  const handleExport = () => {
-    alert('Export functionality coming soon!');
-  };
-
-  // Filter students
-  const filteredStudents = students.filter((student) => {
-    const matchSearch =
-      student.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.kelas.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = filterStatus === 'all' || student.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const handleFilterChange = (newStatus) => {
-    setFilterStatus(newStatus);
-    setCurrentPage(1);
-  };
-
-  return (
-    <GuruLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header */}
-        <PageHeader onRefresh={handleRefresh} refreshing={refreshing} />
-
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
-              <p className="text-slate-600">Memuat data siswa...</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              <StatsCard
-                icon={Users}
-                title="Total Siswa"
-                value={stats.totalSiswa}
-                subtitle="Siswa terdaftar"
-                color="emerald"
-              />
-              <StatsCard
-                icon={UserCheck}
-                title="Siswa Aktif"
-                value={stats.siswaAktif}
-                subtitle="Siswa aktif belajar"
-                color="blue"
-              />
-              <StatsCard
-                icon={Clock}
-                title="Menunggu Validasi"
-                value={stats.menungguValidasi}
-                subtitle="Perlu persetujuan"
-                color="amber"
-              />
-            </div>
-
-            {/* Filter Bar */}
-            <FilterBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              filterStatus={filterStatus}
-              onFilterChange={handleFilterChange}
-              onExport={handleExport}
-            />
-
-            {/* Student Table */}
-            <StudentTable
-              students={filteredStudents}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-            />
-          </>
-        )}
-      </div>
-    </GuruLayout>
   );
 }
