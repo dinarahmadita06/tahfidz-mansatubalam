@@ -209,244 +209,249 @@ export default function PengumumanPage() {
 
   return (
     <AdminLayout>
-      <PageWrapper>
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-4 mb-8">
-          <div className="flex items-start gap-4 min-w-0">
-            <div
-              className="p-4 rounded-2xl shadow-lg flex-shrink-0"
-              style={{
-                background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
-              }}
-            >
-              <Megaphone className="text-white" size={28} />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-3xl font-bold text-gray-900" style={{ fontSize: '24px' }}>Pengumuman</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Kelola pengumuman untuk semua pengguna aplikasi
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg whitespace-nowrap flex-shrink-0 w-full sm:w-auto justify-center sm:justify-start"
-            style={{
-              background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
-            }}
-          >
-            <Plus size={20} />
-            <span className="hidden sm:inline">Buat Pengumuman</span>
-            <span className="sm:hidden">Buat</span>
-          </button>
-        </div>
-
-        {/* Success/Error Message */}
-        {success && (
-          <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-4 rounded-xl flex items-center gap-3">
-            <CheckCircle size={20} />
-            <span className="font-medium">{success}</span>
-          </div>
-        )}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-4 rounded-xl flex items-center gap-3">
-            <AlertCircle size={20} />
-            <span className="font-medium">{error}</span>
-          </div>
-        )}
-
-        {/* List Pengumuman */}
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader className="animate-spin text-emerald-600" size={48} />
-          </div>
-        ) : pengumumanList.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
-            <Megaphone className="mx-auto text-gray-300 mb-4" size={64} />
-            <p className="text-gray-500 text-lg font-medium">Belum ada pengumuman</p>
-            <p className="text-gray-400 text-sm mt-1">Klik tombol &quot;Buat Pengumuman&quot; untuk memulai</p>
-          </div>
-        ) : (
-          <div className="grid gap-5">
-            {pengumumanList.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-all duration-300"
-                style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.03)' }}
+      <div className="min-h-screen bg-gradient-to-b from-[#F6FBEF] via-[#FBFDF6] to-white">
+        <div className="px-6 lg:px-10 py-8 space-y-6">
+          {/* Header Card - SIMTAQ Baseline */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
+            {/* Soft overlay highlight */}
+            <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
+            
+            {/* Decorative blur circles */}
+            <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="flex items-center gap-6">
+                {/* Icon Container */}
+                <div className="h-14 w-14 rounded-2xl bg-white/15 border border-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                  <Megaphone size={32} className="text-white" />
+                </div>
+                
+                {/* Header Content */}
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Pengumuman</h1>
+                  <p className="text-white/90 text-sm sm:text-base">Kelola pengumuman untuk semua pengguna aplikasi</p>
+                </div>
+              </div>
+              
+              {/* Action Button */}
+              <button
+                onClick={openCreateModal}
+                className="flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-gradient-to-r from-emerald-600 to-teal-500 whitespace-nowrap"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    {/* Judul */}
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{item.judul}</h3>
+                <Plus size={18} />
+                <span className="hidden sm:inline">Buat Pengumuman</span>
+                <span className="sm:hidden">Buat</span>
+              </button>
+            </div>
+          </div>
 
-                    {/* Ringkasan Isi */}
-                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                      {truncateText(item.isi, 150)}
-                    </p>
+          {/* Success/Error Message */}
+          {success && (
+            <div className="bg-emerald-50/70 backdrop-blur border border-emerald-200/60 text-emerald-700 px-4 py-4 rounded-xl flex items-center gap-3">
+              <CheckCircle size={20} />
+              <span className="font-medium">{success}</span>
+            </div>
+          )}
+          {error && (
+            <div className="bg-rose-50/70 backdrop-blur border border-rose-200/60 text-rose-700 px-4 py-4 rounded-xl flex items-center gap-3">
+              <AlertCircle size={20} />
+              <span className="font-medium">{error}</span>
+            </div>
+          )}
 
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-6 text-xs text-gray-500">
-                      <span className="flex items-center gap-2">
-                        <Calendar size={14} className="text-emerald-600" />
-                        {formatDate(item.createdAt)}
-                      </span>
-                      {item.tanggalSelesai && (
-                        <span className="flex items-center gap-2" style={{ color: colors.amber[600] }}>
-                          <Calendar size={14} />
-                          Berlaku hingga: {formatDate(item.tanggalSelesai)}
+          {/* List Pengumuman */}
+          {loading ? (
+            <div className="flex items-center justify-center py-16 bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm">
+              <Loader className="animate-spin text-emerald-600" size={48} />
+            </div>
+          ) : pengumumanList.length === 0 ? (
+            <div className="text-center py-16 bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm">
+              <Megaphone className="mx-auto text-emerald-200 mb-4" size={64} />
+              <p className="text-slate-900 text-lg font-semibold">Belum ada pengumuman</p>
+              <p className="text-slate-600 text-sm mt-1">Klik tombol "Buat Pengumuman" untuk menambahkan pengumuman baru</p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {pengumumanList.map((item) => (
+                <div
+                  key={item.id}
+                  className="relative bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-6 hover:-translate-y-[2px] hover:shadow-md transition-all duration-300 border-l-4 border-l-emerald-300/70"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      {/* Judul */}
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">{item.judul}</h3>
+
+                      {/* Ringkasan Isi */}
+                      <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+                        {truncateText(item.isi, 150)}
+                      </p>
+
+                      {/* Meta Info - Badges */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                          <Calendar size={13} />
+                          {formatDate(item.createdAt)}
                         </span>
-                      )}
-                      {item.lampiran && (
-                        <span className="flex items-center gap-2" style={{ color: colors.emerald[600] }}>
-                          <FileText size={14} />
-                          Ada lampiran
-                        </span>
-                      )}
+                        {item.tanggalSelesai && (
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                            <Calendar size={13} />
+                            Berlaku hingga: {formatDate(item.tanggalSelesai)}
+                          </span>
+                        )}
+                        {item.lampiran && (
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            <FileText size={13} />
+                            Ada lampiran
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                        title="Edit"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 bg-rose-100 text-rose-700 hover:bg-rose-200"
+                        title="Hapus"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="p-3 rounded-lg transition-all duration-200 hover:bg-emerald-50 text-emerald-600"
-                      title="Edit"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="p-3 rounded-lg transition-all duration-200 hover:bg-red-50 text-red-600"
-                      title="Hapus"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal Create/Edit */}
+      {showModal && (
+        <div
+          className="fixed inset-0 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto pt-20 sm:pt-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+        >
+          <div className="bg-white rounded-3xl p-6 w-full sm:max-w-2xl max-w-sm my-auto" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900">
+                  {editingId ? 'Edit Pengumuman' : 'Buat Pengumuman Baru'}
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {editingId ? 'Perbarui informasi pengumuman' : 'Buat pengumuman baru untuk semua pengguna'}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
+              <button
+                onClick={closeModal}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X size={24} className="text-gray-600" />
+              </button>
+            </div>
 
-        {/* Modal Create/Edit */}
-        {showModal && (
-          <div
-            className="fixed inset-0 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto pt-20 sm:pt-4"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-          >
-            <div className="bg-white rounded-3xl p-6 w-full sm:max-w-2xl max-w-sm my-auto" style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
-              {/* Modal Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="text-xl sm:text-3xl font-bold text-gray-900">
-                    {editingId ? 'Edit Pengumuman' : 'Buat Pengumuman Baru'}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {editingId ? 'Perbarui informasi pengumuman' : 'Buat pengumuman baru untuk semua pengguna'}
-                  </p>
-                </div>
+            {/* Error/Success dalam Modal */}
+            {error && (
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                <AlertCircle size={18} />
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                <CheckCircle size={18} />
+                {success}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-7">
+              {/* Judul Pengumuman */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Judul Pengumuman
+                </label>
+                <input
+                  type="text"
+                  value={formData.judul}
+                  onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
+                  className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
+                  placeholder="Masukkan judul pengumuman..."
+                  required
+                />
+              </div>
+
+              {/* Isi Pengumuman */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Isi Pengumuman
+                </label>
+                <textarea
+                  rows={8}
+                  value={formData.isi}
+                  onChange={(e) => setFormData({ ...formData, isi: e.target.value })}
+                  className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 resize-none"
+                  placeholder="Masukkan isi pengumuman..."
+                  required
+                />
+              </div>
+
+              {/* Tanggal Berlaku */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Tanggal Berakhir <span className="text-gray-400 font-normal">(Opsional)</span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.tanggalBerlaku}
+                  onChange={(e) => setFormData({ ...formData, tanggalBerlaku: e.target.value })}
+                  className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
+                />
+                <p className="text-xs text-gray-500 mt-2">Pengumuman akan otomatis tidak ditampilkan setelah tanggal ini</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
                 <button
+                  type="button"
                   onClick={closeModal}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 px-6 py-4 rounded-xl font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-100 disabled:opacity-50"
+                  style={{ backgroundColor: colors.gray[100] }}
                 >
-                  <X size={24} className="text-gray-600" />
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-6 py-4 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
+                  }}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader className="animate-spin" size={18} />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    editingId ? 'Perbarui' : 'Publikasikan'
+                  )}
                 </button>
               </div>
-
-              {/* Error/Success dalam Modal */}
-              {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-                  <AlertCircle size={18} />
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-                  <CheckCircle size={18} />
-                  {success}
-                </div>
-              )}
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-7">
-                {/* Judul Pengumuman */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3">
-                    Judul Pengumuman
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.judul}
-                    onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
-                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
-                    placeholder="Masukkan judul pengumuman..."
-                    required
-                  />
-                </div>
-
-                {/* Isi Pengumuman */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3">
-                    Isi Pengumuman
-                  </label>
-                  <textarea
-                    rows={8}
-                    value={formData.isi}
-                    onChange={(e) => setFormData({ ...formData, isi: e.target.value })}
-                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 resize-none"
-                    placeholder="Masukkan isi pengumuman..."
-                    required
-                  />
-                </div>
-
-                {/* Tanggal Berlaku */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3">
-                    Tanggal Berakhir <span className="text-gray-400 font-normal">(Opsional)</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.tanggalBerlaku}
-                    onChange={(e) => setFormData({ ...formData, tanggalBerlaku: e.target.value })}
-                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">Pengumuman akan otomatis tidak ditampilkan setelah tanggal ini</p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    disabled={submitting}
-                    className="flex-1 px-6 py-4 rounded-xl font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-100 disabled:opacity-50"
-                    style={{ backgroundColor: colors.gray[100] }}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 px-6 py-4 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{
-                      background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`
-                    }}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader className="animate-spin" size={18} />
-                        Menyimpan...
-                      </>
-                    ) : (
-                      editingId ? 'Perbarui' : 'Publikasikan'
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
-        )}
-      </PageWrapper>
+        </div>
+      )}
 
       <style jsx global>{`
         body {
