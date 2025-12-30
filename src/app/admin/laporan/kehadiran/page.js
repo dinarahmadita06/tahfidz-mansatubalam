@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { FileText, Download, Loader, AlertTriangle } from 'lucide-react';
+import { FileText, Download, Loader, AlertTriangle, BarChart3 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -403,102 +403,46 @@ export default function LaporanKehadiranPage() {
 
   return (
     <AdminLayout>
-      <style jsx>{`
-        .filter-card {
-          background: #FFFFFF;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-          border-radius: 20px;
-          border: 1px solid #E6F4EF;
-        }
-        .filter-card:hover {
-          border-color: #00C98D;
-        }
-        .preview-empty {
-          background: #F3FCF8;
-          border-radius: 16px;
-          padding: 32px;
-        }
-        .select-input {
-          height: 48px;
-          border: 1px solid #DDE6E1;
-          border-radius: 12px;
-          background: white;
-          color: #2F3E3A;
-          transition: border-color 0.2s ease;
-        }
-        .select-input:hover {
-          border-color: #00C98D;
-        }
-        .select-input:focus {
-          border-color: #00C98D;
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(0, 201, 141, 0.3);
-        }
-        .btn-primary {
-          background: linear-gradient(90deg, #00C98D, #00B77E);
-          color: white;
-          border-radius: 12px;
-          padding: 12px 28px;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .btn-primary:hover:not(:disabled) {
-          background: #00B77E;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 201, 141, 0.3);
-        }
-        .btn-primary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        
-        /* Mobile Responsive Padding */
-        .laporan-header {
-          padding: 48px;
-          margin-bottom: 24px;
-        }
-        
-        .laporan-container {
-          padding: 0 48px 48px 48px;
-        }
-        
-        @media (max-width: 768px) {
-          .laporan-header {
-            padding: 24px 16px 20px 16px;
-            margin-bottom: 16px;
-          }
-          
-          .laporan-container {
-            padding: 0 16px 24px 16px;
-          }
-        }
-      `}</style>
-
-      <div style={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #FEFFD9 0%, #F7FFE5 40%, #F5FBEF 100%)'
-      }}>
-        {/* Header Section */}
-        <div className="laporan-header">
-          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, fontSize: '24px', letterSpacing: '-0.3px' }}>Laporan Rekap Kehadiran & Penilaian</h1>
-          <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Laporan terintegrasi kehadiran dan penilaian hafalan siswa (Read-Only)</p>
+      <div className="min-h-screen bg-gradient-to-b from-[#F6FBEF] via-[#FBFDF6] to-white">
+        {/* Header Card - SIMTAQ Baseline Style (identik Manajemen Siswa) */}
+        <div className="px-6 lg:px-10 py-8">
+          <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
+            {/* Soft overlay highlight */}
+            <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
+            
+            {/* Decorative blur circles */}
+            <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div className="relative z-10 flex items-center gap-6">
+              {/* Icon Container - SIMTAQ Style */}
+              <div className="bg-white/15 border border-white/10 backdrop-blur-sm rounded-2xl p-4 flex-shrink-0">
+                <BarChart3 size={32} className="text-white" />
+              </div>
+              
+              {/* Header Content */}
+              <div className="flex-1">
+                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Laporan Kehadiran & Penilaian</h1>
+                <p className="text-white/90 text-sm sm:text-base">Rekap terintegrasi kehadiran dan penilaian hafalan siswa</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Main Container */}
-        <div className="laporan-container">
+        <div className="px-6 lg:px-10 py-8">
+          <div className="space-y-6">
           {/* Filter Card */}
-          <div className="filter-card p-8 mb-8">
-            <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Filter Laporan</h2>
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-6">
+            <h2 className="text-lg font-bold mb-6 text-emerald-900">Filter Laporan</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tipe Filter</label>
+                <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Tipe Filter</label>
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="select-input w-full px-4"
+                  className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                 >
                   <option value="range">Range Tanggal</option>
                   <option value="bulanan">Bulanan</option>
@@ -507,11 +451,11 @@ export default function LaporanKehadiranPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Kelas <span style={{ color: '#F9844A' }}>*</span></label>
+                <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Kelas <span className="text-rose-600">*</span></label>
                 <select
                   value={selectedKelas}
                   onChange={(e) => setSelectedKelas(e.target.value)}
-                  className="select-input w-full px-4"
+                  className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                 >
                   <option value="">Pilih Kelas</option>
                   {kelasList.map((kelas) => (
@@ -522,11 +466,11 @@ export default function LaporanKehadiranPage() {
 
               {filterType === 'semester' && (
                 <div>
-                  <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Semester</label>
+                  <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Semester</label>
                   <select
                     value={semester}
                     onChange={(e) => setSemester(e.target.value)}
-                    className="select-input w-full px-4"
+                    className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                   >
                     <option value="">Pilih Semester</option>
                     <option value="1">Semester 1 (Juli - Desember)</option>
@@ -538,11 +482,11 @@ export default function LaporanKehadiranPage() {
               {filterType === 'bulanan' && (
                 <>
                   <div>
-                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Bulan</label>
+                    <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Bulan</label>
                     <select
                       value={bulan}
                       onChange={(e) => setBulan(e.target.value)}
-                      className="select-input w-full px-4"
+                      className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                     >
                       <option value="">Pilih Bulan</option>
                       <option value="1">Januari</option>
@@ -560,11 +504,11 @@ export default function LaporanKehadiranPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tahun</label>
+                    <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Tahun</label>
                     <select
                       value={tahun}
                       onChange={(e) => setTahun(e.target.value)}
-                      className="select-input w-full px-4"
+                      className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                     >
                       {[...Array(5)].map((_, i) => {
                         const year = new Date().getFullYear() - i;
@@ -578,64 +522,75 @@ export default function LaporanKehadiranPage() {
               {filterType === 'range' && (
                 <>
                   <div>
-                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tanggal Mulai</label>
+                    <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Tanggal Mulai</label>
                     <input
                       type="date"
                       value={tanggalMulai}
                       onChange={(e) => setTanggalMulai(e.target.value)}
-                      className="select-input w-full px-4"
+                      className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-3" style={{ color: '#2F3E3A' }}>Tanggal Selesai</label>
+                    <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Tanggal Selesai</label>
                     <input
                       type="date"
                       value={tanggalSelesai}
                       onChange={(e) => setTanggalSelesai(e.target.value)}
-                      className="select-input w-full px-4"
+                      className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                     />
                   </div>
                 </>
               )}
             </div>
 
-            {/* Generate Button */}
-            <div className="flex justify-center">
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
               <button
                 onClick={handleGenerateReport}
                 disabled={loading || !selectedKelas}
-                className="btn-primary flex items-center gap-2"
+                className="flex items-center justify-center gap-2 h-11 px-5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-xl font-semibold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
-                    <Loader className="animate-spin" size={20} />
+                    <Loader className="animate-spin" size={18} />
                     Memproses...
                   </>
                 ) : (
                   <>
-                    <FileText size={20} />
+                    <FileText size={18} />
                     Tampilkan Laporan
                   </>
                 )}
               </button>
+              
+              {/* Export PDF Button - Conditional Render */}
+              {reportData && !loading && (
+                <button
+                  onClick={exportPDF}
+                  className="flex items-center justify-center gap-2 h-11 px-5 border border-emerald-200 text-emerald-700 bg-white/60 rounded-xl font-semibold text-sm hover:bg-emerald-50 shadow-sm transition-all duration-200"
+                >
+                  <Download size={18} />
+                  Export PDF
+                </button>
+              )}
             </div>
           </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="filter-card p-12 text-center">
-            <Loader className="animate-spin mx-auto mb-4" size={48} style={{ color: '#00C98D' }} />
-            <p className="font-medium" style={{ color: '#2F3E3A' }}>Memproses data laporan...</p>
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-12 text-center">
+            <Loader className="animate-spin mx-auto mb-4 text-emerald-600" size={48} />
+            <p className="font-medium text-emerald-900">Memproses data laporan...</p>
           </div>
         )}
 
         {/* Error State */}
         {!loading && reportData === null && selectedKelas && (
-          <div className="filter-card p-6 flex items-start gap-4" style={{ border: '1px solid #FED7AA', background: '#FEFCE8' }}>
-            <AlertTriangle className="flex-shrink-0 mt-1" size={24} style={{ color: '#D97706' }} />
+          <div className="bg-amber-50/70 backdrop-blur rounded-2xl border border-amber-200/60 shadow-sm p-6 flex items-start gap-4">
+            <AlertTriangle className="flex-shrink-0 mt-1 text-amber-600" size={24} />
             <div>
-              <h3 className="font-semibold" style={{ color: '#92400E' }}>Perhatian</h3>
-              <p className="text-sm mt-1" style={{ color: '#B45309' }}>
+              <h3 className="font-semibold text-amber-900">Perhatian</h3>
+              <p className="text-sm mt-1 text-amber-800/80">
                 Tidak ada data kehadiran untuk periode yang dipilih. Coba ubah filter atau periode tanggal.
               </p>
             </div>
@@ -644,9 +599,9 @@ export default function LaporanKehadiranPage() {
 
         {/* Empty State */}
         {!reportData && !loading && !selectedKelas && (
-          <div className="preview-empty text-center">
-            <FileText size={48} className="mx-auto mb-4" style={{ color: '#00C98D', opacity: 0.9 }} />
-            <p style={{ color: '#6B7E75', fontSize: '15px' }}>
+          <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-12 text-center">
+            <FileText size={48} className="mx-auto mb-4 text-emerald-600" />
+            <p className="text-emerald-700 text-sm">
               Pilih kelas dan klik &apos;Tampilkan Laporan&apos; untuk melihat laporan kehadiran
             </p>
           </div>
@@ -656,38 +611,38 @@ export default function LaporanKehadiranPage() {
         {reportData && !loading && (
           <>
             {/* Detail Table */}
-            <div className="filter-card overflow-hidden">
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead style={{ background: '#F3FCF8', borderBottom: '2px solid #DDE6E1' }}>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>No</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Nama Siswa</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Hadir</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Sakit</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Izin</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Alpa</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Tajwid</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Kelancaran</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Makhraj</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Implementasi</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold uppercase" style={{ color: '#2F3E3A', borderBottom: '1px solid #DDE6E1' }}>Total Nilai</th>
+                  <thead>
+                    <tr className="bg-emerald-50/70 border-b border-emerald-100/50">
+                      <th className="px-6 py-3.5 text-left text-xs font-bold uppercase text-emerald-900 tracking-wide">No</th>
+                      <th className="px-6 py-3.5 text-left text-xs font-bold uppercase text-emerald-900 tracking-wide">Nama Siswa</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Hadir</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Sakit</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Izin</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Alpa</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Tajwid</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Kelancaran</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Makhraj</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Implementasi</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase text-emerald-900 tracking-wide">Total Nilai</th>
                     </tr>
                   </thead>
-                  <tbody style={{ borderTop: '2px solid #DDE6E1' }}>
+                  <tbody>
                     {reportData.siswaData.map((siswa, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid #DDE6E1' }}>
-                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{idx + 1}</td>
-                        <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{siswa.nama}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#00C98D', fontWeight: 600 }}>{siswa.hadir || 0}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#EF4444', fontWeight: 600 }}>{siswa.sakit || 0}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#F59E0B', fontWeight: 600 }}>{siswa.izin || 0}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#DC2626', fontWeight: 600 }}>{siswa.alpa || 0}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.tajwid ?? '-'}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.kelancaran ?? '-'}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.makhraj ?? '-'}</td>
-                        <td className="px-6 py-4 text-sm text-center" style={{ color: '#2F3E3A' }}>{siswa.implementasi ?? '-'}</td>
-                        <td className="px-6 py-4 text-sm text-center font-semibold" style={{ color: '#00C98D' }}>{siswa.totalNilai ?? '-'}</td>
+                      <tr key={idx} className="border-b border-emerald-100/40 hover:bg-emerald-50/40 transition-colors duration-200">
+                        <td className="px-6 py-4 text-sm text-gray-900">{idx + 1}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{siswa.nama}</td>
+                        <td className="px-6 py-4 text-sm text-center font-semibold text-emerald-600">{siswa.hadir || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center font-semibold text-rose-600">{siswa.sakit || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center font-semibold text-amber-600">{siswa.izin || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center font-semibold text-red-600">{siswa.alpa || 0}</td>
+                        <td className="px-6 py-4 text-sm text-center text-gray-900">{siswa.tajwid ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center text-gray-900">{siswa.kelancaran ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center text-gray-900">{siswa.makhraj ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center text-gray-900">{siswa.implementasi ?? '-'}</td>
+                        <td className="px-6 py-4 text-sm text-center font-semibold text-emerald-600">{siswa.totalNilai ?? '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -695,21 +650,10 @@ export default function LaporanKehadiranPage() {
               </div>
             </div>
 
-            {/* Export Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
-              <button
-                onClick={exportPDF}
-                className="flex items-center justify-center sm:justify-start gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all"
-                style={{ background: 'linear-gradient(90deg, #00C98D, #00B77E)' }}
-                onMouseEnter={(e) => e.target.style.boxShadow = '0 4px 12px rgba(0, 201, 141, 0.3)'}
-                onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
-              >
-                <Download size={20} />
-                Export PDF
-              </button>
-            </div>
+            {/* Export Buttons - Removed from here */}
           </>
         )}
+          </div>
         </div>
       </div>
     </AdminLayout>
