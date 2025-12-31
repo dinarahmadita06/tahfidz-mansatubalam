@@ -90,7 +90,6 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
 
 export default function AdminOrangTuaPage() {
   const [orangTua, setOrangTua] = useState([]);
-  const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -120,18 +119,7 @@ export default function AdminOrangTuaPage() {
 
   useEffect(() => {
     fetchOrangTua();
-    fetchSiswa();
   }, []);
-
-  const fetchSiswa = async () => {
-    try {
-      const response = await fetch('/api/admin/siswa?page=1&limit=1000&include=kelas');
-      const result = await response.json();
-      setSiswa(result.data || []);
-    } catch (error) {
-      console.error('Error fetching siswa:', error);
-    }
-  };
 
   const fetchOrangTua = async () => {
     try {
@@ -376,8 +364,54 @@ export default function AdminOrangTuaPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 relative overflow-x-hidden">
+          {/* Header Skeleton */}
+          <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-4 sm:px-6 lg:px-8 py-8 rounded-3xl shadow-lg mx-4 sm:mx-6 lg:mx-8">
+            <div className="animate-pulse">
+              <div className="h-8 bg-white/20 rounded-lg w-1/3 mb-3"></div>
+              <div className="h-4 bg-white/20 rounded-lg w-1/2"></div>
+            </div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="relative z-10 w-full max-w-none px-4 sm:px-6 lg:px-8 py-8">
+            {/* Stats Skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white/70 rounded-2xl p-6 h-40"></div>
+              ))}
+            </div>
+
+            {/* Table Skeleton */}
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 overflow-hidden shadow-sm animate-pulse">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-emerald-50/50 border-b border-emerald-100/40">
+                      {['Nama', 'Email', 'No. HP', 'Anak', 'Status', 'Tanggal', 'Aksi'].map((col) => (
+                        <th key={col} className="px-6 py-4">
+                          <div className="h-3 bg-emerald-200/40 rounded"></div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[1, 2, 3, 4, 5].map((row) => (
+                      <tr key={row} className="border-b border-emerald-100/20">
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200/40 rounded"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200/40 rounded"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200/40 rounded"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200/40 rounded"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200/40 rounded"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200/40 rounded"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-gray-200/40 rounded"></div></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -565,7 +599,7 @@ export default function AdminOrangTuaPage() {
                               {orangTuaItem.user.email}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
-                              {orangTuaItem.noHP || '-'}
+                              {(orangTuaItem.noHP || orangTuaItem.noTelepon || '-')}
                             </td>
                             <td className="px-6 py-4">
                               <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
@@ -614,7 +648,6 @@ export default function AdminOrangTuaPage() {
       {modalState.detailModal && (
         <ParentDetailModal
           orangTuaItem={modalState.detailModal}
-          siswaList={siswa}
           onClose={() => setModalState(prev => ({ ...prev, detailModal: null }))}
         />
       )}
