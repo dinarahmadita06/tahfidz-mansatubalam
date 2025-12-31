@@ -71,14 +71,6 @@ export default function ParentLinkSection({
     }
   }, [newParentData.name, siswaFormData.nis, emailWaliManuallyEdited, mode, waliType]);
 
-  // Auto-generate email when name or phone changes (fallback to phone-based for compatibility)
-  useEffect(() => {
-    if (mode === 'create' && newParentData.name && newParentData.noHP && !siswaFormData.nis) {
-      const email = generateParentEmail(newParentData.name, newParentData.noHP);
-      onNewParentChange({ ...newParentData, email });
-    }
-  }, [newParentData.name, newParentData.noHP]);
-
   const filteredParents = parents.filter(
     (p) =>
       p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
