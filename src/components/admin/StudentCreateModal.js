@@ -50,6 +50,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
     noHP: '',
     email: '',
     password: '',
+    jenisWali: 'Ayah',
   });
 
   // Student form data
@@ -107,6 +108,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
       noHP: '',
       email: '',
       password: '',
+      jenisWali: 'Ayah',
     });
     setFieldErrors({});
   };
@@ -226,8 +228,25 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
         parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
       } else {
         // Create new parent
+        // Validate all required parent fields
+        const missingParentFields = [];
+        if (!newParentData.name || !newParentData.name.trim()) missingParentFields.push('Nama orang tua');
+        if (!newParentData.noHP || !newParentData.noHP.trim()) missingParentFields.push('Nomor telepon');
+        if (!newParentData.email || !newParentData.email.trim()) missingParentFields.push('Email wali');
+        if (!newParentData.password || !newParentData.password.trim()) missingParentFields.push('Password wali');
+        if (!newParentData.jenisWali) missingParentFields.push('Jenis wali');
+
+        if (missingParentFields.length > 0) {
+          throw new Error(`Data orang tua tidak lengkap: ${missingParentFields.join(', ')}`);
+        }
+
+        // Normalize data before sending
         const parentPayload = {
-          ...newParentData,
+          name: newParentData.name.trim(),
+          noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
+          email: newParentData.email.trim().toLowerCase(),
+          password: newParentData.password.trim(),
+          jenisWali: newParentData.jenisWali,
           nik: `NIK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,  // Ensure unique NIK
           jenisKelamin: 'LAKI_LAKI',  // Default, could be enhanced
         };

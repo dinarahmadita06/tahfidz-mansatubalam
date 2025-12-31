@@ -66,10 +66,10 @@ export default function ParentLinkSection({
     if (mode === 'create' && newParentData.name && siswaFormData.nis && !emailWaliManuallyEdited) {
       const email = generateWaliEmail(newParentData.name, siswaFormData.nis);
       if (email) {
-        onNewParentChange({ ...newParentData, email });
+        onNewParentChange({ ...newParentData, email, jenisWali: waliType });
       }
     }
-  }, [newParentData.name, siswaFormData.nis, emailWaliManuallyEdited, mode]);
+  }, [newParentData.name, siswaFormData.nis, emailWaliManuallyEdited, mode, waliType]);
 
   // Auto-generate email when name or phone changes (fallback to phone-based for compatibility)
   useEffect(() => {
@@ -352,7 +352,10 @@ export default function ParentLinkSection({
               </label>
               <select
                 value={waliType}
-                onChange={(e) => setWaliType(e.target.value)}
+                onChange={(e) => {
+                  setWaliType(e.target.value);
+                  onNewParentChange({ ...newParentData, jenisWali: e.target.value });
+                }}
                 required={mode === 'create'}
                 style={{
                   width: '100%',
