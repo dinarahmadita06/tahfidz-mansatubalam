@@ -103,10 +103,10 @@ function StatsCard({ icon: Icon, title, value, subtitle, variant = 'green' }) {
 }
 
 // FilterBar Component
-function FilterBar({ searchQuery, onSearchChange, filterStatus, onFilterChange, onExport }) {
+function FilterBar({ searchQuery, onSearchChange, filterStatus, onFilterChange, onExport, itemsPerPage, onItemsPerPageChange }) {
   return (
     <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
-      <div className="flex flex-col lg:flex-row gap-3">
+      <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
         {/* Search Input */}
         <div className="relative flex-1 min-w-0">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -119,26 +119,53 @@ function FilterBar({ searchQuery, onSearchChange, filterStatus, onFilterChange, 
           />
         </div>
 
-        {/* Filter Status */}
-        <select
-          value={filterStatus}
-          onChange={(e) => onFilterChange(e.target.value)}
-          className="w-full sm:w-auto px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 outline-none transition-all font-medium"
-        >
-          <option value="all">Semua Status</option>
-          <option value="aktif">Aktif</option>
-          <option value="menunggu_validasi">Menunggu Validasi</option>
-          <option value="tidak_aktif">Tidak Aktif</option>
-        </select>
+        {/* Controls Group - Right side */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto lg:items-center">
+          {/* Rows Per Page */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label htmlFor="rowsPerPage" className="text-sm text-slate-600 font-medium whitespace-nowrap">Tampilkan:</label>
+            <select
+              id="rowsPerPage"
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange(parseInt(e.target.value))}
+              className="h-11 px-3 rounded-xl bg-white/70 backdrop-blur border border-emerald-100/60 focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all text-sm font-medium min-w-[110px] flex-1 sm:flex-none"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
 
-        {/* Export Button */}
-        <button
-          onClick={onExport}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl font-semibold text-sm transition-all"
-        >
-          <Download size={18} />
-          Export
-        </button>
+          {/* Filter Status */}
+          <select
+            value={filterStatus}
+            onChange={(e) => onFilterChange(e.target.value)}
+            className="w-full sm:w-auto h-11 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
+            style={{
+              backgroundImage: 'url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath fill=%27none%27 stroke=%27%23333%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M2 5l6 6 6-6%27/%3E%3C/svg%3E")',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 0.75rem center',
+              backgroundSize: '1.5em 1.5em',
+              paddingRight: '2.5rem',
+            }}
+          >
+            <option value="all">Semua Status</option>
+            <option value="aktif">Aktif</option>
+            <option value="menunggu_validasi">Menunggu Validasi</option>
+            <option value="tidak_aktif">Tidak Aktif</option>
+          </select>
+
+          {/* Export Button */}
+          <button
+            onClick={onExport}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 h-11 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl font-semibold text-sm transition-all"
+          >
+            <Download size={18} />
+            Export
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -247,27 +274,9 @@ function StudentTable({ students, currentPage, onPageChange, itemsPerPage, onIte
       {/* Pagination */}
       {students.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-6 py-4 border-t border-slate-200 bg-slate-50/50">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
-            <p className="text-sm text-slate-600 whitespace-nowrap">
-              Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, students.length)} dari {students.length} siswa
-            </p>
-            
-            <div className="flex items-center gap-2">
-              <label htmlFor="rowsPerPage" className="text-sm text-slate-600 whitespace-nowrap">Tampilkan:</label>
-              <select
-                id="rowsPerPage"
-                value={itemsPerPage}
-                onChange={(e) => onItemsPerPageChange(parseInt(e.target.value))}
-                className="h-10 px-3 rounded-xl bg-white/70 backdrop-blur border border-emerald-100/60 focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all text-sm font-medium min-w-[90px]"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-          </div>
+          <p className="text-sm text-slate-600 whitespace-nowrap">
+            Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, students.length)} dari {students.length} siswa
+          </p>
 
           <div className="flex gap-2">
             <button
@@ -446,6 +455,8 @@ export default function KelolaSiswaPage() {
               filterStatus={filterStatus}
               onFilterChange={handleFilterChange}
               onExport={handleExport}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
 
             {/* Student Table */}
