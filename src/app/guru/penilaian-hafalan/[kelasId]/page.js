@@ -100,6 +100,8 @@ export default function PenilaianHafalanPage() {
     makhraj: '',
     implementasi: '',
     catatan: '',
+    hafalan_lebih_dari_1_surah: false,
+    surah_tambahan: '',
   });
 
   // Fetch data siswa dan kelas
@@ -231,6 +233,8 @@ export default function PenilaianHafalanPage() {
         makhraj: existingData.penilaian.makhraj || '',
         implementasi: existingData.penilaian.implementasi || '',
         catatan: existingData.catatan || '',
+        hafalan_lebih_dari_1_surah: existingData.penilaian.hafalan_lebih_dari_1_surah || false,
+        surah_tambahan: existingData.penilaian.surah_tambahan || '',
       });
     } else {
       // Reset form
@@ -243,6 +247,8 @@ export default function PenilaianHafalanPage() {
         makhraj: '',
         implementasi: '',
         catatan: '',
+        hafalan_lebih_dari_1_surah: false,
+        surah_tambahan: '',
       });
     }
 
@@ -566,6 +572,42 @@ export default function PenilaianHafalanPage() {
                 </select>
               </div>
 
+              {/* Checkbox Hafalan Lebih Dari 1 Surah */}
+              <div>
+                <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="hafalan_lebih_dari_1_surah"
+                    checked={popupForm.hafalan_lebih_dari_1_surah}
+                    onChange={(e) => setPopupForm({ ...popupForm, hafalan_lebih_dari_1_surah: e.target.checked })}
+                    className="mt-1 w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+                  />
+                  <label htmlFor="hafalan_lebih_dari_1_surah" className="flex-1 cursor-pointer">
+                    <p className="font-medium text-slate-700">☑ Hafalan lebih dari 1 surah</p>
+                    <p className="text-xs text-slate-600 mt-1">Centang jika siswa menghafal lebih dari 1 surah dalam sesi ini</p>
+                  </label>
+                </div>
+              </div>
+
+              {/* Surah Tambahan - Conditional */}
+              {popupForm.hafalan_lebih_dari_1_surah && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Surah Tambahan (Opsional)
+                  </label>
+                  <input
+                    type="text"
+                    value={popupForm.surah_tambahan}
+                    onChange={(e) => setPopupForm({ ...popupForm, surah_tambahan: e.target.value })}
+                    placeholder="Contoh: Al-Ikhlas, Al-Falaq"
+                    className="w-full h-11 px-4 rounded-xl bg-white/70 border border-emerald-100/60 backdrop-blur focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-2">
+                    Isi jika hafalan siswa lebih dari 1 surah, namun penilaian tetap dihitung 1x.
+                  </p>
+                </div>
+              )}
+
               {/* Ayat */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
@@ -645,7 +687,7 @@ export default function PenilaianHafalanPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">
-                      Implementasi/Adab <span className="text-red-500">*</span>
+                      Implementasi<span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
