@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { generateSiswaEmail } from '@/lib/siswaUtils';
+import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 
 // PUT - Update siswa
 export async function PUT(request, { params }) {
@@ -27,6 +28,7 @@ export async function PUT(request, { params }) {
       tanggalLahir,
       alamat,
       noHP,
+      noTelepon,
       orangTuaId,
       isActive
     } = body;
@@ -89,7 +91,9 @@ export async function PUT(request, { params }) {
     if (tempatLahir !== undefined) siswaUpdateData.tempatLahir = tempatLahir;
     if (tanggalLahir !== undefined) siswaUpdateData.tanggalLahir = new Date(tanggalLahir);
     if (alamat !== undefined) siswaUpdateData.alamat = alamat;
-    if (noHP !== undefined) siswaUpdateData.noHP = noHP;
+    // Support both noHP and noTelepon
+    if (noHP !== undefined) siswaUpdateData.noTelepon = noHP;
+    if (noTelepon !== undefined) siswaUpdateData.noTelepon = noTelepon;
     if (orangTuaId !== undefined) siswaUpdateData.orangTuaId = orangTuaId || null;
 
     // Add kelas connection if kelasId is provided
@@ -155,6 +159,13 @@ export async function PUT(request, { params }) {
       }
     });
 
+    // Invalidate cache
+    if (updatedSiswa.kelas?.id) {
+      invalidateCache(`siswa-list-kelasId-${updatedSiswa.kelas.id}`);
+      console.log('🗑️ Cache invalidated for kelas:', updatedSiswa.kelas.id);
+    }
+    invalidateCache('siswa-list-all');
+
     return NextResponse.json(updatedSiswa);
   } catch (error) {
     console.error('Error updating siswa:', error);
@@ -165,6 +176,11 @@ export async function PUT(request, { params }) {
       { status: 500 }
     );
   }
+}
+
+// PATCH - Update siswa (alias for PUT, supports partial updates)
+export async function PATCH(request, { params }) {
+  return PUT(request, { params });
 }
 
 // DELETE - Delete siswa
