@@ -182,19 +182,19 @@ function AnnouncementSection() {
 
   return (
     <div className="bg-amber-50/70 backdrop-blur-sm rounded-2xl border border-amber-200 shadow-[0_0_0_1px_rgba(245,158,11,0.25),0_12px_40px_rgba(245,158,11,0.12)] p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-amber-500 rounded-xl text-white shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+          <div className="p-3 bg-amber-500 rounded-xl text-white shadow-lg flex-shrink-0 mx-auto sm:mx-0">
             <Megaphone size={24} strokeWidth={2} />
           </div>
-          <div>
+          <div className="text-center sm:text-left">
             <h2 className="text-lg font-bold text-amber-900">Pengumuman Terbaru</h2>
             <p className="text-xs text-amber-700 font-medium">Informasi penting untuk Anda</p>
           </div>
         </div>
         <Link
           href="/admin/pengumuman"
-          className="hidden sm:inline-flex px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+          className="hidden sm:inline-flex px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md flex-shrink-0"
         >
           Lihat Semua
         </Link>
