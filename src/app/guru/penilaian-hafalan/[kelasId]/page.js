@@ -89,6 +89,9 @@ export default function PenilaianHafalanPage() {
   // State untuk data penilaian per siswa per tanggal
   const [penilaianData, setPenilaianData] = useState({});
 
+  // State untuk expand/collapse catatan di tabel
+  const [expandedCatatan, setExpandedCatatan] = useState({});
+
   // State untuk popup penilaian
   const [showPopup, setShowPopup] = useState(false);
   const [selectedSiswa, setSelectedSiswa] = useState(null);
@@ -490,19 +493,19 @@ export default function PenilaianHafalanPage() {
 
                       {/* Surah yang Disetorkan */}
                       <td className="px-6 py-4 text-sm">
-                        <div className="space-y-2 max-w-[220px] break-words">
+                        <div className="flex flex-col gap-1 max-w-[220px] break-words whitespace-normal">
                           {penilaian.surah ? (
                             <>
                               <div className="font-semibold text-slate-800">
                                 {penilaian.surah} ({penilaian.ayatMulai}–{penilaian.ayatSelesai})
                               </div>
                               {penilaian.surah_tambahan && (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-start gap-2">
                                   <span className="text-slate-700">
                                     {penilaian.surah_tambahan} ({penilaian.ayat_tambahan_mulai}–{penilaian.ayat_tambahan_selesai})
                                   </span>
-                                  <span className="text-xs bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2 py-0.5 whitespace-nowrap">
-                                    tambahan
+                                  <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2 py-0.5 whitespace-nowrap flex-shrink-0 mt-0.5">
+                                    Tambahan
                                   </span>
                                 </div>
                               )}
@@ -514,23 +517,31 @@ export default function PenilaianHafalanPage() {
                       </td>
 
                       {/* Catatan */}
-                      <td className="px-6 py-4">
-                        <input
-                          type="text"
-                          value={data.catatan || ''}
-                          onChange={(e) => {
-                            setPenilaianData((prev) => ({
-                              ...prev,
-                              [siswa.id]: {
-                                ...prev[siswa.id],
-                                catatan: e.target.value,
-                              },
-                            }));
-                          }}
-                          onBlur={(e) => handleCatatanChange(siswa.id, e.target.value)}
-                          placeholder="Tulis catatan singkat…"
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-colors"
-                        />
+                      <td className="px-6 py-4 text-sm">
+                        <div className="min-w-[240px] max-w-[360px] space-y-2">
+                          {data.catatan ? (
+                            <>
+                              <p className={`text-slate-700 leading-relaxed ${
+                                expandedCatatan[siswa.id] ? '' : 'line-clamp-2'
+                              } break-words whitespace-normal`}>
+                                {data.catatan}
+                              </p>
+                              {data.catatan.length > 60 && (
+                                <button
+                                  onClick={() => setExpandedCatatan((prev) => ({
+                                    ...prev,
+                                    [siswa.id]: !prev[siswa.id],
+                                  }))}
+                                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
+                                >
+                                  {expandedCatatan[siswa.id] ? 'Sembunyikan' : 'Lihat Selengkapnya'}
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-slate-400 text-sm">–</span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Rata-rata Nilai */}
