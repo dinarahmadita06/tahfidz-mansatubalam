@@ -599,6 +599,8 @@ export default function KelolaSiswaPage() {
           jenisKelamin: 'LAKI_LAKI',
         };
 
+        console.log('📤 Creating/Linking parent with payload:', parentPayload);
+
         const parentResponse = await fetch('/api/admin/orangtua', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -606,11 +608,13 @@ export default function KelolaSiswaPage() {
         });
 
         const parentResult = await parentResponse.json();
+        console.log('📦 Parent response status:', parentResponse.status, ', result:', parentResult);
 
         if (!parentResponse.ok) {
+          console.error('❌ Parent creation failed:', parentResult);
           // Show specific error messages from backend
-          if (parentResult.error === 'Email sudah terdaftar') {
-            throw new Error('Email wali sudah digunakan');
+          if (parentResult.error && parentResult.error.includes('sudah terdaftar')) {
+            throw new Error('Email wali sudah terdaftar. Silakan gunakan email berbeda atau pilih orang tua yang sudah ada dari daftar.');
           }
           throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
         }
@@ -619,7 +623,9 @@ export default function KelolaSiswaPage() {
         parentEmail = parentResult.user.email;
         parentPassword = newParentData.password;
         parentName = parentResult.user.name;
+        console.log('✅ Parent created/reused successfully:', { orangTuaId, parentName, parentEmail });
 
+        console.log('🔗 Linking parent to student...');
         const linkResponse = await fetch('/api/admin/orangtua-siswa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -632,8 +638,10 @@ export default function KelolaSiswaPage() {
 
         if (!linkResponse.ok) {
           const linkError = await linkResponse.json();
+          console.error('❌ Link creation failed:', linkError);
           throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
         }
+        console.log('✅ Parent linked to student successfully');
       }
 
       setCreatedAccounts({

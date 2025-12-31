@@ -93,7 +93,7 @@ export async function GET(request) {
   }
 }
 
-// POST - Create new orang tua (Admin only)
+// POST - Create or Update (UPSERT) orang tua (Admin only)
 export async function POST(request) {
   try {
     const session = await auth();
@@ -130,26 +130,57 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Format nomor HP tidak valid' }, { status: 400 });
     }
 
-    // Check if email already exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
+    // ============ UPSERT LOGIC ============
+    // Step 1: Check if parent already exists by email
+    console.log('🔍 Checking if parent exists with email:', email);
+    const existingOrangTua = await prisma.orangTua.findFirst({
+      where: {
+        user: {
+          email: email.toLowerCase()
+        }
+      },
+      include: {
+        user: true
+      }
+    });
+
+    if (existingOrangTua) {
+      // Parent already exists → REUSE it (don't update, just return)
+      console.log('✅ Parent already exists by email, reusing:', existingOrangTua.id);
+      return NextResponse.json(
+        {
+          ...existingOrangTua,
+          user: {
+            id: existingOrangTua.user.id,
+            name: existingOrangTua.user.name,
+            email: existingOrangTua.user.email,
+            image: existingOrangTua.user.image,
+            isActive: existingOrangTua.user.isActive,
+            createdAt: existingOrangTua.user.createdAt
+          },
+          message: 'Parent sudah ada, menggunakan data existing'
+        },
+        { status: 200 }
+      );
     }
 
+    // Step 2: Parent doesn't exist → CREATE new
+    console.log('➕ Creating new parent with email:', email);
+    
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user and orang tua
     const orangTua = await prisma.orangTua.create({
       data: {
-        nik, // Add NIK field
+        nik,
         pekerjaan: pekerjaan || null,
         noTelepon: noHP, // Map noHP to noTelepon in Prisma schema
         alamat: alamat || null,
         jenisKelamin: 'LAKI_LAKI', // Add default gender
         user: {
           create: {
-            email,
+            email: email.toLowerCase(),
             password: hashedPassword,
             name,
             role: 'ORANG_TUA',
@@ -177,6 +208,8 @@ export async function POST(request) {
       },
     });
 
+    console.log('✅ Parent created successfully:', orangTua.id);
+
     // Log activity
     await logActivity({
       userId: session.user.id,
@@ -184,13 +217,13 @@ export async function POST(request) {
       userRole: session.user.role,
       action: 'CREATE',
       module: 'ORANG_TUA',
-      description: `Menambahkan orang tua baru ${orangTua.user.name} (No HP: ${orangTua.noHP})`,
+      description: `Menambahkan orang tua baru ${orangTua.user.name} (No HP: ${orangTua.noTelepon})`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
         orangTuaId: orangTua.id
       }
-    });
+    }).catch((err) => console.error('Log activity error:', err));
 
     return NextResponse.json(orangTua, { status: 201 });
   } catch (error) {
@@ -205,13 +238,13 @@ export async function POST(request) {
       const field = error.meta?.target?.[0];
       let errorMsg = 'Data sudah terdaftar';
       if (field === 'email') {
-        errorMsg = 'Email sudah terdaftar';
+        errorMsg = 'Email sudah terdaftar, silakan gunakan email lain';
       } else if (field === 'nik') {
         errorMsg = 'NIK sudah terdaftar';
       }
       return NextResponse.json(
         { error: errorMsg },
-        { status: 400 }
+        { status: 409 }  // Changed to 409 Conflict
       );
     }
     
@@ -219,7 +252,7 @@ export async function POST(request) {
       // Record not found
       return NextResponse.json(
         { error: 'Data tidak ditemukan' },
-        { status: 400 }
+        { status: 404 }
       );
     }
     
