@@ -27,18 +27,19 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Use simple cache key
-    const cacheKey = 'siswa-list';
+    // Use cache key that includes kelasId to avoid mixing data between classes
+    const cacheKey = kelasId ? `siswa-list-kelasId-${kelasId}` : 'siswa-list-all';
+    console.log('🔑 Cache key:', cacheKey, 'kelasId:', kelasId);
 
     // Check if we have cached data
     const cachedData = getCachedData(cacheKey);
 
     if (cachedData) {
-      console.log('Returning cached siswa data');
+      console.log('✅ Returning cached siswa data for kelas:', kelasId, 'count:', cachedData.data?.length || 0);
       return NextResponse.json(cachedData);
     }
 
-    console.log('Fetching fresh siswa data from database');
+    console.log('🔄 Fetching fresh siswa data from database for kelas:', kelasId);
 
     let whereClause = {};
 
@@ -295,8 +296,12 @@ export async function POST(request) {
       }
     }).catch(err => console.error('Log activity error:', err));
 
-    // Invalidate cache (non-blocking)
-    invalidateCache('siswa-list');
+    // Invalidate cache for this kelas (and generic cache)
+    if (siswa.kelasId) {
+      invalidateCache(`siswa-list-kelasId-${siswa.kelasId}`);
+      console.log('🗑️ Cache invalidated for kelas:', siswa.kelasId);
+    }
+    invalidateCache('siswa-list-all');  // Also invalidate generic cache
 
     const totalTime = Date.now() - startTime;
     console.log(`✅ Total request time: ${totalTime}ms`);
