@@ -28,7 +28,13 @@ export async function GET(request) {
 
     const kelas = await prisma.kelas.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        nama: true,
+        tingkat: true,
+        status: true,
+        targetJuz: true,
+        tahunAjaranId: true,
         guruKelas: {
           where: {
             isActive: true
@@ -48,8 +54,10 @@ export async function GET(request) {
         },
         tahunAjaran: {
           select: {
+            id: true,
             nama: true,
             isActive: true,
+            targetHafalan: true,
           },
         },
         _count: {
