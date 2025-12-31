@@ -263,6 +263,7 @@ export default function AdminKelasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGuru, setFilterGuru] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, inactive
+  const [showInactiveKelas, setShowInactiveKelas] = useState(false); // Toggle untuk tampil kelas nonaktif
   const [showKelasModal, setShowKelasModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedKelas, setSelectedKelas] = useState(null);
@@ -611,27 +612,36 @@ export default function AdminKelasPage() {
     setEditingKelas(null);
   };
 
-  // Filter data
-  const filteredKelas = Array.isArray(kelas) ? kelas.filter(k => {
+  // Filter data - pisahkan aktif dan nonaktif
+  const activeKelas = Array.isArray(kelas) ? kelas.filter(k => {
     const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Since isActive is not available, treat all kelas as active if they have guru assigned
-    const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'active' && k.guruKelas && k.guruKelas.length > 0) ||
-      (filterStatus === 'inactive' && (!k.guruKelas || k.guruKelas.length === 0));
-
+    const matchStatus = k.status === 'AKTIF';
     const hasGuru = k.guruKelas && k.guruKelas.length > 0;
     const matchGuru = filterGuru === 'all' ||
       (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
 
-    return matchSearch && matchGuru;
+    return matchSearch && matchGuru && matchStatus;
   }) : [];
 
-  // Statistics
+  const inactiveKelas = Array.isArray(kelas) ? kelas.filter(k => {
+    const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = k.status !== 'AKTIF';
+    const hasGuru = k.guruKelas && k.guruKelas.length > 0;
+    const matchGuru = filterGuru === 'all' ||
+      (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
+
+    return matchSearch && matchGuru && matchStatus;
+  }) : [];
+
+  // Untuk backward compatibility dengan display
+  const filteredKelas = filterStatus === 'all' ? [...activeKelas, ...inactiveKelas] :
+    filterStatus === 'active' ? activeKelas : inactiveKelas;
+
+  // Statistics - updated untuk gunakan real status field
   const stats = {
     total: Array.isArray(kelas) ? kelas.length : 0,
-    active: Array.isArray(kelas) ? kelas.filter(k => k.guruKelas && k.guruKelas.length > 0).length : 0,
-    inactive: Array.isArray(kelas) ? kelas.filter(k => !k.guruKelas || k.guruKelas.length === 0).length : 0,
+    active: activeKelas.length,
+    inactive: inactiveKelas.length,
   };
 
   if (loading) {
@@ -776,16 +786,26 @@ export default function AdminKelasPage() {
             </div>
           </div>
 
-          {/* Grid Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredKelas.length === 0 ? (
+          {/* Grid Cards - Kelas Aktif */}
+          <div>
+            <h2 style={{
+              fontSize: '18px',
+              fontWeight: 700,
+              color: colors.text.primary,
+              marginBottom: '16px',
+              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+            }}>
+              ✅ Kelas Aktif
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {activeKelas.length === 0 ? (
                 <div className="col-span-full bg-white rounded-2xl p-12 text-center shadow-lg border border-slate-100">
                   <BookOpen size={48} className="mx-auto mb-4 text-slate-300" />
-                  <p className="text-slate-500 font-medium">Tidak ada kelas yang ditemukan</p>
+                  <p className="text-slate-500 font-medium">Tidak ada kelas aktif yang ditemukan</p>
                 </div>
               ) : (
-                filteredKelas.map((kelasItem, index) => {
-                  const isActive = kelasItem.guruKelas && kelasItem.guruKelas.some(kg => kg.isActive);
+                activeKelas.map((kelasItem, index) => {
+                  const isActive = true; // Selalu true untuk active section
                   const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
                   const jumlahSiswa = kelasItem._count?.siswa || 0;
 
@@ -1005,7 +1025,284 @@ export default function AdminKelasPage() {
               )}
             </div>
           </div>
+
+          {/* Toggle & Kelas Nonaktif Section */}
+          <div>
+            <button
+              onClick={() => setShowInactiveKelas(!showInactiveKelas)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '14px 20px',
+                background: colors.white,
+                border: `2px solid ${colors.gray[200]}`,
+                borderRadius: '16px',
+                fontSize: '16px',
+                fontWeight: 600,
+                color: colors.text.primary,
+                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                marginBottom: '16px',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = colors.gray[50];
+                e.currentTarget.style.borderColor = colors.emerald[200];
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = colors.white;
+                e.currentTarget.style.borderColor = colors.gray[200];
+              }}
+            >
+              <span>{showInactiveKelas ? '⬇️' : '⬆️'}</span>
+              <span>
+                Kelas Nonaktif ({inactiveKelas.length})
+              </span>
+            </button>
+
+            {/* Kelas Nonaktif - Collapsed by default */}
+            {showInactiveKelas && (
+              <div style={{
+                animation: 'slideDown 0.3s ease-out',
+              }}>
+                <h2 style={{
+                  fontSize: '18px',
+                  fontWeight: 700,
+                  color: colors.amber[700],
+                  marginBottom: '16px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  ⏸️ Kelas Nonaktif
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {inactiveKelas.length === 0 ? (
+                    <div className="col-span-full bg-white rounded-2xl p-12 text-center shadow-lg border border-slate-100">
+                      <BookOpen size={48} className="mx-auto mb-4 text-slate-300" />
+                      <p className="text-slate-500 font-medium">Tidak ada kelas nonaktif yang ditemukan</p>
+                    </div>
+                  ) : (
+                    inactiveKelas.map((kelasItem, index) => {
+                      const isActive = false; // Selalu false untuk inactive section
+                      const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
+                      const jumlahSiswa = kelasItem._count?.siswa || 0;
+
+                      return (
+                        <div
+                          key={kelasItem.id}
+                          onClick={() => handleViewDetail(kelasItem)}
+                          style={{
+                            background: `linear-gradient(135deg, ${colors.amber.soft}40 0%, ${colors.amber.soft}80 100%)`,
+                            borderRadius: '20px',
+                            padding: '24px',
+                            border: `2px solid ${colors.amber.soft}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            animation: `slideUp 0.4s ease-out ${0.3 + (index * 0.05)}s both`,
+                            position: 'relative',
+                            overflow: 'visible',
+                          }}
+                          className="kelas-card"
+                        >
+                          {/* Icon Background */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            background: `${colors.amber[500]}15`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 0,
+                          }}>
+                            <GraduationCap size={50} color={colors.amber[300]} />
+                          </div>
+
+                          {/* Header */}
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'start',
+                            marginBottom: '16px',
+                            position: 'relative',
+                            zIndex: 1,
+                          }}>
+                            <div>
+                              <h3 style={{
+                                fontSize: '20px',
+                                fontWeight: 700,
+                                color: colors.text.primary,
+                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                marginBottom: '4px',
+                              }}>
+                                {kelasItem.nama}
+                              </h3>
+                              <p style={{
+                                fontSize: '12px',
+                                color: colors.text.tertiary,
+                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                              }}>
+                                Tingkat {kelasItem.tingkat} • {kelasItem.tahunAjaran?.nama || 'Belum ada tahun ajaran'}
+                              </p>
+                            </div>
+                            {/* Three-dot menu */}
+                            <button
+                              ref={(el) => {
+                                if (el) buttonRefs.current[kelasItem.id] = el;
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(openMenuId === kelasItem.id ? null : kelasItem.id);
+                              }}
+                              style={{
+                                padding: '8px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                background: openMenuId === kelasItem.id ? colors.gray[100] : 'transparent',
+                                color: colors.gray[600],
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                              }}
+                              title="Opsi"
+                            >
+                              <MoreVertical size={20} />
+                            </button>
+                          </div>
+
+                          {/* Guru Tahfidz */}
+                          <div style={{
+                            background: colors.white,
+                            borderRadius: '12px',
+                            padding: '12px',
+                            marginBottom: '12px',
+                            position: 'relative',
+                            zIndex: 1,
+                          }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              marginBottom: '4px',
+                            }}>
+                              <ShieldCheck size={16} color={colors.amber[600]} />
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                color: colors.text.tertiary,
+                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                              }}>
+                                Guru Tahfidz
+                              </span>
+                            </div>
+                            <p style={{
+                              fontSize: '14px',
+                              fontWeight: 600,
+                              color: colors.text.primary,
+                              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                            }}>
+                              {guruUtama ? guruUtama.guru.user.name : 'Belum ada guru'}
+                            </p>
+                          </div>
+
+                          {/* Stats Row */}
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '12px',
+                            marginBottom: '16px',
+                            position: 'relative',
+                            zIndex: 1,
+                          }}>
+                            <div style={{
+                              background: colors.white,
+                              borderRadius: '12px',
+                              padding: '12px',
+                            }}>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginBottom: '4px',
+                              }}>
+                                <Users size={16} color={colors.amber[600]} />
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  color: colors.text.tertiary,
+                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                  textTransform: 'uppercase',
+                                }}>
+                                  Siswa
+                                </span>
+                              </div>
+                              <p style={{
+                                fontSize: '20px',
+                                fontWeight: 700,
+                                color: colors.text.primary,
+                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                              }}>
+                                {jumlahSiswa}
+                              </p>
+                            </div>
+
+                            <div style={{
+                              background: colors.white,
+                              borderRadius: '12px',
+                              padding: '12px',
+                            }}>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginBottom: '4px',
+                              }}>
+                                <UserCheck size={16} color={colors.amber[600]} />
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  color: colors.text.tertiary,
+                                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                                  textTransform: 'uppercase',
+                                }}>
+                                  Status
+                                </span>
+                              </div>
+                              <p style={{
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                color: colors.amber[700],
+                                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                              }}>
+                                Nonaktif
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/admin/kelas/${kelasItem.id}`);
+                            }}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-600 hover:via-orange-600 hover:to-yellow-600 text-white rounded-xl font-semibold shadow-md transition-all duration-300 relative z-1"
+                          >
+                            Lihat Detail →
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+      </div>
 
       {/* Dropdown Menu dengan Portal */}
       {openMenuId && buttonRefs.current[openMenuId] && (() => {
@@ -1427,14 +1724,12 @@ export default function AdminKelasPage() {
                   marginBottom: '8px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}>
-                  Target Juz
+                  Target Juz (Otomatis dari Tahun Ajaran)
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  max="30"
-                  value={kelasFormData.targetJuz}
-                  onChange={(e) => setKelasFormData({ ...kelasFormData, targetJuz: parseInt(e.target.value) })}
+                  disabled
+                  value={kelasFormData.targetJuz || ''}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -1444,6 +1739,9 @@ export default function AdminKelasPage() {
                     fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                     outline: 'none',
                     transition: 'all 0.3s ease',
+                    backgroundColor: colors.gray[50],
+                    color: colors.text.tertiary,
+                    cursor: 'not-allowed',
                   }}
                   className="form-input"
                 />
@@ -1464,7 +1762,12 @@ export default function AdminKelasPage() {
                   required
                   value={kelasFormData.tahunAjaranId}
                   onChange={(e) => {
-                    setKelasFormData({ ...kelasFormData, tahunAjaranId: e.target.value });
+                    const selectedTA = tahunAjaran.find(ta => ta.id === e.target.value);
+                    setKelasFormData({
+                      ...kelasFormData,
+                      tahunAjaranId: e.target.value,
+                      targetJuz: selectedTA?.targetHafalan || 1,
+                    });
                   }}
                   style={{
                     width: '100%',
@@ -1954,6 +2257,19 @@ export default function AdminKelasPage() {
           }
           to {
             opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            max-height: 2000px;
             transform: translateY(0);
           }
         }
