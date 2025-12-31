@@ -72,6 +72,12 @@ export default function ParentLinkSection({
     }
   }, [newParentData.name, siswaFormData, emailWaliManuallyEdited, mode, waliType, onNewParentChange]);
 
+  // Validate email format
+  const validateEmail = (email) => {
+    if (!email) return true; // Empty is ok (will validate on submit)
+    return email.includes('@wali.tahfidz.sch.id');
+  };
+
   const filteredParents = parents.filter(
     (p) =>
       p.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -458,53 +464,93 @@ export default function ParentLinkSection({
 
             {/* Email (Auto-generated based on NIS, editable) */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.text.secondary,
-                  marginBottom: '8px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}
-              >
-                Email (Otomatis dari Nama + NIS Siswa)
-                <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
-              </label>
-              <input
-                type="email"
-                value={newParentData.email}
-                onChange={(e) => {
-                  onNewParentChange({ ...newParentData, email: e.target.value });
-                  setEmailWaliManuallyEdited(true); // Mark as manually edited
-                }}
-                placeholder="Email akan digenerate otomatis dari nama + NIS siswa"
-                required={mode === 'create'}
-                style={{
-                  width: '100%',
-                  paddingLeft: '16px',
-                  paddingRight: '16px',
-                  paddingTop: '12px',
-                  paddingBottom: '12px',
-                  border: `2px solid ${colors.gray[200]}`,
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  outline: 'none',
-                  transition: 'all 0.3s ease',
-                }}
-                className="parent-input"
-              />
-              <p
-                style={{
-                  fontSize: '12px',
-                  color: colors.text.tertiary,
-                  marginTop: '6px',
-                  fontFamily: '"Poppins", system-ui, sans-serif',
-                }}
-              >
-                Format: namapertama.NIS@wali.tahfidz.sch.id. Bisa diedit manual jika diperlukan.
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.secondary,
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  }}
+                >
+                  Email (Otomatis dari Nama + NIS Siswa)
+                  <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
+                </label>
+                {emailWaliManuallyEdited && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nis = siswaFormData?.nis;
+                      if (newParentData.name && nis) {
+                        const generatedEmail = generateWaliEmail(newParentData.name, nis);
+                        onNewParentChange({ ...newParentData, email: generatedEmail });
+                        setEmailWaliManuallyEdited(false);
+                      }
+                    }}
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      background: colors.emerald[500],
+                      color: colors.white,
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      fontFamily: '"Poppins", system-ui, sans-serif',
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = colors.emerald[600]}
+                    onMouseLeave={(e) => e.target.style.background = colors.emerald[500]}
+                  >
+                    ↻ Reset Otomatis
+                  </button>
+                )}
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="email"
+                  value={newParentData.email}
+                  onChange={(e) => {
+                    onNewParentChange({ ...newParentData, email: e.target.value });
+                    setEmailWaliManuallyEdited(true); // Mark as manually edited
+                  }}
+                  placeholder="Email akan digenerate otomatis dari nama + NIS siswa"
+                  required={mode === 'create'}
+                  style={{
+                    width: '100%',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    paddingTop: '12px',
+                    paddingBottom: '12px',
+                    border: `2px solid ${
+                      newParentData.email && !newParentData.email.includes('@wali.tahfidz.sch.id')
+                        ? '#EF4444'
+                        : colors.gray[200]
+                    }`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                    background: emailWaliManuallyEdited ? '#FFFBEB' : colors.white,
+                  }}
+                  className="parent-input"
+                />
+                {!emailWaliManuallyEdited && newParentData.email && (
+                  <span style={{ position: 'absolute', right: '16px', top: '12px', fontSize: '12px', color: colors.emerald[500], fontWeight: 600 }}>✓ Auto</span>
+                )}
+              </div>
+              {newParentData.email && !newParentData.email.includes('@wali.tahfidz.sch.id') && (
+                <p style={{ fontSize: '12px', color: '#DC2626', marginTop: '6px', fontFamily: '"Poppins", system-ui, sans-serif' }}>
+                  ⚠️ Email harus menggunakan domain @wali.tahfidz.sch.id
+                </p>
+              )}
+              {newParentData.email && newParentData.email.includes('@wali.tahfidz.sch.id') && (
+                <p style={{ fontSize: '12px', color: colors.text.tertiary, marginTop: '6px', fontFamily: '"Poppins", system-ui, sans-serif' }}>
+                  Format: namapertama.NIS@wali.tahfidz.sch.id. Bisa diedit manual jika diperlukan.
+                </p>
+              )}
             </div>
 
             {/* Password */}
