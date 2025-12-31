@@ -411,17 +411,18 @@ export default function PenilaianHafalanPage() {
                 <thead className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white rounded-t-2xl shadow-sm">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-bold w-[60px]">No</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold w-[220px]">Nama Siswa</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold w-[160px]">Kehadiran</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold w-[320px]">Catatan</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold w-[160px]">Rata-rata Nilai</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold w-[120px]">Aksi</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold w-[180px]">Nama Siswa</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold w-[130px]">Kehadiran</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold w-[220px]">Surah yang Disetorkan</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold w-[180px]">Catatan</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold w-[140px]">Rata-rata Nilai</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold w-[100px]">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {siswaList.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="px-6 py-16 text-center">
+                      <td colSpan="7" className="px-6 py-16 text-center">
                         <div className="flex flex-col items-center">
                           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
                             <AlertCircle className="w-10 h-10 text-emerald-500" />
@@ -551,11 +552,6 @@ export default function PenilaianHafalanPage() {
                         >
                           {penilaian.surah ? 'Edit' : 'Input'}
                         </button>
-                        {penilaian.surah && (
-                          <div className="mt-2 text-xs text-emerald-700 font-medium">
-                            {penilaian.surah} ({penilaian.ayatMulai}-{penilaian.ayatSelesai})
-                          </div>
-                        )}
                       </td>
                     </tr>
                       );
