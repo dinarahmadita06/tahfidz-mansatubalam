@@ -157,8 +157,7 @@ function EmptyState({ message }) {
 }
 
 // StudentTable Component
-function StudentTable({ students, currentPage, onPageChange }) {
-  const itemsPerPage = 5;
+function StudentTable({ students, currentPage, onPageChange, itemsPerPage, onItemsPerPageChange }) {
   const totalPages = Math.ceil(students.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedStudents = students.slice(startIndex, startIndex + itemsPerPage);
@@ -192,7 +191,7 @@ function StudentTable({ students, currentPage, onPageChange }) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+            <tr className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 text-white">
               <th className="px-6 py-4 text-left text-sm font-bold">Nama Siswa</th>
               <th className="px-6 py-4 text-center text-sm font-bold">Kelas</th>
               <th className="px-6 py-4 text-center text-sm font-bold">Status</th>
@@ -215,7 +214,7 @@ function StudentTable({ students, currentPage, onPageChange }) {
                 return (
                   <tr
                     key={student.id}
-                    className="even:bg-emerald-50/30 hover:bg-emerald-100/40 transition-colors border-b border-slate-100 last:border-b-0"
+                    className="even:bg-emerald-50/30 hover:bg-emerald-50/40 transition-colors border-b border-slate-100 last:border-b-0"
                   >
                     <td className="px-6 py-4 text-sm font-semibold text-slate-800">
                       {student.nama}
@@ -247,10 +246,28 @@ function StudentTable({ students, currentPage, onPageChange }) {
 
       {/* Pagination */}
       {students.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4 border-t border-slate-200 bg-slate-50/50">
-          <p className="text-sm text-slate-600">
-            Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, students.length)} dari {students.length} siswa
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-6 py-4 border-t border-slate-200 bg-slate-50/50">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
+            <p className="text-sm text-slate-600 whitespace-nowrap">
+              Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, students.length)} dari {students.length} siswa
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <label htmlFor="rowsPerPage" className="text-sm text-slate-600 whitespace-nowrap">Tampilkan:</label>
+              <select
+                id="rowsPerPage"
+                value={itemsPerPage}
+                onChange={(e) => onItemsPerPageChange(parseInt(e.target.value))}
+                className="h-10 px-3 rounded-xl bg-white/70 backdrop-blur border border-emerald-100/60 focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all text-sm font-medium min-w-[90px]"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
 
           <div className="flex gap-2">
             <button
@@ -300,6 +317,7 @@ export default function KelolaSiswaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -376,6 +394,11 @@ export default function KelolaSiswaPage() {
     setCurrentPage(1);
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   return (
     <GuruLayout>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -430,6 +453,8 @@ export default function KelolaSiswaPage() {
               students={filteredStudents}
               currentPage={currentPage}
               onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           </>
         )}
