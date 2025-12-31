@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Calendar, Plus, CheckCircle2, Archive, Edit, Trash2,
+  Calendar, Plus, CheckCircle2, Edit, Trash2,
   BookOpen, Users, GraduationCap, Clock, XCircle
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -200,26 +200,6 @@ export default function AdminTahunAjaranPage() {
     } catch (error) {
       console.error('Error deactivating tahun ajaran:', error);
       alert('Gagal menonaktifkan tahun ajaran');
-    }
-  };
-
-  const handleArchive = async (id) => {
-    if (!confirm('Yakin ingin mengarsipkan tahun ajaran ini?')) return;
-    try {
-      const response = await fetch(`/api/admin/tahun-ajaran/${id}/archive`, {
-        method: 'PATCH',
-      });
-
-      if (response.ok) {
-        alert('Tahun ajaran berhasil diarsipkan');
-        fetchTahunAjaran();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal mengarsipkan tahun ajaran');
-      }
-    } catch (error) {
-      console.error('Error archiving tahun ajaran:', error);
-      alert('Gagal mengarsipkan tahun ajaran');
     }
   };
 
@@ -542,15 +522,6 @@ export default function AdminTahunAjaranPage() {
                               >
                                 <Edit size={15} />
                               </button>
-                              {!taItem.isActive && (
-                                <button
-                                  onClick={() => handleArchive(taItem.id)}
-                                  className="h-8 w-8 rounded-lg bg-sky-100/80 text-sky-600 hover:bg-sky-200 transition-colors duration-200 flex items-center justify-center"
-                                  title="Arsipkan"
-                                >
-                                  <Archive size={15} />
-                                </button>
-                              )}
                               <button
                                 onClick={() => handleDelete(taItem.id)}
                                 className="h-8 w-8 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 transition-colors duration-200 flex items-center justify-center"
