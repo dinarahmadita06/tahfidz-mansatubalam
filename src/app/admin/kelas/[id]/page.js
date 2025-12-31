@@ -291,7 +291,9 @@ export default function KelolaSiswaPage() {
   const [kelas, setKelas] = useState(null);
   const [siswaList, setSiswaList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isReloading, setIsReloading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterGender, setFilterGender] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -333,6 +335,14 @@ export default function KelolaSiswaPage() {
   });
 
   // ============ EFFECTS ============
+  // Debounce search term (400ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     if (kelasId) {
       fetchKelasDetail();
@@ -367,16 +377,35 @@ export default function KelolaSiswaPage() {
 
   const fetchSiswa = async () => {
     try {
-      setLoading(true);
+      // Only set loading=true on initial load (when siswaList is empty)
+      if (siswaList.length === 0) {
+        setLoading(true);
+      } else {
+        setIsReloading(true);
+      }
+      
+      console.log('🔄 Fetching siswa for kelasId:', kelasId);
       const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}`);
       const result = await response.json();
+      
+      console.log('📦 API response:', result);
       const data = Array.isArray(result) ? result : (result.data || []);
+      console.log('✅ Extracted data array, length:', data.length);
+      
+      if (data.length === 0 && siswaList.length > 0) {
+        console.warn('⚠️ WARNING: API returned empty data but siswaList has', siswaList.length, 'items');
+      }
+      
       setSiswaList(data);
     } catch (error) {
-      console.error('Error fetching siswa:', error);
-      setSiswaList([]);
+      console.error('❌ Error fetching siswa:', error);
+      // Keep showing old data if fetch fails
+      if (siswaList.length === 0) {
+        setSiswaList([]);
+      }
     } finally {
       setLoading(false);
+      setIsReloading(false);
     }
   };
 
@@ -706,7 +735,7 @@ export default function KelolaSiswaPage() {
 
   // ============ FILTERING ============
   const filteredSiswa = siswaList.filter(siswa => {
-    const matchSearch = matchesSearch(siswa, searchTerm);
+    const matchSearch = matchesSearch(siswa, debouncedSearchTerm);
     const matchGender = filterGender === 'all' || siswa.jenisKelamin === filterGender;
     return matchSearch && matchGender;
   });
@@ -764,16 +793,6 @@ export default function KelolaSiswaPage() {
   }, [showChangeClassModal]);
 
   // ============ RENDER ============
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: colors.emerald[500] }}></div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
       <div className="min-h-screen bg-white relative overflow-x-hidden">
@@ -799,6 +818,26 @@ export default function KelolaSiswaPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {/* Reload Button with Loading Indicator */}
+                <button
+                  onClick={async () => await fetchSiswa()}
+                  disabled={isReloading}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm hover:bg-white/30 backdrop-blur-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Segarkan data siswa"
+                >
+                  {isReloading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      <span>Memuat...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} />
+                      <span>Segarkan</span>
+                    </>
+                  )}
+                </button>
+
                 <button
                   onClick={() => downloadTemplate()}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
@@ -869,15 +908,32 @@ export default function KelolaSiswaPage() {
                 </div>
               </div>
               
-              {/* Info Text */}
+              {/* Info Text with Loading Indicator */}
               <div className="mt-4 text-xs text-gray-600 font-medium">
-                Menampilkan {filteredSiswa.length} dari {siswaList.length} siswa
+                {isReloading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-emerald-500 border-t-transparent"></div>
+                    Memperbarui data...
+                  </span>
+                ) : (
+                  <>Menampilkan {filteredSiswa.length} dari {siswaList.length} siswa</>
+                )}
               </div>
             </div>
           </div>
 
           {/* ============ TABLE SECTION ============ */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 overflow-hidden shadow-sm">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 overflow-hidden shadow-sm relative">
+            {/* Loading Overlay */}
+            {isReloading && (
+              <div className="absolute inset-0 bg-white/30 backdrop-blur-sm z-40 flex items-center justify-center rounded-2xl pointer-events-none">
+                <div className="bg-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></div>
+                  <span className="text-sm font-semibold text-gray-700">Memperbarui...</span>
+                </div>
+              </div>
+            )}
+
             {/* Table Header Card */}
             <div className="px-6 py-4 border-b border-slate-200/60">
               <h2 className="text-lg font-bold text-gray-900 m-0">
@@ -901,11 +957,25 @@ export default function KelolaSiswaPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSiswa.length === 0 ? (
+                  {/* Loading Skeleton Rows - Show during initial load */}
+                  {loading && siswaList.length === 0 ? (
+                    Array.from({ length: 8 }).map((_, index) => (
+                      <tr key={`skeleton-${index}`} className="border-b border-slate-200/60">
+                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded animate-pulse w-8"></div></td>
+                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div></td>
+                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div></td>
+                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div></td>
+                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div></td>
+                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div></td>
+                        <td className="px-6 py-3"><div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div></td>
+                        <td className="px-6 py-3 text-center"><div className="h-4 bg-gray-200 rounded animate-pulse w-10 mx-auto"></div></td>
+                      </tr>
+                    ))
+                  ) : filteredSiswa.length === 0 ? (
                     <tr>
                       <td colSpan="8" className="px-6 py-12 text-center text-gray-400 text-sm">
                         <Users size={48} className="mx-auto mb-4 opacity-50" />
-                        <p className="m-0 text-base font-medium">Tidak ada data siswa</p>
+                        <p className="m-0 text-base font-medium">{loading ? 'Memuat data siswa...' : 'Tidak ada data siswa'}</p>
                       </td>
                     </tr>
                   ) : (
