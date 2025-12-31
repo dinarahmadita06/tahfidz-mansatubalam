@@ -246,7 +246,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
           noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
           email: newParentData.email.trim().toLowerCase(),
           password: newParentData.password.trim(),
-          nik: `NIK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,  // Ensure unique NIK
+          nik: `NIK${Date.now()}${Math.random().toString().slice(2, 10)}`,  // Better unique NIK
           jenisKelamin: 'LAKI_LAKI',  // Default, could be enhanced
         };
 

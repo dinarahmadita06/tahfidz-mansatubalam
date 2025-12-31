@@ -110,11 +110,12 @@ export async function POST(request) {
       noHP,
       pekerjaan,
       alamat,
-      image
+      image,
+      nik
     } = body;
 
     // Validate required fields
-    if (!name || !email || !password || !noHP) {
+    if (!name || !email || !password || !noHP || !nik) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
@@ -141,9 +142,11 @@ export async function POST(request) {
     // Create user and orang tua
     const orangTua = await prisma.orangTua.create({
       data: {
+        nik, // Add NIK field
         pekerjaan: pekerjaan || null,
-        noHP,
+        noTelepon: noHP, // Map noHP to noTelepon in Prisma schema
         alamat: alamat || null,
+        jenisKelamin: 'LAKI_LAKI', // Add default gender
         user: {
           create: {
             email,
@@ -192,6 +195,9 @@ export async function POST(request) {
     return NextResponse.json(orangTua, { status: 201 });
   } catch (error) {
     console.error('❌ Error creating orang tua:', error);
+    console.error('Error code:', error.code);
+    console.error('Error meta:', error.meta);
+    console.error('Error message:', error.message);
     
     // Handle specific Prisma errors
     if (error.code === 'P2002') {
