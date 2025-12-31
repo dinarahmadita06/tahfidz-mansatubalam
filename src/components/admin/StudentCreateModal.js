@@ -246,7 +246,6 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
           noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
           email: newParentData.email.trim().toLowerCase(),
           password: newParentData.password.trim(),
-          jenisWali: newParentData.jenisWali,
           nik: `NIK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,  // Ensure unique NIK
           jenisKelamin: 'LAKI_LAKI',  // Default, could be enhanced
         };
@@ -265,6 +264,10 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
 
         if (!parentResponse.ok) {
           console.error('❌ Parent creation failed:', parentResult);
+          // Show specific error messages from backend
+          if (parentResult.error === 'Email sudah terdaftar') {
+            throw new Error('Email wali sudah digunakan');
+          }
           throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
         }
 
