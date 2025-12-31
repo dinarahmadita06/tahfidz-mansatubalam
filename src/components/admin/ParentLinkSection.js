@@ -63,13 +63,14 @@ export default function ParentLinkSection({
 
   // Auto-generate email when name or NIS changes (if not manually edited)
   useEffect(() => {
-    if (mode === 'create' && newParentData.name && siswaFormData.nis && !emailWaliManuallyEdited) {
-      const email = generateWaliEmail(newParentData.name, siswaFormData.nis);
+    const nis = siswaFormData?.nis;
+    if (mode === 'create' && newParentData.name && nis && !emailWaliManuallyEdited) {
+      const email = generateWaliEmail(newParentData.name, nis);
       if (email) {
         onNewParentChange({ ...newParentData, email, jenisWali: waliType });
       }
     }
-  }, [newParentData.name, siswaFormData.nis, emailWaliManuallyEdited, mode, waliType]);
+  }, [newParentData.name, siswaFormData, emailWaliManuallyEdited, mode, waliType, onNewParentChange]);
 
   const filteredParents = parents.filter(
     (p) =>
