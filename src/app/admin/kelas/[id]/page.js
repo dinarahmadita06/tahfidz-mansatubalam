@@ -489,7 +489,12 @@ export default function KelolaSiswaPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.password || formData.password.length < 8) {
+    // 🔍 Check if editing
+    const isEditing = !!editingSiswa;
+    console.log('📝 Form submit - Mode:', isEditing ? 'EDIT' : 'CREATE', 'siswaId:', editingSiswa?.id);
+
+    // Only validate password for new student (not for edit)
+    if (!isEditing && (!formData.password || formData.password.length < 8)) {
       alert('Password siswa minimal 8 karakter');
       return;
     }
@@ -529,135 +534,157 @@ export default function KelolaSiswaPage() {
         jenisKelamin: normalizeGender(formData.jenisKelamin),
       };
 
-      const siswaResponse = await fetch('/api/admin/siswa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(siswaPayload),
-      });
-
-      const siswaResult = await siswaResponse.json();
-
-      if (!siswaResponse.ok) {
-        // Handle validation errors with field-specific messages
-        if (siswaResponse.status === 422 && siswaResult.invalidFields) {
-          const fieldErrors = Object.entries(siswaResult.invalidFields)
-            .map(([field, msg]) => `${field}: ${msg}`)
-            .join('\n');
-          throw new Error(`Validasi gagal:\n${fieldErrors}`);
-        }
-        throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
-      }
-
-      const siswaId = siswaResult.id;
-      const siswaEmail = siswaResult.user.email;
-
-      let parentEmail = '';
-      let parentPassword = '';
-      let parentName = '';
-
-      if (parentMode === 'select') {
-        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
-          method: 'POST',
+      // 🔄 EDIT MODE: Use PATCH request
+      if (isEditing) {
+        console.log('🔄 Updating siswa:', editingSiswa.id, 'with payload:', siswaPayload);
+        
+        const updateResponse = await fetch(`/api/admin/siswa/${editingSiswa.id}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            siswaId,
-            orangTuaId: selectedParentId,
-            hubungan: 'Orang Tua',
-          }),
+          body: JSON.stringify(siswaPayload),
         });
 
-        if (!linkResponse.ok) {
-          const linkError = await linkResponse.json();
-          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+        const updateResult = await updateResponse.json();
+        
+        if (!updateResponse.ok) {
+          console.error('❌ Update failed:', updateResult);
+          throw new Error(updateResult.error || 'Gagal mengupdate siswa');
         }
-
-        const parentData = await fetch(`/api/admin/orangtua/${selectedParentId}`);
-        const parent = await parentData.json();
-        parentEmail = parent.user?.email || '';
-        parentName = parent.user?.name || '';
-        parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
+        
+        console.log('✅ Siswa updated successfully');
       } else {
-        // Create new parent - with validation & normalization
-        const missingParentFields = [];
-        if (!newParentData.name || !newParentData.name.trim()) missingParentFields.push('Nama orang tua');
-        if (!newParentData.noHP || !newParentData.noHP.trim()) missingParentFields.push('Nomor telepon');
-        if (!newParentData.email || !newParentData.email.trim()) missingParentFields.push('Email wali');
-        if (!newParentData.password || !newParentData.password.trim()) missingParentFields.push('Password wali');
-        if (!newParentData.jenisWali) missingParentFields.push('Jenis wali');
-
-        if (missingParentFields.length > 0) {
-          throw new Error(`Data orang tua tidak lengkap: ${missingParentFields.join(', ')}`);
-        }
-
-        // Normalize data before sending
-        const parentPayload = {
-          name: newParentData.name.trim(),
-          noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
-          email: newParentData.email.trim().toLowerCase(),
-          password: newParentData.password.trim(),
-          nik: `NIK${Date.now()}${Math.random().toString().slice(2, 10)}`, // Better unique NIK
-          jenisKelamin: 'LAKI_LAKI',
-        };
-
-        console.log('📤 Creating/Linking parent with payload:', parentPayload);
-
-        const parentResponse = await fetch('/api/admin/orangtua', {
+        // 📝 CREATE MODE: Use POST request (original logic)
+        const siswaResponse = await fetch('/api/admin/siswa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(parentPayload),
+          body: JSON.stringify(siswaPayload),
         });
 
-        const parentResult = await parentResponse.json();
-        console.log('📦 Parent response status:', parentResponse.status, ', result:', parentResult);
+        const siswaResult = await siswaResponse.json();
 
-        if (!parentResponse.ok) {
-          console.error('❌ Parent creation failed:', parentResult);
-          // Show specific error messages from backend
-          if (parentResult.error && parentResult.error.includes('sudah terdaftar')) {
-            throw new Error('Email wali sudah terdaftar. Silakan gunakan email berbeda atau pilih orang tua yang sudah ada dari daftar.');
+        if (!siswaResponse.ok) {
+          // Handle validation errors with field-specific messages
+          if (siswaResponse.status === 422 && siswaResult.invalidFields) {
+            const fieldErrors = Object.entries(siswaResult.invalidFields)
+              .map(([field, msg]) => `${field}: ${msg}`)
+              .join('\n');
+            throw new Error(`Validasi gagal:\n${fieldErrors}`);
           }
-          throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
+          throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
         }
 
-        const orangTuaId = parentResult.id;
-        parentEmail = parentResult.user.email;
-        parentPassword = newParentData.password;
-        parentName = parentResult.user.name;
-        console.log('✅ Parent created/reused successfully:', { orangTuaId, parentName, parentEmail });
+        const siswaId = siswaResult.id;
+        const siswaEmail = siswaResult.user.email;
 
-        console.log('🔗 Linking parent to student...');
-        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            siswaId,
-            orangTuaId,
-            hubungan: 'Orang Tua',
-          }),
+        let parentEmail = '';
+        let parentPassword = '';
+        let parentName = '';
+
+        if (parentMode === 'select') {
+          const linkResponse = await fetch('/api/admin/orangtua-siswa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              siswaId,
+              orangTuaId: selectedParentId,
+              hubungan: 'Orang Tua',
+            }),
+          });
+
+          if (!linkResponse.ok) {
+            const linkError = await linkResponse.json();
+            throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+          }
+
+          const parentData = await fetch(`/api/admin/orangtua/${selectedParentId}`);
+          const parent = await parentData.json();
+          parentEmail = parent.user?.email || '';
+          parentName = parent.user?.name || '';
+          parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
+        } else {
+          // Create new parent - with validation & normalization
+          const missingParentFields = [];
+          if (!newParentData.name || !newParentData.name.trim()) missingParentFields.push('Nama orang tua');
+          if (!newParentData.noHP || !newParentData.noHP.trim()) missingParentFields.push('Nomor telepon');
+          if (!newParentData.email || !newParentData.email.trim()) missingParentFields.push('Email wali');
+          if (!newParentData.password || !newParentData.password.trim()) missingParentFields.push('Password wali');
+          if (!newParentData.jenisWali) missingParentFields.push('Jenis wali');
+
+          if (missingParentFields.length > 0) {
+            throw new Error(`Data orang tua tidak lengkap: ${missingParentFields.join(', ')}`);
+          }
+
+          // Normalize data before sending
+          const parentPayload = {
+            name: newParentData.name.trim(),
+            noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
+            email: newParentData.email.trim().toLowerCase(),
+            password: newParentData.password.trim(),
+            nik: `NIK${Date.now()}${Math.random().toString().slice(2, 10)}`, // Better unique NIK
+            jenisKelamin: 'LAKI_LAKI',
+          };
+
+          console.log('📤 Creating/Linking parent with payload:', parentPayload);
+
+          const parentResponse = await fetch('/api/admin/orangtua', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(parentPayload),
+          });
+
+          const parentResult = await parentResponse.json();
+          console.log('📦 Parent response status:', parentResponse.status, ', result:', parentResult);
+
+          if (!parentResponse.ok) {
+            console.error('❌ Parent creation failed:', parentResult);
+            // Show specific error messages from backend
+            if (parentResult.error && parentResult.error.includes('sudah terdaftar')) {
+              throw new Error('Email wali sudah terdaftar. Silakan gunakan email berbeda atau pilih orang tua yang sudah ada dari daftar.');
+            }
+            throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
+          }
+
+          const orangTuaId = parentResult.id;
+          parentEmail = parentResult.user.email;
+          parentPassword = newParentData.password;
+          parentName = parentResult.user.name;
+          console.log('✅ Parent created/reused successfully:', { orangTuaId, parentName, parentEmail });
+
+          console.log('🔗 Linking parent to student...');
+          const linkResponse = await fetch('/api/admin/orangtua-siswa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              siswaId,
+              orangTuaId,
+              hubungan: 'Orang Tua',
+            }),
+          });
+
+          if (!linkResponse.ok) {
+            const linkError = await linkResponse.json();
+            console.error('❌ Link creation failed:', linkError);
+            throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
+          }
+          console.log('✅ Parent linked to student successfully');
+        }
+
+        setCreatedAccounts({
+          student: {
+            name: formData.name,
+            email: siswaEmail,
+            password: formData.password,
+          },
+          parent: {
+            name: parentName,
+            email: parentEmail,
+            password: parentPassword,
+            isNew: parentMode === 'create',
+          },
         });
-
-        if (!linkResponse.ok) {
-          const linkError = await linkResponse.json();
-          console.error('❌ Link creation failed:', linkError);
-          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
-        }
-        console.log('✅ Parent linked to student successfully');
       }
 
-      setCreatedAccounts({
-        student: {
-          name: formData.name,
-          email: siswaEmail,
-          password: formData.password,
-        },
-        parent: {
-          name: parentName,
-          email: parentEmail,
-          password: parentPassword,
-          isNew: parentMode === 'create',
-        },
-      });
-      setShowSuccessModal(true);
+      setShowSuccessModal(!isEditing); // Only show success modal for CREATE
       setShowModal(false);
       // Delete draft after successful save
       if (selectedSiswaForParent?.id) {
@@ -665,16 +692,25 @@ export default function KelolaSiswaPage() {
         console.log('✅ Draft deleted after successful save for siswa:', selectedSiswaForParent.id);
         setSelectedSiswaForParent(null);
       }
+      
+      if (isEditing) {
+        alert('✅ Data siswa berhasil diperbarui');
+      }
+      
       resetForm();
       fetchSiswa();
     } catch (error) {
-      console.error('Error creating student:', error);
+      console.error('Error:', isEditing ? 'updating' : 'creating', 'student:', error);
       alert(`❌ ${error.message}`);
     }
   };
 
   const handleEdit = (siswa) => {
+    console.log('✏️ Editing siswa:', siswa.id, 'with parent data:', siswa.orangTuaSiswa);
+    
     setEditingSiswa(siswa);
+    
+    // ✅ Prefill siswa data
     setFormData({
       name: siswa.user.name,
       nisn: siswa.nisn || '',
@@ -685,6 +721,38 @@ export default function KelolaSiswaPage() {
       alamat: siswa.alamat || '',
       noTelepon: siswa.noTelepon || ''
     });
+    
+    // ✅ Prefill parent data if exists
+    if (siswa.orangTuaSiswa && siswa.orangTuaSiswa.length > 0) {
+      const parentData = siswa.orangTuaSiswa[0].orangTua;
+      console.log('👨‍👩‍👧 Parent data found:', parentData);
+      
+      // Mode: select existing parent
+      setParentMode('select');
+      setSelectedParentId(parentData.id);
+      
+      // Also set newParentData for display (read-only in select mode)
+      setNewParentData({
+        name: parentData.user?.name || '',
+        noHP: parentData.noTelepon || '',
+        email: parentData.user?.email || '',
+        password: '(Password tidak ditampilkan)',
+        jenisWali: 'Ayah',
+      });
+    } else {
+      // No parent linked yet - default to select mode
+      console.log('❌ No parent linked yet');
+      setParentMode('select');
+      setSelectedParentId('');
+      setNewParentData({
+        name: '',
+        noHP: '',
+        email: '',
+        password: '',
+        jenisWali: 'Ayah',
+      });
+    }
+    
     setShowModal(true);
   };
 
