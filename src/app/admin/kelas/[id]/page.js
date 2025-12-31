@@ -464,9 +464,26 @@ export default function KelolaSiswaPage() {
         parentName = parent.user?.name || '';
         parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
       } else {
+        // Create new parent - with validation & normalization
+        const missingParentFields = [];
+        if (!newParentData.name || !newParentData.name.trim()) missingParentFields.push('Nama orang tua');
+        if (!newParentData.noTelepon || !newParentData.noTelepon.trim()) missingParentFields.push('Nomor telepon');
+        if (!newParentData.email || !newParentData.email.trim()) missingParentFields.push('Email wali');
+        if (!newParentData.password || !newParentData.password.trim()) missingParentFields.push('Password wali');
+        if (!newParentData.jenisWali) missingParentFields.push('Jenis wali');
+
+        if (missingParentFields.length > 0) {
+          throw new Error(`Data orang tua tidak lengkap: ${missingParentFields.join(', ')}`);
+        }
+
+        // Normalize data before sending
         const parentPayload = {
-          ...newParentData,
-          nik: `NIK-${Date.now()}`,
+          name: newParentData.name.trim(),
+          noHP: newParentData.noTelepon.trim().replace(/[^0-9]/g, ''), // Remove non-digits
+          email: newParentData.email.trim().toLowerCase(),
+          password: newParentData.password.trim(),
+          jenisWali: newParentData.jenisWali,
+          nik: `NIK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           jenisKelamin: 'LAKI_LAKI',
         };
 
