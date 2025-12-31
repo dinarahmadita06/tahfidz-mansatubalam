@@ -539,8 +539,9 @@ export default function PenilaianHafalanPage() {
       {/* Popup Penilaian */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-6 sm:px-8 py-6 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-slate-200 flex flex-col">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-50 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-6 sm:px-8 py-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
               <h3 className="text-xl sm:text-2xl font-bold text-white">
                 Form Penilaian – {selectedSiswa?.user?.name || selectedSiswa?.nama}
               </h3>
@@ -552,7 +553,8 @@ export default function PenilaianHafalanPage() {
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
               {/* Surah */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3">
@@ -738,8 +740,8 @@ export default function PenilaianHafalanPage() {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="sticky bottom-0 bg-slate-50 px-6 sm:px-8 py-4 flex items-center justify-end gap-3 border-t border-slate-200">
+            {/* Sticky Footer */}
+            <div className="sticky bottom-0 bg-slate-50 px-6 sm:px-8 py-4 flex items-center justify-end gap-3 border-t border-slate-200 flex-shrink-0">
               <button
                 onClick={() => setShowPopup(false)}
                 className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-semibold"
