@@ -12,10 +12,8 @@ export default function ParentDetailModal({ orangTuaItem, siswaList, onClose }) 
 
   const childrenCount = orangTuaItem._count?.siswa || 0;
 
-  // Filter siswa yang terhubung dengan orang tua ini
-  const connectedSiswa = siswaList?.filter(siswa =>
-    orangTuaItem.orangTuaSiswa?.some(rel => rel.siswaId === siswa.id)
-  ) || [];
+  // Get connected children directly from orangTuaSiswa relationship
+  const connectedChildren = (orangTuaItem.orangTuaSiswa || []).map(rel => rel.siswa).filter(Boolean);
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
@@ -48,7 +46,7 @@ export default function ParentDetailModal({ orangTuaItem, siswaList, onClose }) 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
               <p className="text-xs font-semibold text-gray-600 mb-1">No. HP</p>
-              <p className="text-sm font-semibold text-gray-900">{orangTuaItem.noHP || '-'}</p>
+              <p className="text-sm font-semibold text-gray-900">{orangTuaItem.noHP || orangTuaItem.noTelepon || '-'}</p>
             </div>
 
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
@@ -103,26 +101,15 @@ export default function ParentDetailModal({ orangTuaItem, siswaList, onClose }) 
               </div>
             ) : (
               <div className="space-y-2">
-                {connectedSiswa.map(siswa => (
-                  <div key={siswa.id} className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-gray-900">{siswa.user.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {siswa.kelas?.namaKelas || 'Kelas tidak ada'}
+                {connectedChildren.map(siswa => (
+                  <div key={siswa.id} className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm hover:bg-emerald-100/50 transition-colors">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">{siswa.user?.name || 'N/A'}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          <span className="font-medium">NIS:</span> {siswa.nis || '-'} • <span className="font-medium">Kelas:</span> {siswa.kelas?.nama || '-'}
                         </p>
                       </div>
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        siswa.statusSiswa === 'AKTIF'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : siswa.statusSiswa === 'LULUS'
-                          ? 'bg-blue-100 text-blue-700'
-                          : siswa.statusSiswa === 'PINDAH'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {siswa.statusSiswa}
-                      </span>
                     </div>
                   </div>
                 ))}
