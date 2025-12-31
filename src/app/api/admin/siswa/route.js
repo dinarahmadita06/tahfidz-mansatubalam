@@ -210,7 +210,7 @@ export async function POST(request) {
 
     // Check for duplicate fields
     if (existingUser) {
-      invalidFields.name = 'Email sudah terdaftar (NIS atau Nama mungkin duplikat)';
+      invalidFields.email = 'Email sudah terdaftar';
     }
 
     if (existingSiswaByNisn) {
