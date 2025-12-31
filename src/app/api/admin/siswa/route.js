@@ -242,6 +242,7 @@ export async function POST(request) {
 
     // ============ ATOMIC TRANSACTION: Siswa + Orang Tua ============
     console.log('🔄 Starting transaction for siswa + parent creation...');
+    console.log('📋 Parent data provided:', !!parentData, parentData ? { name: parentData.name, email: parentData.email } : null);
     const createStart = Date.now();
 
     const siswa = await prisma.$transaction(async (tx) => {
@@ -320,8 +321,10 @@ export async function POST(request) {
 
         const orangTua = await tx.orangTua.create({
           data: {
+            nik: `NIK${Date.now()}${Math.random().toString().slice(2, 10)}`, // Generate unique NIK
             noTelepon: parentData.noHP.replace(/[^0-9]/g, ''),
-            userId: parentUser.id
+            userId: parentUser.id,
+            jenisKelamin: 'LAKI_LAKI' // Default value
           }
         });
 
