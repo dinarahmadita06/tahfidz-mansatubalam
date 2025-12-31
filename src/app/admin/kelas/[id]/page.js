@@ -553,11 +553,33 @@ export default function KelolaSiswaPage() {
         
         console.log('✅ Siswa updated successfully');
       } else {
-        // 📝 CREATE MODE: Use POST request (original logic)
+        // 📝 CREATE MODE: Use POST request with ATOMIC transaction
+        // Send siswa + parent data together in ONE request
+        
+        let parentDataToSend = null;
+        
+        // If creating new parent, include parent data in request
+        if (parentMode === 'create' && newParentData.name) {
+          parentDataToSend = {
+            name: newParentData.name.trim(),
+            noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''),
+            email: newParentData.email.trim().toLowerCase(),
+            password: newParentData.password.trim(),
+          };
+        }
+        
+        // Payload includes both siswa AND parent data
+        const combinedPayload = {
+          ...siswaPayload,
+          parentData: parentDataToSend
+        };
+        
+        console.log('📝 Combined payload (siswa + parent):', combinedPayload);
+        
         const siswaResponse = await fetch('/api/admin/siswa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(siswaPayload),
+          body: JSON.stringify(combinedPayload),
         });
 
         const siswaResult = await siswaResponse.json();
@@ -581,6 +603,8 @@ export default function KelolaSiswaPage() {
         let parentName = '';
 
         if (parentMode === 'select') {
+          // Link to existing parent
+          console.log('🔗 Linking to existing parent:', selectedParentId);
           const linkResponse = await fetch('/api/admin/orangtua-siswa', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -601,72 +625,12 @@ export default function KelolaSiswaPage() {
           parentEmail = parent.user?.email || '';
           parentName = parent.user?.name || '';
           parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
-        } else {
-          // Create new parent - with validation & normalization
-          const missingParentFields = [];
-          if (!newParentData.name || !newParentData.name.trim()) missingParentFields.push('Nama orang tua');
-          if (!newParentData.noHP || !newParentData.noHP.trim()) missingParentFields.push('Nomor telepon');
-          if (!newParentData.email || !newParentData.email.trim()) missingParentFields.push('Email wali');
-          if (!newParentData.password || !newParentData.password.trim()) missingParentFields.push('Password wali');
-          if (!newParentData.jenisWali) missingParentFields.push('Jenis wali');
-
-          if (missingParentFields.length > 0) {
-            throw new Error(`Data orang tua tidak lengkap: ${missingParentFields.join(', ')}`);
-          }
-
-          // Normalize data before sending
-          const parentPayload = {
-            name: newParentData.name.trim(),
-            noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
-            email: newParentData.email.trim().toLowerCase(),
-            password: newParentData.password.trim(),
-            nik: `NIK${Date.now()}${Math.random().toString().slice(2, 10)}`, // Better unique NIK
-            jenisKelamin: 'LAKI_LAKI',
-          };
-
-          console.log('📤 Creating/Linking parent with payload:', parentPayload);
-
-          const parentResponse = await fetch('/api/admin/orangtua', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(parentPayload),
-          });
-
-          const parentResult = await parentResponse.json();
-          console.log('📦 Parent response status:', parentResponse.status, ', result:', parentResult);
-
-          if (!parentResponse.ok) {
-            console.error('❌ Parent creation failed:', parentResult);
-            // Show specific error messages from backend
-            if (parentResult.error && parentResult.error.includes('sudah terdaftar')) {
-              throw new Error('Email wali sudah terdaftar. Silakan gunakan email berbeda atau pilih orang tua yang sudah ada dari daftar.');
-            }
-            throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
-          }
-
-          const orangTuaId = parentResult.id;
-          parentEmail = parentResult.user.email;
-          parentPassword = newParentData.password;
-          parentName = parentResult.user.name;
-          console.log('✅ Parent created/reused successfully:', { orangTuaId, parentName, parentEmail });
-
-          console.log('🔗 Linking parent to student...');
-          const linkResponse = await fetch('/api/admin/orangtua-siswa', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              siswaId,
-              orangTuaId,
-              hubungan: 'Orang Tua',
-            }),
-          });
-
-          if (!linkResponse.ok) {
-            const linkError = await linkResponse.json();
-            console.error('❌ Link creation failed:', linkError);
-            throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
-          }
-          console.log('✅ Parent linked to student successfully');
+        } else if (parentMode === 'create') {
+          // Parent was created in same transaction
+          console.log('✅ Parent created in same transaction (atomic)');
+          parentEmail = parentDataToSend?.email || '';
+          parentPassword = parentDataToSend?.password || '';
+          parentName = parentDataToSend?.name || '';
         }
 
         setCreatedAccounts({

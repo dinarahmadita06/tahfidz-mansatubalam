@@ -131,6 +131,7 @@ export async function GET(request) {
 
 // POST - Create new siswa (Admin only)
 // Optimized for fast response time
+// WITH TRANSACTION: Siswa + Orang Tua creation is atomic
 export async function POST(request) {
   const startTime = Date.now();
 
@@ -152,7 +153,9 @@ export async function POST(request) {
       jenisKelamin,
       tanggalLahir,
       alamat,
-      noTelepon
+      noTelepon,
+      // Parent data (optional - for atomic creation)
+      parentData
     } = body;
     console.log(`⏱️ Parse body: ${Date.now() - parseStart}ms`);
 
@@ -237,48 +240,109 @@ export async function POST(request) {
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log(`⏱️ Password hashing: ${Date.now() - hashStart}ms`);
 
-    // OPTIMIZED: Create user dan siswa dengan minimal select untuk response cepat
+    // ============ ATOMIC TRANSACTION: Siswa + Orang Tua ============
+    console.log('🔄 Starting transaction for siswa + parent creation...');
     const createStart = Date.now();
-    const siswa = await prisma.siswa.create({
-      data: {
-        nisn,
-        nis,
-        jenisKelamin,
-        tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
-        alamat,
-        noTelepon,
-        status: 'approved', // Admin-created students are auto-approved
-        kelas: {
-          connect: {
-            id: kelasId
+
+    const siswa = await prisma.$transaction(async (tx) => {
+      // Step 1: Create siswa with user
+      console.log('📝 Step 1: Creating siswa...');
+      const newSiswa = await tx.siswa.create({
+        data: {
+          nisn,
+          nis,
+          jenisKelamin,
+          tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
+          alamat,
+          noTelepon,
+          status: 'approved', // Admin-created students are auto-approved
+          kelas: {
+            connect: {
+              id: kelasId
+            }
+          },
+          user: {
+            create: {
+              email,
+              password: hashedPassword,
+              name,
+              role: 'SISWA'
+            }
           }
         },
-        user: {
-          create: {
-            email,
-            password: hashedPassword,
-            name,
-            role: 'SISWA'
+        select: {
+          id: true,
+          nisn: true,
+          nis: true,
+          kelasId: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
           }
         }
-      },
-      // OPTIMIZED: Minimal select untuk response cepat
-      select: {
-        id: true,
-        nisn: true,
-        nis: true,
-        kelasId: true,
-        createdAt: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
+      });
+      console.log('✅ Siswa created:', newSiswa.id);
+
+      // Step 2: Create parent if parentData is provided
+      if (parentData && parentData.name && parentData.noHP && parentData.email && parentData.password) {
+        console.log('📝 Step 2: Creating orang tua...');
+
+        // Validate parent data
+        if (parentData.password.length < 8) {
+          throw new Error('Password orang tua minimal 8 karakter');
         }
+
+        // Hash parent password
+        const parentHashedPassword = await bcrypt.hash(parentData.password, 10);
+
+        // Check if parent email exists
+        const existingParentEmail = await tx.user.findUnique({
+          where: { email: parentData.email.toLowerCase() }
+        });
+
+        if (existingParentEmail) {
+          throw new Error('Email orang tua sudah terdaftar');
+        }
+
+        // Create parent user and orangTua
+        const parentUser = await tx.user.create({
+          data: {
+            email: parentData.email.toLowerCase(),
+            password: parentHashedPassword,
+            name: parentData.name,
+            role: 'ORANGTUA'
+          }
+        });
+
+        const orangTua = await tx.orangTua.create({
+          data: {
+            noTelepon: parentData.noHP.replace(/[^0-9]/g, ''),
+            userId: parentUser.id
+          }
+        });
+
+        console.log('✅ Orang tua created:', orangTua.id);
+
+        // Step 3: Link siswa to orang tua
+        console.log('📝 Step 3: Linking siswa to orang tua...');
+        await tx.orangTuaSiswa.create({
+          data: {
+            siswaId: newSiswa.id,
+            orangTuaId: orangTua.id,
+            hubungan: 'Orang Tua'
+          }
+        });
+        console.log('✅ Siswa linked to orang tua');
       }
+
+      return newSiswa;
     });
-    console.log(`⏱️ Database insert: ${Date.now() - createStart}ms`);
+
+    console.log(`⏱️ Database transaction: ${Date.now() - createStart}ms`);
 
     // Log activity (non-blocking - don't await)
     logActivity({
@@ -287,12 +351,13 @@ export async function POST(request) {
       userRole: session.user.role,
       action: 'CREATE',
       module: 'SISWA',
-      description: `Menambahkan siswa baru ${siswa.user.name} (NIS: ${siswa.nis})`,
+      description: `Menambahkan siswa baru ${siswa.user.name} (NIS: ${siswa.nis})${parentData ? ' dengan orang tua' : ''}`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
         siswaId: siswa.id,
-        kelasId: siswa.kelasId
+        kelasId: siswa.kelasId,
+        withParent: !!parentData
       }
     }).catch(err => console.error('Log activity error:', err));
 
@@ -316,6 +381,21 @@ export async function POST(request) {
       return NextResponse.json(
         { error: 'Format JSON tidak valid' },
         { status: 400 }
+      );
+    }
+
+    // Handle transaction errors (from custom validation)
+    if (error.message && error.message.includes('Password orang tua')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
+    if (error.message && error.message.includes('sudah terdaftar')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 409 }
       );
     }
 
