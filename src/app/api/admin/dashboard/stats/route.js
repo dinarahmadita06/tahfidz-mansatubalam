@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
+// Mark this as a dynamic route - do not call during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Simple in-memory cache
 const cache = new Map();
 const CACHE_DURATION = 300000; // 5 minutes in milliseconds
