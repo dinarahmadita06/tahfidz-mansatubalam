@@ -28,16 +28,24 @@ export async function GET(request, { params }) {
             createdAt: true
           }
         },
-        siswa: {
+        orangTuaSiswa: {
           include: {
-            user: {
+            siswa: {
               select: {
-                name: true
-              }
-            },
-            kelas: {
-              select: {
-                nama: true
+                id: true,
+                nis: true,
+                nisn: true,
+                user: {
+                  select: {
+                    name: true
+                  }
+                },
+                kelas: {
+                  select: {
+                    nama: true,
+                    id: true
+                  }
+                }
               }
             }
           }

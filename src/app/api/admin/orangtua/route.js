@@ -52,8 +52,24 @@ export async function GET(request) {
             }
           },
           orangTuaSiswa: {
-            select: {
-              siswaId: true
+            include: {
+              siswa: {
+                select: {
+                  id: true,
+                  nis: true,
+                  user: {
+                    select: {
+                      name: true
+                    }
+                  },
+                  kelas: {
+                    select: {
+                      nama: true,
+                      id: true
+                    }
+                  }
+                }
+              }
             }
           }
         },
@@ -71,8 +87,8 @@ export async function GET(request) {
       ...ot,
       _count: {
         siswa: ot.orangTuaSiswa?.length || 0
-      },
-      orangTuaSiswa: undefined  // Remove the array, only use count
+      }
+      // Keep orangTuaSiswa array with full siswa details
     }));
 
     return NextResponse.json({
