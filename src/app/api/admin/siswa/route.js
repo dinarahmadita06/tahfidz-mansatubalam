@@ -382,6 +382,11 @@ export async function POST(request) {
   } catch (error) {
     const totalTime = Date.now() - startTime;
     console.error(`❌ Error creating siswa (${totalTime}ms):`, error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error meta:', error.meta);
+    console.error('Full error:', JSON.stringify(error, null, 2));
 
     // Check if it's a JSON parsing error
     if (error instanceof SyntaxError && error.message.includes('JSON')) {
@@ -412,8 +417,10 @@ export async function POST(request) {
     
     return NextResponse.json(
       {
-        error: statusCode === 400 ? 'Data duplikat atau tidak valid' : 'Gagal menambahkan siswa',
-        ...(process.env.NODE_ENV === 'development' && { details: errorMessage })
+        error: 'Gagal menambahkan siswa',
+        details: errorMessage,
+        code: error.code || 'UNKNOWN',
+        ...(process.env.NODE_ENV === 'development' && { fullError: error })
       },
       { status: statusCode }
     );
