@@ -220,28 +220,43 @@ export default function PengumumanPage() {
             <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
             
-            <div className="relative z-10 grid grid-cols-[64px_1fr] gap-4 sm:gap-6 sm:grid-cols-1 items-start sm:flex sm:flex-row sm:items-center sm:justify-between">
-              {/* Icon Container */}
-              <div className="h-14 w-14 rounded-2xl bg-white/15 border border-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-                <Megaphone size={32} className="text-white" />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+              {/* Mobile Layout - Grid */}
+              <div className="sm:hidden grid grid-cols-[48px_1fr] gap-3 items-start w-full">
+                {/* Icon Container - Mobile */}
+                <div className="h-12 w-12 rounded-2xl bg-white/15 border border-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                  <Megaphone size={28} className="text-white" />
+                </div>
+                
+                {/* Header Content - Mobile */}
+                <div className="min-w-0">
+                  <h1 className="text-xl font-bold text-white mb-1 leading-tight break-words">Pengumuman</h1>
+                  <p className="text-white/90 text-xs break-words">Kelola pengumuman untuk semua pengguna aplikasi</p>
+                </div>
               </div>
               
-              {/* Header Content */}
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 leading-tight whitespace-normal break-words">Pengumuman</h1>
-                <p className="text-white/90 text-sm sm:text-base whitespace-normal break-words">Kelola pengumuman untuk semua pengguna aplikasi</p>
+              {/* Desktop Layout - Flex */}
+              <div className="hidden sm:flex items-center gap-6 flex-1">
+                {/* Icon Container - Desktop */}
+                <div className="h-14 w-14 rounded-2xl bg-white/15 border border-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                  <Megaphone size={32} className="text-white" />
+                </div>
+                
+                {/* Header Content - Desktop */}
+                <div>
+                  <h1 className="text-4xl font-bold text-white mb-2">Pengumuman</h1>
+                  <p className="text-white/90 text-base">Kelola pengumuman untuk semua pengguna aplikasi</p>
+                </div>
               </div>
               
               {/* Action Button - Mobile Full Width */}
-              <div className="sm:hidden col-span-2 w-full mt-4">
-                <button
-                  onClick={openCreateModal}
-                  className="w-full flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:bg-white/20 bg-white/15 border border-white/20 whitespace-nowrap"
-                >
-                  <Plus size={18} />
-                  <span>Buat</span>
-                </button>
-              </div>
+              <button
+                onClick={openCreateModal}
+                className="sm:hidden w-full flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:bg-white/20 bg-white/15 border border-white/20 whitespace-nowrap mt-2"
+              >
+                <Plus size={18} />
+                <span>Buat</span>
+              </button>
               
               {/* Action Button - Desktop */}
               <button
