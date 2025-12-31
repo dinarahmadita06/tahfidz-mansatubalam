@@ -16,7 +16,9 @@ import {
   ChevronRight,
   Briefcase,
   IdCard,
-  FileText
+  FileText,
+  Upload,
+  CheckCircle
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 
@@ -313,445 +315,269 @@ export default function ProfileAdminPage() {
 
   return (
     <AdminLayout>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                <User className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+              </div>
 
-        body, * {
-          font-family: 'Poppins', sans-serif;
-        }
-
-        /* Islamic ornament pattern */
-        .islamic-ornament-topleft {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 300px;
-          height: 300px;
-          background-image:
-            radial-gradient(circle at center, rgba(16, 185, 129, 0.04) 0%, transparent 70%),
-            repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(16, 185, 129, 0.03) 20px, rgba(16, 185, 129, 0.03) 40px);
-          filter: blur(1px);
-          pointer-events: none;
-          opacity: 0.8;
-        }
-
-        .islamic-ornament-bottomright {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 400px;
-          height: 400px;
-          background-image:
-            radial-gradient(circle at center, rgba(245, 158, 11, 0.05) 0%, transparent 70%),
-            repeating-linear-gradient(-45deg, transparent, transparent 25px, rgba(245, 158, 11, 0.04) 25px, rgba(245, 158, 11, 0.04) 50px);
-          filter: blur(2px);
-          pointer-events: none;
-          opacity: 0.7;
-        }
-
-        /* Card with enhanced shadow */
-        .profile-card {
-          box-shadow:
-            0 4px 20px rgba(0, 0, 0, 0.06),
-            0 1px 3px rgba(0, 0, 0, 0.03),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        }
-
-        .profile-card-hover {
-          transition: all 0.3s ease;
-        }
-
-        .profile-card-hover:hover {
-          transform: translateY(-2px);
-          box-shadow:
-            0 8px 30px rgba(0, 0, 0, 0.08),
-            0 2px 6px rgba(0, 0, 0, 0.04),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        }
-      `}</style>
-
-      <div
-        className="min-h-screen p-8 relative overflow-hidden profile-container"
-        style={{
-          background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
-          fontFamily: 'Poppins, sans-serif'
-        }}
-      >
-        {/* Islamic Ornaments */}
-        <div className="islamic-ornament-topleft"></div>
-        <div className="islamic-ornament-bottomright"></div>
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm mb-6 relative z-10">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-emerald-100/50 shadow-sm">
-            <Home size={16} className="text-emerald-600" strokeWidth={1.5} />
-            <ChevronRight size={14} className="text-gray-400" strokeWidth={2} />
-            <span className="font-semibold text-emerald-700">Profil Admin</span>
-          </div>
-        </div>
-
-        {/* Header Section */}
-        <div
-          className="relative z-10 mb-8 p-8 profile-card"
-          style={{
-            background: 'linear-gradient(135deg, #FDFCF8 0%, #FFF9F0 100%)',
-            borderTop: '3px solid #10B981'
-          }}
-        >
-          <div className="flex items-start gap-5">
-            <div
-              className="p-4 rounded-2xl shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-              }}
-            >
-              <User className="text-white" size={32} strokeWidth={1.5} />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2" style={{ color: '#064E3B' }}>
-                Profil Admin
-              </h1>
-              <p className="text-sm font-medium" style={{ color: '#374151' }}>
-                Lihat dan kelola informasi akun administrator Anda
-              </p>
-              <div className="flex items-center gap-2 mt-3">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium text-emerald-700">Status: Aktif</span>
+              <div className="min-w-0">
+                <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
+                  Profil Admin
+                </h1>
+                <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
+                  Kelola informasi profil dan keamanan akun Anda
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Profile Card */}
-        <div
-          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
-          style={{
-            background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
-            border: '1px solid rgba(16, 185, 129, 0.1)'
-          }}
-        >
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            {/* Profile Picture */}
-            <div className="flex-shrink-0">
-              <div
-                className="w-28 h-28 rounded-full flex items-center justify-center shadow-xl ring-4 ring-white"
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)'
-                }}
-              >
-                <User className="text-white" size={56} strokeWidth={1.5} />
-              </div>
-            </div>
-
-            {/* Profile Info */}
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {profileData?.nama}
-              </h2>
-              <div className="flex items-center gap-2 text-gray-600 mb-3">
-                <Mail size={16} />
-                <span className="text-sm">{profileData?.email}</span>
-              </div>
-
-              {/* Badge */}
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border mb-4 shadow-sm"
-                style={{
-                  background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
-                  borderColor: '#10B981',
-                  color: '#065F46'
-                }}
-              >
-                <Shield size={16} strokeWidth={2} />
-                {profileData?.role}
-              </div>
-
-              {/* Additional Info */}
-              <div className="space-y-2 mt-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar size={16} className="text-emerald-600" />
-                  <span>Bergabung sejak: <span className="font-medium text-gray-900">{profileData?.tanggalBergabung}</span></span>
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Profile Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              {/* Avatar & Info */}
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg mb-4">
+                  <span className="text-white text-3xl font-bold">
+                    {profileData?.nama?.charAt(0)?.toUpperCase() || 'A'}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Clock size={16} className="text-amber-600" />
-                  <span>Terakhir login: <span className="font-medium text-gray-900">{profileData?.lastLogin}</span></span>
+
+                <h2 className="text-xl font-bold text-gray-900 mb-1 break-words">
+                  {profileData?.nama || 'Administrator'}
+                </h2>
+
+                <div className="flex items-center gap-2 text-gray-600 mb-3">
+                  <Mail size={14} />
+                  <span className="text-sm break-all">{profileData?.email}</span>
+                </div>
+
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Shield size={16} />
+                  Administrator
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 mt-6">
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={handleEditProfile}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white shadow-md hover:shadow-xl transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                  }}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm hover:shadow-md transition-all duration-200"
                 >
-                  <Edit size={18} strokeWidth={2} />
+                  <Edit size={18} />
                   Edit Profil
                 </button>
                 <button
                   onClick={handleChangePassword}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-                    color: '#92400E',
-                    border: '1px solid #F59E0B'
-                  }}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200"
                 >
-                  <Lock size={18} strokeWidth={2} />
-                  Ganti Password
+                  <Lock size={18} />
+                  Ubah Password
                 </button>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Biodata Section */}
-        <div
-          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
-          style={{
-            background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-            border: '1px solid rgba(245, 158, 11, 0.2)'
-          }}
-        >
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-200/50">
-            <div
-              className="p-2 rounded-lg"
-              style={{
-                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-              }}
-            >
-              <IdCard size={20} className="text-white" strokeWidth={2} />
-            </div>
-            <h3 className="text-lg font-bold" style={{ color: '#92400E' }}>
-              Biodata Lengkap
-            </h3>
-          </div>
-
-          {/* Baris 1: Nama Lengkap + Jabatan */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Nama Lengkap */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <User size={16} className="text-amber-600" strokeWidth={2} />
-                Nama Lengkap
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.nama}</p>
+          {/* Right Column: Info + Signature + Security */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Personal Info Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-2 rounded-lg bg-emerald-50">
+                  <User size={20} className="text-emerald-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Informasi Pribadi</h3>
               </div>
-            </div>
 
-            {/* Jabatan */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <Briefcase size={16} className="text-amber-600" strokeWidth={2} />
-                Jabatan
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.jabatan}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Baris 2: NIP + Nomor Telepon */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* NIP */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <IdCard size={16} className="text-amber-600" strokeWidth={2} />
-                NIP <span className="text-gray-500 font-normal">(Opsional)</span>
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold font-mono" style={{ color: '#374151' }}>{profileData?.nip || '-'}</p>
-              </div>
-            </div>
-
-            {/* Nomor Telepon */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-                <Phone size={16} className="text-amber-600" strokeWidth={2} />
-                Nomor Telepon
-              </label>
-              <div
-                className="px-4 py-3 rounded-xl border shadow-sm"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderColor: '#FCD34D'
-                }}
-              >
-                <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.phoneNumber}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Baris 3: Alamat Kantor */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-semibold" style={{ color: '#78350F' }}>
-              <MapPin size={16} className="text-amber-600" strokeWidth={2} />
-              Alamat Kantor
-            </label>
-            <div
-              className="px-4 py-3 rounded-xl border shadow-sm"
-              style={{
-                background: 'rgba(255, 255, 255, 0.7)',
-                borderColor: '#FCD34D'
-              }}
-            >
-              <p className="font-semibold" style={{ color: '#374151' }}>{profileData?.alamat}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Digital Signature Section - Koordinator Tahfidz Only */}
-        <div
-          className="relative z-10 rounded-2xl p-8 mb-6 max-w-4xl mx-auto profile-card profile-card-hover"
-          style={{
-            background: 'linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.2)'
-          }}
-        >
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-blue-200/50">
-            <div
-              className="p-2 rounded-lg"
-              style={{
-                background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)'
-              }}
-            >
-              <Edit size={20} className="text-white" strokeWidth={2} />
-            </div>
-            <h3 className="text-lg font-bold" style={{ color: '#1E40AF' }}>
-              Tanda Tangan Digital Koordinator Tahfidz
-            </h3>
-          </div>
-
-          <div className="max-w-md">
-            {/* Koordinator Tahfidz Signature */}
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600">Upload tanda tangan digital Anda dalam format PNG (max 500 KB). Tanda tangan ini akan otomatis muncul di laporan kehadiran dan hafalan.</p>
-              
-              {signaturePreviews.koordinator ? (
-                <div className="relative">
-                  <div
-                    className="px-6 py-6 rounded-xl border-2 flex items-center justify-center min-h-32"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.9)',
-                      borderColor: '#10B981',
-                      borderStyle: 'solid'
-                    }}
-                  >
-                    <img
-                      src={signaturePreviews.koordinator}
-                      alt="Koordinator Signature"
-                      className="max-h-32 max-w-64 object-contain"
-                    />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nama Lengkap */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <User size={16} className="text-gray-400" />
+                    Nama Lengkap
+                  </label>
+                  <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <p className="font-medium text-gray-900">{profileData?.nama || '-'}</p>
                   </div>
-                  <p className="text-xs text-emerald-600 mt-3 font-semibold">✅ Tanda tangan berhasil disimpan</p>
-                  <button
-                    onClick={() => document.getElementById('koordinator-file-input').click()}
-                    className="mt-3 w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 hover:opacity-90"
-                    style={{
-                      background: '#DBEAFE',
-                      color: '#1E40AF'
-                    }}
-                  >
-                    Ganti Tanda Tangan
-                  </button>
-                  <input
-                    id="koordinator-file-input"
-                    type="file"
-                    accept=".png"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
-                        handleSignatureUpload('koordinator', file);
-                      }
-                    }}
-                    className="hidden"
-                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Mail size={16} className="text-gray-400" />
+                    Email
+                  </label>
+                  <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
+                  </div>
+                </div>
+
+                {/* Nomor Telepon */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Phone size={16} className="text-gray-400" />
+                    Nomor Telepon
+                  </label>
+                  <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <p className="font-medium text-gray-900">{profileData?.phoneNumber || '-'}</p>
+                  </div>
+                </div>
+
+                {/* Jabatan */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Briefcase size={16} className="text-gray-400" />
+                    Jabatan
+                  </label>
+                  <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <p className="font-medium text-gray-900">{profileData?.jabatan || '-'}</p>
+                  </div>
+                </div>
+
+                {/* NIP (Opsional) */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <IdCard size={16} className="text-gray-400" />
+                    NIP (Opsional)
+                  </label>
+                  <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <p className="font-medium text-gray-900">{profileData?.nip || '-'}</p>
+                  </div>
+                </div>
+
+                {/* Alamat Kantor - Full Width */}
+                <div className="md:col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <MapPin size={16} className="text-gray-400" />
+                    Alamat Kantor
+                  </label>
+                  <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <p className="font-medium text-gray-900">{profileData?.alamat || '-'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Signature Uploader */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-2 rounded-lg bg-blue-50">
+                  <FileText size={20} className="text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-gray-900">Tanda Tangan Digital</h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Untuk ditampilkan otomatis di laporan
+                  </p>
+                </div>
+              </div>
+
+              {signaturePreviews.koordinator ? (
+                <div className="space-y-4">
+                  {/* Preview */}
+                  <div className="p-4 rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50/30">
+                    <div className="flex flex-col items-center">
+                      <CheckCircle size={24} className="text-emerald-600 mb-2" />
+                      <p className="text-sm font-semibold text-gray-700 mb-3">
+                        Tanda Tangan Aktif
+                      </p>
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 inline-block">
+                        <img
+                          src={signaturePreviews.koordinator}
+                          alt="Tanda Tangan"
+                          className="max-h-24 mx-auto"
+                          style={{ maxWidth: '200px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 flex-wrap">
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200">
+                        <Upload size={18} />
+                        Ganti
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
+                            handleSignatureUpload('koordinator', file);
+                          }
+                        }}
+                        disabled={saveLoading}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
               ) : (
-                <div
-                  className="px-6 py-8 rounded-xl border-2 border-dashed text-center"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    borderColor: '#93C5FD'
-                  }}
-                >
-                  <FileText size={32} className="text-blue-400 mx-auto mb-3" strokeWidth={1.5} />
+                <label className="block cursor-pointer">
+                  <div className="p-6 rounded-xl border-2 border-dashed border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all duration-200">
+                    <div className="text-center">
+                      <div className="mb-3 flex justify-center">
+                        <div className="p-3 rounded-xl bg-emerald-50">
+                          <Upload size={24} className="text-emerald-600" />
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900 mb-1">
+                        {saveLoading ? 'Mengupload...' : 'Klik untuk Upload Tanda Tangan'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Format: PNG atau JPG • Maksimal 500 KB
+                      </p>
+                    </div>
+                  </div>
                   <input
                     type="file"
-                    accept=".png"
+                    accept="image/png,image/jpeg,image/jpg"
                     onChange={(e) => {
-                      const file = e.target.files[0];
+                      const file = e.target.files?.[0];
                       if (file) {
                         setSignatureFiles({ ...signatureFiles, koordinatorTandaTangan: file });
                         handleSignatureUpload('koordinator', file);
                       }
                     }}
+                    disabled={saveLoading}
                     className="hidden"
-                    id="koordinator-file-input-new"
                   />
-                  <label htmlFor="koordinator-file-input-new" className="cursor-pointer">
-                    <p className="text-sm font-semibold text-blue-600 mb-1">Klik untuk upload atau drag & drop</p>
-                    <p className="text-xs text-gray-500">Format: PNG | Max: 500 KB</p>
-                  </label>
-                </div>
+                </label>
               )}
-            </div>
-          </div>
-        </div>
 
-        {/* Informasi Akun Card */}
-        <div
-          className="relative z-10 rounded-2xl p-6 max-w-4xl mx-auto border profile-card"
-          style={{
-            background: 'linear-gradient(135deg, #D1FAE5 0%, #FEF3C7 100%)',
-            borderColor: 'rgba(16, 185, 129, 0.3)'
-          }}
-        >
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                }}
-              >
-                <Shield size={22} className="text-white" strokeWidth={2} />
+              {/* Info Note */}
+              <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-100">
+                <p className="text-xs text-blue-900">
+                  💡 Ukuran maksimal 500 KB. PNG transparan disarankan.
+                </p>
               </div>
             </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-base mb-2" style={{ color: '#065F46' }}>
-                Informasi Keamanan Akun
-              </h4>
-              <p className="text-sm leading-relaxed" style={{ color: '#374151' }}>
-                Akun ini memiliki hak akses <span className="font-semibold text-emerald-700">penuh</span> terhadap sistem Tahfidz MAN 1 Bandar Lampung.
-                Pastikan untuk menjaga kerahasiaan kredensial login Anda dan segera laporkan
-                jika ada aktivitas mencurigakan.
-              </p>
-              <div className="flex items-center gap-2 mt-3 text-xs font-semibold" style={{ color: '#047857' }}>
-                <Lock size={14} strokeWidth={2} />
-                <span>Login terenkripsi • Sesi aman</span>
+
+            {/* Security Card */}
+            <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center shadow-sm">
+                    <Shield size={20} className="text-white" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-sm mb-2 text-emerald-900">
+                    Informasi Keamanan Akun
+                  </h4>
+                  <p className="text-sm leading-relaxed text-emerald-800">
+                    💡 Pastikan informasi profil Anda selalu ter-update. Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -760,24 +586,13 @@ export default function ProfileAdminPage() {
         {/* Edit Profile Modal */}
         {showEditModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div
-              className="rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
-              style={{
-                background: 'linear-gradient(135deg, #FFFFFF 0%, #FEFDFB 100%)',
-                border: '2px solid rgba(16, 185, 129, 0.2)'
-              }}
-            >
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="p-2 rounded-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                    }}
-                  >
-                    <Edit size={20} className="text-white" strokeWidth={2} />
+                  <div className="p-2 rounded-lg bg-emerald-50">
+                    <Edit size={20} className="text-emerald-600" />
                   </div>
-                  <h3 className="text-2xl font-bold" style={{ color: '#064E3B' }}>Edit Profil</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Edit Profil</h3>
                 </div>
                 <button
                   onClick={() => setShowEditModal(false)}
@@ -789,7 +604,6 @@ export default function ProfileAdminPage() {
                 </button>
               </div>
 
-              {/* Success/Error Message */}
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                   {error}
@@ -805,28 +619,28 @@ export default function ProfileAdminPage() {
                 {/* Nama Lengkap */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nama Lengkap *
+                    Nama Lengkap <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Contoh: Ahmad Fauzi, S.Pd.I"
+                    required
                     value={editFormData.nama || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, nama: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Jabatan */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jabatan *
+                    Jabatan <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Koordinator Tahfidz"
+                    required
                     value={editFormData.jabatan || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, jabatan: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
@@ -837,10 +651,9 @@ export default function ProfileAdminPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Nomor Induk Pegawai"
                     value={editFormData.nip || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, nip: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
@@ -851,10 +664,10 @@ export default function ProfileAdminPage() {
                   </label>
                   <input
                     type="tel"
-                    placeholder="0812-3456-7890"
                     value={editFormData.phoneNumber || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="08xx xxxx xxxx"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
@@ -865,10 +678,10 @@ export default function ProfileAdminPage() {
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Jln. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame"
                     value={editFormData.alamat || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                    placeholder="Alamat lengkap..."
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                   />
                 </div>
 
@@ -881,7 +694,7 @@ export default function ProfileAdminPage() {
                     type="email"
                     value={editFormData.email || ''}
                     disabled
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
                   />
                   <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
                 </div>
@@ -890,23 +703,18 @@ export default function ProfileAdminPage() {
               {/* Modal Actions */}
               <div className="flex gap-3 mt-8">
                 <button
+                  type="button"
                   onClick={() => setShowEditModal(false)}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-                    color: '#374151'
-                  }}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 disabled:opacity-50"
                 >
                   Batal
                 </button>
                 <button
+                  type="button"
                   onClick={handleSaveProfile}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                  }}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-all duration-200 disabled:opacity-50"
                 >
                   {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </button>
@@ -918,24 +726,13 @@ export default function ProfileAdminPage() {
         {/* Change Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div
-              className="rounded-2xl p-8 max-w-md w-full shadow-2xl"
-              style={{
-                background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-                border: '2px solid rgba(245, 158, 11, 0.3)'
-              }}
-            >
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="p-2 rounded-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                    }}
-                  >
-                    <Lock size={20} className="text-white" strokeWidth={2} />
+                  <div className="p-2 rounded-lg bg-amber-50">
+                    <Lock size={20} className="text-amber-600" />
                   </div>
-                  <h3 className="text-2xl font-bold" style={{ color: '#92400E' }}>Ganti Password</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Ubah Password</h3>
                 </div>
                 <button
                   onClick={() => setShowPasswordModal(false)}
@@ -947,7 +744,6 @@ export default function ProfileAdminPage() {
                 </button>
               </div>
 
-              {/* Success/Error Message */}
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                   {error}
@@ -963,42 +759,47 @@ export default function ProfileAdminPage() {
                 {/* Password Lama */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password Lama
+                    Password Lama <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="password"
+                    required
                     placeholder="Masukkan password lama"
                     value={passwordFormData.oldPassword}
                     onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Password Baru */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password Baru
+                    Password Baru <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="password"
-                    placeholder="Masukkan password baru"
+                    required
+                    minLength={6}
+                    placeholder="Minimal 6 karakter"
                     value={passwordFormData.newPassword}
                     onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Konfirmasi Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Konfirmasi Password Baru
+                    Konfirmasi Password Baru <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="password"
-                    placeholder="Konfirmasi password baru"
+                    required
+                    minLength={6}
+                    placeholder="Ketik ulang password baru"
                     value={passwordFormData.confirmPassword}
                     onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -1007,48 +808,33 @@ export default function ProfileAdminPage() {
               <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <p className="text-xs font-medium text-amber-900 mb-2">Persyaratan Password:</p>
                 <ul className="text-xs text-amber-800 space-y-1">
-                  <li>• Minimal 8 karakter</li>
-                  <li>• Mengandung huruf besar dan kecil</li>
-                  <li>• Mengandung angka dan simbol</li>
+                  <li>• Minimal 6 karakter</li>
                 </ul>
               </div>
 
               {/* Modal Actions */}
               <div className="flex gap-3 mt-6">
                 <button
+                  type="button"
                   onClick={() => setShowPasswordModal(false)}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-                    color: '#374151'
-                  }}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 disabled:opacity-50"
                 >
                   Batal
                 </button>
                 <button
+                  type="button"
                   onClick={handleChangePasswordSubmit}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
-                  style={{
-                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                  }}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-all duration-200 disabled:opacity-50"
                 >
-                  {saveLoading ? 'Mengubah...' : 'Ubah Password'}
+                  {saveLoading ? 'Menyimpan...' : 'Ubah Password'}
                 </button>
               </div>
             </div>
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .profile-container {
-            padding: 16px !important;
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 }
