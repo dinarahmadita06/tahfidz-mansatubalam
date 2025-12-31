@@ -313,6 +313,7 @@ export default function KelolaSiswaPage() {
   const [showChangeClassModal, setShowChangeClassModal] = useState(false);
   const [kelasOptions, setKelasOptions] = useState([]);
   const [selectedNewClass, setSelectedNewClass] = useState(null);
+  const [selectedSiswaForParent, setSelectedSiswaForParent] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -333,6 +334,34 @@ export default function KelolaSiswaPage() {
     password: '',
     jenisWali: 'Ayah',
   });
+
+  // ============ DRAFT & LOCALSTORAGE HELPERS ============
+  const draftKey = (siswaId) => `draftParentData_${siswaId}`;
+  
+  const saveDraftToStorage = (siswaId, data) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(draftKey(siswaId), JSON.stringify(data));
+      console.log('💾 Draft saved for siswa:', siswaId);
+    }
+  };
+  
+  const loadDraftFromStorage = (siswaId) => {
+    if (typeof window !== 'undefined') {
+      const draft = localStorage.getItem(draftKey(siswaId));
+      if (draft) {
+        console.log('📂 Draft loaded for siswa:', siswaId);
+        return JSON.parse(draft);
+      }
+    }
+    return null;
+  };
+  
+  const deleteDraftFromStorage = (siswaId) => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(draftKey(siswaId));
+      console.log('🗑️ Draft deleted for siswa:', siswaId);
+    }
+  };
 
   // ============ EFFECTS ============
   // Debounce search term (400ms)
@@ -363,6 +392,53 @@ export default function KelolaSiswaPage() {
       setNewParentData(prev => ({ ...prev, email: generatedEmail }));
     }
   }, [parentMode, newParentData.name, newParentData.noHP, formData.nis]);
+
+  // ============ PREFILL PARENT DATA WHEN MODAL OPENS FOR LINKING ============
+  useEffect(() => {
+    if (showModal && selectedSiswaForParent && selectedSiswaForParent.id) {
+      const siswaId = selectedSiswaForParent.id;
+      
+      // Check if siswa already has parent
+      if (selectedSiswaForParent.orangTuaSiswa && selectedSiswaForParent.orangTuaSiswa.length > 0) {
+        // Load existing parent data
+        const existingParent = selectedSiswaForParent.orangTuaSiswa[0].orangTua;
+        console.log('🔍 Siswa sudah punya orang tua, default ke mode "Pilih"');
+        setParentMode('select');
+        setSelectedParentId(existingParent.id);
+        // Form will be populated by ParentLinkSection component
+      } else {
+        // Check for draft
+        const draft = loadDraftFromStorage(siswaId);
+        if (draft) {
+          console.log('📂 Draft found, default ke mode "Buat baru" + prefill draft');
+          setParentMode('create');
+          setNewParentData(draft);
+        } else {
+          // No parent & no draft - default to 'select' mode
+          console.log('🙄 No parent & no draft, default ke "Pilih existing"');
+          setParentMode('select');
+          setSelectedParentId('');
+          setNewParentData({
+            name: '',
+            noHP: '',
+            email: '',
+            password: '',
+            jenisWali: 'Ayah',
+          });
+        }
+      }
+    }
+  }, [showModal, selectedSiswaForParent]);
+
+  // ============ AUTO-SAVE DRAFT WHEN PARENT DATA CHANGES ============
+  useEffect(() => {
+    if (showModal && selectedSiswaForParent && parentMode === 'create' && selectedSiswaForParent.id) {
+      // Only save if there's actual data
+      if (newParentData.name || newParentData.noHP || newParentData.email || newParentData.password) {
+        saveDraftToStorage(selectedSiswaForParent.id, newParentData);
+      }
+    }
+  }, [newParentData, showModal, selectedSiswaForParent, parentMode]);
 
   // ============ DATA FETCHING ============
   const fetchKelasDetail = async () => {
@@ -575,6 +651,12 @@ export default function KelolaSiswaPage() {
       });
       setShowSuccessModal(true);
       setShowModal(false);
+      // Delete draft after successful save
+      if (selectedSiswaForParent?.id) {
+        deleteDraftFromStorage(selectedSiswaForParent.id);
+        console.log('✅ Draft deleted after successful save for siswa:', selectedSiswaForParent.id);
+        setSelectedSiswaForParent(null);
+      }
       resetForm();
       fetchSiswa();
     } catch (error) {
@@ -1020,7 +1102,10 @@ export default function KelolaSiswaPage() {
                                 onViewDetail={() => handleViewDetail(siswa)}
                                 onEdit={() => handleEdit(siswa)}
                                 onDelete={() => handleDelete(siswa.id)}
-                                onLinkParent={() => setShowModal(true)}
+                                onLinkParent={() => {
+                                  setSelectedSiswaForParent(siswa);
+                                  setShowModal(true);
+                                }}
                                 onChangeClass={() => handleChangeClass(siswa)}
                               />
                             </div>
@@ -1048,8 +1133,27 @@ export default function KelolaSiswaPage() {
           newParentData={newParentData}
           setNewParentData={setNewParentData}
           onSubmit={handleSubmit}
-          onClose={() => { setShowModal(false); resetForm(); }}
+          onClose={() => { 
+            setShowModal(false);
+            // Only reset if not in linking mode, or if explicitly closing from linking
+            if (!selectedSiswaForParent) {
+              resetForm();
+            }
+          }}
           isEditing={!!editingSiswa}
+          selectedSiswaId={selectedSiswaForParent?.id}
+          onDeleteDraft={() => {
+            if (selectedSiswaForParent?.id) {
+              deleteDraftFromStorage(selectedSiswaForParent.id);
+              setNewParentData({
+                name: '',
+                noHP: '',
+                email: '',
+                password: '',
+                jenisWali: 'Ayah',
+              });
+            }
+          }}
         />
       )}
 
@@ -1242,7 +1346,9 @@ function ModalFormSiswa({
   setNewParentData,
   onSubmit,
   onClose,
-  isEditing
+  isEditing,
+  selectedSiswaId,
+  onDeleteDraft
 }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px', backdropFilter: 'blur(4px)' }}>
@@ -1372,7 +1478,23 @@ function ModalFormSiswa({
           />
 
           {/* Buttons */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+            {selectedSiswaId && onDeleteDraft && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Hapus draft data orang tua?')) {
+                    onDeleteDraft();
+                  }
+                }}
+                style={{ flex: 1, minWidth: '120px', padding: '12px', border: `2px solid ${colors.red[600]}`, borderRadius: '12px', background: 'transparent', color: colors.red[600], fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = colors.red[50]; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                title="Hapus draft yang tersimpan untuk siswa ini"
+              >
+                Hapus Draft
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
