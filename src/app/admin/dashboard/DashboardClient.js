@@ -24,6 +24,9 @@ import {
   Bell,
   Star,
   Lightbulb,
+  Plus,
+  Download,
+  Upload,
 } from 'lucide-react';
 
 // Segment config removed to prevent build error
@@ -143,7 +146,57 @@ function MotivationCard() {
   );
 }
 
-// Local Announcement Section - Amber Pastel (SIMTAQ Baseline)
+// Manajemen Kelas Card - Emerald Gradient with Action Buttons
+function ManagementKelasCard() {
+  return (
+    <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
+      {/* Decorative Circles */}
+      <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
+
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">Manajemen Kelas</h2>
+          <p className="text-green-50 text-sm sm:text-base">Kelas-kelas tahfidz, well kelas, dan alasan dengan mudah</p>
+        </div>
+
+        {/* Action Buttons - Stack on Mobile, Grid on Desktop */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-3">
+          {/* Tambah Kelas - Primary Button */}
+          <Link
+            href="/admin/kelas"
+            className="flex items-center justify-center gap-3 px-4 h-11 bg-white text-emerald-700 font-semibold rounded-xl shadow-sm hover:bg-white/90 transition-colors duration-200 flex-1 sm:flex-none"
+          >
+            <Plus size={20} className="text-emerald-600" strokeWidth={2.5} />
+            <span className="hidden sm:inline">Tambah Kelas</span>
+            <span className="sm:hidden">Tambah</span>
+          </Link>
+
+          {/* Import Button - Secondary */}
+          <Link
+            href="/admin/kelas"
+            className="flex items-center justify-center gap-3 px-4 h-11 bg-white/15 text-white border border-white/20 font-semibold rounded-xl shadow-sm hover:bg-white/20 transition-colors duration-200 flex-1 sm:flex-none"
+          >
+            <Upload size={20} className="text-white" strokeWidth={2.5} />
+            <span className="hidden sm:inline">Import</span>
+            <span className="sm:hidden">Import</span>
+          </Link>
+
+          {/* Export Button - Secondary */}
+          <Link
+            href="/admin/kelas"
+            className="flex items-center justify-center gap-3 px-4 h-11 bg-white/15 text-white border border-white/20 font-semibold rounded-xl shadow-sm hover:bg-white/20 transition-colors duration-200 flex-1 sm:flex-none"
+          >
+            <Download size={20} className="text-white" strokeWidth={2.5} />
+            <span className="hidden sm:inline">Export</span>
+            <span className="sm:hidden">Export</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 function AnnouncementSection() {
   const [pengumuman, setPengumuman] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -443,6 +496,9 @@ export default function AdminDashboardPage() {
 
           {/* 1. Hero Header */}
           <DashboardHeader userName={session?.user?.name} />
+
+          {/* 1.2 Manajemen Kelas Card */}
+          <ManagementKelasCard />
 
           {/* 1.5 Pending Validation Alert */}
           {pendingCount > 0 && (
