@@ -319,7 +319,7 @@ export async function POST(request) {
             email: parentData.email.toLowerCase(),
             password: parentHashedPassword,
             name: parentData.name,
-            role: 'ORANGTUA'
+            role: 'ORANG_TUA'  // ← FIX: Changed from 'ORANGTUA' to 'ORANG_TUA'
           }
         });
 
