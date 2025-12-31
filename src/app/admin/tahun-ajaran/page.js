@@ -98,6 +98,8 @@ function SuccessCheck({ onComplete }) {
 export default function AdminTahunAjaranPage() {
   const [tahunAjaran, setTahunAjaran] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summary, setSummary] = useState({ jumlahKelas: 0, jumlahSiswa: 0 });
   const [showTahunAjaranModal, setShowTahunAjaranModal] = useState(false);
   const [showActivateModal, setShowActivateModal] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
@@ -114,7 +116,23 @@ export default function AdminTahunAjaranPage() {
 
   useEffect(() => {
     fetchTahunAjaran();
+    fetchSummary();
   }, []);
+
+  const fetchSummary = async () => {
+    try {
+      setSummaryLoading(true);
+      const response = await fetch('/api/tahun-ajaran/summary');
+      const data = await response.json();
+      setSummary(data);
+    } catch (error) {
+      console.error('Error fetching summary:', error);
+      // Fallback to empty summary on error
+      setSummary({ jumlahKelas: null, jumlahSiswa: null });
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   const fetchTahunAjaran = async () => {
     try {
@@ -172,6 +190,7 @@ export default function AdminTahunAjaranPage() {
         setTimeout(() => {
           setShowSuccessAnimation(false);
           fetchTahunAjaran();
+          fetchSummary();
         }, 2000);
       } else {
         const error = await response.json();
@@ -286,10 +305,8 @@ export default function AdminTahunAjaranPage() {
   const stats = {
     activePeriod: activeTahunAjaran ? `${activeTahunAjaran.nama} - Semester ${activeTahunAjaran.semester}` : 'Belum ada',
     activePeriodSubtitle: activeTahunAjaran ? `${new Date(activeTahunAjaran.tanggalMulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} - ${new Date(activeTahunAjaran.tanggalSelesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}` : '',
-    totalKelas: activeTahunAjaran?._count?.kelas || 0,
-    totalSiswa: tahunAjaran.reduce((sum, ta) => {
-      return sum + (ta.kelas?.reduce((kelasSum, k) => kelasSum + (k._count?.siswa || 0), 0) || 0);
-    }, 0),
+    totalKelas: summary.jumlahKelas,
+    totalSiswa: summary.jumlahSiswa,
     activeTargetHafalan: activeTahunAjaran?.targetHafalan || null,
     activeTahunAjaranId: activeTahunAjaran?.id || null,
   };
@@ -390,8 +407,17 @@ export default function AdminTahunAjaranPage() {
                   </div>
                   <p className="text-xs font-semibold text-blue-800 tracking-wide uppercase mt-1">Jumlah Kelas</p>
                 </div>
-                <h3 className="text-3xl font-bold text-blue-700 ml-16 -mt-12">{stats.totalKelas}</h3>
-                <p className="text-xs text-blue-600/80 mt-3">Periode aktif</p>
+                {summaryLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-10 bg-blue-200/40 rounded-lg w-20 ml-16 mb-3"></div>
+                    <div className="h-4 bg-blue-200/40 rounded-lg w-32"></div>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-3xl font-bold text-blue-700 ml-16 -mt-12">{summary.jumlahKelas ?? '−'}</h3>
+                    <p className="text-xs text-blue-600/80 mt-3">Periode aktif</p>
+                  </>
+                )}
               </div>
 
               {/* Card 3: Total Students - Emerald Theme */}
@@ -402,8 +428,17 @@ export default function AdminTahunAjaranPage() {
                   </div>
                   <p className="text-xs font-semibold text-emerald-800 tracking-wide uppercase mt-1">Jumlah Siswa</p>
                 </div>
-                <h3 className="text-3xl font-bold text-emerald-700 ml-16 -mt-12">{stats.totalSiswa}</h3>
-                <p className="text-xs text-emerald-600/80 mt-3">Semua periode</p>
+                {summaryLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-10 bg-emerald-200/40 rounded-lg w-20 ml-16 mb-3"></div>
+                    <div className="h-4 bg-emerald-200/40 rounded-lg w-32"></div>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-3xl font-bold text-emerald-700 ml-16 -mt-12">{summary.jumlahSiswa ?? '−'}</h3>
+                    <p className="text-xs text-emerald-600/80 mt-3">Semua periode</p>
+                  </>
+                )}
               </div>
             </div>
 
