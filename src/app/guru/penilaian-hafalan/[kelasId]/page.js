@@ -24,12 +24,12 @@ const TABLE_HEADER_GRADIENT = 'bg-gradient-to-r from-emerald-600 via-green-600 t
 // Table column configuration
 const TABLE_COLUMNS = [
   { key: 'no', label: 'No', width: 'w-[60px]', align: 'text-left' },
-  { key: 'nama', label: 'Nama Siswa', width: 'w-[220px]', align: 'text-left' },
-  { key: 'kehadiran', label: 'Kehadiran', width: 'w-[160px]', align: 'text-center' },
-  { key: 'surah', label: 'Surah yang Disetorkan', width: 'w-[280px]', align: 'text-left' },
-  { key: 'catatan', label: 'Catatan', width: 'w-[280px]', align: 'text-left' },
-  { key: 'nilai', label: 'Rata-rata Nilai', width: 'w-[160px]', align: 'text-center' },
-  { key: 'aksi', label: 'Aksi', width: 'w-[120px]', align: 'text-center' },
+  { key: 'nama', label: 'Nama Siswa', width: 'w-[180px]', align: 'text-left' },
+  { key: 'kehadiran', label: 'Kehadiran', width: 'w-[130px]', align: 'text-center' },
+  { key: 'surah', label: 'Surah yang Disetorkan', width: 'w-[220px]', align: 'text-left' },
+  { key: 'catatan', label: 'Catatan', width: 'w-[180px]', align: 'text-left' },
+  { key: 'nilai', label: 'Rata-rata Nilai', width: 'w-[140px]', align: 'text-center' },
+  { key: 'aksi', label: 'Aksi', width: 'w-[100px]', align: 'text-center' },
 ];
 
 // Daftar 114 Surah Al-Quran
