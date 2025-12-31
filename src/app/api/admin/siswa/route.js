@@ -122,8 +122,12 @@ export async function GET(request) {
     return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching siswa:', error);
+    console.error('Error details:', error.message, error.stack);
     return NextResponse.json(
-      { error: 'Failed to fetch siswa' },
+      { 
+        error: 'Failed to fetch siswa',
+        details: error.message
+      },
       { status: 500 }
     );
   }
