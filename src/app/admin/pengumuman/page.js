@@ -220,28 +220,36 @@ export default function PengumumanPage() {
             <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
             
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-              <div className="flex items-center gap-6">
-                {/* Icon Container */}
-                <div className="h-14 w-14 rounded-2xl bg-white/15 border border-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-                  <Megaphone size={32} className="text-white" />
-                </div>
-                
-                {/* Header Content */}
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Pengumuman</h1>
-                  <p className="text-white/90 text-sm sm:text-base">Kelola pengumuman untuk semua pengguna aplikasi</p>
-                </div>
+            <div className="relative z-10 grid grid-cols-[64px_1fr] gap-4 sm:gap-6 sm:grid-cols-1 items-start sm:flex sm:flex-row sm:items-center sm:justify-between">
+              {/* Icon Container */}
+              <div className="h-14 w-14 rounded-2xl bg-white/15 border border-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                <Megaphone size={32} className="text-white" />
               </div>
               
-              {/* Action Button */}
+              {/* Header Content */}
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 leading-tight whitespace-normal break-words">Pengumuman</h1>
+                <p className="text-white/90 text-sm sm:text-base whitespace-normal break-words">Kelola pengumuman untuk semua pengguna aplikasi</p>
+              </div>
+              
+              {/* Action Button - Mobile Full Width */}
+              <div className="sm:hidden col-span-2 w-full mt-4">
+                <button
+                  onClick={openCreateModal}
+                  className="w-full flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:bg-white/20 bg-white/15 border border-white/20 whitespace-nowrap"
+                >
+                  <Plus size={18} />
+                  <span>Buat</span>
+                </button>
+              </div>
+              
+              {/* Action Button - Desktop */}
               <button
                 onClick={openCreateModal}
-                className="flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-gradient-to-r from-emerald-600 to-teal-500 whitespace-nowrap"
+                className="hidden sm:flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-gradient-to-r from-emerald-600 to-teal-500 whitespace-nowrap flex-shrink-0"
               >
                 <Plus size={18} />
-                <span className="hidden sm:inline">Buat Pengumuman</span>
-                <span className="sm:hidden">Buat</span>
+                <span>Buat Pengumuman</span>
               </button>
             </div>
           </div>
