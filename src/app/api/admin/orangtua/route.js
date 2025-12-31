@@ -193,16 +193,40 @@ export async function POST(request) {
   } catch (error) {
     console.error('❌ Error creating orang tua:', error);
     
+    // Handle specific Prisma errors
+    if (error.code === 'P2002') {
+      // Unique constraint violation (email or NIK already exists)
+      const field = error.meta?.target?.[0];
+      let errorMsg = 'Data sudah terdaftar';
+      if (field === 'email') {
+        errorMsg = 'Email sudah terdaftar';
+      } else if (field === 'nik') {
+        errorMsg = 'NIK sudah terdaftar';
+      }
+      return NextResponse.json(
+        { error: errorMsg },
+        { status: 400 }
+      );
+    }
+    
+    if (error.code === 'P2025') {
+      // Record not found
+      return NextResponse.json(
+        { error: 'Data tidak ditemukan' },
+        { status: 400 }
+      );
+    }
+    
     // Provide detailed error message for debugging
     const errorMessage = error.meta?.cause || error.message || 'Unknown error';
-    const statusCode = error.code === 'P2002' ? 400 : 500;
+    console.error('Detailed error:', errorMessage);
     
     return NextResponse.json(
       {
-        error: statusCode === 400 ? 'Data sudah terdaftar atau tidak valid' : 'Gagal menambahkan orang tua',
+        error: 'Gagal menambahkan orang tua',
         ...(process.env.NODE_ENV === 'development' && { details: errorMessage })
       },
-      { status: statusCode }
+      { status: 500 }
     );
   }
 }

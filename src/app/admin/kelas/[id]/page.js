@@ -483,7 +483,6 @@ export default function KelolaSiswaPage() {
           noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
           email: newParentData.email.trim().toLowerCase(),
           password: newParentData.password.trim(),
-          jenisWali: newParentData.jenisWali,
           nik: `NIK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           jenisKelamin: 'LAKI_LAKI',
         };
@@ -497,6 +496,10 @@ export default function KelolaSiswaPage() {
         const parentResult = await parentResponse.json();
 
         if (!parentResponse.ok) {
+          // Show specific error messages from backend
+          if (parentResult.error === 'Email sudah terdaftar') {
+            throw new Error('Email wali sudah digunakan');
+          }
           throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
         }
 
