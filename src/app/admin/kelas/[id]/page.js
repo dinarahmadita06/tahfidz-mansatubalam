@@ -1269,6 +1269,7 @@ function ModalFormSiswa({
             onSelectParent={setSelectedParentId}
             newParentData={newParentData}
             onNewParentChange={setNewParentData}
+            siswaFormData={formData}
           />
 
           {/* Buttons */}
