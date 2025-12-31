@@ -433,6 +433,13 @@ export default function KelolaSiswaPage() {
       const siswaResult = await siswaResponse.json();
 
       if (!siswaResponse.ok) {
+        // Handle validation errors with field-specific messages
+        if (siswaResponse.status === 422 && siswaResult.invalidFields) {
+          const fieldErrors = Object.entries(siswaResult.invalidFields)
+            .map(([field, msg]) => `${field}: ${msg}`)
+            .join('\n');
+          throw new Error(`Validasi gagal:\n${fieldErrors}`);
+        }
         throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
       }
 
