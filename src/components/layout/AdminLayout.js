@@ -85,7 +85,7 @@ function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
-  const [isMounted, setIsMounted] = useState(false); // NEW: Track if component is mounted
+  const [isMounted, setIsMounted] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const pathname = usePathname();
 
@@ -96,7 +96,7 @@ function AdminLayout({ children }) {
 
   // Detect mobile screen - runs only on client
   useEffect(() => {
-    if (!isMounted) return; // Wait until mounted
+    if (!isMounted) return;
     
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024;
@@ -129,7 +129,7 @@ function AdminLayout({ children }) {
 
     if (isMounted) {
       fetchPendingCount();
-      const interval = setInterval(fetchPendingCount, 30000); // Check every 30 seconds
+      const interval = setInterval(fetchPendingCount, 30000);
       return () => clearInterval(interval);
     }
   }, [isMounted]);
@@ -156,15 +156,12 @@ function AdminLayout({ children }) {
         }
       } catch (error) {
         // Silently fail - notification polling is not critical
-        // console.error('Error fetching notifications:', error);
       }
     };
 
-    // Only start polling if we're on client side
     if (typeof window !== 'undefined') {
       checkNotifications();
-      const interval = setInterval(checkNotifications, 60000); // interval 60 detik
-
+      const interval = setInterval(checkNotifications, 60000);
       return () => clearInterval(interval);
     }
   }, [currentNotification]);
@@ -192,15 +189,12 @@ function AdminLayout({ children }) {
     }
   };
 
+  // Multi-expand: toggle submenu independently
   const toggleSubmenu = (title) => {
-    setExpandedMenus(prev => {
-      // If clicking the same menu that's open, close it
-      if (prev[title]) {
-        return { ...prev, [title]: false };
-      }
-      // Otherwise, close all others and open only this one
-      return { [title]: true };
-    });
+    setExpandedMenus(prev => ({
+      ...prev,
+      [title]: !prev[title]
+    }));
   };
 
   const handleLogout = async () => {
@@ -222,17 +216,14 @@ function AdminLayout({ children }) {
     }
   };
 
-  // Auto-expand menu yang aktif, close yang lain
+  // Auto-expand menu yang aktif, tapi jangan close yang lain
   useEffect(() => {
     const activeMenu = menuItems.find((item) =>
       item.submenu && isSubmenuActive(item.submenu)
     );
 
     if (activeMenu) {
-      setExpandedMenus({ [activeMenu.title]: true });
-    } else {
-      // Close all if no active submenu
-      setExpandedMenus({});
+      setExpandedMenus(prev => ({ ...prev, [activeMenu.title]: true }));
     }
   }, [pathname]);
 
@@ -263,13 +254,12 @@ function AdminLayout({ children }) {
           background-image:
             radial-gradient(circle at center, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
             conic-gradient(from 0deg, rgba(16, 185, 129, 0.05) 0deg, transparent 45deg, rgba(16, 185, 129, 0.05) 90deg, transparent 135deg, rgba(16, 185, 129, 0.05) 180deg, transparent 225deg, rgba(16, 185, 129, 0.05) 270deg, transparent 315deg);
-          /* filter: blur(1px); removed for performance */
           opacity: 0.6;
         }
       `}</style>
 
       <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }} suppressHydrationWarning>
-        {/* Mobile Overlay - Only show when sidebar is open on mobile AND component is mounted */}
+        {/* Mobile Overlay */}
         {isMounted && isMobile && sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -298,6 +288,7 @@ function AdminLayout({ children }) {
         >
           {/* Islamic Star Ornament */}
           <div className="islamic-star-ornament"></div>
+          
           {/* Logo Section */}
           <div className="h-20 flex items-center justify-between px-5 border-b border-emerald-100/60">
             {sidebarOpen ? (
@@ -343,92 +334,78 @@ function AdminLayout({ children }) {
 
           {/* Menu Navigation */}
           <nav className="flex-1 overflow-y-auto py-5 px-4">
-            <div className="space-y-1">
+            <div className="space-y-2">
               {menuItems.map((item, index) => {
                 const isMenuActive = item.submenu ? isSubmenuActive(item.submenu) : isActive(item.href);
-                const showDivider = index === 0 || index === 3 || index === 4; // Divider after Dashboard, Monitoring, Activity
+                const showDivider = index === 3 || index === 5 || index === 6;
 
                 return (
                   <div key={item.title}>
-                    {showDivider && index !== 0 && (
-                      <div className="my-2 border-t border-gray-200/30"></div>
+                    {showDivider && (
+                      <div className="my-3 border-t border-emerald-100/60"></div>
                     )}
 
                     {item.submenu ? (
                       <div>
                         <button
                           onClick={() => sidebarOpen ? toggleSubmenu(item.title) : setSidebarOpen(true)}
-                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'} py-2 rounded-xl transition-all duration-200 group relative ${
+                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-3' : 'justify-center px-0'} py-2.5 rounded-xl min-h-[44px] transition-colors duration-200 group ${
                             isMenuActive
-                              ? 'bg-emerald-50/80 text-emerald-800'
-                              : 'text-gray-700 hover:bg-emerald-50/40 hover:text-emerald-700'
+                              ? 'bg-emerald-50/70 ring-1 ring-emerald-200/40 text-emerald-700 font-semibold'
+                              : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700'
                           }`}
                           title={!sidebarOpen ? item.title : ''}
                         >
-                          {isMenuActive && sidebarOpen && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-600 rounded-r-full"></div>
-                          )}
                           <div className="flex items-center gap-3">
                             <item.icon
                               size={20}
                               strokeWidth={1.5}
-                              className={isMenuActive ? 'text-emerald-700' : 'text-gray-600 group-hover:text-emerald-700'}
+                              className={isMenuActive ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}
                             />
                             {sidebarOpen && (
-                              <span className="font-medium text-sm">{item.title}</span>
+                              <span className="text-sm font-medium">{item.title}</span>
                             )}
                           </div>
                           {sidebarOpen && (
                             <ChevronDown
                               size={16}
                               strokeWidth={2}
-                              className={`transition-transform duration-200 ${
+                              className={`text-slate-400 transition-transform duration-200 ${
                                 expandedMenus[item.title] ? 'rotate-180' : ''
                               }`}
                             />
                           )}
                         </button>
 
-                        {sidebarOpen && (
-                          <div
-                            className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                              expandedMenus[item.title]
-                                ? 'mt-1 ml-6 pl-4 max-h-96 opacity-100 border-l-2 border-emerald-100'
-                                : 'mt-0 ml-0 pl-0 max-h-0 opacity-0 border-l-0'
-                            }`}
-                          >
-                            <div className="space-y-1">
-                              {item.submenu.map((subitem) => (
-                                <Link
-                                  key={subitem.href}
-                                  href={subitem.href}
-                                  prefetch={false}
-                                  onClick={handleLinkClick}
-                                  className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 group relative ${
-                                    isActive(subitem.href)
-                                      ? 'bg-amber-50 text-amber-900'
-                                      : 'text-gray-600 hover:bg-emerald-50/40 hover:text-emerald-700'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    {isActive(subitem.href) && (
-                                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
-                                    )}
-                                    <subitem.icon
-                                      size={18}
-                                      strokeWidth={1.5}
-                                      className={isActive(subitem.href) ? 'text-amber-700' : 'text-gray-500 group-hover:text-emerald-600'}
-                                    />
-                                    <span className="font-medium">{subitem.title}</span>
-                                  </div>
-                                  {subitem.href === '/admin/validasi-siswa' && pendingCount > 0 && (
-                                    <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
-                                      {pendingCount > 99 ? '99+' : pendingCount}
-                                    </span>
-                                  )}
-                                </Link>
-                              ))}
-                            </div>
+                        {sidebarOpen && expandedMenus[item.title] && (
+                          <div className="mt-2 space-y-1 transition-all duration-200">
+                            {item.submenu.map((subitem) => (
+                              <Link
+                                key={subitem.href}
+                                href={subitem.href}
+                                prefetch={false}
+                                onClick={handleLinkClick}
+                                className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 border-l-2 ${
+                                  isActive(subitem.href)
+                                    ? 'bg-emerald-50/60 text-emerald-700 font-medium border-l-emerald-400/70'
+                                    : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700 border-l-transparent hover:border-l-emerald-300/40'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <subitem.icon
+                                    size={18}
+                                    strokeWidth={1.5}
+                                    className={isActive(subitem.href) ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}
+                                  />
+                                  <span className="font-medium">{subitem.title}</span>
+                                </div>
+                                {subitem.href === '/admin/validasi-siswa' && pendingCount > 0 && (
+                                  <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                    {pendingCount > 99 ? '99+' : pendingCount}
+                                  </span>
+                                )}
+                              </Link>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -437,27 +414,20 @@ function AdminLayout({ children }) {
                         href={item.href}
                         prefetch={false}
                         onClick={handleLinkClick}
-                        className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} py-2 rounded-xl transition-all duration-200 group relative ${
+                        className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-2.5 rounded-xl min-h-[44px] transition-colors duration-200 ${
                           isActive(item.href)
-                            ? 'text-amber-900 shadow-inner'
-                            : 'text-gray-700 hover:bg-emerald-50/40 hover:text-emerald-700'
+                            ? 'bg-emerald-50/70 ring-1 ring-emerald-200/40 text-emerald-700 font-semibold'
+                            : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700'
                         }`}
-                        style={isActive(item.href) ? {
-                          background: 'linear-gradient(135deg, #FFF5DA 0%, #FFEAA7 100%)',
-                          boxShadow: 'inset 0 2px 4px rgba(245, 158, 11, 0.15)'
-                        } : {}}
                         title={!sidebarOpen ? item.title : ''}
                       >
-                        {isActive(item.href) && sidebarOpen && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-500 rounded-r-full"></div>
-                        )}
                         <item.icon
                           size={20}
                           strokeWidth={1.5}
-                          className={isActive(item.href) ? 'text-amber-700' : 'text-gray-600 group-hover:text-emerald-700'}
+                          className={isActive(item.href) ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}
                         />
                         {sidebarOpen && (
-                          <span className="font-medium text-sm">{item.title}</span>
+                          <span className="text-sm font-medium">{item.title}</span>
                         )}
                       </Link>
                     )}
@@ -471,7 +441,7 @@ function AdminLayout({ children }) {
           <div className="p-4 border-t border-gray-200/50">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group hover:bg-red-50/60 text-red-600 hover:text-red-700"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl min-h-[44px] transition-colors duration-200 group hover:bg-red-50/60 text-red-600 hover:text-red-700"
             >
               <LogOut
                 size={20}
@@ -514,7 +484,7 @@ function AdminLayout({ children }) {
                 Tahfidz Admin
               </span>
             </div>
-            <div className="w-10" /> {/* Spacer for centering */}
+            <div className="w-10" />
           </div>
 
           {/* Content */}
@@ -535,5 +505,4 @@ function AdminLayout({ children }) {
   );
 }
 
-// Memoize untuk mencegah unnecessary re-render
 export default memo(AdminLayout);
