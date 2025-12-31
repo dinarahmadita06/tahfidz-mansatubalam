@@ -326,9 +326,10 @@ export default function KelolaSiswaPage() {
 
   const [newParentData, setNewParentData] = useState({
     name: '',
-    noTelepon: '',
+    noHP: '',
     email: '',
-    password: ''
+    password: '',
+    jenisWali: 'Ayah',
   });
 
   // ============ EFFECTS ============
@@ -347,11 +348,11 @@ export default function KelolaSiswaPage() {
   }, [formData.name, formData.nis]);
 
   useEffect(() => {
-    if (parentMode === 'create' && newParentData.name && newParentData.noTelepon) {
-      const generatedEmail = generateParentEmail(newParentData.name, newParentData.noTelepon);
+    if (parentMode === 'create' && newParentData.name && newParentData.noHP && formData.nis) {
+      const generatedEmail = generateParentEmail(newParentData.name, formData.nis);
       setNewParentData(prev => ({ ...prev, email: generatedEmail }));
     }
-  }, [parentMode, newParentData.name, newParentData.noTelepon]);
+  }, [parentMode, newParentData.name, newParentData.noHP, formData.nis]);
 
   // ============ DATA FETCHING ============
   const fetchKelasDetail = async () => {
@@ -406,7 +407,7 @@ export default function KelolaSiswaPage() {
     }
 
     if (parentMode === 'create') {
-      if (!newParentData.name || !newParentData.noTelepon || !newParentData.password) {
+      if (!newParentData.name || !newParentData.noHP || !newParentData.email || !newParentData.password) {
         alert('Data orang tua tidak lengkap');
         return;
       }
@@ -467,7 +468,7 @@ export default function KelolaSiswaPage() {
         // Create new parent - with validation & normalization
         const missingParentFields = [];
         if (!newParentData.name || !newParentData.name.trim()) missingParentFields.push('Nama orang tua');
-        if (!newParentData.noTelepon || !newParentData.noTelepon.trim()) missingParentFields.push('Nomor telepon');
+        if (!newParentData.noHP || !newParentData.noHP.trim()) missingParentFields.push('Nomor telepon');
         if (!newParentData.email || !newParentData.email.trim()) missingParentFields.push('Email wali');
         if (!newParentData.password || !newParentData.password.trim()) missingParentFields.push('Password wali');
         if (!newParentData.jenisWali) missingParentFields.push('Jenis wali');
@@ -479,7 +480,7 @@ export default function KelolaSiswaPage() {
         // Normalize data before sending
         const parentPayload = {
           name: newParentData.name.trim(),
-          noHP: newParentData.noTelepon.trim().replace(/[^0-9]/g, ''), // Remove non-digits
+          noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
           email: newParentData.email.trim().toLowerCase(),
           password: newParentData.password.trim(),
           jenisWali: newParentData.jenisWali,
@@ -592,9 +593,10 @@ export default function KelolaSiswaPage() {
     setSelectedParentId('');
     setNewParentData({
       name: '',
-      noTelepon: '',
+      noHP: '',
       email: '',
-      password: ''
+      password: '',
+      jenisWali: 'Ayah',
     });
     setEditingSiswa(null);
   };
