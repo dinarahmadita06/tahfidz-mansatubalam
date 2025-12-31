@@ -142,14 +142,7 @@ function FilterBar({ searchQuery, onSearchChange, filterStatus, onFilterChange, 
           <select
             value={filterStatus}
             onChange={(e) => onFilterChange(e.target.value)}
-            className="w-full sm:w-auto h-11 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
-            style={{
-              backgroundImage: 'url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath fill=%27none%27 stroke=%27%23333%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M2 5l6 6 6-6%27/%3E%3C/svg%3E")',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 0.75rem center',
-              backgroundSize: '1.5em 1.5em',
-              paddingRight: '2.5rem',
-            }}
+            className="w-full sm:w-auto h-11 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 outline-none transition-all font-medium text-sm appearance-none bg-white cursor-pointer"
           >
             <option value="all">Semua Status</option>
             <option value="aktif">Aktif</option>
