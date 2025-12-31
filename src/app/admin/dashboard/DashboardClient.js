@@ -447,8 +447,8 @@ export default function AdminDashboardPage() {
           {/* 1.5 Pending Validation Alert */}
           {pendingCount > 0 && (
             <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 shadow-md">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4 flex-1">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
                   <div className="bg-red-100 rounded-xl p-3 flex-shrink-0">
                     <Bell size={24} className="text-red-600" />
                   </div>
@@ -459,7 +459,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <Link
                   href="/admin/validasi-siswa"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex-shrink-0"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 h-11 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex-shrink-0 mt-2 md:mt-0"
                 >
                   Lihat Sekarang
                   <ChevronRight size={18} />
