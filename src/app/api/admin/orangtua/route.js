@@ -119,6 +119,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    console.log(' OrangTua POST body received:', { ...body, password: '***' });
     const {
       name,
       email,
@@ -194,6 +195,7 @@ export async function POST(request) {
         noTelepon: noHP, // Map noHP to noTelepon in Prisma schema
         alamat: alamat || null,
         jenisKelamin: 'LAKI_LAKI', // Add default gender
+        status: 'approved', // Admin-created parents are auto-approved
         user: {
           create: {
             email: email.toLowerCase(),
@@ -214,11 +216,6 @@ export async function POST(request) {
             image: true,
             isActive: true,
             createdAt: true
-          }
-        },
-        _count: {
-          select: {
-            siswa: true
           }
         }
       },
@@ -241,7 +238,14 @@ export async function POST(request) {
       }
     }).catch((err) => console.error('Log activity error:', err));
 
-    return NextResponse.json(orangTua, { status: 201 });
+    // Return clean response without sensitive fields
+    return NextResponse.json({
+      id: orangTua.id,
+      user: orangTua.user,
+      noTelepon: orangTua.noTelepon,
+      status: orangTua.status,
+      jenisKelamin: orangTua.jenisKelamin
+    }, { status: 201 });
   } catch (error) {
     console.error('❌ Error creating orang tua:', error);
     console.error('Error code:', error.code);
@@ -285,3 +289,6 @@ export async function POST(request) {
     );
   }
 }
+
+
+

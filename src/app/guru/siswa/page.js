@@ -343,6 +343,11 @@ export default function KelolaSiswaPage() {
         if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
         const siswaData = await siswaRes.json();
         console.log('📊 API response:', siswaData);
+        console.log('✅ Response structure:', {
+          hasData: !!siswaData.data,
+          dataLength: siswaData.data?.length || 0,
+          pagination: siswaData.pagination
+        });
         
         const siswaList = siswaData.data || [];
         console.log('✅ Siswa yang di-fetch:', siswaList.length, 'siswa');
@@ -357,8 +362,8 @@ export default function KelolaSiswaPage() {
               : siswa.status === 'pending'
               ? 'menunggu_validasi'
               : 'tidak_aktif',
-          totalJuz: siswa.totalJuz || 0,
-          totalSetoran: siswa.totalSetoran || 0,
+          totalJuz: siswa.hafalanCount || 0,
+          totalSetoran: siswa.hafalanCount || 0,
         }));
       } else {
         console.warn('⚠️ Guru tidak memiliki kelas aktif yang diampu!');
@@ -382,6 +387,7 @@ export default function KelolaSiswaPage() {
       });
     } catch (error) {
       console.error('❌ Error fetching data:', error);
+      console.error('Full error:', { message: error.message, stack: error.stack });
       setError(error.message || 'Gagal memuat data siswa. Silahkan refresh halaman.');
       setStudents([]);
       setStats({ totalSiswa: 0, siswaAktif: 0, menungguValidasi: 0 });

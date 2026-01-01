@@ -192,9 +192,15 @@ export async function GET(request) {
     });
 
     console.log('[API /guru/siswa] Siswa returned:', siswa.length);
+    
+    // Include hafalan count in response
+    const transformedSiswa = siswa.map(s => ({
+      ...s,
+      hafalanCount: s._count.hafalan
+    }));
 
     const responseData = {
-      data: siswa,
+      data: transformedSiswa,
       pagination: {
         page,
         limit,

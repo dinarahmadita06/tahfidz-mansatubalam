@@ -83,11 +83,11 @@ export async function GET(request) {
             nama: true,
           }
         },
-        hafalanSiswa: {
+        hafalan: {
           select: {
             id: true,
             juz: true,
-            status: true
+            surah: true
           }
         },
         orangTuaSiswa: {
@@ -114,6 +114,9 @@ export async function GET(request) {
         createdAt: 'desc'
       }
     });
+
+    console.log('📊 Siswa fetched from database:', siswa.length, 'total:', totalCount);
+    console.log('🔍 Sample siswa:', siswa.slice(0, 2).map(s => ({ id: s.id, nis: s.nis, nama: s.user.name, status: s.status })));
 
     const responseData = {
       data: siswa,
