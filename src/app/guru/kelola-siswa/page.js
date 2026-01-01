@@ -9,59 +9,104 @@ import {
   TrendingUp,
   Award,
   CheckCircle,
+  AlertCircle,
   XCircle,
   BookOpen,
   Calendar,
   Eye,
   Edit,
   Trash2,
-  Link
+  Link,
+  Loader
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-// Mock data for classes
-const mockClasses = [
-  { id: 'cmj5e0vj40001jm04gnqslpzs', name: 'X A1', tahunAjaran: '2024/2025', targetJuz: 1, totalSiswa: 25, progress: 45 },
-  { id: 'cmj5e0vj40001jm04gnqslpzt', name: 'X A2', tahunAjaran: '2024/2025', targetJuz: 1, totalSiswa: 24, progress: 52 },
-  { id: 'cmj5e0vj40001jm04gnqslpzu', name: 'XI A1', tahunAjaran: '2024/2025', targetJuz: 2, totalSiswa: 26, progress: 38 },
-  { id: 'cmj5e0vj40001jm04gnqslpzv', name: 'XI A2', tahunAjaran: '2024/2025', targetJuz: 2, totalSiswa: 23, progress: 41 },
-  { id: 'cmj5e0vj40001jm04gnqslpzw', name: 'XII A1', tahunAjaran: '2024/2025', targetJuz: 3, totalSiswa: 22, progress: 65 },
-];
-
 export default function KelolaSiswa() {
   const router = useRouter();
-  const [classes, setClasses] = useState([]);
+  const [kelasDiampu, setKelasDiampu] = useState([]);  // Kelas aktif yang diampu guru
+  const [allSiswa, setAllSiswa] = useState([]);        // Siswa dari kelas aktif saja
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTahunAjaran, setSelectedTahunAjaran] = useState('');
+  const [selectedKelas, setSelectedKelas] = useState('');  // Changed from tahunAjaran to kelas filter
+  const [loading, setLoading] = useState(true);
+  const [statsData, setStatsData] = useState({
+    totalSiswa: 0,
+    siswaAktif: 0,
+    menungguValidasi: 0,
+  });
 
+  // Fetch kelas aktif yang diampu guru dan siswa mereka
   useEffect(() => {
-    setClasses(mockClasses);
-    setFilteredClasses(mockClasses);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // 1. Fetch kelas aktif yang diampu guru (dari /api/guru/kelas yang sudah difilter AKTIF)
+        const kelasRes = await fetch('/api/guru/kelas', { credentials: 'include' });
+        if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
+        const kelasData = await kelasRes.json();
+        const kelasList = kelasData.kelas || [];
+        setKelasDiampu(kelasList);
+        setFilteredClasses(kelasList);
+        
+        // 2. Fetch siswa hanya dari kelas aktif yang diampu guru
+        if (kelasList.length > 0) {
+          const klasIds = kelasList.map(k => k.id).join(',');
+          const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`, { credentials: 'include' });
+          if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
+          const siswaData = await siswaRes.json();
+          const siswaList = siswaData.data || (Array.isArray(siswaData) ? siswaData : []);
+          setAllSiswa(siswaList);
+          
+          // Calculate stats from filtered siswa only
+          setStatsData({
+            totalSiswa: siswaList.length,
+            siswaAktif: siswaList.filter(s => s.status === 'approved').length,
+            menungguValidasi: siswaList.filter(s => s.status !== 'approved').length,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setKelasDiampu([]);
+        setAllSiswa([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
   }, []);
 
+  // Filter kelas berdasarkan search
   useEffect(() => {
-    let result = classes;
+    let result = kelasDiampu;
     
     // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(c => 
-        c.name.toLowerCase().includes(term) ||
-        c.tahunAjaran.toLowerCase().includes(term)
+      result = result.filter(k => 
+        k.nama.toLowerCase().includes(term) ||
+        k.tahunAjaran?.nama?.toLowerCase().includes(term)
       );
     }
     
-    // Apply tahun ajaran filter
-    if (selectedTahunAjaran) {
-      result = result.filter(c => c.tahunAjaran === selectedTahunAjaran);
+    // Apply kelas filter
+    if (selectedKelas) {
+      result = result.filter(k => k.id === selectedKelas);
     }
     
     setFilteredClasses(result);
-  }, [searchTerm, selectedTahunAjaran, classes]);
+  }, [searchTerm, selectedKelas, kelasDiampu]);
 
-  // Get unique tahun ajaran values
-  const tahunAjaranOptions = [...new Set(mockClasses.map(c => c.tahunAjaran))];
+  // Calculate statistics from filtered classes
+  const totalKelas = filteredClasses.length;
+  const totalSiswaFiltered = allSiswa.filter(s => {
+    // Filter siswa only from filtered kelas
+    return filteredClasses.some(k => k.id === s.kelasId);
+  }).length;
+  const siswaAktifFiltered = allSiswa.filter(s => 
+    filteredClasses.some(k => k.id === s.kelasId) && s.status === 'approved'
+  ).length;
 
   const StatCard = ({ icon: Icon, title, value, theme = 'emerald' }) => {
     const themeConfig = {
@@ -89,6 +134,14 @@ export default function KelolaSiswa() {
         iconBg: 'bg-blue-100',
         iconColor: 'text-blue-600',
       },
+      orange: {
+        bg: 'bg-gradient-to-br from-orange-50 to-red-50',
+        border: 'border-2 border-orange-200',
+        titleColor: 'text-orange-600',
+        valueColor: 'text-orange-700',
+        iconBg: 'bg-orange-100',
+        iconColor: 'text-orange-600',
+      },
     };
 
     const config = themeConfig[theme] || themeConfig.emerald;
@@ -113,12 +166,15 @@ export default function KelolaSiswa() {
   };
 
   // Calculate statistics
-  const totalKelas = filteredClasses.length;
-  const totalSiswa = filteredClasses.reduce((acc, c) => acc + c.totalSiswa, 0);
-  const avgProgress = totalKelas > 0 
-    ? Math.round(filteredClasses.reduce((acc, c) => acc + c.progress, 0) / totalKelas)
-    : 0;
-  const activeKelas = filteredClasses.length; // All are considered active
+  const totalSiswa = statsData.totalSiswa;
+  const siswaAktif = statsData.siswaAktif;
+  const menungguvalisasi = statsData.menungguValidasi;
+
+  // Get unique kelas for dropdown
+  const kelasOptions = kelasDiampu.map(k => ({
+    id: k.id,
+    nama: k.nama
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,143 +209,139 @@ export default function KelolaSiswa() {
           </div>
         </div>
 
-        {/* Statistics Cards - Pastel Style */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard 
-            icon={Users}
-            title="Total Kelas"
-            value={totalKelas}
-            theme="emerald"
-          />
-          <StatCard 
-            icon={TrendingUp}
-            title="Total Siswa"
-            value={totalSiswa}
-            theme="amber"
-          />
-          <StatCard 
-            icon={Users}
-            title="Rata-rata Progress"
-            value={`${avgProgress}%`}
-            theme="blue"
-          />
-          <StatCard 
-            icon={Award}
-            title="Kelas Aktif"
-            value={activeKelas}
-            theme="emerald"
-          />
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
+              <p className="text-slate-600">Memuat data kelas dan siswa...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <StatCard 
+                icon={Users}
+                title="Total Siswa (dari Kelas Aktif)"
+                value={totalSiswa}
+                theme="amber"
+              />
+              <StatCard 
+                icon={CheckCircle}
+                title="Siswa Aktif"
+                value={siswaAktif}
+                theme="emerald"
+              />
+              <StatCard 
+                icon={AlertCircle}
+                title="Menunggu Validasi"
+                value={menungguvalisasi}
+                theme="orange"
+              />
+            </div>
 
-        {/* Filter Search Card */}
-        <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md shadow-emerald-100/30 p-6">
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                  Cari Kelas
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 flex-shrink-0" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Cari berdasarkan nama kelas atau tahun ajaran..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-                  />
+            {/* Filter Search Card */}
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md shadow-emerald-100/30 p-6">
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                      Cari Kelas
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 flex-shrink-0" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Cari berdasarkan nama kelas atau tahun ajaran..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                      Filter Kelas (Hanya Aktif)
+                    </label>
+                    <select
+                      value={selectedKelas}
+                      onChange={(e) => setSelectedKelas(e.target.value)}
+                      className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+                    >
+                      <option value="">Semua Kelas ({kelasDiampu.length})</option>
+                      {kelasOptions.map(k => (
+                        <option key={k.id} value={k.id}>{k.nama}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                  Tahun Ajaran
-                </label>
-                <select
-                  value={selectedTahunAjaran}
-                  onChange={(e) => setSelectedTahunAjaran(e.target.value)}
-                  className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-                >
-                  <option value="">Semua</option>
-                  {tahunAjaranOptions.map(tahun => (
-                    <option key={tahun} value={tahun}>{tahun}</option>
-                  ))}
-                </select>
+            </div>
+
+            {/* Classes List Card */}
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-md overflow-hidden border border-emerald-100/30">
+              <div className="p-6 border-b border-emerald-100/30">
+                <h2 className="text-xl font-bold text-emerald-900">Daftar Kelas Diampu (Aktif)</h2>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Classes List Card */}
-        <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-md overflow-hidden border border-emerald-100/30">
-          <div className="p-6 border-b border-emerald-100/30">
-            <h2 className="text-xl font-bold text-emerald-900">Daftar Kelas</h2>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b-2 border-emerald-200">
-                <tr>
-                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
-                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Kelas</th>
-                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Tahun Ajaran</th>
-                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Target Juz</th>
-                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Jumlah Siswa</th>
-                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Rata-rata Progress</th>
-                  <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-emerald-100/50">
-                {filteredClasses.map((kelas, index) => (
-                  <tr key={kelas.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-4 px-6">
-                      <span className="text-gray-600">{index + 1}</span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div>
-                        <p className="font-medium text-gray-900">{kelas.name}</p>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm text-gray-600">{kelas.tahunAjaran}</p>
-                    </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm font-medium text-emerald-600">{kelas.targetJuz} Juz</p>
-                    </td>
-                    <td className="py-4 px-6">
-                      <p className="text-sm font-medium text-blue-600">{kelas.totalSiswa} siswa</p>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center">
-                        <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-emerald-500 h-2 rounded-full" 
-                            style={{ width: `${kelas.progress}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-medium">{kelas.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <button
-                        onClick={() => router.push(`/guru/kelola-siswa/${kelas.id}`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors text-sm"
-                      >
-                        <span>Detail</span>
-                        <ArrowRight size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {filteredClasses.length === 0 && (
-            <div className="p-12 text-center">
-              <p className="text-gray-500">Tidak ada kelas ditemukan</p>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b-2 border-emerald-200">
+                    <tr>
+                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
+                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Kelas</th>
+                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Tahun Ajaran</th>
+                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Target Juz</th>
+                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Jumlah Siswa</th>
+                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-emerald-100/50">
+                    {filteredClasses.map((kelas, index) => {
+                      const siswaCount = allSiswa.filter(s => s.kelasId === kelas.id).length;
+                      return (
+                        <tr key={kelas.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-4 px-6">
+                            <span className="text-gray-600">{index + 1}</span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div>
+                              <p className="font-medium text-gray-900">{kelas.nama}</p>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="text-sm text-gray-600">{kelas.tahunAjaran?.nama || '-'}</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="text-sm font-medium text-emerald-600">{kelas.targetJuz || '-'} Juz</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="text-sm font-medium text-blue-600">{siswaCount} siswa</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <button
+                              onClick={() => router.push(`/guru/kelola-siswa/${kelas.id}`)}
+                              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors text-sm"
+                            >
+                              <span>Detail</span>
+                              <ArrowRight size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              
+              {filteredClasses.length === 0 && (
+                <div className="p-12 text-center">
+                  <p className="text-gray-500">Tidak ada kelas aktif yang diampu</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
