@@ -315,6 +315,7 @@ export default function KelolaSiswaPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
 
   // Fetch siswa dari kelas binaan guru
   useEffect(() => {
@@ -324,12 +325,14 @@ export default function KelolaSiswaPage() {
   const fetchSiswa = async () => {
     try {
       setLoading(true);
-      
+      setError(null);
       console.log('📚 Fetching kelas aktif dari /api/guru/kelas...');
       const kelasRes = await fetch('/api/guru/kelas', { credentials: 'include' });
       if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
       const kelasData = await kelasRes.json();
       const kelasList = kelasData.kelas || [];
+      console.log('Raw Kelas API Response:', kelasData);
+      console.log('Extracted kelasList:', kelasList);
       console.log('✅ Kelas yang diampu (AKTIF):', kelasList.length, kelasList.map(k => ({ id: k.id, nama: k.nama })));
       
       let transformedData = [];
@@ -359,6 +362,7 @@ export default function KelolaSiswaPage() {
         }));
       } else {
         console.warn('⚠️ Guru tidak memiliki kelas aktif yang diampu!');
+        setError('Anda tidak memiliki kelas binaan yang aktif. Silahkan hubungi admin.');
       }
 
       setStudents(transformedData);
@@ -378,6 +382,9 @@ export default function KelolaSiswaPage() {
       });
     } catch (error) {
       console.error('❌ Error fetching data:', error);
+      setError(error.message || 'Gagal memuat data siswa. Silahkan refresh halaman.');
+      setStudents([]);
+      setStats({ totalSiswa: 0, siswaAktif: 0, menungguValidasi: 0 });
     } finally {
       setLoading(false);
     }
@@ -423,6 +430,24 @@ export default function KelolaSiswaPage() {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
               <p className="text-slate-600">Memuat data siswa...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl bg-red-50 border-2 border-red-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <AlertCircle size={24} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-red-900 mb-1">Gagal Memuat Data</h3>
+                <p className="text-red-700 text-sm mb-4">{error}</p>
+                <button
+                  onClick={handleRefresh}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-all"
+                >
+                  Coba Lagi
+                </button>
+              </div>
             </div>
           </div>
         ) : (
