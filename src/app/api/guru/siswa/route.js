@@ -117,7 +117,7 @@ export async function GET(request) {
       
       // If requested IDs don't match guru's classes, return 400
       if (requestedIds.length > 0 && targetKelasIds.length === 0) {
-        console.warn('[API /guru/siswa] Requested kelas IDs do not match guru activ classes');
+        console.warn('[API /guru/siswa] Requested kelas IDs do not match guru active classes');
         return NextResponse.json({
           error: 'Kelas yang diminta tidak valid atau tidak diampu',
           data: [],
@@ -177,13 +177,6 @@ export async function GET(request) {
           select: {
             id: true,
             nama: true,
-            status: true
-          }
-        },
-        hafalan: {
-          select: {
-            id: true,
-            juz: true,
             status: true
           }
         },
