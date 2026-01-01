@@ -31,7 +31,6 @@ export async function GET(request) {
       select: {
         id: true,
         nama: true,
-        tingkat: true,
         status: true,
         targetJuz: true,
         tahunAjaranId: true,
