@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
-import PengumumanWidget from '@/components/PengumumanWidget';
 import {
   BookOpen,
   Star,
@@ -18,10 +17,20 @@ import {
   FileText,
   CheckCircle,
   UserCheck,
+  Megaphone,
+  Calendar,
+  Bell,
+  Award,
 } from 'lucide-react';
 import Link from 'next/link';
 
-// ===== CONSTANTS - TASMI STYLE =====
+// Pengumuman category icons
+const CATEGORY_ICONS = {
+  UMUM: Bell,
+  AKADEMIK: BookOpen,
+  KEGIATAN: Star,
+  PENTING: Award,
+};
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
@@ -169,13 +178,53 @@ export default function DashboardSiswa() {
     catatanGuru: 0,
   });
   const [recentActivities, setRecentActivities] = useState([]);
+  const [pengumuman, setPengumuman] = useState([]);
+  const [pengumumanLoading, setPengumumanLoading] = useState(true);
   const [juzProgress, setJuzProgress] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const getFirstName = (fullName) => {
-    if (!fullName) return 'Siswa';
-    return fullName.split(' ')[0];
+  // Format date helper
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
   };
+
+  // Truncate text helper
+  const truncateText = (text, length = 80) => {
+    if (!text || text.length <= length) return text;
+    return text.substring(0, length) + '...';
+  };
+
+  // Check if pengumuman is new (< 3 days)
+  const isNew = (date) => {
+    const now = new Date();
+    const created = new Date(date);
+    const diffDays = (now - created) / (1000 * 60 * 60 * 24);
+    return diffDays < 3;
+  };
+
+  // Fetch pengumuman
+  useEffect(() => {
+    const fetchPengumuman = async () => {
+      try {
+        setPengumumanLoading(true);
+        const res = await fetch('/api/pengumuman?limit=3');
+        if (res.ok) {
+          const data = await res.json();
+          setPengumuman(data.pengumuman || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch pengumuman', error);
+      } finally {
+        setPengumumanLoading(false);
+      }
+    };
+    fetchPengumuman();
+  }, []);
 
   // Fetch Dashboard Data
   useEffect(() => {
@@ -253,6 +302,11 @@ export default function DashboardSiswa() {
     return configs[type] || configs.setor;
   };
 
+  // Get category icon for pengumuman
+  const getCategoryIcon = (kategori) => {
+    return CATEGORY_ICONS[kategori] || CATEGORY_ICONS.UMUM;
+  };
+
   return (
     <SiswaLayout>
       <div className="min-h-screen bg-gray-50">
@@ -307,14 +361,12 @@ export default function DashboardSiswa() {
             </div>
           </div>
 
-          {/* Pengumuman - HIGHLIGHT AMBER (Urgent & Elegant) */}
+          {/* Pengumuman - HIGHLIGHT AMBER (Urgent & Elegant) - Single Card */}
           <div className="bg-amber-50/70 backdrop-blur-sm rounded-2xl border border-amber-200 ring-2 ring-amber-200/40 shadow-[0_0_0_3px_rgba(245,158,11,0.12)] border-l-4 border-l-amber-400 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="p-3.5 bg-amber-500 rounded-xl shadow-lg ring-2 ring-amber-300/50">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                  </svg>
+                  <Megaphone className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-amber-900">Pengumuman Terbaru</h2>
@@ -328,7 +380,64 @@ export default function DashboardSiswa() {
                 Lihat Semua
               </Link>
             </div>
-            <PengumumanWidget limit={3} />
+
+            {/* Pengumuman Content - Direct render tanpa nested card */}
+            {pengumumanLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-20 bg-amber-100/50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : pengumuman.length === 0 ? (
+              <div className="text-center py-8 px-4">
+                <div className="inline-flex p-3 bg-amber-100 rounded-full mb-3">
+                  <Megaphone size={24} className="text-amber-600" />
+                </div>
+                <p className="text-amber-900 text-sm font-medium">Belum ada pengumuman</p>
+                <p className="text-amber-700 text-xs mt-1">Nantikan kabar terbaru dari admin</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pengumuman.map((item) => {
+                  const CategoryIcon = getCategoryIcon(item.kategori);
+                  return (
+                    <Link
+                      key={item.id}
+                      href="/siswa/pengumuman"
+                      className="block p-4 bg-white rounded-lg hover:bg-amber-50/50 transition-all border border-amber-100 hover:border-amber-200 hover:shadow-md group"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0 group-hover:bg-amber-200 transition-colors">
+                          <CategoryIcon size={16} className="text-amber-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <h4 className="font-semibold text-gray-900 text-sm line-clamp-1 group-hover:text-amber-700 transition-colors">
+                              {item.judul}
+                            </h4>
+                            {isNew(item.createdAt) && (
+                              <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full flex-shrink-0">
+                                Baru
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-600 mb-2 line-clamp-2 leading-relaxed">
+                            {truncateText(item.isi, 100)}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Calendar size={12} />
+                            <span>{formatDate(item.createdAt)}</span>
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold">
+                              {item.kategori}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Mobile CTA - Full Width Button */}
             <Link
