@@ -233,7 +233,6 @@ model TahunAjaran {
 model Kelas {
   id            String          @id @default(cuid())
   nama          String
-  tingkat       Int?            // Tingkat kelas (1, 2, 3, dst)
   tahunAjaranId String
   kapasitas     Int?
   targetJuz     Int?
