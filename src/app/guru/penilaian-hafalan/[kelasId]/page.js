@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { useParams, useRouter } from 'next/navigation';
+import { getSurahSetoranText, formatSurahSetoran } from '@/lib/helpers/formatSurahSetoran';
 import {
   BookOpen,
   Calendar,
@@ -104,10 +105,7 @@ export default function PenilaianHafalanPage() {
     makhraj: '',
     implementasi: '',
     catatan: '',
-    hafalan_lebih_dari_1_surah: false,
-    surah_tambahan: '',
-    ayat_tambahan_mulai: '',
-    ayat_tambahan_selesai: '',
+    surahTambahan: [],
   });
 
   // Fetch data siswa dan kelas
@@ -174,14 +172,11 @@ export default function PenilaianHafalanPage() {
                 surah: hafalan.surah || '',
                 ayatMulai: hafalan.ayatMulai || '',
                 ayatSelesai: hafalan.ayatSelesai || '',
-                hafalan_lebih_dari_1_surah: hafalan.hafalan_lebih_dari_1_surah || false,
-                surah_tambahan: hafalan.surah_tambahan || '',
-                ayat_tambahan_mulai: hafalan.ayat_tambahan_mulai || '',
-                ayat_tambahan_selesai: hafalan.ayat_tambahan_selesai || '',
+                surahTambahan: hafalan.surahTambahan || [],
                 tajwid: penilaianData.tajwid || '',
                 kelancaran: penilaianData.kelancaran || '',
                 makhraj: penilaianData.makhraj || '',
-                implementasi: penilaianData.adab || '', // map 'adab' to 'implementasi'
+                implementasi: penilaianData.adab || '',
               } : {},
               statusKehadiran: 'HADIR',
               catatan: penilaianData?.catatan || '',
@@ -243,10 +238,7 @@ export default function PenilaianHafalanPage() {
         makhraj: existingData.penilaian.makhraj || '',
         implementasi: existingData.penilaian.implementasi || '',
         catatan: existingData.catatan || '',
-        hafalan_lebih_dari_1_surah: existingData.penilaian.hafalan_lebih_dari_1_surah || false,
-        surah_tambahan: existingData.penilaian.surah_tambahan || '',
-        ayat_tambahan_mulai: existingData.penilaian.ayat_tambahan_mulai || '',
-        ayat_tambahan_selesai: existingData.penilaian.ayat_tambahan_selesai || '',
+        surahTambahan: existingData.penilaian.surahTambahan || [],
       });
     } else {
       // Reset form
@@ -259,10 +251,7 @@ export default function PenilaianHafalanPage() {
         makhraj: '',
         implementasi: '',
         catatan: '',
-        hafalan_lebih_dari_1_surah: false,
-        surah_tambahan: '',
-        ayat_tambahan_mulai: '',
-        ayat_tambahan_selesai: '',
+        surahTambahan: [],
       });
     }
 
@@ -291,10 +280,7 @@ export default function PenilaianHafalanPage() {
           surah: popupForm.surah,
           ayatMulai: parseInt(popupForm.ayatMulai),
           ayatSelesai: parseInt(popupForm.ayatSelesai),
-          hafalan_lebih_dari_1_surah: popupForm.hafalan_lebih_dari_1_surah,
-          surah_tambahan: popupForm.surah_tambahan || null,
-          ayat_tambahan_mulai: popupForm.ayat_tambahan_mulai ? parseInt(popupForm.ayat_tambahan_mulai) : null,
-          ayat_tambahan_selesai: popupForm.ayat_tambahan_selesai ? parseInt(popupForm.ayat_tambahan_selesai) : null,
+          surahTambahan: popupForm.surahTambahan || [],
           tajwid: parseInt(popupForm.tajwid),
           kelancaran: parseInt(popupForm.kelancaran),
           makhraj: parseInt(popupForm.makhraj),
@@ -504,19 +490,12 @@ export default function PenilaianHafalanPage() {
                         <div className="flex flex-col gap-1 max-w-[220px] break-words whitespace-normal">
                           {penilaian.surah ? (
                             <>
-                              <div className="font-semibold text-slate-800">
-                                {penilaian.surah} ({penilaian.ayatMulai}–{penilaian.ayatSelesai})
-                              </div>
-                              {penilaian.surah_tambahan && (
-                                <div className="flex items-start gap-2">
-                                  <span className="text-slate-700">
-                                    {penilaian.surah_tambahan} ({penilaian.ayat_tambahan_mulai}–{penilaian.ayat_tambahan_selesai})
-                                  </span>
-                                  <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2 py-0.5 whitespace-nowrap flex-shrink-0 mt-0.5">
-                                    Tambahan
-                                  </span>
+                              {formatSurahSetoran(penilaian).map((surah, idx) => (
+                                <div key={idx} className={idx === 0 ? 'font-semibold text-slate-800' : 'text-slate-700'}>
+                                  {surah}
+                                  {idx > 0 && <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2 py-0.5 whitespace-nowrap ml-2 inline-block">Tambahan</span>}
                                 </div>
-                              )}
+                              ))}
                             </>
                           ) : (
                             <span className="text-slate-400">–</span>
@@ -657,8 +636,8 @@ export default function PenilaianHafalanPage() {
                   <input
                     type="checkbox"
                     id="hafalan_lebih_dari_1_surah"
-                    checked={popupForm.hafalan_lebih_dari_1_surah}
-                    onChange={(e) => setPopupForm({ ...popupForm, hafalan_lebih_dari_1_surah: e.target.checked })}
+                    checked={popupForm.surahTambahan.length > 0}
+                    onChange={(e) => setPopupForm({ ...popupForm, surahTambahan: e.target.checked ? [{ surah: '', ayatMulai: '', ayatSelesai: '' }] : [] })}
                     className="mt-1 w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
                   />
                   <label htmlFor="hafalan_lebih_dari_1_surah" className="flex-1 cursor-pointer">
@@ -669,55 +648,94 @@ export default function PenilaianHafalanPage() {
               </div>
 
               {/* Surah Tambahan - Conditional Card */}
-              {popupForm.hafalan_lebih_dari_1_surah && (
+              {popupForm.surahTambahan.length > 0 && (
                 <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-5 space-y-4">
-                  <h4 className="font-bold text-slate-800 text-sm">Surah Tambahan (Opsional)</h4>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Nama Surah
-                    </label>
-                    <input
-                      type="text"
-                      value={popupForm.surah_tambahan}
-                      onChange={(e) => setPopupForm({ ...popupForm, surah_tambahan: e.target.value })}
-                      placeholder="Contoh: Al-Ikhlas, Al-Falaq"
-                      className="w-full h-11 px-4 rounded-xl bg-white/70 border border-emerald-100/60 backdrop-blur focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
-                    />
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-bold text-slate-800 text-sm">Surah Tambahan (Opsional)</h4>
+                    <button
+                      type="button"
+                      onClick={() => setPopupForm({ ...popupForm, surahTambahan: [...popupForm.surahTambahan, { surah: '', ayatMulai: '', ayatSelesai: '' }] })}
+                      className="text-xs px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-semibold"
+                    >
+                      + Tambah Surah
+                    </button>
                   </div>
 
-                  {/* Ayat Tambahan */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Ayat Mulai
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={popupForm.ayat_tambahan_mulai}
-                        onChange={(e) => setPopupForm({ ...popupForm, ayat_tambahan_mulai: e.target.value })}
-                        className="w-full h-11 px-4 rounded-xl bg-white/70 border border-emerald-100/60 backdrop-blur focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
-                        placeholder="1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Ayat Selesai
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={popupForm.ayat_tambahan_selesai}
-                        onChange={(e) => setPopupForm({ ...popupForm, ayat_tambahan_selesai: e.target.value })}
-                        className="w-full h-11 px-4 rounded-xl bg-white/70 border border-emerald-100/60 backdrop-blur focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
-                        placeholder="5"
-                      />
-                    </div>
+                  <div className="space-y-4">
+                    {popupForm.surahTambahan.map((item, idx) => (
+                      <div key={idx} className="bg-white/60 rounded-xl p-4 border border-emerald-200/50 space-y-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-semibold text-slate-600">Surah #{idx + 1}</p>
+                          {popupForm.surahTambahan.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setPopupForm({ ...popupForm, surahTambahan: popupForm.surahTambahan.filter((_, i) => i !== idx) })}
+                              className="text-xs px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors font-semibold border border-red-200"
+                            >
+                              x Hapus
+                            </button>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Nama Surah
+                          </label>
+                          <input
+                            type="text"
+                            value={item.surah}
+                            onChange={(e) => {
+                              const updated = [...popupForm.surahTambahan];
+                              updated[idx].surah = e.target.value;
+                              setPopupForm({ ...popupForm, surahTambahan: updated });
+                            }}
+                            placeholder="Contoh: Al-Ikhlas, Al-Falaq"
+                            className="w-full h-11 px-4 rounded-xl bg-white border border-emerald-100/60 focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                              Ayat Mulai
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.ayatMulai}
+                              onChange={(e) => {
+                                const updated = [...popupForm.surahTambahan];
+                                updated[idx].ayatMulai = e.target.value;
+                                setPopupForm({ ...popupForm, surahTambahan: updated });
+                              }}
+                              className="w-full h-11 px-4 rounded-xl bg-white border border-emerald-100/60 focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
+                              placeholder="1"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                              Ayat Selesai
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.ayatSelesai}
+                              onChange={(e) => {
+                                const updated = [...popupForm.surahTambahan];
+                                updated[idx].ayatSelesai = e.target.value;
+                                setPopupForm({ ...popupForm, surahTambahan: updated });
+                              }}
+                              className="w-full h-11 px-4 rounded-xl bg-white border border-emerald-100/60 focus:ring-2 focus:ring-emerald-200/40 focus:border-emerald-500 outline-none transition-all font-medium text-sm"
+                              placeholder="5"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Isi jika siswa menyetorkan lebih dari 1 surah dalam sesi ini (penilaian tetap dihitung 1x).
+                  <p className="text-xs text-slate-600 leading-relaxed mt-3">
+                    Setiap surah dengan ayat berbeda dihitung sebagai setoran terpisah.
                   </p>
                 </div>
               )}
