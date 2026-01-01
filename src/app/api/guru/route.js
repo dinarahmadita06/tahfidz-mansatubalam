@@ -5,6 +5,9 @@ import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 
+// Constant for active class status
+const STATUS_AKTIF = 'AKTIF';
+
 export async function GET(request) {
   try {
     const session = await auth();
@@ -24,6 +27,7 @@ export async function GET(request) {
 
     console.log('Fetching fresh guru data from database');
 
+    // Filter kelas to only AKTIF status in the guruKelas relation
     const guru = await prisma.guru.findMany({
       include: {
         user: {
@@ -36,11 +40,28 @@ export async function GET(request) {
           }
         },
         guruKelas: {
+          where: {
+            kelas: {
+              status: STATUS_AKTIF
+            }
+          },
           include: {
             kelas: {
               select: {
                 id: true,
-                nama: true
+                nama: true,
+                status: true,
+                tahunAjaran: {
+                  select: {
+                    id: true,
+                    nama: true
+                  }
+                },
+                _count: {
+                  select: {
+                    siswa: true
+                  }
+                }
               }
             }
           }
@@ -104,13 +125,13 @@ export async function POST(request) {
 
     console.log('✅ Validation passed');
 
-    // Validate kelasIds if provided
+    // Validate kelasIds if provided - only AKTIF kelas allowed
     if (kelasIds && kelasIds.length > 0) {
       console.log('🔍 Validating kelas IDs:', kelasIds);
       const validKelas = await prisma.kelas.findMany({
         where: {
           id: { in: kelasIds },
-          status: 'AKTIF'
+          status: STATUS_AKTIF
         },
         select: { id: true, nama: true }
       });
@@ -200,13 +221,13 @@ export async function POST(request) {
       const guruKelasData = kelasIds.map(kelasId => ({
         guruId: guru.id,
         kelasId: kelasId,
-        peran: 'pendamping', // Default role - can be 'utama' or 'pendamping'
+        peran: 'pendamping',
         isActive: true
       }));
 
       await prisma.guruKelas.createMany({
         data: guruKelasData,
-        skipDuplicates: true // Skip if already exists
+        skipDuplicates: true
       });
 
       console.log('✅ GuruKelas relationships created');
