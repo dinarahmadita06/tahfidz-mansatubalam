@@ -94,6 +94,7 @@ export async function POST(request) {
       surah,
       ayatMulai,
       ayatSelesai,
+      surahTambahan = [],
       tajwid,
       kelancaran,
       makhraj,
@@ -165,6 +166,7 @@ export async function POST(request) {
           surah,
           ayatMulai,
           ayatSelesai,
+          surahTambahan: Array.isArray(surahTambahan) ? surahTambahan : [],
         },
       });
 
@@ -186,10 +188,11 @@ export async function POST(request) {
           siswaId,
           guruId: guru.id,
           tanggal: new Date(tanggal),
-          juz: 1, // Default value
+          juz: 1,
           surah,
           ayatMulai,
           ayatSelesai,
+          surahTambahan: Array.isArray(surahTambahan) ? surahTambahan : [],
         },
       });
 

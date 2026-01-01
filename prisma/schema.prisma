@@ -293,20 +293,21 @@ model TargetHafalan {
 }
 
 model Hafalan {
-  id          String      @id @default(cuid())
-  siswaId     String
-  guruId      String
-  tanggal     DateTime    @default(now())
-  juz         Int
-  surah       String
-  ayatMulai   Int
-  ayatSelesai Int
-  keterangan  String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  siswa       Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
-  guru        Guru        @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  penilaian   Penilaian[]
+  id               String      @id @default(cuid())
+  siswaId          String
+  guruId           String
+  tanggal          DateTime    @default(now())
+  juz              Int
+  surah            String
+  ayatMulai        Int
+  ayatSelesai      Int
+  surahTambahan    Json        @default("[]")
+  keterangan       String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  siswa            Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  guru             Guru        @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  penilaian        Penilaian[]
 
   @@index([siswaId])
   @@index([tanggal(sort: Desc)])
