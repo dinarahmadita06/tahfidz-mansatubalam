@@ -148,8 +148,8 @@ export default function AdminSiswaPage() {
       setLoading(true);
       try {
         const [siswaRes, kelasRes] = await Promise.all([
-          fetch('/api/admin/siswa'),
-          fetch('/api/kelas')
+          fetch('/api/admin/siswa', { credentials: 'include' }),
+          fetch('/api/kelas', { credentials: 'include' })
         ]);
 
         if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
@@ -211,7 +211,7 @@ export default function AdminSiswaPage() {
   // Refresh data after status change or create
   const refetchSiswa = async () => {
     try {
-      const response = await fetch('/api/admin/siswa');
+      const response = await fetch('/api/admin/siswa', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch');
       const result = await response.json();
       const data = result.data || (Array.isArray(result) ? result : []);
