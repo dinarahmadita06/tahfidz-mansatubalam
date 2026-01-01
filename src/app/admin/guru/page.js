@@ -108,7 +108,9 @@ function SearchFilterBar({ searchTerm, setSearchTerm, filterStatus, setFilterSta
 
 export default function AdminGuruPage() {
   const [guru, setGuru] = useState([]);
+  const [kelas, setKelas] = useState([]); // For kelas dropdown
   const [loading, setLoading] = useState(true);
+  const [loadingKelas, setLoadingKelas] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -122,6 +124,7 @@ export default function AdminGuruPage() {
     jenisKelamin: 'L',
     alamat: ''
   });
+  const [selectedKelas, setSelectedKelas] = useState([]); // Track selected classes
 
   useEffect(() => {
     fetchGuru();
@@ -137,6 +140,20 @@ export default function AdminGuruPage() {
       console.error('Error fetching guru:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchKelas = async () => {
+    setLoadingKelas(true);
+    try {
+      const response = await fetch('/api/kelas?showAll=true');
+      const data = await response.json();
+      const aktivKelas = data.filter(k => k.status === 'AKTIF');
+      setKelas(aktivKelas);
+    } catch (error) {
+      console.error('Error fetching kelas:', error);
+    } finally {
+      setLoadingKelas(false);
     }
   };
 
@@ -157,12 +174,17 @@ export default function AdminGuruPage() {
       const url = editingGuru ? `/api/guru/${editingGuru.id}` : '/api/guru';
       const method = editingGuru ? 'PUT' : 'POST';
 
+      const payload = {
+        ...formData,
+        kelasIds: selectedKelas // Include selected classes
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -223,6 +245,7 @@ export default function AdminGuruPage() {
       jenisKelamin: 'L',
       alamat: ''
     });
+    setSelectedKelas([]);
     setEditingGuru(null);
   };
 
@@ -301,6 +324,7 @@ export default function AdminGuruPage() {
                 <button
                   onClick={() => {
                     resetForm();
+                    fetchKelas(); // Fetch kelas when opening modal
                     setShowModal(true);
                   }}
                   className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-emerald-600 rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
@@ -600,6 +624,41 @@ export default function AdminGuruPage() {
                   onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
                   className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-3 uppercase tracking-wide">
+                  Kelas yang Diampu
+                </label>
+                {loadingKelas ? (
+                  <div className="text-sm text-slate-500 py-3">Memuat kelas...</div>
+                ) : kelas.length === 0 ? (
+                  <div className="text-sm text-slate-500 py-3">Tidak ada kelas AKTIF</div>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-300 rounded-xl p-4 bg-slate-50">
+                    {kelas.map((k) => (
+                      <label key={k.id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={selectedKelas.includes(k.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedKelas([...selectedKelas, k.id]);
+                            } else {
+                              setSelectedKelas(selectedKelas.filter(id => id !== k.id));
+                            }
+                          }}
+                          className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-slate-900 truncate">{k.nama}</div>
+                          <div className="text-xs text-slate-500">{k.tahunAjaran?.nama}</div>
+                        </div>
+                        <div className="text-xs text-slate-400 whitespace-nowrap">{k._count?.siswa || 0} siswa</div>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
