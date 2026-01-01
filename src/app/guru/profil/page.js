@@ -16,7 +16,9 @@ import {
   Upload,
   Trash2,
   CheckCircle,
-  Loader
+  Loader,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { toast, Toaster } from 'react-hot-toast';
@@ -308,6 +310,9 @@ export default function ProfilGuruPage() {
     newPassword: '',
     confirmPassword: ''
   });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [tandaTanganUrl, setTandaTanganUrl] = useState(null);
   const [uploadingSignature, setUploadingSignature] = useState(false);
@@ -357,6 +362,9 @@ export default function ProfilGuruPage() {
       newPassword: '',
       confirmPassword: ''
     });
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
     setShowPasswordModal(true);
   };
 
@@ -715,14 +723,24 @@ export default function ProfilGuruPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Password Lama <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Masukkan password lama"
-                    value={passwordFormData.currentPassword}
-                    onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Masukkan password lama"
+                      value={passwordFormData.currentPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })}
+                      className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Password Baru */}
@@ -730,15 +748,25 @@ export default function ProfilGuruPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Password Baru <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    placeholder="Minimal 6 karakter"
-                    value={passwordFormData.newPassword}
-                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="Minimal 6 karakter"
+                      value={passwordFormData.newPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                      className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Konfirmasi Password */}
@@ -746,15 +774,25 @@ export default function ProfilGuruPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Konfirmasi Password Baru <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    placeholder="Ketik ulang password baru"
-                    value={passwordFormData.confirmPassword}
-                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="Ketik ulang password baru"
+                      value={passwordFormData.confirmPassword}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                      className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
