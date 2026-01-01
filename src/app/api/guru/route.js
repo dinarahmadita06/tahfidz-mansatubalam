@@ -86,9 +86,9 @@ export async function POST(request) {
     const body = await request.json();
     console.log('📝 Request body:', JSON.stringify(body, null, 2));
 
-    const { name, email, password, nip, jenisKelamin, noHP, noTelepon, alamat } = body;
+    const { name, email, password, nip, jenisKelamin, noHP, noTelepon, alamat, kelasIds } = body;
 
-    // Validasi input
+    // Validasi input - NIP is now optional
     if (!name || !email || !password || !jenisKelamin) {
       console.log('❌ Validation failed:', { name, email, hasPassword: !!password, jenisKelamin });
       return NextResponse.json({
@@ -103,6 +103,26 @@ export async function POST(request) {
     }
 
     console.log('✅ Validation passed');
+
+    // Validate kelasIds if provided
+    if (kelasIds && kelasIds.length > 0) {
+      console.log('🔍 Validating kelas IDs:', kelasIds);
+      const validKelas = await prisma.kelas.findMany({
+        where: {
+          id: { in: kelasIds },
+          status: 'AKTIF'
+        },
+        select: { id: true, nama: true }
+      });
+
+      if (validKelas.length !== kelasIds.length) {
+        console.log('❌ Invalid atau inactive kelas provided');
+        return NextResponse.json({
+          error: 'Beberapa kelas tidak valid atau tidak aktif'
+        }, { status: 400 });
+      }
+      console.log('✅ All kelas valid:', validKelas.map(k => k.nama));
+    }
 
     // Normalize jenisKelamin dari L/P ke LAKI_LAKI/PEREMPUAN
     let normalizedJenisKelamin = 'LAKI_LAKI';
@@ -173,6 +193,25 @@ export async function POST(request) {
 
     console.log('✅ Guru created successfully:', guru.id);
 
+    // Create GuruKelas relationships if kelasIds provided
+    if (kelasIds && kelasIds.length > 0) {
+      console.log('🔗 Creating GuruKelas relationships for:', kelasIds);
+      
+      const guruKelasData = kelasIds.map(kelasId => ({
+        guruId: guru.id,
+        kelasId: kelasId,
+        peran: 'pendamping', // Default role - can be 'utama' or 'pendamping'
+        isActive: true
+      }));
+
+      await prisma.guruKelas.createMany({
+        data: guruKelasData,
+        skipDuplicates: true // Skip if already exists
+      });
+
+      console.log('✅ GuruKelas relationships created');
+    }
+
     // Log activity
     console.log('📝 Logging activity...');
     await logActivity({
@@ -181,11 +220,12 @@ export async function POST(request) {
       userRole: session.user.role,
       action: 'CREATE',
       module: 'GURU',
-      description: `Menambahkan guru baru ${guru.user.name} (NIP: ${guru.nip || '-'})`,
+      description: `Menambahkan guru baru ${guru.user.name} (NIP: ${guru.nip || '-'}) dengan ${kelasIds?.length || 0} kelas`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
-        guruId: guru.id
+        guruId: guru.id,
+        kelasCount: kelasIds?.length || 0
       }
     });
 
