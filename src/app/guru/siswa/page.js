@@ -203,104 +203,97 @@ function StudentTable({ students, currentPage, onPageChange, itemsPerPage, onIte
         icon: AlertCircle,
       },
     };
-    return configs[status] || configs.aktif;
+    return configs[status] || configs.tidak_aktif;
   };
+
+  if (students.length === 0) {
+    return <EmptyState message="Tidak ada siswa yang sesuai dengan filter" />;
+  }
 
   return (
     <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 text-white">
-              <th className="px-6 py-4 text-left text-sm font-bold">Nama Siswa</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Kelas</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Status</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Total Juz</th>
-              <th className="px-6 py-4 text-center text-sm font-bold">Total Setoran</th>
+            <tr className="border-b border-slate-200 bg-gradient-to-r from-emerald-50 to-green-50">
+              <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Siswa</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Kelas</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Total Juz</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Total Setoran</th>
             </tr>
           </thead>
-          <tbody>
-            {paginatedStudents.length === 0 ? (
-              <tr>
-                <td colSpan="5">
-                  <EmptyState message="Tidak ada siswa yang ditemukan" />
-                </td>
-              </tr>
-            ) : (
-              paginatedStudents.map((student, index) => {
-                const statusConfig = getStatusConfig(student.status);
-                const StatusIcon = statusConfig.icon;
-
-                return (
-                  <tr
-                    key={student.id}
-                    className="even:bg-emerald-50/30 hover:bg-emerald-50/40 transition-colors border-b border-slate-100 last:border-b-0"
-                  >
-                    <td className="px-6 py-4 text-sm font-semibold text-slate-800">
-                      {student.nama}
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm text-slate-600">
-                      {student.kelas}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${statusConfig.bg} ${statusConfig.text} text-xs font-semibold`}
-                      >
-                        <StatusIcon size={14} />
-                        {statusConfig.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-emerald-700">
-                      {student.totalJuz} Juz
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm font-semibold text-slate-600">
-                      {student.totalSetoran}×
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+          <tbody className="divide-y divide-slate-100">
+            {paginatedStudents.map((student) => {
+              const statusConfig = getStatusConfig(student.status);
+              const StatusIcon = statusConfig.icon;
+              return (
+                <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-slate-900">{student.nama}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm text-slate-700">{student.kelas}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${statusConfig.bg}`}>
+                      <StatusIcon size={14} className={statusConfig.text} />
+                      <span className={`text-xs font-semibold ${statusConfig.text}`}>{statusConfig.label}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm text-slate-700">{student.totalJuz}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm text-slate-700">{student.totalSetoran}</p>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
-      {students.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-6 py-4 border-t border-slate-200 bg-slate-50/50">
-          <p className="text-sm text-slate-600 whitespace-nowrap">
-            Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, students.length)} dari {students.length} siswa
-          </p>
+      {totalPages > 1 && (
+        <div className="border-t border-slate-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-600">
+              Menampilkan {startIndex + 1} - {Math.min(startIndex + itemsPerPage, students.length)} dari {students.length} siswa
+            </p>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-full border border-slate-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <ChevronLeft size={18} />
-            </button>
-
-            {[...Array(totalPages)].map((_, i) => (
+            <div className="flex items-center gap-2">
               <button
-                key={i + 1}
-                onClick={() => onPageChange(i + 1)}
-                className={`min-w-[40px] px-3 py-2 rounded-full text-sm font-semibold transition-all ${
-                  currentPage === i + 1
-                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md'
-                    : 'border border-slate-200 hover:bg-emerald-50'
-                }`}
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-full border border-slate-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {i + 1}
+                <ChevronLeft size={18} />
               </button>
-            ))}
 
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-full border border-slate-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <ChevronRight size={18} />
-            </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => onPageChange(i + 1)}
+                  className={`min-w-[40px] px-3 py-2 rounded-full text-sm font-semibold transition-all ${
+                    currentPage === i + 1
+                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md'
+                      : 'border border-slate-200 hover:bg-emerald-50'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-full border border-slate-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -331,25 +324,42 @@ export default function KelolaSiswaPage() {
   const fetchSiswa = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/siswa');
-      if (!response.ok) throw new Error('Failed to fetch siswa');
-
-      const data = await response.json();
-
-      // Transform data
-      const transformedData = data.map((siswa) => ({
-        id: siswa.id,
-        nama: siswa.user.name,
-        kelas: siswa.kelas?.nama || '-',
-        status:
-          siswa.status === 'approved'
-            ? 'aktif'
-            : siswa.status === 'pending'
-            ? 'menunggu_validasi'
-            : 'tidak_aktif',
-        totalJuz: siswa.totalJuz || 0,
-        totalSetoran: siswa.totalSetoran || 0,
-      }));
+      
+      console.log('📚 Fetching kelas aktif dari /api/guru/kelas...');
+      const kelasRes = await fetch('/api/guru/kelas', { credentials: 'include' });
+      if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
+      const kelasData = await kelasRes.json();
+      const kelasList = kelasData.kelas || [];
+      console.log('✅ Kelas yang diampu (AKTIF):', kelasList.length, kelasList.map(k => ({ id: k.id, nama: k.nama })));
+      
+      let transformedData = [];
+      if (kelasList.length > 0) {
+        const klasIds = kelasList.map(k => k.id).join(',');
+        console.log('🔗 Kelas IDs untuk fetch siswa:', klasIds);
+        const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`, { credentials: 'include' });
+        if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
+        const siswaData = await siswaRes.json();
+        console.log('📊 API response:', siswaData);
+        
+        const siswaList = siswaData.data || [];
+        console.log('✅ Siswa yang di-fetch:', siswaList.length, 'siswa');
+        
+        transformedData = siswaList.map((siswa) => ({
+          id: siswa.id,
+          nama: siswa.user?.name || '-',
+          kelas: siswa.kelas?.nama || '-',
+          status:
+            siswa.status === 'approved'
+              ? 'aktif'
+              : siswa.status === 'pending'
+              ? 'menunggu_validasi'
+              : 'tidak_aktif',
+          totalJuz: siswa.totalJuz || 0,
+          totalSetoran: siswa.totalSetoran || 0,
+        }));
+      } else {
+        console.warn('⚠️ Guru tidak memiliki kelas aktif yang diampu!');
+      }
 
       setStudents(transformedData);
 
@@ -360,13 +370,14 @@ export default function KelolaSiswaPage() {
         (s) => s.status === 'menunggu_validasi'
       ).length;
 
+      console.log(`📈 Stats: Total=${totalSiswa}, Aktif=${siswaAktif}, Menunggu=${menungguValidasi}`);
       setStats({
         totalSiswa,
         siswaAktif,
         menungguValidasi,
       });
     } catch (error) {
-      console.error('Error fetching siswa:', error);
+      console.error('❌ Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -422,7 +433,7 @@ export default function KelolaSiswaPage() {
                 icon={Users}
                 title="TOTAL SISWA"
                 value={stats.totalSiswa}
-                subtitle="Siswa terdaftar"
+                subtitle="Siswa dari kelas aktif"
                 variant="green"
               />
               <StatsCard
