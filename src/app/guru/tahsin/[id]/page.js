@@ -1119,8 +1119,9 @@ export default function TahsinDetailPage() {
                     const isPdf = materi.jenisMateri === 'PDF';
                     const borderColor = isPdf ? 'border-amber-200' : isYoutube ? 'border-rose-200' : 'border-gray-100';
                     const badgeBg = isPdf ? 'bg-amber-50 text-amber-700 border border-amber-200' : isYoutube ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-emerald-100 text-emerald-700';
-                    const thumbnailBg = isPdf ? 'from-amber-50 to-amber-100' : isYoutube ? 'from-rose-50 to-rose-100' : 'from-gray-50 to-gray-100';
-                    const actionBg = isPdf ? 'bg-amber-500 hover:bg-amber-600' : isYoutube ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600';
+                    const thumbnailBg = isPdf ? 'from-amber-50 to-white' : isYoutube ? 'from-rose-50 to-white' : 'from-gray-50 to-gray-100';
+                    const actionBg = isPdf ? 'bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200' : isYoutube ? 'bg-rose-100 text-rose-700 border border-rose-200 hover:bg-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200';
+                    const downloadBg = 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100';
                     
                     return (
                     <div
@@ -1180,7 +1181,7 @@ export default function TahsinDetailPage() {
                             href={materi.jenisMateri === 'YOUTUBE' ? materi.youtubeUrl : materi.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 ${actionBg} text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md`}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 ${actionBg} text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md`}
                             style={{ fontFamily: 'Poppins, sans-serif' }}
                           >
                             <Eye size={16} />
@@ -1191,7 +1192,7 @@ export default function TahsinDetailPage() {
                             <a
                               href={materi.fileUrl}
                               download
-                              className="flex items-center justify-center px-3 py-2.5 bg-amber-100 hover:bg-amber-200 text-amber-700 text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                              className={`flex items-center justify-center px-3 py-2.5 ${downloadBg} text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md`}
                             >
                               <Download size={16} />
                             </a>
