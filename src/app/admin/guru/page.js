@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import { MultiSelectKelas } from './MultiSelectKelas';
 
 // ===== REUSABLE COMPONENTS =====
 
@@ -169,6 +170,12 @@ export default function AdminGuruPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validation: at least one class must be selected
+    if (selectedKelas.length === 0) {
+      alert('Pilih minimal 1 kelas yang akan diampu');
+      return;
+    }
 
     try {
       const url = editingGuru ? `/api/guru/${editingGuru.id}` : '/api/guru';
@@ -504,7 +511,7 @@ export default function AdminGuruPage() {
         </div>
       </div>
 
-      {/* Modal - Keep existing modal code */}
+      {/* Modal - New Layout */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-100">
@@ -524,6 +531,7 @@ export default function AdminGuruPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Row 1: Nama Lengkap | NIP */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
@@ -538,6 +546,21 @@ export default function AdminGuruPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                    NIP
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.nip}
+                    onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Email | Password */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
                     Email *
@@ -585,16 +608,20 @@ export default function AdminGuruPage() {
                     </button>
                   </div>
                 </div>
+              </div>
 
+              {/* Row 3: Kelas yang Diampu | Jenis Kelamin */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
-                    NIP
+                    Kelas yang Diampu *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.nip}
-                    onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  <MultiSelectKelas
+                    kelas={kelas}
+                    selectedKelas={selectedKelas}
+                    onSelectionChange={setSelectedKelas}
+                    loading={loadingKelas}
+                    error={kelas.length === 0 && !loadingKelas ? 'Tidak ada kelas AKTIF tersedia' : null}
                   />
                 </div>
 
@@ -614,6 +641,7 @@ export default function AdminGuruPage() {
                 </div>
               </div>
 
+              {/* Row 4: Alamat (full width) */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
                   Alamat
@@ -626,41 +654,7 @@ export default function AdminGuruPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-3 uppercase tracking-wide">
-                  Kelas yang Diampu
-                </label>
-                {loadingKelas ? (
-                  <div className="text-sm text-slate-500 py-3">Memuat kelas...</div>
-                ) : kelas.length === 0 ? (
-                  <div className="text-sm text-slate-500 py-3">Tidak ada kelas AKTIF</div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-300 rounded-xl p-4 bg-slate-50">
-                    {kelas.map((k) => (
-                      <label key={k.id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={selectedKelas.includes(k.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedKelas([...selectedKelas, k.id]);
-                            } else {
-                              setSelectedKelas(selectedKelas.filter(id => id !== k.id));
-                            }
-                          }}
-                          className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-slate-900 truncate">{k.nama}</div>
-                          <div className="text-xs text-slate-500">{k.tahunAjaran?.nama}</div>
-                        </div>
-                        <div className="text-xs text-slate-400 whitespace-nowrap">{k._count?.siswa || 0} siswa</div>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-
+              {/* Buttons */}
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
