@@ -13,7 +13,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { nama, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds, forceCreate } = body;
+    const { nama, tingkat, tahunAjaranId, targetJuz, guruUtamaId, guruPendampingIds, forceCreate } = body;
 
     // Validate required fields
     if (!nama || !tahunAjaranId) {
@@ -95,6 +95,7 @@ export async function POST(request) {
       const newKelas = await tx.kelas.create({
         data: {
           nama,
+          tingkat: tingkat ? parseInt(tingkat) : null,
           tahunAjaranId: tahunAjaranId, // Keep as string - it's a CUID
           targetJuz: targetJuz ? parseInt(targetJuz) : 1,
         }
@@ -177,6 +178,8 @@ export async function POST(request) {
       userAgent: getUserAgent(request),
       metadata: {
         kelasId: kelas.id,
+        kelasNama: kelas.nama,
+        tingkat: kelas.tingkat,
         tahunAjaranId: kelas.tahunAjaranId,
         guruUtamaId: guruUtamaId || null,
         guruPendampingCount: guruPendampingIds?.length || 0
