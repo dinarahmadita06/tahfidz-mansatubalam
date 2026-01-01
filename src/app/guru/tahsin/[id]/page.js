@@ -69,6 +69,7 @@ export default function TahsinDetailPage() {
   // Search & Filter states for Materi Tahsin
   const [materiSearchQuery, setMateriSearchQuery] = useState('');
   const [materiSortBy, setMateriSortBy] = useState('terbaru'); // 'terbaru' | 'terlama'
+  const [materiTypeFilter, setMateriTypeFilter] = useState('ALL'); // 'ALL' | 'PDF' | 'YOUTUBE'
 
   // Selected siswa for header display
   const selectedSiswa = useMemo(() => {
@@ -78,10 +79,15 @@ export default function TahsinDetailPage() {
   // Filtered and sorted materi list
   const filteredMateriList = useMemo(() => {
     let filtered = materiList.filter((materi) => {
+      // Filter by search query
       const matchesSearch =
         materi.judul.toLowerCase().includes(materiSearchQuery.toLowerCase()) ||
         (materi.deskripsi && materi.deskripsi.toLowerCase().includes(materiSearchQuery.toLowerCase()));
-      return matchesSearch;
+      
+      // Filter by type
+      const matchesType = materiTypeFilter === 'ALL' || materi.jenisMateri === materiTypeFilter;
+      
+      return matchesSearch && matchesType;
     });
 
     // Sort by date
@@ -92,7 +98,7 @@ export default function TahsinDetailPage() {
     });
 
     return filtered;
-  }, [materiList, materiSearchQuery, materiSortBy]);
+  }, [materiList, materiSearchQuery, materiSortBy, materiTypeFilter]);
 
   // Filtered tahsin list based on filter
   const filteredTahsinList = useMemo(() => {
@@ -1028,6 +1034,28 @@ export default function TahsinDetailPage() {
                     />
                   </div>
 
+                  {/* Type Filter - Segmented Button */}
+                  <div className="flex gap-2 items-center bg-white border-2 border-gray-200 rounded-xl p-2 shadow-sm">
+                    {['ALL', 'PDF', 'YOUTUBE'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setMateriTypeFilter(type)}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          materiTypeFilter === type
+                            ? type === 'PDF'
+                              ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                              : type === 'YOUTUBE'
+                              ? 'bg-rose-100 text-rose-600 border border-rose-200'
+                              : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                            : 'bg-gray-50 text-gray-600 border border-transparent hover:bg-gray-100'
+                        }`}
+                        style={{ fontFamily: 'Poppins, sans-serif' }}
+                      >
+                        {type === 'ALL' ? 'Semua' : type}
+                      </button>
+                    ))}
+                  </div>
+
                   {/* Sort Dropdown */}
                   <div className="relative min-w-[160px]">
                     <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -1086,27 +1114,35 @@ export default function TahsinDetailPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredMateriList.map((materi) => (
+                  {filteredMateriList.map((materi) => {
+                    const isYoutube = materi.jenisMateri === 'YOUTUBE';
+                    const isPdf = materi.jenisMateri === 'PDF';
+                    const borderColor = isPdf ? 'border-amber-200' : isYoutube ? 'border-rose-200' : 'border-gray-100';
+                    const badgeBg = isPdf ? 'bg-amber-50 text-amber-700 border border-amber-200' : isYoutube ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-emerald-100 text-emerald-700';
+                    const thumbnailBg = isPdf ? 'from-amber-50 to-amber-100' : isYoutube ? 'from-rose-50 to-rose-100' : 'from-gray-50 to-gray-100';
+                    const actionBg = isPdf ? 'bg-amber-500 hover:bg-amber-600' : isYoutube ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600';
+                    
+                    return (
                     <div
                       key={materi.id}
-                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                      className="bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group ${borderColor}"
                     >
-                      {/* Thumbnail Area with Soft Background */}
-                      <div className="h-40 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative">
+                        {/* Thumbnail Area with Type-Specific Background */}
+                        <div className={`h-40 bg-gradient-to-br ${thumbnailBg} flex items-center justify-center relative`}>
                         <div className="absolute inset-0 bg-white/50 backdrop-blur-sm"></div>
-                        {materi.jenisMateri === 'PDF' && (
-                          <FileText className="text-gray-300 relative z-10" size={72} />
+                        {isPdf && (
+                          <FileText className="relative z-10 text-amber-400" size={72} />
                         )}
                         {materi.jenisMateri === 'VIDEO' && (
                           <PlayCircle className="text-gray-300 relative z-10" size={72} />
                         )}
-                        {materi.jenisMateri === 'YOUTUBE' && (
-                          <Youtube className="text-gray-300 relative z-10" size={72} />
+                        {isYoutube && (
+                          <Youtube className="relative z-10 text-rose-400" size={72} />
                         )}
 
                         {/* Category Badge */}
                         <div className="absolute top-3 left-3">
-                          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
+                          <span className={`px-3 py-1 ${badgeBg} text-xs font-bold rounded-full border`}>
                             {materi.jenisMateri}
                           </span>
                         </div>
@@ -1144,18 +1180,18 @@ export default function TahsinDetailPage() {
                             href={materi.jenisMateri === 'YOUTUBE' ? materi.youtubeUrl : materi.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 ${actionBg} text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md`}
                             style={{ fontFamily: 'Poppins, sans-serif' }}
                           >
                             <Eye size={16} />
                             <span>Lihat</span>
                           </a>
 
-                          {materi.jenisMateri !== 'YOUTUBE' && (
+                          {isPdf && (
                             <a
                               href={materi.fileUrl}
                               download
-                              className="flex items-center justify-center px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                              className="flex items-center justify-center px-3 py-2.5 bg-amber-100 hover:bg-amber-200 text-amber-700 text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
                             >
                               <Download size={16} />
                             </a>
@@ -1163,7 +1199,8 @@ export default function TahsinDetailPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
