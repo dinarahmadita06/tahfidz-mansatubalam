@@ -129,10 +129,12 @@ export default function AdminSiswaPage() {
   const [siswa, setSiswa] = useState([]);
   const [kelas, setKelas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeoutId, setSearchTimeoutId] = useState(null);
   const [filterKelas, setFilterKelas] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, active, unvalidated
-  const [filterStatusSiswa, setFilterStatusSiswa] = useState('all'); // all, AKTIF, LULUS, PINDAH, KELUAR
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatusSiswa, setFilterStatusSiswa] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -140,33 +142,82 @@ export default function AdminSiswaPage() {
   const [newStatus, setNewStatus] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  // Initial fetch: both data in parallel
   useEffect(() => {
-    fetchSiswa();
-    fetchKelas();
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        const [siswaRes, kelasRes] = await Promise.all([
+          fetch('/api/admin/siswa'),
+          fetch('/api/kelas')
+        ]);
+
+        if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
+        if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
+
+        const siswaData = await siswaRes.json();
+        const kelasData = await kelasRes.json();
+
+        // Handle API response structure (data property or direct array)
+        const parsedSiswa = siswaData.data || (Array.isArray(siswaData) ? siswaData : []);
+        const parsedKelas = Array.isArray(kelasData) ? kelasData : (kelasData.data || []);
+
+        setSiswa(parsedSiswa);
+        setKelas(parsedKelas);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setSiswa([]);
+        setKelas([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
   }, []);
 
-  const fetchSiswa = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeoutId) {
+      clearTimeout(searchTimeoutId);
+    }
+
+    if (!searchTerm.trim()) {
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    const timeoutId = setTimeout(() => {
+      // Search is done client-side via filteredSiswa below
+      setSearching(false);
+    }, 300);
+
+    setSearchTimeoutId(timeoutId);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [searchTerm, searchTimeoutId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutId) clearTimeout(searchTimeoutId);
+    };
+  }, [searchTimeoutId]);
+
+  // Refresh data after status change or create
+  const refetchSiswa = async () => {
     try {
       const response = await fetch('/api/admin/siswa');
+      if (!response.ok) throw new Error('Failed to fetch');
       const result = await response.json();
-      // Handle both array response and object with data property
-      const data = Array.isArray(result) ? result : (result.data || []);
+      const data = result.data || (Array.isArray(result) ? result : []);
       setSiswa(data);
     } catch (error) {
-      console.error('Error fetching siswa:', error);
-      setSiswa([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchKelas = async () => {
-    try {
-      const response = await fetch('/api/kelas');
-      const data = await response.json();
-      setKelas(data);
-    } catch (error) {
-      console.error('Error fetching kelas:', error);
+      console.error('Error refetching siswa:', error);
     }
   };
 
@@ -189,7 +240,7 @@ export default function AdminSiswaPage() {
         'Tempat Lahir': s.tempatLahir || '-',
         'Tanggal Lahir': s.tanggalLahir ? new Date(s.tanggalLahir).toLocaleDateString('id-ID') : '-',
         'Alamat': s.alamat || '-',
-        'No. HP': s.noHP || '-',
+        'No. HP': s.noTelepon || '-',
         'Kelas': s.kelas?.nama || '-',
         'Status': s.user.isActive ? 'Aktif' : 'Tidak Aktif',
         'Validasi': s.status === 'approved' ? 'Tervalidasi' : s.status === 'rejected' ? 'Ditolak' : 'Pending'
@@ -269,7 +320,7 @@ export default function AdminSiswaPage() {
 
       if (response.ok) {
         // Refresh data
-        await fetchSiswa();
+        await refetchSiswa();
 
         // Close modal and show success message
         setShowStatusModal(false);
@@ -469,6 +520,11 @@ export default function AdminSiswaPage() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white/50 hover:bg-white/70"
                     />
+                    {searching && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -484,7 +540,7 @@ export default function AdminSiswaPage() {
                   >
                     <option value="all">Semua Kelas</option>
                     {kelas.map(k => (
-                      <option key={k.id} value={k.id}>{k.namaKelas}</option>
+                      <option key={k.id} value={k.id}>{k.nama}</option>
                     ))}
                   </select>
                 </div>
@@ -643,7 +699,7 @@ export default function AdminSiswaPage() {
       <StudentCreateModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSuccess={fetchSiswa}
+        onSuccess={refetchSiswa}
       />
 
       {/* Smart Import Modal */}
@@ -652,7 +708,7 @@ export default function AdminSiswaPage() {
           <SmartImport
             onSuccess={() => {
               setShowImportModal(false);
-              fetchSiswa();
+              refetchSiswa();
             }}
             onClose={() => setShowImportModal(false)}
           />
