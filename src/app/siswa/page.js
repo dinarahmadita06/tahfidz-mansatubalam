@@ -36,6 +36,12 @@ const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
 
 // ===== HELPER FUNCTIONS =====
+// Extract first name from full name
+const getFirstName = (fullName) => {
+  if (!fullName) return 'Siswa';
+  return fullName.split(' ')[0];
+};
+
 const formatTimeAgo = (timestamp) => {
   if (!timestamp) return '';
 
