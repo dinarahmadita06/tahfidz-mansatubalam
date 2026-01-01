@@ -72,13 +72,22 @@ export async function GET(request) {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            isActive: true,
+            createdAt: true
           }
         },
         kelas: {
           select: {
             id: true,
             nama: true,
+          }
+        },
+        hafalanSiswa: {
+          select: {
+            id: true,
+            juz: true,
+            status: true
           }
         },
         orangTuaSiswa: {
