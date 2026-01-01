@@ -28,6 +28,9 @@ export async function GET() {
       where: {
         guruId: guru.id,
         isActive: true,
+        kelas: {
+          status: 'AKTIF'  // FILTER: Only show AKTIF classes
+        }
       },
       include: {
         kelas: {
