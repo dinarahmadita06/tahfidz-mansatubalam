@@ -1034,26 +1034,19 @@ export default function TahsinDetailPage() {
                     />
                   </div>
 
-                  {/* Type Filter - Segmented Button */}
-                  <div className="flex gap-2 items-center bg-white border-2 border-gray-200 rounded-xl p-2 shadow-sm">
-                    {['ALL', 'PDF', 'YOUTUBE'].map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setMateriTypeFilter(type)}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          materiTypeFilter === type
-                            ? type === 'PDF'
-                              ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                              : type === 'YOUTUBE'
-                              ? 'bg-rose-100 text-rose-600 border border-rose-200'
-                              : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                            : 'bg-gray-50 text-gray-600 border border-transparent hover:bg-gray-100'
-                        }`}
-                        style={{ fontFamily: 'Poppins, sans-serif' }}
-                      >
-                        {type === 'ALL' ? 'Semua' : type}
-                      </button>
-                    ))}
+                  {/* Type Filter - Dropdown */}
+                  <div className="relative min-w-[140px]">
+                    <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <select
+                      value={materiTypeFilter}
+                      onChange={(e) => setMateriTypeFilter(e.target.value)}
+                      className="w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none appearance-none bg-white cursor-pointer shadow-sm hover:shadow-md transition-all font-medium"
+                      style={{ fontFamily: 'Poppins, sans-serif' }}
+                    >
+                      <option value="ALL">Semua Jenis</option>
+                      <option value="PDF">PDF</option>
+                      <option value="YOUTUBE">YouTube</option>
+                    </select>
                   </div>
 
                   {/* Sort Dropdown */}
