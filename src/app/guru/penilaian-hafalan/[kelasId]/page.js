@@ -487,16 +487,11 @@ export default function PenilaianHafalanPage() {
 
                       {/* Surah yang Disetorkan */}
                       <td className="px-6 py-4 text-sm">
-                        <div className="flex flex-col gap-1 max-w-[220px] break-words whitespace-normal">
+                        <div className="max-w-[220px] break-words whitespace-normal">
                           {penilaian.surah ? (
-                            <>
-                              {formatSurahSetoran(penilaian).map((surah, idx) => (
-                                <div key={idx} className={idx === 0 ? 'font-semibold text-slate-800' : 'text-slate-700'}>
-                                  {surah}
-                                  {idx > 0 && <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2 py-0.5 whitespace-nowrap ml-2 inline-block">Tambahan</span>}
-                                </div>
-                              ))}
-                            </>
+                            <span className="text-slate-800 font-medium">
+                              {getSurahSetoranText(penilaian)}
+                            </span>
                           ) : (
                             <span className="text-slate-400">–</span>
                           )}
