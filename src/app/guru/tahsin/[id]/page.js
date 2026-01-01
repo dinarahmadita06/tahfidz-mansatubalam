@@ -1110,28 +1110,39 @@ export default function TahsinDetailPage() {
                   {filteredMateriList.map((materi) => {
                     const isYoutube = materi.jenisMateri === 'YOUTUBE';
                     const isPdf = materi.jenisMateri === 'PDF';
-                    const borderColor = isPdf ? 'border-amber-200' : isYoutube ? 'border-rose-200' : 'border-gray-100';
-                    const badgeBg = isPdf ? 'bg-amber-50 text-amber-700 border border-amber-200' : isYoutube ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-emerald-100 text-emerald-700';
-                    const thumbnailBg = isPdf ? 'from-amber-50 to-white' : isYoutube ? 'from-rose-50 to-white' : 'from-gray-50 to-gray-100';
-                    const actionBg = isPdf ? 'bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200' : isYoutube ? 'bg-rose-100 text-rose-700 border border-rose-200 hover:bg-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200';
-                    const downloadBg = 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100';
+                    
+                    // Full pastel card backgrounds & borders
+                    const cardBg = isPdf ? 'bg-amber-50' : isYoutube ? 'bg-rose-50' : 'bg-gray-50';
+                    const cardBorder = isPdf ? 'border-amber-200/80' : isYoutube ? 'border-rose-200/80' : 'border-gray-200/60';
+                    const cardHover = isPdf ? 'hover:shadow-lg hover:shadow-amber-200/60' : isYoutube ? 'hover:shadow-lg hover:shadow-rose-200/60' : 'hover:shadow-lg hover:shadow-gray-200/40';
+                    
+                    // Badge styling
+                    const badgeBg = isPdf ? 'bg-amber-100 text-amber-700 border border-amber-200/80' : isYoutube ? 'bg-rose-100 text-rose-600 border border-rose-200/80' : 'bg-emerald-100 text-emerald-700';
+                    
+                    // Icon styling
+                    const iconColor = isPdf ? 'text-amber-300' : isYoutube ? 'text-rose-300' : 'text-gray-300';
+                    
+                    // Action button styling
+                    const actionBg = isPdf ? 'bg-amber-200/70 text-amber-900 hover:bg-amber-300/70' : isYoutube ? 'bg-rose-200/70 text-rose-900 hover:bg-rose-300/70' : 'bg-emerald-200/70 text-emerald-900 hover:bg-emerald-300/70';
+                    const downloadBg = isPdf ? 'bg-amber-100/70 text-amber-800 hover:bg-amber-200/70' : 'bg-gray-100/70 text-gray-700 hover:bg-gray-200/70';
+                    
                     
                     return (
                     <div
                       key={materi.id}
-                      className="bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group ${borderColor}"
+                      className={`${cardBg} ${cardBorder} rounded-2xl shadow-sm border overflow-hidden hover:-translate-y-1 transition-all duration-200 ease-in-out group ${cardHover}`}
                     >
                         {/* Thumbnail Area with Type-Specific Background */}
-                        <div className={`h-40 bg-gradient-to-br ${thumbnailBg} flex items-center justify-center relative`}>
-                        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm"></div>
+                        <div className={`h-40 bg-gradient-to-br ${isPdf ? 'from-amber-100 to-amber-50' : isYoutube ? 'from-rose-100 to-rose-50' : 'from-gray-100 to-gray-50'} flex items-center justify-center relative`}>
+                        <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
                         {isPdf && (
-                          <FileText className="relative z-10 text-amber-400" size={72} />
+                          <FileText className={`relative z-10 ${iconColor}`} size={72} />
                         )}
                         {materi.jenisMateri === 'VIDEO' && (
                           <PlayCircle className="text-gray-300 relative z-10" size={72} />
                         )}
                         {isYoutube && (
-                          <Youtube className="relative z-10 text-rose-400" size={72} />
+                          <Youtube className={`relative z-10 ${iconColor}`} size={72} />
                         )}
 
                         {/* Category Badge */}
@@ -1174,7 +1185,7 @@ export default function TahsinDetailPage() {
                             href={materi.jenisMateri === 'YOUTUBE' ? materi.youtubeUrl : materi.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 ${actionBg} text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md`}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 ${actionBg} text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md`}
                             style={{ fontFamily: 'Poppins, sans-serif' }}
                           >
                             <Eye size={16} />
@@ -1185,7 +1196,7 @@ export default function TahsinDetailPage() {
                             <a
                               href={materi.fileUrl}
                               download
-                              className={`flex items-center justify-center px-3 py-2.5 ${downloadBg} text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md`}
+                              className={`flex items-center justify-center px-3 py-2.5 ${downloadBg} text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md`}
                             >
                               <Download size={16} />
                             </a>
