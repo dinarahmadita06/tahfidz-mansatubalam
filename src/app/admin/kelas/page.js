@@ -276,6 +276,7 @@ export default function AdminKelasPage() {
   const buttonRefs = useRef({});
   const [kelasFormData, setKelasFormData] = useState({
     nama: '', // Menggunakan field 'nama' sesuai schema
+    tingkat: '', // Tingkat kelas
     tahunAjaranId: '',
     targetJuz: 1,
     guruUtamaId: '', // Guru utama/wali kelas
@@ -298,6 +299,7 @@ export default function AdminKelasPage() {
       
       const newFormData = {
         nama: editingKelas.nama,
+        tingkat: editingKelas.tingkat || '',
         tahunAjaranId: tahunAjaranId,
         targetJuz: editingKelas.targetJuz || 1,
         guruUtamaId: guruUtama ? String(guruUtama.guruId) : '',
@@ -438,6 +440,7 @@ export default function AdminKelasPage() {
     setKelasFormData(prevState => {
       const newState = {
         nama: kelasItem.nama,
+        tingkat: kelasItem.tingkat || '',
         tahunAjaranId: tahunAjaranId,
         targetJuz: kelasItem.targetJuz || 1,
         guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
@@ -604,6 +607,7 @@ export default function AdminKelasPage() {
   const resetKelasForm = () => {
     setKelasFormData({
       nama: '',
+      tingkat: '',
       tahunAjaranId: '',
       targetJuz: 1,
       guruUtamaId: '',
@@ -1700,6 +1704,38 @@ export default function AdminKelasPage() {
                   placeholder="Contoh: Kelas 1A"
                   value={kelasFormData.nama}
                   onChange={(e) => setKelasFormData({ ...kelasFormData, nama: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `2px solid ${colors.gray[200]}`,
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                  }}
+                  className="form-input"
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text.secondary,
+                  marginBottom: '8px',
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                }}>
+                  Tingkat Kelas (Opsional)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="6"
+                  placeholder="Contoh: 1, 2, 3, dst"
+                  value={kelasFormData.tingkat}
+                  onChange={(e) => setKelasFormData({ ...kelasFormData, tingkat: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
