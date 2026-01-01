@@ -13,13 +13,17 @@ export async function GET() {
       );
     }
 
+    console.log('[API /guru/kelas] User session:', { id: session.user.id, email: session.user.email, name: session.user.name });
+    
     const guru = await prisma.guru.findUnique({
       where: { userId: session.user.id },
     });
 
+    console.log('[API /guru/kelas] Guru lookup result:', guru ? { id: guru.id } : 'NOT_FOUND');
+    
     if (!guru) {
       return NextResponse.json(
-        { message: 'Data guru tidak ditemukan' },
+        { message: 'Data guru tidak ditemukan', userId: session.user.id },
         { status: 404 }
       );
     }
@@ -48,6 +52,8 @@ export async function GET() {
         },
       },
     });
+
+    console.log('[API /guru/kelas] GuruKelas found (AKTIF only):', guruKelas.length, guruKelas.map(gk => ({ kelasNama: gk.kelas.nama, siswaCount: gk.kelas._count.siswa })));
 
     const kelas = guruKelas.map((gk) => gk.kelas);
 
