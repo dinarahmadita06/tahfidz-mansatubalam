@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import {
   User,
   Mail,
@@ -32,7 +33,7 @@ function ProfileHeader() {
 
           <div className="min-w-0">
             <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
-              Profil Saya
+              Profil Siswa
             </h1>
             <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
               Kelola informasi profil dan keamanan akun Anda
@@ -548,36 +549,70 @@ export default function ProfileSiswaPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const router = useRouter();
 
+  // Fetch profile on mount and when session changes
   useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
     fetchProfileData();
-  }, []);
+  }, [session, router]);
 
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      const saved = localStorage.getItem('siswa_profile');
-      if (saved) {
-        setProfileData(JSON.parse(saved));
-      } else {
-        // Fallback to default data with statusSiswa from session
-        setProfileData({
-          nama: 'Ahmad Fauzi',
-          email: 'ahmad.fauzi@student.tahfidz.sch.id',
-          phone: '0812-3456-7890',
-          alamat: "Jl. Al-Qur'an No. 123, Jakarta Selatan",
-          tanggalLahir: '15 Mei 2010',
-          jenisKelamin: 'Laki-laki',
-          kelas: '9 Tahfidz A',
-          nisn: '0051234567',
-          nis: '2024001',
-          namaWali: 'Bapak Hasan',
-          phoneWali: '0813-9876-5432',
-          statusSiswa: session?.user?.statusSiswa || 'AKTIF', // Get from session
-        });
+      setError('');
+
+      // Fetch from API with no-store cache
+      const res = await fetch('/api/siswa/profile', {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          // Unauthorized - redirect to login
+          router.push('/login');
+          return;
+        }
+
+        const errorData = await res.json();
+        setError(errorData.error || 'Failed to load profile');
+        
+        // Show fallback message if profile not found
+        if (res.status === 404) {
+          setProfileData({
+            nama: '-',
+            email: session?.user?.email || '-',
+            phone: '-',
+            alamat: '-',
+            tanggalLahir: '-',
+            jenisKelamin: '-',
+            kelas: '-',
+            nisn: '-',
+            nis: '-',
+            namaWali: '-',
+            phoneWali: '-',
+            statusSiswa: 'AKTIF',
+          });
+        }
+        return;
       }
+
+      const data = await res.json();
+      setProfileData(data);
+      // Clear any previous errors
+      setError('');
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setError('Gagal memuat data profil. Silahkan coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -590,15 +625,12 @@ export default function ProfileSiswaPage() {
   };
 
   const handleSaveProfile = async (formData) => {
-    // Update profileData with edited data
-    const updatedData = { ...profileData, ...formData };
-    setProfileData(updatedData);
-    localStorage.setItem('siswa_profile', JSON.stringify(updatedData));
-
     setSuccess('Profil berhasil diperbarui!');
+    setShowEditModal(false);
     setTimeout(() => {
+      fetchProfileData();
       setSuccess('');
-    }, 3000);
+    }, 1000);
   };
 
   const handleChangePassword = () => {
@@ -612,33 +644,37 @@ export default function ProfileSiswaPage() {
     setShowPasswordModal(true);
   };
 
-  const handleChangePasswordSubmit = async () => {
+  const handlePasswordSubmit = async () => {
+    if (!passwordFormData.oldPassword || !passwordFormData.newPassword || !passwordFormData.confirmPassword) {
+      setError('Semua field wajib diisi');
+      return;
+    }
+
+    if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
+      setError('Password baru tidak sesuai dengan konfirmasi');
+      return;
+    }
+
     try {
       setSaveLoading(true);
-      setError('');
+      const res = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          oldPassword: passwordFormData.oldPassword,
+          newPassword: passwordFormData.newPassword,
+        }),
+      });
 
-      if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
-        setError('Password baru dan konfirmasi tidak cocok');
-        setSaveLoading(false);
-        return;
-      }
-
-      if (passwordFormData.newPassword.length < 6) {
-        setError('Password minimal 6 karakter');
-        setSaveLoading(false);
-        return;
-      }
-
-      setSuccess('Password berhasil diubah!');
-      setTimeout(() => {
+      if (res.ok) {
+        setSuccess('Password berhasil diubah!');
         setShowPasswordModal(false);
-        setSuccess('');
-        setPasswordFormData({
-          oldPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        });
-      }, 2000);
+        setPasswordFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Gagal mengubah password');
+      }
     } catch (error) {
       console.error('Error changing password:', error);
       setError('Terjadi kesalahan saat mengubah password');
@@ -782,7 +818,7 @@ export default function ProfileSiswaPage() {
                 Batal
               </button>
               <button
-                onClick={handleChangePasswordSubmit}
+                onClick={handlePasswordSubmit}
                 disabled={saveLoading}
                 className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
               >

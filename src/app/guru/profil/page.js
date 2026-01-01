@@ -35,7 +35,7 @@ function ProfileHeader() {
 
           <div className="min-w-0">
             <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
-              Profil Saya
+              Profil Guru
             </h1>
             <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
               Kelola informasi profil dan keamanan akun Anda
