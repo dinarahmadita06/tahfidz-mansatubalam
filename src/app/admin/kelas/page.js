@@ -1719,7 +1719,7 @@ export default function AdminKelasPage() {
                 {/* Target Juz - Read Only */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-slate-700">
-                    Target Juz (Otomatis dari Tahun Ajaran)
+                    Target Juz
                   </label>
                   <input
                     type="number"
