@@ -5,6 +5,9 @@ import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, Grad
 import AdminLayout from '@/components/layout/AdminLayout';
 import { MultiSelectKelas } from './MultiSelectKelas';
 
+// Constant for class status
+const STATUS_AKTIF = 'AKTIF';
+
 // ===== REUSABLE COMPONENTS =====
 
 // Modern Stat Card - Align with Dashboard Admin Style (Pastel Solid, Border-2, Icon Badge Right)
@@ -105,11 +108,19 @@ function SearchFilterBar({ searchTerm, setSearchTerm, filterStatus, setFilterSta
   );
 }
 
+// ===== HELPER FUNCTIONS =====
+
+// Get only AKTIF classes from guruKelas array
+const getAktifKelas = (guruKelas) => {
+  if (!Array.isArray(guruKelas)) return [];
+  return guruKelas.filter(gk => gk.kelas && gk.kelas.status === STATUS_AKTIF);
+};
+
 // ===== MAIN COMPONENT =====
 
 export default function AdminGuruPage() {
   const [guru, setGuru] = useState([]);
-  const [kelas, setKelas] = useState([]); // For kelas dropdown
+  const [kelas, setKelas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingKelas, setLoadingKelas] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -125,7 +136,7 @@ export default function AdminGuruPage() {
     jenisKelamin: 'L',
     alamat: ''
   });
-  const [selectedKelas, setSelectedKelas] = useState([]); // Track selected classes
+  const [selectedKelas, setSelectedKelas] = useState([]);
 
   useEffect(() => {
     fetchGuru();
@@ -149,7 +160,7 @@ export default function AdminGuruPage() {
     try {
       const response = await fetch('/api/kelas?showAll=true');
       const data = await response.json();
-      const aktivKelas = data.filter(k => k.status === 'AKTIF');
+      const aktivKelas = data.filter(k => k.status === STATUS_AKTIF);
       setKelas(aktivKelas);
     } catch (error) {
       console.error('Error fetching kelas:', error);
@@ -171,7 +182,6 @@ export default function AdminGuruPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation: at least one class must be selected
     if (selectedKelas.length === 0) {
       alert('Pilih minimal 1 kelas yang akan diampu');
       return;
@@ -183,7 +193,7 @@ export default function AdminGuruPage() {
 
       const payload = {
         ...formData,
-        kelasIds: selectedKelas // Include selected classes
+        kelasIds: selectedKelas
       };
 
       const response = await fetch(url, {
@@ -210,6 +220,10 @@ export default function AdminGuruPage() {
   };
 
   const handleEdit = (guruItem) => {
+    // Filter dan prefill hanya kelas AKTIF
+    const aktivKelasFromGuru = getAktifKelas(guruItem.guruKelas);
+    const aktivKelasIds = aktivKelasFromGuru.map(gk => gk.kelasId);
+
     setEditingGuru(guruItem);
     setFormData({
       name: guruItem.user.name,
@@ -219,6 +233,8 @@ export default function AdminGuruPage() {
       jenisKelamin: guruItem.jenisKelamin,
       alamat: guruItem.alamat || ''
     });
+    setSelectedKelas(aktivKelasIds);
+    fetchKelas();
     setShowModal(true);
   };
 
@@ -271,7 +287,7 @@ export default function AdminGuruPage() {
     setFormData({ ...formData, password });
   };
 
-  // Filter data
+  // Filter guru data
   const filteredGuru = Array.isArray(guru) ? guru.filter(g => {
     const matchSearch = g.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       g.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -302,12 +318,10 @@ export default function AdminGuruPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* Page Container - Full Width */}
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-          {/* Header Card - Modern Gradient Hero */}
+          {/* Header Card */}
           <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden relative">
-            {/* Decorative Circles */}
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
 
@@ -326,12 +340,11 @@ export default function AdminGuruPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
                     resetForm();
-                    fetchKelas(); // Fetch kelas when opening modal
+                    fetchKelas();
                     setShowModal(true);
                   }}
                   className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-emerald-600 rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
@@ -407,7 +420,7 @@ export default function AdminGuruPage() {
             setFilterStatus={setFilterStatus}
           />
 
-          {/* Table - Modern Glass Card */}
+          {/* Table */}
           <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -429,80 +442,83 @@ export default function AdminGuruPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredGuru.map((guruItem) => (
-                      <tr
-                        key={guruItem.id}
-                        className="hover:bg-emerald-50/30 transition-colors duration-200"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm ring-2 ring-emerald-200/60 shadow-sm">
-                              {guruItem.user.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="font-semibold text-gray-900 text-sm">
-                                {guruItem.user.name}
+                    filteredGuru.map((guruItem) => {
+                      const aktivKelas = getAktifKelas(guruItem.guruKelas);
+                      return (
+                        <tr
+                          key={guruItem.id}
+                          className="hover:bg-emerald-50/30 transition-colors duration-200"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm ring-2 ring-emerald-200/60 shadow-sm">
+                                {guruItem.user.name.charAt(0).toUpperCase()}
                               </div>
-                              {guruItem.nip && (
-                                <div className="text-xs text-gray-500">
-                                  NIP: {guruItem.nip}
+                              <div>
+                                <div className="font-semibold text-gray-900 text-sm">
+                                  {guruItem.user.name}
                                 </div>
-                              )}
+                                {guruItem.nip && (
+                                  <div className="text-xs text-gray-500">
+                                    NIP: {guruItem.nip}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {guruItem.user.email}
-                        </td>
-                        <td className="px-6 py-4">
-                          {guruItem.guruKelas && guruItem.guruKelas.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {guruItem.guruKelas.map((gk) => (
-                                <span
-                                  key={gk.id}
-                                  className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-50/70 border border-emerald-100/60 text-emerald-700 flex items-center gap-1"
-                                >
-                                  <GraduationCap size={12} />
-                                  {gk.kelas.nama}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400">
-                              Belum ada kelas
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {guruItem.user.email}
+                          </td>
+                          <td className="px-6 py-4">
+                            {aktivKelas && aktivKelas.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {aktivKelas.map((gk) => (
+                                  <span
+                                    key={gk.id}
+                                    className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-50/70 border border-emerald-100/60 text-emerald-700 flex items-center gap-1"
+                                  >
+                                    <GraduationCap size={12} />
+                                    {gk.kelas.nama}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">
+                                Belum ada kelas aktif
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex px-4 py-1.5 text-xs font-semibold rounded-full bg-emerald-100/70 text-emerald-700 border border-emerald-200/60">
+                              Aktif
                             </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex px-4 py-1.5 text-xs font-semibold rounded-full bg-emerald-100/70 text-emerald-700 border border-emerald-200/60">
-                            Aktif
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleEdit(guruItem)}
-                              className="p-2 rounded-lg bg-emerald-50/70 text-emerald-600 hover:bg-emerald-100/70 hover:shadow-md transition-all"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(guruItem.id)}
-                              className="p-2 rounded-lg bg-rose-50/70 text-rose-600 hover:bg-rose-100/70 hover:shadow-md transition-all"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEdit(guruItem)}
+                                className="p-2 rounded-lg bg-emerald-50/70 text-emerald-600 hover:bg-emerald-100/70 hover:shadow-md transition-all"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(guruItem.id)}
+                                className="p-2 rounded-lg bg-rose-50/70 text-rose-600 hover:bg-rose-100/70 hover:shadow-md transition-all"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -511,7 +527,7 @@ export default function AdminGuruPage() {
         </div>
       </div>
 
-      {/* Modal - New Layout */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-100">
@@ -641,7 +657,7 @@ export default function AdminGuruPage() {
                 </div>
               </div>
 
-              {/* Row 4: Alamat (full width) */}
+              {/* Row 4: Alamat */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
                   Alamat
