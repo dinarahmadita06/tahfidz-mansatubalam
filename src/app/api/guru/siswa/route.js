@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
-import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,6 +32,8 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '100');
 
+    console.log('[API /guru/siswa] Request params:', { kelasIds, search, status, page, limit, userId: session.user.id });
+
     // Step 1: Get guru's assigned classes that are AKTIF
     const guruKelas = await prisma.guruKelas.findMany({
       where: {
@@ -48,9 +49,11 @@ export async function GET(request) {
     });
 
     const aktivKelasIds = guruKelas.map(gk => gk.kelasId);
+    console.log('[API /guru/siswa] Guru aktif kelas:', aktivKelasIds);
 
     // If guru has no active classes, return empty
     if (aktivKelasIds.length === 0) {
+      console.log('[API /guru/siswa] Guru has no active kelas');
       return NextResponse.json({
         data: [],
         pagination: {
@@ -67,6 +70,7 @@ export async function GET(request) {
     if (kelasIds) {
       const requestedIds = kelasIds.split(',').filter(Boolean);
       targetKelasIds = aktivKelasIds.filter(id => requestedIds.includes(id));
+      console.log('[API /guru/siswa] After filtering with kelasIds param:', targetKelasIds);
     }
 
     // Step 3: Build where clause for siswa
@@ -78,20 +82,37 @@ export async function GET(request) {
 
     // Add search filter if provided
     if (search) {
-      whereClause.OR = [
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { nis: { contains: search } },
-        { user: { email: { contains: search, mode: 'insensitive' } } }
+      whereClause.AND = [
+        {
+          kelasId: {
+            in: targetKelasIds
+          }
+        },
+        {
+          OR: [
+            { user: { name: { contains: search, mode: 'insensitive' } } },
+            { nis: { contains: search } },
+            { user: { email: { contains: search, mode: 'insensitive' } } }
+          ]
+        }
       ];
     }
 
     // Add status filter if provided
     if (status) {
-      whereClause.status = status;
+      if (whereClause.AND) {
+        whereClause.AND.push({ status });
+      } else {
+        whereClause.status = status;
+      }
     }
+
+    console.log('[API /guru/siswa] Query whereClause:', JSON.stringify(whereClause, null, 2));
 
     // Step 4: Get siswa count and list
     const totalCount = await prisma.siswa.count({ where: whereClause });
+    console.log('[API /guru/siswa] Total count:', totalCount);
+
     const totalPages = Math.ceil(totalCount / limit);
 
     const siswa = await prisma.siswa.findMany({
@@ -133,6 +154,8 @@ export async function GET(request) {
       }
     });
 
+    console.log('[API /guru/siswa] Siswa returned:', siswa.length);
+
     const responseData = {
       data: siswa,
       pagination: {
@@ -145,7 +168,7 @@ export async function GET(request) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('Error fetching guru siswa:', error);
+    console.error('[API /guru/siswa] Error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch siswa',
