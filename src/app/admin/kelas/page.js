@@ -1714,90 +1714,62 @@ export default function AdminKelasPage() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.text.secondary,
-                  marginBottom: '8px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  Target Juz (Otomatis dari Tahun Ajaran)
-                </label>
-                <input
-                  type="number"
-                  disabled
-                  value={kelasFormData.targetJuz || ''}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `2px solid ${colors.gray[200]}`,
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                    outline: 'none',
-                    transition: 'all 0.3s ease',
-                    backgroundColor: colors.gray[50],
-                    color: colors.text.tertiary,
-                    cursor: 'not-allowed',
-                  }}
-                  className="form-input"
-                />
-              </div>
+              {/* Target Juz & Tahun Ajaran - Responsive Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Target Juz - Read Only */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Target Juz (Otomatis dari Tahun Ajaran)
+                  </label>
+                  <input
+                    type="number"
+                    disabled
+                    readOnly
+                    value={kelasFormData.targetJuz || ''}
+                    className="w-full h-12 px-4 py-3 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-600 text-sm cursor-not-allowed transition-all duration-300"
+                  />
+                </div>
 
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.text.secondary,
-                  marginBottom: '8px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  Tahun Ajaran *
-                </label>
-                <select
-                  required
-                  value={kelasFormData.tahunAjaranId}
-                  onChange={(e) => {
-                    const selectedTA = tahunAjaran.find(ta => ta.id === e.target.value);
-                    setKelasFormData({
-                      ...kelasFormData,
-                      tahunAjaranId: e.target.value,
-                      targetJuz: selectedTA?.targetHafalan || 1,
-                    });
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `2px solid ${colors.gray[200]}`,
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                    outline: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                  }}
-                  className="form-input"
-                >
-                  <option value="">Pilih Tahun Ajaran</option>
-                  {tahunAjaran.length === 0 ? (
-                    <option disabled>Tidak ada tahun ajaran tersedia</option>
-                  ) : (
-                    tahunAjaran.map((ta) => {
-                      // ta.id is already a string (CUID), use directly
-                      return (
+                {/* Tahun Ajaran */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Tahun Ajaran *
+                  </label>
+                  <select
+                    required
+                    value={kelasFormData.tahunAjaranId}
+                    onChange={(e) => {
+                      const selectedTA = tahunAjaran.find(ta => ta.id === e.target.value);
+                      setKelasFormData({
+                        ...kelasFormData,
+                        tahunAjaranId: e.target.value,
+                        targetJuz: selectedTA?.targetHafalan || 1,
+                      });
+                    }}
+                    className="w-full h-12 px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-0 text-slate-700 text-sm cursor-pointer bg-white transition-all duration-300 appearance-none"
+                    style={{
+                      backgroundImage: 'url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath fill=%27none%27 stroke=%27%23374151%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M2 5l6 6 6-6%27/%3E%3C/svg%3E")',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundSize: '1.25rem',
+                      paddingRight: '2.5rem',
+                    }}
+                  >
+                    <option value="">Pilih Tahun Ajaran</option>
+                    {tahunAjaran.length === 0 ? (
+                      <option disabled>Tidak ada tahun ajaran tersedia</option>
+                    ) : (
+                      tahunAjaran.map((ta) => (
                         <option key={ta.id} value={ta.id}>
                           {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
                         </option>
-                      );
-                    })
-                  )}
-                </select>
+                      ))
+                    )}
+                  </select>
+                </div>
               </div>
 
+              {/* Guru Utama */}
               <div>
                 <label style={{
                   display: 'block',
@@ -1833,8 +1805,8 @@ export default function AdminKelasPage() {
                   ))}
                 </select>
               </div>
-              </div>
 
+              {/* Guru Pendamping */}
               <div>
                 <label style={{
                   display: 'block',
