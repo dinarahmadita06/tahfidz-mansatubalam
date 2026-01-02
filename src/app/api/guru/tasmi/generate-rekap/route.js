@@ -86,12 +86,12 @@ export async function POST(request) {
       kelas: tasmi.siswa.kelas?.nama || '-',
       totalJuz: tasmi.jumlahHafalan?.toString() || '-',
       juzDiuji: tasmi.juzYangDitasmi?.substring(0, 15) || '-',
+      tanggal: tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID') : '-',
       makhraj: tasmi.nilaiKelancaran ? tasmi.nilaiKelancaran.toFixed(0) : '-',
       tajwid: tasmi.nilaiTajwid ? tasmi.nilaiTajwid.toFixed(0) : '-',
       keindahan: tasmi.nilaiAdab ? tasmi.nilaiAdab.toFixed(0) : '-',
       kefasihan: tasmi.nilaiIrama ? tasmi.nilaiIrama.toFixed(0) : '-',
       nilaiAkhir: tasmi.nilaiAkhir ? tasmi.nilaiAkhir.toFixed(2) : '-',
-      tanggal: tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID') : '-',
     }));
 
     const totalNilai = tasmiList.reduce((sum, t) => sum + (t.nilaiAkhir || 0), 0);

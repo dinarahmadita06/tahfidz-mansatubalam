@@ -105,11 +105,14 @@ export async function generateTasmiRecapPDF(data) {
   yPos += 11;
 
   // ===== C) TABEL REKAP (FULL HEADER TEXT, NO ABBREVIATION) =====
-  // Column proportions (% - adjusted for landscape)
-  const colProportions = [4, 16, 10, 6, 14, 10, 8, 8, 9, 9, 8]; // Total = 100%
-  const colWidths = colProportions.map(prop => (contentWidth * prop) / 100);
+  // Column proportions - FULL WIDTH 100% dengan normalisasi
+  // No:4% Nama:18% Kelas:10% Juz:6% JuzDiuji:18% TglUjian:10% Makhraj:8% Tajwid:8% Keindahan:10% Kefasihan:10% Nilai:8%
+  const colProportions = [4, 18, 10, 6, 18, 10, 8, 8, 10, 10, 8]; // Total = 110% (normalized to 100%)
+  // Normalize untuk ensure 100% width
+  const totalProportion = colProportions.reduce((a, b) => a + b, 0);
+  const colWidths = colProportions.map(prop => (contentWidth * prop) / totalProportion);
 
-  // FULL HEADER TEXT (tidak ada singkatan)
+  // FULL HEADER TEXT (tidak ada singkatan) - dengan font size lebih kecil agar 1 baris
   const tableColumns = [
     'No',
     'Nama Siswa',
@@ -143,21 +146,25 @@ export async function generateTasmiRecapPDF(data) {
     body: tableRows,
     startY: yPos,
     margin: { left: margin, right: margin, top: 0, bottom: 0 },
+    tableWidth: 'auto',
+    didDrawPage: (data) => {
+      // Ensure table spans full width without extra space
+    },
     pageBreak: 'auto',
     headerStyles: {
       fillColor: [0, 102, 51],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 9,
+      fontSize: 8.5,
       halign: 'center',
       valign: 'middle',
-      padding: 3.5,
+      padding: 2.5,
       lineWidth: 0.5,
       lineColor: [0, 102, 51]
     },
     bodyStyles: {
-      fontSize: 9,
-      padding: 3,
+      fontSize: 8.5,
+      padding: 2.5,
       lineWidth: 0.3,
       lineColor: [200, 200, 200]
     },
