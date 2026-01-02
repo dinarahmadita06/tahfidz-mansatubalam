@@ -20,6 +20,7 @@ import {
   Users,
   CalendarCheck,
   Medal,
+  Plus,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -32,6 +33,7 @@ export default function GuruTasmiPage() {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
+  const [showRekapFilterModal, setShowRekapFilterModal] = useState(false);
   const [selectedTasmi, setSelectedTasmi] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -51,6 +53,15 @@ export default function GuruTasmiPage() {
     nilaiTajwid: '',
     nilaiKelancaran: '',
     catatanPenguji: '',
+  });
+
+  // Rekap filter state
+  const [rekapFilter, setRekapFilter] = useState({
+    startDate: '',
+    endDate: '',
+    kelasId: '',
+    status: 'SELESAI',
+    juz: '',
   });
 
   useEffect(() => {
@@ -87,6 +98,7 @@ export default function GuruTasmiPage() {
     return (total / 4).toFixed(2);
   };
 
+  // Note: getPredikat function kept for future use but not displayed in UI
   const getPredikat = (nilaiAkhir) => {
     if (!nilaiAkhir) return '-';
     const nilai = parseFloat(nilaiAkhir);
@@ -230,7 +242,6 @@ export default function GuruTasmiPage() {
     }
 
     const nilaiAkhir = calculateNilaiAkhir(gradeData);
-    const predikat = getPredikat(nilaiAkhir);
 
     try {
       const response = await fetch(`/api/guru/tasmi/${selectedTasmi.id}/grade`, {
@@ -242,7 +253,6 @@ export default function GuruTasmiPage() {
           nilaiTajwid: parseFloat(nilaiTajwid),
           nilaiIrama: parseFloat(nilaiKelancaran),
           nilaiAkhir: parseFloat(nilaiAkhir),
-          predikat,
           catatanPenguji: gradeData.catatanPenguji,
           publish: false, // Save as draft, generate PDF but don't publish
         }),
@@ -264,30 +274,74 @@ export default function GuruTasmiPage() {
     }
   };
 
-  const handlePublish = async (tasmiId) => {
-    if (!confirm('Apakah Anda yakin ingin mempublikasikan hasil ini ke siswa?')) return;
-
+  // Handle Download PDF Laporan Per Siswa
+  const handleDownloadPDF = async (tasmiId) => {
     try {
-      const response = await fetch(`/api/guru/tasmi/${tasmiId}/publish`, {
+      const response = await fetch(`/api/guru/tasmi/${tasmiId}/generate-pdf`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        toast.success('Hasil penilaian berhasil dipublikasikan!');
-        fetchData();
+        // Download PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Laporan_Tasmi_${tasmiId}_${new Date().getTime()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('PDF berhasil diunduh');
       } else {
-        toast.error(data.message || 'Gagal mempublikasikan hasil');
+        const data = await response.json();
+        toast.error(data.message || 'Gagal mengunduh PDF');
       }
     } catch (error) {
-      console.error('Error publishing:', error);
-      toast.error('Terjadi kesalahan');
+      console.error('Error downloading PDF:', error);
+      toast.error('Terjadi kesalahan saat mengunduh PDF');
     }
   };
 
-  // Format date
+  // Handle Download Rekap PDF
+  const handleDownloadRekap = async () => {
+    try {
+      // Build query params
+      const params = new URLSearchParams();
+      if (rekapFilter.startDate) params.append('startDate', rekapFilter.startDate);
+      if (rekapFilter.endDate) params.append('endDate', rekapFilter.endDate);
+      if (rekapFilter.kelasId) params.append('kelasId', rekapFilter.kelasId);
+      if (rekapFilter.status) params.append('status', rekapFilter.status);
+      if (rekapFilter.juz) params.append('juz', rekapFilter.juz);
+
+      const response = await fetch(`/api/guru/tasmi/generate-rekap?${params.toString()}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        // Download PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Rekap_Tasmi_${new Date().getTime()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('Rekap PDF berhasil diunduh');
+        setShowRekapFilterModal(false);
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Gagal mengunduh rekap PDF');
+      }
+    } catch (error) {
+      console.error('Error downloading rekap:', error);
+      toast.error('Terjadi kesalahan saat mengunduh rekap');
+    }
+  };
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -347,31 +401,10 @@ export default function GuruTasmiPage() {
     );
   };
 
-  // Get predikat badge
-  const getPredikatBadge = (predikat) => {
-    if (!predikat) return null;
-
-    const badges = {
-      Mumtaz: 'bg-green-100 text-green-700 border-green-200',
-      'Jayyid Jiddan': 'bg-blue-100 text-blue-700 border-blue-200',
-      Jayyid: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      Maqbul: 'bg-gray-100 text-gray-700 border-gray-200',
-    };
-
-    return (
-      <span
-        className={`inline-block px-2 py-1 rounded-md text-xs font-semibold border ${
-          badges[predikat] || badges.Maqbul
-        }`}
-      >
-        {predikat}
-      </span>
-    );
-  };
+  // Note: getPredikatBadge function removed - predikat no longer displayed to user
 
   // Calculate preview values
   const nilaiAkhirPreview = calculateNilaiAkhir(gradeData);
-  const predikatPreview = getPredikat(nilaiAkhirPreview);
 
   if (loading) {
     return (
@@ -503,6 +536,17 @@ export default function GuruTasmiPage() {
           </div>
         </div>
 
+        {/* Rekap Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowRekapFilterModal(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold"
+          >
+            <FileText size={18} />
+            Unduh Rekap Tasmi (PDF)
+          </button>
+        </div>
+
         {/* Main Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-500 to-green-600">
@@ -581,14 +625,9 @@ export default function GuruTasmiPage() {
                               <Star size={16} className="text-yellow-500 fill-yellow-500" />
                               <span className="font-bold text-lg">{tasmi.nilaiAkhir.toFixed(0)}</span>
                             </div>
-                            {getPredikatBadge(tasmi.predikat)}
-                            {tasmi.publishedAt ? (
-                              <span className="text-xs text-green-600 flex items-center gap-1">
-                                <CheckCircle size={12} /> Dipublikasi
-                              </span>
-                            ) : (
-                              <span className="text-xs text-amber-600">Belum dipublikasi</span>
-                            )}
+                            <span className="text-xs text-emerald-600 flex items-center gap-1">
+                              <CheckCircle size={12} /> Tersimpan
+                            </span>
                           </div>
                         ) : tasmi.statusPendaftaran === 'DISETUJUI' ? (
                           <button
@@ -624,8 +663,8 @@ export default function GuruTasmiPage() {
                             </>
                           )}
 
-                          {/* Aksi untuk sudah dinilai tapi belum publish */}
-                          {tasmi.nilaiAkhir && !tasmi.publishedAt && (
+                          {/* Aksi untuk sudah dinilai - HANYA EDIT + PDF */}
+                          {tasmi.nilaiAkhir && (
                             <>
                               <button
                                 onClick={() => openGradeModal(tasmi, true)}
@@ -635,24 +674,13 @@ export default function GuruTasmiPage() {
                                 Edit
                               </button>
                               <button
-                                onClick={() => handlePublish(tasmi.id)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                                onClick={() => handleDownloadPDF(tasmi.id)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 transition-colors"
                               >
-                                <Send size={14} />
-                                Publish
+                                <FileText size={14} />
+                                PDF
                               </button>
                             </>
-                          )}
-
-                          {/* Jika sudah publish, tampilkan PDF */}
-                          {tasmi.publishedAt && tasmi.pdfUrl && (
-                            <button
-                              onClick={() => window.open(tasmi.pdfUrl, '_blank')}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded-lg hover:bg-gray-700 transition-colors"
-                            >
-                              <FileText size={14} />
-                              Lihat PDF
-                            </button>
                           )}
                         </div>
                       </td>
@@ -890,23 +918,15 @@ export default function GuruTasmiPage() {
                 />
               </div>
 
-              {/* Preview Hasil */}
+              {/* Preview Hasil - Show nur Nilai Akhir tanpa Predikat */}
               {nilaiAkhirPreview && (
-                <div className="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
-                  <h4 className="font-semibold text-gray-900 mb-3">Preview Hasil:</h4>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-200 shadow-sm">
+                  <h4 className="font-semibold text-gray-900 mb-4">Hasil Akhir:</h4>
+                  <div className="flex items-center gap-4">
+                    <Star size={32} className="text-emerald-500 fill-emerald-500" />
                     <div>
-                      <p className="text-sm text-gray-600">Nilai Akhir:</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Star size={20} className="text-yellow-500 fill-yellow-500" />
-                        <span className="text-2xl font-bold text-purple-700">
-                          {nilaiAkhirPreview}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Predikat:</p>
-                      <p className="text-2xl font-bold text-purple-700 mt-1">{predikatPreview}</p>
+                      <p className="text-sm text-gray-600">Nilai Akhir</p>
+                      <p className="text-4xl font-bold text-emerald-700">{nilaiAkhirPreview}</p>
                     </div>
                   </div>
                 </div>
@@ -929,8 +949,93 @@ export default function GuruTasmiPage() {
               </button>
             </div>
             <p className="text-xs text-gray-500 text-center mt-2">
-              * Nilai akan disimpan dan PDF otomatis dibuat. Klik &quot;Publish&quot; untuk menampilkan hasil ke siswa.
+              * Nilai akan disimpan dan PDF otomatis dibuat.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Rekap Filter Modal */}
+      {showRekapFilterModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Filter Rekap Tasmi&apos;</h3>
+              <button
+                onClick={() => setShowRekapFilterModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XIcon size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Tanggal Mulai */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
+                <input
+                  type="date"
+                  value={rekapFilter.startDate}
+                  onChange={(e) => setRekapFilter({ ...rekapFilter, startDate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Tanggal Selesai */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai</label>
+                <input
+                  type="date"
+                  value={rekapFilter.endDate}
+                  onChange={(e) => setRekapFilter({ ...rekapFilter, endDate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Filter Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={rekapFilter.status}
+                  onChange={(e) => setRekapFilter({ ...rekapFilter, status: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Semua Status</option>
+                  <option value="MENUNGGU">Menunggu ACC</option>
+                  <option value="DISETUJUI">Terjadwal</option>
+                  <option value="SELESAI">Selesai</option>
+                  <option value="DITOLAK">Ditolak</option>
+                </select>
+              </div>
+
+              {/* Filter Juz (Optional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Juz (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Juz 1"
+                  value={rekapFilter.juz}
+                  onChange={(e) => setRekapFilter({ ...rekapFilter, juz: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowRekapFilterModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleDownloadRekap}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
+              >
+                <FileText size={16} />
+                Download
+              </button>
+            </div>
           </div>
         </div>
       )}

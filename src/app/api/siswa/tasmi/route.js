@@ -35,38 +35,22 @@ export async function GET(request) {
     // Parallel fetch for independent data
     const [tasmi, totalCount, hafalanData] = await Promise.all([
       // Fetch tasmi history with pagination
+      // NOTE: Explicitly EXCLUDE nilai fields from siswa view (security)
       prisma.tasmi.findMany({
         where: {
           siswaId: siswa.id,
         },
-        include: {
-          guruPengampu: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-          guruVerifikasi: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-          guruPenguji: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
+        select: {
+          id: true,
+          siswaId: true,
+          statusPendaftaran: true,
+          tanggalTasmi: true,
+          jamTasmi: true,
+          juzYangDitasmi: true,
+          jumlahHafalan: true,
+          tanggalDaftar: true,
+          catatanPengajuan: true,
+          // EXCLUDED FOR SECURITY: nilaiAkhir, nilaiKelancaran, nilaiAdab, nilaiTajwid, nilaiIrama, catatanPenguji, predikat, publishedAt, pdfUrl
           siswa: {
             include: {
               user: {
@@ -77,6 +61,15 @@ export async function GET(request) {
               kelas: {
                 select: {
                   nama: true,
+                },
+              },
+            },
+          },
+          guruPengampu: {
+            include: {
+              user: {
+                select: {
+                  name: true,
                 },
               },
             },
@@ -218,6 +211,15 @@ export async function POST(request) {
     if (pendingTasmi) {
       return NextResponse.json(
         { message: 'Anda masih memiliki pendaftaran yang menunggu verifikasi' },
+        { status: 400 }
+      );
+    }
+
+    // Validasi minimal hafalan (minimal 3 juz atau target sekolah, ambil yang lebih besar)
+    const minimalHafalan = 3; // Default minimal 3 juz
+    if (jumlahHafalan < minimalHafalan) {
+      return NextResponse.json(
+        { message: `Hafalan belum memenuhi syarat minimal Tasmi (minimal ${minimalHafalan} juz). Saat ini Anda baru ${jumlahHafalan} juz.` },
         { status: 400 }
       );
     }

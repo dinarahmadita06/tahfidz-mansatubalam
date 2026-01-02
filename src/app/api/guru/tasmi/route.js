@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// GET - Fetch all tasmi registrations (for Guru)
+// GET - Fetch all tasmi registrations (for Guru ONLY - includes full grading data)
 export async function GET(request) {
   try {
     const session = await auth();
@@ -14,7 +14,7 @@ export async function GET(request) {
       );
     }
 
-    // Fetch all tasmi registrations
+    // Fetch all tasmi registrations WITH nilai fields (guru only)
     const tasmiList = await prisma.tasmi.findMany({
       include: {
         siswa: {
