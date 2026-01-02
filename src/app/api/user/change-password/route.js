@@ -15,10 +15,14 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { currentPassword, newPassword } = body;
+    const { currentPassword, oldPassword, newPassword } = body;
+    console.log('REQUEST BODY:', { currentPassword, oldPassword, newPassword: newPassword ? '***' : '' });
+    
+    // Support both currentPassword and oldPassword for compatibility
+    const passwordToCheck = currentPassword || oldPassword;
 
     // Validate all required fields
-    if (!currentPassword || !newPassword) {
+    if (!passwordToCheck || !newPassword) {
       return NextResponse.json(
         { error: 'Password lama dan password baru harus diisi' },
         { status: 400 }
@@ -46,7 +50,7 @@ export async function POST(request) {
     }
 
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isPasswordValid = await bcrypt.compare(passwordToCheck, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Password lama tidak sesuai' },
