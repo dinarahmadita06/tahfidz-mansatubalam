@@ -519,9 +519,7 @@ export default function GuruTasmiPage() {
 
         {/* Filter Bar */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-            {/* Filter Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Cari Siswa</label>
@@ -555,23 +553,17 @@ export default function GuruTasmiPage() {
               </select>
             </div>
 
-            {/* Filter Juz (Optional) */}
+            {/* Unduh Laporan (menggantikan Filter Juz) */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Filter Juz</label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                <option value="">Semua Juz</option>
-              </select>
-            </div>
-
-            {/* Rekap Button - Sejajar dengan filters */}
-            <button
-              onClick={() => setShowRekapFilterModal(true)}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold whitespace-nowrap h-fit"
-              title="Unduh laporan rekap hasil ujian Tasmi' dalam format PDF"
-            >
-              <FileText size={18} />
-              Unduh Rekap
-            </button>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Unduh Laporan</label>
+              <button
+                onClick={() => setShowRekapFilterModal(true)}
+                className="inline-flex items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold w-full h-10"
+                title="Unduh laporan rekap hasil ujian Tasmi' dalam format PDF"
+              >
+                <FileText size={18} />
+                Unduh Rekap
+              </button>
             </div>
           </div>
         </div>
