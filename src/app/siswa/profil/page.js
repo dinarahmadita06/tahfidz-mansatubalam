@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { toast, Toaster } from 'react-hot-toast';
 import {
   User,
   Mail,
@@ -17,6 +18,8 @@ import {
   UserCircle,
   Loader,
   X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import { getStatusBadgeConfig } from '@/lib/helpers/statusHelpers';
@@ -547,6 +550,9 @@ export default function ProfileSiswaPage() {
     confirmPassword: '',
   });
   const [saveLoading, setSaveLoading] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
@@ -625,12 +631,45 @@ export default function ProfileSiswaPage() {
   };
 
   const handleSaveProfile = async (formData) => {
-    setSuccess('Profil berhasil diperbarui!');
-    setShowEditModal(false);
-    setTimeout(() => {
-      fetchProfileData();
-      setSuccess('');
-    }, 1000);
+    try {
+      console.log('Payload update profile:', formData);
+      
+      // Buat payload dengan field yang bisa diedit
+      const payload = {
+        phone: formData.phone || '',
+        alamat: formData.alamat || '',
+      };
+
+      // Send PATCH request to update profile
+      const res = await fetch('/api/siswa/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+      });
+
+      if (res.ok) {
+        const updatedData = await res.json();
+        console.log('Profile updated successfully:', updatedData);
+                
+        // Update state dengan data terbaru dari API
+        setProfileData(updatedData);
+        toast.success('Profil berhasil disimpan!');
+        setShowEditModal(false);
+        setError('');
+      } else {
+        const errorData = await res.json();
+        console.error('Update failed:', errorData);
+        const errorMsg = errorData.error || 'Gagal menyimpan profil';
+        toast.error(errorMsg);
+        setError(errorMsg);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      const errorMsg = 'Terjadi kesalahan saat menyimpan profil';
+      toast.error(errorMsg);
+      setError(errorMsg);
+    }
   };
 
   const handleChangePassword = () => {
@@ -657,27 +696,34 @@ export default function ProfileSiswaPage() {
 
     try {
       setSaveLoading(true);
+      const payload = {
+        oldPassword: passwordFormData.oldPassword,
+        newPassword: passwordFormData.newPassword,
+      };
+      console.log('Payload change password:', payload);
+            
       const res = await fetch('/api/user/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          oldPassword: passwordFormData.oldPassword,
-          newPassword: passwordFormData.newPassword,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        setSuccess('Password berhasil diubah!');
+        toast.success('Password berhasil diubah!');
         setShowPasswordModal(false);
         setPasswordFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
-        setTimeout(() => setSuccess(''), 3000);
+        setTimeout(() => setError(''), 3000);
       } else {
         const data = await res.json();
-        setError(data.error || 'Gagal mengubah password');
+        const errorMsg = data.error || 'Gagal mengubah password';
+        toast.error(errorMsg);
+        setError(errorMsg);
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      setError('Terjadi kesalahan saat mengubah password');
+      const errorMsg = 'Terjadi kesalahan saat mengubah password';
+      toast.error(errorMsg);
+      setError(errorMsg);
     } finally {
       setSaveLoading(false);
     }
@@ -731,6 +777,9 @@ export default function ProfileSiswaPage() {
         </div>
       </div>
 
+      {/* Toast Notifications */}
+      <Toaster position="top-right" />
+
       {/* Edit Profile Modal */}
       <EditProfileModal
         isOpen={showEditModal}
@@ -764,47 +813,79 @@ export default function ProfileSiswaPage() {
             {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>}
             {success && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">{success}</div>}
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Old Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
-                <input
-                  type="password"
-                  value={passwordFormData.oldPassword}
-                  onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password Lama <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? 'text' : 'password'}
+                    value={passwordFormData.oldPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
+                    placeholder="Masukkan password lama"
+                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    aria-label={showOldPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {/* New Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
-                <input
-                  type="password"
-                  value={passwordFormData.newPassword}
-                  onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password Baru <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={passwordFormData.newPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                    minLength={6}
+                    placeholder="Minimal 6 karakter"
+                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password Baru</label>
-                <input
-                  type="password"
-                  value={passwordFormData.confirmPassword}
-                  onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
-              </div>
-
-              {/* Info */}
-              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                <p className="text-xs font-medium text-amber-900 mb-1">Persyaratan Password:</p>
-                <ul className="text-xs text-amber-800 space-y-1">
-                  <li>• Minimal 6 karakter</li>
-                  <li>• Gunakan kombinasi huruf dan angka</li>
-                </ul>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Konfirmasi Password Baru <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={passwordFormData.confirmPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                    minLength={6}
+                    placeholder="Ketik ulang password baru"
+                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
             </div>
 
