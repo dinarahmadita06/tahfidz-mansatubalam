@@ -446,13 +446,14 @@ export default function SiswaTasmiPage() {
   };
 
   // Calculate registration status dynamically
-  const isSiapMendaftar = totalJuzHafalan >= targetJuzSekolah;
+  const minimalHafalan = 3; // Backend validation minimum
+  const isSiapMendaftar = totalJuzHafalan >= minimalHafalan;
   const statusPendaftaran = isSiapMendaftar
     ? 'Siap Mendaftar'
     : 'Belum Siap Mendaftar';
   const statusSubtitle = isSiapMendaftar
-    ? `${totalJuzHafalan} dari ${targetJuzSekolah} juz terpenuhi`
-    : `Minimal ${targetJuzSekolah} juz diperlukan`;
+    ? `${totalJuzHafalan} dari ${minimalHafalan} juz terpenuhi`
+    : `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${totalJuzHafalan} juz`;
 
   const isInitialLoading = tasmiLoading && !tasmiData;
 
@@ -529,7 +530,12 @@ export default function SiswaTasmiPage() {
           >
             <button
               onClick={openNewModal}
-              className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all font-semibold"
+              disabled={!isSiapMendaftar}
+              className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+                isSiapMendaftar
+                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white hover:shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
+              }`}
             >
               <Plus size={20} />
               <span>Daftar Tasmi' Baru</span>
@@ -650,6 +656,19 @@ export default function SiswaTasmiPage() {
                 Isi formulir pendaftaran dengan lengkap dan benar
               </p>
             </div>
+            
+            {/* Warning Alert - Show if not eligible */}
+            {!isSiapMendaftar && (
+              <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
+                <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-800">Belum Memenuhi Syarat Pendaftaran</p>
+                  <p className="text-sm text-red-700 mt-1">
+                    Anda memerlukan minimal <strong>{minimalHafalan} juz hafalan</strong> untuk mendaftar Tasmi'. Saat ini Anda baru <strong>{totalJuzHafalan} juz</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -690,9 +709,12 @@ export default function SiswaTasmiPage() {
                     type="number"
                     value={formData.jumlahHafalan}
                     onChange={(e) => setFormData({ ...formData, jumlahHafalan: parseInt(e.target.value) || 0 })}
+                    disabled={!isSiapMendaftar || editMode}
                     min="2"
                     max="30"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all ${
+                      !isSiapMendaftar && !editMode ? 'bg-gray-50 text-gray-600 cursor-not-allowed' : ''
+                    }`}
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Jumlah juz yang telah dihafal</p>
@@ -706,8 +728,11 @@ export default function SiswaTasmiPage() {
                     type="text"
                     value={formData.juzYangDitasmi}
                     onChange={(e) => setFormData({ ...formData, juzYangDitasmi: e.target.value })}
+                    disabled={!isSiapMendaftar || editMode}
                     placeholder="Contoh: Juz 1, Juz 2, Juz 3"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all ${
+                      !isSiapMendaftar && !editMode ? 'bg-gray-50 text-gray-600 cursor-not-allowed' : ''
+                    }`}
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Juz yang akan diuji</p>
@@ -722,7 +747,10 @@ export default function SiswaTasmiPage() {
                 <select
                   value={formData.guruId}
                   onChange={(e) => setFormData({ ...formData, guruId: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  disabled={!isSiapMendaftar || editMode}
+                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all ${
+                    !isSiapMendaftar && !editMode ? 'bg-gray-50 text-gray-600 cursor-not-allowed' : ''
+                  }`}
                   required
                 >
                   <option value="">Pilih guru pengampu tahfidz</option>
@@ -745,8 +773,11 @@ export default function SiswaTasmiPage() {
                     type="text"
                     value={formData.jamTasmi}
                     onChange={(e) => setFormData({ ...formData, jamTasmi: e.target.value })}
+                    disabled={!isSiapMendaftar || editMode}
                     placeholder="Contoh: 08:00-10:00"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all ${
+                      !isSiapMendaftar && !editMode ? 'bg-gray-50 text-gray-600 cursor-not-allowed' : ''
+                    }`}
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Jam yang diajukan</p>
@@ -760,7 +791,10 @@ export default function SiswaTasmiPage() {
                     type="date"
                     value={formData.tanggalTasmi}
                     onChange={(e) => setFormData({ ...formData, tanggalTasmi: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    disabled={!isSiapMendaftar || editMode}
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all ${
+                      !isSiapMendaftar && !editMode ? 'bg-gray-50 text-gray-600 cursor-not-allowed' : ''
+                    }`}
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Tanggal yang diajukan</p>
@@ -803,7 +837,12 @@ export default function SiswaTasmiPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+                  disabled={!isSiapMendaftar && !editMode}
+                  className={`flex-1 px-4 py-3 rounded-lg transition-all font-semibold ${
+                    !isSiapMendaftar && !editMode
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white hover:shadow-lg'
+                  }`}
                 >
                   {editMode ? 'Update Pendaftaran' : 'Daftar Sekarang'}
                 </button>
