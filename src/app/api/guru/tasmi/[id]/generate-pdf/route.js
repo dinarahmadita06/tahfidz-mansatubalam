@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-// POST - Generate PDF laporan hasil ujian tasmi per siswa
+// POST - Generate PDF laporan hasil ujian tasmi per siswa (PROFESIONAL FORMAT)
 export async function POST(request, { params }) {
   try {
     const session = await auth();
@@ -56,21 +56,21 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Generate PDF menggunakan pdf-lib
+    // Generate PDF dengan format PROFESIONAL
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
     const page = pdfDoc.addPage([595, 842]); // A4
     const { width, height } = page.getSize();
-    const margin = 50;
+    const margin = 30;
     const contentWidth = width - 2 * margin;
 
     let yPosition = height - margin;
 
-    // Helper function untuk menambah text
+    // ===== HELPER FUNCTIONS =====
     const addText = (text, x, y, options = {}) => {
-      const fontSize = options.fontSize || 12;
+      const fontSize = options.fontSize || 11;
       const font = options.font || helveticaFont;
       const color = options.color || rgb(0, 0, 0);
 
@@ -83,10 +83,9 @@ export async function POST(request, { params }) {
         ...options,
       });
 
-      return y - (fontSize + 4);
+      return y - (fontSize + (options.lineGap || 3));
     };
 
-    // Helper untuk line
     const addLine = (x1, y1, x2, y2, thickness = 1, color = rgb(0, 0, 0)) => {
       page.drawLine({
         start: { x: x1, y: y1 },
@@ -96,127 +95,136 @@ export async function POST(request, { params }) {
       });
     };
 
-    // HEADER
+    const addSection = (title, yPos) => {
+      // Section header dengan background hijau SIMTAQ
+      page.drawRectangle({
+        x: margin,
+        y: yPos - 18,
+        width: contentWidth,
+        height: 18,
+        color: rgb(0, 0.4, 0.2), // SIMTAQ hijau
+      });
+      addText(title, margin + 8, yPos - 4, { font: helveticaBoldFont, fontSize: 12, color: rgb(1, 1, 1) });
+      return yPos - 25;
+    };
+
+    // ===== HEADER JUDUL =====
     yPosition = addText('LAPORAN HASIL UJIAN TASMI\' AL-QUR\'AN', margin, yPosition, {
       font: helveticaBoldFont,
-      fontSize: 16,
+      fontSize: 18,
       color: rgb(0, 0.4, 0.2),
+      lineGap: 8,
+    });
+    yPosition -= 8;
+
+    // ===== IDENTITAS SISWA (GRID 2 KOLOM) =====
+    yPosition = addSection('DATA IDENTITAS', yPosition);
+
+    const col1X = margin + 10;
+    const col2X = margin + contentWidth / 2 + 10;
+    const labelWidth = 100;
+
+    // Row 1: Nama & Kelas
+    yPosition = addText('Nama Siswa', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(tasmi.siswa.user.name, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
+    yPosition = addText('Kelas', col2X, yPosition + 11, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(tasmi.siswa.kelas.nama, col2X + labelWidth, yPosition + 11, { fontSize: 10, font: helveticaBoldFont });
+    yPosition -= 15;
+
+    // Row 2: Guru Penguji & Tanggal Ujian
+    yPosition = addText('Guru Penguji', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(tasmi.guruPenguji?.user?.name || '-', col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
+    yPosition = addText('Tanggal Ujian', col2X, yPosition + 11, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    const tanggalStr = tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: '2-digit' }) : '-';
+    addText(tanggalStr, col2X + labelWidth, yPosition + 11, { fontSize: 10, font: helveticaBoldFont });
+    yPosition -= 25;
+
+    // ===== DETAIL UJIAN =====
+    yPosition = addSection('DETAIL UJIAN', yPosition);
+
+    yPosition = addText('Juz yang Ditasmi', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(tasmi.juzYangDitasmi, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
+    yPosition = addText('Total Hafalan', col2X, yPosition + 11, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(`${tasmi.jumlahHafalan} Juz`, col2X + labelWidth, yPosition + 11, { fontSize: 10, font: helveticaBoldFont });
+    yPosition -= 25;
+
+    // ===== PENILAIAN KOMPONEN (TABEL) =====
+    yPosition = addSection('PENILAIAN KOMPONEN', yPosition);
+    yPosition -= 5;
+
+    // Tabel header
+    const tableMargin = margin + 10;
+    const col1 = tableMargin;
+    const col2 = tableMargin + 350; // Align kanan untuk nilai
+
+    // Header background
+    page.drawRectangle({
+      x: tableMargin - 5,
+      y: yPosition - 14,
+      width: contentWidth - 10,
+      height: 14,
+      color: rgb(0.95, 0.95, 0.95),
     });
 
-    yPosition = addText('Ujian Bacaan dan Kefasihan Al-Qur\'an', margin, yPosition, {
-      fontSize: 12,
-      color: rgb(0.3, 0.3, 0.3),
+    addText('Komponen Penilaian', col1, yPosition - 2, { font: helveticaBoldFont, fontSize: 10 });
+    addText('Nilai', col2, yPosition - 2, { font: helveticaBoldFont, fontSize: 10 });
+    yPosition -= 18;
+
+    // Data rows
+    const components = [
+      { label: 'Makhrajul Huruf (0-100)', value: tasmi.nilaiKelancaran },
+      { label: 'Keindahan Melantunkan (0-100)', value: tasmi.nilaiAdab },
+      { label: 'Tajwid (0-100)', value: tasmi.nilaiTajwid },
+      { label: 'Kefasihan & Kelancaran (0-100)', value: tasmi.nilaiIrama },
+    ];
+
+    components.forEach((comp) => {
+      addText(comp.label, col1, yPosition, { fontSize: 10 });
+      addText((comp.value || '-').toString(), col2, yPosition, { fontSize: 10, font: helveticaBoldFont });
+      yPosition -= 13;
     });
 
+    yPosition -= 5;
+    addLine(margin, yPosition, width - margin, yPosition, 1, rgb(0.7, 0.7, 0.7));
     yPosition -= 10;
-    addLine(margin, yPosition, width - margin, yPosition, 2, rgb(0, 0.4, 0.2));
-    yPosition -= 15;
 
-    // IDENTITAS SISWA
-    yPosition = addText('DATA IDENTITAS', margin, yPosition, {
-      font: helveticaBoldFont,
-      fontSize: 12,
-      color: rgb(0, 0.3, 0.6),
+    // ===== NILAI AKHIR (MENONJOL) =====
+    page.drawRectangle({
+      x: margin,
+      y: yPosition - 40,
+      width: contentWidth,
+      height: 40,
+      color: rgb(0, 0.4, 0.2),
+      opacity: 0.1,
     });
-    yPosition -= 8;
 
-    yPosition = addText(`Nama Siswa     : ${tasmi.siswa.user.name}`, margin + 15, yPosition, { fontSize: 11 });
-    yPosition = addText(`Kelas          : ${tasmi.siswa.kelas.nama}`, margin + 15, yPosition, { fontSize: 11 });
-    yPosition = addText(`Guru Penguji   : ${tasmi.guruPenguji?.user?.name || 'Belum ditentukan'}`, margin + 15, yPosition, { fontSize: 11 });
-    yPosition = addText(`Tanggal Ujian  : ${tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID') : 'Belum dijadwalkan'}`, margin + 15, yPosition, { fontSize: 11 });
+    addText('NILAI AKHIR', margin + 10, yPosition - 8, { fontSize: 12, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
+    addText(tasmi.nilaiAkhir.toFixed(2), margin + 300, yPosition - 15, { fontSize: 28, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
+    yPosition -= 50;
 
-    yPosition -= 15;
+    // ===== CATATAN PENGUJI (HANYA JIKA ADA) =====
+    if (tasmi.catatanPenguji && tasmi.catatanPenguji.trim()) {
+      yPosition = addSection('CATATAN PENGUJI', yPosition);
+      yPosition -= 5;
 
-    // DETAIL UJIAN
-    yPosition = addText('DETAIL UJIAN', margin, yPosition, {
-      font: helveticaBoldFont,
-      fontSize: 12,
-      color: rgb(0, 0.3, 0.6),
-    });
-    yPosition -= 8;
-
-    yPosition = addText(`Juz yang Ditasmi : ${tasmi.juzYangDitasmi}`, margin + 15, yPosition, { fontSize: 11 });
-    yPosition = addText(`Total Hafalan   : ${tasmi.jumlahHafalan} Juz`, margin + 15, yPosition, { fontSize: 11 });
-    yPosition = addText(`Status          : ${tasmi.statusPendaftaran === 'SELESAI' ? 'Selesai' : tasmi.statusPendaftaran}`, margin + 15, yPosition, { fontSize: 11 });
-
-    yPosition -= 15;
-
-    // NILAI KOMPONEN
-    yPosition = addText('PENILAIAN KOMPONEN', margin, yPosition, {
-      font: helveticaBoldFont,
-      fontSize: 12,
-      color: rgb(0, 0.3, 0.6),
-    });
-    yPosition -= 8;
-
-    // Tabel simple (manual)
-    const tableX = margin + 15;
-    const col1X = tableX;
-    const col2X = tableX + 250;
-
-    // Header tabel
-    yPosition = addText('Komponen', col1X, yPosition, { font: helveticaBoldFont, fontSize: 11 });
-    addText('Nilai', col2X, yPosition, { font: helveticaBoldFont, fontSize: 11 });
-    yPosition -= 12;
-
-    // Row 1: Makhraj
-    yPosition = addText('Makhrajul Huruf', col1X, yPosition, { fontSize: 10 });
-    addText(tasmi.nilaiKelancaran?.toString() || '-', col2X, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 12;
-
-    // Row 2: Keindahan
-    yPosition = addText('Keindahan Melantunkan', col1X, yPosition, { fontSize: 10 });
-    addText(tasmi.nilaiAdab?.toString() || '-', col2X, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 12;
-
-    // Row 3: Tajwid
-    yPosition = addText('Tajwid', col1X, yPosition, { fontSize: 10 });
-    addText(tasmi.nilaiTajwid?.toString() || '-', col2X, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 12;
-
-    // Row 4: Kefasihan
-    yPosition = addText('Kefasihan & Kelancaran', col1X, yPosition, { fontSize: 10 });
-    addText(tasmi.nilaiIrama?.toString() || '-', col2X, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 15;
-
-    // Garis separator
-    addLine(margin + 15, yPosition, width - margin - 15, yPosition, 1, rgb(0.7, 0.7, 0.7));
-    yPosition -= 12;
-
-    // NILAI AKHIR (HIGHLIGHT)
-    yPosition = addText('NILAI AKHIR', col1X, yPosition, { font: helveticaBoldFont, fontSize: 12, color: rgb(0, 0.5, 0.2) });
-    addText(tasmi.nilaiAkhir?.toFixed(2).toString() || '-', col2X + 120, yPosition, {
-      font: helveticaBoldFont,
-      fontSize: 20,
-      color: rgb(0, 0.5, 0.2),
-    });
-    yPosition -= 20;
-
-    // CATATAN PENGUJI
-    if (tasmi.catatanPenguji) {
-      yPosition = addText('CATATAN PENGUJI', margin, yPosition, {
-        font: helveticaBoldFont,
-        fontSize: 11,
-        color: rgb(0.3, 0.3, 0.3),
+      // Word wrap untuk catatan (simple approach)
+      const maxCharsPerLine = 90;
+      const lines = tasmi.catatanPenguji.match(new RegExp(`.{1,${maxCharsPerLine}}`, 'g')) || [tasmi.catatanPenguji];
+      lines.forEach((line) => {
+        yPosition = addText(line, margin + 10, yPosition, { fontSize: 10, color: rgb(0.1, 0.1, 0.1) });
       });
-      yPosition -= 8;
-
-      // Word wrap untuk catatan
-      const maxLineWidth = contentWidth - 30;
-      const catatanLines = tasmi.catatanPenguji.match(/[\s\S]{1,80}/g) || [tasmi.catatanPenguji];
-      catatanLines.forEach((line) => {
-        yPosition = addText(line.trim(), margin + 15, yPosition, { fontSize: 10, color: rgb(0.2, 0.2, 0.2) });
-      });
-      yPosition -= 15;
+      yPosition -= 10;
     }
 
-    // FOOTER
-    yPosition = 50;
-    addLine(margin, yPosition, width - margin, yPosition, 1, rgb(0.8, 0.8, 0.8));
-    yPosition -= 10;
+    // ===== FOOTER SIGNATURE =====
+    yPosition = 80;
+    addText('Mengetahui,', margin + 50, yPosition, { fontSize: 10, font: helveticaBoldFont });
+    addText('Guru Tahfidz/Guru Penguji', margin + 30, yPosition - 30, { fontSize: 9 });
+    addText(tasmi.guruPenguji?.user?.name || '', margin + 30, yPosition - 45, { fontSize: 9 });
 
-    addText(`Guru Penguji: ${tasmi.guruPenguji?.user?.name || ''}`, margin, yPosition, { fontSize: 9, color: rgb(0.5, 0.5, 0.5) });
-    addText(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, width - margin - 150, yPosition, { fontSize: 9, color: rgb(0.5, 0.5, 0.5) });
+    // Tanggal cetak di kanan
+    const printDate = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: '2-digit' });
+    addText(`Tanggal: ${printDate}`, width - margin - 120, 50, { fontSize: 9 });
 
     // Save PDF ke buffer
     const pdfBytes = await pdfDoc.save();
