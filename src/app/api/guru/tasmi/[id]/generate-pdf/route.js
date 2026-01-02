@@ -120,109 +120,112 @@ export async function POST(request, { params }) {
       return barY - 12; // Space after bar
     };
 
-    // ===== HEADER JUDUL =====
-    yPosition = addText('LAPORAN HASIL UJIAN TASMI\' AL-QUR\'AN', margin, yPosition, {
+    // ===== HEADER JUDUL (CENTER) =====
+    yPosition -= 10; // Padding top minimal
+    const titleText = 'LAPORAN HASIL UJIAN TASMI\' AL-QUR\'AN';
+    const titleWidth = helveticaBoldFont.widthOfTextAtSize(titleText, 18);
+    const titleX = (width - titleWidth) / 2; // Center horizontally
+    
+    page.drawText(titleText, {
+      x: titleX,
+      y: yPosition,
+      size: 18,
       font: helveticaBoldFont,
-      fontSize: 18,
       color: rgb(0, 0.4, 0.2),
-      lineGap: 8,
     });
-    yPosition -= 8;
+    yPosition -= 28; // Spacing setelah judul
 
-    // ===== IDENTITAS SISWA (GRID 2 KOLOM) =====
+    // ===== IDENTITAS SISWA (FORMAT TABEL 3 KOLOM: Label : Value) =====
     yPosition = addSection('DATA IDENTITAS', yPosition);
+    yPosition -= 10; // Padding top lebih kecil (naikin identitas)
 
-    const col1X = margin + 10;
-    const col2X = margin + contentWidth / 2 + 10;
-    const labelWidth = 110;
+    const identitasLabelCol = margin + 15;      // Kolom label (fixed 150px)
+    const identitasColonCol = identitasLabelCol + 150;  // Kolom ":" (20px)
+    const identitasValueCol = identitasColonCol + 20;   // Kolom value (auto)
+    const identitasRowHeight = 12;              // Consistent row height
 
-    // Row 1: Nama Siswa
-    yPosition = addText('Nama Siswa', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(tasmi.siswa.user.name, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 5;
+    // Helper: Render key-value pair dalam 3 kolom dengan spacing proper
+    const renderKeyValueRow = (label, value) => {
+      addText(label, identitasLabelCol, yPosition, { fontSize: 11, color: rgb(0.2, 0.2, 0.2) });
+      addText(':', identitasColonCol, yPosition, { fontSize: 11, color: rgb(0.2, 0.2, 0.2) });
+      addText(value, identitasValueCol, yPosition, { fontSize: 11, font: helveticaBoldFont });
+      yPosition -= identitasRowHeight + 4; // Row height + bottom padding
+    };
 
-    // Row 2: Kelas
-    yPosition = addText('Kelas', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(tasmi.siswa.kelas.nama, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 5;
-
-    // Row 3: Guru Penguji
-    yPosition = addText('Guru Penguji', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(tasmi.guruPenguji?.user?.name || '-', col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 5;
-
-    // Row 4: Tanggal Ujian
+    // Render rows
+    renderKeyValueRow('Nama Siswa', tasmi.siswa.user.name);
+    renderKeyValueRow('Kelas', tasmi.siswa.kelas.nama);
+    renderKeyValueRow('Guru Penguji', tasmi.guruPenguji?.user?.name || '-');
+    
     const tanggalStr = tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: '2-digit' }) : '-';
-    yPosition = addText('Tanggal Ujian', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(tanggalStr, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 16;
+    renderKeyValueRow('Tanggal Ujian', tanggalStr);
 
-    // ===== DETAIL UJIAN =====
+    yPosition -= 10; // Padding bottom setelah section
+
+    // ===== DETAIL UJIAN (FORMAT TABEL 3 KOLOM: Label : Value) =====
     yPosition = addSection('DETAIL UJIAN', yPosition);
+    yPosition -= 12; // Padding top setelah header
 
-    // Row 1: Juz yang Ditasmi
-    yPosition = addText('Juz yang Ditasmi', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(tasmi.juzYangDitasmi, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 5;
+    const detailLabelCol = margin + 15;        // Kolom label (fixed 150px)
+    const detailColonCol = detailLabelCol + 150;     // Kolom ":" (20px)
+    const detailValueCol = detailColonCol + 20;      // Kolom value (auto)
+    const detailRowHeight = 12;               // Consistent row height
 
-    // Row 2: Total Hafalan
-    yPosition = addText('Total Hafalan', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(`${tasmi.jumlahHafalan} Juz`, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 16;
+    // Helper: Render key-value pair untuk detail section (reuse renderKeyValueRow jika possible)
+    const renderDetailRow = (label, value) => {
+      addText(label, detailLabelCol, yPosition, { fontSize: 11, color: rgb(0.2, 0.2, 0.2) });
+      addText(':', detailColonCol, yPosition, { fontSize: 11, color: rgb(0.2, 0.2, 0.2) });
+      addText(value, detailValueCol, yPosition, { fontSize: 11, font: helveticaBoldFont });
+      yPosition -= detailRowHeight + 4; // Row height + bottom padding
+    };
 
-    // ===== PENILAIAN KOMPONEN (TABEL RAPI) =====
+    // Render rows
+    renderDetailRow('Juz yang Ditasmi', tasmi.juzYangDitasmi);
+    renderDetailRow('Total Hafalan', `${tasmi.jumlahHafalan} Juz`);
+
+    yPosition -= 10; // Padding bottom setelah section
+
+    // ===== PENILAIAN KOMPONEN (TABEL 2 KOLOM RAPI) =====
     yPosition = addSection('PENILAIAN KOMPONEN', yPosition);
-    yPosition -= 5;
+    yPosition -= 12; // Padding top setelah header
 
     // Tabel positioning
-    const tableMargin = margin + 10;
-    const tableCol1 = tableMargin;
-    const tableCol2 = tableMargin + 350; // Kolom nilai (align center/kanan)
-    const tableRowHeight = 14;
+    const tableCol1 = margin + 15;      // Komponen label
+    const tableCol2 = margin + 400;     // Nilai (kanan)
+    const tableRowHeight = 16;          // Consistent row height dengan padding
+    const tableRowPaddingY = 4;         // Padding dalam row
+    const tableBottomMargin = margin + contentWidth - 15; // Right boundary
     
-    // Header tabel dengan background abu-abu
-    page.drawRectangle({
-      x: tableMargin - 5,
-      y: yPosition - tableRowHeight,
-      width: contentWidth - 10,
-      height: tableRowHeight,
-      color: rgb(0.93, 0.93, 0.93),
-    });
+    // HEADER ROW (tanpa background abu-abu, cukup text tegas)
+    addText('Komponen Penilaian', tableCol1, yPosition, { font: helveticaBoldFont, fontSize: 10, color: rgb(0, 0.4, 0.2) });
+    addText('Nilai', tableCol2, yPosition, { font: helveticaBoldFont, fontSize: 10, color: rgb(0, 0.4, 0.2) });
+    
+    // Garis pembatas header (sejajar dengan baseline text)
+    addLine(tableCol1 - 5, yPosition - 1, tableBottomMargin, yPosition - 1, 0.5, rgb(0.6, 0.6, 0.6));
+    yPosition -= 10; // Spacing setelah divider ke row pertama
 
-    addText('Komponen Penilaian', tableCol1, yPosition - 3, { font: helveticaBoldFont, fontSize: 10 });
-    addText('Nilai', tableCol2, yPosition - 3, { font: helveticaBoldFont, fontSize: 10, halign: 'center' });
-    yPosition -= tableRowHeight + 2;
-
-    // Data rows dengan alternating background
+    // Data rows dengan alternating background halus
     const components = [
-      { label: 'Makhrajul Huruf (0-100)', value: tasmi.nilaiKelancaran },
-      { label: 'Keindahan Melantunkan (0-100)', value: tasmi.nilaiAdab },
-      { label: 'Tajwid (0-100)', value: tasmi.nilaiTajwid },
-      { label: 'Kefasihan & Kelancaran (0-100)', value: tasmi.nilaiIrama },
+      { label: 'Makhraj', value: tasmi.nilaiKelancaran },
+      { label: 'Keindahan', value: tasmi.nilaiAdab },
+      { label: 'Tajwid', value: tasmi.nilaiTajwid },
+      { label: 'Kefasihan', value: tasmi.nilaiIrama },
     ];
 
     components.forEach((comp, idx) => {
-      // Alternating row background (stripe)
-      if (idx % 2 === 1) {
-        page.drawRectangle({
-          x: tableMargin - 5,
-          y: yPosition - tableRowHeight,
-          width: contentWidth - 10,
-          height: tableRowHeight,
-          color: rgb(0.98, 0.98, 0.98),
-        });
-      }
-
-      addText(comp.label, tableCol1, yPosition - 2, { fontSize: 10 });
-      addText((comp.value || '-').toString(), tableCol2, yPosition - 2, { fontSize: 10, font: helveticaBoldFont });
-      yPosition -= tableRowHeight + 1;
+      // Render row: label | value (clean polos, tanpa border)
+      addText(comp.label, tableCol1, yPosition - tableRowPaddingY, { fontSize: 11, color: rgb(0.2, 0.2, 0.2) });
+      const valueStr = (comp.value || '-').toString();
+      addText(valueStr, tableCol2, yPosition - tableRowPaddingY, { fontSize: 11, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
+      
+      yPosition -= tableRowHeight;
     });
 
-    yPosition -= 5;
+    yPosition -= 12; // Spacing setelah tabel
 
-    // ===== NILAI AKHIR (HIGHLIGHT PASTEL HIJAU) =====
+    // ===== NILAI AKHIR (HIGHLIGHT PASTEL HIJAU - HORIZONTAL CENTER LAYOUT) =====
     yPosition -= 8;
-    const nilaiBoxHeight = 70;
+    const nilaiBoxHeight = 50;  // Fixed height
     const nilaiBoxY = yPosition - nilaiBoxHeight;
     
     // Box highlight pastel hijau
@@ -244,8 +247,13 @@ export async function POST(request, { params }) {
       borderWidth: 1,
     });
 
-    addText('NILAI AKHIR', margin + 14, nilaiBoxY + 50, { fontSize: 12, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
-    addText(tasmi.nilaiAkhir.toFixed(2), margin + contentWidth - 80, nilaiBoxY + 35, { fontSize: 24, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
+    // Layout horizontal center: "NILAI AKHIR" (kiri) dan "80.25" (kanan), kedua-duanya center vertikal
+    // Padding top-bottom yang cukup (setara dengan py-4/py-5)
+    const nilaiBoxPadding = 8;  // padding atas-bawah
+    const nilaiBoxCenterY = nilaiBoxY + (nilaiBoxHeight / 2) + 2;  // Vertical center dari box
+    
+    addText('NILAI AKHIR', margin + 18, nilaiBoxCenterY, { fontSize: 12, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
+    addText(tasmi.nilaiAkhir.toFixed(2), margin + contentWidth - 90, nilaiBoxCenterY, { fontSize: 16, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
     
     yPosition = nilaiBoxY - 12;
 
