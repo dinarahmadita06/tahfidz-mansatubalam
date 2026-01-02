@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { generateTasmiRecapPDF } from '@/lib/tasmiPdfGenerator';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
   Award,
@@ -28,6 +29,7 @@ export default function GuruTasmiPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [tasmiList, setTasmiList] = useState([]);
+  const [guruKelas, setGuruKelas] = useState([]);
 
   // Modals
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -60,9 +62,8 @@ export default function GuruTasmiPage() {
     startDate: '',
     endDate: '',
     kelasId: '',
-    status: 'SELESAI',
-    juz: '',
   });
+  const [isDownloadingRekap, setIsDownloadingRekap] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -72,10 +73,23 @@ export default function GuruTasmiPage() {
 
   const fetchData = async () => {
     try {
-      const tasmiRes = await fetch('/api/guru/tasmi');
+      const [tasmiRes, guruRes] = await Promise.all([
+        fetch('/api/guru/tasmi'),
+        fetch('/api/guru/profile')
+      ]);
+
       if (tasmiRes.ok) {
         const tasmiData = await tasmiRes.json();
         setTasmiList(tasmiData.tasmi || []);
+      }
+
+      if (guruRes.ok) {
+        const guruData = await guruRes.json();
+        const kelas = guruData.guruKelas?.map(gk => ({
+          id: gk.kelas.id,
+          nama: gk.kelas.nama
+        })) || [];
+        setGuruKelas(kelas);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -307,39 +321,52 @@ export default function GuruTasmiPage() {
   // Handle Download Rekap PDF
   const handleDownloadRekap = async () => {
     try {
+      // Validasi: tanggal harus diisi
+      if (!rekapFilter.startDate || !rekapFilter.endDate) {
+        toast.error('Tanggal Mulai dan Tanggal Selesai harus diisi');
+        return;
+      }
+
+      // Validasi: tanggal mulai tidak boleh lebih besar dari tanggal selesai
+      const startDate = new Date(rekapFilter.startDate);
+      const endDate = new Date(rekapFilter.endDate);
+      if (startDate > endDate) {
+        toast.error('Tanggal Mulai tidak boleh lebih besar dari Tanggal Selesai');
+        return;
+      }
+
+      setIsDownloadingRekap(true);
+
       // Build query params
       const params = new URLSearchParams();
-      if (rekapFilter.startDate) params.append('startDate', rekapFilter.startDate);
-      if (rekapFilter.endDate) params.append('endDate', rekapFilter.endDate);
+      params.append('startDate', rekapFilter.startDate);
+      params.append('endDate', rekapFilter.endDate);
       if (rekapFilter.kelasId) params.append('kelasId', rekapFilter.kelasId);
-      if (rekapFilter.status) params.append('status', rekapFilter.status);
-      if (rekapFilter.juz) params.append('juz', rekapFilter.juz);
 
       const response = await fetch(`/api/guru/tasmi/generate-rekap?${params.toString()}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       });
 
-      if (response.ok) {
-        // Download PDF
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Rekap_Tasmi_${new Date().getTime()}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast.success('Rekap PDF berhasil diunduh');
+      const result = await response.json();
+
+      if (response.ok && result.ok && !result.empty) {
+        // Success - generate PDF menggunakan jsPDF
+        const data = result.data;
+        await generateTasmiRecapPDF(data);
+        toast.success('Rekap Tasmi berhasil diunduh');
         setShowRekapFilterModal(false);
+      } else if (result.empty) {
+        // Tidak ada data selesai
+        toast.success('Belum ada hasil ujian Tasmi yang selesai pada periode ini.');
       } else {
-        const data = await response.json();
-        toast.error(data.message || 'Gagal mengunduh rekap PDF');
+        // Error lain
+        toast.error(result.message || 'Gagal mengunduh rekap PDF');
       }
     } catch (error) {
       console.error('Error downloading rekap:', error);
       toast.error('Terjadi kesalahan saat mengunduh rekap');
+    } finally {
+      setIsDownloadingRekap(false);
     }
   };
   const formatDate = (dateString) => {
@@ -492,7 +519,9 @@ export default function GuruTasmiPage() {
 
         {/* Filter Bar */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            {/* Filter Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
             {/* Search */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Cari Siswa</label>
@@ -533,18 +562,18 @@ export default function GuruTasmiPage() {
                 <option value="">Semua Juz</option>
               </select>
             </div>
-          </div>
-        </div>
 
-        {/* Rekap Button */}
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowRekapFilterModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold"
-          >
-            <FileText size={18} />
-            Unduh Rekap Tasmi (PDF)
-          </button>
+            {/* Rekap Button - Sejajar dengan filters */}
+            <button
+              onClick={() => setShowRekapFilterModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all font-semibold whitespace-nowrap h-fit"
+              title="Unduh laporan rekap hasil ujian Tasmi' dalam format PDF"
+            >
+              <FileText size={18} />
+              Unduh Rekap
+            </button>
+            </div>
+          </div>
         </div>
 
         {/* Main Table */}
@@ -958,12 +987,12 @@ export default function GuruTasmiPage() {
       {/* Rekap Filter Modal */}
       {showRekapFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-emerald-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900">Filter Rekap Tasmi&apos;</h3>
               <button
                 onClick={() => setShowRekapFilterModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <XIcon size={24} />
               </button>
@@ -977,7 +1006,7 @@ export default function GuruTasmiPage() {
                   type="date"
                   value={rekapFilter.startDate}
                   onChange={(e) => setRekapFilter({ ...rekapFilter, startDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-emerald-50"
                 />
               </div>
 
@@ -988,36 +1017,26 @@ export default function GuruTasmiPage() {
                   type="date"
                   value={rekapFilter.endDate}
                   onChange={(e) => setRekapFilter({ ...rekapFilter, endDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-emerald-50"
                 />
               </div>
 
-              {/* Filter Status */}
+              {/* Dropdown Kelas (Optional) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Kelas (Optional)</label>
                 <select
-                  value={rekapFilter.status}
-                  onChange={(e) => setRekapFilter({ ...rekapFilter, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={rekapFilter.kelasId}
+                  onChange={(e) => setRekapFilter({ ...rekapFilter, kelasId: e.target.value })}
+                  disabled={guruKelas.length === 0}
+                  className="w-full px-3 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="">Semua Status</option>
-                  <option value="MENUNGGU">Menunggu ACC</option>
-                  <option value="DISETUJUI">Terjadwal</option>
-                  <option value="SELESAI">Selesai</option>
-                  <option value="DITOLAK">Ditolak</option>
+                  <option value="">Semua Kelas</option>
+                  {guruKelas.map((kelas) => (
+                    <option key={kelas.id} value={kelas.id}>
+                      {kelas.nama}
+                    </option>
+                  ))}
                 </select>
-              </div>
-
-              {/* Filter Juz (Optional) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Juz (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Juz 1"
-                  value={rekapFilter.juz}
-                  onChange={(e) => setRekapFilter({ ...rekapFilter, juz: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
               </div>
             </div>
 
@@ -1030,10 +1049,11 @@ export default function GuruTasmiPage() {
               </button>
               <button
                 onClick={handleDownloadRekap}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
+                disabled={isDownloadingRekap || !rekapFilter.startDate || !rekapFilter.endDate}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FileText size={16} />
-                Download
+                {isDownloadingRekap ? 'Membuat...' : 'Download'}
               </button>
             </div>
           </div>

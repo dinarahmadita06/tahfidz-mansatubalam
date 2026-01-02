@@ -45,7 +45,7 @@ export async function GET(request) {
       );
     }
 
-    return NextResponse.json({ guru });
+    return NextResponse.json(guru);
   } catch (error) {
     console.error('Error fetching guru profile:', error);
     return NextResponse.json(
