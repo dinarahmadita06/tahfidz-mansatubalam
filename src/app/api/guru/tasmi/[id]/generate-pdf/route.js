@@ -97,15 +97,27 @@ export async function POST(request, { params }) {
 
     const addSection = (title, yPos) => {
       // Section header dengan background hijau SIMTAQ
+      // Bar hijau dengan text di tengah vertikal (tidak overlap)
+      const barHeight = 32;
+      const barY = yPos - barHeight;
+      
       page.drawRectangle({
         x: margin,
-        y: yPos - 18,
+        y: barY,
         width: contentWidth,
-        height: 18,
+        height: barHeight,
         color: rgb(0, 0.4, 0.2), // SIMTAQ hijau
       });
-      addText(title, margin + 8, yPos - 4, { font: helveticaBoldFont, fontSize: 12, color: rgb(1, 1, 1) });
-      return yPos - 25;
+      
+      // Text di tengah bar
+      addText(title, margin + 10, barY + 10, { 
+        font: helveticaBoldFont, 
+        fontSize: 12, 
+        color: rgb(1, 1, 1),
+        lineGap: 0
+      });
+      
+      return barY - 12; // Space after bar
     };
 
     // ===== HEADER JUDUL =====
@@ -122,55 +134,66 @@ export async function POST(request, { params }) {
 
     const col1X = margin + 10;
     const col2X = margin + contentWidth / 2 + 10;
-    const labelWidth = 100;
+    const labelWidth = 110;
 
-    // Row 1: Nama & Kelas
+    // Row 1: Nama Siswa
     yPosition = addText('Nama Siswa', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
     addText(tasmi.siswa.user.name, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition = addText('Kelas', col2X, yPosition + 11, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(tasmi.siswa.kelas.nama, col2X + labelWidth, yPosition + 11, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 15;
+    yPosition -= 5;
 
-    // Row 2: Guru Penguji & Tanggal Ujian
+    // Row 2: Kelas
+    yPosition = addText('Kelas', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(tasmi.siswa.kelas.nama, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
+    yPosition -= 5;
+
+    // Row 3: Guru Penguji
     yPosition = addText('Guru Penguji', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
     addText(tasmi.guruPenguji?.user?.name || '-', col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition = addText('Tanggal Ujian', col2X, yPosition + 11, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    yPosition -= 5;
+
+    // Row 4: Tanggal Ujian
     const tanggalStr = tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: '2-digit' }) : '-';
-    addText(tanggalStr, col2X + labelWidth, yPosition + 11, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 25;
+    yPosition = addText('Tanggal Ujian', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(tanggalStr, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
+    yPosition -= 16;
 
     // ===== DETAIL UJIAN =====
     yPosition = addSection('DETAIL UJIAN', yPosition);
 
+    // Row 1: Juz yang Ditasmi
     yPosition = addText('Juz yang Ditasmi', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
     addText(tasmi.juzYangDitasmi, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    yPosition = addText('Total Hafalan', col2X, yPosition + 11, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
-    addText(`${tasmi.jumlahHafalan} Juz`, col2X + labelWidth, yPosition + 11, { fontSize: 10, font: helveticaBoldFont });
-    yPosition -= 25;
+    yPosition -= 5;
 
-    // ===== PENILAIAN KOMPONEN (TABEL) =====
+    // Row 2: Total Hafalan
+    yPosition = addText('Total Hafalan', col1X, yPosition, { fontSize: 10, color: rgb(0.3, 0.3, 0.3) });
+    addText(`${tasmi.jumlahHafalan} Juz`, col1X + labelWidth, yPosition, { fontSize: 10, font: helveticaBoldFont });
+    yPosition -= 16;
+
+    // ===== PENILAIAN KOMPONEN (TABEL RAPI) =====
     yPosition = addSection('PENILAIAN KOMPONEN', yPosition);
     yPosition -= 5;
 
-    // Tabel header
+    // Tabel positioning
     const tableMargin = margin + 10;
-    const col1 = tableMargin;
-    const col2 = tableMargin + 350; // Align kanan untuk nilai
-
-    // Header background
+    const tableCol1 = tableMargin;
+    const tableCol2 = tableMargin + 350; // Kolom nilai (align center/kanan)
+    const tableRowHeight = 14;
+    
+    // Header tabel dengan background abu-abu
     page.drawRectangle({
       x: tableMargin - 5,
-      y: yPosition - 14,
+      y: yPosition - tableRowHeight,
       width: contentWidth - 10,
-      height: 14,
-      color: rgb(0.95, 0.95, 0.95),
+      height: tableRowHeight,
+      color: rgb(0.93, 0.93, 0.93),
     });
 
-    addText('Komponen Penilaian', col1, yPosition - 2, { font: helveticaBoldFont, fontSize: 10 });
-    addText('Nilai', col2, yPosition - 2, { font: helveticaBoldFont, fontSize: 10 });
-    yPosition -= 18;
+    addText('Komponen Penilaian', tableCol1, yPosition - 3, { font: helveticaBoldFont, fontSize: 10 });
+    addText('Nilai', tableCol2, yPosition - 3, { font: helveticaBoldFont, fontSize: 10, halign: 'center' });
+    yPosition -= tableRowHeight + 2;
 
-    // Data rows
+    // Data rows dengan alternating background
     const components = [
       { label: 'Makhrajul Huruf (0-100)', value: tasmi.nilaiKelancaran },
       { label: 'Keindahan Melantunkan (0-100)', value: tasmi.nilaiAdab },
@@ -178,53 +201,62 @@ export async function POST(request, { params }) {
       { label: 'Kefasihan & Kelancaran (0-100)', value: tasmi.nilaiIrama },
     ];
 
-    components.forEach((comp) => {
-      addText(comp.label, col1, yPosition, { fontSize: 10 });
-      addText((comp.value || '-').toString(), col2, yPosition, { fontSize: 10, font: helveticaBoldFont });
-      yPosition -= 13;
+    components.forEach((comp, idx) => {
+      // Alternating row background (stripe)
+      if (idx % 2 === 1) {
+        page.drawRectangle({
+          x: tableMargin - 5,
+          y: yPosition - tableRowHeight,
+          width: contentWidth - 10,
+          height: tableRowHeight,
+          color: rgb(0.98, 0.98, 0.98),
+        });
+      }
+
+      addText(comp.label, tableCol1, yPosition - 2, { fontSize: 10 });
+      addText((comp.value || '-').toString(), tableCol2, yPosition - 2, { fontSize: 10, font: helveticaBoldFont });
+      yPosition -= tableRowHeight + 1;
     });
 
     yPosition -= 5;
-    addLine(margin, yPosition, width - margin, yPosition, 1, rgb(0.7, 0.7, 0.7));
-    yPosition -= 10;
 
-    // ===== NILAI AKHIR (MENONJOL) =====
+    // ===== NILAI AKHIR (HIGHLIGHT PASTEL HIJAU) =====
+    yPosition -= 8;
+    const nilaiBoxHeight = 70;
+    const nilaiBoxY = yPosition - nilaiBoxHeight;
+    
+    // Box highlight pastel hijau
     page.drawRectangle({
       x: margin,
-      y: yPosition - 40,
+      y: nilaiBoxY,
       width: contentWidth,
-      height: 40,
-      color: rgb(0, 0.4, 0.2),
-      opacity: 0.1,
+      height: nilaiBoxHeight,
+      color: rgb(0.85, 0.95, 0.88), // Pastel hijau muda
+    });
+    
+    // Border tipis
+    page.drawRectangle({
+      x: margin,
+      y: nilaiBoxY,
+      width: contentWidth,
+      height: nilaiBoxHeight,
+      borderColor: rgb(0, 0.4, 0.2),
+      borderWidth: 1,
     });
 
-    addText('NILAI AKHIR', margin + 10, yPosition - 8, { fontSize: 12, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
-    addText(tasmi.nilaiAkhir.toFixed(2), margin + 300, yPosition - 15, { fontSize: 28, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
-    yPosition -= 50;
+    addText('NILAI AKHIR', margin + 14, nilaiBoxY + 50, { fontSize: 12, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
+    addText(tasmi.nilaiAkhir.toFixed(2), margin + contentWidth - 80, nilaiBoxY + 35, { fontSize: 24, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2) });
+    
+    yPosition = nilaiBoxY - 12;
 
-    // ===== CATATAN PENGUJI (HANYA JIKA ADA) =====
-    if (tasmi.catatanPenguji && tasmi.catatanPenguji.trim()) {
-      yPosition = addSection('CATATAN PENGUJI', yPosition);
-      yPosition -= 5;
-
-      // Word wrap untuk catatan (simple approach)
-      const maxCharsPerLine = 90;
-      const lines = tasmi.catatanPenguji.match(new RegExp(`.{1,${maxCharsPerLine}}`, 'g')) || [tasmi.catatanPenguji];
-      lines.forEach((line) => {
-        yPosition = addText(line, margin + 10, yPosition, { fontSize: 10, color: rgb(0.1, 0.1, 0.1) });
-      });
-      yPosition -= 10;
-    }
-
-    // ===== FOOTER SIGNATURE =====
-    yPosition = 80;
-    addText('Mengetahui,', margin + 50, yPosition, { fontSize: 10, font: helveticaBoldFont });
-    addText('Guru Tahfidz/Guru Penguji', margin + 30, yPosition - 30, { fontSize: 9 });
-    addText(tasmi.guruPenguji?.user?.name || '', margin + 30, yPosition - 45, { fontSize: 9 });
-
-    // Tanggal cetak di kanan
+    // ===== FOOTER INFO (KECIL & RAPI) =====
+    const footerY = 45;
+    const footerX = margin + 10;
+    const footerRightX = width - margin - 120;
+    
     const printDate = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: '2-digit' });
-    addText(`Tanggal: ${printDate}`, width - margin - 120, 50, { fontSize: 9 });
+    addText(`Dicetak pada: ${printDate}`, footerX, footerY, { fontSize: 9, color: rgb(0.5, 0.5, 0.5) });
+    addText(`Guru Penguji: ${tasmi.guruPenguji?.user?.name || '-'}`, footerRightX, footerY, { fontSize: 9, color: rgb(0.5, 0.5, 0.5) });
 
     // Save PDF ke buffer
     const pdfBytes = await pdfDoc.save();
