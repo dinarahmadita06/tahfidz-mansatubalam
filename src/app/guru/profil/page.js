@@ -373,7 +373,7 @@ export default function ProfilGuruPage() {
     try {
       setSaveLoading(true);
 
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/guru/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
