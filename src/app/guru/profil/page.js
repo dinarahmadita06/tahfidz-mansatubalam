@@ -96,7 +96,7 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
 }
 
 // PersonalInfoForm Component
-function PersonalInfoForm({ profileData }) {
+function PersonalInfoForm({ profileData, formatDisplayValue }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
@@ -114,7 +114,7 @@ function PersonalInfoForm({ profileData }) {
             Nama Lengkap
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.name || '-'}</p>
+            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.name)}</p>
           </div>
         </div>
 
@@ -125,7 +125,7 @@ function PersonalInfoForm({ profileData }) {
             Email
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
+            <p className="font-medium text-gray-900 break-all">{formatDisplayValue(profileData?.email)}</p>
           </div>
         </div>
 
@@ -136,7 +136,7 @@ function PersonalInfoForm({ profileData }) {
             Nomor Telepon
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.phone || '-'}</p>
+            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.phone)}</p>
           </div>
         </div>
 
@@ -147,7 +147,7 @@ function PersonalInfoForm({ profileData }) {
             Bidang Keahlian
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.bidangKeahlian || '-'}</p>
+            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.bidangKeahlian)}</p>
           </div>
         </div>
 
@@ -158,7 +158,7 @@ function PersonalInfoForm({ profileData }) {
             Mulai Mengajar
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.mulaiMengajar || '-'}</p>
+            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.mulaiMengajar)}</p>
           </div>
         </div>
 
@@ -169,7 +169,7 @@ function PersonalInfoForm({ profileData }) {
             Alamat
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.alamat || '-'}</p>
+            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.alamat)}</p>
           </div>
         </div>
       </div>
@@ -317,17 +317,54 @@ export default function ProfilGuruPage() {
   const [tandaTanganUrl, setTandaTanganUrl] = useState(null);
   const [uploadingSignature, setUploadingSignature] = useState(false);
 
+  /**
+   * Format display value:
+   * - null/undefined/empty string → "-"
+   * - whitespace-only string → "-"
+   * - otherwise → trimmed value
+   */
+  const formatDisplayValue = (value) => {
+    if (!value || typeof value !== 'string' || !value.trim()) {
+      return '-';
+    }
+    return value.trim();
+  };
+
+  /**
+   * Fetch guru profile from API (not from session)
+   * Session is cached and doesn't have guru-specific fields
+   */
+  const fetchGuruProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/guru/profile');
+      
+      if (response.ok) {
+        const guruData = await response.json();
+        console.log('[GURU PROFILE] Fetched from API:', guruData);
+        
+        setProfileData({
+          name: guruData.user?.name || '',
+          email: guruData.user?.email || '',
+          phone: guruData.noTelepon || '',
+          alamat: guruData.alamat || '',
+          bidangKeahlian: guruData.bidangKeahlian || 'Tahfidz Al-Quran',
+          mulaiMengajar: guruData.mulaiMengajar || ''
+        });
+      } else {
+        console.error('Failed to fetch guru profile:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching guru profile:', error);
+      toast.error('Gagal memuat profil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (status === 'authenticated') {
-      setProfileData({
-        name: session.user.name || '',
-        email: session.user.email || '',
-        phone: session.user.phone || '',
-        alamat: session.user.alamat || '',
-        bidangKeahlian: session.user.bidangKeahlian || 'Tahfidz Al-Quran',
-        mulaiMengajar: session.user.mulaiMengajar || ''
-      });
-      setLoading(false);
+      fetchGuruProfile();
       fetchTandaTangan();
     }
   }, [status, session]);
@@ -562,7 +599,7 @@ export default function ProfilGuruPage() {
 
           {/* Right Column: Info + Signature + Security */}
           <div className="lg:col-span-2 space-y-6">
-            <PersonalInfoForm profileData={profileData} />
+            <PersonalInfoForm profileData={profileData} formatDisplayValue={formatDisplayValue} />
 
             <SignatureUploader
               tandaTanganUrl={tandaTanganUrl}
