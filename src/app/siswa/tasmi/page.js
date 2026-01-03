@@ -7,6 +7,7 @@ import SiswaLayout from '@/components/layout/SiswaLayout';
 import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2, FileText, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import { useTargetHafalan } from '@/hooks/useTargetHafalan';
 
 // ============================================================
 // REUSABLE COMPONENTS
@@ -323,9 +324,13 @@ export default function SiswaTasmiPage() {
     keepPreviousData: true,
   });
 
+  // Fetch target hafalan dynamically from API
+  const { targetJuz, isNotSet, error: targetError } = useTargetHafalan();
+
   const tasmiList = tasmiData?.tasmi || [];
   const totalJuzHafalan = tasmiData?.totalJuzHafalan || 0;
-  const targetJuzSekolah = tasmiData?.targetJuzSekolah || 3;
+  // Use dynamic target from API, fallback to 3 if not set or error
+  const targetJuzSekolah = targetJuz || 3;
   const pagination = tasmiData?.pagination || {};
 
   // Update formData when totalJuzHafalan changes
@@ -446,12 +451,16 @@ export default function SiswaTasmiPage() {
   };
 
   // Calculate registration status dynamically
-  const minimalHafalan = 3; // Backend validation minimum
-  const isSiapMendaftar = totalJuzHafalan >= minimalHafalan;
-  const statusPendaftaran = isSiapMendaftar
+  const minimalHafalan = targetJuzSekolah;
+  const isSiapMendaftar = targetJuz ? totalJuzHafalan >= minimalHafalan : false;
+  const statusPendaftaran = isNotSet
+    ? 'Admin belum mengatur target'
+    : isSiapMendaftar
     ? 'Siap Mendaftar'
     : 'Belum Siap Mendaftar';
-  const statusSubtitle = isSiapMendaftar
+  const statusSubtitle = isNotSet
+    ? 'Admin belum mengatur target hafalan'
+    : isSiapMendaftar
     ? `${totalJuzHafalan} dari ${minimalHafalan} juz terpenuhi`
     : `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${totalJuzHafalan} juz`;
 
@@ -498,7 +507,7 @@ export default function SiswaTasmiPage() {
                   icon={Award}
                   title="Total Juz Hafalan"
                   value={`${totalJuzHafalan} Juz`}
-                  subtitle={`Dari ${targetJuzSekolah} juz target`}
+                  subtitle={isNotSet ? 'Admin belum mengatur target' : `Dari ${targetJuzSekolah} juz target`}
                   color="emerald"
                   delay={0.1}
                 />
@@ -657,8 +666,18 @@ export default function SiswaTasmiPage() {
               </p>
             </div>
             
-            {/* Warning Alert - Show if not eligible */}
-            {!isSiapMendaftar && (
+            {/* Warning Alert - Show if not eligible or target not set */}
+            {isNotSet ? (
+              <div className="mx-6 mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3">
+                <AlertCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-amber-800">Target Belum Ditetapkan</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    Admin belum mengatur target hafalan untuk tahun ajaran ini. Hubungi guru atau admin untuk informasi lebih lanjut.
+                  </p>
+                </div>
+              </div>
+            ) : !isSiapMendaftar && (
               <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
                 <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
                 <div>
