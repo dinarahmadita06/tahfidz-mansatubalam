@@ -115,8 +115,7 @@ model User {
   guru             Guru?
   siswa            Siswa?
   orangTua         OrangTua?
-  logActivity      LogActivity[]
-  logActivityActor LogActivity[] @relation("ActivityActor")
+  activityLogs     ActivityLog[]   @relation("ActivityLogActor")
   guruActivity     GuruActivity[]
   pengumuman       Pengumuman[]
   pengumumanRead   PengumumanRead[] @relation("UserPengumumanRead")
@@ -472,33 +471,36 @@ model Agenda {
   @@index([tanggal(sort: Desc)])
 }
 
-model LogActivity {
-  id          String         @id @default(cuid())
-  userId      String         // Deprecated: use actorId instead
-  role        Role           // Deprecated: use actorRole instead
-  aktivitas   JenisAktivitas
-  modul       String
-  deskripsi   String?
-  ipAddress   String?
-  device      String?
+model ActivityLog {
+  id            String         @id @default(cuid())
   
-  // New fields for actor-based activity tracking
-  actorId     String
-  actorRole   Role
+  // Actor info (who performed the action)
+  actorId       String
+  actorRole     Role           // SISWA, GURU, ADMIN
+  actorName     String?        // Cached for display
   
-  // Optional: for logging impact on other users
-  targetUserId   String?
-  targetRole     Role?
+  // Action details
+  action        String         // SISWA_DAFTAR_TASMI, GURU_INPUT_PENILAIAN, etc
+  title         String         // "Penilaian Hafalan Disimpan"
+  description   String?        // "Anda menyimpan penilaian... untuk Lakita"
   
-  createdAt   DateTime       @default(now())
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  actor       User           @relation("ActivityActor", fields: [actorId], references: [id], onDelete: Cascade)
+  // Optional target (who was affected)
+  targetUserId  String?
+  targetRole    Role?
+  targetName    String?        // Cached for display
   
-  @@index([userId])
+  // Metadata JSON (additional context without sensitive data)
+  metadata      Json?          // { siswaId, kelasId, tanggal, nilaiAkhir, etc }
+  
+  createdAt     DateTime       @default(now())
+  
+  user          User           @relation("ActivityLogActor", fields: [actorId], references: [id], onDelete: Cascade)
+  
   @@index([actorId])
   @@index([actorRole])
+  @@index([action])
   @@index([createdAt(sort: Desc)])
-  @@index([aktivitas])
+  @@index([targetUserId])
 }
 
 model GuruActivity {
