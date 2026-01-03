@@ -349,7 +349,7 @@ export default function ProfilGuruPage() {
           phone: guruData.noTelepon || '',
           alamat: guruData.alamat || '',
           bidangKeahlian: guruData.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: guruData.mulaiMengajar || ''
+          mulaiMengajar: guruData.mulaiMengajar ? guruData.mulaiMengajar.split('T')[0] : ''
         });
       } else {
         console.error('Failed to fetch guru profile:', response.status);
@@ -429,7 +429,7 @@ export default function ProfilGuruPage() {
           phone: responseData.data.noTelepon || '',
           alamat: responseData.data.alamat || '',
           bidangKeahlian: responseData.data.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: responseData.data.mulaiMengajar || ''
+          mulaiMengajar: responseData.data.mulaiMengajar ? responseData.data.mulaiMengajar.split('T')[0] : ''
         });
         
         await update();
