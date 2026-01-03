@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { calcAverageScore, calcStatisticAverage, normalizeNilaiAkhir } from '@/lib/helpers/calcAverageScore';
 
 export async function GET(request) {
   try {
@@ -61,11 +62,21 @@ export async function GET(request) {
         // Removed surah: true since surah is a string field, not a relation
       },
       orderBy: {
-        tanggal: 'desc'
+        tanggal: 'desc'  // ✅ Order by hafalan tanggal, not createdAt
       }
     });
 
-    return NextResponse.json(hafalan);
+    // ✅ Normalize nilaiAkhir in response to 2 decimal places
+    const normalizedHafalan = hafalan.map(h => ({
+      ...h,
+      penilaian: h.penilaian.map(p => ({
+        ...p,
+        nilaiAkhir: parseFloat((p.nilaiAkhir || 0).toFixed(2)) // Ensure 2 decimal consistency
+      }))
+    }));
+
+    console.log(`[PENILAIAN GET] Fetched ${normalizedHafalan.length} hafalan records`);
+    return NextResponse.json(normalizedHafalan);
   } catch (error) {
     console.error('Error fetching hafalan for penilaian:', error);
     return NextResponse.json(
@@ -122,6 +133,42 @@ export async function POST(request) {
       );
     }
 
+    // ✅ HELPER: Clean and validate surahTambahan
+    const cleanSurahTambahan = (surahArray) => {
+      if (!Array.isArray(surahArray)) return [];
+      
+      return surahArray
+        .filter(item => {
+          // Only include items where surah is not empty
+          if (!item.surah || (typeof item.surah === 'string' && !item.surah.trim())) {
+            return false;
+          }
+          // Validate ayat numbers
+          const ayatMulai = Number(item.ayatMulai);
+          const ayatSelesai = Number(item.ayatSelesai);
+          if (isNaN(ayatMulai) || isNaN(ayatSelesai) || ayatMulai <= 0 || ayatSelesai <= 0) {
+            return false;
+          }
+          // Ensure ayatMulai <= ayatSelesai
+          if (ayatMulai > ayatSelesai) {
+            return false;
+          }
+          return true;
+        })
+        .map(item => ({
+          surah: typeof item.surah === 'string' ? item.surah.trim() : item.surah,
+          ayatMulai: Number(item.ayatMulai),
+          ayatSelesai: Number(item.ayatSelesai)
+        }));
+    };
+
+    // Clean surahTambahan before processing
+    const cleanedSurahTambahan = cleanSurahTambahan(surahTambahan);
+
+    // ✅ Normalize tanggal to YYYY-MM-DD format (start of day, no timezone issues)
+    const dateObj = new Date(tanggal);
+    const normalizedDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+
     // Get guru data
     const guru = await prisma.guru.findUnique({
       where: { userId: session.user.id },
@@ -134,69 +181,84 @@ export async function POST(request) {
       );
     }
 
-    // Calculate average
-    const nilaiAkhir = (tajwid + kelancaran + makhraj + implementasi) / 4;
+    // ✅ Calculate nilai akhir with consistent rounding using shared utility
+    const nilaiAkhir = calcAverageScore(tajwid, kelancaran, makhraj, implementasi, 2);
 
-    // Parse date
-    const selectedDate = new Date(tanggal);
-    const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
-
-    // Check if hafalan and penilaian already exist for this date
-    const existingPenilaian = await prisma.penilaian.findFirst({
+    // ✅ UPSERT: Check if hafalan exists for this siswa + tanggal
+    // Query by hafalan.tanggal (not penilaian.createdAt) to prevent duplicates
+    const existingHafalan = await prisma.hafalan.findFirst({
       where: {
         siswaId,
         guruId: guru.id,
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        tanggal: normalizedDate,
       },
       include: {
-        hafalan: true,
+        penilaian: true,
       },
     });
 
-    if (existingPenilaian) {
-      // Update existing hafalan and penilaian
+    if (existingHafalan) {
+      // UPDATE existing hafalan + penilaian (UPSERT logic)
+      console.log(`[PENILAIAN] UPDATE hafalan ${existingHafalan.id} for siswa ${siswaId} on ${normalizedDate}`);
+      
       await prisma.hafalan.update({
-        where: { id: existingPenilaian.hafalanId },
+        where: { id: existingHafalan.id },
         data: {
-          tanggal: new Date(tanggal),
+          tanggal: normalizedDate,
           surah,
           ayatMulai,
           ayatSelesai,
-          surahTambahan: Array.isArray(surahTambahan) ? surahTambahan : [],
+          ...(cleanedSurahTambahan.length > 0 && { surahTambahan: cleanedSurahTambahan }),
         },
       });
 
-      await prisma.penilaian.update({
-        where: { id: existingPenilaian.id },
-        data: {
-          tajwid,
-          kelancaran,
-          makhraj,
-          adab: implementasi,
-          nilaiAkhir,
-          catatan: catatan || null,
-        },
-      });
+      // Update existing penilaian or create if doesn't exist
+      if (existingHafalan.penilaian && existingHafalan.penilaian.length > 0) {
+        await prisma.penilaian.update({
+          where: { id: existingHafalan.penilaian[0].id },
+          data: {
+            tajwid,
+            kelancaran,
+            makhraj,
+            adab: implementasi,
+            nilaiAkhir,
+            catatan: catatan || null,
+          },
+        });
+      } else {
+        // Create new penilaian for existing hafalan
+        await prisma.penilaian.create({
+          data: {
+            hafalanId: existingHafalan.id,
+            siswaId,
+            guruId: guru.id,
+            tajwid,
+            kelancaran,
+            makhraj,
+            adab: implementasi,
+            nilaiAkhir,
+            catatan: catatan || null,
+          },
+        });
+      }
     } else {
-      // Create new hafalan
+      // CREATE new hafalan + penilaian (UPSERT logic)
+      console.log(`[PENILAIAN] CREATE hafalan for siswa ${siswaId} on ${normalizedDate}`);
+      
       const hafalan = await prisma.hafalan.create({
         data: {
           siswaId,
           guruId: guru.id,
-          tanggal: new Date(tanggal),
+          tanggal: normalizedDate,
           juz: 1,
           surah,
           ayatMulai,
           ayatSelesai,
-          surahTambahan: Array.isArray(surahTambahan) ? surahTambahan : [],
+          ...(cleanedSurahTambahan.length > 0 && { surahTambahan: cleanedSurahTambahan }),
         },
       });
 
-      // Create new penilaian
+      // Create penilaian untuk hafalan baru
       await prisma.penilaian.create({
         data: {
           hafalanId: hafalan.id,
@@ -217,10 +279,7 @@ export async function POST(request) {
       where: {
         siswaId,
         guruId: guru.id,
-        tanggal: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        tanggal: normalizedDate,  // ✅ Use normalized date
       },
     });
 
@@ -229,7 +288,7 @@ export async function POST(request) {
         data: {
           siswaId,
           guruId: guru.id,
-          tanggal: new Date(tanggal),
+          tanggal: normalizedDate,  // ✅ Use normalized date
           status: 'HADIR',
         },
       });
@@ -237,13 +296,33 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Penilaian saved successfully',
+      message: 'Penilaian berhasil disimpan',
+      nilaiAkhir: nilaiAkhir,  // Explicitly return with 2 decimal precision
+      hafalanTambahan: cleanedSurahTambahan.length > 0 ? cleanedSurahTambahan : null
     });
   } catch (error) {
     console.error('Error saving penilaian:', error);
+    
+    // Detailed error responses for frontend
+    let errorMessage = 'Gagal menyimpan penilaian';
+    let statusCode = 500;
+
+    if (error.code === 'P2025') {
+      errorMessage = 'Data siswa atau guru tidak ditemukan';
+      statusCode = 404;
+    } else if (error.code === 'P2003') {
+      errorMessage = 'Referensi data tidak valid (siswa atau guru tidak ada)';
+      statusCode = 400;
+    } else if (error.message?.includes('Unknown argument')) {
+      errorMessage = 'Format data tidak sesuai - periksa struktur surahTambahan';
+      statusCode = 400;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
-      { error: 'Failed to save penilaian', details: error.message },
-      { status: 500 }
+      { error: errorMessage, details: error.message },
+      { status: statusCode }
     );
   }
 }

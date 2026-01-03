@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { calcStatisticAverage, normalizeNilaiAkhir } from '@/lib/helpers/calcAverageScore';
 
 export async function GET(request) {
   try {
@@ -45,7 +46,7 @@ export async function GET(request) {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        tanggal: 'desc'  // ✅ Order by hafalan tanggal, not createdAt
       }
     });
 
@@ -59,25 +60,12 @@ export async function GET(request) {
     let rataRataImplementasi = 0;
 
     if (totalPenilaian > 0) {
-      let totalNilai = 0;
-      let totalTajwid = 0;
-      let totalKelancaran = 0;
-      let totalMakhraj = 0;
-      let totalAdab = 0;
-
-      penilaianList.forEach((p) => {
-        totalNilai += p.nilaiAkhir || 0;
-        totalTajwid += p.tajwid || 0;
-        totalKelancaran += p.kelancaran || 0;
-        totalMakhraj += p.makhraj || 0;
-        totalAdab += p.adab || 0;
-      });
-
-      rataRataNilai = Math.round(totalNilai / totalPenilaian);
-      rataRataTajwid = Math.round(totalTajwid / totalPenilaian);
-      rataRataKelancaran = Math.round(totalKelancaran / totalPenilaian);
-      rataRataMakhraj = Math.round(totalMakhraj / totalPenilaian);
-      rataRataImplementasi = Math.round(totalAdab / totalPenilaian);
+      // ✅ Use shared utility for consistent calculation with 2 decimal rounding
+      rataRataNilai = calcStatisticAverage(penilaianList, 'nilaiAkhir', 2);
+      rataRataTajwid = calcStatisticAverage(penilaianList, 'tajwid', 2);
+      rataRataKelancaran = calcStatisticAverage(penilaianList, 'kelancaran', 2);
+      rataRataMakhraj = calcStatisticAverage(penilaianList, 'makhraj', 2);
+      rataRataImplementasi = calcStatisticAverage(penilaianList, 'adab', 2);
     }
 
     // Format penilaian data
@@ -93,7 +81,7 @@ export async function GET(request) {
         makhraj: p.makhraj || 0,
         implementasi: p.adab || 0
       },
-      nilaiTotal: p.nilaiAkhir || 0,
+      nilaiTotal: parseFloat((p.nilaiAkhir || 0).toFixed(2)),  // ✅ Normalize to 2 decimals
       catatan: p.catatan || ''
     }));
 
@@ -126,8 +114,10 @@ export async function GET(request) {
       .sort((a, b) => a.key.localeCompare(b.key))
       .map(item => ({
         label: item.label,
-        value: Math.round(item.total / item.count)
+        value: parseFloat((item.total / item.count).toFixed(2))  // ✅ Normalize to 2 decimals
       }));
+
+    console.log(`[SISWA PENILAIAN GET] Fetched ${totalPenilaian} penilaian with avg nilai: ${rataRataNilai}`);
 
     return NextResponse.json({
       statistics: {
