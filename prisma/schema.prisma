@@ -116,6 +116,7 @@ model User {
   siswa            Siswa?
   orangTua         OrangTua?
   logActivity      LogActivity[]
+  logActivityActor LogActivity[] @relation("ActivityActor")
   guruActivity     GuruActivity[]
   pengumuman       Pengumuman[]
   pengumumanRead   PengumumanRead[] @relation("UserPengumumanRead")
@@ -472,17 +473,29 @@ model Agenda {
 
 model LogActivity {
   id          String         @id @default(cuid())
-  userId      String
-  role        Role
+  userId      String         // Deprecated: use actorId instead
+  role        Role           // Deprecated: use actorRole instead
   aktivitas   JenisAktivitas
   modul       String
   deskripsi   String?
   ipAddress   String?
   device      String?
+  
+  // New fields for actor-based activity tracking
+  actorId     String
+  actorRole   Role
+  
+  // Optional: for logging impact on other users
+  targetUserId   String?
+  targetRole     Role?
+  
   createdAt   DateTime       @default(now())
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  actor       User           @relation("ActivityActor", fields: [actorId], references: [id], onDelete: Cascade)
+  
   @@index([userId])
+  @@index([actorId])
+  @@index([actorRole])
   @@index([createdAt(sort: Desc)])
   @@index([aktivitas])
 }
@@ -493,10 +506,17 @@ model GuruActivity {
   type      String   // presensi, penilaian_tahsin, penilaian_hafalan, penilaian_tasmi, upload_materi, pengumuman, lainnya
   title     String
   subtitle  String?
+  
+  // New fields for consistency
+  actorId   String   // Always same as userId for GuruActivity
+  actorRole String   @default("GURU") // Always GURU
+  
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  
   @@index([userId])
+  @@index([actorId])
+  @@index([actorRole])
   @@index([createdAt(sort: Desc)])
   @@index([type])
 }
