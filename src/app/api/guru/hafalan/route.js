@@ -101,6 +101,7 @@ export async function POST(request) {
       surah,
       ayatMulai,
       ayatSelesai,
+      surahTambahan = [],
       keterangan
     } = data;
 
@@ -112,6 +113,36 @@ export async function POST(request) {
       );
     }
 
+    // ✅ HELPER: Clean and validate surahTambahan
+    const cleanSurahTambahan = (surahArray) => {
+      if (!Array.isArray(surahArray)) return null;
+      
+      const cleaned = surahArray
+        .filter(item => {
+          if (!item.surah || (typeof item.surah === 'string' && !item.surah.trim())) {
+            return false;
+          }
+          const ayatMulai = Number(item.ayatMulai);
+          const ayatSelesai = Number(item.ayatSelesai);
+          if (isNaN(ayatMulai) || isNaN(ayatSelesai) || ayatMulai <= 0 || ayatSelesai <= 0) {
+            return false;
+          }
+          if (ayatMulai > ayatSelesai) {
+            return false;
+          }
+          return true;
+        })
+        .map(item => ({
+          surah: typeof item.surah === 'string' ? item.surah.trim() : item.surah,
+          ayatMulai: Number(item.ayatMulai),
+          ayatSelesai: Number(item.ayatSelesai)
+        }));
+      
+      return cleaned.length > 0 ? cleaned : null;
+    };
+
+    const cleanedSurahTambahan = cleanSurahTambahan(surahTambahan);
+
     // Create hafalan
     const hafalan = await prisma.hafalan.create({
       data: {
@@ -122,6 +153,7 @@ export async function POST(request) {
         surah,
         ayatMulai: parseInt(ayatMulai),
         ayatSelesai: parseInt(ayatSelesai),
+        ...(cleanedSurahTambahan && { surahTambahan: cleanedSurahTambahan }),
         keterangan: keterangan || null
       },
       include: {
@@ -138,9 +170,24 @@ export async function POST(request) {
     return NextResponse.json(hafalan, { status: 201 });
   } catch (error) {
     console.error('Error creating hafalan:', error);
+    
+    let errorMessage = 'Gagal membuat hafalan';
+    let statusCode = 500;
+    
+    if (error.code === 'P2025') {
+      errorMessage = 'Data siswa atau guru tidak ditemukan';
+      statusCode = 404;
+    } else if (error.code === 'P2003') {
+      errorMessage = 'Referensi data tidak valid';
+      statusCode = 400;
+    } else if (error.message?.includes('Unknown argument')) {
+      errorMessage = 'Format data tidak sesuai';
+      statusCode = 400;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create hafalan' },
-      { status: 500 }
+      { error: errorMessage, details: error.message },
+      { status: statusCode }
     );
   }
 }
@@ -162,6 +209,7 @@ export async function PUT(request) {
       surah,
       ayatMulai,
       ayatSelesai,
+      surahTambahan = [],
       keterangan
     } = data;
 
@@ -171,6 +219,36 @@ export async function PUT(request) {
         { status: 400 }
       );
     }
+
+    // ✅ HELPER: Clean and validate surahTambahan
+    const cleanSurahTambahan = (surahArray) => {
+      if (!Array.isArray(surahArray)) return undefined;
+      
+      const cleaned = surahArray
+        .filter(item => {
+          if (!item.surah || (typeof item.surah === 'string' && !item.surah.trim())) {
+            return false;
+          }
+          const ayatMulai = Number(item.ayatMulai);
+          const ayatSelesai = Number(item.ayatSelesai);
+          if (isNaN(ayatMulai) || isNaN(ayatSelesai) || ayatMulai <= 0 || ayatSelesai <= 0) {
+            return false;
+          }
+          if (ayatMulai > ayatSelesai) {
+            return false;
+          }
+          return true;
+        })
+        .map(item => ({
+          surah: typeof item.surah === 'string' ? item.surah.trim() : item.surah,
+          ayatMulai: Number(item.ayatMulai),
+          ayatSelesai: Number(item.ayatSelesai)
+        }));
+      
+      return cleaned.length > 0 ? cleaned : undefined;
+    };
+
+    const cleanedSurahTambahan = cleanSurahTambahan(surahTambahan);
 
     // Update hafalan
     const hafalan = await prisma.hafalan.update({
@@ -184,6 +262,7 @@ export async function PUT(request) {
         surah: surah || undefined,
         ayatMulai: ayatMulai ? parseInt(ayatMulai) : undefined,
         ayatSelesai: ayatSelesai ? parseInt(ayatSelesai) : undefined,
+        ...(cleanedSurahTambahan && { surahTambahan: cleanedSurahTambahan }),
         keterangan: keterangan || null
       },
       include: {
@@ -200,9 +279,21 @@ export async function PUT(request) {
     return NextResponse.json(hafalan);
   } catch (error) {
     console.error('Error updating hafalan:', error);
+    
+    let errorMessage = 'Gagal mengupdate hafalan';
+    let statusCode = 500;
+    
+    if (error.code === 'P2025') {
+      errorMessage = 'Hafalan tidak ditemukan';
+      statusCode = 404;
+    } else if (error.message?.includes('Unknown argument')) {
+      errorMessage = 'Format data tidak sesuai';
+      statusCode = 400;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to update hafalan' },
-      { status: 500 }
+      { error: errorMessage, details: error.message },
+      { status: statusCode }
     );
   }
 }
