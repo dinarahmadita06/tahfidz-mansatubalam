@@ -331,6 +331,25 @@ export default function ProfilGuruPage() {
   };
 
   /**
+   * Convert DateTime to YYYY-MM-DD format for input field
+   * Handles: string ISO, Date object, or null
+   */
+  const formatDateForInput = (dateValue) => {
+    if (!dateValue) return '';
+    try {
+      if (typeof dateValue === 'string') {
+        return dateValue.split('T')[0];
+      }
+      if (dateValue instanceof Date) {
+        return dateValue.toISOString().split('T')[0];
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+    }
+    return '';
+  };
+
+  /**
    * Fetch guru profile from API (not from session)
    * Session is cached and doesn't have guru-specific fields
    */
@@ -349,14 +368,33 @@ export default function ProfilGuruPage() {
           phone: guruData.noTelepon || '',
           alamat: guruData.alamat || '',
           bidangKeahlian: guruData.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: guruData.mulaiMengajar ? guruData.mulaiMengajar.split('T')[0] : ''
+          mulaiMengajar: formatDateForInput(guruData.mulaiMengajar)
         });
       } else {
         console.error('Failed to fetch guru profile:', response.status);
+        console.error('Response:', await response.text());
+        // Set empty profile data on error
+        setProfileData({
+          name: '',
+          email: '',
+          phone: '',
+          alamat: '',
+          bidangKeahlian: 'Tahfidz Al-Quran',
+          mulaiMengajar: ''
+        });
       }
     } catch (error) {
       console.error('Error fetching guru profile:', error);
       toast.error('Gagal memuat profil');
+      // Set empty profile data on error
+      setProfileData({
+        name: '',
+        email: '',
+        phone: '',
+        alamat: '',
+        bidangKeahlian: 'Tahfidz Al-Quran',
+        mulaiMengajar: ''
+      });
     } finally {
       setLoading(false);
     }
@@ -429,7 +467,7 @@ export default function ProfilGuruPage() {
           phone: responseData.data.noTelepon || '',
           alamat: responseData.data.alamat || '',
           bidangKeahlian: responseData.data.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: responseData.data.mulaiMengajar ? responseData.data.mulaiMengajar.split('T')[0] : ''
+          mulaiMengajar: formatDateForInput(responseData.data.mulaiMengajar)
         });
         
         await update();
