@@ -382,8 +382,19 @@ export default function ProfilGuruPage() {
       });
 
       if (response.ok) {
+        const responseData = await response.json();
         toast.success('Profil berhasil diperbarui!');
-        setProfileData(editFormData);
+        
+        // ✅ Update profileData dengan response dari API (bukan hanya editFormData)
+        setProfileData({
+          name: responseData.data.user.name || '',
+          email: responseData.data.user.email || '',
+          phone: responseData.data.noTelepon || '',
+          alamat: responseData.data.alamat || '',
+          bidangKeahlian: responseData.data.bidangKeahlian || 'Tahfidz Al-Quran',
+          mulaiMengajar: responseData.data.mulaiMengajar || ''
+        });
+        
         await update();
         setTimeout(() => {
           setShowEditModal(false);
