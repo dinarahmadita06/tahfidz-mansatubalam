@@ -46,7 +46,9 @@ export async function GET(request) {
         }
       },
       orderBy: {
-        tanggal: 'desc'  // ✅ Order by hafalan tanggal, not createdAt
+        hafalan: {
+          tanggal: 'desc'  // ✅ Order by hafalan.tanggal (not penilaian.tanggal which doesn't exist)
+        }
       }
     });
 
