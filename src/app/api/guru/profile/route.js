@@ -9,6 +9,7 @@ import { logActivity, ACTIVITY_TYPES } from '@/lib/helpers/activityLogger';
 export async function GET(request) {
   try {
     const session = await auth();
+    console.log('[GURU PROFILE GET] Session:', session?.user?.id, 'Role:', session?.user?.role);
 
     if (!session || session.user.role !== 'GURU') {
       return NextResponse.json(
@@ -43,15 +44,17 @@ export async function GET(request) {
     });
 
     if (!guru) {
+      console.error('[GURU PROFILE GET] Guru not found for userId:', session.user.id);
       return NextResponse.json(
         { message: 'Data guru tidak ditemukan' },
         { status: 404 }
       );
     }
 
+    console.log('[GURU PROFILE GET] Success, returning guru data');
     return NextResponse.json(guru);
   } catch (error) {
-    console.error('Error fetching guru profile:', error);
+    console.error('[GURU PROFILE GET] Error:', error);
     return NextResponse.json(
       { message: 'Internal server error', error: error.message },
       { status: 500 }
