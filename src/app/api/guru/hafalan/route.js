@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { getJuzFromSurahAyah } from '@/lib/helpers/quran-mapping';
 
 // GET - Fetch hafalan
 export async function GET(request) {
@@ -99,6 +100,7 @@ export async function POST(request) {
       tanggal,
       juz,
       surah,
+      surahNumber,
       ayatMulai,
       ayatSelesai,
       surahTambahan = [],
@@ -106,11 +108,47 @@ export async function POST(request) {
     } = data;
 
     // Validasi input
-    if (!siswaId || !juz || !surah || !ayatMulai || !ayatSelesai) {
+    if (!siswaId || !surah || !ayatMulai || !ayatSelesai) {
       return NextResponse.json(
-        { error: 'Data tidak lengkap' },
+        { error: 'Data tidak lengkap (siswaId, surah, ayatMulai, ayatSelesai wajib)' },
         { status: 400 }
       );
+    }
+
+    // 🎯 AUTO-MAP JUZ: Jika juz tidak disediakan, hitung otomatis
+    let mappedJuz = juz ? parseInt(juz) : null;
+    let resolvedSurahNumber = surahNumber ? parseInt(surahNumber) : null;
+
+    if (!mappedJuz) {
+      console.log(`[AUTO-MAP JUZ] surah="${surah}", surahNumber=${surahNumber}, ayatMulai=${ayatMulai}`);
+      
+      // Jika ada surahNumber, langsung gunakan untuk mapping
+      if (resolvedSurahNumber) {
+        mappedJuz = getJuzFromSurahAyah(resolvedSurahNumber, parseInt(ayatMulai));
+        if (mappedJuz) {
+          console.log(`[AUTO-MAP JUZ] ✅ Mapped: Surah ${resolvedSurahNumber}, Ayah ${ayatMulai} -> Juz ${mappedJuz}`);
+        } else {
+          console.warn(`[AUTO-MAP JUZ] ⚠️ Mapping gagal: Surah ${resolvedSurahNumber}, Ayah ${ayatMulai}`);
+        }
+      } else {
+        // Fallback: Coba parse surah number dari string surah (e.g., "1. Al-Fatihah" -> 1)
+        const match = surah.match(/^(\d+)/);
+        if (match) {
+          resolvedSurahNumber = parseInt(match[1], 10);
+          mappedJuz = getJuzFromSurahAyah(resolvedSurahNumber, parseInt(ayatMulai));
+          if (mappedJuz) {
+            console.log(`[AUTO-MAP JUZ] ✅ Mapped dari surah string: "${surah}" -> Surah ${resolvedSurahNumber} -> Juz ${mappedJuz}`);
+          }
+        } else {
+          console.warn(`[AUTO-MAP JUZ] ⚠️ Tidak bisa parse surah number dari: "${surah}"`);
+        }
+      }
+    }
+
+    // Jika mapping gagal, gunakan default (akan menyebabkan error atau null)
+    if (!mappedJuz) {
+      console.warn(`[AUTO-MAP JUZ] ⚠️ FINAL WARNING: Juz tidak termap untuk ${surah} ayat ${ayatMulai}, akan menjadi NULL`);
+      // Jangan throw error, biarkan juz NULL jika mapping gagal (bisa di-backfill nanti)
     }
 
     // ✅ HELPER: Clean and validate surahTambahan
@@ -149,8 +187,9 @@ export async function POST(request) {
         siswaId,
         guruId: session.user.guruId,
         tanggal: tanggal ? new Date(tanggal) : new Date(),
-        juz: parseInt(juz),
+        juz: mappedJuz, // Use auto-mapped juz
         surah,
+        surahNumber: resolvedSurahNumber, // Save numeric surah ID
         ayatMulai: parseInt(ayatMulai),
         ayatSelesai: parseInt(ayatSelesai),
         ...(cleanedSurahTambahan && { surahTambahan: cleanedSurahTambahan }),
@@ -207,6 +246,7 @@ export async function PUT(request) {
       tanggal,
       juz,
       surah,
+      surahNumber,
       ayatMulai,
       ayatSelesai,
       surahTambahan = [],
@@ -250,21 +290,65 @@ export async function PUT(request) {
 
     const cleanedSurahTambahan = cleanSurahTambahan(surahTambahan);
 
+    // 🎯 AUTO-MAP JUZ for UPDATE: Jika ada perubahan surah/ayat tapi juz tidak disertakan
+    let updateData = {
+      tanggal: tanggal ? new Date(tanggal) : undefined,
+      surah: surah || undefined,
+      ayatMulai: ayatMulai ? parseInt(ayatMulai) : undefined,
+      ayatSelesai: ayatSelesai ? parseInt(ayatSelesai) : undefined,
+      ...(cleanedSurahTambahan && { surahTambahan: cleanedSurahTambahan }),
+      keterangan: keterangan || null
+    };
+
+    // Jika ada perubahan surah atau ayat, dan juz tidak disertakan, hitung otomatis
+    if ((surah || ayatMulai || ayatSelesai) && !juz) {
+      // Ambil data hafalan current untuk fallback
+      const currentHafalan = await prisma.hafalan.findUnique({
+        where: { id },
+        select: { surah: true, surahNumber: true, ayatMulai: true }
+      });
+
+      if (currentHafalan) {
+        const finalSurah = surah || currentHafalan.surah;
+        const finalSurahNumber = surahNumber || currentHafalan.surahNumber;
+        const finalAyatMulai = ayatMulai ? parseInt(ayatMulai) : currentHafalan.ayatMulai;
+
+        if (finalSurahNumber) {
+          const mappedJuz = getJuzFromSurahAyah(finalSurahNumber, finalAyatMulai);
+          if (mappedJuz) {
+            console.log(`[AUTO-MAP JUZ UPDATE] ✅ Mapped: Surah ${finalSurahNumber}, Ayah ${finalAyatMulai} -> Juz ${mappedJuz}`);
+            updateData.juz = mappedJuz;
+          }
+        } else {
+          const match = finalSurah.match(/^(\d+)/);
+          if (match) {
+            const parsedSurahNum = parseInt(match[1], 10);
+            const mappedJuz = getJuzFromSurahAyah(parsedSurahNum, finalAyatMulai);
+            if (mappedJuz) {
+              console.log(`[AUTO-MAP JUZ UPDATE] ✅ Mapped dari surah string: "${finalSurah}" -> Juz ${mappedJuz}`);
+              updateData.juz = mappedJuz;
+              updateData.surahNumber = parsedSurahNum;
+            }
+          }
+        }
+      }
+    } else if (juz) {
+      // Jika juz disertakan, gunakan juz yang diberikan
+      updateData.juz = parseInt(juz);
+    }
+
+    // Jika surahNumber disertakan, simpan juga
+    if (surahNumber) {
+      updateData.surahNumber = parseInt(surahNumber);
+    }
+
     // Update hafalan
     const hafalan = await prisma.hafalan.update({
       where: {
         id,
         guruId: session.user.guruId
       },
-      data: {
-        tanggal: tanggal ? new Date(tanggal) : undefined,
-        juz: juz ? parseInt(juz) : undefined,
-        surah: surah || undefined,
-        ayatMulai: ayatMulai ? parseInt(ayatMulai) : undefined,
-        ayatSelesai: ayatSelesai ? parseInt(ayatSelesai) : undefined,
-        ...(cleanedSurahTambahan && { surahTambahan: cleanedSurahTambahan }),
-        keterangan: keterangan || null
-      },
+      data: updateData,
       include: {
         siswa: {
           include: {

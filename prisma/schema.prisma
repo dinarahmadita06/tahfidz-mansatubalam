@@ -299,8 +299,9 @@ model Hafalan {
   siswaId          String
   guruId           String
   tanggal          DateTime    @default(now())
-  juz              Int
+  juz              Int?        // Auto-mapped from surah+ayah, nullable for legacy data
   surah            String
+  surahNumber      Int?        // Numeric surah ID (1-114) for accurate juz mapping
   ayatMulai        Int
   ayatSelesai      Int
   surahTambahan    Json        @default("[]")
@@ -314,6 +315,8 @@ model Hafalan {
   @@index([siswaId])
   @@index([tanggal(sort: Desc)])
   @@index([guruId])
+  @@index([juz])
+  @@index([surahNumber])
 }
 
 model Penilaian {
