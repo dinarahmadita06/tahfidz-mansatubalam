@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
   Book,
@@ -14,6 +14,7 @@ import {
   BookOpen,
   AlertCircle,
   FileCheck,
+  Loader,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -35,6 +36,7 @@ export default function BukuDigitalPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showViewerModal, setShowViewerModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -45,41 +47,46 @@ export default function BukuDigitalPage() {
     file: null,
   });
 
-  // Load books from localStorage on mount
   useEffect(() => {
-    const savedBooks = localStorage.getItem('tahfidz_books');
-    if (savedBooks) {
-      try {
-        setBooks(JSON.parse(savedBooks));
-      } catch (e) {
-        console.error('Error loading books:', e);
-      }
-    }
+    fetchBooks();
   }, []);
 
-  // Save books to localStorage whenever books change
-  useEffect(() => {
-    if (books.length > 0) {
-      localStorage.setItem('tahfidz_books', JSON.stringify(books));
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/guru/buku-digital/all');
+      if (response.ok) {
+        const data = await response.json();
+        setBooks(data.data || []);
+      } else {
+        toast.error('Gagal memuat buku digital');
+      }
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      toast.error('Terjadi kesalahan saat memuat buku');
+    } finally {
+      setLoading(false);
     }
-  }, [books]);
+  };
 
   // Filter books based on search and category
-  const filteredBooks = books.filter((book) => {
-    // Handle both old localStorage format (title, description, category) and new API format (judul, deskripsi, kategori)
-    const title = book.title || book.judul || '';
-    const description = book.description || book.deskripsi || '';
-    const category = book.category || book.kategori || '';
-    
-    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'Semua' || category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredBooks = useMemo(() => {
+    return books.filter((book) => {
+      // Handle both old localStorage format (title, description, category) and new API format (judul, deskripsi, kategori)
+      const title = book.title || book.judul || '';
+      const description = book.description || book.deskripsi || '';
+      const category = book.category || book.kategori || '';
+      
+      const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'Semua' || category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [books, searchQuery, selectedCategory]);
 
   // Calculate statistics - handle both old and new format
-  const totalBooks = books.length;
-  const totalPDF = books.filter(b => {
+  const totalBooks = filteredBooks.length;
+  const totalPDF = filteredBooks.filter(b => {
     const fileUrl = b.fileUrl || b.fileUrl || '';
     return b.file || fileUrl.startsWith('blob:') || fileUrl.startsWith('http');
   }).length;
@@ -139,8 +146,8 @@ export default function BukuDigitalPage() {
       const result = await response.json();
 
       if (response.ok) {
-        // Add book to local state
-        setBooks([...books, result.data]);
+        // Refresh the books list
+        fetchBooks();
         setShowUploadModal(false);
         setFormData({
           title: '',
@@ -162,19 +169,6 @@ export default function BukuDigitalPage() {
   const handleDelete = async (bookId) => {
     if (confirm('Apakah Anda yakin ingin menghapus buku ini?')) {
       try {
-        // Check if this is a localStorage ID (starts with 'book_') or database ID
-        if (bookId.startsWith('book_')) {
-          // This is an old localStorage book - just remove from UI
-          setBooks(books.filter((book) => book.id !== bookId));
-          toast.success('Buku berhasil dihapus dari lokal');
-          // Clear old localStorage if empty
-          const remainingBooks = books.filter((book) => book.id !== bookId);
-          if (remainingBooks.length === 0) {
-            localStorage.removeItem('tahfidz_books');
-          }
-          return;
-        }
-
         // This is a real database book - call API
         const response = await fetch(`/api/guru/buku-digital/${bookId}`, {
           method: 'DELETE'
@@ -196,6 +190,16 @@ export default function BukuDigitalPage() {
   };
 
   const handleView = (book) => {
+    const fileUrl = book.fileUrl || book.fileUrl;
+    
+    // Check if it's a YouTube URL
+    if (fileUrl && (fileUrl.startsWith('https://youtu.be/') || fileUrl.startsWith('https://www.youtube.com/'))) {
+      // Open YouTube URL directly
+      window.open(fileUrl, '_blank');
+      toast.success('Membuka YouTube...');
+      return;
+    }
+    
     setSelectedBook(book);
     setShowViewerModal(true);
   };
@@ -207,7 +211,15 @@ export default function BukuDigitalPage() {
       return;
     }
     
-    // Create a blob URL for the PDF to display inline
+    // Check if it's a YouTube URL
+    if (fileUrl.startsWith('https://youtu.be/') || fileUrl.startsWith('https://www.youtube.com/')) {
+      // Open YouTube URL directly
+      window.open(fileUrl, '_blank');
+      toast.success('Membuka YouTube...');
+      return;
+    }
+    
+    // For PDF files, use the proxy
     const proxyUrl = `/api/guru/buku-digital/proxy?url=${encodeURIComponent(fileUrl)}`;
     
     // Fetch the PDF and create a blob URL
@@ -256,7 +268,7 @@ export default function BukuDigitalPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-emerald-600 text-sm font-semibold mb-1">TOTAL MATERI</p>
-                <h3 className="text-4xl font-bold text-emerald-700">{totalBooks}</h3>
+                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalBooks}</h3>
               </div>
               <div className="bg-emerald-100 p-4 rounded-full">
                 <BookOpen size={32} className="text-emerald-600" />
@@ -269,7 +281,7 @@ export default function BukuDigitalPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-600 text-sm font-semibold mb-1">FILE PDF</p>
-                <h3 className="text-4xl font-bold text-blue-700">{totalPDF}</h3>
+                <h3 className="text-4xl font-bold text-blue-700">{loading ? '...' : totalPDF}</h3>
               </div>
               <div className="bg-blue-100 p-4 rounded-full">
                 <FileCheck size={32} className="text-blue-600" />
@@ -323,8 +335,18 @@ export default function BukuDigitalPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
+              <p className="text-gray-600">Memuat buku digital...</p>
+            </div>
+          </div>
+        )}
+        
         {/* Books Grid / Empty State */}
-        {filteredBooks.length === 0 ? (
+        {!loading && filteredBooks.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <div className="flex justify-center mb-4">
               <div className="p-4 bg-emerald-50 rounded-full">
@@ -390,7 +412,7 @@ export default function BukuDigitalPage() {
                       className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-lg transition-all"
                     >
                       <Eye size={16} />
-                      Lihat
+                      {book.fileUrl && (book.fileUrl.startsWith('https://youtu.be/') || book.fileUrl.startsWith('https://www.youtube.com/')) ? 'Buka' : 'Lihat'}
                     </button>
 
                     <button
