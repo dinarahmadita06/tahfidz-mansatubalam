@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 // POST - Update presensi status
 export async function POST(request) {
@@ -53,6 +54,12 @@ export async function POST(request) {
       },
     });
 
+    // Get siswa data for activity log
+    const siswa = await prisma.siswa.findUnique({
+      where: { id: siswaId },
+      include: { user: { select: { name: true } } }
+    });
+
     if (existingPresensi) {
       // Update existing presensi
       await prisma.presensi.update({
@@ -70,6 +77,25 @@ export async function POST(request) {
         },
       });
     }
+
+    // ✅ Log activity - Presensi update
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.GURU_UBAH_PRESENSI,
+      title: 'Ubah presensi siswa',
+      description: `Mengubah status presensi ${siswa?.user?.name} menjadi ${status}`,
+      targetUserId: siswaId,
+      targetRole: 'SISWA',
+      targetName: siswa?.user?.name,
+      metadata: {
+        siswaId,
+        tanggal,
+        status,
+        guruId: guru.id,
+      },
+    }).catch(err => console.error('Activity log error:', err));
 
     return NextResponse.json({
       success: true,

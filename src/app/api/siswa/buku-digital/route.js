@@ -1,72 +1,38 @@
-import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
+/**
+ * GET /api/siswa/buku-digital
+ * Fetch all buku digital accessible to the student
+ * Students can see all buku digital but cannot create/edit/delete
+ */
 export async function GET(request) {
   try {
     const session = await auth();
 
     if (!session || session.user.role !== 'SISWA') {
       return NextResponse.json(
-        { error: 'Unauthorized - Hanya siswa yang dapat mengakses' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // Get siswa data with kelas info
-    const siswa = await prisma.siswa.findUnique({
-      where: { userId: session.user.id },
-      include: {
-        kelas: {
-          include: {
-            guruKelas: {
-              where: { isActive: true },
-              include: {
-                guru: {
-                  select: {
-                    id: true,
-                    user: {
-                      select: {
-                        name: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!siswa) {
-      return NextResponse.json(
-        { error: 'Data siswa tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-
-    // Get list of guru IDs from siswa's kelas
-    const guruIds = siswa.kelas?.guruKelas?.map((gk) => gk.guruId) || [];
-
-    if (guruIds.length === 0) {
-      // No guru pengampu, return empty array
-      return NextResponse.json({
-        books: [],
-        message: 'Belum ada guru pengampu di kelas Anda',
-      });
-    }
-
-    // Fetch books uploaded by guru pengampu
-    const books = await prisma.bukuDigital.findMany({
-      where: {
-        guruId: {
-          in: guruIds,
-        },
-      },
-      include: {
+    // Get all buku digital from all gurus (shared resources)
+    // Students can view all books in the system
+    const bukuDigitalList = await prisma.bukuDigital.findMany({
+      select: {
+        id: true,
+        guruId: true,
+        judul: true,
+        deskripsi: true,
+        kategori: true,
+        fileUrl: true,
+        fileName: true,
+        fileSize: true,
+        createdAt: true,
         guru: {
-          include: {
+          select: {
             user: {
               select: {
                 name: true,
@@ -80,28 +46,15 @@ export async function GET(request) {
       },
     });
 
-    // Format response
-    const formattedBooks = books.map((book) => ({
-      id: book.id,
-      title: book.judul,
-      description: book.deskripsi || 'Tidak ada deskripsi',
-      category: book.kategori,
-      fileUrl: book.fileUrl,
-      fileName: book.fileName,
-      fileSize: book.fileSize,
-      uploadDate: book.createdAt,
-      guruName: book.guru?.user?.name || 'Unknown',
-      downloadCount: book.downloadCount,
-    }));
-
     return NextResponse.json({
-      books: formattedBooks,
-      totalBooks: formattedBooks.length,
+      success: true,
+      data: bukuDigitalList,
+      count: bukuDigitalList.length,
     });
   } catch (error) {
     console.error('Error fetching buku digital:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch buku digital', details: error.message },
+      { error: 'Gagal memuat buku digital', details: error.message },
       { status: 500 }
     );
   }

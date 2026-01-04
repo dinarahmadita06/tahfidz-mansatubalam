@@ -5,8 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
-  ArrowLeft, Save, Loader2, BookOpen, FileText, Plus, Trash2,
-  Eye, Youtube, FileVideo, X, Filter, Search, Calendar, User,
+  ArrowLeft, Save, Loader2, BookOpen, Plus, Trash2,
+  Eye, X, Filter, Search, Calendar, User,
   ClipboardList, CheckCircle, AlertCircle, Lightbulb, PlayCircle, Download
 } from 'lucide-react';
 import Link from 'next/link';
@@ -18,7 +18,7 @@ export default function TahsinDetailPage() {
   const router = useRouter();
   const kelasId = params.id;
 
-  // Tab state - now with 3 tabs
+  // Tab state - now with 2 tabs
   const [activeTab, setActiveTab] = useState('pencatatan');
 
   // Loading states
@@ -31,11 +31,9 @@ export default function TahsinDetailPage() {
   const [siswaList, setSiswaList] = useState([]);
   const [guruData, setGuruData] = useState(null);
   const [tahsinList, setTahsinList] = useState([]);
-  const [materiList, setMateriList] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
 
   // Modal states
-  const [showMateriModal, setShowMateriModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTahsin, setSelectedTahsin] = useState(null);
 
@@ -54,51 +52,12 @@ export default function TahsinDetailPage() {
     statusPembelajaran: 'LANJUT',
   });
 
-  const [materiFormData, setMateriFormData] = useState({
-    judul: '',
-    jenisMateri: '',
-    fileUrl: '',
-    youtubeUrl: '',
-    deskripsi: '',
-  });
-
-  const [selectedFile, setSelectedFile] = useState(null);
   const [errors, setErrors] = useState({});
-  const [materiErrors, setMateriErrors] = useState({});
-
-  // Search & Filter states for Materi Tahsin
-  const [materiSearchQuery, setMateriSearchQuery] = useState('');
-  const [materiSortBy, setMateriSortBy] = useState('terbaru'); // 'terbaru' | 'terlama'
-  const [materiTypeFilter, setMateriTypeFilter] = useState('ALL'); // 'ALL' | 'PDF' | 'YOUTUBE'
 
   // Selected siswa for header display
   const selectedSiswa = useMemo(() => {
     return siswaList.find(s => s.id === formData.siswaId);
   }, [siswaList, formData.siswaId]);
-
-  // Filtered and sorted materi list
-  const filteredMateriList = useMemo(() => {
-    let filtered = materiList.filter((materi) => {
-      // Filter by search query
-      const matchesSearch =
-        materi.judul.toLowerCase().includes(materiSearchQuery.toLowerCase()) ||
-        (materi.deskripsi && materi.deskripsi.toLowerCase().includes(materiSearchQuery.toLowerCase()));
-      
-      // Filter by type
-      const matchesType = materiTypeFilter === 'ALL' || materi.jenisMateri === materiTypeFilter;
-      
-      return matchesSearch && matchesType;
-    });
-
-    // Sort by date
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
-      return materiSortBy === 'terbaru' ? dateB - dateA : dateA - dateB;
-    });
-
-    return filtered;
-  }, [materiList, materiSearchQuery, materiSortBy, materiTypeFilter]);
 
   // Filtered tahsin list based on filter
   const filteredTahsinList = useMemo(() => {
@@ -163,11 +122,10 @@ export default function TahsinDetailPage() {
     try {
       setLoading(true);
 
-      const [kelasRes, guruRes, tahsinRes, materiRes] = await Promise.all([
+      const [kelasRes, guruRes, tahsinRes] = await Promise.all([
         fetch(`/api/guru/kelas/${kelasId}`),
         fetch('/api/guru/profile'),
-        fetch(`/api/guru/tahsin?kelasId=${kelasId}`),
-        fetch(`/api/guru/materi-tahsin?kelasId=${kelasId}`)
+        fetch(`/api/guru/tahsin?kelasId=${kelasId}`)
       ]);
 
       if (kelasRes.ok) {
@@ -178,17 +136,12 @@ export default function TahsinDetailPage() {
 
       if (guruRes.ok) {
         const guruData = await guruRes.json();
-        setGuruData(guruData.guru);
+        setGuruData(guruData);
       }
 
       if (tahsinRes.ok) {
         const tahsinData = await tahsinRes.json();
         setTahsinList(tahsinData.tahsin || []);
-      }
-
-      if (materiRes.ok) {
-        const materiData = await materiRes.json();
-        setMateriList(materiData.materi || []);
       }
 
       // Mark data as loaded to prevent refetch on tab focus
@@ -209,13 +162,7 @@ export default function TahsinDetailPage() {
     }
   };
 
-  const handleMateriInputChange = (e) => {
-    const { name, value } = e.target;
-    setMateriFormData((prev) => ({ ...prev, [name]: value }));
-    if (materiErrors[name]) {
-      setMateriErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
+
 
   const handleRadioChange = (value) => {
     setFormData((prev) => ({ ...prev, statusPembelajaran: value }));
@@ -233,25 +180,7 @@ export default function TahsinDetailPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateMateriForm = () => {
-    const newErrors = {};
-    if (!materiFormData.judul.trim()) newErrors.judul = 'Judul materi wajib diisi';
-    if (!materiFormData.jenisMateri) newErrors.jenisMateri = 'Pilih jenis materi';
 
-    // Validate based on type
-    if (materiFormData.jenisMateri === 'YOUTUBE') {
-      if (!materiFormData.youtubeUrl.trim()) {
-        newErrors.youtubeUrl = 'URL YouTube wajib diisi';
-      }
-    } else if (materiFormData.jenisMateri === 'PDF') {
-      if (!selectedFile) {
-        newErrors.fileUrl = 'File wajib diunggah';
-      }
-    }
-
-    setMateriErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -318,130 +247,6 @@ export default function TahsinDetailPage() {
     }
   };
 
-  const handleMateriSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateMateriForm()) {
-      toast.error('Mohon lengkapi semua field yang wajib diisi');
-      return;
-    }
-
-    if (!guruData?.id) {
-      toast.error('Data guru tidak ditemukan');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      let fileUrl = null;
-
-      // Upload file first if not YouTube
-      if (materiFormData.jenisMateri !== 'YOUTUBE' && selectedFile) {
-        setUploadingFile(true);
-        const uploadFormData = new FormData();
-        uploadFormData.append('file', selectedFile);
-        uploadFormData.append('folder', 'materi-tahsin');
-
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: uploadFormData,
-        });
-
-        const uploadData = await uploadResponse.json();
-
-        if (!uploadResponse.ok) {
-          throw new Error(uploadData.message || 'Gagal mengunggah file');
-        }
-
-        fileUrl = uploadData.url;
-        setUploadingFile(false);
-      }
-
-      // Submit materi data
-      const payload = {
-        guruId: guruData.id,
-        kelasId: kelasId,
-        judul: materiFormData.judul.trim(),
-        jenisMateri: materiFormData.jenisMateri,
-        fileUrl: materiFormData.jenisMateri === 'YOUTUBE' ? null : fileUrl,
-        youtubeUrl: materiFormData.jenisMateri === 'YOUTUBE' ? materiFormData.youtubeUrl.trim() : null,
-        deskripsi: materiFormData.deskripsi.trim() || null,
-      };
-
-      const response = await fetch('/api/guru/materi-tahsin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Materi tahsin berhasil ditambahkan');
-
-        // Optimistic update
-        setMateriList(prev => [data.materi, ...prev]);
-
-        resetMateriForm();
-        setShowMateriModal(false);
-      } else {
-        toast.error(data.message || 'Gagal menyimpan materi');
-      }
-    } catch (error) {
-      console.error('Error submitting materi:', error);
-      toast.error(error.message || 'Terjadi kesalahan saat menyimpan materi');
-    } finally {
-      setSubmitting(false);
-      setUploadingFile(false);
-    }
-  };
-
-  const handleDeleteMateri = async (materiId) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus materi ini?')) return;
-
-    try {
-      const response = await fetch(`/api/guru/materi-tahsin/${materiId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        toast.success('Materi berhasil dihapus');
-        // Optimistic update
-        setMateriList(prev => prev.filter(m => m.id !== materiId));
-      } else {
-        const data = await response.json();
-        toast.error(data.message || 'Gagal menghapus materi');
-      }
-    } catch (error) {
-      console.error('Error deleting materi:', error);
-      toast.error('Terjadi kesalahan saat menghapus materi');
-    }
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const allowedTypes = ['application/pdf', 'video/mp4', 'video/webm', 'video/ogg'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Format file tidak didukung. Gunakan PDF atau video (MP4, WebM, OGG)');
-      e.target.value = ''; // Reset input
-      return;
-    }
-
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error('Ukuran file terlalu besar. Maksimal 50MB');
-      e.target.value = ''; // Reset input
-      return;
-    }
-
-    // Save file to state and clear error
-    setSelectedFile(file);
-    if (materiErrors.fileUrl) {
-      setMateriErrors((prev) => ({ ...prev, fileUrl: '' }));
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       siswaId: '',
@@ -453,31 +258,6 @@ export default function TahsinDetailPage() {
       statusPembelajaran: 'LANJUT',
     });
     setErrors({});
-  };
-
-  const resetMateriForm = () => {
-    setMateriFormData({
-      judul: '',
-      jenisMateri: '',
-      fileUrl: '',
-      youtubeUrl: '',
-      deskripsi: '',
-    });
-    setSelectedFile(null);
-    setMateriErrors({});
-  };
-
-  const getJenisMateriIcon = (jenis) => {
-    switch (jenis) {
-      case 'PDF':
-        return <FileText size={20} className="text-red-500" />;
-      case 'YOUTUBE':
-        return <Youtube size={20} className="text-red-600" />;
-      case 'VIDEO':
-        return <FileVideo size={20} className="text-blue-600" />;
-      default:
-        return <FileText size={20} />;
-    }
   };
 
   const getLevelLabel = (level) => {
@@ -587,19 +367,6 @@ export default function TahsinDetailPage() {
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <ClipboardList size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <span>Riwayat/Hasil</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('materi')}
-              className={`shrink-0 px-5 py-3 rounded-xl text-sm sm:text-base font-semibold transition-all ${
-                activeTab === 'materi'
-                  ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md border-transparent'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'
-              }`}
-            >
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <FileText size={16} className="sm:w-[18px] sm:h-[18px]" />
-                <span>Materi Tahsin</span>
               </div>
             </button>
           </div>
@@ -994,387 +761,7 @@ export default function TahsinDetailPage() {
               )}
             </>
           )}
-
-          {activeTab === 'materi' && (
-            /* MATERI TAB - Clean Design */
-            <div className="space-y-6">
-              {/* Simple Section Title */}
-              <div className="flex justify-between items-end border-b border-gray-200 pb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Materi Tahsin
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Kumpulan materi pembelajaran tahsin untuk {kelas?.nama}
-                  </p>
-                </div>
-                <div className="bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl shadow-sm">
-                  <p className="text-xs text-emerald-700/80 font-semibold uppercase tracking-wide">
-                    Total Materi
-                  </p>
-                  <p className="text-3xl text-emerald-700 font-bold">
-                    {materiList.length}
-                  </p>
-                </div>
-              </div>
-
-              {/* Search & Filter Bar */}
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1">
-                  {/* Search Input */}
-                  <div className="relative flex-1 min-w-[280px]">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                      type="text"
-                      placeholder="Cari materi tahsin..."
-                      value={materiSearchQuery}
-                      onChange={(e) => setMateriSearchQuery(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none transition-all bg-white shadow-sm hover:shadow-md"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    />
-                  </div>
-
-                  {/* Type Filter - Dropdown */}
-                  <div className="relative min-w-[140px]">
-                    <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <select
-                      value={materiTypeFilter}
-                      onChange={(e) => setMateriTypeFilter(e.target.value)}
-                      className="w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none appearance-none bg-white cursor-pointer shadow-sm hover:shadow-md transition-all font-medium"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      <option value="ALL">Semua Jenis</option>
-                      <option value="PDF">PDF</option>
-                      <option value="YOUTUBE">YouTube</option>
-                    </select>
-                  </div>
-
-                  {/* Sort Dropdown */}
-                  <div className="relative min-w-[160px]">
-                    <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <select
-                      value={materiSortBy}
-                      onChange={(e) => setMateriSortBy(e.target.value)}
-                      className="w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none appearance-none bg-white cursor-pointer shadow-sm hover:shadow-md transition-all font-medium"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      <option value="terbaru">Terbaru</option>
-                      <option value="terlama">Terlama</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Tambah Materi Button */}
-                <button
-                  onClick={() => setShowMateriModal(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:brightness-105 text-white font-semibold rounded-xl shadow-md transition-all"
-                >
-                  <Plus size={20} />
-                  <span>Tambah Materi</span>
-                </button>
-              </div>
-
-              {/* Grid Cards or Empty State */}
-              {filteredMateriList.length === 0 ? (
-                <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-2xl p-16 text-center border-2 border-dashed border-gray-200 shadow-sm">
-                  <div className="flex justify-center mb-6">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full blur-2xl opacity-20"></div>
-                      <div className="relative p-6 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full shadow-sm">
-                        <FileText className="text-gray-400" size={56} />
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-700 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    {materiSearchQuery
-                      ? 'Tidak ada materi yang sesuai'
-                      : 'Belum ada materi Tahsin'}
-                  </h3>
-                  <p className="text-gray-500 mb-8 max-w-md mx-auto" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    {materiSearchQuery
-                      ? 'Coba gunakan kata kunci yang berbeda'
-                      : 'Tambahkan materi tahsin pertama untuk membantu siswa belajar dengan lebih baik.'}
-                  </p>
-                  {!materiSearchQuery && (
-                    <button
-                      onClick={() => setShowMateriModal(true)}
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:brightness-105 text-white font-semibold rounded-xl shadow-md transition-all"
-                    >
-                      <Plus size={22} />
-                      <span>Tambah Materi Pertama</span>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredMateriList.map((materi) => {
-                    const isYoutube = materi.jenisMateri === 'YOUTUBE';
-                    const isPdf = materi.jenisMateri === 'PDF';
-                    
-                    // Full pastel card backgrounds & borders
-                    const cardBg = isPdf ? 'bg-amber-50' : isYoutube ? 'bg-rose-50' : 'bg-gray-50';
-                    const cardBorder = isPdf ? 'border-amber-200/80' : isYoutube ? 'border-rose-200/80' : 'border-gray-200/60';
-                    const cardHover = isPdf ? 'hover:shadow-lg hover:shadow-amber-200/60' : isYoutube ? 'hover:shadow-lg hover:shadow-rose-200/60' : 'hover:shadow-lg hover:shadow-gray-200/40';
-                    
-                    // Badge styling
-                    const badgeBg = isPdf ? 'bg-amber-100 text-amber-700 border border-amber-200/80' : isYoutube ? 'bg-rose-100 text-rose-600 border border-rose-200/80' : 'bg-emerald-100 text-emerald-700';
-                    
-                    // Icon styling
-                    const iconColor = isPdf ? 'text-amber-300' : isYoutube ? 'text-rose-300' : 'text-gray-300';
-                    
-                    // Action button styling
-                    const actionBg = isPdf ? 'bg-amber-200/70 text-amber-900 hover:bg-amber-300/70' : isYoutube ? 'bg-rose-200/70 text-rose-900 hover:bg-rose-300/70' : 'bg-emerald-200/70 text-emerald-900 hover:bg-emerald-300/70';
-                    const downloadBg = isPdf ? 'bg-amber-100/70 text-amber-800 hover:bg-amber-200/70' : 'bg-gray-100/70 text-gray-700 hover:bg-gray-200/70';
-                    
-                    
-                    return (
-                    <div
-                      key={materi.id}
-                      className={`${cardBg} ${cardBorder} rounded-2xl shadow-sm border overflow-hidden hover:-translate-y-1 transition-all duration-200 ease-in-out group ${cardHover}`}
-                    >
-                        {/* Thumbnail Area with Type-Specific Background */}
-                        <div className={`h-40 bg-gradient-to-br ${isPdf ? 'from-amber-100 to-amber-50' : isYoutube ? 'from-rose-100 to-rose-50' : 'from-gray-100 to-gray-50'} flex items-center justify-center relative`}>
-                        <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
-                        {isPdf && (
-                          <FileText className={`relative z-10 ${iconColor}`} size={72} />
-                        )}
-                        {materi.jenisMateri === 'VIDEO' && (
-                          <PlayCircle className="text-gray-300 relative z-10" size={72} />
-                        )}
-                        {isYoutube && (
-                          <Youtube className={`relative z-10 ${iconColor}`} size={72} />
-                        )}
-
-                        {/* Category Badge */}
-                        <div className="absolute top-3 left-3">
-                          <span className={`px-3 py-1 ${badgeBg} text-xs font-bold rounded-full border`}>
-                            {materi.jenisMateri}
-                          </span>
-                        </div>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => handleDeleteMateri(materi.id)}
-                          className="absolute top-3 right-3 w-8 h-8 bg-white/90 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                          <Trash2 size={16} className="text-red-500" />
-                        </button>
-                      </div>
-
-                      {/* Card Content */}
-                      <div className="p-5">
-                        <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                          {materi.judul}
-                        </h3>
-
-                        {materi.deskripsi && (
-                          <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            {materi.deskripsi}
-                          </p>
-                        )}
-
-                        {/* Meta Info */}
-                        <div className="flex items-center gap-2 text-xs text-gray-400 mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                          <Calendar size={14} />
-                          <span>{new Date(materi.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2">
-                          <a
-                            href={materi.jenisMateri === 'YOUTUBE' ? materi.youtubeUrl : materi.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 ${actionBg} text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md`}
-                            style={{ fontFamily: 'Poppins, sans-serif' }}
-                          >
-                            <Eye size={16} />
-                            <span>Lihat</span>
-                          </a>
-
-                          {isPdf && (
-                            <a
-                              href={materi.fileUrl}
-                              download
-                              className={`flex items-center justify-center px-3 py-2.5 ${downloadBg} text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md`}
-                            >
-                              <Download size={16} />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
         </div>
-
-        {/* Modal Tambah Materi */}
-        {showMateriModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-slate-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  Tambah Materi Tahsin
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowMateriModal(false);
-                    resetMateriForm();
-                  }}
-                  className="text-slate-400 hover:text-slate-600 transition"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <form onSubmit={handleMateriSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Judul Materi <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="judul"
-                    value={materiFormData.judul}
-                    onChange={handleMateriInputChange}
-                    placeholder="Contoh: Hukum Tajwid Nun Mati dan Tanwin"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                      materiErrors.judul ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                  />
-                  {materiErrors.judul && (
-                    <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      {materiErrors.judul}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Jenis Materi <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="jenisMateri"
-                    value={materiFormData.jenisMateri}
-                    onChange={handleMateriInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
-                    style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                  >
-                    <option value="">-- Pilih Jenis Materi --</option>
-                    <option value="PDF">PDF</option>
-                    <option value="YOUTUBE">YouTube</option>
-                  </select>
-                  {materiErrors.jenisMateri && (
-                    <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      {materiErrors.jenisMateri}
-                    </p>
-                  )}
-                </div>
-
-                {materiFormData.jenisMateri === 'YOUTUBE' ? (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      URL YouTube <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="url"
-                      name="youtubeUrl"
-                      value={materiFormData.youtubeUrl}
-                      onChange={handleMateriInputChange}
-                      placeholder="https://www.youtube.com/watch?v=..."
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                        materiErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    />
-                    {materiErrors.youtubeUrl && (
-                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        {materiErrors.youtubeUrl}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      Upload File {materiFormData.jenisMateri === 'PDF' ? 'PDF' : 'Video'} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="file"
-                      accept={materiFormData.jenisMateri === 'PDF' ? 'application/pdf' : 'video/*'}
-                      onChange={handleFileUpload}
-                      disabled={uploadingFile || submitting}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                        materiErrors.fileUrl ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                    />
-                    {selectedFile && !uploadingFile && (
-                      <p className="text-emerald-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
-                      </p>
-                    )}
-                    {uploadingFile && (
-                      <p className="text-blue-600 text-sm mt-2 flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        <Loader2 className="animate-spin" size={16} />
-                        <span>Mengunggah file...</span>
-                      </p>
-                    )}
-                    {materiErrors.fileUrl && !selectedFile && (
-                      <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        {materiErrors.fileUrl}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    Deskripsi (Opsional)
-                  </label>
-                  <textarea
-                    name="deskripsi"
-                    value={materiFormData.deskripsi}
-                    onChange={handleMateriInputChange}
-                    rows="3"
-                    placeholder="Deskripsi singkat tentang materi ini..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition resize-none"
-                    style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                  />
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowMateriModal(false);
-                      resetMateriForm();
-                    }}
-                    className="flex-1 px-4 py-3 border border-gray-300 text-slate-700 rounded-lg font-semibold hover:bg-gray-50 transition"
-                    style={{ fontFamily: 'Poppins, sans-serif' }}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting || uploadingFile}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ fontFamily: 'Poppins, sans-serif' }}
-                  >
-                    {submitting ? 'Menyimpan...' : 'Simpan Materi'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {/* Modal Detail Tahsin */}
         {showDetailModal && selectedTahsin && (

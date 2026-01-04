@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { formatTimeAgo } from '@/lib/helpers/activityLoggerV2';
+
+// ✅ Disable caching - always fetch fresh data from database
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/siswa/aktivitas-list
  * Fetch paginated activity logs for authenticated siswa
+ * Database queries only - no business logic or formatting
  * 
  * Query params:
  * - limit=10 (default)
  * - page=1 (default)
  * - afterDate=YYYY-MM-DD (optional - filter activities after date)
+ * 
+ * Response:
+ * - data: Array of activities with createdAt (frontend calculates timeAgo)
+ * - pagination: { total, page, limit, pages }
  */
 export async function GET(request) {
   try {
@@ -68,21 +75,36 @@ export async function GET(request) {
     });
 
     // Format response
-    const formattedActivities = activities.map((activity) => ({
-      id: activity.id,
-      action: activity.action,
-      title: activity.title,
-      description: activity.description,
-      timeAgo: formatTimeAgo(activity.createdAt),
-      createdAt: activity.createdAt,
-      metadata: activity.metadata ? JSON.parse(activity.metadata) : null,
-    }));
+    const formattedActivities = activities.map((activity) => {
+      let metadata = null;
+      if (activity.metadata) {
+        // Prisma's Json type returns already-parsed object
+        // If it's a string, parse it; if it's an object, use as-is
+        if (typeof activity.metadata === 'string') {
+          try {
+            metadata = JSON.parse(activity.metadata);
+          } catch (e) {
+            metadata = activity.metadata;
+          }
+        } else {
+          metadata = activity.metadata;
+        }
+      }
+      return {
+        id: activity.id,
+        action: activity.action,
+        title: activity.title,
+        description: activity.description,
+        createdAt: activity.createdAt,
+        metadata,
+      };
+    });
 
     console.log(
       `[SISWA AKTIVITAS] Fetched ${formattedActivities.length} activities for siswa ${session.user.id}`
     );
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: formattedActivities,
       pagination: {
@@ -92,6 +114,10 @@ export async function GET(request) {
         pages: Math.ceil(totalCount / limit),
       },
     });
+
+    // ✅ Set cache headers to prevent caching
+    response.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
+    return response;
   } catch (error) {
     console.error('[SISWA AKTIVITAS ERROR]', error);
     return NextResponse.json(

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { calcAverageScore, calcStatisticAverage, normalizeNilaiAkhir } from '@/lib/helpers/calcAverageScore';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 export async function GET(request) {
   try {
@@ -293,6 +294,34 @@ export async function POST(request) {
         },
       });
     }
+
+    // ✅ Log activity - input/edit penilaian
+    const siswa = await prisma.siswa.findUnique({
+      where: { id: siswaId },
+      include: { user: { select: { name: true } } }
+    });
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.GURU_INPUT_PENILAIAN,
+      title: 'Menginput penilaian hafalan',
+      description: `Penilaian untuk ${siswa?.user.name || 'siswa'} - ${surah}:${ayatMulai}-${ayatSelesai}`,
+      targetUserId: siswaId,
+      targetRole: 'SISWA',
+      targetName: siswa?.user.name,
+      metadata: {
+        surah,
+        ayatMulai,
+        ayatSelesai,
+        nilaiAkhir,
+        tajwid,
+        kelancaran,
+        makhraj,
+        implementasi
+      }
+    });
 
     return NextResponse.json({
       success: true,

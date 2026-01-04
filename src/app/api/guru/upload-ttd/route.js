@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 export async function POST(request) {
   try {
@@ -81,6 +82,21 @@ export async function POST(request) {
     await prisma.guru.update({
       where: { id: guru.id },
       data: { tandaTangan: relativePath }
+    });
+
+    // ✅ Log activity
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.GURU_UPLOAD_TTD,
+      title: 'Upload tanda tangan digital',
+      description: `Upload file tanda tangan (${file.name})`,
+      metadata: {
+        fileName,
+        fileSize: file.size,
+        fileType: file.type
+      }
     });
 
     return NextResponse.json({

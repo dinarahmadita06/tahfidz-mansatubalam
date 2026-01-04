@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { logActivity, ACTIVITY_TYPES } from '@/lib/helpers/activityLogger';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 /**
  * GET - Fetch guru profile
@@ -120,13 +120,24 @@ export async function PATCH(request) {
       }
     });
 
-    // Log activity
+    // ✅ Log activity
     await logActivity({
-      userId: session.user.id,
-      role: 'GURU',
-      type: ACTIVITY_TYPES.EDIT_PROFIL,
-      title: 'Mengedit profil',
-      subtitle: 'Mengubah data profil guru'
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: updatedUser.name,
+      action: ACTIVITY_ACTIONS.GURU_UBAH_PROFIL,
+      title: 'Mengubah profil pribadi',
+      description: 'Update profil',
+      metadata: {
+        updatedFields: [
+          name && 'nama',
+          email && 'email',
+          phone && 'noTelepon',
+          alamat && 'alamat',
+          bidangKeahlian && 'bidangKeahlian',
+          mulaiMengajar && 'mulaiMengajar'
+        ].filter(Boolean)
+      }
     });
 
     console.log(`[GURU PROFILE] Updated profile for guru ${guru.id}`);

@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 // PATCH - Update target hafalan sekolah global
 export async function PATCH(request) {
   try {
+    const session = await auth();
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { schoolTarget } = body;
 
@@ -36,6 +47,22 @@ export async function PATCH(request) {
         tahun: new Date().getFullYear()
       }
     });
+
+    // ✅ Log activity - Set target hafalan
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'ADMIN',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.ADMIN_SET_TARGET,
+      title: 'Set target hafalan sekolah',
+      description: `Mengatur target hafalan sekolah menjadi ${schoolTarget} juz per tahun`,
+      metadata: {
+        schoolTarget,
+        targetId: 'school-target-global',
+        bulan: new Date().getMonth() + 1,
+        tahun: new Date().getFullYear(),
+      },
+    }).catch(err => console.error('Activity log error:', err));
 
     return NextResponse.json({
       success: true,

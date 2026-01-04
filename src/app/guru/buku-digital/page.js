@@ -20,9 +20,11 @@ import { toast, Toaster } from 'react-hot-toast';
 const CATEGORIES = [
   'Semua',
   'Tajwid',
+  'Tafsir',
+  'Hadits',
+  'Fiqih',
+  'Akhlak',
   'Tahsin',
-  'Doa Harian',
-  'Panduan Hafalan',
   'Umum',
 ];
 
@@ -64,15 +66,23 @@ export default function BukuDigitalPage() {
 
   // Filter books based on search and category
   const filteredBooks = books.filter((book) => {
-    const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'Semua' || book.category === selectedCategory;
+    // Handle both old localStorage format (title, description, category) and new API format (judul, deskripsi, kategori)
+    const title = book.title || book.judul || '';
+    const description = book.description || book.deskripsi || '';
+    const category = book.category || book.kategori || '';
+    
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'Semua' || category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // Calculate statistics
+  // Calculate statistics - handle both old and new format
   const totalBooks = books.length;
-  const totalPDF = books.filter(b => b.file || b.fileUrl.startsWith('blob:')).length;
+  const totalPDF = books.filter(b => {
+    const fileUrl = b.fileUrl || b.fileUrl || '';
+    return b.file || fileUrl.startsWith('blob:') || fileUrl.startsWith('http');
+  }).length;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -96,7 +106,7 @@ export default function BukuDigitalPage() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
@@ -114,34 +124,74 @@ export default function BukuDigitalPage() {
       return;
     }
 
-    const newBook = {
-      id: `book_${Date.now()}`,
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      fileUrl: formData.fileUrl,
-      fileName: formData.file?.name || '',
-      uploadDate: new Date().toISOString(),
-      uploadedBy: 'Guru',
-    };
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('file', formData.file);
+      formDataToSend.append('judul', formData.title);
+      formDataToSend.append('deskripsi', formData.description);
+      formDataToSend.append('kategori', formData.category);
 
-    setBooks([...books, newBook]);
-    setShowUploadModal(false);
-    setFormData({
-      title: '',
-      description: '',
-      category: 'Tajwid',
-      fileUrl: '',
-      file: null,
-    });
+      const response = await fetch('/api/guru/buku-digital', {
+        method: 'POST',
+        body: formDataToSend
+      });
 
-    toast.success('Buku digital berhasil ditambahkan!');
+      const result = await response.json();
+
+      if (response.ok) {
+        // Add book to local state
+        setBooks([...books, result.data]);
+        setShowUploadModal(false);
+        setFormData({
+          title: '',
+          description: '',
+          category: 'Tajwid',
+          fileUrl: '',
+          file: null,
+        });
+        toast.success('Buku digital berhasil diupload!');
+      } else {
+        toast.error(result.error || 'Gagal mengupload buku digital');
+      }
+    } catch (error) {
+      console.error('Error uploading book:', error);
+      toast.error('Terjadi kesalahan saat mengupload');
+    }
   };
 
-  const handleDelete = (bookId) => {
+  const handleDelete = async (bookId) => {
     if (confirm('Apakah Anda yakin ingin menghapus buku ini?')) {
-      setBooks(books.filter((book) => book.id !== bookId));
-      toast.success('Buku berhasil dihapus');
+      try {
+        // Check if this is a localStorage ID (starts with 'book_') or database ID
+        if (bookId.startsWith('book_')) {
+          // This is an old localStorage book - just remove from UI
+          setBooks(books.filter((book) => book.id !== bookId));
+          toast.success('Buku berhasil dihapus dari lokal');
+          // Clear old localStorage if empty
+          const remainingBooks = books.filter((book) => book.id !== bookId);
+          if (remainingBooks.length === 0) {
+            localStorage.removeItem('tahfidz_books');
+          }
+          return;
+        }
+
+        // This is a real database book - call API
+        const response = await fetch(`/api/guru/buku-digital/${bookId}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          setBooks(books.filter((book) => book.id !== bookId));
+          toast.success('Buku berhasil dihapus');
+        } else {
+          toast.error(result.error || 'Gagal menghapus buku');
+        }
+      } catch (error) {
+        console.error('Error deleting book:', error);
+        toast.error('Terjadi kesalahan saat menghapus');
+      }
     }
   };
 
@@ -151,17 +201,27 @@ export default function BukuDigitalPage() {
   };
 
   const handleDownload = (book) => {
-    if (book.fileUrl.startsWith('blob:') || book.fileUrl.startsWith('http')) {
-      const link = document.createElement('a');
-      link.href = book.fileUrl;
-      link.download = book.fileName || book.title + '.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Mengunduh file...');
-    } else {
-      toast.error('File tidak dapat diunduh');
+    const fileUrl = book.fileUrl || book.fileUrl;
+    if (!fileUrl) {
+      toast.error('File tidak tersedia');
+      return;
     }
+    
+    // Create a blob URL for the PDF to display inline
+    const proxyUrl = `/api/guru/buku-digital/proxy?url=${encodeURIComponent(fileUrl)}`;
+    
+    // Fetch the PDF and create a blob URL
+    fetch(proxyUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        // Open in new tab
+        window.open(blobUrl, '_blank');
+      })
+      .catch(err => {
+        console.error('Error opening PDF:', err);
+        toast.error('Gagal membuka PDF');
+      });
   };
 
   return (
@@ -307,20 +367,20 @@ export default function BukuDigitalPage() {
                 <div className="p-4">
                   {/* Category Badge */}
                   <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded mb-2">
-                    {book.category}
+                    {book.category || book.kategori || 'Umum'}
                   </span>
 
                   <h3 className="text-base font-bold text-gray-900 line-clamp-1 mb-2">
-                    {book.title}
+                    {book.title || book.judul || 'Untitled'}
                   </h3>
 
                   <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]">
-                    {book.description}
+                    {book.description || book.deskripsi || 'No description'}
                   </p>
 
                   {/* Upload Date */}
                   <p className="text-xs text-gray-500 mb-4">
-                    {new Date(book.uploadDate).toLocaleDateString('id-ID')}
+                    {new Date(book.uploadDate || book.createdAt).toLocaleDateString('id-ID')}
                   </p>
 
                   {/* Action Buttons */}
@@ -505,11 +565,26 @@ export default function BukuDigitalPage() {
               {/* Viewer Body */}
               <div className="flex-1 overflow-auto bg-gray-50 p-6">
                 {selectedBook.fileUrl ? (
-                  <iframe
-                    src={selectedBook.fileUrl}
-                    className="w-full h-full rounded-lg shadow-lg bg-white"
-                    title={selectedBook.title}
-                  />
+                  <div className="w-full h-full flex items-center justify-center">
+                    {/* Display loading message - user should click download to view */}
+                    <div className="bg-white rounded-lg p-8 text-center max-w-md">
+                      <div className="mb-4 flex justify-center">
+                        <div className="p-4 bg-emerald-100 rounded-full">
+                          <BookOpen className="text-emerald-600" size={48} />
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">Buka PDF di Tab Baru</h3>
+                      <p className="text-gray-600 mb-6">Klik tombol unduh di bawah atau di header untuk membuka PDF di tab baru browser Anda.</p>
+                      <p className="text-sm text-gray-500 mb-6">Nama: {selectedBook.fileName || selectedBook.judul || 'Document'}</p>
+                      <button
+                        onClick={() => handleDownload(selectedBook)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
+                      >
+                        <Download size={20} />
+                        Buka PDF
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <div className="h-full flex items-center justify-center">
                     <div className="text-center">

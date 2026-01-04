@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 // GET - Fetch siswa's own tasmi history with pagination
 export async function GET(request) {
   try {
@@ -262,6 +262,23 @@ export async function POST(request) {
         },
       },
     });
+
+    // ✅ Log activity - siswa daftar tasmi
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'SISWA',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.SISWA_DAFTAR_TASMI,
+      title: 'Mendaftar Tasmi',
+      description: `Mendaftar untuk Juz ${juzYangDitasmi} dengan target hafalan ${jumlahHafalan} juz`,
+      metadata: {
+        tasmiId: tasmi.id,
+        juzYangDitasmi,
+        jumlahHafalan: parseInt(jumlahHafalan),
+        tanggalTasmi: tasmi.tanggalTasmi,
+        jamTasmi
+      }
+    }).catch(err => console.error('Activity log error:', err));
 
     return NextResponse.json(
       { message: 'Pendaftaran Tasmi\' berhasil', tasmi },
