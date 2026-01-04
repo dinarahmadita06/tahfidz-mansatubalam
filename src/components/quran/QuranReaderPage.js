@@ -457,7 +457,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                 <BookOpen size={32} className="text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold break-words">Referensi Al-Qur'an</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Al-Qur'an Digital</h1>
                 <p className="text-green-50 text-sm sm:text-base mt-1">
                   Baca, dengarkan, dan pahami ayat suci Al-Qur'an dengan mudah
                 </p>
