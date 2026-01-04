@@ -36,9 +36,6 @@ const CATEGORIES = [
 const JENIS_MATERI = {
   PDF: 'PDF',
   YOUTUBE: 'YOUTUBE',
-  VIDEO: 'VIDEO',
-  AUDIO: 'AUDIO',
-  LINK: 'LINK',
 };
 
 // Extract YouTube video ID from URL
@@ -58,8 +55,6 @@ function getMaterialIcon(jenisMateri, className = 'w-12 h-12') {
   switch (jenisMateri) {
     case 'YOUTUBE':
       return <Play className={className} />;
-    case 'LINK':
-      return <Link className={className} />;
     default: // PDF
       return <FileText className={className} />;
   }
@@ -75,30 +70,6 @@ function getMaterialColors(jenisMateri) {
         card: 'bg-white/70 backdrop-blur-sm border-2 border-pink-200',
         button: 'bg-pink-500 hover:bg-pink-600',
         buttonSecondary: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
-      };
-    case 'VIDEO':
-      return {
-        badge: 'bg-purple-100 text-purple-700 border-purple-200',
-        icon: 'text-purple-600',
-        card: 'bg-white/70 backdrop-blur-sm border-2 border-purple-200',
-        button: 'bg-purple-500 hover:bg-purple-600',
-        buttonSecondary: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
-      };
-    case 'AUDIO':
-      return {
-        badge: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-        icon: 'text-indigo-600',
-        card: 'bg-white/70 backdrop-blur-sm border-2 border-indigo-200',
-        button: 'bg-indigo-500 hover:bg-indigo-600',
-        buttonSecondary: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700',
-      };
-    case 'LINK':
-      return {
-        badge: 'bg-blue-100 text-blue-700 border-blue-200',
-        icon: 'text-blue-600',
-        card: 'bg-white/70 backdrop-blur-sm border-2 border-blue-200',
-        button: 'bg-blue-500 hover:bg-blue-600',
-        buttonSecondary: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
       };
     default: // PDF
       return {
@@ -454,30 +425,30 @@ export default function BukuDigitalPage() {
           </div>
         </div>
 
-        {/* Statistics Cards - 2 Kolom (PDF-Only) */}
+        {/* Statistics Cards - 2 Kolom (PDF & YouTube) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card 1: Total Materi */}
+          {/* Card 1: PDF */}
           <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-600 text-sm font-semibold mb-1">TOTAL MATERI</p>
-                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalMateri}</h3>
+                <p className="text-emerald-600 text-sm font-semibold mb-1">FILE PDF</p>
+                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalPDF}</h3>
               </div>
               <div className="bg-emerald-100 p-4 rounded-full">
-                <BookOpen size={32} className="text-emerald-600" />
+                <FileCheck size={32} className="text-emerald-600" />
               </div>
             </div>
           </div>
 
-          {/* Card 2: PDF */}
-          <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-xl border-2 border-blue-200 p-6 shadow-sm">
+          {/* Card 2: YouTube */}
+          <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border-2 border-pink-200 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-sm font-semibold mb-1">FILE PDF</p>
-                <h3 className="text-4xl font-bold text-blue-700">{loading ? '...' : totalPDF}</h3>
+                <p className="text-pink-600 text-sm font-semibold mb-1">YOUTUBE</p>
+                <h3 className="text-4xl font-bold text-pink-700">{loading ? '...' : totalYouTube}</h3>
               </div>
-              <div className="bg-blue-100 p-4 rounded-full">
-                <FileCheck size={32} className="text-blue-600" />
+              <div className="bg-pink-100 p-4 rounded-full">
+                <Play size={32} className="text-pink-600" />
               </div>
             </div>
           </div>

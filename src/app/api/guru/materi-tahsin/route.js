@@ -154,7 +154,7 @@ export async function POST(request) {
     }
 
     // Validate jenis materi enum
-    const validJenis = ['PDF', 'YOUTUBE', 'VIDEO', 'AUDIO', 'LINK'];
+    const validJenis = ['PDF', 'YOUTUBE'];
     if (!validJenis.includes(jenisMateri)) {
       return NextResponse.json(
         { message: 'Jenis materi tidak valid' },
