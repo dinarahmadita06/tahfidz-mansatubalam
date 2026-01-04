@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
@@ -12,46 +13,60 @@ import {
   FileText,
 } from 'lucide-react';
 
-const ACTIVITY_ICONS = {
-  presensi: CheckCircle2,
-  penilaian_tahsin: Volume2,
-  penilaian_hafalan: BookOpen,
-  penilaian_tasmi: Award,
-  upload_materi: Upload,
-  pengumuman: Megaphone,
+// Map new action names to icons
+const ACTION_ICONS = {
+  // Guru actions
+  GURU_INPUT_PENILAIAN: BookOpen,
+  GURU_EDIT_PENILAIAN: BookOpen,
+  GURU_UBAH_PROFIL: FileText,
+  GURU_UPLOAD_TTD: Upload,
+  GURU_LIHAT_SISWA: Volume2,
+  
+  // Siswa actions
+  SISWA_DAFTAR_TASMI: Award,
+  SISWA_LIHAT_PENILAIAN: BookOpen,
+  SISWA_UBAH_PROFIL: FileText,
+  
+  // Default
   lainnya: FileText,
 };
 
-const ACTIVITY_COLORS = {
-  presensi: {
-    bg: 'bg-emerald-100',
-    text: 'text-emerald-600',
-    border: 'border-emerald-200',
-  },
-  penilaian_tahsin: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-600',
-    border: 'border-blue-200',
-  },
-  penilaian_hafalan: {
+// Map actions to colors
+const ACTION_COLORS = {
+  GURU_INPUT_PENILAIAN: {
     bg: 'bg-violet-100',
     text: 'text-violet-600',
     border: 'border-violet-200',
   },
-  penilaian_tasmi: {
-    bg: 'bg-amber-100',
-    text: 'text-amber-600',
-    border: 'border-amber-200',
+  GURU_EDIT_PENILAIAN: {
+    bg: 'bg-violet-100',
+    text: 'text-violet-600',
+    border: 'border-violet-200',
   },
-  upload_materi: {
+  GURU_UBAH_PROFIL: {
+    bg: 'bg-blue-100',
+    text: 'text-blue-600',
+    border: 'border-blue-200',
+  },
+  GURU_UPLOAD_TTD: {
     bg: 'bg-cyan-100',
     text: 'text-cyan-600',
     border: 'border-cyan-200',
   },
-  pengumuman: {
-    bg: 'bg-rose-100',
-    text: 'text-rose-600',
-    border: 'border-rose-200',
+  SISWA_DAFTAR_TASMI: {
+    bg: 'bg-amber-100',
+    text: 'text-amber-600',
+    border: 'border-amber-200',
+  },
+  SISWA_LIHAT_PENILAIAN: {
+    bg: 'bg-emerald-100',
+    text: 'text-emerald-600',
+    border: 'border-emerald-200',
+  },
+  SISWA_UBAH_PROFIL: {
+    bg: 'bg-blue-100',
+    text: 'text-blue-600',
+    border: 'border-blue-200',
   },
   lainnya: {
     bg: 'bg-slate-100',
@@ -61,8 +76,20 @@ const ACTIVITY_COLORS = {
 };
 
 function ActivityItem({ activity }) {
-  const Icon = ACTIVITY_ICONS[activity.type] || FileText;
-  const colors = ACTIVITY_COLORS[activity.type] || ACTIVITY_COLORS.lainnya;
+  // ✅ Real-time timeAgo: re-render every minute to update relative time
+  const [, setTriggerUpdate] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTriggerUpdate(prev => prev + 1);
+    }, 60000); // Update every 1 minute
+
+    return () => clearInterval(interval);
+  }, []);
+  // Handle both old (type) and new (action) format
+  const activityType = activity.action || activity.type || 'lainnya';
+  const Icon = ACTION_ICONS[activityType] || ACTION_ICONS.lainnya;
+  const colors = ACTION_COLORS[activityType] || ACTION_COLORS.lainnya;
 
   const relativeTime = formatDistanceToNow(new Date(activity.createdAt), {
     addSuffix: true,
@@ -78,9 +105,9 @@ function ActivityItem({ activity }) {
         <p className="text-sm font-semibold text-slate-800 line-clamp-1">
           {activity.title}
         </p>
-        {activity.subtitle && (
+        {(activity.subtitle || activity.description) && (
           <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">
-            {activity.subtitle}
+            {activity.subtitle || activity.description}
           </p>
         )}
         <p className="text-xs text-slate-500 mt-1">{relativeTime}</p>

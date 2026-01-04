@@ -198,7 +198,17 @@ function AdminLayout({ children }) {
   };
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' });
+    try {
+      // Log logout activity
+      await fetch('/api/auth/log-activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'LOGOUT' })
+      }).catch(err => console.error('Logout activity log failed:', err));
+    } finally {
+      // Proceed with signOut regardless of logging success
+      await signOut({ callbackUrl: '/login' });
+    }
   };
 
   const isActive = (href) => {

@@ -391,10 +391,14 @@ export default function DashboardGuru() {
   const fetchActivities = async () => {
     try {
       setActivitiesLoading(true);
-      const response = await fetch('/api/guru/activity?limit=8');
+      // ✅ Force fresh data - no caching
+      const response = await fetch('/api/guru/aktivitas-list?limit=8', {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
       if (!response.ok) throw new Error('Failed to fetch activities');
       const data = await response.json();
-      setActivities(data.activities || []);
+      setActivities(data.data || []);
     } catch (error) {
       console.error('Error fetching activities:', error);
       setActivities([]);

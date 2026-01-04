@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 // PUT - Update tahsin
 export async function PUT(request, { params }) {
@@ -40,6 +41,17 @@ export async function PUT(request, { params }) {
     // Check if tahsin exists and belongs to this guru
     const existingTahsin = await prisma.tahsin.findUnique({
       where: { id },
+      include: {
+        siswa: {
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!existingTahsin) {
@@ -102,6 +114,24 @@ export async function PUT(request, { params }) {
       },
     });
 
+    // Log activity - Edit Tahsin
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.GURU_EDIT_TAHSIN,
+      title: 'Edit hasil tahsin',
+      description: `Edit tahsin untuk ${existingTahsin.siswa.user.name} - Level ${level || existingTahsin.level}`,
+      targetUserId: existingTahsin.siswaId,
+      targetRole: 'SISWA',
+      targetName: existingTahsin.siswa.user.name,
+      metadata: {
+        tahsinId: tahsin.id,
+        level: level || existingTahsin.level,
+        statusPembelajaran: statusPembelajaran || existingTahsin.statusPembelajaran,
+      },
+    }).catch(err => console.error('Activity log error:', err));
+
     return NextResponse.json({
       message: 'Tahsin berhasil diperbarui',
       tahsin,
@@ -144,6 +174,17 @@ export async function DELETE(request, { params }) {
     // Check if tahsin exists and belongs to this guru
     const existingTahsin = await prisma.tahsin.findUnique({
       where: { id },
+      include: {
+        siswa: {
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!existingTahsin) {
@@ -164,6 +205,24 @@ export async function DELETE(request, { params }) {
     await prisma.tahsin.delete({
       where: { id },
     });
+
+    // Log activity - Hapus Tahsin
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.GURU_HAPUS_TAHSIN,
+      title: 'Hapus data tahsin',
+      description: `Menghapus tahsin untuk ${existingTahsin.siswa.user.name}`,
+      targetUserId: existingTahsin.siswaId,
+      targetRole: 'SISWA',
+      targetName: existingTahsin.siswa.user.name,
+      metadata: {
+        tahsinId: existingTahsin.id,
+        level: existingTahsin.level,
+        deletedAt: new Date(),
+      },
+    }).catch(err => console.error('Activity log error:', err));
 
     return NextResponse.json({
       message: 'Tahsin berhasil dihapus',
