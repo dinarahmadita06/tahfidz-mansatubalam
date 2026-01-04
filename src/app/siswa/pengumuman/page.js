@@ -1,65 +1,154 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   Megaphone,
   Search,
   Calendar,
-  Clock,
-  X,
   Bell,
   BookOpen,
   Award,
-  Star,
+  Loader,
+  FileText,
 } from 'lucide-react';
-import SiswaLayout from '@/components/layout/SiswaLayout';
+import { toast, Toaster } from 'react-hot-toast';
 
-// Category config
+// Category icons and colors (identik dengan Guru)
 const CATEGORY_CONFIG = {
-  UMUM: { icon: Bell, color: 'bg-blue-100 text-blue-600' },
-  AKADEMIK: { icon: BookOpen, color: 'bg-purple-100 text-purple-600' },
-  KEGIATAN: { icon: Star, color: 'bg-amber-100 text-amber-600' },
-  PENTING: { icon: Award, color: 'bg-red-100 text-red-600' },
+  UMUM: { icon: Bell, color: 'bg-blue-100 text-blue-600', badgeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
+  AKADEMIK: { icon: BookOpen, color: 'bg-purple-100 text-purple-600', badgeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
+  KEGIATAN: { icon: Award, color: 'bg-amber-100 text-amber-600', badgeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
+  PENTING: { icon: Megaphone, color: 'bg-red-100 text-red-600', badgeColor: 'bg-red-50 text-red-700 border-red-200' },
 };
+
+// AnnouncementCard Component (identik dengan Guru)
+function AnnouncementCard({ announcement }) {
+  const categoryData = CATEGORY_CONFIG[announcement.kategori] || CATEGORY_CONFIG.UMUM;
+  const CategoryIcon = categoryData.icon;
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const truncateText = (text, length = 100) => {
+    if (!text) return '';
+    if (text.length <= length) return text;
+    return text.substring(0, length) + '...';
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+      {/* Category color bar */}
+      <div className={`h-1 ${announcement.kategori === 'PENTING' ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+
+      <div className="p-6">
+        {/* Header: Icon + Title */}
+        <div className="flex items-start gap-4 mb-4">
+          <div className={`p-3 rounded-lg ${categoryData.color} flex-shrink-0`}>
+            <CategoryIcon size={24} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
+              {announcement.judul}
+            </h3>
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${categoryData.badgeColor}`}
+            >
+              {announcement.kategori}
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
+          {truncateText(announcement.isi, 150)}
+        </p>
+
+        {/* Footer: Date */}
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Calendar size={16} className="text-gray-400" />
+          <span>{formatDate(announcement.createdAt)}</span>
+          {announcement.tanggalSelesai && (
+            <>
+              <span className="text-gray-300">•</span>
+              <span>Hingga {formatDate(announcement.tanggalSelesai)}</span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// EmptyState Component (identik dengan Guru)
+function AnnouncementEmptyState() {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+      <div className="flex justify-center mb-4">
+        <div className="p-4 bg-emerald-50 rounded-full">
+          <Megaphone className="text-emerald-600" size={48} />
+        </div>
+      </div>
+      <h3 className="text-xl font-bold text-gray-700 mb-2">Belum Ada Pengumuman</h3>
+      <p className="text-gray-500 mb-1">Nantikan kabar terbaru di sini</p>
+      <p className="text-sm text-gray-400">
+        Admin akan segera mengirimkan informasi penting untuk Anda
+      </p>
+    </div>
+  );
+}
 
 export default function SiswaPengumumanPage() {
   const [pengumuman, setPengumuman] = useState([]);
   const [filteredPengumuman, setFilteredPengumuman] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState('terbaru');
-  const [selectedPengumuman, setSelectedPengumuman] = useState(null);
 
   useEffect(() => {
     fetchPengumuman();
   }, []);
 
   useEffect(() => {
-    filterAndSortPengumuman();
-  }, [searchQuery, sortOrder, pengumuman]);
+    filterPengumuman();
+  }, [searchQuery, pengumuman]);
 
   const fetchPengumuman = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await fetch('/api/pengumuman?limit=100');
+      const res = await fetch('/api/pengumuman?limit=100', {
+        credentials: 'include',
+      });
 
       if (!res.ok) {
         throw new Error('Gagal memuat pengumuman');
       }
 
       const data = await res.json();
-      setPengumuman(data.pengumuman || []);
+
+      // Empty array is valid, not an error
+      const announcements = data.pengumuman || [];
+      setPengumuman(announcements);
+      setFilteredPengumuman(announcements);
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error fetching pengumuman:', err);
+      toast.error('Gagal memuat pengumuman. Coba refresh halaman.');
+      setPengumuman([]);
+      setFilteredPengumuman([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterAndSortPengumuman = () => {
-    let filtered = [...pengumuman];
+  const filterPengumuman = () => {
+    let filtered = pengumuman;
 
-    // Search filter
+    // Filter by search query
     if (searchQuery.trim()) {
       filtered = filtered.filter(
         (p) =>
@@ -68,230 +157,106 @@ export default function SiswaPengumumanPage() {
       );
     }
 
-    // Sort
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
-      return sortOrder === 'terbaru' ? dateB - dateA : dateA - dateB;
-    });
-
     setFilteredPengumuman(filtered);
   };
 
-  const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
-  const truncateText = (text, length = 120) => {
-    if (!text || text.length <= length) return text;
-    return text.substring(0, length) + '...';
-  };
-
-  const isNew = (date) => {
-    const now = new Date();
-    const created = new Date(date);
-    const diffDays = (now - created) / (1000 * 60 * 60 * 24);
-    return diffDays < 3;
-  };
-
-  const getCategoryIcon = (kategori) => {
-    return CATEGORY_CONFIG[kategori] || CATEGORY_CONFIG.UMUM;
-  };
+  if (loading) {
+    return (
+      <SiswaLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
+            <p className="text-gray-600">Memuat pengumuman...</p>
+          </div>
+        </div>
+      </SiswaLayout>
+    );
+  }
 
   return (
     <SiswaLayout>
-      {/* Background Gradient - SIMTAQ Style */}
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-        <div className="w-full max-w-none px-4 sm:px-6 lg:px-10 py-6 space-y-6">
-          {/* Header - SIMTAQ Green Gradient */}
-          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
-                <Megaphone size={32} className="text-white" />
+      <Toaster position="top-right" />
+
+      <div className="space-y-6">
+        {/* Header Gradient Hijau - Style identik dengan Guru (Responsive) */}
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-5 sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                <Megaphone className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
+
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold break-words">Pengumuman</h1>
-                <p className="text-green-50 text-sm sm:text-base mt-1">
-                  Informasi dan kabar terbaru dari sekolah
+                <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
+                  Pengumuman
+                </h1>
+                <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
+                  Pantau informasi dan kabar terbaru 
                 </p>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Search & Filter - Compact */}
-          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-4">
-            <div className="space-y-4">
-              {/* Search - Full Width */}
-              <div className="w-full">
-                <div className="relative">
-                  <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari pengumuman..."
-                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
-                </div>
-              </div>
-
-              {/* Sort Filter */}
-              <div className="flex items-center gap-2">
-                {['terbaru', 'terlama'].map((sort) => (
-                  <button
-                    key={sort}
-                    onClick={() => setSortOrder(sort)}
-                    className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-all ${
-                      sortOrder === sort
-                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {sort.charAt(0).toUpperCase() + sort.slice(1)}
-                  </button>
-                ))}
-              </div>
+        {/* Filter Section - identik dengan Guru */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* Search Bar - Full Width */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Cari Pengumuman
+            </label>
+            <div className="relative">
+              <Search size={18} className="absolute left-3 top-3 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari pengumuman..."
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
             </div>
           </div>
+        </div>
 
-          {/* Content */}
-          {loading ? (
-            <div className="grid grid-cols-1 gap-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-40 bg-white/70 backdrop-blur rounded-2xl border border-white/20 animate-pulse"
-                />
-              ))}
-            </div>
-          ) : filteredPengumuman.length === 0 ? (
-            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-12 text-center">
+        {/* Announcement List or Empty State */}
+        {filteredPengumuman.length === 0 ? (
+          pengumuman.length === 0 ? (
+            <AnnouncementEmptyState />
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
               <div className="flex justify-center mb-4">
-                <div className="p-4 bg-emerald-100 rounded-full">
-                  <Megaphone className="text-emerald-600" size={48} />
+                <div className="p-4 bg-gray-50 rounded-full">
+                  <FileText className="text-gray-400" size={48} />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-gray-700 mb-2">
-                {searchQuery ? 'Tidak Ada Hasil' : 'Belum Ada Pengumuman'}
+                Tidak Ada Hasil
               </h3>
               <p className="text-gray-500">
-                {searchQuery
-                  ? 'Tidak ditemukan pengumuman yang sesuai dengan pencarian'
-                  : 'Belum ada pengumuman dari admin'}
+                Tidak ditemukan pengumuman yang sesuai dengan pencarian atau filter
               </p>
             </div>
-          ) : (
-            <>
-              {/* Card List */}
-              <div className="space-y-4">
-                {filteredPengumuman.map((item) => {
-                  const categoryData = getCategoryIcon(item.kategori);
-                  const CategoryIcon = categoryData.icon;
+          )
+        ) : (
+          <>
+            {/* Grid Layout - identik dengan Guru (2 columns pada desktop) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredPengumuman.map((announcement) => (
+                <AnnouncementCard key={announcement.id} announcement={announcement} />
+              ))}
+            </div>
 
-                  return (
-                    <div
-                      key={item.id}
-                      className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                      onClick={() => setSelectedPengumuman(item)}
-                    >
-                      <div className="flex items-start gap-4">
-                        {/* Icon */}
-                        <div className={`p-3 rounded-xl ${categoryData.color} flex-shrink-0`}>
-                          <CategoryIcon size={24} />
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <h3 className="font-bold text-gray-900 text-lg line-clamp-2">
-                              {item.judul}
-                            </h3>
-                            {isNew(item.createdAt) && (
-                              <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full flex-shrink-0">
-                                Baru
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-                            {truncateText(item.isi, 150)}
-                          </p>
-
-                          <div className="flex items-center gap-3 text-sm text-gray-500">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar size={16} />
-                              <span>{formatDate(item.createdAt)}</span>
-                            </div>
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
-                              {item.kategori}
-                            </span>
-                          </div>
-
-                          <button className="mt-3 text-emerald-600 hover:text-emerald-700 font-semibold text-sm flex items-center gap-1">
-                            Lihat Detail →
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Footer Info */}
-              <div className="bg-emerald-50 rounded-lg p-4 text-center border border-emerald-100">
-                <p className="text-sm text-gray-700">
-                  Menampilkan{' '}
-                  <span className="font-bold text-emerald-700">{filteredPengumuman.length}</span> dari{' '}
-                  <span className="font-bold text-emerald-700">{pengumuman.length}</span> pengumuman
-                </p>
-              </div>
-            </>
-          )}
-        </div>
+            {/* Footer Info */}
+            <div className="bg-emerald-50 rounded-lg p-4 text-center border border-emerald-100">
+              <p className="text-sm text-gray-700">
+                Menampilkan{' '}
+                <span className="font-bold text-emerald-700">{filteredPengumuman.length}</span> dari{' '}
+                <span className="font-bold text-emerald-700">{pengumuman.length}</span> pengumuman
+              </p>
+            </div>
+          </>
+        )}
       </div>
-
-      {/* Modal Detail */}
-      {selectedPengumuman && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 flex items-start justify-between">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  {selectedPengumuman.judul}
-                </h2>
-                <div className="flex items-center gap-3 text-sm text-white/90">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={16} />
-                    <span>{formatDate(selectedPengumuman.createdAt)}</span>
-                  </div>
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">
-                    {selectedPengumuman.kategori}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedPengumuman(null)}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-white" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="prose prose-emerald max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {selectedPengumuman.isi}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </SiswaLayout>
   );
 }
