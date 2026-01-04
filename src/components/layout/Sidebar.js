@@ -79,7 +79,7 @@ const menuItems = [
     title: 'Pengumuman',
     icon: Bell,
     href: '/guru/pengumuman',
-    description: 'Buat pengumuman'
+    description: 'Pantau pengumuman'
   },
   {
     title: 'Profil',

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import AnnouncementSlider from '@/components/AnnouncementSlider';
 import {
   BookOpen,
   Star,
@@ -367,93 +368,8 @@ export default function DashboardSiswa() {
             </div>
           </div>
 
-          {/* Pengumuman - HIGHLIGHT AMBER (Urgent & Elegant) - Single Card */}
-          <div className="bg-amber-50/70 backdrop-blur-sm rounded-2xl border border-amber-200 ring-2 ring-amber-200/40 shadow-[0_0_0_3px_rgba(245,158,11,0.12)] border-l-4 border-l-amber-400 p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="p-3.5 bg-amber-500 rounded-xl shadow-lg ring-2 ring-amber-300/50">
-                  <Megaphone className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-amber-900">Pengumuman Terbaru</h2>
-                  <p className="text-xs text-amber-700 font-medium mt-0.5">Informasi penting untuk Anda</p>
-                </div>
-              </div>
-              <Link
-                href="/siswa/pengumuman"
-                className="hidden sm:inline-flex px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
-              >
-                Lihat Semua
-              </Link>
-            </div>
-
-            {/* Pengumuman Content - Direct render tanpa nested card */}
-            {pengumumanLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-20 bg-amber-100/50 rounded-lg animate-pulse" />
-                ))}
-              </div>
-            ) : pengumuman.length === 0 ? (
-              <div className="text-center py-8 px-4">
-                <div className="inline-flex p-3 bg-amber-100 rounded-full mb-3">
-                  <Megaphone size={24} className="text-amber-600" />
-                </div>
-                <p className="text-amber-900 text-sm font-medium">Belum ada pengumuman</p>
-                <p className="text-amber-700 text-xs mt-1">Nantikan kabar terbaru dari admin</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pengumuman.map((item) => {
-                  const CategoryIcon = getCategoryIcon(item.kategori);
-                  return (
-                    <Link
-                      key={item.id}
-                      href="/siswa/pengumuman"
-                      className="block p-4 bg-white rounded-lg hover:bg-amber-50/50 transition-all border border-amber-100 hover:border-amber-200 hover:shadow-md group"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0 group-hover:bg-amber-200 transition-colors">
-                          <CategoryIcon size={16} className="text-amber-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900 text-sm line-clamp-1 group-hover:text-amber-700 transition-colors">
-                              {item.judul}
-                            </h4>
-                            {isNew(item.createdAt) && (
-                              <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full flex-shrink-0">
-                                Baru
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-600 mb-2 line-clamp-2 leading-relaxed">
-                            {truncateText(item.isi, 100)}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <Calendar size={12} />
-                            <span>{formatDate(item.createdAt)}</span>
-                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold">
-                              {item.kategori}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Mobile CTA - Full Width Button */}
-            <Link
-              href="/siswa/pengumuman"
-              className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
-            >
-              Lihat Semua
-              <ChevronRight size={20} />
-            </Link>
-          </div>
+          {/* Pengumuman - Using Reusable AnnouncementSlider */}
+          <AnnouncementSlider announcements={pengumuman} loading={pengumumanLoading} variant="siswa" />
 
           {/* Statistics Cards - 4 Columns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

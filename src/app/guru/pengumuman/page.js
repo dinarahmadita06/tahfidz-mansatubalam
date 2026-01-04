@@ -197,7 +197,7 @@ export default function GuruPengumumanPage() {
                   Pengumuman
                 </h1>
                 <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
-                  Informasi dan kabar terbaru untuk guru
+                  Pantau informasi dan kabar terbaru 
                 </p>
               </div>
             </div>

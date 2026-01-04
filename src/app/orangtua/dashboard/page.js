@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { User, BookOpen, TrendingUp, Calendar, Star, Clock, Award, MessageCircle, ChevronDown, Lightbulb } from "lucide-react";
-import PengumumanWidget from "@/components/PengumumanWidget";
+import AnnouncementSlider from "@/components/AnnouncementSlider";
 
 // ===== CONSTANTS - SIMTAQ BASELINE =====
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
@@ -236,6 +236,26 @@ export default function OrangtuaDashboardPage() {
   ];
 
   const [selectedChild, setSelectedChild] = useState(allChildren[0]);
+  const [pengumuman, setPengumuman] = useState([]);
+  const [pengumumanLoading, setPengumumanLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPengumuman = async () => {
+      try {
+        setPengumumanLoading(true);
+        const res = await fetch('/api/pengumuman?limit=5');
+        if (res.ok) {
+          const data = await res.json();
+          setPengumuman(data.pengumuman || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch pengumuman', error);
+      } finally {
+        setPengumumanLoading(false);
+      }
+    };
+    fetchPengumuman();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
@@ -280,11 +300,8 @@ export default function OrangtuaDashboardPage() {
           <ChildCard child={selectedChild} isActive={true} />
         </div>
 
-        {/* Pengumuman Widget */}
-        <div className={`${CARD_GLASS} p-6`}>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Pengumuman</h2>
-          <PengumumanWidget limit={3} />
-        </div>
+        {/* Pengumuman Slider */}
+        <AnnouncementSlider announcements={pengumuman} loading={pengumumanLoading} variant="orangtua" />
 
         {/* Weekly Progress */}
         <WeeklyProgress />
