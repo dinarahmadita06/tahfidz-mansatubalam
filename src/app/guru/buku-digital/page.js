@@ -15,6 +15,10 @@ import {
   AlertCircle,
   FileCheck,
   Loader,
+  Play,
+  Video,
+  Link,
+  Music,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -29,73 +33,262 @@ const CATEGORIES = [
   'Umum',
 ];
 
+const JENIS_MATERI = {
+  PDF: 'PDF',
+  YOUTUBE: 'YOUTUBE',
+  VIDEO: 'VIDEO',
+  AUDIO: 'AUDIO',
+  LINK: 'LINK',
+};
+
+// Extract YouTube video ID from URL
+function extractYouTubeId(url) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Get thumbnail URL for YouTube videos
+function getYouTubeThumbnail(videoId) {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+// Get icon based on material type
+function getMaterialIcon(jenisMateri, className = 'w-12 h-12') {
+  switch (jenisMateri) {
+    case 'YOUTUBE':
+      return <Play className={className} />;
+    case 'LINK':
+      return <Link className={className} />;
+    default: // PDF
+      return <FileText className={className} />;
+  }
+}
+
+// Get color classes based on material type
+function getMaterialColors(jenisMateri) {
+  switch (jenisMateri) {
+    case 'YOUTUBE':
+      return {
+        badge: 'bg-pink-100 text-pink-700 border-pink-200',
+        icon: 'text-pink-600',
+        card: 'bg-white/70 backdrop-blur-sm border-2 border-pink-200',
+        button: 'bg-pink-500 hover:bg-pink-600',
+        buttonSecondary: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
+      };
+    case 'VIDEO':
+      return {
+        badge: 'bg-purple-100 text-purple-700 border-purple-200',
+        icon: 'text-purple-600',
+        card: 'bg-white/70 backdrop-blur-sm border-2 border-purple-200',
+        button: 'bg-purple-500 hover:bg-purple-600',
+        buttonSecondary: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
+      };
+    case 'AUDIO':
+      return {
+        badge: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+        icon: 'text-indigo-600',
+        card: 'bg-white/70 backdrop-blur-sm border-2 border-indigo-200',
+        button: 'bg-indigo-500 hover:bg-indigo-600',
+        buttonSecondary: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700',
+      };
+    case 'LINK':
+      return {
+        badge: 'bg-blue-100 text-blue-700 border-blue-200',
+        icon: 'text-blue-600',
+        card: 'bg-white/70 backdrop-blur-sm border-2 border-blue-200',
+        button: 'bg-blue-500 hover:bg-blue-600',
+        buttonSecondary: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
+      };
+    default: // PDF
+      return {
+        badge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        icon: 'text-emerald-600',
+        card: 'bg-white/70 backdrop-blur-sm border-2 border-emerald-200',
+        button: 'bg-emerald-500 hover:bg-emerald-600',
+        buttonSecondary: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700',
+      };
+  }
+}
+
+// Material Card Component
+function MaterialCard({ materi, onOpen, onDownload, onDelete }) {
+  const colors = getMaterialColors(materi.jenisMateri);
+  const isYouTube = materi.jenisMateri === 'YOUTUBE';
+  const isPDF = materi.jenisMateri === 'PDF';
+  
+  const handleOpen = () => {
+    onOpen(materi);
+  };
+  
+  const handleDownloadClick = () => {
+    onDownload(materi);
+  };
+  
+  const handleDelete = () => {
+    onDelete(materi.id);
+  };
+  
+  return (
+    <div className={`rounded-2xl shadow-sm ${colors.card} overflow-hidden hover:shadow-md hover:shadow-emerald-500/20 transition-all duration-200`}>
+      {/* Material Type Badge */}
+      <div className="absolute top-3 left-3 z-10">
+        <span className={`px-2 py-1 ${colors.badge} text-xs font-medium rounded-full uppercase`}>
+          {materi.jenisMateri}
+        </span>
+      </div>
+      
+      {/* Thumbnail/Icon Area */}
+      <div className="h-40 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 relative">
+        {isYouTube ? (
+          <div className="relative w-full h-full">
+            {materi.youtubeUrl ? (
+              <>
+                <img 
+                  src={getYouTubeThumbnail(extractYouTubeId(materi.youtubeUrl))}
+                  alt={materi.judul}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null; // Prevent infinite loop
+                    e.target.style.display = 'none';
+                    const fallbackDiv = e.target.parentElement.querySelector('.fallback-icon');
+                    if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity">
+                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
+                    <Play className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+                <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-600 hidden">
+                  <Play className="w-12 h-12 text-white" />
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-600">
+                <Play className="w-12 h-12 text-white" />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
+            {getMaterialIcon(materi.jenisMateri, 'w-16 h-16 text-white/40')}
+          </div>
+        )}
+      </div>
+
+      {/* Material Info */}
+      <div className="p-4">
+        <h3 className="text-base font-bold text-gray-900 line-clamp-1 mb-2">
+          {materi.judul || 'Untitled'}
+        </h3>
+
+        <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]">
+          {materi.deskripsi || materi.deskripsi || 'No description'}
+        </p>
+
+        {/* Upload Date */}
+        <p className="text-xs text-gray-500 mb-4">
+          {new Date(materi.createdAt || materi.uploadDate || materi.createdAt).toLocaleDateString('id-ID')}
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleOpen}
+            className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-white text-sm font-semibold rounded-lg transition-all ${colors.button}`}
+          >
+            <Eye size={16} />
+            {isYouTube ? 'Buka Video' : 'Lihat'}
+          </button>
+
+          {isPDF && (
+            <button
+              onClick={handleDownloadClick}
+              className={`flex items-center justify-center px-3 py-2 ${colors.buttonSecondary} rounded-lg transition-all`}
+            >
+              <Download size={16} />
+            </button>
+          )}
+
+          <button
+            onClick={handleDelete}
+            className="flex items-center justify-center px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BukuDigitalPage() {
-  const [books, setBooks] = useState([]);
+  const [materiList, setMateriList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showViewerModal, setShowViewerModal] = useState(false);
-  const [selectedBook, setSelectedBook] = useState(null);
+  const [selectedMateri, setSelectedMateri] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Form states
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'Tajwid',
+    judul: '',
+    deskripsi: '',
+    kategori: 'Tajwid',
+    jenisMateri: 'PDF',
     fileUrl: '',
+    youtubeUrl: '',
     file: null,
   });
 
   useEffect(() => {
-    fetchBooks();
+    fetchMateri();
   }, []);
 
-  const fetchBooks = async () => {
+  const fetchMateri = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/guru/buku-digital/all');
+      const response = await fetch('/api/guru/materi-tahsin');
       if (response.ok) {
         const data = await response.json();
-        setBooks(data.data || []);
+        setMateriList(data.materi || []);
       } else {
-        toast.error('Gagal memuat buku digital');
+        toast.error('Gagal memuat materi digital');
       }
     } catch (error) {
-      console.error('Error fetching books:', error);
-      toast.error('Terjadi kesalahan saat memuat buku');
+      console.error('Error fetching materi:', error);
+      toast.error('Terjadi kesalahan saat memuat materi');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter books based on search and category
-  const filteredBooks = useMemo(() => {
-    return books.filter((book) => {
-      // Handle both old localStorage format (title, description, category) and new API format (judul, deskripsi, kategori)
-      const title = book.title || book.judul || '';
-      const description = book.description || book.deskripsi || '';
-      const category = book.category || book.kategori || '';
+  // Filter materi based on search and category
+  const filteredMateri = useMemo(() => {
+    return materiList.filter((materi) => {
+      const judul = materi.judul || '';
+      const deskripsi = materi.deskripsi || '';
+      const kategori = materi.kategori || '';
       
-      const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'Semua' || category === selectedCategory;
+      const matchesSearch = judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deskripsi.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'Semua' || kategori === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [books, searchQuery, selectedCategory]);
+  }, [materiList, searchQuery, selectedCategory]);
 
-  // Calculate statistics - handle both old and new format
-  const totalBooks = filteredBooks.length;
-  const totalPDF = filteredBooks.filter(b => {
-    const fileUrl = b.fileUrl || b.fileUrl || '';
-    return b.file || fileUrl.startsWith('blob:') || fileUrl.startsWith('http');
-  }).length;
+  // Calculate statistics
+  const totalMateri = filteredMateri.length;
+  const totalPDF = filteredMateri.filter(m => m.jenisMateri === 'PDF').length;
+  const totalYouTube = filteredMateri.filter(m => m.jenisMateri === 'YOUTUBE').length;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('Ukuran file maksimal 10MB');
+      if (file.size > 50 * 1024 * 1024) { // Increase to 50MB as per API
+        toast.error('Ukuran file maksimal 50MB');
         return;
       }
       if (file.type !== 'application/pdf') {
@@ -109,6 +302,7 @@ export default function BukuDigitalPage() {
         ...formData,
         file: file,
         fileUrl: fileUrl,
+        youtubeUrl: '', // Clear youtubeUrl when file is selected
       });
     }
   };
@@ -116,29 +310,44 @@ export default function BukuDigitalPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.title.trim()) {
-      toast.error('Judul buku harus diisi');
+    if (!formData.judul.trim()) {
+      toast.error('Judul materi harus diisi');
       return;
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.deskripsi.trim()) {
       toast.error('Deskripsi harus diisi');
       return;
     }
 
-    if (!formData.file) {
+    if (formData.jenisMateri === 'PDF' && !formData.file) {
       toast.error('File PDF wajib diupload');
+      return;
+    }
+
+    if (formData.jenisMateri === 'YOUTUBE' && !formData.youtubeUrl.trim()) {
+      toast.error('URL YouTube wajib diisi');
       return;
     }
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('file', formData.file);
-      formDataToSend.append('judul', formData.title);
-      formDataToSend.append('deskripsi', formData.description);
-      formDataToSend.append('kategori', formData.category);
+      formDataToSend.append('judul', formData.judul);
+      formDataToSend.append('deskripsi', formData.deskripsi);
+      formDataToSend.append('jenisMateri', formData.jenisMateri);
+      
+      // Only include kelasId if it exists
+      if (formData.kelasId) {
+        formDataToSend.append('kelasId', formData.kelasId);
+      }
+      
+      if (formData.jenisMateri === 'YOUTUBE') {
+        formDataToSend.append('youtubeUrl', formData.youtubeUrl);
+      } else if (formData.file) {
+        formDataToSend.append('file', formData.file);
+      }
 
-      const response = await fetch('/api/guru/buku-digital', {
+      const response = await fetch('/api/guru/materi-tahsin', {
         method: 'POST',
         body: formDataToSend
       });
@@ -146,94 +355,78 @@ export default function BukuDigitalPage() {
       const result = await response.json();
 
       if (response.ok) {
-        // Refresh the books list
-        fetchBooks();
+        // Refresh the materi list
+        fetchMateri();
         setShowUploadModal(false);
         setFormData({
-          title: '',
-          description: '',
-          category: 'Tajwid',
+          judul: '',
+          deskripsi: '',
+          kategori: 'Tajwid',
+          jenisMateri: 'PDF',
           fileUrl: '',
+          youtubeUrl: '',
           file: null,
+          kelasId: undefined, // Reset kelasId as well
         });
-        toast.success('Buku digital berhasil diupload!');
+        toast.success('Materi digital berhasil ditambahkan!');
       } else {
-        toast.error(result.error || 'Gagal mengupload buku digital');
+        toast.error(result.message || 'Gagal menambahkan materi digital');
       }
     } catch (error) {
-      console.error('Error uploading book:', error);
-      toast.error('Terjadi kesalahan saat mengupload');
+      console.error('Error adding materi:', error);
+      toast.error('Terjadi kesalahan saat menambahkan materi');
     }
   };
 
-  const handleDelete = async (bookId) => {
-    if (confirm('Apakah Anda yakin ingin menghapus buku ini?')) {
+  const handleDelete = async (materiId) => {
+    if (confirm('Apakah Anda yakin ingin menghapus materi ini?')) {
       try {
-        // This is a real database book - call API
-        const response = await fetch(`/api/guru/buku-digital/${bookId}`, {
+        const response = await fetch(`/api/guru/materi-tahsin/${materiId}`, {
           method: 'DELETE'
         });
 
         const result = await response.json();
 
         if (response.ok) {
-          setBooks(books.filter((book) => book.id !== bookId));
-          toast.success('Buku berhasil dihapus');
+          setMateriList(materiList.filter((materi) => materi.id !== materiId));
+          toast.success('Materi berhasil dihapus');
         } else {
-          toast.error(result.error || 'Gagal menghapus buku');
+          toast.error(result.message || 'Gagal menghapus materi');
         }
       } catch (error) {
-        console.error('Error deleting book:', error);
+        console.error('Error deleting materi:', error);
         toast.error('Terjadi kesalahan saat menghapus');
       }
     }
   };
 
-  const handleView = (book) => {
-    const fileUrl = book.fileUrl || book.fileUrl;
-    
-    // Check if it's a YouTube URL
-    if (fileUrl && (fileUrl.startsWith('https://youtu.be/') || fileUrl.startsWith('https://www.youtube.com/'))) {
+  const handleView = (materi) => {
+    if (materi.jenisMateri === 'YOUTUBE' && materi.youtubeUrl) {
       // Open YouTube URL directly
-      window.open(fileUrl, '_blank');
+      window.open(materi.youtubeUrl, '_blank');
       toast.success('Membuka YouTube...');
       return;
     }
     
-    setSelectedBook(book);
+    setSelectedMateri(materi);
     setShowViewerModal(true);
   };
 
-  const handleDownload = (book) => {
-    const fileUrl = book.fileUrl || book.fileUrl;
-    if (!fileUrl) {
-      toast.error('File tidak tersedia');
-      return;
-    }
-    
-    // Check if it's a YouTube URL
-    if (fileUrl.startsWith('https://youtu.be/') || fileUrl.startsWith('https://www.youtube.com/')) {
+  const handleDownload = (materi) => {
+    if (materi.jenisMateri === 'YOUTUBE' && materi.youtubeUrl) {
       // Open YouTube URL directly
-      window.open(fileUrl, '_blank');
+      window.open(materi.youtubeUrl, '_blank');
       toast.success('Membuka YouTube...');
       return;
     }
     
-    // For PDF files, use the proxy
-    const proxyUrl = `/api/guru/buku-digital/proxy?url=${encodeURIComponent(fileUrl)}`;
-    
-    // Fetch the PDF and create a blob URL
-    fetch(proxyUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const blobUrl = URL.createObjectURL(blob);
-        // Open in new tab
-        window.open(blobUrl, '_blank');
-      })
-      .catch(err => {
-        console.error('Error opening PDF:', err);
-        toast.error('Gagal membuka PDF');
-      });
+    if (materi.fileUrl) {
+      // Open the file URL directly
+      window.open(materi.fileUrl, '_blank');
+      toast.success('Membuka file...');
+    } else {
+      toast.error('File tidak tersedia');
+    }
   };
 
   return (
@@ -268,7 +461,7 @@ export default function BukuDigitalPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-emerald-600 text-sm font-semibold mb-1">TOTAL MATERI</p>
-                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalBooks}</h3>
+                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalMateri}</h3>
               </div>
               <div className="bg-emerald-100 p-4 rounded-full">
                 <BookOpen size={32} className="text-emerald-600" />
@@ -299,7 +492,7 @@ export default function BukuDigitalPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  placeholder="Cari buku..."
+                  placeholder="Cari materi..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -329,7 +522,7 @@ export default function BukuDigitalPage() {
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
               >
                 <Upload size={20} />
-                Upload Buku Baru
+                Upload Materi Baru
               </button>
             </div>
           </div>
@@ -340,13 +533,13 @@ export default function BukuDigitalPage() {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-              <p className="text-gray-600">Memuat buku digital...</p>
+              <p className="text-gray-600">Memuat materi digital...</p>
             </div>
           </div>
         )}
         
-        {/* Books Grid / Empty State */}
-        {!loading && filteredBooks.length === 0 ? (
+        {/* Materi Grid / Empty State */}
+        {!loading && filteredMateri.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <div className="flex justify-center mb-4">
               <div className="p-4 bg-emerald-50 rounded-full">
@@ -355,8 +548,8 @@ export default function BukuDigitalPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">
               {searchQuery || selectedCategory !== 'Semua'
-                ? 'Tidak ada buku yang sesuai'
-                : 'Belum ada buku digital'}
+                ? 'Tidak ada materi yang sesuai'
+                : 'Belum ada materi digital'}
             </h3>
             <p className="text-gray-500 mb-6">
               {searchQuery || selectedCategory !== 'Semua'
@@ -369,68 +562,20 @@ export default function BukuDigitalPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
               >
                 <Upload size={20} />
-                Upload Buku Pertama
+                Upload Materi Pertama
               </button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredBooks.map((book) => (
-              <div
-                key={book.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all"
-              >
-                {/* Book Thumbnail */}
-                <div className="h-40 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                  <Book className="text-white/40" size={64} />
-                </div>
-
-                {/* Book Info */}
-                <div className="p-4">
-                  {/* Category Badge */}
-                  <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded mb-2">
-                    {book.category || book.kategori || 'Umum'}
-                  </span>
-
-                  <h3 className="text-base font-bold text-gray-900 line-clamp-1 mb-2">
-                    {book.title || book.judul || 'Untitled'}
-                  </h3>
-
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]">
-                    {book.description || book.deskripsi || 'No description'}
-                  </p>
-
-                  {/* Upload Date */}
-                  <p className="text-xs text-gray-500 mb-4">
-                    {new Date(book.uploadDate || book.createdAt).toLocaleDateString('id-ID')}
-                  </p>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleView(book)}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-lg transition-all"
-                    >
-                      <Eye size={16} />
-                      {book.fileUrl && (book.fileUrl.startsWith('https://youtu.be/') || book.fileUrl.startsWith('https://www.youtube.com/')) ? 'Buka' : 'Lihat'}
-                    </button>
-
-                    <button
-                      onClick={() => handleDownload(book)}
-                      className="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all"
-                    >
-                      <Download size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(book.id)}
-                      className="flex items-center justify-center px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {filteredMateri.map((materi) => (
+              <MaterialCard
+                key={materi.id}
+                materi={materi}
+                onOpen={handleView}
+                onDownload={handleDownload}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}
@@ -451,7 +596,7 @@ export default function BukuDigitalPage() {
                   <div className="p-2 bg-white/20 rounded-lg">
                     <Upload className="text-white" size={24} />
                   </div>
-                  <h2 className="text-xl font-bold text-white">Upload Buku Baru</h2>
+                  <h2 className="text-xl font-bold text-white">Upload Materi Baru</h2>
                 </div>
                 <button
                   onClick={() => setShowUploadModal(false)}
@@ -465,12 +610,12 @@ export default function BukuDigitalPage() {
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Judul Buku <span className="text-red-500">*</span>
+                    Judul Materi <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    value={formData.judul}
+                    onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
                     placeholder="Contoh: Panduan Tajwid Lengkap"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
@@ -481,8 +626,8 @@ export default function BukuDigitalPage() {
                     Kategori <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    value={formData.kategori}
+                    onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   >
                     {CATEGORIES.filter(c => c !== 'Semua').map((category) => (
@@ -498,31 +643,72 @@ export default function BukuDigitalPage() {
                     Deskripsi Singkat <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    value={formData.deskripsi}
+                    onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}
                     placeholder="Penjelasan singkat tentang materi buku..."
                     rows={3}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                   />
                 </div>
 
+                {/* Jenis Materi Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Upload File PDF (max 10MB) <span className="text-red-500">*</span>
+                    Jenis Materi <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                  />
-                  {formData.file && (
-                    <p className="mt-2 text-sm text-gray-600 flex items-center gap-2 bg-emerald-50 px-3 py-2 rounded-lg">
-                      <FileText size={16} className="text-emerald-600" />
-                      {formData.file.name}
-                    </p>
-                  )}
+                  <select
+                    value={formData.jenisMateri}
+                    onChange={(e) => {
+                      const newJenisMateri = e.target.value;
+                      setFormData({
+                        ...formData,
+                        jenisMateri: newJenisMateri,
+                        // Clear conflicting fields when switching types
+                        youtubeUrl: newJenisMateri === 'YOUTUBE' ? formData.youtubeUrl : '',
+                        file: newJenisMateri !== 'YOUTUBE' ? formData.file : null,
+                        fileUrl: newJenisMateri !== 'YOUTUBE' ? formData.fileUrl : '',
+                      });
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  >
+                    <option value="PDF">PDF</option>
+                    <option value="YOUTUBE">YouTube</option>
+                    </select>
                 </div>
+
+                {/* Conditional rendering based on jenisMateri */}
+                {formData.jenisMateri === 'YOUTUBE' ? (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      URL YouTube <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.youtubeUrl || ''}
+                      onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value, file: null })}
+                      placeholder="Contoh: https://www.youtube.com/watch?v=..."
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Upload File PDF (max 50MB) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                    />
+                    {formData.file && (
+                      <p className="mt-2 text-sm text-gray-600 flex items-center gap-2 bg-emerald-50 px-3 py-2 rounded-lg">
+                        <FileText size={16} className="text-emerald-600" />
+                        {formData.file.name}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="pt-4 flex gap-3">
                   <button
@@ -536,7 +722,7 @@ export default function BukuDigitalPage() {
                     type="submit"
                     className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-all"
                   >
-                    Simpan Buku
+                    Simpan Materi
                   </button>
                 </div>
               </form>
@@ -545,7 +731,7 @@ export default function BukuDigitalPage() {
         )}
 
         {/* Viewer Modal */}
-        {showViewerModal && selectedBook && (
+        {showViewerModal && selectedMateri && (
           <div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowViewerModal(false)}
@@ -562,14 +748,14 @@ export default function BukuDigitalPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-bold text-white truncate">
-                      {selectedBook.title}
+                      {selectedMateri.judul}
                     </h2>
-                    <p className="text-white/80 text-sm">{selectedBook.category}</p>
+                    <p className="text-white/80 text-sm">{selectedMateri.jenisMateri}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <button
-                    onClick={() => handleDownload(selectedBook)}
+                    onClick={() => handleDownload(selectedMateri)}
                     className="p-2 hover:bg-white/20 rounded-lg transition"
                     title="Unduh PDF"
                   >
@@ -586,7 +772,7 @@ export default function BukuDigitalPage() {
 
               {/* Viewer Body */}
               <div className="flex-1 overflow-auto bg-gray-50 p-6">
-                {selectedBook.fileUrl ? (
+                {selectedMateri.fileUrl ? (
                   <div className="w-full h-full flex items-center justify-center">
                     {/* Display loading message - user should click download to view */}
                     <div className="bg-white rounded-lg p-8 text-center max-w-md">
@@ -597,9 +783,9 @@ export default function BukuDigitalPage() {
                       </div>
                       <h3 className="text-lg font-bold text-gray-900 mb-2">Buka PDF di Tab Baru</h3>
                       <p className="text-gray-600 mb-6">Klik tombol unduh di bawah atau di header untuk membuka PDF di tab baru browser Anda.</p>
-                      <p className="text-sm text-gray-500 mb-6">Nama: {selectedBook.fileName || selectedBook.judul || 'Document'}</p>
+                      <p className="text-sm text-gray-500 mb-6">Nama: {selectedMateri.fileName || selectedMateri.judul || 'Document'}</p>
                       <button
-                        onClick={() => handleDownload(selectedBook)}
+                        onClick={() => handleDownload(selectedMateri)}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
                       >
                         <Download size={20} />
@@ -617,7 +803,7 @@ export default function BukuDigitalPage() {
                       </div>
                       <p className="text-gray-600 text-lg mb-6">File preview tidak tersedia</p>
                       <button
-                        onClick={() => handleDownload(selectedBook)}
+                        onClick={() => handleDownload(selectedMateri)}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
                       >
                         <Download size={20} />

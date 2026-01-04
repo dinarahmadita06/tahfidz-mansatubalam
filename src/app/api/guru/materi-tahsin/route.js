@@ -80,27 +80,81 @@ export async function POST(request) {
       );
     }
 
-    const body = await request.json();
-    const {
-      guruId,
-      kelasId,
-      judul,
-      jenisMateri,
-      fileUrl,
-      youtubeUrl,
-      deskripsi,
-    } = body;
+    // Get form data for file uploads or JSON for YouTube links
+    const contentType = request.headers.get('content-type');
+    let formData;
+    let judul, jenisMateri, youtubeUrl, deskripsi, kelasId;
+    let fileUrl = null;
 
-    // Validation
-    if (!guruId || !judul || !jenisMateri) {
-      return NextResponse.json(
-        { message: 'Data tidak lengkap. Pastikan semua field wajib diisi.' },
-        { status: 400 }
-      );
+    if (contentType && contentType.includes('multipart/form-data')) {
+      // File upload case
+      formData = await request.formData();
+      judul = formData.get('judul');
+      jenisMateri = formData.get('jenisMateri');
+      youtubeUrl = formData.get('youtubeUrl');
+      deskripsi = formData.get('deskripsi');
+      kelasId = formData.get('kelasId');
+
+      // Handle file upload if it's not YouTube
+      if (jenisMateri !== 'YOUTUBE') {
+        const file = formData.get('file');
+        
+        // Validate required fields
+        if (!file || !judul || !jenisMateri) {
+          return NextResponse.json(
+            { message: 'File, judul, dan jenis materi harus diisi.' },
+            { status: 400 }
+          );
+        }
+
+        // Validate file type based on jenisMateri
+        if (jenisMateri === 'PDF' && file.type !== 'application/pdf') {
+          return NextResponse.json(
+            { message: 'Hanya file PDF yang diterima untuk jenis materi PDF.' },
+            { status: 400 }
+          );
+        }
+
+        // Validate file size (max 50MB)
+        const maxSize = 50 * 1024 * 1024;
+        if (file.size > maxSize) {
+          return NextResponse.json(
+            { message: 'Ukuran file terlalu besar. Maksimal 50MB.' },
+            { status: 400 }
+          );
+        }
+
+        // Upload file to Vercel Blob
+        const { put } = await import('@vercel/blob');
+        const fileName = `materi-tahsin-${Date.now()}-${file.name}`;
+        const blob = await put(fileName, file, {
+          access: 'public',
+          contentType: file.type
+        });
+        
+        fileUrl = blob.url;
+      }
+    } else {
+      // JSON case (for YouTube links)
+      const body = await request.json();
+      judul = body.judul;
+      jenisMateri = body.jenisMateri;
+      youtubeUrl = body.youtubeUrl;
+      deskripsi = body.deskripsi;
+      kelasId = body.kelasId;
+      fileUrl = body.fileUrl;
+
+      // Validate required fields
+      if (!judul || !jenisMateri) {
+        return NextResponse.json(
+          { message: 'Judul dan jenis materi harus diisi.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate jenis materi enum
-    const validJenis = ['PDF', 'YOUTUBE', 'VIDEO'];
+    const validJenis = ['PDF', 'YOUTUBE', 'VIDEO', 'AUDIO', 'LINK'];
     if (!validJenis.includes(jenisMateri)) {
       return NextResponse.json(
         { message: 'Jenis materi tidak valid' },
@@ -119,28 +173,28 @@ export async function POST(request) {
     } else {
       if (!fileUrl) {
         return NextResponse.json(
-          { message: 'File wajib diunggah untuk jenis materi PDF atau Video' },
+          { message: 'File wajib diunggah untuk jenis materi selain YouTube' },
           { status: 400 }
         );
       }
     }
 
-    // Verify guru ownership
+    // Get guru from session
     const guru = await prisma.guru.findUnique({
       where: { userId: session.user.id },
     });
 
-    if (!guru || guru.id !== guruId) {
+    if (!guru) {
       return NextResponse.json(
-        { message: 'Unauthorized - Guru tidak valid' },
-        { status: 401 }
+        { message: 'Data guru tidak ditemukan' },
+        { status: 404 }
       );
     }
 
     // Create materi tahsin
     const materi = await prisma.materiTahsin.create({
       data: {
-        guruId,
+        guruId: guru.id,  // Use guru.id from session
         kelasId: kelasId || null,
         judul,
         jenisMateri,
