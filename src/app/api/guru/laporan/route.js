@@ -50,54 +50,58 @@ export async function GET(request) {
     }
 
     if (viewMode === 'bulanan' || viewMode === 'semesteran') {
-      // For monthly/semester reports, we need aggregated data per student
-      const hafalan = await prisma.hafalan.findMany({
-        where: whereClause,
-        include: {
-          siswa: {
-            include: {
-              user: {
-                select: {
-                  name: true
-                }
-              },
-              kelas: {
-                select: {
-                  nama: true
-                }
+      // For monthly/semester reports, we need ALL siswa from the kelas with aggregated data
+      
+      // First, get all siswa in the selected kelas
+      let allSiswa = [];
+      if (kelasId) {
+        allSiswa = await prisma.siswa.findMany({
+          where: {
+            kelasId: kelasId,
+            statusSiswa: 'AKTIF' // Only active students
+          },
+          include: {
+            user: {
+              select: {
+                name: true
+              }
+            },
+            kelas: {
+              select: {
+                nama: true
               }
             }
           },
+          orderBy: {
+            user: {
+              name: 'asc'
+            }
+          }
+        });
+      }
+
+      // Get hafalan data for the date range (only for students in this kelas)
+      const endDate = new Date(tanggalSelesai);
+      endDate.setHours(23, 59, 59, 999);
+      
+      const hafalan = await prisma.hafalan.findMany({
+        where: {
+          guruId: session.user.guruId,
+          siswa: {
+            kelasId: kelasId
+          },
+          tanggal: {
+            gte: new Date(tanggalMulai),
+            lte: endDate
+          }
+        },
+        include: {
           penilaian: true
         },
         orderBy: {
           tanggal: 'desc'
         }
       });
-
-      // Get presensi data for the same date range
-      let presensiData = [];
-      if (tanggalMulai && tanggalSelesai) {
-        const startDate = new Date(tanggalMulai);
-        const endDate = new Date(tanggalSelesai);
-        endDate.setHours(23, 59, 59, 999);
-        
-        presensiData = await prisma.presensi.findMany({
-          where: {
-            guruId: session.user.guruId,
-            tanggal: {
-              gte: startDate,
-              lte: endDate
-            },
-            ...(kelasId && {
-              siswa: {
-                kelasId: kelasId
-              }
-            }),
-            ...(siswaId && { siswaId })
-          }
-        });
-      }
 
       // Group hafalan by student and calculate aggregates
       const groupedBySiswa = {};
@@ -106,9 +110,6 @@ export async function GET(request) {
         const siswaId = h.siswaId;
         if (!groupedBySiswa[siswaId]) {
           groupedBySiswa[siswaId] = {
-            siswaId: h.siswaId,
-            namaLengkap: h.siswa.user.name,
-            kelasNama: h.siswa.kelas.nama,
             hafalanList: [],
             penilaianList: []
           };
@@ -119,18 +120,10 @@ export async function GET(request) {
         }
       });
 
-      // Group presensi by student for attendance calculation
-      const presensiBySiswa = {};
-      presensiData.forEach(p => {
-        if (!presensiBySiswa[p.siswaId]) {
-          presensiBySiswa[p.siswaId] = [];
-        }
-        presensiBySiswa[p.siswaId].push(p);
-      });
-
-      // Calculate aggregates for each student
-      const result = Object.values(groupedBySiswa).map(siswaData => {
-        const penilaianList = siswaData.penilaianList;
+      // Build result with ALL siswa in the kelas
+      const result = allSiswa.map((siswa, idx) => {
+        const siswaHafalanData = groupedBySiswa[siswa.id] || { hafalanList: [], penilaianList: [] };
+        const penilaianList = siswaHafalanData.penilaianList;
         
         // Calculate averages
         const tajwidValues = penilaianList.filter(p => p.tajwid != null).map(p => p.tajwid);
@@ -148,27 +141,27 @@ export async function GET(request) {
         const rataRataNilaiBulanan = allNilai.length > 0 ? allNilai.reduce((a, b) => a + b, 0) / allNilai.length : null;
         
         // Count total hafalan entries
-        const jumlahSetoran = siswaData.hafalanList.length;
+        const jumlahSetoran = siswaHafalanData.hafalanList.length;
         
-        // Calculate attendance
-        const siswaPresensi = presensiBySiswa[siswaData.siswaId] || [];
-        const totalHadir = siswaPresensi.filter(p => p.status === 'HADIR').length;
-        const totalTidakHadir = siswaPresensi.filter(p => p.status === 'IZIN' || p.status === 'SAKIT' || p.status === 'ALFA').length;
+        // Get hafalan terakhir (latest) from the list
+        const hafalanTerakhir = siswaHafalanData.hafalanList.length > 0 ? siswaHafalanData.hafalanList[0] : null;
+        const hafalanTerakhirText = hafalanTerakhir ? `Surah ${hafalanTerakhir.surah}` : '-';
         
         return {
-          siswaId: siswaData.siswaId,
-          namaLengkap: siswaData.namaLengkap,
-          kelasNama: siswaData.kelasNama,
+          no: idx + 1,
+          siswaId: siswa.id,
+          namaLengkap: siswa.user.name,
+          kelasNama: siswa.kelas.nama,
+          totalHadir: '-', // Not needed for recap, but keeping structure
+          totalTidakHadir: '-', // Not needed for recap
           jumlahSetoran: jumlahSetoran,
-          rataRataTajwid: rataRataTajwid ? Math.round(rataRataTajwid * 10) / 10 : null,
-          rataRataKelancaran: rataRataKelancaran ? Math.round(rataRataKelancaran * 10) / 10 : null,
-          rataRataMakhraj: rataRataMakhraj ? Math.round(rataRataMakhraj * 10) / 10 : null,
-          rataRataImplementasi: rataRataImplementasi ? Math.round(rataRataImplementasi * 10) / 10 : null,
-          rataRataNilaiBulanan: rataRataNilaiBulanan ? Math.round(rataRataNilaiBulanan * 10) / 10 : null,
-          totalHadir: totalHadir,
-          totalTidakHadir: totalTidakHadir,
-          statusHafalan: jumlahSetoran > 0 ? 'LANJUT' : 'BELUM ADA SETORAN', // Simple logic
-          catatanBulanan: '' // This would come from separate catatan storage
+          hafalanTerakhir: hafalanTerakhirText,
+          rataRataTajwid: rataRataTajwid ? Math.round(rataRataTajwid * 10) / 10 : '-',
+          rataRataKelancaran: rataRataKelancaran ? Math.round(rataRataKelancaran * 10) / 10 : '-',
+          rataRataMakhraj: rataRataMakhraj ? Math.round(rataRataMakhraj * 10) / 10 : '-',
+          rataRataImplementasi: rataRataImplementasi ? Math.round(rataRataImplementasi * 10) / 10 : '-',
+          rataRataNilaiBulanan: rataRataNilaiBulanan ? Math.round(rataRataNilaiBulanan * 10) / 10 : '-',
+          statusHafalan: jumlahSetoran > 0 ? 'LANJUT' : 'BELUM SETORAN'
         };
       });
 
@@ -177,12 +170,11 @@ export async function GET(request) {
         tanggalMulai,
         tanggalSelesai,
         kelasId,
-        siswaId,
         viewMode,
-        whereClause,
-        rawCount: hafalan.length,
-        presensiCount: presensiData.length,
-        resultCount: result.length
+        totalSiswa: allSiswa.length,
+        siswaWithHafalan: Object.keys(groupedBySiswa).length,
+        resultCount: result.length,
+        note: 'Now includes ALL siswa in kelas, with and without hafalan'
       });
 
       return NextResponse.json(result);
