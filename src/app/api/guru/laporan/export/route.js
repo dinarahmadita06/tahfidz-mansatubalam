@@ -25,10 +25,11 @@ export async function POST(request) {
       );
     }
 
-    // Get guru data
+    // Get guru data with signature
     const guru = await prisma.guru.findUnique({
       where: { userId: session.user.id },
-      include: {
+      select: {
+        tandaTangan: true,
         user: {
           select: {
             name: true,
@@ -121,34 +122,26 @@ function generateCSV(data, viewMode) {
         csv += `${siswa.pertemuan.nilaiMakhraj || '-'},`;
         csv += `${siswa.pertemuan.nilaiImplementasi || '-'},`;
         csv += `"${siswa.pertemuan.statusHafalan}",`;
-        csv += `"${siswa.pertemuan.catatan}"\n`;
+        csv += `"${siswa.pertemuan.catatan || '-'}"\n`;
       } else {
         csv += `${idx + 1},"${siswa.namaLengkap}",-,-,-,-,-,-,-,-\n`;
       }
     });
   } else {
     // Header for bulanan/semesteran
-    csv += 'No,Nama Lengkap,Total Hadir,Total Tidak Hadir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Rata-rata Nilai,Status Hafalan,Catatan Akhir\n';
+    csv += 'No,Nama Lengkap,Jumlah Setoran,Hafalan Terakhir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Rata-rata Nilai,Status Hafalan\n';
 
     // Rows
     data.forEach((siswa, idx) => {
-      const rataRataNilai = hitungRataRata(
-        siswa.rataRataTajwid,
-        siswa.rataRataKelancaran,
-        siswa.rataRataMakhraj,
-        siswa.rataRataImplementasi
-      );
-
-      csv += `${idx + 1},"${siswa.namaLengkap}",`;
-      csv += `${siswa.totalHadir},`;
-      csv += `${siswa.totalTidakHadir},`;
+      csv += `${siswa.no || (idx + 1)},"${siswa.namaLengkap}",`;
+      csv += `${siswa.jumlahSetoran || 0},`;
+      csv += `"${siswa.hafalanTerakhir || '-'}",`;
       csv += `${formatNilai(siswa.rataRataTajwid)},`;
       csv += `${formatNilai(siswa.rataRataKelancaran)},`;
       csv += `${formatNilai(siswa.rataRataMakhraj)},`;
       csv += `${formatNilai(siswa.rataRataImplementasi)},`;
-      csv += `${formatNilai(rataRataNilai)},`;
-      csv += `"${siswa.statusHafalan}",`;
-      csv += `"${siswa.catatanAkhir}"\n`;
+      csv += `${formatNilai(siswa.rataRataNilaiBulanan)},`;
+      csv += `"${siswa.statusHafalan}"\n`;
     });
   }
 
@@ -164,9 +157,21 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   });
 
   let modeTitle = '';
-  if (viewMode === 'harian') modeTitle = 'Laporan Harian/Mingguan';
-  else if (viewMode === 'bulanan') modeTitle = 'Laporan Rekap Bulanan';
-  else modeTitle = 'Laporan Rekap Semesteran';
+  let periodeText = '';
+  
+  if (viewMode === 'harian') {
+    modeTitle = 'LAPORAN HARIAN/MINGGUAN';
+    periodeText = periode;
+  } else if (viewMode === 'bulanan') {
+    modeTitle = 'LAPORAN REKAP BULANAN';
+    periodeText = periode.replace('-', ' ').toUpperCase();
+  } else {
+    modeTitle = 'LAPORAN REKAP SEMESTERAN';
+    periodeText = periode.replace('-', ' ').toUpperCase();
+  }
+
+  // Get signature URL if available
+  const signatureUrl = guru.tandaTangan || null;
 
   let html = `<!DOCTYPE html>
 <html>
@@ -174,109 +179,262 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   <meta charset="UTF-8">
   <title>${modeTitle} - ${now}</title>
   <style>
-    @page { size: landscape; margin: 1cm; }
-    @media print {
-      body { margin: 0; }
-      .no-print { display: none; }
+    @page {
+      size: landscape;
+      margin: 1cm;
+      margin-top: 0.8cm;
+      margin-bottom: 0.8cm;
     }
+    
+    /* Remove default print headers/footers */
+    @page :first {
+      margin-top: 0.8cm;
+    }
+    
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+      /* Remove default browser elements */
+      html, body {
+        background: white;
+      }
+    }
+    
     body {
       font-family: 'Arial', sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 12px;
       color: #1B1B1B;
+      background: white;
     }
+    
+    /* HEADER SECTION - With Logos */
     .header {
+      margin-bottom: 10px;
+      padding-bottom: 0;
+    }
+    
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      gap: 15px;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .logo img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    
+    .header-center {
       text-align: center;
-      margin-bottom: 30px;
-      border-bottom: 3px solid #1A936F;
-      padding-bottom: 20px;
+      flex: 1;
+      padding: 5px 0;
     }
-    .header h1 {
-      color: #1A936F;
-      margin: 0 0 10px 0;
-      font-size: 24px;
-    }
-    .header h2 {
-      color: #444444;
+    
+    .school-name {
+      font-size: 16px;
+      font-weight: bold;
       margin: 0;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .school-address {
+      font-size: 11px;
+      margin: 0;
+      line-height: 1.3;
+      color: #333;
+      margin-bottom: 2px;
+    }
+    
+    /* Double Line Separator */
+    .header-line {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 8px 0;
+      padding: 0;
+    }
+    
+    .header-line-top {
+      border-top: 2px solid #1A936F;
+      height: 0;
+    }
+    
+    .header-line-bottom {
+      border-top: 1px solid #000;
+      height: 0;
+    }
+    
+    .report-title {
       font-size: 18px;
-      font-weight: normal;
+      font-weight: bold;
+      margin: 6px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-align: center;
+      padding: 4px 0;
     }
-    .meta-info {
-      margin-bottom: 20px;
+    
+    /* META INFORMATION - Two Column Layout */
+    .meta-section {
+      margin-bottom: 12px;
       font-size: 12px;
-      color: #6B7280;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 35px;
+      line-height: 1.5;
     }
+    
+    .meta-column {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .meta-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    
+    .meta-label {
+      font-weight: 600;
+      text-align: left;
+    }
+    
+    .meta-value {
+      text-align: left;
+    }
+    
+    /* TABLE STYLING */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       font-size: 11px;
     }
+    
     th {
-      background: linear-gradient(135deg, #1A936F 0%, #059669 100%);
-      color: white;
-      padding: 12px 8px;
+      background-color: #E8F5E9;
+      color: #1B1B1B;
+      padding: 9px 5px;
       text-align: left;
-      font-weight: 600;
+      font-weight: 700;
       border: 1px solid #1A936F;
     }
+    
     th.center, td.center {
       text-align: center;
     }
+    
     td {
-      padding: 10px 8px;
-      border: 1px solid #E5E7EB;
+      padding: 8px 5px;
+      border: 1px solid #D1D5DB;
     }
+    
     tr:nth-child(even) {
-      background-color: #F9FAFB;
+      background-color: #FAFAFA;
     }
+    
     .badge {
       display: inline-block;
-      padding: 4px 12px;
+      padding: 3px 10px;
       border-radius: 100px;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 600;
     }
+    
     .badge-hadir {
       background: #D1FAE5;
       color: #047857;
     }
+    
     .badge-sakit, .badge-izin {
       background: #FDE68A;
       color: #B45309;
     }
+    
     .badge-alfa {
       background: #FEE2E2;
       color: #991B1B;
     }
+    
     .nilai-excellent {
       color: #1A936F;
       font-weight: 700;
     }
+    
     .nilai-good {
       color: #F7C873;
       font-weight: 700;
     }
+    
     .nilai-fair {
       color: #D97706;
       font-weight: 700;
     }
-    .footer {
-      margin-top: 40px;
-      text-align: right;
+    
+    /* FOOTER SUMMARY */
+    .footer-summary {
+      margin-top: 8px;
+      margin-bottom: 25px;
       font-size: 12px;
+      font-weight: 600;
     }
-    .signature {
-      margin-top: 60px;
+    
+    /* SIGNATURE SECTION - Right Aligned Only */
+    .signature-section {
+      margin-top: 35px;
       text-align: right;
+      padding-right: 15px;
     }
-    .signature-line {
-      border-top: 1px solid #1B1B1B;
-      width: 200px;
-      display: inline-block;
-      margin-top: 50px;
+    
+    .signature-date {
+      font-size: 12px;
+      margin-bottom: 25px;
+      font-weight: normal;
     }
+    
+    .signature-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 75px;
+    }
+    
+    .signature-image {
+      max-width: 120px;
+      max-height: 60px;
+      margin-bottom: 5px;
+      display: block;
+      margin-left: auto;
+    }
+    
+    .signature-name {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 0;
+    }
+    
     .button-print {
       background: #1A936F;
       color: white;
@@ -285,8 +443,9 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
       border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
+    
     .button-print:hover {
       background: #047857;
     }
@@ -296,14 +455,51 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   <button class="button-print no-print" onclick="window.print()">Cetak PDF</button>
 
   <div class="header">
-    <h1>TAHFIDZ QURAN - MAN SATU BALAM</h1>
-    <h2>${modeTitle}</h2>
+    <div class="header-top">
+      <div class="logo">
+        <img src="/logo-man1.png" alt="Logo MAN 1" />
+      </div>
+      <div class="header-center">
+        <div class="school-name">MADRASAH TAHFIDZ AL-QUR'AN</div>
+        <div class="school-address">
+          Jl. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame<br>
+          Kota Bandar Lampung, Lampung 35131
+        </div>
+      </div>
+      <div class="logo">
+        <img src="/logo-kemenag.png" alt="Logo Kemenag" />
+      </div>
+    </div>
+    
+    <div class="header-line">
+      <div class="header-line-top"></div>
+      <div class="header-line-bottom"></div>
+    </div>
+    
+    <div class="report-title">${modeTitle}</div>
   </div>
 
-  <div class="meta-info">
-    <strong>Guru:</strong> ${guru.user.name} |
-    <strong>Periode:</strong> ${periode.replace('-', ' ').toUpperCase()} |
-    <strong>Tanggal Cetak:</strong> ${now}
+  <div class="meta-section">
+    <div class="meta-column">
+      <div class="meta-row">
+        <div class="meta-label">Periode:</div>
+        <div class="meta-value">${periodeText}</div>
+      </div>
+      <div class="meta-row">
+        <div class="meta-label">Tanggal Cetak:</div>
+        <div class="meta-value">${now}</div>
+      </div>
+    </div>
+    <div class="meta-column">
+      <div class="meta-row">
+        <div class="meta-label">Kelas:</div>
+        <div class="meta-value">Tahfidz</div>
+      </div>
+      <div class="meta-row">
+        <div class="meta-label">Guru Pembina:</div>
+        <div class="meta-value">${guru.user.name}</div>
+      </div>
+    </div>
   </div>
 
   <table>
@@ -325,16 +521,15 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   } else {
     html += `
         <th style="width: 5%;">No</th>
-        <th style="width: 22%;">Nama Lengkap</th>
-        <th class="center" style="width: 7%;">Hadir</th>
-        <th class="center" style="width: 7%;">Tidak Hadir</th>
-        <th class="center" style="width: 7%;">Avg Tajwid</th>
-        <th class="center" style="width: 7%;">Avg Kelancaran</th>
-        <th class="center" style="width: 7%;">Avg Makhraj</th>
-        <th class="center" style="width: 7%;">Avg Impl.</th>
-        <th class="center" style="width: 8%; background: #ECFDF5;">Rata-rata Nilai</th>
-        <th class="center" style="width: 7%;">Status</th>
-        <th style="width: 12%;">Catatan</th>`;
+        <th style="width: 25%;">Nama Lengkap</th>
+        <th class="center" style="width: 8%;">Jumlah Setoran</th>
+        <th class="center" style="width: 9%;">Hafalan Terakhir</th>
+        <th class="center" style="width: 8%;">Avg Tajwid</th>
+        <th class="center" style="width: 8%;">Avg Kelancaran</th>
+        <th class="center" style="width: 8%;">Avg Makhraj</th>
+        <th class="center" style="width: 8%;">Avg Impl.</th>
+        <th class="center" style="width: 10%; background: #ECFDF5;">Rata-rata Nilai</th>
+        <th class="center" style="width: 8%;">Status</th>`;
   }
 
   html += `
@@ -366,24 +561,16 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
       html += `<td class="center">${p?.statusHafalan || '-'}</td>`;
       html += `<td style="font-size: 10px;">${p?.catatan || '-'}</td>`;
     } else {
-      const rataRataNilai = hitungRataRata(
-        siswa.rataRataTajwid,
-        siswa.rataRataKelancaran,
-        siswa.rataRataMakhraj,
-        siswa.rataRataImplementasi
-      );
-
-      html += `<td>${idx + 1}</td>`;
+      html += `<td>${siswa.no || (idx + 1)}</td>`;
       html += `<td>${siswa.namaLengkap}</td>`;
-      html += `<td class="center" style="color: #1A936F; font-weight: 700;">${siswa.totalHadir}</td>`;
-      html += `<td class="center" style="color: #D97706; font-weight: 700;">${siswa.totalTidakHadir}</td>`;
+      html += `<td class="center" style="font-weight: 700;">${siswa.jumlahSetoran || 0}</td>`;
+      html += `<td class="center" style="font-size: 10px;">${siswa.hafalanTerakhir || '-'}</td>`;
       html += `<td class="center ${getNilaiClass(siswa.rataRataTajwid)}">${formatNilai(siswa.rataRataTajwid)}</td>`;
       html += `<td class="center ${getNilaiClass(siswa.rataRataKelancaran)}">${formatNilai(siswa.rataRataKelancaran)}</td>`;
       html += `<td class="center ${getNilaiClass(siswa.rataRataMakhraj)}">${formatNilai(siswa.rataRataMakhraj)}</td>`;
       html += `<td class="center ${getNilaiClass(siswa.rataRataImplementasi)}">${formatNilai(siswa.rataRataImplementasi)}</td>`;
-      html += `<td class="center ${getNilaiClass(rataRataNilai)}" style="background: #ECFDF5; font-weight: 700;">${formatNilai(rataRataNilai)}</td>`;
+      html += `<td class="center ${getNilaiClass(siswa.rataRataNilaiBulanan)}" style="background: #ECFDF5; font-weight: 700;">${formatNilai(siswa.rataRataNilaiBulanan)}</td>`;
       html += `<td class="center">${siswa.statusHafalan}</td>`;
-      html += `<td style="font-size: 10px;">${siswa.catatanAkhir}</td>`;
     }
 
     html += '</tr>';
@@ -393,15 +580,15 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
     </tbody>
   </table>
 
-  <div class="footer">
-    <p><strong>Total Siswa:</strong> ${data.length}</p>
+  <div class="footer-summary">
+    <strong>Total Siswa:</strong> ${data.length}
   </div>
 
-  <div class="signature">
-    <p style="margin-bottom: 8px;">Bandar Lampung, ${now}</p>
-    <p style="margin-bottom: 60px; font-weight: 600;">Guru Pembina Tahfidz</p>
-    <div class="signature-line"></div>
-    <p style="margin-top: 5px; font-weight: 600;">( ${guru.user.name} )</p>
+  <div class="signature-section">
+    <div class="signature-date">Bandar Lampung, ${now}</div>
+    <div class="signature-title">Guru Pembina Tahfidz</div>
+    ${signatureUrl ? `<img src="${signatureUrl}" alt="Tanda Tangan" class="signature-image" />` : ''}
+    <div class="signature-name">( ${guru.user.name} )</div>
   </div>
 </body>
 </html>`;
@@ -419,7 +606,8 @@ function getNilaiClass(nilai) {
 
 // Helper function untuk format angka (bulat jika tidak pecahan, koma jika pecahan)
 function formatNilai(nilai) {
-  if (nilai == null) return '-';
+  if (nilai == null || nilai === '-') return '-';
+  if (typeof nilai === 'string') return nilai; // Already formatted
   const rounded = Math.round(nilai);
   // Jika nilai sama dengan nilai bulatannya, tampilkan bulat
   if (Math.abs(nilai - rounded) < 0.01) {
