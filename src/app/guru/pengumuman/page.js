@@ -206,38 +206,20 @@ export default function GuruPengumumanPage() {
 
         {/* Filter Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Search Bar */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Cari Pengumuman
-              </label>
-              <div className="relative">
-                <Search size={18} className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari pengumuman..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Filter Dropdown */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Filter</label>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="Semua">Semua Kategori</option>
-                <option value="PENTING">Penting</option>
-                <option value="AKADEMIK">Akademik</option>
-                <option value="KEGIATAN">Kegiatan</option>
-                <option value="UMUM">Umum</option>
-              </select>
+          {/* Search Bar - Full Width */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Cari Pengumuman
+            </label>
+            <div className="relative">
+              <Search size={18} className="absolute left-3 top-3 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari pengumuman..."
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
             </div>
           </div>
         </div>

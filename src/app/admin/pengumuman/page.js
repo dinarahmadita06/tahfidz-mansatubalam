@@ -16,7 +16,11 @@ import {
   Edit,
   CheckCircle,
   AlertCircle,
-  FileText
+  FileText,
+  Search,
+  Bell,
+  BookOpen,
+  Award
 } from 'lucide-react';
 
 const colors = {
@@ -56,6 +60,122 @@ const colors = {
   },
 };
 
+// Category Config matching Guru
+const CATEGORY_CONFIG = {
+  UMUM: { icon: Bell, color: 'bg-blue-100 text-blue-600', badgeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
+  AKADEMIK: { icon: BookOpen, color: 'bg-purple-100 text-purple-600', badgeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
+  KEGIATAN: { icon: Award, color: 'bg-amber-100 text-amber-600', badgeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
+  PENTING: { icon: Megaphone, color: 'bg-red-100 text-red-600', badgeColor: 'bg-red-50 text-red-700 border-red-200' },
+};
+
+// AnnouncementCard Component (matching Guru style)
+function AnnouncementCard({ announcement, onEdit, onDelete }) {
+  const categoryData = CATEGORY_CONFIG[announcement.kategori] || CATEGORY_CONFIG.UMUM;
+  const CategoryIcon = categoryData.icon;
+
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const truncateText = (text, length = 100) => {
+    if (!text) return '';
+    if (text.length <= length) return text;
+    return text.substring(0, length) + '...';
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+      {/* Category color bar */}
+      <div className={`h-1 ${announcement.kategori === 'PENTING' ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+
+      <div className="p-6">
+        {/* Header: Icon + Title + Actions */}
+        <div className="flex items-start gap-4 mb-4">
+          <div className={`p-3 rounded-lg ${categoryData.color} flex-shrink-0`}>
+            <CategoryIcon size={24} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
+              {announcement.judul}
+            </h3>
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${categoryData.badgeColor}`}
+            >
+              {announcement.kategori}
+            </span>
+          </div>
+          {/* Action Buttons - Top Right */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => onEdit(announcement)}
+              className="h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+              title="Edit"
+            >
+              <Edit size={16} />
+            </button>
+            <button
+              onClick={() => onDelete(announcement.id)}
+              className="h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-rose-100 text-rose-700 hover:bg-rose-200"
+              title="Hapus"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
+          {truncateText(announcement.isi, 150)}
+        </p>
+
+        {/* Footer: Date & Info */}
+        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            <Calendar size={16} className="text-gray-400" />
+            <span>{formatDate(announcement.createdAt)}</span>
+          </div>
+          {announcement.tanggalSelesai && (
+            <>
+              <span className="text-gray-300">•</span>
+              <span>Hingga {formatDate(announcement.tanggalSelesai)}</span>
+            </>
+          )}
+          {announcement.lampiran && (
+            <>
+              <span className="text-gray-300">•</span>
+              <span className="inline-flex items-center gap-1 text-blue-600">
+                <FileText size={14} />
+                Ada lampiran
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// EmptyState Component
+function AnnouncementEmptyState() {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+      <div className="flex justify-center mb-4">
+        <div className="p-4 bg-emerald-50 rounded-full">
+          <Megaphone className="text-emerald-600" size={48} />
+        </div>
+      </div>
+      <h3 className="text-xl font-bold text-gray-700 mb-2">Belum Ada Pengumuman</h3>
+      <p className="text-gray-500 mb-1">Nantikan kabar terbaru di sini</p>
+      <p className="text-sm text-gray-400">Buat pengumuman baru untuk memulai</p>
+    </div>
+  );
+}
+
 export default function PengumumanPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
@@ -65,6 +185,8 @@ export default function PengumumanPage() {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredPengumuman, setFilteredPengumuman] = useState([]);
 
   // Form state - simplified
   const [formData, setFormData] = useState({
@@ -92,6 +214,19 @@ export default function PengumumanPage() {
       setLoading(false);
     }
   };
+
+  // Filter pengumuman based on search query
+  useEffect(() => {
+    let filtered = pengumumanList;
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(
+        (p) =>
+          p.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.isi.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    setFilteredPengumuman(filtered);
+  }, [searchQuery, pengumumanList]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -283,76 +418,70 @@ export default function PengumumanPage() {
             </div>
           )}
 
+          {/* Search Bar Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            {/* Search Bar - Full Width */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Cari Pengumuman
+              </label>
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari pengumuman..."
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* List Pengumuman */}
           {loading ? (
-            <div className="flex items-center justify-center py-16 bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm">
+            <div className="flex items-center justify-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
               <Loader className="animate-spin text-emerald-600" size={48} />
             </div>
           ) : pengumumanList.length === 0 ? (
-            <div className="text-center py-16 bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm">
-              <Megaphone className="mx-auto text-emerald-200 mb-4" size={64} />
-              <p className="text-slate-900 text-lg font-semibold">Belum ada pengumuman</p>
-              <p className="text-slate-600 text-sm mt-1">Klik tombol "Buat Pengumuman" untuk menambahkan pengumuman baru</p>
+            <AnnouncementEmptyState />
+          ) : filteredPengumuman.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-gray-50 rounded-full">
+                  <FileText className="text-gray-400" size={48} />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-700 mb-2">
+                Tidak Ada Hasil
+              </h3>
+              <p className="text-gray-500">
+                Tidak ditemukan pengumuman yang sesuai dengan pencarian
+              </p>
             </div>
           ) : (
-            <div className="space-y-5">
-              {pengumumanList.map((item) => (
-                <div
-                  key={item.id}
-                  className="relative bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-6 hover:-translate-y-[2px] hover:shadow-md transition-all duration-300 border-l-4 border-l-emerald-300/70"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      {/* Judul */}
-                      <h3 className="text-lg font-bold text-slate-900 mb-2">{item.judul}</h3>
+            <>
+              {/* Grid Layout - 2 Columns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredPengumuman.map((announcement) => (
+                  <AnnouncementCard
+                    key={announcement.id}
+                    announcement={announcement}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
 
-                      {/* Ringkasan Isi */}
-                      <p className="text-slate-600 text-sm mb-4 leading-relaxed">
-                        {truncateText(item.isi, 150)}
-                      </p>
-
-                      {/* Meta Info - Badges */}
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                          <Calendar size={13} />
-                          {formatDate(item.createdAt)}
-                        </span>
-                        {item.tanggalSelesai && (
-                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                            <Calendar size={13} />
-                            Berlaku hingga: {formatDate(item.tanggalSelesai)}
-                          </span>
-                        )}
-                        {item.lampiran && (
-                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                            <FileText size={13} />
-                            Ada lampiran
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                        title="Edit"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="h-9 w-9 rounded-lg flex items-center justify-center transition-all duration-200 bg-rose-100 text-rose-700 hover:bg-rose-200"
-                        title="Hapus"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+              {/* Footer Info */}
+              <div className="bg-emerald-50 rounded-lg p-4 text-center border border-emerald-100">
+                <p className="text-sm text-gray-700">
+                  Menampilkan{' '}
+                  <span className="font-bold text-emerald-700">{filteredPengumuman.length}</span> dari{' '}
+                  <span className="font-bold text-emerald-700">{pengumumanList.length}</span> pengumuman
+                </p>
+              </div>
+            </>
           )}
         </div>
       </div>

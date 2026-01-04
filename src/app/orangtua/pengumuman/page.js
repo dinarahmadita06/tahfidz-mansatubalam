@@ -124,9 +124,9 @@ export default function OrangtuaPengumumanPage() {
 
           {/* Search & Filter - Compact */}
           <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-4">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              {/* Search */}
-              <div className="flex-1 min-w-[200px]">
+            <div className="space-y-4">
+              {/* Search - Full Width */}
+              <div className="w-full">
                 <div className="relative">
                   <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
                   <input
