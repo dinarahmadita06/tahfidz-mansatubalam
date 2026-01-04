@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 export async function POST(request) {
   try {
@@ -13,17 +13,41 @@ export async function POST(request) {
     const body = await request.json();
     const { action = 'LOGIN' } = body;
 
-    // Log activity
+    // Determine role-specific action
+    let activityAction;
+    if (action === 'LOGIN') {
+      const roleActionMap = {
+        'SISWA': ACTIVITY_ACTIONS.SISWA_LOGIN,
+        'GURU': ACTIVITY_ACTIONS.GURU_LOGIN,
+        'ADMIN': ACTIVITY_ACTIONS.ADMIN_LOGIN,
+        'ORANG_TUA': ACTIVITY_ACTIONS.SISWA_LOGIN, // Map to SISWA_LOGIN if no ORANG_TUA exists
+      };
+      activityAction = roleActionMap[session.user.role] || ACTIVITY_ACTIONS.SISWA_LOGIN;
+    } else if (action === 'LOGOUT') {
+      const roleActionMap = {
+        'SISWA': ACTIVITY_ACTIONS.SISWA_LOGOUT,
+        'GURU': ACTIVITY_ACTIONS.GURU_LOGOUT,
+        'ADMIN': ACTIVITY_ACTIONS.ADMIN_LOGOUT,
+        'ORANG_TUA': ACTIVITY_ACTIONS.SISWA_LOGOUT,
+      };
+      activityAction = roleActionMap[session.user.role] || ACTIVITY_ACTIONS.SISWA_LOGOUT;
+    } else {
+      activityAction = action; // Fallback to passed action
+    }
+
+    // Log activity using new logger
     await logActivity({
-      userId: session.user.id,
-      userName: session.user.name,
-      userRole: session.user.role,
-      action: action,
-      module: 'AUTH',
-      description: `User ${session.user.name} (${session.user.role}) berhasil ${action === 'LOGIN' ? 'login' : 'logout'}`,
-      ipAddress: getIpAddress(request),
-      userAgent: getUserAgent(request)
-    });
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      actorName: session.user.name,
+      action: activityAction,
+      title: action === 'LOGIN' ? 'User login' : 'User logout',
+      description: `${session.user.name} (${session.user.role}) ${action === 'LOGIN' ? 'berhasil login' : 'berhasil logout'}`,
+      metadata: {
+        action,
+        timestamp: new Date().toISOString(),
+      },
+    }).catch(err => console.error('Activity log error:', err));
 
     return NextResponse.json({ success: true });
   } catch (error) {

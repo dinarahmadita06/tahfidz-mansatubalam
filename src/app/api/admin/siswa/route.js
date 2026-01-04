@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
-import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 import { generateSiswaEmail } from '@/lib/siswaUtils';
 
@@ -363,22 +363,29 @@ export async function POST(request) {
 
     console.log(`⏱️ Database transaction: ${Date.now() - createStart}ms`);
 
-    // Log activity (non-blocking - don't await)
-    logActivity({
-      userId: session.user.id,
-      userName: session.user.name,
-      userRole: session.user.role,
-      action: 'CREATE',
-      module: 'SISWA',
-      description: `Menambahkan siswa baru ${siswa.user.name} (NIS: ${siswa.nis})${parentData ? ' dengan orang tua' : ''}`,
-      ipAddress: getIpAddress(request),
-      userAgent: getUserAgent(request),
-      metadata: {
-        siswaId: siswa.id,
-        kelasId: siswa.kelasId,
-        withParent: !!parentData
-      }
-    }).catch(err => console.error('Log activity error:', err));
+    // ✅ Log activity - Create Siswa
+    try {
+      await logActivity({
+        actorId: session.user.id,
+        actorRole: 'ADMIN',
+        actorName: session.user.name,
+        action: ACTIVITY_ACTIONS.ADMIN_TAMBAH_SISWA,
+        title: 'Menambahkan siswa baru',
+        description: `Siswa: ${siswa.user.name} (NIS: ${siswa.nis}) di kelas ${siswa.kelasId}${parentData ? ' + orang tua' : ''}`,
+        targetUserId: siswa.userId,
+        targetRole: 'SISWA',
+        targetName: siswa.user.name,
+        metadata: {
+          siswaId: siswa.id,
+          nis: siswa.nis,
+          kelasId: siswa.kelasId,
+          withParent: !!parentData
+        }
+      });
+      console.log('✅ Activity logged for ADMIN_TAMBAH_SISWA');
+    } catch (logErr) {
+      console.error('❌ Log activity error:', logErr.message);
+    }
 
     // Invalidate cache for this kelas (and generic cache)
     if (siswa.kelasId) {

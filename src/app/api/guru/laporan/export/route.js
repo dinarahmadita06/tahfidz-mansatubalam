@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 // POST /api/guru/laporan/export - Export laporan to PDF or Excel
 export async function POST(request) {
@@ -43,33 +44,55 @@ export async function POST(request) {
       );
     }
 
+    let result = null;
+
     if (format === 'PDF') {
       // Generate PDF HTML template
       const pdfHtml = generatePDFTemplate(data, viewMode, guru, periode, kelasId);
 
-      return NextResponse.json({
+      result = {
         success: true,
         format: 'PDF',
         html: pdfHtml,
         filename: `laporan-${viewMode}-${new Date().toISOString().split('T')[0]}.pdf`,
-      });
+      };
     } else if (format === 'Excel') {
       // Generate CSV (Excel compatible)
       const csv = generateCSV(data, viewMode);
       const filename = `laporan-${viewMode}-${new Date().toISOString().split('T')[0]}.csv`;
 
-      return NextResponse.json({
+      result = {
         success: true,
         format: 'Excel',
         csv,
         filename,
-      });
+      };
+    } else {
+      return NextResponse.json(
+        { error: 'Invalid format' },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(
-      { error: 'Invalid format' },
-      { status: 400 }
-    );
+    // Log activity - Export Laporan
+    const actionType = format === 'PDF' ? ACTIVITY_ACTIONS.GURU_EXPORT_PDF : ACTIVITY_ACTIONS.GURU_EXPORT_EXCEL;
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: session.user.name,
+      action: actionType,
+      title: `Export laporan ke ${format}`,
+      description: `Export laporan ${viewMode} untuk ${data.length} siswa ke format ${format}`,
+      metadata: {
+        format,
+        viewMode,
+        siswaCount: data.length,
+        periode,
+        kelasId,
+      },
+    }).catch(err => console.error('Activity log error:', err));
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error exporting laporan:', error);
     return NextResponse.json(

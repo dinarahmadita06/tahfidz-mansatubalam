@@ -39,6 +39,7 @@ enum KategoriBuku {
   HADITS
   FIQIH
   AKHLAK
+  TAHSIN
   UMUM
 }
 

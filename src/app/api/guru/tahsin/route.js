@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 // GET - Fetch tahsin data (with optional kelasId filter)
 export async function GET(request) {
@@ -171,6 +172,25 @@ export async function POST(request) {
         },
       },
     });
+
+    // Log activity - Input Tahsin
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'GURU',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.GURU_INPUT_TAHSIN,
+      title: 'Input hasil tahsin',
+      description: `Input tahsin untuk ${tahsin.siswa.user.name} - Level ${level}`,
+      targetUserId: siswaId,
+      targetRole: 'SISWA',
+      targetName: tahsin.siswa.user.name,
+      metadata: {
+        tahsinId: tahsin.id,
+        level,
+        statusPembelajaran,
+        tanggal: tahsin.tanggal,
+      },
+    }).catch(err => console.error('Activity log error:', err));
 
     return NextResponse.json(
       { message: 'Tahsin berhasil ditambahkan', tahsin },
