@@ -99,34 +99,51 @@ export async function GET(request) {
       const sakit = siswaKehadiran.filter(k => k.status === 'SAKIT').length;
       const alpa = siswaKehadiran.filter(k => k.status === 'ALPA').length;
 
-      // Get penilaian data for this siswa
+      // Get hafalan and penilaian data for this siswa
       const siswaHafalan = hafalanData.filter(h => h.siswaId === siswa.id);
-      const penilaianRecords = siswaHafalan
-        .filter(h => h.penilaian)
-        .map(h => h.penilaian);
+      
+      // Flatten penilaian arrays - use spread operator to handle nested arrays
+      const penilaianList = [];
+      siswaHafalan.forEach(h => {
+        if (h.penilaian && h.penilaian.length > 0) {
+          penilaianList.push(...h.penilaian);
+        }
+      });
 
-      // Calculate average scores
+      // Calculate average scores from flattened penilaian list
       let avgTajwid = null;
       let avgKelancaran = null;
       let avgMakhraj = null;
       let avgImplementasi = null;
       let totalNilai = null;
+      const jumlahSetoran = siswaHafalan.length;
 
-      if (penilaianRecords.length > 0) {
-        avgTajwid = Math.round(
-          penilaianRecords.reduce((sum, p) => sum + p.tajwid, 0) / penilaianRecords.length
-        );
-        avgKelancaran = Math.round(
-          penilaianRecords.reduce((sum, p) => sum + p.kelancaran, 0) / penilaianRecords.length
-        );
-        avgMakhraj = Math.round(
-          penilaianRecords.reduce((sum, p) => sum + p.makhraj, 0) / penilaianRecords.length
-        );
-        avgImplementasi = Math.round(
-          penilaianRecords.reduce((sum, p) => sum + p.adab, 0) / penilaianRecords.length
-        );
-        totalNilai = Math.round((avgTajwid + avgKelancaran + avgMakhraj + avgImplementasi) / 4);
+      if (penilaianList.length > 0) {
+        const tajwidValues = penilaianList.filter(p => p.tajwid != null).map(p => p.tajwid);
+        const kelancaranValues = penilaianList.filter(p => p.kelancaran != null).map(p => p.kelancaran);
+        const makhrajValues = penilaianList.filter(p => p.makhraj != null).map(p => p.makhraj);
+        const adabValues = penilaianList.filter(p => p.adab != null).map(p => p.adab);
+        
+        if (tajwidValues.length > 0) avgTajwid = Math.round(tajwidValues.reduce((a, b) => a + b, 0) / tajwidValues.length);
+        if (kelancaranValues.length > 0) avgKelancaran = Math.round(kelancaranValues.reduce((a, b) => a + b, 0) / kelancaranValues.length);
+        if (makhrajValues.length > 0) avgMakhraj = Math.round(makhrajValues.reduce((a, b) => a + b, 0) / makhrajValues.length);
+        if (adabValues.length > 0) avgImplementasi = Math.round(adabValues.reduce((a, b) => a + b, 0) / adabValues.length);
+        
+        // Calculate overall average
+        if (avgTajwid && avgKelancaran && avgMakhraj && avgImplementasi) {
+          totalNilai = Math.round((avgTajwid + avgKelancaran + avgMakhraj + avgImplementasi) / 4);
+        }
       }
+      
+      // Determine status
+      const statusHafalan = jumlahSetoran > 0 ? 'LANJUT' : 'BELUM SETORAN';
+      
+      // Get hafalan terakhir (latest from the list - sorted by date descending)
+      const hafalanTerakhir = siswaHafalan.length > 0 ? siswaHafalan[0] : null;
+      const hafalanTerakhirText = hafalanTerakhir ? `Surah ${hafalanTerakhir.surah}` : '-';
+      
+      // Fallback null values to '-'
+      const formatValue = (val) => val === null || val === undefined ? '-' : val;
 
       return {
         nama: siswa.user.name,
@@ -135,11 +152,14 @@ export async function GET(request) {
         izin,
         sakit,
         alpa,
-        tajwid: avgTajwid,
-        kelancaran: avgKelancaran,
-        makhraj: avgMakhraj,
-        implementasi: avgImplementasi,
-        totalNilai
+        jumlahSetoran,
+        hafalanTerakhir: hafalanTerakhirText,
+        tajwid: formatValue(avgTajwid),
+        kelancaran: formatValue(avgKelancaran),
+        makhraj: formatValue(avgMakhraj),
+        implementasi: formatValue(avgImplementasi),
+        totalNilai: formatValue(totalNilai),
+        statusHafalan
       };
     });
 
