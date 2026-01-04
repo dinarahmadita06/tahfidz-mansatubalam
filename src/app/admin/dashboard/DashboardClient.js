@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AdminLayout from '@/components/layout/AdminLayout';
+import AnnouncementSlider from '@/components/AnnouncementSlider';
 import TargetStatisticsSection from './TargetStatisticsSection';
 
 // Verify correct version is loaded
@@ -143,108 +144,6 @@ function MotivationCard() {
   );
 }
 
-// Local Announcement Section - Amber Pastel (SIMTAQ Baseline)
-function AnnouncementSection() {
-  const [pengumuman, setPengumuman] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPengumuman = async () => {
-      try {
-        const res = await fetch('/api/pengumuman?limit=3');
-        if (res.ok) {
-          const data = await res.json();
-          setPengumuman(data.pengumuman || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch pengumuman', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPengumuman();
-  }, []);
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const CATEGORY_ICONS = {
-    UMUM: Bell,
-    AKADEMIK: BookOpen,
-    KEGIATAN: Star,
-    PENTING: Award,
-  };
-
-  return (
-    <div className="bg-amber-50/70 backdrop-blur-sm rounded-2xl border border-amber-200 shadow-[0_0_0_1px_rgba(245,158,11,0.25),0_12px_40px_rgba(245,158,11,0.12)] p-6 h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
-          <div className="p-3 bg-amber-500 rounded-xl text-white shadow-lg flex-shrink-0 mx-auto sm:mx-0">
-            <Megaphone size={24} strokeWidth={2} />
-          </div>
-          <div className="text-center sm:text-left">
-            <h2 className="text-lg font-bold text-amber-900">Pengumuman Terbaru</h2>
-            <p className="text-xs text-amber-700 font-medium">Informasi penting untuk Anda</p>
-          </div>
-        </div>
-        <Link
-          href="/admin/pengumuman"
-          className="hidden sm:inline-flex px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md flex-shrink-0"
-        >
-          Lihat Semua
-        </Link>
-      </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-        {loading ? (
-          <>
-            <div className="h-20 bg-white/50 rounded-2xl animate-pulse"></div>
-            <div className="h-20 bg-white/50 rounded-2xl animate-pulse"></div>
-          </>
-        ) : pengumuman.length === 0 ? (
-          <div className="text-center py-8 text-amber-800/60 font-medium">Belum ada pengumuman</div>
-        ) : (
-          pengumuman.map((item) => {
-            const Icon = CATEGORY_ICONS[item.kategori] || CATEGORY_ICONS.UMUM;
-            return (
-              <div key={item.id} className="bg-white/70 border border-amber-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-amber-50 rounded-lg text-amber-500 shrink-0 mt-0.5">
-                    <Icon size={16} />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-900 line-clamp-1 mb-1">{item.judul}</h4>
-                    <p className="text-xs text-gray-600 line-clamp-2 mb-2 leading-relaxed">{item.isi}</p>
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-gray-400">
-                      <Calendar size={10} />
-                      <span>{formatDate(item.createdAt)}</span>
-                      <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full">{item.kategori}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-      
-      {/* Mobile only button */}
-       <Link
-          href="/admin/pengumuman"
-          className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
-        >
-          Lihat Semua
-          <ChevronRight size={20} />
-        </Link>
-    </div>
-  );
-}
-
 // Hero Header Card - Green Gradient (SIMTAQ Baseline)
 function DashboardHeader({ userName }) {
   // Initialize with static default values to match SSR
@@ -347,6 +246,8 @@ export default function AdminDashboardPage() {
       rataRataKehadiran: 0,
     },
   });
+  const [pengumuman, setPengumuman] = useState([]);
+  const [pengumumanLoading, setPengumumanLoading] = useState(true);
   const [chartData, setChartData] = useState({
     siswaStats: { mencapai: 0, belum: 0 },
     kelasStats: { mencapai: 0, total: 0, persentase: 0 },
@@ -426,10 +327,26 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const fetchPengumuman = async () => {
+    try {
+      setPengumumanLoading(true);
+      const res = await fetch('/api/pengumuman?limit=5');
+      if (res.ok) {
+        const data = await res.json();
+        setPengumuman(data.pengumuman || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch pengumuman', error);
+    } finally {
+      setPengumumanLoading(false);
+    }
+  };
+
   useEffect(() => {
     setIsClient(true);
     fetchDashboardData();
     fetchPendingCount();
+    fetchPengumuman();
   }, []);
 
   if (!isClient) {
@@ -472,7 +389,7 @@ export default function AdminDashboardPage() {
           <MotivationCard />
 
           {/* 3. Announcement Card - FULL WIDTH */}
-          <AnnouncementSection />
+          <AnnouncementSlider announcements={pengumuman} loading={pengumumanLoading} variant="admin" />
 
           {/* 4. Stat Cards - Pastel Transparent + Glow */}
           {!error && (

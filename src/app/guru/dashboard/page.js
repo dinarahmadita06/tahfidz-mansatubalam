@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
+import AnnouncementSlider from '@/components/AnnouncementSlider';
 import PengumumanWidget from '@/components/PengumumanWidget';
 import ActivityList from '@/components/guru/ActivityList';
 import {
@@ -15,6 +16,7 @@ import {
   FileText,
   Megaphone,
   ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
 
 // Style constants
@@ -89,62 +91,6 @@ function MotivationCard() {
             — HR. Bukhari
           </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// 2. AnnouncementSection Component
-function AnnouncementSection({ announcements, loading }) {
-  if (loading) {
-    return (
-      <div className={`${CARD_BASE} p-5 sm:p-6`}>
-        <div className="animate-pulse">
-          <div className="h-4 bg-slate-200 rounded w-1/3 mb-3"></div>
-          <div className="h-3 bg-slate-200 rounded w-2/3"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!Array.isArray(announcements) || announcements.length === 0) {
-    return (
-      <div className={`${CARD_BASE} p-5 sm:p-6`}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <Megaphone size={18} className="text-slate-400" />
-          </div>
-          <p className="text-sm text-slate-600">Tidak ada pengumuman baru</p>
-        </div>
-      </div>
-    );
-  }
-
-  const displayedAnnouncements = announcements.slice(0, 3);
-
-  return (
-    <div className="rounded-2xl bg-emerald-50 border-2 border-emerald-300 shadow-md p-5 sm:p-6 ring-2 ring-emerald-100">
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
-            <Megaphone size={22} className="text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-emerald-900">Pengumuman</h3>
-            <p className="text-xs text-emerald-700">Informasi terbaru untuk Anda</p>
-          </div>
-        </div>
-        <span className="px-3 py-1 rounded-full bg-emerald-200 text-emerald-800 text-xs font-bold">
-          Baru
-        </span>
-      </div>
-      <div className="space-y-3">
-        {displayedAnnouncements.map((announcement) => (
-          <div key={announcement.id} className="bg-white rounded-xl p-4 border border-emerald-200">
-            <h4 className="font-semibold text-slate-900 mb-1">{announcement.judul}</h4>
-            <p className="text-sm text-slate-600 line-clamp-2">{announcement.isi}</p>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -412,7 +358,8 @@ export default function DashboardGuru() {
       const response = await fetch('/api/pengumuman');
       if (!response.ok) throw new Error('Failed to fetch announcements');
       const data = await response.json();
-      const announcementsList = parseApiResponse(data);
+      // API returns { pengumuman: [...] } structure
+      const announcementsList = parseApiResponse(data, 'pengumuman');
       setAnnouncements(announcementsList);
     } catch (error) {
       console.error('Error fetching announcements:', error);
@@ -490,7 +437,7 @@ export default function DashboardGuru() {
         <MotivationCard />
 
         {/* Announcement Section - Paling Pertama & Menonjol */}
-        <AnnouncementSection announcements={announcements} loading={false} />
+        <AnnouncementSlider announcements={announcements} loading={false} variant="guru" />
 
         {/* Stats Cards - Hapus Total Juz, Progress dengan subtitle jelas */}
         <StatsCards stats={stats} />
