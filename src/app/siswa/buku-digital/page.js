@@ -3,7 +3,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
-import { BookOpen, Search, Download, Eye, Loader } from 'lucide-react';
+import {
+  Book,
+  BookOpen,
+  Search,
+  Download,
+  Eye,
+  Loader,
+  Play,
+  FileText,
+} from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const CATEGORIES = [
@@ -16,6 +25,151 @@ const CATEGORIES = [
   'Tahsin',
   'Umum',
 ];
+
+// Extract YouTube video ID from URL
+function extractYouTubeId(url) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Get thumbnail URL for YouTube videos
+function getYouTubeThumbnail(videoId) {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+// Get icon based on material type
+function getMaterialIcon(jenisMateri, className = 'w-12 h-12') {
+  switch (jenisMateri) {
+    case 'YOUTUBE':
+      return <Play className={className} />;
+    default: // PDF
+      return <FileText className={className} />;
+  }
+}
+
+// Get color classes based on material type
+function getMaterialColors(jenisMateri) {
+  switch (jenisMateri) {
+    case 'YOUTUBE':
+      return {
+        badge: 'bg-pink-100 text-pink-700 border-pink-200',
+        icon: 'text-pink-600',
+        card: 'bg-white/70 backdrop-blur-sm border-2 border-pink-200',
+        button: 'bg-pink-500 hover:bg-pink-600',
+        buttonSecondary: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
+      };
+    default: // PDF
+      return {
+        badge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        icon: 'text-emerald-600',
+        card: 'bg-white/70 backdrop-blur-sm border-2 border-emerald-200',
+        button: 'bg-emerald-500 hover:bg-emerald-600',
+        buttonSecondary: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700',
+      };
+  }
+}
+
+// Material Card Component
+function MaterialCard({ materi, onOpen, onDownload }) {
+  const colors = getMaterialColors(materi.jenisMateri);
+  const isYouTube = materi.jenisMateri === 'YOUTUBE';
+  const isPDF = materi.jenisMateri === 'PDF';
+  
+  const handleOpen = () => {
+    onOpen(materi);
+  };
+  
+  const handleDownloadClick = () => {
+    onDownload(materi);
+  };
+  
+  return (
+    <div className={`rounded-2xl shadow-sm ${colors.card} overflow-hidden hover:shadow-md hover:shadow-emerald-500/20 transition-all duration-200`}>
+      {/* Material Type Badge */}
+      <div className="absolute top-3 left-3 z-10">
+        <span className={`px-2 py-1 ${colors.badge} text-xs font-medium rounded-full uppercase`}>
+          {materi.jenisMateri}
+        </span>
+      </div>
+      
+      {/* Thumbnail/Icon Area */}
+      <div className="h-40 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 relative">
+        {isYouTube ? (
+          <div className="relative w-full h-full">
+            {materi.youtubeUrl ? (
+              <>
+                <img 
+                  src={getYouTubeThumbnail(extractYouTubeId(materi.youtubeUrl))}
+                  alt={materi.judul}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null; // Prevent infinite loop
+                    e.target.style.display = 'none';
+                    const fallbackDiv = e.target.parentElement.querySelector('.fallback-icon');
+                    if (fallbackDiv) fallbackDiv.style.display = 'flex';
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity">
+                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
+                    <Play className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+                <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-600 hidden">
+                  <Play className="w-12 h-12 text-white" />
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-600">
+                <Play className="w-12 h-12 text-white" />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
+            {getMaterialIcon(materi.jenisMateri, 'w-16 h-16 text-white/40')}
+          </div>
+        )}
+      </div>
+
+      {/* Material Info */}
+      <div className="p-4">
+        <h3 className="text-base font-bold text-gray-900 line-clamp-1 mb-2">
+          {materi.judul || 'Untitled'}
+        </h3>
+
+        <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]">
+          {materi.deskripsi || materi.deskripsi || 'No description'}
+        </p>
+
+        {/* Upload Date */}
+        <p className="text-xs text-gray-500 mb-4">
+          {new Date(materi.createdAt || materi.uploadDate || materi.createdAt).toLocaleDateString('id-ID')}
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleOpen}
+            className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-white text-sm font-semibold rounded-lg transition-all ${colors.button}`}
+          >
+            <Eye size={16} />
+            {isYouTube ? 'Buka Video' : 'Lihat'}
+          </button>
+
+          {isPDF && (
+            <button
+              onClick={handleDownloadClick}
+              className={`flex items-center justify-center px-3 py-2 ${colors.buttonSecondary} rounded-lg transition-all`}
+            >
+              <Download size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SiswaBukuDigitalPage() {
   const { data: session } = useSession();
@@ -48,13 +202,12 @@ export default function SiswaBukuDigitalPage() {
     }
   };
 
-  // Filter books based on search and category
+  // Filter materials based on search and category
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
-      // Handle both old localStorage format and new API format
-      const title = book.title || book.judul || '';
-      const description = book.description || book.deskripsi || '';
-      const category = book.category || book.kategori || '';
+      const title = book.judul || book.title || '';
+      const description = book.deskripsi || book.description || '';
+      const category = book.kategori || book.category || '';
 
       const matchesSearch =
         title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,6 +216,10 @@ export default function SiswaBukuDigitalPage() {
       return matchesSearch && matchesCategory;
     });
   }, [books, searchQuery, selectedCategory]);
+
+  // Calculate statistics
+  const totalPDF = filteredBooks.filter(m => m.jenisMateri === 'PDF').length;
+  const totalYouTube = filteredBooks.filter(m => m.jenisMateri === 'YOUTUBE').length;
 
   const handleDownload = (book) => {
     const fileUrl = book.fileUrl || book.fileUrl;
@@ -116,29 +273,63 @@ export default function SiswaBukuDigitalPage() {
                 <BookOpen size={40} className="text-white" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold">Buku Digital</h1>
-                <p className="text-green-50 text-base md:text-lg">Materi & panduan pembelajaran Tahfidz</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl md:text-4xl font-bold">Buku Digital</h1>
+                  <span className="bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
+                    Materi
+                  </span>
+                </div>
+                <p className="text-green-50 text-base md:text-lg">Kumpulan materi & panduan Tahfidz yang dapat diakses oleh siswa</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        {/* Statistics Cards - PDF & YouTube */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Card 1: PDF */}
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-600 text-sm font-semibold mb-1">FILE PDF</p>
+                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalPDF}</h3>
+              </div>
+              <div className="bg-emerald-100 p-4 rounded-full">
+                <FileText size={32} className="text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: YouTube */}
+          <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border-2 border-pink-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-pink-600 text-sm font-semibold mb-1">YOUTUBE</p>
+                <h3 className="text-4xl font-bold text-pink-700">{loading ? '...' : totalYouTube}</h3>
+              </div>
+              <div className="bg-pink-100 p-4 rounded-full">
+                <Play size={32} className="text-pink-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Bar - Search + Kategori */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Cari buku..."
+                placeholder="Cari materi..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
 
-            {/* Category Dropdown */}
+            {/* Kategori Dropdown */}
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -158,12 +349,12 @@ export default function SiswaBukuDigitalPage() {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-              <p className="text-gray-600">Memuat buku digital...</p>
+              <p className="text-gray-600">Memuat materi digital...</p>
             </div>
           </div>
         )}
-
-        {/* Books Grid / Empty State */}
+        
+        {/* Materi Grid / Empty State */}
         {!loading && filteredBooks.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <div className="flex justify-center mb-4">
@@ -173,71 +364,26 @@ export default function SiswaBukuDigitalPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">
               {searchQuery || selectedCategory !== 'Semua'
-                ? 'Tidak ada buku yang sesuai'
-                : 'Belum ada buku digital'}
+                ? 'Tidak ada materi yang sesuai'
+                : 'Belum ada materi digital'}
             </h3>
-            <p className="text-gray-500">
+            <p className="text-gray-500 mb-6">
               {searchQuery || selectedCategory !== 'Semua'
                 ? 'Coba gunakan kata kunci atau filter yang berbeda'
-                : 'Belum ada materi buku digital yang tersedia'}
+                : 'Materi buku digital belum tersedia'}
             </p>
           </div>
         ) : (
-          !loading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredBooks.map((book) => (
-                <div
-                  key={book.id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all"
-                >
-                  {/* Book Thumbnail */}
-                  <div className="h-40 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <BookOpen className="text-white/40" size={64} />
-                  </div>
-
-                  {/* Book Info */}
-                  <div className="p-4">
-                    {/* Category Badge */}
-                    <span className="inline-block px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded mb-2">
-                      {book.category || book.kategori || 'Umum'}
-                    </span>
-
-                    <h3 className="text-base font-bold text-gray-900 line-clamp-1 mb-2">
-                      {book.title || book.judul || 'Untitled'}
-                    </h3>
-
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]">
-                      {book.description || book.deskripsi || 'No description'}
-                    </p>
-
-                    {/* Upload Date */}
-                    <p className="text-xs text-gray-500 mb-4">
-                      {new Date(book.uploadDate || book.createdAt).toLocaleDateString('id-ID')}
-                    </p>
-
-                    {/* Action Buttons - Read Only for Siswa */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleView(book)}
-                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-lg transition-all"
-                      >
-                        <Eye size={16} />
-                        {book.fileUrl && (book.fileUrl.startsWith('https://youtu.be/') || book.fileUrl.startsWith('https://www.youtube.com/')) ? 'Buka' : 'Lihat'}
-                      </button>
-
-                      <button
-                        onClick={() => handleDownload(book)}
-                        className="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all"
-                        title="Unduh PDF"
-                      >
-                        <Download size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredBooks.map((materi) => (
+              <MaterialCard
+                key={materi.id}
+                materi={materi}
+                onOpen={handleView}
+                onDownload={handleDownload}
+              />
+            ))}
+          </div>
         )}
       </div>
     </SiswaLayout>
