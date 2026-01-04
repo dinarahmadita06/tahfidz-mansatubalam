@@ -121,6 +121,7 @@ export async function fetchLaporan(filters) {
 
   const response = await fetch(`/api/guru/laporan?${params.toString()}`, {
     credentials: 'include',
+    cache: 'no-store', // Disable caching to always get fresh data
   });
 
   if (!response.ok) {
@@ -132,13 +133,19 @@ export async function fetchLaporan(filters) {
   // Debug log (temporary)
   console.log('Laporan result:', result);
 
-  // If API returns success: false, throw error
-  if (result.success === false) {
+  // API now returns array directly, not wrapped in { data: [...] }
+  // Handle both cases for backward compatibility
+  let data = result;
+  
+  // If API returns { data: [...] }, extract the array
+  if (result && typeof result === 'object' && 'data' in result && !Array.isArray(result)) {
+    data = result.data || [];
+  }
+  
+  // If API returns { success: false, error: "..." }, throw error
+  if (result && typeof result === 'object' && result.success === false) {
     throw new Error(result.error || 'Failed to fetch laporan');
   }
-
-  // Return data array (can be empty, which is valid)
-  const data = result.data || [];
 
   // Ensure it's an array
   if (!Array.isArray(data)) {
