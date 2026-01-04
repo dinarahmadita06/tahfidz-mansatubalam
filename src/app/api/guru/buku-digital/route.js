@@ -78,7 +78,7 @@ export async function POST(request) {
     kategori = kategori.toUpperCase();
     
     // Validate kategori enum
-    const validKategori = ['TAJWID', 'TAFSIR', 'HADITS', 'FIQIH', 'AKHLAK', 'UMUM'];
+    const validKategori = ['TAJWID', 'TAFSIR', 'HADITS', 'FIQIH', 'AKHLAK', 'TAHSIN', 'UMUM'];
     if (!validKategori.includes(kategori)) {
       return NextResponse.json(
         { error: `Kategori tidak valid. Pilih dari: ${validKategori.join(', ')}` },

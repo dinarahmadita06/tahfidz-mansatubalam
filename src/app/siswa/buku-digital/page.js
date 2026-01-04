@@ -67,6 +67,15 @@ export default function SiswaBukuDigitalPage() {
   const handleDownload = (book) => {
     const fileUrl = book.fileUrl || book.fileUrl;
     if (fileUrl) {
+      // Check if it's a YouTube URL
+      if (fileUrl.startsWith('https://youtu.be/') || fileUrl.startsWith('https://www.youtube.com/')) {
+        // Open YouTube URL directly
+        window.open(fileUrl, '_blank');
+        toast.success('Membuka YouTube...');
+        return;
+      }
+      
+      // For PDF files, use the proxy
       const proxyUrl = `/api/guru/buku-digital/proxy?url=${encodeURIComponent(fileUrl)}`;
       window.open(proxyUrl, '_blank');
       toast.success('Membuka PDF...');
@@ -78,6 +87,15 @@ export default function SiswaBukuDigitalPage() {
   const handleView = (book) => {
     const fileUrl = book.fileUrl || book.fileUrl;
     if (fileUrl) {
+      // Check if it's a YouTube URL
+      if (fileUrl.startsWith('https://youtu.be/') || fileUrl.startsWith('https://www.youtube.com/')) {
+        // Open YouTube URL directly
+        window.open(fileUrl, '_blank');
+        toast.success('Membuka YouTube...');
+        return;
+      }
+      
+      // For PDF files, use the proxy
       const proxyUrl = `/api/guru/buku-digital/proxy?url=${encodeURIComponent(fileUrl)}`;
       window.open(proxyUrl, '_blank');
     } else {
@@ -204,7 +222,7 @@ export default function SiswaBukuDigitalPage() {
                         className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-lg transition-all"
                       >
                         <Eye size={16} />
-                        Lihat
+                        {book.fileUrl && (book.fileUrl.startsWith('https://youtu.be/') || book.fileUrl.startsWith('https://www.youtube.com/')) ? 'Buka' : 'Lihat'}
                       </button>
 
                       <button
