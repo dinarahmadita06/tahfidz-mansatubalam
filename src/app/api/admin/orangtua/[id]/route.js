@@ -160,7 +160,7 @@ export async function PUT(request, { params }) {
         },
         _count: {
           select: {
-            siswa: true
+            orangTuaSiswa: true
           }
         }
       }
