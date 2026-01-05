@@ -6,6 +6,8 @@ import { getChildrenByParentId, getChildByParentId, createEmptyStatistics } from
 export async function GET(request) {
   try {
     const session = await auth();
+    console.log('\n🔐 API: /api/orangtua/penilaian');
+    console.log('📋 Session:', { userId: session?.user?.id, role: session?.user?.role });
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -22,11 +24,14 @@ export async function GET(request) {
 
     // Jika siswaId tidak diberikan, ambil semua anak dari orang tua ini
     if (!siswaId) {
+      console.log('🎆 No siswaId, fetching all children for parent:', session.user.id);
       const children = await getChildrenByParentId(session.user.id);
+      console.log('👤 Children found:', children.length);
       return NextResponse.json({ children });
     }
 
     // Validasi: pastikan siswa adalah anak dari orang tua ini menggunakan orangTuaSiswa relation
+    console.log('🔍 Validating siswa:', siswaId, 'for parent:', session.user.id);
     const siswa = await getChildByParentId(siswaId, session.user.id);
 
     if (!siswa) {
