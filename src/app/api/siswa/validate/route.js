@@ -34,6 +34,15 @@ export async function PATCH(request) {
             nama: true,
           },
         },
+        orangTuaSiswa: {
+          include: {
+            orangTua: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -92,6 +101,27 @@ export async function PATCH(request) {
           where: { id: siswa.userId },
           data: { isActive: true },
         });
+        
+        // RULE FINAL: When siswa approved, auto-activate connected parent(s)
+        const connectedParents = await tx.orangTuaSiswa.findMany({
+          where: { siswaId: siswaId },
+          include: {
+            orangTua: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        });
+        
+        // Activate each connected parent's user account
+        for (const relation of connectedParents) {
+          await tx.user.update({
+            where: { id: relation.orangTua.userId },
+            data: { isActive: true },
+          });
+          console.log(`✅ [VALIDATE-SISWA] Auto-activated parent: ${relation.orangTua.user.email}`);
+        }
       }
 
       return updatedSiswa;
