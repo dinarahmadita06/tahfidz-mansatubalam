@@ -34,43 +34,85 @@ export async function GET(request) {
     if (startDateStr && endDateStr) {
       const startDate = new Date(startDateStr);
       const endDate = new Date(endDateStr);
-      endDate.setHours(23, 59, 59, 999); // Include entire last day
       
+      // Debug range
+      console.log("[SISWA PENILAIAN] Filter Range:", { startDate, endDate, startDateStr, endDateStr });
+
       whereClause.hafalan = {
         tanggal: {
           gte: startDate,
-          lte: endDate
+          lt: endDate
         }
       };
     }
 
-    // Fetch all penilaian for this siswa (with optional date filter)
-    const penilaianList = await prisma.penilaian.findMany({
-      where: whereClause,
-      include: {
-        hafalan: {
-          select: {
-            tanggal: true,
-            surah: true,
-            ayatMulai: true,
-            ayatSelesai: true
-          }
-        },
-        guru: {
-          include: {
-            user: {
-              select: {
-                name: true
+    // Fetch all penilaian and presensi in parallel
+    const [penilaianList, presensiList, presensiStats] = await Promise.all([
+      prisma.penilaian.findMany({
+        where: whereClause,
+        include: {
+          hafalan: {
+            select: {
+              tanggal: true,
+              surah: true,
+              ayatMulai: true,
+              ayatSelesai: true
+            }
+          },
+          guru: {
+            include: {
+              user: {
+                select: {
+                  name: true
+                }
               }
             }
           }
+        },
+        orderBy: {
+          hafalan: {
+            tanggal: 'desc'
+          }
         }
-      },
-      orderBy: {
-        hafalan: {
-          tanggal: 'desc'  // ✅ Order by hafalan.tanggal (not penilaian.tanggal which doesn't exist)
+      }),
+      prisma.presensi.findMany({
+        where: {
+          siswaId: siswa.id,
+          tanggal: whereClause.hafalan?.tanggal || undefined
+        },
+        select: {
+          tanggal: true,
+          status: true
         }
-      }
+      }),
+      prisma.presensi.groupBy({
+        by: ['status'],
+        where: {
+          siswaId: siswa.id,
+          tanggal: whereClause.hafalan?.tanggal || undefined
+        },
+        _count: {
+          id: true
+        }
+      })
+    ]);
+
+    // Map attendance status by date (YYYY-MM-DD)
+    const attendanceMap = new Map();
+    presensiList.forEach(p => {
+      const dateKey = p.tanggal.toISOString().split('T')[0];
+      attendanceMap.set(dateKey, p.status);
+    });
+
+    const counts = {
+      HADIR: 0,
+      IZIN: 0,
+      SAKIT: 0,
+      ALFA: 0
+    };
+
+    presensiStats.forEach(stat => {
+      counts[stat.status] = stat._count.id;
     });
 
     // Calculate statistics
@@ -81,6 +123,7 @@ export async function GET(request) {
     let rataRataKelancaran = 0;
     let rataRataMakhraj = 0;
     let rataRataImplementasi = 0;
+    let lastAssessment = null;
 
     if (totalPenilaian > 0) {
       // ✅ Use shared utility for consistent calculation with 2 decimal rounding
@@ -89,24 +132,45 @@ export async function GET(request) {
       rataRataKelancaran = calcStatisticAverage(penilaianList, 'kelancaran', 2);
       rataRataMakhraj = calcStatisticAverage(penilaianList, 'makhraj', 2);
       rataRataImplementasi = calcStatisticAverage(penilaianList, 'adab', 2);
+
+      // Last assessment is the first one because of DESC order
+      const last = penilaianList[0];
+      lastAssessment = {
+        tanggal: last.hafalan?.tanggal || last.createdAt,
+        surah: last.hafalan?.surah || '-',
+        nilai: last.nilaiAkhir || 0
+      };
     }
 
     // Format penilaian data
-    const penilaianData = penilaianList.map((p) => ({
-      id: p.id,
-      surah: p.hafalan?.surah || '-',
-      ayat: p.hafalan ? `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}` : '-',
-      tanggal: p.hafalan?.tanggal || p.createdAt,
-      guru: p.guru?.user?.name || 'Unknown',
-      nilaiAspek: {
-        tajwid: p.tajwid || 0,
-        kelancaran: p.kelancaran || 0,
-        makhraj: p.makhraj || 0,
-        implementasi: p.adab || 0
-      },
-      nilaiTotal: parseFloat((p.nilaiAkhir || 0).toFixed(2)),  // ✅ Normalize to 2 decimals
-      catatan: p.catatan || ''
-    }));
+    const penilaianData = penilaianList.map((p) => {
+      const nilaiAkhir = p.nilaiAkhir || 0;
+      let status = 'belum';
+      if (nilaiAkhir >= 75) status = 'lulus';
+      else if (nilaiAkhir >= 60) status = 'revisi';
+
+      const assessmentDate = p.hafalan?.tanggal || p.createdAt;
+      const dateKey = assessmentDate instanceof Date ? assessmentDate.toISOString().split('T')[0] : new Date(assessmentDate).toISOString().split('T')[0];
+      const attendanceStatus = attendanceMap.get(dateKey) || null;
+
+      return {
+        id: p.id,
+        surah: p.hafalan?.surah || '-',
+        ayat: p.hafalan ? `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}` : '-',
+        tanggal: assessmentDate,
+        guru: p.guru?.user?.name || 'Unknown',
+        nilaiAspek: {
+          tajwid: p.tajwid || 0,
+          kelancaran: p.kelancaran || 0,
+          makhraj: p.makhraj || 0,
+          implementasi: p.adab || 0
+        },
+        nilaiTotal: parseFloat(nilaiAkhir.toFixed(2)),  // ✅ Normalize to 2 decimals
+        catatan: p.catatan || '',
+        status: status, // Use lowercase keys matching UI (lulus, revisi, belum)
+        attendanceStatus: attendanceStatus
+      };
+    });
 
     // Build chart data - group by month from hafalan.tanggal
     const chartDataMap = new Map();
@@ -149,7 +213,12 @@ export async function GET(request) {
         rataRataKelancaran,
         rataRataMakhraj,
         rataRataImplementasi,
-        totalPenilaian
+        totalPenilaian,
+        lastAssessment,
+        hadir: counts.HADIR,
+        izin: counts.IZIN,
+        sakit: counts.SAKIT,
+        alfa: counts.ALFA
       },
       penilaianData,
       chartData

@@ -9,7 +9,6 @@ import {
   UserCircle,
   BookOpen,
   Star,
-  CalendarCheck,
   Settings,
   Menu,
   X,
@@ -31,18 +30,11 @@ const menuItems = [
     color: 'emerald'
   },
   {
-    title: 'Penilaian Hafalan',
+    title: 'Perkembangan Anak',
     icon: Star,
-    href: '/orangtua/penilaian-hafalan',
-    description: 'Hasil penilaian dari guru',
+    href: '/orangtua/perkembangan-anak',
+    description: 'Presensi & penilaian hafalan',
     color: 'emerald'
-  },
-  {
-    title: 'Riwayat Perkembangan Harian',
-    icon: CalendarCheck,
-    href: '/orangtua/presensi',
-    description: 'Presensi & penilaian harian',
-    color: 'sky'
   },
   {
     title: 'Pengumuman',

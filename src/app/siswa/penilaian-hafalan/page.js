@@ -17,6 +17,9 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
+  CheckCircle,
+  Clock,
+  X,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -39,7 +42,27 @@ const fetcher = async (url) => {
 // SUB-COMPONENTS
 // ============================================================
 
-function StatsCard({ icon: Icon, title, value, color = 'emerald', delay = 0 }) {
+const AttendanceBadge = ({ status }) => {
+  const configs = {
+    HADIR: { label: 'Hadir', emoji: '✅', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    IZIN: { label: 'Izin', emoji: '🟡', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+    SAKIT: { label: 'Sakit', emoji: '🔵', color: 'text-sky-600', bg: 'bg-sky-50', border: 'border-sky-200' },
+    ALFA: { label: 'Alfa', emoji: '🔴', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200' },
+  };
+
+  const config = configs[status];
+
+  if (!config) return null;
+
+  return (
+    <div className={`inline-flex items-center gap-1 px-2 py-0.5 ${config.bg} ${config.border} border rounded-md shadow-sm`}>
+      <span className="text-[10px]">{config.emoji}</span>
+      <span className={`text-[10px] font-bold ${config.color}`}>{config.label}</span>
+    </div>
+  );
+};
+
+function StatsCard({ icon: Icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
   const colorConfig = {
     emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' },
     sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700' },
@@ -62,6 +85,7 @@ function StatsCard({ icon: Icon, title, value, color = 'emerald', delay = 0 }) {
         <span className={`text-xs font-bold ${config.text} uppercase tracking-wider`}>{title}</span>
       </div>
       <p className={`text-3xl font-bold ${config.text}`}>{value}</p>
+      {subtitle && <p className="text-xs text-gray-500 mt-2 line-clamp-1">{subtitle}</p>}
     </motion.div>
   );
 }
@@ -123,6 +147,7 @@ function PenilaianCard({ penilaian, index }) {
               <Calendar size={14} />
               <span>{new Date(penilaian.tanggal).toLocaleDateString('id-ID')}</span>
             </div>
+            <AttendanceBadge status={penilaian.attendanceStatus} />
             <span>•</span>
             <span>Oleh {penilaian.guru}</span>
           </div>
@@ -221,11 +246,50 @@ export default function PenilaianHafalanPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <StatsCard icon={Award} title="Rata-rata" value={statistics?.rataRataNilai || 0} color="violet" delay={0.1} />
-            <StatsCard icon={Star} title="Tajwid" value={statistics?.rataRataTajwid || 0} color="emerald" delay={0.2} />
-            <StatsCard icon={TrendingUp} title="Kelancaran" value={statistics?.rataRataKelancaran || 0} color="sky" delay={0.3} />
-            <StatsCard icon={BookOpen} title="Makhraj" value={statistics?.rataRataMakhraj || 0} color="purple" delay={0.4} />
-            <StatsCard icon={Sparkles} title="Adab" value={statistics?.rataRataImplementasi || 0} color="amber" delay={0.5} />
+            <StatsCard 
+              icon={CheckCircle} 
+              title="Hadir" 
+              value={statistics?.hadir || 0} 
+              subtitle="Kehadiran bulan ini"
+              color="emerald" 
+              delay={0.1} 
+            />
+            <StatsCard 
+              icon={AlertCircle} 
+              title="Izin" 
+              value={statistics?.izin || 0} 
+              subtitle="Izin bulan ini"
+              color="amber" 
+              delay={0.2} 
+            />
+            <StatsCard 
+              icon={Clock} 
+              title="Sakit" 
+              value={statistics?.sakit || 0} 
+              subtitle="Sakit bulan ini"
+              color="sky" 
+              delay={0.3} 
+            />
+            <StatsCard 
+              icon={X} 
+              title="Alfa" 
+              value={statistics?.alfa || 0} 
+              subtitle="Alfa bulan ini"
+              color="violet" 
+              delay={0.4} 
+            />
+            <StatsCard 
+              icon={Award} 
+              title="Rata-rata" 
+              value={statistics?.rataRataNilai || 0} 
+              subtitle={
+                statistics?.lastAssessment 
+                  ? `${statistics.lastAssessment.surah} (${statistics.lastAssessment.nilai})`
+                  : "Belum ada penilaian pada periode ini"
+              }
+              color="purple" 
+              delay={0.5} 
+            />
           </div>
 
           {/* Chart Section */}

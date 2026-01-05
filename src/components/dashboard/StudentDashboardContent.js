@@ -211,8 +211,8 @@ export default function StudentDashboardContent({
 
   // Determine report links based on role context
   const laporan_href = roleContext === 'SISWA' ? '/siswa/laporan' : '/orangtua/laporan-hafalan';
-  const nilai_href = roleContext === 'SISWA' ? '/siswa/penilaian-hafalan' : '/orangtua/penilaian-hafalan';
-
+  const nilai_href = roleContext === 'SISWA' ? '/siswa/penilaian-hafalan' : '/orangtua/perkembangan-anak';
+  
   return (
     <>
       {/* Motivasi - Biru Transparan */}
