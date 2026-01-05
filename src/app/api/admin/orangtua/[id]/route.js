@@ -122,9 +122,9 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 });
     }
 
-    // Prepare update data
+    // Prepare update data - map noHP to noTelepon for Prisma
     const orangTuaUpdateData = {};
-    if (noHP !== undefined) orangTuaUpdateData.noHP = noHP;
+    if (noHP !== undefined) orangTuaUpdateData.noTelepon = noHP;
     if (pekerjaan !== undefined) orangTuaUpdateData.pekerjaan = pekerjaan || null;
     if (alamat !== undefined) orangTuaUpdateData.alamat = alamat || null;
 
