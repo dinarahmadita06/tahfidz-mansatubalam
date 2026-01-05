@@ -309,16 +309,48 @@ const RecentActivities = ({ activities, loading }) => {
 export default function DashboardOrangTua() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [children, setChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState(null);
   const [greeting, setGreeting] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [childrenLoading, setChildrenLoading] = useState(true);
 
-  // Mock data - replace with real API
-  const children = [
-    { id: 1, name: 'Ahmad Fauzan', kelas: '5A' },
-    { id: 2, name: 'Fatimah Azzahra', kelas: '3B' },
-  ];
+  // Fetch real children from API
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchChildren();
+    }
+  }, [session?.user?.id]);
+
+  const fetchChildren = async () => {
+    try {
+      setChildrenLoading(true);
+      const response = await fetch('/api/orangtua/hafalan-anak');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.children && data.children.length > 0) {
+          // Transform API response to match UI format
+          const formattedChildren = data.children.map(child => ({
+            id: child.id,
+            name: child.namaLengkap,
+            kelas: child.kelas?.namaKelas || 'N/A'
+          }));
+          setChildren(formattedChildren);
+          setSelectedChild(formattedChildren[0]);
+        } else {
+          setChildren([]);
+          setSelectedChild(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching children:', error);
+      setChildren([]);
+      setSelectedChild(null);
+    } finally {
+      setChildrenLoading(false);
+    }
+  };
 
   // Default stats - all zero when no data
   const stats = {
@@ -356,10 +388,6 @@ export default function DashboardOrangTua() {
     else if (hour < 15) setGreeting('Selamat Siang');
     else if (hour < 18) setGreeting('Selamat Sore');
     else setGreeting('Selamat Malam');
-
-    if (children.length > 0 && !selectedChild) {
-      setSelectedChild(children[0]);
-    }
   }, []);
 
   if (status === 'loading') {
