@@ -7,9 +7,11 @@ import ParentActionMenu from '@/components/admin/ParentActionMenu';
 import ParentDetailModal from '@/components/admin/ParentDetailModal';
 import ResetPasswordModal from '@/components/admin/ResetPasswordModal';
 import LinkStudentModal from '@/components/admin/LinkStudentModal';
+import UnlinkStudentModal from '@/components/admin/UnlinkStudentModal';
 import ToggleStatusModal from '@/components/admin/ToggleStatusModal';
 import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal';
 import Toast from '@/components/ui/Toast';
+import { calculateParentDisplayStatus, getParentStatusDisplay, getParentStatusContext } from '@/lib/helpers/parentStatusHelper';
 
 /**
  * Format tanggal ke format Indonesia (dd Bulan yyyy)
@@ -110,9 +112,14 @@ export default function AdminOrangTuaPage() {
     detailModal: null,
     resetPasswordModal: null,
     linkStudentModal: null,
+    unlinkStudentModal: null,
     toggleStatusModal: null,
     deleteConfirmModal: null,
   });
+
+  // Additional state for filters
+  const [filterConnectionStatus, setFilterConnectionStatus] = useState('all'); // all, connected, disconnected
+  const [filterAccountStatus, setFilterAccountStatus] = useState('all'); // all, active, inactive
 
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -267,6 +274,41 @@ export default function AdminOrangTuaPage() {
     }));
   };
 
+  const handleUnlinkStudent = (orangTuaItem) => {
+    setModalState(prev => ({
+      ...prev,
+      unlinkStudentModal: orangTuaItem
+    }));
+  };
+
+  const confirmUnlinkStudent = async (orangTuaItem, siswaId) => {
+    setIsActionLoading(true);
+    try {
+      const response = await fetch('/api/admin/orangtua-siswa/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orangTuaId: orangTuaItem.id,
+          siswaId: siswaId,
+        }),
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: '✓ Hubungan anak berhasil diputus' });
+        setModalState(prev => ({ ...prev, unlinkStudentModal: null }));
+        fetchOrangTua();
+      } else {
+        const error = await response.json();
+        setToast({ type: 'error', message: error.error || 'Gagal memutus hubungan anak' });
+      }
+    } catch (error) {
+      console.error('Error unlinking student:', error);
+      setToast({ type: 'error', message: 'Gagal memutus hubungan anak' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   const confirmToggleStatus = async (orangTuaItem, newStatus) => {
     setIsActionLoading(true);
     try {
@@ -348,17 +390,23 @@ export default function AdminOrangTuaPage() {
       (o.noHP && o.noHP.includes(searchTerm));
 
     const childrenCount = o._count?.siswa || 0;
-    const matchFilter = filterStatus === 'all' ||
-      (filterStatus === 'connected' && childrenCount > 0) ||
-      (filterStatus === 'disconnected' && childrenCount === 0);
+    const matchConnection = filterConnectionStatus === 'all' ||
+      (filterConnectionStatus === 'connected' && childrenCount > 0) ||
+      (filterConnectionStatus === 'disconnected' && childrenCount === 0);
 
-    return matchSearch && matchFilter;
+    const matchAccount = filterAccountStatus === 'all' ||
+      (filterAccountStatus === 'active' && o.user.isActive) ||
+      (filterAccountStatus === 'inactive' && !o.user.isActive);
+
+    return matchSearch && matchConnection && matchAccount;
   });
 
   const stats = {
     total: orangTua.length,
     connected: orangTua.filter(o => (o._count?.siswa || 0) > 0).length,
     disconnected: orangTua.filter(o => (o._count?.siswa || 0) === 0).length,
+    active: orangTua.filter(o => o.user.isActive).length,
+    inactive: orangTua.filter(o => !o.user.isActive).length,
   };
 
   if (loading) {
@@ -492,7 +540,7 @@ export default function AdminOrangTuaPage() {
           <div className="space-y-6">
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <StatCard
                 icon={Users}
                 title="Total Akun"
@@ -514,11 +562,25 @@ export default function AdminOrangTuaPage() {
                 subtitle="Belum ada anak terhubung"
                 theme="amber"
               />
+              <StatCard
+                icon={UserCheck}
+                title="Akun Aktif"
+                value={stats.active}
+                subtitle="Status akun aktif"
+                theme="emerald"
+              />
+              <StatCard
+                icon={UserX}
+                title="Akun Tidak Aktif"
+                value={stats.inactive}
+                subtitle="Status akun tidak aktif"
+                theme="red"
+              />
             </div>
 
             {/* Search & Filter Section - Glass Effect */}
             <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 p-6 shadow-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {/* Search Input */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-2 tracking-wide">
@@ -542,13 +604,29 @@ export default function AdminOrangTuaPage() {
                     Filter Keterhubungan
                   </label>
                   <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
+                    value={filterConnectionStatus}
+                    onChange={(e) => setFilterConnectionStatus(e.target.value)}
                     className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
                   >
                     <option value="all">Semua Status</option>
                     <option value="connected">Terhubung dengan Siswa</option>
                     <option value="disconnected">Belum Terhubung</option>
+                  </select>
+                </div>
+
+                {/* Filter Status Akun */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2 tracking-wide">
+                    Filter Status Akun
+                  </label>
+                  <select
+                    value={filterAccountStatus}
+                    onChange={(e) => setFilterAccountStatus(e.target.value)}
+                    className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
+                  >
+                    <option value="all">Semua Akun</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Tidak Aktif</option>
                   </select>
                 </div>
               </div>
@@ -611,13 +689,22 @@ export default function AdminOrangTuaPage() {
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                                orangTuaItem.user.isActive
-                                  ? 'bg-emerald-100 text-emerald-700'
-                                  : 'bg-red-100 text-red-700'
-                              }`}>
-                                {orangTuaItem.user.isActive ? 'Aktif' : 'Tidak Aktif'}
-                              </span>
+                              {(() => {
+                                const statusContext = getParentStatusContext(orangTuaItem);
+                                const statusDisplay = statusContext.statusDisplay;
+                                return (
+                                  <div className="flex flex-col gap-2">
+                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold w-fit ${statusDisplay.bgColor} ${statusDisplay.textColor}`}>
+                                      {statusDisplay.emoji} {statusContext.statusText}
+                                    </span>
+                                    {statusContext.badgeText && (
+                                      <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 w-fit" title={statusContext.tooltip}>
+                                        {statusDisplay.badgeEmoji} {statusContext.badgeText}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
                               {formatTanggal(orangTuaItem.user.createdAt)}
@@ -628,6 +715,7 @@ export default function AdminOrangTuaPage() {
                                 onViewDetail={handleViewDetail}
                                 onResetPassword={handleResetPassword}
                                 onLinkStudent={handleLinkStudent}
+                                onUnlinkStudent={handleUnlinkStudent}
                                 onToggleStatus={handleToggleStatus}
                                 onDelete={handleDeleteAccount}
                               />
@@ -667,6 +755,15 @@ export default function AdminOrangTuaPage() {
           siswaList={siswa}
           onConfirm={confirmLinkStudent}
           onClose={() => setModalState(prev => ({ ...prev, linkStudentModal: null }))}
+          isLoading={isActionLoading}
+        />
+      )}
+
+      {modalState.unlinkStudentModal && (
+        <UnlinkStudentModal
+          orangTuaItem={modalState.unlinkStudentModal}
+          onConfirm={confirmUnlinkStudent}
+          onClose={() => setModalState(prev => ({ ...prev, unlinkStudentModal: null }))}
           isLoading={isActionLoading}
         />
       )}
