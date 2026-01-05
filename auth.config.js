@@ -52,7 +52,20 @@ export const authConfig = {
               include: {
                 siswa: true,
                 guru: true,
-                orangTua: true,
+                orangTua: {
+                  include: {
+                    orangTuaSiswa: {
+                      include: {
+                        siswa: {
+                          select: {
+                            status: true,
+                            statusSiswa: true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
               },
             });
           } catch (dbError) {
@@ -101,9 +114,21 @@ export const authConfig = {
               console.error('❌ [AUTH] OrangTua profile not found for user');
               throw new Error("Profil orang tua tidak ditemukan. Hubungi admin.");
             }
-            if (user.orangTua.status !== 'approved') {
-              console.warn('⚠️  [AUTH] OrangTua account status:', user.orangTua.status);
-              throw new Error(`Akun Anda sedang dalam status ${user.orangTua.status}. Hubungi admin untuk persetujuan.`);
+            
+            // Check connected students' status (RULE: parent status depends on children)
+            if (!user.orangTua.orangTuaSiswa || user.orangTua.orangTuaSiswa.length === 0) {
+              console.warn('⚠️  [AUTH] OrangTua has no connected students');
+              throw new Error("Akun Anda belum terhubung dengan siswa. Silakan hubungi admin sekolah.");
+            }
+            
+            // Check if ANY connected student has pending status
+            const hasPendingSiswa = user.orangTua.orangTuaSiswa.some(
+              (relation) => relation.siswa.status !== 'approved'
+            );
+            
+            if (hasPendingSiswa) {
+              console.warn('⚠️  [AUTH] Connected student(s) still pending validation');
+              throw new Error("Akun anak masih dalam proses validasi. Silakan tunggu persetujuan admin.");
             }
           }
 
