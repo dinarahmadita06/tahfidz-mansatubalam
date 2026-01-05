@@ -223,20 +223,16 @@ export default function AdminOrangTuaPage() {
   const confirmResetPassword = async (orangTuaItem, newPassword) => {
     setIsActionLoading(true);
     try {
-      const response = await fetch(`/api/admin/orangtua/${orangTuaItem.id}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/admin/orangtua/${orangTuaItem.id}/reset-password`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: orangTuaItem.user.name,
-          email: orangTuaItem.user.email,
-          password: newPassword,
-          noHP: orangTuaItem.noHP || '',
-          pekerjaan: orangTuaItem.pekerjaan || '',
-          alamat: orangTuaItem.alamat || '',
+          newPassword: newPassword
         }),
       });
 
       if (response.ok) {
+        const result = await response.json();
         setToast({ type: 'success', message: '✓ Password berhasil direset' });
         setModalState(prev => ({ ...prev, resetPasswordModal: null }));
         fetchOrangTua();
