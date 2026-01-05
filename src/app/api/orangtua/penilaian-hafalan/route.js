@@ -17,6 +17,8 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const siswaId = searchParams.get('siswaId');
+    const startDateStr = searchParams.get('startDate');
+    const endDateStr = searchParams.get('endDate');
 
     // Jika tidak ada siswaId, return children list
     if (!siswaId) {
@@ -73,9 +75,25 @@ export async function GET(request) {
       }, { status: 403 });
     }
 
+    // Build where clause with optional date filter
+    const whereClause = { siswaId };
+
+    if (startDateStr && endDateStr) {
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
+      endDate.setHours(23, 59, 59, 999); // Include entire last day
+      
+      whereClause.hafalan = {
+        tanggal: {
+          gte: startDate,
+          lte: endDate
+        }
+      };
+    }
+
     // Fetch penilaian data
     const penilaianList = await prisma.penilaian.findMany({
-      where: { siswaId },
+      where: whereClause,
       include: {
         hafalan: {
           select: {
@@ -91,7 +109,7 @@ export async function GET(request) {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { hafalan: { tanggal: 'desc' } }
     });
 
     // Calculate statistics
@@ -108,7 +126,7 @@ export async function GET(request) {
       id: p.id,
       surah: p.hafalan?.surah || '-',
       ayat: p.hafalan ? `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}` : '-',
-      tanggal: p.hafalan?.tanggal || p.createdAt,
+      tanggal: p.hafalan?.tanggal ? new Date(p.hafalan.tanggal).toLocaleDateString('id-ID') : new Date(p.createdAt).toLocaleDateString('id-ID'),
       guru: p.guru?.user?.name || 'Unknown',
       tajwid: p.tajwid || 0,
       kelancaran: p.kelancaran || 0,
@@ -116,7 +134,7 @@ export async function GET(request) {
       implementasi: p.adab || 0,
       nilaiAkhir: p.nilaiAkhir || 0,
       rataRata: p.nilaiAkhir || 0,
-      catatan: p.catatan || '',
+      catatan: p.catatan || '-',
       status: (p.nilaiAkhir || 0) >= 75 ? 'lulus' : (p.nilaiAkhir || 0) >= 60 ? 'revisi' : 'belum'
     }));
 
@@ -129,17 +147,27 @@ export async function GET(request) {
       statistics: {
         totalPenilaian,
         rataRataNilai,
-        rataRataTajwid: 0,
-        rataRataKelancaran: 0,
-        rataRataMakhraj: 0,
-        rataRataImplementasi: 0
+        // Calculate per-aspek averages
+        rataRataTajwid: penilaianList.length > 0 
+          ? Math.round(penilaianList.reduce((sum, p) => sum + (p.tajwid || 0), 0) / penilaianList.length)
+          : 0,
+        rataRataKelancaran: penilaianList.length > 0
+          ? Math.round(penilaianList.reduce((sum, p) => sum + (p.kelancaran || 0), 0) / penilaianList.length)
+          : 0,
+        rataRataMakhraj: penilaianList.length > 0
+          ? Math.round(penilaianList.reduce((sum, p) => sum + (p.makhraj || 0), 0) / penilaianList.length)
+          : 0,
+        rataRataImplementasi: penilaianList.length > 0
+          ? Math.round(penilaianList.reduce((sum, p) => sum + (p.adab || 0), 0) / penilaianList.length)
+          : 0
       },
       penilaianData
     });
   } catch (error) {
     console.error('Error fetching penilaian hafalan:', error);
+    console.log('Request URL:', request.url);
     return NextResponse.json(
-      { error: 'Failed to fetch data', details: error.message },
+      { error: 'Failed to fetch data', details: error.message, stack: error.stack },
       { status: 500 }
     );
   }
