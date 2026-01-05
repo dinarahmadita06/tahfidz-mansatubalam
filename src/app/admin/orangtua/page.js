@@ -101,6 +101,7 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
 
 export default function AdminOrangTuaPage() {
   const [orangTua, setOrangTua] = useState([]);
+  const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -135,6 +136,7 @@ export default function AdminOrangTuaPage() {
 
   useEffect(() => {
     fetchOrangTua();
+    fetchSiswa();
   }, []);
 
   const fetchOrangTua = async () => {
@@ -146,6 +148,16 @@ export default function AdminOrangTuaPage() {
       console.error('Error fetching orang tua:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSiswa = async () => {
+    try {
+      const response = await fetch('/api/admin/siswa?page=1&limit=10000');
+      const result = await response.json();
+      setSiswa(result.data || []);
+    } catch (error) {
+      console.error('Error fetching siswa:', error);
     }
   };
 
