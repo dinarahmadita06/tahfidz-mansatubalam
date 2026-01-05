@@ -22,6 +22,7 @@ import {
   X,
   TrendingUp,
   Award,
+  Target,
 } from 'lucide-react';
 import {
   safeNumber,
