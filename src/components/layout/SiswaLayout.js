@@ -4,6 +4,7 @@ import { useState, memo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import useSiswaActivityTracking from '@/hooks/useSiswaActivityTracking';
 import {
   LayoutDashboard,
   Star,
@@ -247,6 +248,9 @@ function SiswaSidebar({ userName = 'Siswa' }) {
 
 function SiswaLayout({ children }) {
   const { data: session } = useSession();
+  
+  // Track activity when menu is accessed
+  useSiswaActivityTracking();
 
   const handleLogout = async () => {
     try {
