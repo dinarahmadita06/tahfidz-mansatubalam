@@ -12,6 +12,7 @@ export default function ParentActionMenu({
   onViewDetail,
   onResetPassword,
   onLinkStudent,
+  onUnlinkStudent,
   onToggleStatus,
   onDelete,
   onRefresh
@@ -94,7 +95,23 @@ export default function ParentActionMenu({
               className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
             >
               <span>🔗</span>
-              <span>Hubungkan ke Siswa</span>
+              <span>{childrenCount > 0 ? 'Tambah Anak Terhubung' : 'Hubungkan ke Anak'}</span>
+            </button>
+            
+            {/* Menu Item: Putuskan Hubungan Anak */}
+            <button
+              onClick={() => handleMenuClick(() => onUnlinkStudent(orangTuaItem))}
+              disabled={childrenCount === 0}
+              className={`w-full text-left px-4 py-3 text-sm font-medium flex items-center gap-3 transition-colors ${
+                childrenCount === 0
+                  ? 'text-gray-400 bg-gray-50 cursor-not-allowed'
+                  : 'text-orange-700 hover:bg-orange-50'
+              }`}
+              title={childrenCount === 0 ? 'Tidak ada anak yang terhubung' : ''}
+            >
+              <span>🔐</span>
+              <span>Putuskan Hubungan Anak</span>
+              {childrenCount > 0 && <span className="ml-auto text-xs text-gray-500">({childrenCount})</span>}
             </button>
             
             {/* Menu Item: Toggle Status Akun */}

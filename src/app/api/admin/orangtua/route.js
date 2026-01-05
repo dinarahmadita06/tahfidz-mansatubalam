@@ -57,6 +57,8 @@ export async function GET(request) {
                 select: {
                   id: true,
                   nis: true,
+                  nisn: true,
+                  statusSiswa: true,
                   user: {
                     select: {
                       name: true
