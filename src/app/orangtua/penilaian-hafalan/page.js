@@ -388,20 +388,33 @@ export default function PenilaianHafalanPage() {
 
   // Fetch children list
   const { data: childrenData, error: childrenError } = useSWR(
-    status === 'authenticated' ? '/api/orangtua/penilaian' : null,
+    status === 'authenticated' ? '/api/orangtua/penilaian-hafalan' : null,
     fetcher,
     { revalidateOnFocus: true }
   );
 
   // Fetch penilaian data for selected child
   const { data: penilaianData, error: penilaianError, mutate } = useSWR(
-    selectedChild?.id ? `/api/orangtua/penilaian?siswaId=${selectedChild.id}` : null,
+    selectedChild?.id ? `/api/orangtua/penilaian-hafalan?siswaId=${selectedChild.id}` : null,
     fetcher,
     {
       revalidateOnFocus: true,
       refreshInterval: 30000, // Auto-refresh every 30 seconds
     }
   );
+
+  // Debug log
+  useEffect(() => {
+    if (selectedChild?.id) {
+      console.log('🎯 Penilaian: selectedChild changed to:', selectedChild);
+      console.log('📡 Fetching from:', `/api/orangtua/penilaian?siswaId=${selectedChild.id}`);
+    }
+  }, [selectedChild?.id]);
+
+  useEffect(() => {
+    console.log('📊 penilaianData:', penilaianData);
+    console.log('❌ penilaianError:', penilaianError);
+  }, [penilaianData, penilaianError]);
 
   // Set initial selected child when children data loads
   useEffect(() => {

@@ -35,16 +35,24 @@ export async function getChildrenByParentId(userIdOrOrangTuaId) {
       },
       select: {
         id: true,
-        namaLengkap: true,
+        user: {
+          select: { name: true }
+        },
         kelas: {
           select: {
-            namaKelas: true,
+            nama: true,
           },
         },
       },
     });
 
-    return children;
+    return children.map(child => ({
+      id: child.id,
+      namaLengkap: child.user.name,
+      kelas: {
+        namaKelas: child.kelas?.nama || 'N/A'
+      }
+    }));
   } catch (error) {
     console.error('Error fetching children for parent:', error);
     return [];
@@ -60,6 +68,7 @@ export async function getChildrenByParentId(userIdOrOrangTuaId) {
  */
 export async function getChildByParentId(siswaId, userIdOrOrangTuaId) {
   if (!siswaId || !userIdOrOrangTuaId) {
+    console.log('❌ getChildByParentId: missing siswaId or userId', { siswaId, userIdOrOrangTuaId });
     return null;
   }
 
@@ -73,9 +82,13 @@ export async function getChildByParentId(siswaId, userIdOrOrangTuaId) {
       select: { id: true }
     });
     
+    console.log('🔍 orangTuaByUser:', orangTuaByUser, 'for userId:', userIdOrOrangTuaId);
+    
     if (orangTuaByUser) {
       orangTuaId = orangTuaByUser.id;
     }
+
+    console.log('🔎 Searching for siswa:', siswaId, 'connected to orangTuaId:', orangTuaId);
 
     const siswa = await prisma.siswa.findFirst({
       where: {
@@ -95,9 +108,82 @@ export async function getChildByParentId(siswaId, userIdOrOrangTuaId) {
       },
     });
 
+    console.log('✅ Found siswa:', siswa?.id, 'with namaLengkap:', siswa?.namaLengkap);
+
     return siswa;
   } catch (error) {
-    console.error('Error fetching child for parent:', error);
+    console.error('❌ Error fetching child for parent:', error);
+    return null;
+  }
+}
+
+/**
+ * Get parent profile data by session userId
+ * SECURITY: Query by userId (from session) to ensure logged-in parent only sees their own data
+ * @param {string} userId - User ID from session.user.id
+ * @returns {Promise<Object|null>} - Parent profile with user data and children list
+ */
+export async function getOrangTuaProfile(userId) {
+  if (!userId) {
+    return null;
+  }
+
+  try {
+    // SECURITY: Query orangTua by userId to ensure we get the right parent
+    const orangTua = await prisma.orangTua.findFirst({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            isActive: true,
+            createdAt: true
+          }
+        },
+        orangTuaSiswa: {
+          include: {
+            siswa: {
+              select: {
+                id: true,
+                user: {
+                  select: { name: true }
+                },
+                kelas: {
+                  select: {
+                    nama: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!orangTua) {
+      return null;
+    }
+
+    // Transform to frontend format
+    return {
+      id: orangTua.id,
+      userId: orangTua.userId,
+      namaLengkap: orangTua.user.name,
+      email: orangTua.user.email,
+      noTelepon: orangTua.noTelepon,
+      alamat: orangTua.alamat,
+      status: 'Aktif', // Parent status now depends on children status
+      jenisKelamin: orangTua.jenisKelamin,
+      children: orangTua.orangTuaSiswa.map(relation => ({
+        id: relation.siswa.id,
+        namaLengkap: relation.siswa.user.name,
+        kelas: relation.siswa.kelas?.nama || 'N/A'
+      }))
+    };
+  } catch (error) {
+    console.error('Error fetching orang tua profile:', error);
     return null;
   }
 }
