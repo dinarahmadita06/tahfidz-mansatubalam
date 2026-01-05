@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import {
   User,
   Mail,
@@ -222,53 +223,30 @@ function ChildrenConnectedCard({ children }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {children.map((child, index) => {
-            const percentage = Math.round((child.progressHafalan / child.targetHafalan) * 100);
-
+          {children.map((child) => {
             return (
               <div
-                key={index}
+                key={child.id}
                 className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 transition-all"
               >
                 <div className="flex items-start gap-4 mb-3">
                   {/* Avatar */}
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-md flex-shrink-0">
                     <span className="text-white text-lg font-bold">
-                      {child.nama?.charAt(0)?.toUpperCase() || 'A'}
+                      {child.namaLengkap?.charAt(0)?.toUpperCase() || 'A'}
                     </span>
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-gray-900 mb-1">{child.nama}</h4>
+                    <h4 className="font-bold text-gray-900 mb-1">{child.namaLengkap}</h4>
                     <div className="flex items-center gap-3 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <BookOpen size={14} />
-                        <span>Kelas {child.kelas}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <User size={14} />
-                        <span>{child.guruPembimbing}</span>
+                        <span>{child.kelas}</span>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Progress */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-gray-700">Progress Hafalan</span>
-                    <span className="text-xs font-bold text-emerald-600">{percentage}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {child.progressHafalan} dari {child.targetHafalan} Juz
-                  </p>
                 </div>
               </div>
             );
@@ -331,6 +309,8 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
         }
       }
 
+      // SECURITY: Ensure data being saved matches the session parent
+      // (API will validate on server side anyway)
       await onSave(formData);
 
       setSuccess('Profil berhasil diperbarui!');
@@ -340,7 +320,7 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
       }, 1500);
     } catch (err) {
       console.error('Error saving profile:', err);
-      setError('Terjadi kesalahan saat menyimpan profil');
+      setError(err.message || 'Terjadi kesalahan saat menyimpan profil');
     } finally {
       setSaveLoading(false);
     }
@@ -671,45 +651,59 @@ export default function ProfilOrangtuaPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Children data (demo data)
-  const children = [
-    {
-      nama: 'Ahmad Fauzan',
-      kelas: '10 A',
-      guruPembimbing: 'Ustadz Ahmad',
-      progressHafalan: 15,
-      targetHafalan: 30,
-    },
-    {
-      nama: 'Fatimah Azzahra',
-      kelas: '11 B',
-      guruPembimbing: 'Ustadzah Siti',
-      progressHafalan: 8,
-      targetHafalan: 20,
-    },
-  ];
+  const router = useRouter();
+  const [children, setChildren] = useState([]);
+  const [childrenLoading, setChildrenLoading] = useState(false);
 
+  // SECURITY: Fetch profile data when session is available
   useEffect(() => {
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
     fetchProfileData();
-  }, []);
+  }, [session, router]);
 
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      const saved = localStorage.getItem('orangtua_profile');
-      if (saved) {
-        setProfileData(JSON.parse(saved));
+      setError('');
+
+      // SECURITY: Fetch from API with session validation
+      // API will reject if parent tries to access another parent's data
+      const response = await fetch('/api/orangtua/profile', {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || 'Gagal memuat data profil');
+        if (response.status === 401) {
+          router.push('/login');
+        }
+        return;
+      }
+
+      const data = await response.json();
+
+      // SECURITY: Validate response contains expected fields from session parent
+      if (!data.namaLengkap || !data.email) {
+        setError('Data profil tidak valid');
+        return;
+      }
+
+      setProfileData(data);
+
+      // Load children from profile
+      if (data.children && Array.isArray(data.children)) {
+        setChildren(data.children);
       } else {
-        // Default demo data (ID Wali still in data but not displayed)
-        setProfileData({
-          namaLengkap: 'Ali Rahman',
-          email: 'ali.rahman@wali.sch.id',
-          noTelepon: '0812-3456-7890',
-          alamat: 'Jl. Pahlawan No. 23, Bandar Lampung',
-          status: 'Aktif',
-          // idWali exists in data but is NOT displayed in UI
-          idWali: 'WLI.2024.013',
-        });
+        setChildren([]);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -726,23 +720,39 @@ export default function ProfilOrangtuaPage() {
   };
 
   const handleSaveProfile = async (formData) => {
-    // Merge only editable fields, keep read-only fields unchanged
-    const updatedData = {
-      ...profileData,
-      ...formData,
-      // Ensure read-only fields are NOT overwritten
-      email: profileData.email,
-      status: profileData.status,
-      idWali: profileData.idWali, // Keep in data but not displayed
-    };
+    try {
+      // Update only editable fields
+      const updateData = {
+        namaLengkap: formData.namaLengkap,
+        noTelepon: formData.noTelepon,
+        alamat: formData.alamat,
+      };
 
-    setProfileData(updatedData);
-    localStorage.setItem('orangtua_profile', JSON.stringify(updatedData));
+      // Call API to update profile
+      const response = await fetch('/api/orangtua/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
 
-    setSuccess('Profil berhasil diperbarui!');
-    setTimeout(() => {
-      setSuccess('');
-    }, 3000);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Gagal menyimpan profil');
+      }
+
+      const updatedData = await response.json();
+      setProfileData(updatedData);
+
+      setSuccess('Profil berhasil diperbarui!');
+      setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setError(error.message || 'Gagal menyimpan profil');
+    }
   };
 
   const handleChangePassword = () => {
@@ -766,6 +776,42 @@ export default function ProfilOrangtuaPage() {
       <OrangtuaLayout>
         <div className="flex items-center justify-center min-h-screen">
           <Loader className="animate-spin h-12 w-12 text-emerald-600" />
+        </div>
+      </OrangtuaLayout>
+    );
+  }
+
+  if (error && !profileData) {
+    return (
+      <OrangtuaLayout>
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center">
+          <div className="max-w-md w-full mx-4">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6 text-center">
+              <p className="font-semibold mb-2">Gagal Memuat Profil</p>
+              <p className="text-sm mb-4">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          </div>
+        </div>
+      </OrangtuaLayout>
+    );
+  }
+
+  if (!profileData) {
+    return (
+      <OrangtuaLayout>
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center">
+          <div className="max-w-md w-full mx-4">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl p-6 text-center">
+              <p className="font-semibold">Data Profil Tidak Tersedia</p>
+              <p className="text-sm mt-2">Silahkan hubungi administrator</p>
+            </div>
+          </div>
         </div>
       </OrangtuaLayout>
     );

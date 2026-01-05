@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
+import toast from 'react-hot-toast';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import {
   BookOpen,
@@ -379,6 +380,7 @@ export default function PenilaianHafalanPage() {
   const [selectedChild, setSelectedChild] = useState(null);
   const [selectedCatatan, setSelectedCatatan] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -485,13 +487,68 @@ export default function PenilaianHafalanPage() {
     }
   };
 
-  const handleDownload = () => {
-    if (penilaianRows.length === 0) {
-      alert('Belum ada data untuk diunduh');
+  const handleDownload = async () => {
+    if (!selectedChild?.id) {
+      toast.error('Pilih anak terlebih dahulu');
       return;
     }
-    // TODO: Implement download functionality
-    alert('Fitur unduh akan segera tersedia');
+
+    if (penilaianRows.length === 0) {
+      toast.error('Belum ada data penilaian untuk diunduh');
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+      const toastId = toast.loading('📄 Generating PDF laporan...');
+
+      // Calculate date range (default: current week)
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      // Format dates for API (ISO string)
+      const startDate = startOfWeek.toISOString().split('T')[0];
+      const endDate = endOfWeek.toISOString().split('T')[0];
+
+      const response = await fetch(
+        `/api/orangtua/laporan-hafalan/pdf?anakId=${selectedChild.id}&startDate=${startDate}&endDate=${endDate}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      // Get filename from response header
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `Laporan_Hafalan_${selectedChild.nama}.pdf`;
+      if (contentDisposition) {
+        const matches = contentDisposition.match(/filename="?([^"]*?)"?$/i);
+        if (matches?.[1]) filename = matches[1];
+      }
+
+      // Convert response to blob and trigger download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`✅ PDF laporan berhasil diunduh!`, { id: toastId });
+    } catch (error) {
+      console.error('❌ Download error:', error);
+      toast.error(`⚠️  Gagal mengunduh PDF: ${error.message}`, { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -575,16 +632,25 @@ export default function PenilaianHafalanPage() {
               {/* Download Button - Green Theme */}
               <button
                 onClick={handleDownload}
-                disabled={penilaianRows.length === 0}
+                disabled={penilaianRows.length === 0 || isDownloading}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md ${
-                  penilaianRows.length === 0
+                  penilaianRows.length === 0 || isDownloading
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white hover:shadow-lg'
                 }`}
-                title={penilaianRows.length === 0 ? 'Belum ada data untuk diunduh' : 'Unduh Penilaian'}
+                title={penilaianRows.length === 0 ? 'Belum ada data untuk diunduh' : 'Unduh Laporan PDF'}
               >
-                <Download size={18} />
-                <span className="font-semibold text-sm">Unduh Penilaian</span>
+                {isDownloading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="font-semibold text-sm">Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={18} />
+                    <span className="font-semibold text-sm">Unduh Laporan PDF</span>
+                  </>
+                )}
               </button>
             </div>
 
