@@ -62,6 +62,15 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
       iconBg: 'bg-amber-100',
       iconColor: 'text-amber-800',
     },
+    red: {
+      bg: 'bg-red-50/70',
+      border: 'border-2 border-red-200/70',
+      titleColor: 'text-red-800',
+      valueColor: 'text-red-800',
+      subtitleColor: 'text-red-800',
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-800',
+    },
   };
 
   const config = themeConfig[theme];
