@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import AnnouncementSlider from '@/components/AnnouncementSlider';
+import AktivitasTerkiniWidget from '@/components/siswa/AktivitasTerkiniWidget';
 import {
   BookOpen,
   Star,
@@ -184,7 +185,6 @@ export default function DashboardSiswa() {
     totalHari: 0,
     catatanGuru: 0,
   });
-  const [recentActivities, setRecentActivities] = useState([]);
   const [pengumuman, setPengumuman] = useState([]);
   const [pengumumanLoading, setPengumumanLoading] = useState(true);
   const [juzProgress, setJuzProgress] = useState([]);
@@ -257,10 +257,6 @@ export default function DashboardSiswa() {
           catatanGuru: data.stats?.catatanGuru || 0,
         });
 
-        // Set recent activities (already sorted and limited to 5 from API)
-        setRecentActivities(data.recentActivities || []);
-
-        // Set juz progress (already filtered for progress > 0 from API)
         setJuzProgress(data.juzProgress || []);
 
       } catch (error) {
@@ -296,18 +292,6 @@ export default function DashboardSiswa() {
     };
     updateTime();
   }, []);
-
-  // Activity type config
-  const getActivityConfig = (type) => {
-    const configs = {
-      tasmi: { icon: FileText, status: 'info', color: 'bg-blue-100 text-blue-700' },
-      setor: { icon: BookOpen, status: 'approved', color: 'bg-emerald-100 text-emerald-700' },
-      nilai: { icon: Star, status: 'info', color: 'bg-amber-100 text-amber-700' },
-      catatan: { icon: MessageSquare, status: 'warning', color: 'bg-purple-100 text-purple-700' },
-      presensi: { icon: CheckCircle, status: 'approved', color: 'bg-sky-100 text-sky-700' },
-    };
-    return configs[type] || configs.setor;
-  };
 
   // Get category icon for pengumuman
   const getCategoryIcon = (kategori) => {
@@ -459,61 +443,8 @@ export default function DashboardSiswa() {
               )}
             </Card>
 
-            {/* Recent Activities */}
-            <Card>
-              <SectionHeader
-                icon={Clock}
-                title="Aktivitas Terkini"
-                subtitle="Update terbaru"
-                iconColor="amber"
-              />
-
-              {loading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
-                  ))}
-                </div>
-              ) : recentActivities.length === 0 ? (
-                <EmptyState
-                  icon={Clock}
-                  title="Belum ada aktivitas"
-                  description="Aktivitas Anda akan muncul di sini"
-                />
-              ) : (
-                <>
-                  <div className="space-y-3">
-                    {recentActivities.map((activity) => {
-                      const config = getActivityConfig(activity.type);
-                      const Icon = config.icon;
-
-                      return (
-                        <div
-                          key={activity.id}
-                          className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
-                        >
-                          <div className={`p-2.5 rounded-xl ${config.color}`}>
-                            <Icon size={18} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                              {activity.title}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {formatTimeAgo(activity.timestamp)}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <button className="mt-4 w-full py-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
-                    Lihat Semua Aktivitas
-                  </button>
-                </>
-              )}
-            </Card>
+            {/* Aktivitas Terkini Widget */}
+            <AktivitasTerkiniWidget />
           </div>
         </div>
       </div>
