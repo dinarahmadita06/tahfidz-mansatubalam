@@ -10,10 +10,20 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get anak (siswa) of this orang tua using helper
+    // SECURITY: Fetch orangTua from userId to get correct orangTuaId
+    const orangTua = await prisma.orangTua.findFirst({
+      where: { userId: session.user.id },
+      select: { id: true }
+    });
+
+    if (!orangTua) {
+      return NextResponse.json({ error: 'Parent profile not found' }, { status: 404 });
+    }
+
+    // Get anak (siswa) of this orang tua using correct orangTuaId
     const orangTuaSiswa = await prisma.orangTuaSiswa.findMany({
       where: {
-        orangTuaId: session.user.id
+        orangTuaId: orangTua.id
       },
       include: {
         siswa: {

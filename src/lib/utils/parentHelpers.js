@@ -2,15 +2,29 @@ import { prisma } from '@/lib/db';
 
 /**
  * Get all children (siswa) for a parent using orangTuaSiswa pivot relation
- * @param {string} orangTuaId - Parent user ID
+ * @param {string} userIdOrOrangTuaId - Parent user ID or orangTuaId
  * @returns {Promise<Array>} - Array of siswa objects
  */
-export async function getChildrenByParentId(orangTuaId) {
-  if (!orangTuaId) {
+export async function getChildrenByParentId(userIdOrOrangTuaId) {
+  if (!userIdOrOrangTuaId) {
     return [];
   }
 
   try {
+    // First, check if we need to fetch orangTuaId from userId
+    // Try to find orangTua by either userId or by ID directly
+    let orangTuaId = userIdOrOrangTuaId;
+    
+    // Attempt to find orangTua by userId first
+    const orangTuaByUser = await prisma.orangTua.findFirst({
+      where: { userId: userIdOrOrangTuaId },
+      select: { id: true }
+    });
+    
+    if (orangTuaByUser) {
+      orangTuaId = orangTuaByUser.id;
+    }
+
     const children = await prisma.siswa.findMany({
       where: {
         orangTuaSiswa: {
@@ -41,15 +55,28 @@ export async function getChildrenByParentId(orangTuaId) {
  * Get a specific child (siswa) for a parent using orangTuaSiswa pivot relation
  * Validates that the siswa belongs to the parent
  * @param {string} siswaId - Student ID
- * @param {string} orangTuaId - Parent user ID
+ * @param {string} userIdOrOrangTuaId - Parent user ID or orangTuaId
  * @returns {Promise<Object|null>} - Siswa object or null
  */
-export async function getChildByParentId(siswaId, orangTuaId) {
-  if (!siswaId || !orangTuaId) {
+export async function getChildByParentId(siswaId, userIdOrOrangTuaId) {
+  if (!siswaId || !userIdOrOrangTuaId) {
     return null;
   }
 
   try {
+    // First, check if we need to fetch orangTuaId from userId
+    let orangTuaId = userIdOrOrangTuaId;
+    
+    // Attempt to find orangTua by userId first
+    const orangTuaByUser = await prisma.orangTua.findFirst({
+      where: { userId: userIdOrOrangTuaId },
+      select: { id: true }
+    });
+    
+    if (orangTuaByUser) {
+      orangTuaId = orangTuaByUser.id;
+    }
+
     const siswa = await prisma.siswa.findFirst({
       where: {
         id: siswaId,
