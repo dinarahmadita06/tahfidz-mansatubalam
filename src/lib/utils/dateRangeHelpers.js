@@ -9,19 +9,16 @@
  * calculateMonthRange(0, 2026) => 
  * { 
  *   startDate: 2026-01-01,
- *   endDate: 2026-01-31,
+ *   endDate: 2026-02-01,
  *   startDateStr: "2026-01-01",
- *   endDateStr: "2026-01-31"
+ *   endDateStr: "2026-02-01"
  * }
  */
 export function calculateMonthRange(month, year) {
-  // First day of month
-  const startDate = new Date(year, month, 1);
+  // Use UTC to ensure consistent date strings regardless of local timezone
+  const startDate = new Date(Date.UTC(year, month, 1));
+  const endDate = new Date(Date.UTC(year, month + 1, 1));
 
-  // Last day of month (day 0 of next month = last day of current month)
-  const endDate = new Date(year, month + 1, 0);
-
-  // Format as ISO strings (YYYY-MM-DD)
   const startDateStr = startDate.toISOString().split('T')[0];
   const endDateStr = endDate.toISOString().split('T')[0];
 
