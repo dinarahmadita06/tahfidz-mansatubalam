@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
+import MonthlyPeriodFilter from '@/components/penilaian/MonthlyPeriodFilter';
+import { calculateMonthRange, getCurrentMonthYear, formatMonthYear } from '@/lib/utils/dateRangeHelpers';
 import {
   BookOpen,
   Clock,
@@ -21,7 +23,6 @@ import {
 } from 'lucide-react';
 import {
   safeNumber,
-  calcAvg,
   mapAssessmentToRow,
   formatTanggal,
 } from '@/lib/utils/penilaianHelpers';
@@ -94,7 +95,7 @@ const StatCard = ({ icon: Icon, title, value, subtitle, variant = 'emerald' }) =
         <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
       </div>
       <div className="mt-3">
-        <p className={`text-3xl font-bold ${styles.textValue}`}>{value}</p>
+        <div className={`text-3xl font-bold ${styles.textValue}`}>{value}</div>
         <p className="text-sm text-gray-600 mt-1.5">{subtitle}</p>
       </div>
     </div>
@@ -282,36 +283,6 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
 const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
   if (!isOpen || !catatan) return null;
 
-  // Check if note is recent (< 7 days)
-  const isRecentNote = () => {
-    if (!catatan.tanggal || catatan.tanggal === '-') return false;
-
-    try {
-      const months = {
-        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'Mei': 4, 'Jun': 5,
-        'Jul': 6, 'Agt': 7, 'Sep': 8, 'Okt': 9, 'Nov': 10, 'Des': 11
-      };
-
-      const parts = catatan.tanggal.split(' ');
-      if (parts.length !== 3) return false;
-
-      const day = parseInt(parts[0]);
-      const month = months[parts[1]];
-      const year = parseInt(parts[2]);
-
-      if (isNaN(day) || month === undefined || isNaN(year)) return false;
-
-      const noteDate = new Date(year, month, day);
-      const today = new Date();
-      const diffTime = Math.abs(today - noteDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      return diffDays <= 7;
-    } catch (error) {
-      return false;
-    }
-  };
-
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -321,7 +292,6 @@ const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
         onClick={(e) => e.stopPropagation()}
         className="bg-white/80 backdrop-blur rounded-2xl border border-white/20 shadow-xl shadow-green-500/10 p-5 sm:p-6 max-w-lg w-full"
       >
-        {/* Header dengan icon dan subtitle */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-start gap-3">
             <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-md">
@@ -333,7 +303,6 @@ const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
             </div>
           </div>
 
-          {/* Icon button close */}
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100/70 rounded-xl transition-all duration-200 hover:shadow-md group"
@@ -342,25 +311,12 @@ const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
           </button>
         </div>
 
-        {/* Badge "Catatan terbaru" (opsional) */}
-        {isRecentNote() && (
-          <div className="mb-4">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-              <Clock size={14} className="text-emerald-600" />
-              <span className="text-xs font-semibold text-emerald-700">Catatan terbaru</span>
-            </span>
-          </div>
-        )}
-
-        {/* Body - Info blocks */}
         <div className="space-y-4">
-          {/* Info blocks untuk Guru dan Tanggal */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <InfoRow label="Guru Pengajar" value={catatan.guru} />
             <InfoRow label="Tanggal Setor" value={catatan.tanggal} />
           </div>
 
-          {/* Catatan utama dengan highlight dan green accent */}
           <div className="border-l-4 border-emerald-500 bg-emerald-50/60 rounded-r-xl p-4">
             <p className="text-xs font-medium text-emerald-700 mb-2">Catatan Penilaian</p>
             <p className="text-sm text-gray-900 leading-relaxed">{catatan.text}</p>
@@ -379,41 +335,16 @@ export default function PenilaianHafalanPage() {
   const [selectedCatatan, setSelectedCatatan] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+  // Month/Year filter state
+  const currentDate = getCurrentMonthYear();
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.month);
+  const [selectedYear, setSelectedYear] = useState(currentDate.year);
 
   // Fetch children list
-  const { data: childrenData, error: childrenError } = useSWR(
+  const { data: childrenData } = useSWR(
     status === 'authenticated' ? '/api/orangtua/penilaian-hafalan' : null,
-    fetcher,
-    { revalidateOnFocus: true }
+    fetcher
   );
-
-  // Fetch penilaian data for selected child
-  const { data: penilaianData, error: penilaianError, mutate } = useSWR(
-    selectedChild?.id ? `/api/orangtua/penilaian-hafalan?siswaId=${selectedChild.id}` : null,
-    fetcher,
-    {
-      revalidateOnFocus: true,
-      refreshInterval: 30000, // Auto-refresh every 30 seconds
-    }
-  );
-
-  // Debug log
-  useEffect(() => {
-    if (selectedChild?.id) {
-      console.log('🎯 Penilaian: selectedChild changed to:', selectedChild);
-      console.log('📡 Fetching from:', `/api/orangtua/penilaian?siswaId=${selectedChild.id}`);
-    }
-  }, [selectedChild?.id]);
-
-  useEffect(() => {
-    console.log('📊 penilaianData:', penilaianData);
-    console.log('❌ penilaianError:', penilaianError);
-  }, [penilaianData, penilaianError]);
 
   // Set initial selected child when children data loads
   useEffect(() => {
@@ -428,7 +359,16 @@ export default function PenilaianHafalanPage() {
     }
   }, [childrenData, selectedChild]);
 
-  // Loading state
+  // Fetch penilaian data for selected child and month range
+  const { data: penilaianData, error: penilaianError } = useSWR(
+    selectedChild?.id ? (() => {
+      const { startDateStr, endDateStr } = calculateMonthRange(selectedMonth, selectedYear);
+      return `/api/orangtua/penilaian-hafalan?siswaId=${selectedChild.id}&startDate=${startDateStr}&endDate=${endDateStr}`;
+    })() : null,
+    fetcher,
+    { revalidateOnFocus: true }
+  );
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -441,10 +381,15 @@ export default function PenilaianHafalanPage() {
   }
 
   if (status === 'unauthenticated') {
+    router.push('/login');
     return null;
   }
 
-  // Map penilaian data to table rows using helper function
+  const handleMonthYearChange = (month, year) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
+
   const penilaianRows = penilaianData?.penilaianData
     ? penilaianData.penilaianData.map((assessment) => {
         const mapped = mapAssessmentToRow(assessment);
@@ -455,7 +400,10 @@ export default function PenilaianHafalanPage() {
       })
     : [];
 
-  // Calculate stats with safe fallbacks (DEFAULT TO 0)
+  const periodText = formatMonthYear(selectedMonth, selectedYear);
+  const penilaianCount = penilaianRows.length;
+
+  // Stats calculation
   const stats = {
     totalPenilaian: safeNumber(penilaianData?.statistics?.totalPenilaian, 0),
     rataRataNilai: safeNumber(penilaianData?.statistics?.rataRataNilai, 0),
@@ -488,7 +436,7 @@ export default function PenilaianHafalanPage() {
     <OrangtuaLayout>
       <div className="min-h-screen bg-gray-50">
         <div className={`${CONTAINER} py-6 space-y-6`}>
-          {/* Header - Green SIMTAQ Style */}
+          {/* Header */}
           <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-6 sm:p-8 text-white`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -505,13 +453,13 @@ export default function PenilaianHafalanPage() {
                 </div>
               </div>
 
-              {/* Child Selector Dropdown */}
               {childrenData?.children && selectedChild && (
                 <ChildSelector
                   children={childrenData.children.map((c) => ({
                     id: c.id,
                     nama: c.namaLengkap,
                     kelas: c.kelas?.namaKelas || '-',
+                    statusSiswa: c.statusSiswa,
                   }))}
                   selectedChild={selectedChild}
                   onSelectChild={setSelectedChild}
@@ -520,26 +468,26 @@ export default function PenilaianHafalanPage() {
             </div>
           </div>
 
-          {/* Summary Cards - 3 Columns (Compact & Bright Pastel) */}
+          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
               icon={Award}
-              title="Total Penilaian Masuk"
+              title="Total Penilaian Periode Ini"
               value={stats.totalPenilaian}
               subtitle="Penilaian dari guru"
               variant="emerald"
             />
             <StatCard
               icon={TrendingUp}
-              title="Rata-rata Nilai Keseluruhan"
+              title="Rata-rata Nilai Periode Ini"
               value={stats.rataRataNilai}
-              subtitle="Dari 100"
+              subtitle="Berdasarkan filter"
               variant="amber"
             />
             <StatCard
               icon={Clock}
               title="Penilaian Terakhir"
-              value={<span className="text-xl">{stats.penilaianTerakhir.surah}</span>}
+              value={<div className="text-xl truncate">{stats.penilaianTerakhir.surah}</div>}
               subtitle={
                 stats.penilaianTerakhir.tanggal !== '-'
                   ? `Ayat ${stats.penilaianTerakhir.ayat} • ${stats.penilaianTerakhir.tanggal}`
@@ -549,7 +497,21 @@ export default function PenilaianHafalanPage() {
             />
           </div>
 
-          {/* Tabel Penilaian */}
+          {/* Filter Component */}
+          <MonthlyPeriodFilter
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthYearChange={handleMonthYearChange}
+          />
+
+          <div className="text-sm text-gray-600 -mt-4 ml-0.5 font-medium">
+            {penilaianCount > 0 
+              ? `Menampilkan ${penilaianCount} penilaian pada ${periodText}`
+              : `Tidak ada penilaian hafalan pada periode ${periodText}`
+            }
+          </div>
+
+          {/* Content Table */}
           <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-emerald-50 rounded-xl">
@@ -561,8 +523,7 @@ export default function PenilaianHafalanPage() {
               </div>
             </div>
 
-            {/* Show loading state while fetching */}
-            {!penilaianData && !penilaianError && selectedChild && (
+            {!penilaianData && !penilaianError && (
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -571,49 +532,25 @@ export default function PenilaianHafalanPage() {
               </div>
             )}
 
-            {/* Desktop Table or Empty State */}
             {penilaianRows.length > 0 ? (
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-emerald-50/60 backdrop-blur">
-                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800 rounded-tl-xl">
-                        Tanggal
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800">
-                        Surah/Ayat
-                      </th>
-                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">
-                        Tajwid
-                      </th>
-                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">
-                        Kelancaran
-                      </th>
-                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">
-                        Makhraj
-                      </th>
-                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">
-                        Implementasi
-                      </th>
-                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">
-                        Rata-rata
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800">
-                        Status
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800 rounded-tr-xl">
-                        Catatan
-                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800 rounded-tl-xl">Tanggal</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800">Surah/Ayat</th>
+                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">Tajwid</th>
+                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">Kelancaran</th>
+                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">Makhraj</th>
+                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">Implementasi</th>
+                      <th className="text-center py-3 px-4 text-sm font-bold text-emerald-800">Rata-rata</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-emerald-800 rounded-tr-xl">Catatan</th>
                     </tr>
                   </thead>
                   <tbody>
                     {penilaianRows.map((row, index) => (
-                      <tr
-                        key={row.id}
-                        className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${
-                          index % 2 === 0 ? 'bg-white/70' : 'bg-white/40'
-                        }`}
-                      >
+                      <tr key={row.id} className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${index % 2 === 0 ? 'bg-white/70' : 'bg-white/40'}`}>
                         <td className="py-4 px-4 text-sm text-gray-700">{row.tanggal}</td>
                         <td className="py-4 px-4">
                           <div>
@@ -621,113 +558,76 @@ export default function PenilaianHafalanPage() {
                             <p className="text-xs text-gray-600">Ayat {row.ayat}</p>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-center">
-                          <ScoreBadge score={row.tajwid} />
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <ScoreBadge score={row.kelancaran} />
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <ScoreBadge score={row.makhraj} />
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <ScoreBadge score={row.implementasi} />
-                        </td>
+                        <td className="py-4 px-4 text-center"><ScoreBadge score={row.tajwid} /></td>
+                        <td className="py-4 px-4 text-center"><ScoreBadge score={row.kelancaran} /></td>
+                        <td className="py-4 px-4 text-center"><ScoreBadge score={row.makhraj} /></td>
+                        <td className="py-4 px-4 text-center"><ScoreBadge score={row.implementasi} /></td>
                         <td className="py-4 px-4 text-center">
                           <span className="inline-flex items-center justify-center min-w-[3rem] px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg font-bold text-purple-700 text-base">
                             {row.rataRata}
                           </span>
                         </td>
-                        <td className="py-4 px-4">
-                          <StatusBadge status={row.status} />
-                        </td>
+                        <td className="py-4 px-4"><StatusBadge status={row.status} /></td>
                         <td className="py-4 px-4">
                           {row.catatan && row.catatan !== '-' ? (
-                            <button
-                              onClick={() => handleOpenCatatan(row)}
-                              className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
-                            >
+                            <button onClick={() => handleOpenCatatan(row)} className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium">
                               <Info size={18} />
                               <span className="text-sm">Lihat</span>
                             </button>
-                          ) : (
-                            <span className="text-gray-400 text-sm">-</span>
-                          )}
+                          ) : <span className="text-gray-400 text-sm">-</span>}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            ) : penilaianData && penilaianRows.length === 0 ? (
+            ) : penilaianData && (
               <EmptyState
                 icon={BookOpen}
                 title="Belum Ada Penilaian Hafalan"
                 description="Penilaian dari guru akan muncul di sini setelah anak menyelesaikan setoran hafalan dan dinilai oleh guru."
               />
-            ) : null}
-
-            {/* Mobile Cards */}
-            {penilaianRows.length > 0 && (
-              <div className="md:hidden space-y-4">
-                {penilaianRows.map((row) => (
-                  <div
-                    key={row.id}
-                    className="bg-white/70 rounded-xl p-4 shadow-sm border border-gray-200"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-bold text-gray-900">{row.surah}</h3>
-                        <p className="text-sm text-gray-600">Ayat {row.ayat}</p>
-                        <p className="text-xs text-gray-500 mt-1">{row.tanggal}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-purple-600">{row.rataRata}</p>
-                        <p className="text-xs text-gray-600">Rata-rata</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="text-center p-2 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Tajwid</p>
-                        <ScoreBadge score={row.tajwid} />
-                      </div>
-                      <div className="text-center p-2 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Kelancaran</p>
-                        <ScoreBadge score={row.kelancaran} />
-                      </div>
-                      <div className="text-center p-2 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Makhraj</p>
-                        <ScoreBadge score={row.makhraj} />
-                      </div>
-                      <div className="text-center p-2 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Implementasi</p>
-                        <ScoreBadge score={row.implementasi} />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-3">
-                      <StatusBadge status={row.status} />
-                    </div>
-
-                    {row.catatan && row.catatan !== '-' && (
-                      <button
-                        onClick={() => handleOpenCatatan(row)}
-                        className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
-                      >
-                        <Info size={16} />
-                        <span className="text-sm font-medium">Lihat Catatan Guru</span>
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
             )}
+
+            {/* Mobile View */}
+            <div className="md:hidden space-y-4">
+              {penilaianRows.map((row) => (
+                <div key={row.id} className="bg-white/70 rounded-xl p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-bold text-gray-900">{row.surah}</h3>
+                      <p className="text-sm text-gray-600">Ayat {row.ayat}</p>
+                      <p className="text-xs text-gray-500 mt-1">{row.tanggal}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-purple-600">{row.rataRata}</p>
+                      <p className="text-xs text-gray-600">Rata-rata</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {['tajwid', 'kelancaran', 'makhraj', 'implementasi'].map((aspek) => (
+                      <div key={aspek} className="text-center p-2 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1 capitalize">{aspek}</p>
+                        <ScoreBadge score={row[aspek]} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <StatusBadge status={row.status} />
+                  </div>
+                  {row.catatan && row.catatan !== '-' && (
+                    <button onClick={() => handleOpenCatatan(row)} className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                      <Info size={16} />
+                      <span className="text-sm font-medium">Lihat Catatan Guru</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Modal Catatan Guru */}
       <CatatanGuruModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
