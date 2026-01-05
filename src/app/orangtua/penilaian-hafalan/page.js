@@ -498,9 +498,10 @@ export default function PenilaianHafalanPage() {
       return;
     }
 
+    let toastId;
     try {
       setIsDownloading(true);
-      const toastId = toast.loading('📄 Generating PDF laporan...');
+      toastId = toast.loading('📄 Generating PDF laporan...');
 
       // Calculate date range (default: current week)
       const today = new Date();

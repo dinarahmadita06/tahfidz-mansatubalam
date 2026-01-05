@@ -171,7 +171,7 @@ export async function GET(request) {
       statistics: {
         totalPenilaian,
         rataRataNilai,
-        halalanTerakhir,
+        hafalanTerakhir,
         konsistensi
       },
       startDate,
