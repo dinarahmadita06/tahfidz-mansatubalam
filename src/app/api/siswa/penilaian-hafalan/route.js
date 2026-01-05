@@ -21,11 +21,32 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Siswa not found' }, { status: 404 });
     }
 
-    // Fetch all penilaian for this siswa
+    // Parse date range query parameters
+    const { searchParams } = new URL(request.url);
+    const startDateStr = searchParams.get('startDate');
+    const endDateStr = searchParams.get('endDate');
+
+    // Build where clause with optional date filter
+    const whereClause = {
+      siswaId: siswa.id
+    };
+
+    if (startDateStr && endDateStr) {
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
+      endDate.setHours(23, 59, 59, 999); // Include entire last day
+      
+      whereClause.hafalan = {
+        tanggal: {
+          gte: startDate,
+          lte: endDate
+        }
+      };
+    }
+
+    // Fetch all penilaian for this siswa (with optional date filter)
     const penilaianList = await prisma.penilaian.findMany({
-      where: {
-        siswaId: siswa.id
-      },
+      where: whereClause,
       include: {
         hafalan: {
           select: {
