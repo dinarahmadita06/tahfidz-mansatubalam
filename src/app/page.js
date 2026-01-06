@@ -171,27 +171,23 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => (
   </motion.div>
 );
 
-const StatCard = ({ icon: Icon, label, value, sub, index }) => (
+const FeatureHighlightCard = ({ icon: Icon, label, description, index }) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    whileInView={{ opacity: 1, scale: 1 }}
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.1 }}
     viewport={{ once: true }}
-    className="bg-white/80 backdrop-blur-sm border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border-b-4 border-b-emerald-400"
+    className="bg-white/70 backdrop-blur-md border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border-b-4 border-b-emerald-400 group h-full"
   >
     <div className="flex items-center gap-3 mb-4">
-      <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500">
-        <Icon size={20} />
+      <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-emerald-100/50">
+        <Icon size={24} />
       </div>
-      <div className="text-sm font-bold text-slate-800 uppercase tracking-wider">{label}</div>
+      <div className="text-sm font-bold text-slate-800 uppercase tracking-wider leading-tight">{label}</div>
     </div>
-    <div className="text-4xl font-black bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent mb-1">
-      {value}
-    </div>
-    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium italic">
-      <Info size={10} />
-      {sub}
-    </div>
+    <p className="text-slate-600 text-sm font-medium leading-relaxed">
+      {description}
+    </p>
   </motion.div>
 );
 
@@ -392,13 +388,33 @@ export default function SIMTAQLandingPage() {
         </div>
       </section>
 
-      {/* 3. Statistik Section */}
-      <Section id="statistik" className="pt-0">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <StatCard icon={Users} label="Siswa Aktif" value="500+" sub="Contoh data (otomatis sistem)" index={0} />
-          <StatCard icon={GraduationCap} label="Guru Pembina" value="25+" sub="Contoh data (otomatis sistem)" index={1} />
-          <StatCard icon={TrendingUp} label="Setoran" value="12K+" sub="Contoh data (otomatis sistem)" index={2} />
-          <StatCard icon={Award} label="Rata-rata" value="88.5" sub="Contoh data (otomatis sistem)" index={3} />
+      {/* 3. Highlight Section */}
+      <Section id="highlight" className="pt-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <FeatureHighlightCard 
+            icon={Users} 
+            label="Multi Role Portal" 
+            description="Akses terintegrasi khusus untuk Guru, Siswa, dan Orang Tua dalam satu sistem." 
+            index={0} 
+          />
+          <FeatureHighlightCard 
+            icon={BookOpen} 
+            label="Monitoring Hafalan" 
+            description="Rekap tajwid, kelancaran, makhraj, dan status hafalan siswa secara realtime." 
+            index={1} 
+          />
+          <FeatureHighlightCard 
+            icon={FileText} 
+            label="Laporan PDF via WA" 
+            description="Rekap perkembangan anak otomatis tiap bulan, siap dikirimkan melalui WhatsApp." 
+            index={2} 
+          />
+          <FeatureHighlightCard 
+            icon={Smartphone} 
+            label="PWA Install App" 
+            description="Dapat di-install langsung di HP tanpa Play Store, sangat ringan dan cepat aksesnya." 
+            index={3} 
+          />
         </div>
       </Section>
 
