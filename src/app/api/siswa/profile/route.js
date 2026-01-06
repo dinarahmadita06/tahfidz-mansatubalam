@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 const formatDate = (date) => {
   if (!date) return '-';
@@ -197,6 +198,22 @@ export async function PATCH(request) {
           },
         },
       },
+    });
+
+    // Log the activity
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'SISWA',
+      actorName: updated.user?.name,
+      action: ACTIVITY_ACTIONS.SISWA_UBAH_PROFIL,
+      title: 'Mengubah Profil',
+      description: 'Anda memperbarui informasi profil siswa.',
+      metadata: {
+        fieldsUpdated: [
+          body.phone !== undefined ? 'noTelepon' : null,
+          body.alamat !== undefined ? 'alamat' : null
+        ].filter(Boolean)
+      }
     });
 
     // Get the primary guardian if exists

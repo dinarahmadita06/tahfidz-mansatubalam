@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 export async function POST(request) {
   try {
@@ -73,6 +74,20 @@ export async function POST(request) {
     });
 
     console.log('✅ Password berhasil diubah untuk user:', user.email);
+
+    // Log the activity
+    const activityAction = session.user.role === 'ORANG_TUA' || session.user.role === 'ORANGTUA' 
+      ? ACTIVITY_ACTIONS.ORANGTUA_UBAH_PASSWORD 
+      : ACTIVITY_ACTIONS.SISWA_UBAH_PASSWORD;
+
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      actorName: session.user.name,
+      action: activityAction,
+      title: 'Mengubah Password',
+      description: 'Anda berhasil mengubah password akun.',
+    });
 
     return NextResponse.json(
       { message: 'Password berhasil diubah' },

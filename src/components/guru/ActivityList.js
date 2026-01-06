@@ -122,10 +122,7 @@ function EmptyState() {
       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
         <FileText size={32} className="text-slate-400" />
       </div>
-      <p className="text-slate-600 font-medium">Belum ada aktivitas</p>
-      <p className="text-sm text-slate-500 mt-1">
-        Aktivitas Anda akan muncul di sini
-      </p>
+      <p className="text-slate-600 font-medium">Belum ada aktivitas terbaru</p>
     </div>
   );
 }

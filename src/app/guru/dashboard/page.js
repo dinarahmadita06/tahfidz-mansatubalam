@@ -338,7 +338,7 @@ export default function DashboardGuru() {
     try {
       setActivitiesLoading(true);
       // ✅ Force fresh data - no caching
-      const response = await fetch('/api/guru/aktivitas-list?limit=8', {
+      const response = await fetch('/api/guru/aktivitas-list?limit=5', {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
       });

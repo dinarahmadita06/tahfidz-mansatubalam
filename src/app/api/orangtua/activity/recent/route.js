@@ -19,6 +19,10 @@ export async function GET(request) {
       );
     }
 
+    // Get limit from query (default: 5)
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '5'), 20);
+
     // Fetch recent activities for this parent
     const activities = await prisma.activityLog.findMany({
       where: {
@@ -37,7 +41,7 @@ export async function GET(request) {
       orderBy: {
         createdAt: 'desc'
       },
-      take: 7
+      take: limit
     });
 
     return NextResponse.json(

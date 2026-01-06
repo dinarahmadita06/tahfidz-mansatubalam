@@ -24,7 +24,7 @@ export default function AktivitasTerkiniWidget() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/siswa/activity/recent?limit=7');
+      const response = await fetch('/api/siswa/activity/recent?limit=5');
 
       if (!response.ok) {
         throw new Error(`Failed to fetch activities: ${response.status}`);
@@ -92,10 +92,7 @@ export default function AktivitasTerkiniWidget() {
         ) : activities.length === 0 ? (
           <div className="py-12 text-center">
             <div className="text-4xl mb-3">📝</div>
-            <p className="text-gray-600 font-medium">Belum ada aktivitas</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Aktivitas Anda akan muncul saat mulai menggunakan aplikasi.
-            </p>
+            <p className="text-gray-600 font-medium">Belum ada aktivitas terbaru</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -136,19 +133,6 @@ export default function AktivitasTerkiniWidget() {
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Footer - View All */}
-        {activities.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <Link
-              href="/siswa/aktivitas"
-              className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-            >
-              Lihat Semua Aktivitas
-              <ChevronRight size={16} />
-            </Link>
           </div>
         )}
       </div>
