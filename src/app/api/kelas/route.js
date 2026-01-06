@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 export async function GET(request) {
   try {
     const session = await auth();
+    console.log('[API /kelas] Session:', { role: session?.user?.role, userId: session?.user?.id });
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -13,6 +14,7 @@ export async function GET(request) {
     // Get query params
     const { searchParams } = new URL(request.url);
     const showAll = searchParams.get('showAll') === 'true'; // Show all kelas, not just guru's classes
+    console.log('[API /kelas] Params:', { showAll });
 
     let whereClause = {};
 
@@ -24,7 +26,12 @@ export async function GET(request) {
           isActive: true
         }
       };
+      console.log('[API /kelas] Filtering for GURU:', session.user.guruId);
+    } else if (session.user.role === 'ADMIN') {
+      console.log('[API /kelas] ADMIN role - showing ALL classes');
     }
+
+    console.log('[API /kelas] Where clause:', JSON.stringify(whereClause));
 
     const kelas = await prisma.kelas.findMany({
       where: whereClause,
@@ -70,11 +77,14 @@ export async function GET(request) {
       },
     });
 
+    console.log('[API /kelas] RESULT: Total kelas found:', kelas.length);
+    console.log('[API /kelas] Classes:', kelas.map(k => ({ id: k.id, nama: k.nama, status: k.status })));
+
     return NextResponse.json(kelas);
   } catch (error) {
-    console.error('Error fetching kelas:', error);
+    console.error('[API /kelas] ERROR:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch kelas' },
+      { error: 'Failed to fetch kelas', details: error.message },
       { status: 500 }
     );
   }
