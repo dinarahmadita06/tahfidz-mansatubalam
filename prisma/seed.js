@@ -173,7 +173,7 @@ async function main() {
         create: {
           nip: '198501012010011001',
           jenisKelamin: 'LAKI_LAKI',
-          noHP: '081234567890',
+          noTelepon: '081234567890',
           alamat: 'Jl. Pendidikan No. 123',
         },
       },
@@ -182,17 +182,39 @@ async function main() {
   });
   console.log('✅ Guru created! Email: guru@tahfidz.sch.id | Password: guru123');
 
-  // Seed Kelas
-  console.log('🏫 Seeding Kelas...');
-  const kelas = await prisma.kelas.upsert({
+  const kelas1 = await prisma.kelas.upsert({
     where: { id: 'kelas-xii-ipa-1' },
     update: {},
     create: {
       id: 'kelas-xii-ipa-1',
       nama: 'XII IPA 1',
-      tingkat: 12,
       tahunAjaranId: tahunAjaran.id,
       targetJuz: 5,
+      status: 'AKTIF',
+    },
+  });
+
+  const kelas2 = await prisma.kelas.upsert({
+    where: { id: 'kelas-xii-ipa-2' },
+    update: {},
+    create: {
+      id: 'kelas-xii-ipa-2',
+      nama: 'XII IPA 2',
+      tahunAjaranId: tahunAjaran.id,
+      targetJuz: 5,
+      status: 'AKTIF',
+    },
+  });
+
+  const kelas3 = await prisma.kelas.upsert({
+    where: { id: 'kelas-xii-ips-1' },
+    update: {},
+    create: {
+      id: 'kelas-xii-ips-1',
+      nama: 'XII IPS 1',
+      tahunAjaranId: tahunAjaran.id,
+      targetJuz: 3,
+      status: 'NONAKTIF',
     },
   });
 
@@ -201,13 +223,13 @@ async function main() {
     where: {
       guruId_kelasId: {
         guruId: guruUser.guru.id,
-        kelasId: kelas.id,
+        kelasId: kelas1.id,
       },
     },
     update: {},
     create: {
       guruId: guruUser.guru.id,
-      kelasId: kelas.id,
+      kelasId: kelas1.id,
       peran: 'utama',
       isActive: true,
     },
@@ -264,7 +286,7 @@ async function main() {
           create: {
             nisn: '0012345678',
             nis: '2021001',
-            kelasId: kelas.id,
+            kelasId: kelas1.id,
             jenisKelamin: 'LAKI_LAKI',
             tanggalLahir: new Date('2006-05-15'),
             alamat: 'Jl. Siswa No. 1',
