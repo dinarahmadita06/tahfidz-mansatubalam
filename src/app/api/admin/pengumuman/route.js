@@ -82,28 +82,6 @@ export async function POST(request) {
       name: session.user.name
     });
 
-    // Validasi apakah user exists di database
-    const userExists = await prisma.user.findUnique({
-      where: { id: session.user.id }
-    });
-
-    console.log('CREATE PENGUMUMAN - User exists check:', {
-      userId: session.user.id,
-      exists: !!userExists,
-      userData: userExists ? { id: userExists.id, email: userExists.email, name: userExists.name } : null
-    });
-
-    if (!userExists) {
-      console.error('CREATE PENGUMUMAN - User not found in database:', session.user.id);
-      return NextResponse.json(
-        {
-          error: 'User tidak ditemukan di database',
-          details: `User dengan ID ${session.user.id} tidak terdaftar dalam sistem. Silakan logout dan login kembali, atau hubungi administrator.`
-        },
-        { status: 400 }
-      );
-    }
-
     console.log('CREATE PENGUMUMAN - Creating pengumuman:', {
       userId: session.user.id,
       judul: judul.trim(),
