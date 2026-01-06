@@ -13,78 +13,7 @@ import {
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { toast, Toaster } from 'react-hot-toast';
-
-// Category icons and colors
-const CATEGORY_CONFIG = {
-  UMUM: { icon: Bell, color: 'bg-blue-100 text-blue-600', badgeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
-  AKADEMIK: { icon: BookOpen, color: 'bg-purple-100 text-purple-600', badgeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
-  KEGIATAN: { icon: Award, color: 'bg-amber-100 text-amber-600', badgeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
-  PENTING: { icon: Megaphone, color: 'bg-red-100 text-red-600', badgeColor: 'bg-red-50 text-red-700 border-red-200' },
-};
-
-// AnnouncementCard Component
-function AnnouncementCard({ announcement }) {
-  const categoryData = CATEGORY_CONFIG[announcement.kategori] || CATEGORY_CONFIG.UMUM;
-  const CategoryIcon = categoryData.icon;
-
-  const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
-  const truncateText = (text, length = 100) => {
-    if (!text) return '';
-    if (text.length <= length) return text;
-    return text.substring(0, length) + '...';
-  };
-
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
-      {/* Category color bar */}
-      <div className={`h-1 ${announcement.kategori === 'PENTING' ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
-
-      <div className="p-6">
-        {/* Header: Icon + Title */}
-        <div className="flex items-start gap-4 mb-4">
-          <div className={`p-3 rounded-lg ${categoryData.color} flex-shrink-0`}>
-            <CategoryIcon size={24} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
-              {announcement.judul}
-            </h3>
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${categoryData.badgeColor}`}
-            >
-              {announcement.kategori}
-            </span>
-          </div>
-        </div>
-
-        {/* Content */}
-        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
-          {truncateText(announcement.isi, 150)}
-        </p>
-
-        {/* Footer: Date */}
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Calendar size={16} className="text-gray-400" />
-          <span>{formatDate(announcement.createdAt)}</span>
-          {announcement.tanggalSelesai && (
-            <>
-              <span className="text-gray-300">•</span>
-              <span>Hingga {formatDate(announcement.tanggalSelesai)}</span>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+import AnnouncementCard from '@/components/shared/AnnouncementCard';
 
 // EmptyState Component
 function AnnouncementEmptyState() {
