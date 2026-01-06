@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { BookOpen, Clock, Users, Target, Play, Award } from 'lucide-react';
+import GuruLayout from '@/components/layout/GuruLayout';
 
 // Mock data untuk mode latihan
 const mockSessions = [
@@ -200,7 +201,8 @@ export default function ModeLatihan() {
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <GuruLayout>
+      <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-[#1F1F1F] mb-2">Mode Latihan</h1>
         <p className="text-gray-600">Kelola sesi latihan dan materi pembelajaran tahfidz</p>
@@ -433,5 +435,6 @@ export default function ModeLatihan() {
         </div>
       </div>
     </div>
+    </GuruLayout>
   );
 }

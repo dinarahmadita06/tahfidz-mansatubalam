@@ -36,7 +36,7 @@ const colors = {
   },
 };
 
-export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }) {
+export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, initialKelasId }) {
   const [kelas, setKelas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -86,8 +86,12 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }
       const data = await response.json();
       const kelasList = data.kelas || [];
       setKelas(kelasList);
-      if (kelasList.length > 0 && !formData.kelasId) {
-        setFormData(prev => ({ ...prev, kelasId: kelasList[0].id }));
+      if (kelasList.length > 0) {
+        if (initialKelasId) {
+          setFormData(prev => ({ ...prev, kelasId: initialKelasId }));
+        } else if (!formData.kelasId) {
+          setFormData(prev => ({ ...prev, kelasId: kelasList[0].id }));
+        }
       }
     } catch (error) {
       console.error('Error fetching teacher kelas:', error);
@@ -136,7 +140,7 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }
       password: '',
       nis: '',
       nisn: '',
-      kelasId: kelas.length > 0 ? kelas[0].id : '',
+      kelasId: initialKelasId || (kelas.length > 0 ? kelas[0].id : ''),
       gender: 'LAKI_LAKI',
       birthDate: '',
     });

@@ -11,6 +11,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import GuruLayout from '@/components/layout/GuruLayout';
 import TeacherStudentCreateModal from '@/components/guru/TeacherStudentCreateModal';
 
 export default function KelolaSiswa() {
@@ -159,164 +160,171 @@ export default function KelolaSiswa() {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-10 py-6 space-y-6">
-        {/* Header Section */}
-        <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
+    <GuruLayout>
+      <div className="min-h-screen bg-gray-50">
+        <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-10 py-6 space-y-6">
+          {/* Header Section */}
+          <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
 
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                Kelola Siswa
-              </h1>
-              <p className="text-green-50 text-sm sm:text-base">
-                Monitoring siswa kelas binaan dan tracking progress hafalan
-              </p>
-            </div>
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                  Kelola Siswa
+                </h1>
+                <p className="text-green-50 text-sm sm:text-base">
+                  Monitoring siswa kelas binaan dan tracking progress hafalan
+                </p>
+              </div>
 
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-bold text-sm hover:bg-emerald-50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <UserPlus size={20} />
-              <span>Tambah Siswa Baru</span>
-            </button>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-              <p className="text-slate-600">Memuat data kelas dan siswa...</p>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-bold text-sm hover:bg-emerald-50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <UserPlus size={20} />
+                <span>Tambah Siswa Baru</span>
+              </button>
             </div>
           </div>
-        ) : (
-          <>
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <StatCard 
-                icon={Users}
-                title="Total Siswa"
-                value={totalSiswa}
-                theme="amber"
-              />
-              <StatCard 
-                icon={CheckCircle}
-                title="Siswa Aktif"
-                value={siswaAktif}
-                theme="emerald"
-              />
-              <StatCard 
-                icon={AlertCircle}
-                title="Menunggu Validasi"
-                value={menungguvalisasi}
-                theme="orange"
-              />
-            </div>
 
-            {/* Filter Section */}
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md p-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                    Cari Nama Siswa atau NIS
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Cari siswa..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-                    />
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
+                <p className="text-slate-600">Memuat data kelas dan siswa...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Statistics Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <StatCard 
+                  icon={Users}
+                  title="Total Siswa"
+                  value={totalSiswa}
+                  theme="amber"
+                />
+                <StatCard 
+                  icon={CheckCircle}
+                  title="Siswa Aktif"
+                  value={siswaAktif}
+                  theme="emerald"
+                />
+                <StatCard 
+                  icon={AlertCircle}
+                  title="Menunggu Validasi"
+                  value={menungguvalisasi}
+                  theme="orange"
+                />
+              </div>
+
+              {/* Filter Section */}
+              <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md p-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                      Cari Nama Siswa atau NIS
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Cari siswa..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="sm:w-64">
+                    <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
+                      Filter Kelas
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedKelas}
+                        onChange={(e) => setSelectedKelas(e.target.value)}
+                        className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm appearance-none bg-white"
+                      >
+                        <option value="">Semua Kelas ({kelasDiampu.length})</option>
+                        {kelasOptions.map(k => (
+                          <option key={k.id} value={k.id}>{k.nama}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <Users size={16} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="sm:w-64">
-                  <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                    Filter Kelas
-                  </label>
-                  <select
-                    value={selectedKelas}
-                    onChange={(e) => setSelectedKelas(e.target.value)}
-                    className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-                  >
-                    <option value="">Semua Kelas ({kelasDiampu.length})</option>
-                    {kelasOptions.map(k => (
-                      <option key={k.id} value={k.id}>{k.nama}</option>
-                    ))}
-                  </select>
+              </div>
+
+              {/* Siswa List Card */}
+              <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-md overflow-hidden border border-emerald-100/30">
+                <div className="p-6 border-b border-emerald-100/30">
+                  <h2 className="text-xl font-bold text-emerald-900">Daftar Siswa (Kelas Aktif)</h2>
+                  <p className="text-sm text-slate-600 mt-1">Menampilkan {filteredSiswa.length} dari {allSiswa.length} siswa</p>
                 </div>
-              </div>
-            </div>
 
-            {/* Siswa List Card */}
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-md overflow-hidden border border-emerald-100/30">
-              <div className="p-6 border-b border-emerald-100/30">
-                <h2 className="text-xl font-bold text-emerald-900">Daftar Siswa (Kelas Aktif)</h2>
-                <p className="text-sm text-slate-600 mt-1">Menampilkan {filteredSiswa.length} dari {allSiswa.length} siswa</p>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b-2 border-emerald-200">
-                    <tr>
-                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
-                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Siswa</th>
-                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">NIS</th>
-                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Kelas</th>
-                      <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-emerald-100/50">
-                    {filteredSiswa.map((siswa, index) => (
-                      <tr key={siswa.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-6">
-                          <span className="text-gray-600 text-sm">{index + 1}</span>
-                        </td>
-                        <td className="py-4 px-6">
-                          <p className="font-medium text-gray-900">{siswa.user?.name || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">{siswa.user?.email || ''}</p>
-                        </td>
-                        <td className="py-4 px-6">
-                          <p className="text-sm text-gray-600">{siswa.nis || '-'}</p>
-                        </td>
-                        <td className="py-4 px-6">
-                          <p className="text-sm text-gray-600">{siswa.kelas?.nama || '-'}</p>
-                        </td>
-                        <td className="py-4 px-6">
-                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                            siswa.status === 'approved' 
-                              ? 'bg-emerald-100 text-emerald-700' 
-                              : 'bg-amber-100 text-amber-700'
-                          }`}>
-                            {siswa.status === 'approved' ? 'Aktif' : 'Menunggu'}
-                          </span>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b-2 border-emerald-200">
+                      <tr>
+                        <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
+                        <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Siswa</th>
+                        <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">NIS</th>
+                        <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Kelas</th>
+                        <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {filteredSiswa.length === 0 && (
-                <div className="p-12 text-center">
-                  <p className="text-gray-500">Tidak ada siswa yang sesuai dengan filter</p>
+                    </thead>
+                    <tbody className="divide-y divide-emerald-100/50">
+                      {filteredSiswa.map((siswa, index) => (
+                        <tr key={siswa.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-4 px-6">
+                            <span className="text-gray-600 text-sm">{index + 1}</span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="font-medium text-gray-900">{siswa.user?.name || 'N/A'}</p>
+                            <p className="text-xs text-gray-500">{siswa.user?.email || ''}</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="text-sm text-gray-600">{siswa.nis || '-'}</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="text-sm text-gray-600">{siswa.kelas?.nama || '-'}</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                              siswa.status === 'approved' 
+                                ? 'bg-emerald-100 text-emerald-700' 
+                                : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {siswa.status === 'approved' ? 'Aktif' : 'Menunggu'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+                
+                {filteredSiswa.length === 0 && (
+                  <div className="p-12 text-center">
+                    <p className="text-gray-500">Tidak ada siswa yang sesuai dengan filter</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
-      <TeacherStudentCreateModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={fetchData}
-      />
-    </div>
+        <TeacherStudentCreateModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={fetchData}
+        />
+      </div>
+    </GuruLayout>
   );
 }
