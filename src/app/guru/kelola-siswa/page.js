@@ -7,9 +7,11 @@ import {
   TrendingUp,
   CheckCircle,
   AlertCircle,
-  Loader
+  Loader,
+  UserPlus
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import TeacherStudentCreateModal from '@/components/guru/TeacherStudentCreateModal';
 
 export default function KelolaSiswa() {
   const router = useRouter();
@@ -19,6 +21,7 @@ export default function KelolaSiswa() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedKelas, setSelectedKelas] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [statsData, setStatsData] = useState({
     totalSiswa: 0,
     siswaAktif: 0,
@@ -26,53 +29,53 @@ export default function KelolaSiswa() {
   });
 
   // Fetch kelas aktif dan siswa mereka
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      console.log('📚 Fetching kelas aktif dari /api/guru/kelas...');
+      const kelasRes = await fetch('/api/guru/kelas', { credentials: 'include' });
+      if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
+      const kelasData = await kelasRes.json();
+      const kelasList = kelasData.kelas || [];
+      console.log('✅ Kelas yang diampu (AKTIF):', kelasList.length, kelasList.map(k => ({ id: k.id, nama: k.nama })));
+      setKelasDiampu(kelasList);
+      
+      // Fetch siswa hanya dari kelas aktif yang diampu guru
+      if (kelasList.length > 0) {
+        const klasIds = kelasList.map(k => k.id).join(',');
+        console.log('🔗 Kelas IDs untuk fetch siswa:', klasIds);
+        const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`, { credentials: 'include' });
+        if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
+        const siswaData = await siswaRes.json();
+        console.log('📊 API response:', siswaData);
+        const siswaList = siswaData.data || [];
+        console.log('✅ Siswa yang di-fetch:', siswaList.length, 'siswa');
+        setAllSiswa(siswaList);
+        setFilteredSiswa(siswaList);
         
-        console.log('📚 Fetching kelas aktif dari /api/guru/kelas...');
-        const kelasRes = await fetch('/api/guru/kelas', { credentials: 'include' });
-        if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
-        const kelasData = await kelasRes.json();
-        const kelasList = kelasData.kelas || [];
-        console.log('✅ Kelas yang diampu (AKTIF):', kelasList.length, kelasList.map(k => ({ id: k.id, nama: k.nama })));
-        setKelasDiampu(kelasList);
-        
-        // Fetch siswa hanya dari kelas aktif yang diampu guru
-        if (kelasList.length > 0) {
-          const klasIds = kelasList.map(k => k.id).join(',');
-          console.log('🔗 Kelas IDs untuk fetch siswa:', klasIds);
-          const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`, { credentials: 'include' });
-          if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
-          const siswaData = await siswaRes.json();
-          console.log('📊 API response:', siswaData);
-          const siswaList = siswaData.data || [];
-          console.log('✅ Siswa yang di-fetch:', siswaList.length, 'siswa');
-          setAllSiswa(siswaList);
-          setFilteredSiswa(siswaList);
-          
-          // Calculate stats
-          const approved = siswaList.filter(s => s.status === 'approved').length;
-          const pending = siswaList.filter(s => s.status !== 'approved').length;
-          console.log(`📈 Stats: Total=${siswaList.length}, Aktif=${approved}, Menunggu=${pending}`);
-          setStatsData({
-            totalSiswa: siswaList.length,
-            siswaAktif: approved,
-            menungguValidasi: pending,
-          });
-        } else {
-          console.warn('⚠️ Guru tidak memiliki kelas aktif yang diampu!');
-        }
-      } catch (error) {
-        console.error('❌ Error fetching data:', error);
-        setKelasDiampu([]);
-        setAllSiswa([]);
-      } finally {
-        setLoading(false);
+        // Calculate stats
+        const approved = siswaList.filter(s => s.status === 'approved').length;
+        const pending = siswaList.filter(s => s.status !== 'approved').length;
+        console.log(`📈 Stats: Total=${siswaList.length}, Aktif=${approved}, Menunggu=${pending}`);
+        setStatsData({
+          totalSiswa: siswaList.length,
+          siswaAktif: approved,
+          menungguValidasi: pending,
+        });
+      } else {
+        console.warn('⚠️ Guru tidak memiliki kelas aktif yang diampu!');
       }
-    };
-    
+    } catch (error) {
+      console.error('❌ Error fetching data:', error);
+      setKelasDiampu([]);
+      setAllSiswa([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -172,6 +175,14 @@ export default function KelolaSiswa() {
                 Monitoring siswa kelas binaan dan tracking progress hafalan
               </p>
             </div>
+
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-bold text-sm hover:bg-emerald-50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <UserPlus size={20} />
+              <span>Tambah Siswa Baru</span>
+            </button>
           </div>
         </div>
 
@@ -300,6 +311,12 @@ export default function KelolaSiswa() {
           </>
         )}
       </div>
+
+      <TeacherStudentCreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={fetchData}
+      />
     </div>
   );
 }
