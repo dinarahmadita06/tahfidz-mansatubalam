@@ -247,6 +247,7 @@ model Kelas {
   siswa         Siswa[]
   targetHafalan TargetHafalan[]
   agenda        Agenda[]
+  bukuDigital   BukuDigital[]
 
   @@index([status])
   @@index([tahunAjaranId])
@@ -440,6 +441,7 @@ model PengumumanRead {
 model BukuDigital {
   id          String       @id @default(cuid())
   guruId      String
+  classId     String
   judul       String
   deskripsi   String?
   kategori    KategoriBuku
@@ -450,10 +452,13 @@ model BukuDigital {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   guru        Guru         @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  kelas       Kelas        @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@index([guruId])
+  @@index([classId])
   @@index([kategori])
   @@index([createdAt(sort: Desc)])
+  @@unique([guruId, classId, judul])
 }
 
 model Agenda {

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { put } from '@vercel/blob';
 import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
-// GET - Fetch books uploaded by current guru
+// GET - Fetch books uploaded by current guru (for classes they teach)
 export async function GET(request) {
   try {
     const session = await auth();
@@ -27,8 +27,33 @@ export async function GET(request) {
       );
     }
 
+    // ✅ Get classes this guru teaches
+    const guruKelas = await prisma.guruKelas.findMany({
+      where: {
+        guruId: guru.id,
+        isActive: true
+      },
+      select: { kelasId: true }
+    });
+
+    const classIds = guruKelas.map(gk => gk.kelasId);
+
+    // ✅ Get materials only for classes this guru teaches
     const books = await prisma.bukuDigital.findMany({
-      where: { guruId: guru.id },
+      where: {
+        guruId: guru.id,
+        classId: { in: classIds }
+      },
+      include: {
+        kelas: {
+          select: {
+            nama: true,
+            tahunAjaran: {
+              select: { nama: true }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
 
@@ -72,6 +97,7 @@ export async function POST(request) {
     const file = formData.get('file');
     const judul = formData.get('judul');
     const deskripsi = formData.get('deskripsi');
+    const classId = formData.get('classId');
     let kategori = formData.get('kategori') || 'UMUM';
     
     // Convert kategori to uppercase to match enum (TAJWID, TAFSIR, HADITS, FIQIH, AKHLAK, UMUM)
@@ -87,9 +113,9 @@ export async function POST(request) {
     }
 
     // Validate required fields
-    if (!file || !judul) {
+    if (!file || !judul || !classId) {
       return NextResponse.json(
-        { error: 'File dan judul harus diisi' },
+        { error: 'File, judul, dan kelas harus diisi' },
         { status: 400 }
       );
     }
@@ -111,6 +137,23 @@ export async function POST(request) {
       );
     }
 
+    // ✅ VALIDATION: Check if guru teaches this class
+    const guruKelas = await prisma.guruKelas.findUnique({
+      where: {
+        guruId_kelasId: {
+          guruId: guru.id,
+          kelasId: classId
+        }
+      }
+    });
+
+    if (!guruKelas || !guruKelas.isActive) {
+      return NextResponse.json(
+        { error: 'Anda tidak memiliki akses untuk upload materi ke kelas ini' },
+        { status: 403 }
+      );
+    }
+
     // Upload file to Vercel Blob
     const fileName = `buku-digital-${guru.id}-${Date.now()}.pdf`;
     const blob = await put(fileName, file, {
@@ -118,10 +161,11 @@ export async function POST(request) {
       contentType: 'application/pdf'
     });
 
-    // Save to database
+    // Save to database with classId
     const bukuDigital = await prisma.bukuDigital.create({
       data: {
         guruId: guru.id,
+        classId: classId,
         judul,
         deskripsi: deskripsi || null,
         kategori: kategori,  // Now uppercase and validated
@@ -138,11 +182,12 @@ export async function POST(request) {
       actorName: session.user.name,
       action: ACTIVITY_ACTIONS.GURU_UPLOAD_BUKU_DIGITAL,
       title: 'Upload buku digital',
-      description: `Upload buku digital "${judul}" ke kategori ${kategori}`,
+      description: `Upload buku digital "${judul}" ke kategori ${kategori} untuk kelas ${classId}`,
       metadata: {
         bukuId: bukuDigital.id,
         judul,
         kategori,
+        classId,
         fileName: file.name,
         fileSize: file.size,
         guruId: guru.id,
