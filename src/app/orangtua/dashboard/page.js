@@ -224,8 +224,7 @@ export default function OrangtuaDashboardPage() {
 
   return (
     <OrangtuaLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className={`${CONTAINER} space-y-4 lg:space-y-6`}>
+      <div className="w-full space-y-4 lg:space-y-6">
         {/* Banner Header */}
         <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg px-6 py-5 lg:py-6 sm:px-8 sm:py-7 lg:px-10 text-white`}>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
@@ -293,7 +292,6 @@ export default function OrangtuaDashboardPage() {
             </div>
           </>
         ) : null}
-        </div>
       </div>
     </OrangtuaLayout>
   );

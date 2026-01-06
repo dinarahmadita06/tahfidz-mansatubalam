@@ -273,7 +273,7 @@ export default function LaporanHafalanPage() {
       <div className="-m-6 lg:-m-8">
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-400 via-mint-300 to-amber-200 px-4 lg:px-8 py-6 lg:py-10 shadow-md">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-emerald-800 text-sm mb-4">
             <Home className="w-4 h-4" />
@@ -302,7 +302,7 @@ export default function LaporanHafalanPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="w-full py-8 space-y-8">
         {/* Filter & Pengaturan */}
         <div className="bg-white shadow-sm border border-emerald-100 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-5">
