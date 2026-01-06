@@ -38,7 +38,7 @@ export async function middleware(request) {
   }
 
   // Public routes yang tidak perlu auth
-  const publicRoutes = ['/register', '/lupa-password', '/reset-password', '/registrasi-orang-tua'];
+  const publicRoutes = ['/', '/register', '/lupa-password', '/reset-password', '/registrasi-orang-tua'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   const isAuthApiRoute = pathname.startsWith('/api/auth');
   const isSeedApiRoute = pathname === '/api/seed-tasmi' || pathname === '/api/seed-users';
