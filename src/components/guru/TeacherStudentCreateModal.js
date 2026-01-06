@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, UserPlus, Key, Users, BookOpen, User, Search, AlertCircle } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import PasswordField from '@/components/admin/PasswordField';
 import AccountSuccessModal from '@/components/admin/AccountSuccessModal';
 import { generateSiswaEmail } from '@/lib/siswaUtils';
@@ -527,8 +528,11 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
                 disabled={loading}
                 className="px-10 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-3"
               >
-                {loading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                {loading ? 'Memproses...' : 'Simpan Siswa'}
+                {loading ? (
+                  <LoadingIndicator size="small" text="Memproses..." inline className="text-white" />
+                ) : (
+                  'Simpan Siswa'
+                )}
               </button>
             </div>
           </form>

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import { 
   Upload, 
   Mic, 
@@ -439,10 +440,7 @@ export default function UploadHafalanForm({ onSubmit, onCancel }) {
               className="flex-1 px-4 py-2 bg-[#FFB030] text-white rounded-lg hover:bg-[#874D14] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Mengirim...</span>
-                </div>
+                <LoadingIndicator size="small" text="Mengirim..." inline className="text-white" />
               ) : (
                 "Kirim Hafalan"
               )}

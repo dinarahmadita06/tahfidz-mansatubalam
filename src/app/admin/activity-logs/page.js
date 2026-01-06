@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Activity, Filter, RotateCcw, FileDown, TrendingUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import AdminLayout from '@/components/layout/AdminLayout';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 
 export default function ActivityLogsPage() {
   const [logs, setLogs] = useState([]);
@@ -336,10 +337,7 @@ export default function ActivityLogsPage() {
           }}
         >
           {loading ? (
-            <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200 border-t-emerald-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600 font-medium">Memuat data log aktivitas...</p>
-            </div>
+            <LoadingIndicator text="Memuat data log aktivitas..." className="py-20" />
           ) : logs.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📋</div>

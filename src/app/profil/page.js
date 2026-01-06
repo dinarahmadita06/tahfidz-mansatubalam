@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { UserCircle, Mail, Phone, MapPin, School, Lock, Save, Edit2, X } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function ProfilPage() {
   const { data: session, status, update } = useSession();
@@ -138,10 +139,7 @@ export default function ProfilPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+        <LoadingIndicator />
       </div>
     );
   }
@@ -306,8 +304,14 @@ export default function ProfilPage() {
                     disabled={loading}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                   >
-                    <Save size={18} />
-                    {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                    {loading ? (
+                      <LoadingIndicator text="Menyimpan..." size="small" inline className="text-white" />
+                    ) : (
+                      <>
+                        <Save size={18} />
+                        Simpan Perubahan
+                      </>
+                    )}
                   </button>
                 </div>
               )}
@@ -430,7 +434,11 @@ export default function ProfilPage() {
                   disabled={loading}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                 >
-                  {loading ? 'Menyimpan...' : 'Ubah Password'}
+                  {loading ? (
+                    <LoadingIndicator text="Menyimpan..." size="small" inline className="text-white" />
+                  ) : (
+                    'Ubah Password'
+                  )}
                 </button>
               </div>
             </form>

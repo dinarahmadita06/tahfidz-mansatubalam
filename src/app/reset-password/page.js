@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { BookOpen, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -189,10 +190,7 @@ function ResetPasswordForm() {
                   className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-sm"
                 >
                   {loading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Menyimpan...
-                    </div>
+                    <LoadingIndicator text="Menyimpan..." size="small" inline />
                   ) : (
                     'Simpan Password'
                   )}
@@ -217,10 +215,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat...</p>
-        </div>
+        <LoadingIndicator />
       </div>
     }>
       <ResetPasswordForm />

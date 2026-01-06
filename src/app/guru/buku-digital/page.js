@@ -14,12 +14,12 @@ import {
   BookOpen,
   AlertCircle,
   FileCheck,
-  Loader,
   Play,
   Video,
   Link,
   Music,
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { toast, Toaster } from 'react-hot-toast';
 
 const CATEGORIES = [
@@ -194,6 +194,23 @@ function MaterialCard({ materi, onOpen, onDownload, onDelete }) {
   );
 }
 
+// StatCard Component
+function StatCard({ label, value, icon, color }) {
+  return (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BukuDigitalPage() {
   const [materiList, setMateriList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -210,9 +227,8 @@ export default function BukuDigitalPage() {
     deskripsi: '',
     kategori: 'Tajwid',
     jenisMateri: 'PDF',
-    fileUrl: '',
-    youtubeUrl: '',
     file: null,
+    youtubeUrl: '',
     classId: '', // ✅ Required for class-based access control
   });
 
@@ -241,10 +257,10 @@ export default function BukuDigitalPage() {
   const fetchMateri = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/guru/materi-tahsin');
+      const response = await fetch('/api/guru/buku-digital');
       if (response.ok) {
         const data = await response.json();
-        setMateriList(data.materi || []);
+        setMateriList(data.data || []);
       } else {
         toast.error('Gagal memuat materi digital');
       }
@@ -331,10 +347,13 @@ export default function BukuDigitalPage() {
       formDataToSend.append('judul', formData.judul);
       formDataToSend.append('deskripsi', formData.deskripsi);
       formDataToSend.append('kategori', formData.kategori);
+      formDataToSend.append('jenisMateri', formData.jenisMateri);
       formDataToSend.append('classId', formData.classId); // ✅ Required for access control
       
       if (formData.jenisMateri === 'PDF' && formData.file) {
         formDataToSend.append('file', formData.file);
+      } else if (formData.jenisMateri === 'YOUTUBE') {
+        formDataToSend.append('youtubeUrl', formData.youtubeUrl);
       }
 
       const response = await fetch('/api/guru/buku-digital', {
@@ -353,9 +372,8 @@ export default function BukuDigitalPage() {
           deskripsi: '',
           kategori: 'Tajwid',
           jenisMateri: 'PDF',
-          fileUrl: '',
-          youtubeUrl: '',
           file: null,
+          youtubeUrl: '',
           classId: guruKelas.length > 0 ? guruKelas[0].id : '', // Reset to first class
         });
         toast.success('Materi digital berhasil ditambahkan!');
@@ -371,7 +389,7 @@ export default function BukuDigitalPage() {
   const handleDelete = async (materiId) => {
     if (confirm('Apakah Anda yakin ingin menghapus materi ini?')) {
       try {
-        const response = await fetch(`/api/guru/materi-tahsin/${materiId}`, {
+        const response = await fetch(`/api/guru/buku-digital/${materiId}`, {
           method: 'DELETE'
         });
 
@@ -446,31 +464,18 @@ export default function BukuDigitalPage() {
 
         {/* Statistics Cards - 2 Kolom (PDF & YouTube) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card 1: PDF */}
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-600 text-sm font-semibold mb-1">FILE PDF</p>
-                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalPDF}</h3>
-              </div>
-              <div className="bg-emerald-100 p-4 rounded-full">
-                <FileCheck size={32} className="text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: YouTube */}
-          <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border-2 border-pink-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-pink-600 text-sm font-semibold mb-1">YOUTUBE</p>
-                <h3 className="text-4xl font-bold text-pink-700">{loading ? '...' : totalYouTube}</h3>
-              </div>
-              <div className="bg-pink-100 p-4 rounded-full">
-                <Play size={32} className="text-pink-600" />
-              </div>
-            </div>
-          </div>
+          <StatCard
+            label="File PDF"
+            value={loading ? '...' : totalPDF}
+            icon={<FileCheck size={24} />}
+            color="bg-emerald-500"
+          />
+          <StatCard
+            label="YouTube"
+            value={loading ? '...' : totalYouTube}
+            icon={<Play size={24} />}
+            color="bg-pink-500"
+          />
         </div>
 
         {/* Filter Bar - Search + Kategori + Upload */}
@@ -520,12 +525,7 @@ export default function BukuDigitalPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-              <p className="text-gray-600">Memuat materi digital...</p>
-            </div>
-          </div>
+          <LoadingIndicator text="Memuat materi digital..." />
         )}
         
         {/* Materi Grid / Empty State */}
@@ -681,15 +681,14 @@ export default function BukuDigitalPage() {
                         jenisMateri: newJenisMateri,
                         // Clear conflicting fields when switching types
                         youtubeUrl: newJenisMateri === 'YOUTUBE' ? formData.youtubeUrl : '',
-                        file: newJenisMateri !== 'YOUTUBE' ? formData.file : null,
-                        fileUrl: newJenisMateri !== 'YOUTUBE' ? formData.fileUrl : '',
+                        file: newJenisMateri === 'PDF' ? formData.file : null,
                       });
                     }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   >
                     <option value="PDF">PDF</option>
                     <option value="YOUTUBE">YouTube</option>
-                    </select>
+                  </select>
                 </div>
 
                 {/* Conditional rendering based on jenisMateri */}

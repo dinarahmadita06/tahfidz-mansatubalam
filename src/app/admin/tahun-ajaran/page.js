@@ -6,6 +6,7 @@ import {
   BookOpen, Users, GraduationCap, Clock, XCircle
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 
 // Color Palette
 const colors = {
@@ -314,9 +315,7 @@ export default function AdminTahunAjaranPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        </div>
+        <LoadingIndicator text="Memuat data tahun ajaran..." className="py-20" />
       </AdminLayout>
     );
   }

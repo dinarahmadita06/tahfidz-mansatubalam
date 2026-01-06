@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Clock, MapPin, User } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function JadwalPage() {
   const { data: session, status } = useSession();
@@ -74,10 +75,7 @@ export default function JadwalPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+        <LoadingIndicator />
       </div>
     );
   }

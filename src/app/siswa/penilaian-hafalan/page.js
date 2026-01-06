@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import MonthlyPeriodFilter from '@/components/penilaian/MonthlyPeriodFilter';
 import { calculateMonthRange, getCurrentMonthYear, formatMonthYear } from '@/lib/utils/dateRangeHelpers';
 import {
@@ -15,7 +16,6 @@ import {
   Calendar,
   BookOpen,
   Sparkles,
-  Loader2,
   AlertCircle,
   CheckCircle,
   Clock,
@@ -64,28 +64,30 @@ const AttendanceBadge = ({ status }) => {
 
 function StatsCard({ icon: Icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
   const colorConfig = {
-    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' },
-    sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700' },
-    purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700' },
-    amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
-    violet: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700' },
+    emerald: 'bg-emerald-500',
+    sky: 'bg-sky-500',
+    purple: 'bg-purple-500',
+    amber: 'bg-amber-500',
+    violet: 'bg-violet-500',
   };
-
-  const config = colorConfig[color];
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay }}
-      className={`${config.bg} rounded-2xl p-5 border ${config.border} shadow-sm hover:-translate-y-1 transition-all duration-300`}
+      className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group"
     >
-      <div className="flex items-center gap-2 mb-3">
-        <Icon size={20} className={config.text} />
-        <span className={`text-xs font-bold ${config.text} uppercase tracking-wider`}>{title}</span>
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${colorConfig[color] || 'bg-emerald-500'} rounded-xl flex items-center justify-center shadow-sm text-white flex-shrink-0`}>
+          <Icon size={24} />
+        </div>
       </div>
-      <p className={`text-3xl font-bold ${config.text}`}>{value}</p>
-      {subtitle && <p className="text-xs text-gray-500 mt-2 line-clamp-1">{subtitle}</p>}
+      {subtitle && <p className="text-[10px] text-gray-400 font-medium truncate">{subtitle}</p>}
     </motion.div>
   );
 }
@@ -207,7 +209,7 @@ export default function PenilaianHafalanPage() {
     return (
       <SiswaLayout>
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="animate-spin text-emerald-600" size={48} />
+          <LoadingIndicator text="Memuat data penilaian..." size="large" />
         </div>
       </SiswaLayout>
     );
@@ -331,7 +333,9 @@ export default function PenilaianHafalanPage() {
               <p className="text-red-700">Gagal memuat data</p>
             </div>
           ) : !data ? (
-            <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-emerald-600" size={32} /></div>
+            <div className="py-12">
+              <LoadingIndicator text="Memuat data..." />
+            </div>
           ) : penilaianData.length > 0 ? (
             <div className="space-y-4">
               {penilaianData.map((penilaian, index) => (

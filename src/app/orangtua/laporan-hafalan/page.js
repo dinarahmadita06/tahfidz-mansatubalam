@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout'
+import LoadingIndicator from '@/components/shared/LoadingIndicator'
 import {
   ChartBar,
   Filter,
@@ -23,7 +24,7 @@ import {
 // Dynamic import untuk Recharts - mencegah SSR issues
 const LineChart = dynamic(
   () => import('recharts').then(mod => mod.LineChart),
-  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
+  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center"><LoadingIndicator size="small" text="Memuat grafik..." /></div> }
 )
 const Line = dynamic(
   () => import('recharts').then(mod => mod.Line),
@@ -31,7 +32,7 @@ const Line = dynamic(
 )
 const BarChart = dynamic(
   () => import('recharts').then(mod => mod.BarChart),
-  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div> }
+  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center"><LoadingIndicator size="small" text="Memuat grafik..." /></div> }
 )
 const Bar = dynamic(
   () => import('recharts').then(mod => mod.Bar),
@@ -261,10 +262,7 @@ export default function LaporanHafalanPage() {
     return (
       <OrangtuaLayout>
         <div className="flex items-center justify-center py-10 lg:py-20">
-          <div className="text-center">
-            <RefreshCw className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Memuat data...</p>
-          </div>
+          <LoadingIndicator text="Memuat data laporan..." size="large" />
         </div>
       </OrangtuaLayout>
     )
@@ -376,10 +374,16 @@ export default function LaporanHafalanPage() {
               <button
                 onClick={handleTampilkanLaporan}
                 disabled={loading}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg px-4 py-2 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg px-4 py-2 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 min-w-[120px]"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                Tampilkan
+                {loading ? (
+                  <LoadingIndicator size="small" text="Memuat..." inline className="text-white" />
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Tampilkan
+                  </>
+                )}
               </button>
             </div>
           </div>

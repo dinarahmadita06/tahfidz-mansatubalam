@@ -22,6 +22,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { getStatusBadgeConfig } from '@/lib/helpers/statusHelpers';
 
 // ProfileHeader Component
@@ -53,7 +54,7 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
   const statusBadge = getStatusBadgeConfig(profileData?.statusSiswa || 'AKTIF');
 
   return (
-    <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       {/* Avatar & Info */}
       <div className="flex flex-col items-center text-center mb-6">
         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg mb-4">
@@ -109,7 +110,7 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
 // PersonalInfoCard Component (Read-only view only)
 function PersonalInfoCard({ profileData }) {
   return (
-    <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
         <div className="p-2 rounded-lg bg-emerald-50">
           <User size={20} className="text-emerald-600" />
@@ -529,7 +530,11 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
             disabled={saveLoading}
             className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
           >
-            {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+            {saveLoading ? (
+              <LoadingIndicator size="small" text="Menyimpan..." inline className="text-white" />
+            ) : (
+              'Simpan Perubahan'
+            )}
           </button>
         </div>
       </div>
@@ -733,7 +738,7 @@ export default function ProfileSiswaPage() {
     return (
       <SiswaLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <Loader className="animate-spin h-12 w-12 text-emerald-600" />
+          <LoadingIndicator text="Memuat profil..." />
         </div>
       </SiswaLayout>
     );
@@ -903,7 +908,11 @@ export default function ProfileSiswaPage() {
                 disabled={saveLoading}
                 className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
               >
-                {saveLoading ? 'Mengubah...' : 'Ubah Password'}
+                {saveLoading ? (
+                  <LoadingIndicator size="small" text="Mengubah..." inline className="text-white" />
+                ) : (
+                  'Ubah Password'
+                )}
               </button>
             </div>
           </div>

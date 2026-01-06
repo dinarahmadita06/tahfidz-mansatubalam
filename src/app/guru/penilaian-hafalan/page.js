@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import Link from 'next/link';
-import { BookOpen, Search, ChevronDown, ChevronUp, AlertCircle, Loader, Users } from 'lucide-react';
+import { BookOpen, Search, ChevronDown, ChevronUp, AlertCircle, Users } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // HeaderSection Component
 function HeaderSection() {
@@ -155,18 +156,6 @@ function EmptyState({ message }) {
   );
 }
 
-// LoadingState Component
-function LoadingState() {
-  return (
-    <div className="flex items-center justify-center py-20">
-      <div className="text-center">
-        <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-        <p className="text-slate-600">Memuat data kelas...</p>
-      </div>
-    </div>
-  );
-}
-
 // ConfirmationModal Component
 function ConfirmationModal({ isOpen, kelas, onClose, onConfirm }) {
   if (!isOpen || !kelas) return null;
@@ -278,7 +267,7 @@ export default function PenilaianHafalanIndexPage() {
         <HeaderSection />
 
         {loading ? (
-          <LoadingState />
+          <LoadingIndicator text="Memuat data kelas..." />
         ) : (
           <>
             {/* Section 1: Kelas Binaan */}

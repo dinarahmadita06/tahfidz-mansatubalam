@@ -20,6 +20,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // Single Source of Truth: Profile Fields Configuration
 // Layout order: Row 1 (Nama | Telepon), Row 2 (Email | Status), Row 3 (Alamat full-width)
@@ -443,10 +444,7 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
             className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {saveLoading ? (
-              <>
-                <Loader className="animate-spin" size={18} />
-                Menyimpan...
-              </>
+              <LoadingIndicator size="small" text="Menyimpan..." inline className="text-white" />
             ) : (
               'Simpan Perubahan'
             )}
@@ -662,10 +660,7 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
             className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saveLoading ? (
-              <>
-                <Loader className="animate-spin" size={18} />
-                Mengubah...
-              </>
+              <LoadingIndicator size="small" text="Mengubah..." inline className="text-white" />
             ) : (
               'Ubah Password'
             )}
@@ -810,7 +805,7 @@ export default function ProfilOrangtuaPage() {
     return (
       <OrangtuaLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <Loader className="animate-spin h-12 w-12 text-emerald-600" />
+          <LoadingIndicator text="Memuat profil..." />
         </div>
       </OrangtuaLayout>
     );

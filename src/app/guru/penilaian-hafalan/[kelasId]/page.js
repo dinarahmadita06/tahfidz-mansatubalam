@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { useParams, useRouter } from 'next/navigation';
 import { getSurahSetoranText, formatSurahSetoran } from '@/lib/helpers/formatSurahSetoran';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import {
   BookOpen,
   Calendar,
   Save,
   X,
   AlertCircle,
-  Loader,
   Bookmark,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
@@ -337,14 +337,7 @@ export default function PenilaianHafalanPage() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-amber-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mb-4">
-              <Loader className="w-8 h-8 text-white animate-spin" />
-            </div>
-            <p className="text-gray-600 font-medium">Memuat data siswa...</p>
-          </div>
-        </div>
+        <LoadingIndicator fullPage text="Memuat data siswa..." />
       </GuruLayout>
     );
   }

@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Upload, Download, Settings, X, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Upload, Download, Settings, X, CheckCircle, AlertCircle } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import * as XLSX from 'xlsx';
 
 // Islamic Modern Color Palette
@@ -598,15 +599,7 @@ export default function ImportExportToolbar({
                 gap: '12px',
                 marginBottom: '12px'
               }}>
-                <Loader size={20} color={colors.emerald[600]} className="animate-spin" />
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.emerald[700],
-                  margin: 0
-                }}>
-                  File sedang diunggah dan diproses...
-                </p>
+                <LoadingIndicator size="small" text="File sedang diunggah dan diproses..." inline className="text-emerald-600" />
               </div>
               <div style={{
                 width: '100%',
@@ -887,10 +880,7 @@ export default function ImportExportToolbar({
               }}
             >
               {importing ? (
-                <>
-                  <Loader size={18} className="animate-spin" />
-                  Mengimport Data...
-                </>
+                <LoadingIndicator size="small" text="Mengimport Data..." inline className="text-white" />
               ) : (
                 <>
                   <Upload size={18} />
@@ -922,15 +912,6 @@ export default function ImportExportToolbar({
           @keyframes progressMove {
             0% { background-position: 0% 0%; }
             100% { background-position: 200% 0%; }
-          }
-
-          .animate-spin {
-            animation: spin 1s linear infinite;
-          }
-
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
           }
         `}</style>
       </div>

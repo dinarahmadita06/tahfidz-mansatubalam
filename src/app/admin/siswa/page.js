@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserPlus, Upload, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen, CheckCircle, XCircle, ArrowUpRight, Award } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import AdminLayout from '@/components/layout/AdminLayout';
 import SmartImport from '@/components/SmartImport';
 import StudentCreateModal from '@/components/admin/StudentCreateModal';
@@ -391,9 +392,7 @@ export default function AdminSiswaPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        </div>
+        <LoadingIndicator text="Memuat data siswa..." />
       </AdminLayout>
     );
   }
@@ -522,7 +521,7 @@ export default function AdminSiswaPage() {
                     />
                     {searching && (
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                        <LoadingIndicator size="small" text="" inline />
                       </div>
                     )}
                   </div>
@@ -792,10 +791,11 @@ export default function AdminSiswaPage() {
                 disabled={isUpdatingStatus}
                 className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {isUpdatingStatus && (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {isUpdatingStatus ? (
+                  <LoadingIndicator size="small" text="Mengubah..." inline className="text-white" />
+                ) : (
+                  'Ya, Ubah Status'
                 )}
-                {isUpdatingStatus ? 'Mengubah...' : 'Ya, Ubah Status'}
               </button>
             </div>
           </div>
