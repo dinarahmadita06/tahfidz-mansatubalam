@@ -28,27 +28,29 @@ function GuruLayout({ children }) {
       <Sidebar userName={session?.user?.name} />
 
       {/* Main Content with margin for sidebar */}
-      <div className="lg:ml-64 transition-all duration-300">
+      <div className="lg:ml-[240px] xl:ml-[260px] transition-all duration-300">
         {/* Top Bar */}
         <header className="bg-white shadow-sm sticky top-0 z-20">
-          <div className="px-4 sm:px-6 lg:px-8 py-4">
+          <div className="px-4 sm:px-6 lg:px-8 py-2.5">
             <div className="flex justify-end">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                className="flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
               >
-                <LogOut size={20} />
-                <span className="hidden sm:inline">Logout</span>
+                <LogOut className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
+                <span className="hidden sm:inline text-sm lg:text-base">Logout</span>
               </button>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">
-          <PageTransition>
-            {children}
-          </PageTransition>
+        <main className="px-3 lg:px-4 xl:px-6 py-3 lg:py-4 xl:py-6">
+          <div className="max-w-[1200px] xl:max-w-[1400px] mx-auto w-full">
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </div>
         </main>
       </div>
     </div>

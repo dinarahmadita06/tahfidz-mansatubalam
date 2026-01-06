@@ -97,7 +97,7 @@ function ActivityItem({ activity }) {
   });
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 px-3 -mx-3 rounded-lg transition-colors">
+    <div className="flex items-start gap-3 py-2 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 px-3 -mx-3 rounded-lg transition-colors">
       <div className={`${colors.bg} ${colors.text} p-2 rounded-lg shrink-0`}>
         <Icon size={18} />
       </div>

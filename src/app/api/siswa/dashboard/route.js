@@ -91,7 +91,7 @@ export async function GET(req) {
 
     const stats = {
       hafalanSelesai: totalHafalan || 0,
-      totalHafalan: targetHafalan?.targetJuz || 0,
+      totalHafalan: tahunAjaranAktif?.targetHafalan || targetHafalan?.targetJuz || 0,
       rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
       kehadiran: kehadiranCount || 0,
       totalHari: totalHariCount || 0,
@@ -253,6 +253,7 @@ export async function GET(req) {
     // ===== RETURN RESPONSE =====
 
     return NextResponse.json({
+      siswaId,
       stats,
       recentActivities: sortedActivities,
       juzProgress: filteredJuzProgress

@@ -11,15 +11,15 @@ function TargetKelasChartCard({ data, loading }) {
   const hasData = chartData.length > 0;
 
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-emerald-100/60 shadow-sm">
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl p-3.5 lg:p-4 border border-emerald-100/60 shadow-sm">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="p-3 bg-emerald-500 rounded-xl text-white shadow-md ring-2 ring-emerald-200">
-          <TrendingUp size={24} />
+      <div className="flex items-center gap-3 lg:gap-4 mb-3 lg:mb-4">
+        <div className="p-2 lg:p-2.5 bg-emerald-500 rounded-xl text-white shadow-md ring-2 ring-emerald-200">
+          <TrendingUp size={18} />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Statistik Kelas Mencapai Target</h3>
-          <p className="text-xs text-gray-600 font-medium">Top 5 kelas dengan progres terbaik</p>
+          <h3 className="text-base lg:text-lg font-bold text-gray-800 leading-tight">Statistik Kelas Mencapai Target</h3>
+          <p className="text-[10px] lg:text-xs text-gray-600 font-medium opacity-80">Top 5 kelas dengan progres terbaik</p>
         </div>
       </div>
 
@@ -62,17 +62,17 @@ function TargetKelasChartCard({ data, loading }) {
                 </div>
                 
                 {/* Bar Chart */}
-                <div className="relative h-8 bg-emerald-100/60 rounded-full overflow-hidden shadow-inner">
+                <div className="relative h-6 lg:h-7 bg-emerald-100/60 rounded-full overflow-hidden shadow-inner">
                   <div
                     className={`absolute inset-y-0 left-0 bg-gradient-to-r ${
                       isHighest
                         ? 'from-emerald-600 to-emerald-500'
                         : 'from-emerald-500 to-teal-500'
-                    } rounded-full transition-all duration-500 ease-out flex items-center justify-end pr-3`}
+                    } rounded-full transition-all duration-500 ease-out flex items-center justify-end pr-2.5`}
                     style={{ width: `${kelas.persen}%` }}
                   >
                     {kelas.persen > 15 && (
-                      <span className="text-white text-xs font-bold">{kelas.mencapai}/{kelas.total}</span>
+                      <span className="text-white text-[10px] lg:text-xs font-bold">{kelas.mencapai}/{kelas.total}</span>
                     )}
                   </div>
                 </div>
@@ -83,8 +83,8 @@ function TargetKelasChartCard({ data, loading }) {
       )}
 
       {/* Info Box */}
-      <div className="mt-6 bg-emerald-50 border-l-4 border-emerald-500 rounded-xl p-4">
-        <p className="text-sm text-emerald-800 font-medium">
+      <div className="mt-4 lg:mt-5 bg-emerald-50 border-l-4 border-emerald-500 rounded-xl p-3 lg:p-4">
+        <p className="text-[11px] lg:text-sm text-emerald-800 font-medium leading-relaxed">
           <span className="font-bold">Target Kelas:</span> Kelas dianggap mencapai target jika ≥ 50% siswanya telah mencapai target hafalan (≥ 3 juz)
         </p>
       </div>
@@ -104,15 +104,15 @@ function TargetSiswaDonutCard({ data, loading }) {
   const belumAngle = total > 0 ? (belum / total) * 360 : 0;
 
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-blue-100/60 shadow-sm">
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl p-3.5 lg:p-4 border border-blue-100/60 shadow-sm">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="p-3 bg-blue-500 rounded-xl text-white shadow-md ring-2 ring-blue-200">
-          <Users size={24} />
+      <div className="flex items-center gap-3 lg:gap-4 mb-3 lg:mb-4">
+        <div className="p-2 lg:p-2.5 bg-blue-500 rounded-xl text-white shadow-md ring-2 ring-blue-200">
+          <Users size={18} />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Statistik Siswa Mencapai Target</h3>
-          <p className="text-xs text-gray-600 font-medium">Distribusi pencapaian siswa</p>
+          <h3 className="text-base lg:text-lg font-bold text-gray-800 leading-tight">Statistik Siswa Mencapai Target</h3>
+          <p className="text-[10px] lg:text-xs text-gray-600 font-medium opacity-80">Distribusi pencapaian siswa</p>
         </div>
       </div>
 
@@ -131,10 +131,10 @@ function TargetSiswaDonutCard({ data, loading }) {
           <p className="text-xs text-gray-500">Data akan muncul setelah siswa menyelesaikan hafalan</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           {/* SVG Donut Chart */}
           <div className="flex justify-center">
-            <svg className="w-40 h-40" viewBox="0 0 200 200">
+            <svg className="w-32 h-32 lg:w-36 lg:h-36" viewBox="0 0 200 200">
               {/* Mencapai Target - Green */}
               <circle
                 cx="100"
@@ -162,12 +162,12 @@ function TargetSiswaDonutCard({ data, loading }) {
               {/* Center Circle */}
               <circle cx="100" cy="100" r="45" fill="white" />
               {/* Percentage Text */}
-              <text
+                <text
                 x="100"
                 y="100"
                 textAnchor="middle"
                 dy="0.3em"
-                className="text-3xl font-bold fill-gray-900"
+                className="text-2xl lg:text-3xl font-bold fill-gray-900"
                 fontSize="32"
               >
                 {persen}%
@@ -176,8 +176,8 @@ function TargetSiswaDonutCard({ data, loading }) {
                 x="100"
                 y="125"
                 textAnchor="middle"
-                className="text-xs fill-gray-600"
-                fontSize="12"
+                className="text-[10px] lg:text-xs fill-gray-600"
+                fontSize="14"
               >
                 Mencapai
               </text>
@@ -185,29 +185,29 @@ function TargetSiswaDonutCard({ data, loading }) {
           </div>
 
           {/* Statistics */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 lg:gap-4">
             {/* Mencapai Target */}
-            <div className="bg-emerald-50/70 rounded-xl p-4 border border-emerald-100/60">
-              <p className="text-xs font-bold text-emerald-800 uppercase mb-1">Mencapai Target</p>
-              <p className="text-2xl font-bold text-gray-900">{mencapai}</p>
-              <p className="text-xs text-emerald-700 font-medium mt-1">Siswa</p>
+            <div className="bg-emerald-50/70 rounded-xl p-2.5 lg:p-3 border border-emerald-100/60">
+              <p className="text-[10px] lg:text-xs font-bold text-emerald-800 uppercase mb-0.5 lg:mb-1">Mencapai</p>
+              <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-900 leading-tight">{mencapai}</p>
+              <p className="text-[10px] text-emerald-700 font-medium mt-0.5 opacity-80">Siswa</p>
             </div>
 
             {/* Belum Mencapai */}
-            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-200/60">
-              <p className="text-xs font-bold text-gray-800 uppercase mb-1">Belum Mencapai</p>
-              <p className="text-2xl font-bold text-gray-900">{belum}</p>
-              <p className="text-xs text-gray-600 font-medium mt-1">Siswa</p>
+            <div className="bg-gray-50/70 rounded-xl p-2.5 lg:p-3 border border-gray-200/60">
+              <p className="text-[10px] lg:text-xs font-bold text-gray-800 uppercase mb-0.5 lg:mb-1">Belum</p>
+              <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-900 leading-tight">{belum}</p>
+              <p className="text-[10px] text-gray-600 font-medium mt-0.5 opacity-80">Siswa</p>
             </div>
           </div>
 
           {/* Total Info */}
-          <div className="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-4">
-            <p className="text-sm text-blue-800">
-              <span className="font-bold">Total Siswa:</span> {total} siswa
+          <div className="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-3 lg:p-4">
+            <p className="text-[11px] lg:text-sm text-blue-800 leading-relaxed">
+              <span className="font-bold">Total:</span> {total} siswa
             </p>
-            <p className="text-sm text-blue-800 mt-2">
-              <span className="font-bold">Target Siswa:</span> Siswa dianggap mencapai target jika hafalan ≥ 3 juz
+            <p className="text-[11px] lg:text-sm text-blue-800 mt-1 lg:mt-2 leading-relaxed">
+              <span className="font-bold">Target:</span> Hafalan ≥ 3 juz
             </p>
           </div>
         </div>

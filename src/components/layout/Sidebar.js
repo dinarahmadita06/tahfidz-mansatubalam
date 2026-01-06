@@ -120,22 +120,22 @@ function Sidebar({ userName = 'Guru' }) {
         className={`
           fixed top-0 left-0 h-full bg-white text-gray-900 shadow-lg z-40 transition-all duration-300
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}
-          w-64
+          ${isCollapsed ? 'lg:w-20' : 'lg:w-[240px] xl:w-[260px]'}
+          w-[240px]
         `}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}>
+          <div className="p-2.5 lg:p-3 border-b border-gray-200" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}>
             <div className="flex items-center justify-between">
               {!isCollapsed && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                    <LayoutDashboard size={24} className="text-white" />
+                <div className="flex items-center gap-2.5 lg:gap-3">
+                  <div className="w-9 h-9 lg:w-10 lg:h-10 bg-green-600 rounded-lg flex items-center justify-center shadow-sm">
+                    <LayoutDashboard className="text-white w-5 h-5 lg:w-6 lg:h-6" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-gray-900" style={{ color: '#111827' }}>SIMTAQ</h2>
-                    <p className="text-xs text-gray-600" style={{ color: '#4B5563' }}>{userName}</p>
+                    <h2 className="font-bold text-gray-900 text-base lg:text-lg" style={{ color: '#111827' }}>SIMTAQ</h2>
+                    <p className="text-[10px] lg:text-xs text-gray-600" style={{ color: '#4B5563' }}>{userName}</p>
                   </div>
                 </div>
               )}
@@ -154,8 +154,8 @@ function Sidebar({ userName = 'Guru' }) {
           </div>
 
           {/* Menu Items */}
-          <nav className="flex-1 overflow-y-auto p-4" style={{ backgroundColor: '#FFFFFF' }}>
-            <ul className="space-y-2">
+          <nav className="flex-1 overflow-y-auto p-2.5 lg:p-3" style={{ backgroundColor: '#FFFFFF' }}>
+            <ul className="space-y-1.5 lg:space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
@@ -167,7 +167,7 @@ function Sidebar({ userName = 'Guru' }) {
                       prefetch={false}
                       onClick={() => setIsOpen(false)}
                       className={`
-                        flex items-center gap-3 px-3 py-3 rounded-lg transition-all
+                        flex items-center gap-2.5 lg:gap-3 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-lg transition-all
                         ${isActive
                           ? 'bg-green-50 text-green-700 font-medium'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -180,11 +180,11 @@ function Sidebar({ userName = 'Guru' }) {
                       }}
                       title={isCollapsed ? item.title : ''}
                     >
-                      <Icon size={20} style={{ color: isActive ? '#16A34A' : '#4B5563' }} />
+                      <Icon style={{ color: isActive ? '#16A34A' : '#4B5563' }} className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
                       {!isCollapsed && (
                         <div className="flex-1">
-                          <p className="text-sm font-medium" style={{ color: isActive ? '#15803D' : '#1F2937' }}>{item.title}</p>
-                          <p className="text-xs" style={{ color: '#6B7280' }}>{item.description}</p>
+                          <p className="text-[13px] lg:text-sm font-medium leading-tight" style={{ color: isActive ? '#15803D' : '#1F2937' }}>{item.title}</p>
+                          <p className="text-[10px] lg:text-xs mt-0.5" style={{ color: '#6B7280' }}>{item.description}</p>
                         </div>
                       )}
                     </Link>
@@ -196,7 +196,7 @@ function Sidebar({ userName = 'Guru' }) {
 
           {/* Footer */}
           {!isCollapsed && (
-            <div className="p-4 border-t border-gray-200" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}>
+            <div className="p-3 border-t border-gray-200" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}>
               <div className="bg-green-50 rounded-lg p-3" style={{ backgroundColor: '#F0FDF4' }}>
                 <p className="text-xs font-medium text-green-900 mb-1" style={{ color: '#15803D' }}>💡 Tips</p>
                 <p className="text-xs" style={{ color: '#16A34A' }}>

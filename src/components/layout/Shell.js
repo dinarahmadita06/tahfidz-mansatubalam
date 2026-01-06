@@ -119,7 +119,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:border-gray-200 md:dark:border-neutral-800 bg-white/60 dark:bg-black/40 backdrop-blur">
+    <aside className="hidden md:flex md:w-[240px] xl:md:w-[260px] md:flex-col md:border-r md:border-gray-200 md:dark:border-neutral-800 bg-white/60 dark:bg-black/40 backdrop-blur">
       <div className="h-16 flex items-center px-4 text-lg font-semibold gap-2">
         <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-emerald-500 text-white"><Leaf size={18} /></span>
         Tahfidz
