@@ -25,7 +25,7 @@ import { motion } from 'framer-motion';
 
 // ===== CONSTANTS - SIMTAQ BASELINE =====
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
-const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
+const CONTAINER = 'w-full space-y-6';
 
 // ===== DATA FETCHER =====
 const fetcher = async (url) => {
@@ -63,31 +63,76 @@ const AttendanceBadge = ({ status }) => {
 };
 
 function StatsCard({ icon: Icon, title, value, subtitle, color = 'emerald', delay = 0 }) {
-  const colorConfig = {
-    emerald: 'bg-emerald-500',
-    sky: 'bg-sky-500',
-    purple: 'bg-purple-500',
-    amber: 'bg-amber-500',
-    violet: 'bg-violet-500',
+  const getCardVariant = (type) => {
+    const variants = {
+      emerald: {
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-200',
+        text: 'text-emerald-700',
+        label: 'text-emerald-600',
+        glow: 'shadow-emerald-500/20',
+        iconBg: 'bg-white',
+        iconText: 'text-emerald-600'
+      },
+      amber: {
+        bg: 'bg-amber-50',
+        border: 'border-amber-200',
+        text: 'text-amber-700',
+        label: 'text-amber-600',
+        glow: 'shadow-amber-500/20',
+        iconBg: 'bg-white',
+        iconText: 'text-amber-600'
+      },
+      blue: {
+        bg: 'bg-blue-50',
+        border: 'border-blue-200',
+        text: 'text-blue-700',
+        label: 'text-blue-600',
+        glow: 'shadow-blue-500/20',
+        iconBg: 'bg-white',
+        iconText: 'text-blue-600'
+      },
+      red: {
+        bg: 'bg-red-50',
+        border: 'border-red-200',
+        text: 'text-red-700',
+        label: 'text-red-600',
+        glow: 'shadow-red-500/20',
+        iconBg: 'bg-white',
+        iconText: 'text-red-600'
+      },
+      purple: {
+        bg: 'bg-purple-50',
+        border: 'border-purple-200',
+        text: 'text-purple-700',
+        label: 'text-purple-600',
+        glow: 'shadow-purple-500/20',
+        iconBg: 'bg-white',
+        iconText: 'text-purple-600'
+      }
+    };
+    return variants[type] || variants.emerald;
   };
+
+  const variant = getCardVariant(color);
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay }}
-      className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group"
+      className={`${variant.bg} ${variant.border} ${variant.glow} p-5 rounded-2xl border shadow-lg hover:shadow-xl transition-all group`}
     >
       <div className="flex items-center justify-between mb-2">
         <div>
-          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{value}</p>
+          <p className={`${variant.label} text-[10px] font-bold uppercase tracking-wider mb-1`}>{title}</p>
+          <p className={`text-2xl font-bold ${variant.text}`}>{value}</p>
         </div>
-        <div className={`w-12 h-12 ${colorConfig[color] || 'bg-emerald-500'} rounded-xl flex items-center justify-center shadow-sm text-white flex-shrink-0`}>
+        <div className={`w-12 h-12 ${variant.iconBg} ${variant.iconText} rounded-full flex items-center justify-center shadow-sm flex-shrink-0 border ${variant.border}`}>
           <Icon size={24} />
         </div>
       </div>
-      {subtitle && <p className="text-[10px] text-gray-400 font-medium truncate">{subtitle}</p>}
+      {subtitle && <p className={`${variant.label} text-[10px] font-medium truncate opacity-80`}>{subtitle}</p>}
     </motion.div>
   );
 }
@@ -269,7 +314,7 @@ export default function PenilaianHafalanPage() {
               title="Sakit" 
               value={statistics?.sakit || 0} 
               subtitle="Sakit bulan ini"
-              color="sky" 
+              color="blue" 
               delay={0.3} 
             />
             <StatsCard 
@@ -277,7 +322,7 @@ export default function PenilaianHafalanPage() {
               title="Alfa" 
               value={statistics?.alfa || 0} 
               subtitle="Alfa bulan ini"
-              color="violet" 
+              color="red" 
               delay={0.4} 
             />
             <StatsCard 

@@ -293,10 +293,7 @@ export default function LaporanHafalanPage() {
 
   return (
     <SiswaLayout>
-      {/* Background Gradient - SIMTAQ Style */}
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-        {/* Container - Full Width SIMTAQ Style */}
-        <div className="w-full max-w-none px-4 sm:px-6 lg:px-10 py-6 space-y-6">
+      <div className="w-full space-y-6">
 
           {/* Header - SIMTAQ Green Gradient */}
           <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
@@ -497,7 +494,6 @@ export default function LaporanHafalanPage() {
             </>
           )}
         </div>
-      </div>
     </SiswaLayout>
   );
 }
