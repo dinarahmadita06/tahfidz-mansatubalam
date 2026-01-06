@@ -112,7 +112,7 @@ export default function OrangtuaTasmiPage() {
     return (
       <OrangtuaLayout>
         <Toaster position="top-right" />
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
           <div className="bg-white rounded-xl shadow-sm p-8 text-center">
             <AlertCircle size={48} className="text-gray-300 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-gray-900 mb-2">Data Anak Tidak Ditemukan</h2>
@@ -127,7 +127,7 @@ export default function OrangtuaTasmiPage() {
     <OrangtuaLayout>
       <Toaster position="top-right" />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {/* Header */}
         <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-lg p-8 mb-6 text-white">
           <div className="flex items-center justify-between">
