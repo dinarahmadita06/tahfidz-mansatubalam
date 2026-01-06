@@ -53,7 +53,7 @@ function TahsinClassCard({ kelas }) {
   return (
     <Link
       href={`/guru/tahsin/${kelas.id}`}
-      className="block bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-300 transition-all duration-200 p-6 cursor-pointer group"
+      className="block bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200/70 shadow-sm hover:shadow-lg hover:-translate-y-[2px] transition-all duration-200 p-6 cursor-pointer group"
     >
       {/* Icon Tahsin */}
       <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-700 transition-colors">
@@ -117,7 +117,7 @@ export default function TahsinIndexPage() {
 
   return (
     <GuruLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-3 sm:px-4 lg:px-5 py-6 space-y-6 w-full">
         {/* Header */}
         <TahsinHeader />
 

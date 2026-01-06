@@ -353,7 +353,7 @@ export default function PenilaianHafalanPage() {
     <GuruLayout>
       <Toaster position="top-right" />
 
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-3 sm:px-4 lg:px-5 py-6 w-full">
         {/* Header Card with Gradient - Full Width */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8 mb-6">
           <div className="flex items-center gap-3 sm:gap-4">
