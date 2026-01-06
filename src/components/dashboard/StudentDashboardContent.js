@@ -150,6 +150,9 @@ export default function StudentDashboardContent({
   const [pengumuman, setPengumuman] = useState([]);
   const [pengumumanLoading, setPengumumanLoading] = useState(true);
   const [juzProgress, setJuzProgress] = useState([]);
+  const [targetJuzSekolah, setTargetJuzSekolah] = useState(null);
+  const [totalJuzSelesai, setTotalJuzSelesai] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(null);
   const [quote, setQuote] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -195,6 +198,9 @@ export default function StudentDashboardContent({
         });
 
         setJuzProgress(data.juzProgress || []);
+        setTargetJuzSekolah(data.targetJuzSekolah);
+        setTotalJuzSelesai(data.totalJuzSelesai || 0);
+        setProgressPercent(data.progressPercent);
         setQuote(data.quote || "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.");
 
       } catch (error) {
@@ -285,6 +291,40 @@ export default function StudentDashboardContent({
           subtitle="Pantau perkembangan hafalan"
           iconColor="emerald"
         />
+
+        {/* Highlight Target & Progress Sekolah */}
+        {!loading && (
+          <div className="mb-6 bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl px-5 py-4 border border-amber-200/60 shadow-sm shadow-amber-100/50 space-y-3 relative overflow-hidden">
+            {/* Subtle decorative background pattern */}
+            <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="flex justify-between items-center text-sm relative z-10">
+              <span className="text-slate-700 font-bold flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Target Hafalan Sekolah Tahun Ini
+              </span>
+              <span className="font-extrabold text-slate-900 bg-white/60 px-2.5 py-0.5 rounded-lg border border-amber-100">
+                {targetJuzSekolah ? `${targetJuzSekolah} Juz` : 'Belum ditentukan'}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center text-sm relative z-10">
+              <span className="text-slate-700 font-bold flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+                Progress Capaian
+              </span>
+              <span className="font-extrabold text-amber-700 text-right bg-amber-100/50 px-3 py-1 rounded-full border border-amber-200/50">
+                {totalJuzSelesai === 0 ? (
+                  'Belum mulai setoran'
+                ) : targetJuzSekolah ? (
+                  `${totalJuzSelesai} / ${targetJuzSekolah} Juz (${progressPercent}%)`
+                ) : (
+                  `${totalJuzSelesai} Juz selesai`
+                )}
+              </span>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-4">

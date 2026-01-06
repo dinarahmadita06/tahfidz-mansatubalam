@@ -212,10 +212,10 @@ export default function OrangtuaDashboardPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'ORTU_GANTI_ANAK',
-          title: `Mengganti anak ke ${child.namaLengkap}`,
-          description: `Orang tua mengganti monitoring ke ${child.namaLengkap}`,
-          metadata: { childId: child.id, childName: child.namaLengkap }
+          action: 'ORANGTUA_PILIH_ANAK',
+          title: 'Mengganti Anak Aktif',
+          description: `Anda memilih anak: ${child.namaLengkap}`,
+          metadata: { siswaId: child.id, nama: child.namaLengkap }
         })
       });
     } catch (error) {

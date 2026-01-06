@@ -181,7 +181,51 @@ export async function GET(req, { params }) {
       .filter(juz => juz.progress > 0)
       .sort((a, b) => a.juz - b.juz);
 
-    // ===== 3. QUOTE =====
+    // ===== 3. TARGET SEKOLAH & PROGRESS =====
+    
+    // Get target from active TahunAjaran or fallback to Kelas target
+    let targetJuzSekolah = null;
+    
+    if (tahunAjaranAktif?.targetHafalan) {
+      targetJuzSekolah = tahunAjaranAktif.targetHafalan;
+    } else {
+      // Fallback to student's class target
+      const student = await prisma.siswa.findUnique({
+        where: { id: siswaId },
+        select: { 
+          kelas: { 
+            select: { targetJuz: true } 
+          } 
+        }
+      });
+      if (student?.kelas?.targetJuz) {
+        targetJuzSekolah = student.kelas.targetJuz;
+      }
+    }
+
+    // Get total juz selesai
+    // Use DISTINCT juz from Hafalan table where at least one penilaian is valid (>= 75)
+    const juzSelesaiRecords = await prisma.hafalan.findMany({
+      where: { 
+        siswaId,
+        penilaian: {
+          some: {
+            nilaiAkhir: { gte: 75 }
+          }
+        }
+      },
+      select: { juz: true },
+      distinct: ['juz']
+    });
+    
+    const totalJuzSelesai = juzSelesaiRecords.length;
+    
+    // Calculate progress percent
+    const progressPercent = targetJuzSekolah 
+      ? Math.min(100, Math.round((totalJuzSelesai / targetJuzSekolah) * 100))
+      : null;
+
+    // ===== 4. QUOTE =====
 
     const quote = "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.";
 
@@ -191,6 +235,9 @@ export async function GET(req, { params }) {
       {
         stats,
         juzProgress: filteredJuzProgress,
+        targetJuzSekolah,
+        totalJuzSelesai,
+        progressPercent,
         quote,
         lastUpdated: new Date().toISOString()
       },
