@@ -4,6 +4,7 @@
  */
 
 import { designSystem } from '@/styles/design-system';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export function Button({
   children,
@@ -123,10 +124,10 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <>
-          <LoadingSpinner size={size} />
+        <div className="flex items-center gap-2">
+          <LoadingIndicator size="small" inline text="" className="text-current" />
           <span>Loading...</span>
-        </>
+        </div>
       ) : (
         <>
           {icon && iconPosition === 'left' && <span className="btn-icon">{icon}</span>}
@@ -150,33 +151,7 @@ export function Button({
 }
 
 function LoadingSpinner({ size = 'md' }) {
-  const sizeMap = {
-    sm: '14px',
-    md: '16px',
-    lg: '20px',
-  };
-
-  return (
-    <div
-      className="spinner"
-      style={{
-        width: sizeMap[size],
-        height: sizeMap[size],
-        border: '2px solid currentColor',
-        borderTopColor: 'transparent',
-        borderRadius: '50%',
-        animation: 'spin 0.6s linear infinite',
-      }}
-    >
-      <style jsx>{`
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
-    </div>
-  );
+  return <LoadingIndicator size="small" inline text="" className="text-current" />;
 }
 
 // Button Group Component

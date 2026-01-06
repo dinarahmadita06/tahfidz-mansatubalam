@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import PageWrapper from '@/components/PageWrapper';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import {
   Home,
   ChevronRight,
@@ -440,9 +441,7 @@ export default function PengumumanPage() {
 
           {/* List Pengumuman */}
           {loading ? (
-            <div className="flex items-center justify-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
-              <Loader className="animate-spin text-emerald-600" size={48} />
-            </div>
+            <LoadingIndicator text="Memuat pengumuman..." className="py-20" />
           ) : pengumumanList.length === 0 ? (
             <AnnouncementEmptyState />
           ) : filteredPengumuman.length === 0 ? (
@@ -591,10 +590,7 @@ export default function PengumumanPage() {
                   }}
                 >
                   {submitting ? (
-                    <>
-                      <Loader className="animate-spin" size={18} />
-                      Menyimpan...
-                    </>
+                    <LoadingIndicator inline text="Menyimpan..." size="small" />
                   ) : (
                     editingId ? 'Perbarui' : 'Publikasikan'
                   )}

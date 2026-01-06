@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { Search, Filter, Play, Award, CheckCircle2, Clock, Volume2, RefreshCw } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // Islamic Modern Color Palette - Warm & Soft (sama dengan dashboard guru)
 const colors = {
@@ -424,8 +425,14 @@ export default function VerifikasiHafalanPage() {
                 boxShadow: '0 2px 8px rgba(247, 200, 115, 0.3)',
               }}
             >
-              <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-              {refreshing ? 'Memuat...' : 'Refresh Data'}
+              {refreshing ? (
+                <LoadingIndicator size="small" text="Memuat..." inline className="text-white" />
+              ) : (
+                <>
+                  <RefreshCw size={16} />
+                  <span>Refresh Data</span>
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { Play, Pause, SkipBack, SkipForward, Volume2, BookOpen, RefreshCw, Clock, Award, Target } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // Islamic Modern Color Palette - Teal & Gold
 const colors = {
@@ -626,8 +627,14 @@ export default function LatihanTahfidzPage() {
                 boxShadow: '0 2px 8px rgba(234, 179, 8, 0.3)',
               }}
             >
-              <RefreshCw size={16} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-              {refreshing ? 'Memuat...' : 'Refresh'}
+              {refreshing ? (
+                <LoadingIndicator size="small" text="Memuat..." inline className="text-white" />
+              ) : (
+                <>
+                  <RefreshCw size={16} />
+                  <span>Refresh</span>
+                </>
+              )}
             </button>
           </div>
         </div>

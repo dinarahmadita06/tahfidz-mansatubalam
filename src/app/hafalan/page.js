@@ -4,12 +4,13 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Filter, Search, Eye, X, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import dynamic from 'next/dynamic';
 
 // Dynamically import layout to reduce initial bundle size
 const SiswaLayout = dynamic(() => import('@/components/layout/SiswaLayout'), {
   ssr: false,
-  loading: () => <div className="min-h-screen flex items-center justify-center"><div className="text-gray-500">Loading layout...</div></div>
+  loading: () => <LoadingIndicator fullPage text="Memuat layout..." />
 });
 
 export default function HafalanPage() {
@@ -83,21 +84,9 @@ export default function HafalanPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </div>
-      }>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </div>
-      </Suspense>
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingIndicator text="Memuat data hafalan..." size="large" />
+      </div>
     );
   }
 

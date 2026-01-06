@@ -8,12 +8,35 @@ import {
   Target,
   Award,
   Flame,
-  Loader,
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // ============================================================
 // CHART COMPONENTS
 // ============================================================
+
+// ============================================================
+// SUB-COMPONENTS
+// ============================================================
+
+function StatCard({ label, value, icon, color, subtitle }) {
+  return (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-2xl font-bold text-gray-900">{value}</p>
+            {subtitle && <span className="text-[10px] text-gray-400 font-medium">{subtitle}</span>}
+          </div>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white flex-shrink-0`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Donut Chart Component
 function DonutChart({ data, size = 200 }) {
@@ -375,71 +398,39 @@ export default function LaporanHafalanPage() {
 
           {/* Loading State */}
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Loader size={48} className="text-emerald-500 animate-spin mx-auto mb-4" />
-                <p className="text-gray-600 font-medium">Memuat laporan hafalan...</p>
-              </div>
-            </div>
+            <LoadingIndicator text="Memuat laporan hafalan..." />
           ) : (
             <>
               {/* Stats Cards - Period Data */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Total Setoran */}
-                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <BookOpen size={24} className="text-emerald-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-emerald-700 font-medium">Total Setoran</p>
-                      <p className="text-2xl font-bold text-emerald-900">{currentStats.totalSetoran || 0}</p>
-                      <p className="text-xs text-emerald-600 mt-0.5">setoran</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Rata-rata Nilai */}
-                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Award size={24} className="text-amber-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-amber-700 font-medium">Rata-rata Nilai</p>
-                      <p className="text-2xl font-bold text-amber-900">{currentStats.rataRataNilai || 0}</p>
-                      <p className="text-xs text-amber-600 mt-0.5">dari 100</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Target Tercapai */}
-                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Target size={24} className="text-purple-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-purple-700 font-medium">Target Tercapai</p>
-                      <p className="text-2xl font-bold text-purple-900">{currentStats.targetTercapai || 0}%</p>
-                      <p className="text-xs text-purple-600 mt-0.5">progress</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Konsistensi */}
-                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Flame size={24} className="text-sky-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-sky-700 font-medium">Konsistensi</p>
-                      <p className="text-2xl font-bold text-sky-900">{currentStats.konsistensi || 0}</p>
-                      <p className="text-xs text-sky-600 mt-0.5">hari</p>
-                    </div>
-                  </div>
-                </div>
+                <StatCard
+                  label="Total Setoran"
+                  value={currentStats.totalSetoran || 0}
+                  icon={<BookOpen size={24} />}
+                  color="bg-emerald-500"
+                  subtitle="setoran"
+                />
+                <StatCard
+                  label="Rata-rata Nilai"
+                  value={currentStats.rataRataNilai || 0}
+                  icon={<Award size={24} />}
+                  color="bg-amber-500"
+                  subtitle="dari 100"
+                />
+                <StatCard
+                  label="Target Tercapai"
+                  value={`${currentStats.targetTercapai || 0}%`}
+                  icon={<Target size={24} />}
+                  color="bg-purple-500"
+                  subtitle="progress"
+                />
+                <StatCard
+                  label="Konsistensi"
+                  value={currentStats.konsistensi || 0}
+                  icon={<Flame size={24} />}
+                  color="bg-sky-500"
+                  subtitle="hari"
+                />
               </div>
 
               {/* Charts Section - 2 Columns */}

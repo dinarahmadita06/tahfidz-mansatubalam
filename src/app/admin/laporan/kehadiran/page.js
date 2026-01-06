@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import { FileText, Download, Loader, AlertTriangle, BarChart3 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -551,10 +552,7 @@ export default function LaporanKehadiranPage() {
                 className="flex items-center justify-center gap-2 h-11 px-5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-xl font-semibold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <>
-                    <Loader className="animate-spin" size={18} />
-                    Memproses...
-                  </>
+                  <LoadingIndicator inline text="Memproses..." size="small" />
                 ) : (
                   <>
                     <FileText size={18} />
@@ -579,8 +577,7 @@ export default function LaporanKehadiranPage() {
         {/* Loading State */}
         {loading && (
           <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-12 text-center">
-            <Loader className="animate-spin mx-auto mb-4 text-emerald-600" size={48} />
-            <p className="font-medium text-emerald-900">Memproses data laporan...</p>
+            <LoadingIndicator text="Memproses data laporan..." />
           </div>
         )}
 

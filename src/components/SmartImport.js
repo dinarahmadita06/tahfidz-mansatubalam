@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, Download, CheckCircle, AlertCircle, Loader, Eye, ArrowRight, FileSpreadsheet, Users } from 'lucide-react';
+import { Upload, Download, CheckCircle, AlertCircle, Eye, ArrowRight, FileSpreadsheet, Users } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import * as XLSX from 'xlsx';
 
 // Islamic Modern Color Palette
@@ -678,18 +679,11 @@ export default function SmartImport({ onSuccess, onClose }) {
       {/* Step 3: Processing */}
       {step === 3 && (
         <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <Loader size={48} color={colors.emerald[500]} className="animate-spin" style={{ marginBottom: '24px' }} />
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: 600,
-            color: colors.gray[600],
-            marginBottom: '12px'
-          }}>
-            Sedang memproses data...
-          </h3>
+          <LoadingIndicator text="Sedang memproses data..." size="large" />
           <p style={{
             fontSize: '14px',
             color: colors.gray[400],
+            marginTop: '24px',
             marginBottom: '24px'
           }}>
             Mohon tunggu, jangan tutup halaman ini

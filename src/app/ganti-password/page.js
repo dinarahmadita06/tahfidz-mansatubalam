@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { BookOpen, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function GantiPasswordPage() {
   const router = useRouter();
@@ -208,10 +209,7 @@ export default function GantiPasswordPage() {
               className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-sm"
             >
               {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Menyimpan...
-                </div>
+                <LoadingIndicator text="Menyimpan..." size="small" inline />
               ) : (
                 'Simpan'
               )}

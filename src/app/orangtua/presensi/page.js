@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
+
 export default function PresensiRedirect() {
   const router = useRouter();
 
@@ -13,10 +15,7 @@ export default function PresensiRedirect() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Mengalihkan ke Perkembangan Anak...</p>
-      </div>
+      <LoadingIndicator text="Mengalihkan..." />
     </div>
   );
 }

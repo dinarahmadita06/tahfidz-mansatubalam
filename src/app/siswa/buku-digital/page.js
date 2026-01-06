@@ -9,10 +9,10 @@ import {
   Search,
   Download,
   Eye,
-  Loader,
   Play,
   FileText,
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import toast, { Toaster } from 'react-hot-toast';
 
 const CATEGORIES = [
@@ -25,6 +25,26 @@ const CATEGORIES = [
   'Tahsin',
   'Umum',
 ];
+
+// ============================================================
+// SUB-COMPONENTS
+// ============================================================
+
+function StatCard({ label, value, icon, color }) {
+  return (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white flex-shrink-0`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Extract YouTube video ID from URL
 function extractYouTubeId(url) {
@@ -287,31 +307,18 @@ export default function SiswaBukuDigitalPage() {
 
         {/* Statistics Cards - PDF & YouTube */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card 1: PDF */}
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-600 text-sm font-semibold mb-1">FILE PDF</p>
-                <h3 className="text-4xl font-bold text-emerald-700">{loading ? '...' : totalPDF}</h3>
-              </div>
-              <div className="bg-emerald-100 p-4 rounded-full">
-                <FileText size={32} className="text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: YouTube */}
-          <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border-2 border-pink-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-pink-600 text-sm font-semibold mb-1">YOUTUBE</p>
-                <h3 className="text-4xl font-bold text-pink-700">{loading ? '...' : totalYouTube}</h3>
-              </div>
-              <div className="bg-pink-100 p-4 rounded-full">
-                <Play size={32} className="text-pink-600" />
-              </div>
-            </div>
-          </div>
+          <StatCard
+            label="FILE PDF"
+            value={loading ? '...' : totalPDF}
+            icon={<FileText size={24} />}
+            color="bg-emerald-500"
+          />
+          <StatCard
+            label="YOUTUBE"
+            value={loading ? '...' : totalYouTube}
+            icon={<Play size={24} />}
+            color="bg-pink-500"
+          />
         </div>
 
         {/* Filter Bar - Search + Kategori */}
@@ -346,12 +353,7 @@ export default function SiswaBukuDigitalPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-              <p className="text-gray-600">Memuat materi digital...</p>
-            </div>
-          </div>
+          <LoadingIndicator text="Memuat materi digital..." />
         )}
         
         {/* Materi Grid / Empty State */}

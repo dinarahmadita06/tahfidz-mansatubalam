@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, UserPlus, Key, Users, BookOpen, User } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import PasswordField from './PasswordField';
 import ParentLinkSection from './ParentLinkSection';
 import AccountSuccessModal from './AccountSuccessModal';
@@ -867,19 +868,11 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
                 }}
                 className="submit-btn"
               >
-                {loading && (
-                  <div
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid transparent',
-                      borderTopColor: colors.white,
-                      borderRadius: '50%',
-                      animation: 'spin 0.6s linear infinite',
-                    }}
-                  />
+                {loading ? (
+                  <LoadingIndicator size="small" inline text="Menyimpan..." className="text-white" />
+                ) : (
+                  'Simpan Siswa'
                 )}
-                {loading ? 'Menyimpan...' : 'Simpan Siswa'}
               </button>
             </div>
           </form>

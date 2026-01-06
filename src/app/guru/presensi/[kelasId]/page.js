@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import {
   ClipboardCheck,
   Users,
@@ -13,7 +14,6 @@ import {
   XCircle,
   ArrowLeft,
   Save,
-  Loader2,
   RefreshCw,
   CheckCircle2,
 } from 'lucide-react';
@@ -294,10 +294,7 @@ export default function PresensiDetailPage() {
                 }`}
               >
                 {saving ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span className="hidden md:inline">Menyimpan...</span>
-                  </>
+                  <LoadingIndicator size="small" text="Menyimpan..." inline className="text-white" />
                 ) : (
                   <>
                     <Save size={16} />
@@ -336,10 +333,7 @@ export default function PresensiDetailPage() {
             }`}
           >
             {saving ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Menyimpan...
-              </>
+              <LoadingIndicator size="small" text="Menyimpan..." inline className="text-white" />
             ) : (
               <>
                 <Save size={18} />
@@ -352,19 +346,18 @@ export default function PresensiDetailPage() {
         {/* Statistics Cards */}
         {!loading && presensiData.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <StatCard label="Total" value={stats.total} icon={Users} color="emerald" />
-            <StatCard label="Hadir" value={stats.hadir} icon={UserCheck} color="green" />
-            <StatCard label="Izin" value={stats.izin} icon={Clock} color="amber" />
-            <StatCard label="Sakit" value={stats.sakit} icon={AlertCircle} color="blue" />
-            <StatCard label="Alfa" value={stats.alfa} icon={XCircle} color="red" />
+            <StatCard label="Total" value={stats.total} icon={<Users size={24} />} color="bg-emerald-500" />
+            <StatCard label="Hadir" value={stats.hadir} icon={<UserCheck size={24} />} color="bg-green-500" />
+            <StatCard label="Izin" value={stats.izin} icon={<Clock size={24} />} color="bg-amber-500" />
+            <StatCard label="Sakit" value={stats.sakit} icon={<AlertCircle size={24} />} color="bg-blue-500" />
+            <StatCard label="Alfa" value={stats.alfa} icon={<XCircle size={24} />} color="bg-red-500" />
           </div>
         )}
 
         {/* Table Presensi */}
         {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-16 text-center">
-            <Loader2 size={48} className="animate-spin text-emerald-600 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Memuat data siswa...</p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-16">
+            <LoadingIndicator text="Memuat data siswa..." />
           </div>
         ) : presensiData.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
@@ -432,23 +425,17 @@ export default function PresensiDetailPage() {
   );
 }
 
-function StatCard({ label, value, icon: Icon, color }) {
-  const colors = {
-    emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    green: 'bg-green-100 text-green-700 border-green-200',
-    amber: 'bg-amber-100 text-amber-700 border-amber-200',
-    blue: 'bg-blue-100 text-blue-700 border-blue-200',
-    red: 'bg-red-100 text-red-700 border-red-200',
-  };
-
+function StatCard({ label, value, icon, color }) {
   return (
-    <div className={`${colors[color]} rounded-xl border-2 p-4`}>
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold mb-1 opacity-75">{label}</p>
-          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
-        <Icon size={24} className="opacity-50" />
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
+        </div>
       </div>
     </div>
   );

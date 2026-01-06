@@ -3,6 +3,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition, RadioGroup } from '@headlessui/react';
 import { X, BookOpen, Star, MessageSquare, Save } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // Status hafalan options
 const STATUS_HAFALAN_OPTIONS = [
@@ -434,8 +435,7 @@ export default function FormPenilaianModal({
                     >
                       {isLoading ? (
                         <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Menyimpan...
+                          <LoadingIndicator size="small" text="Menyimpan..." inline className="text-white" />
                         </>
                       ) : (
                         <>

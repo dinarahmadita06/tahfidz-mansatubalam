@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Eye, CheckCircle, XCircle, Users, Clock, UserCheck, Search, Filter, Plus } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Toast from '@/components/ui/Toast';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 
 function formatTanggal(dateValue) {
   if (!dateValue) return '-';
@@ -239,7 +240,7 @@ function ApproveModal({ siswa, onConfirm, onCancel, isLoading }) {
             disabled={isLoading}
             className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
           >
-            {isLoading ? 'Memproses...' : 'Ya, Validasi'}
+            {isLoading ? <LoadingIndicator inline text="Memproses..." size="small" /> : 'Ya, Validasi'}
           </button>
         </div>
       </div>
@@ -292,7 +293,7 @@ function RejectModal({ siswa, onConfirm, onCancel, reason, setReason, isLoading 
             disabled={isLoading || !reason.trim()}
             className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
           >
-            {isLoading ? 'Memproses...' : 'Ya, Tolak'}
+            {isLoading ? <LoadingIndicator inline text="Memproses..." size="small" /> : 'Ya, Tolak'}
           </button>
         </div>
       </div>
@@ -425,9 +426,7 @@ export default function ValidasiSiswaPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        </div>
+        <LoadingIndicator text="Memuat data validasi..." className="py-20" />
       </AdminLayout>
     );
   }

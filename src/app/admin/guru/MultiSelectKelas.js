@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, ChevronDown } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export function MultiSelectKelas({ 
   kelas = [], 
@@ -68,8 +69,7 @@ export function MultiSelectKelas({
   if (loading) {
     return (
       <div className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-slate-50 text-slate-500 text-sm flex items-center">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500 mr-2"></div>
-        Memuat kelas...
+        <LoadingIndicator size="small" text="Memuat kelas..." inline />
       </div>
     );
   }

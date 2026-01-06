@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import GuruLayout from "@/components/layout/GuruLayout";
-import { BookOpen, User, Calendar, Clock, Star, CheckCircle, XCircle, Edit, Save, Play, Pause, RotateCcw, Volume2, Users, Target, Award, TrendingUp, AlertCircle, FileText, Download, Filter, Plus, X, Loader } from "lucide-react";
+import { BookOpen, User, Calendar, Clock, Star, CheckCircle, XCircle, Edit, Save, Play, Pause, RotateCcw, Volume2, Users, Target, Award, TrendingUp, AlertCircle, FileText, Download, Filter, Plus, X } from "lucide-react";
 
 // Mock data evaluasi
 const mockEvaluations = [

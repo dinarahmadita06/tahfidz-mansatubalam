@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import {
   Megaphone,
   Search,
@@ -164,10 +165,7 @@ export default function SiswaPengumumanPage() {
     return (
       <SiswaLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-            <p className="text-gray-600">Memuat pengumuman...</p>
-          </div>
+          <LoadingIndicator text="Memuat pengumuman..." />
         </div>
       </SiswaLayout>
     );

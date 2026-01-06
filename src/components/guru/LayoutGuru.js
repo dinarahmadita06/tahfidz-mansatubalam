@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import { 
   LayoutDashboard,
   ClipboardCheck,
@@ -117,7 +118,7 @@ export default function LayoutGuru({ children }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <LoadingIndicator text="Memuat sistem..." />
       </div>
     );
   }

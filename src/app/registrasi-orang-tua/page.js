@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { BookOpen, User, Phone, Lock, Eye, EyeOff, Calendar, CreditCard, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function RegistrasiOrangTuaPage() {
   const router = useRouter();
@@ -204,10 +205,7 @@ export default function RegistrasiOrangTuaPage() {
                   className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-sm"
                 >
                   {loading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Memverifikasi...
-                    </div>
+                    <LoadingIndicator text="Memverifikasi..." size="small" inline />
                   ) : (
                     'Lanjutkan'
                   )}
@@ -331,10 +329,7 @@ export default function RegistrasiOrangTuaPage() {
                   className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-sm"
                 >
                   {loading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Mendaftar...
-                    </div>
+                    <LoadingIndicator text="Mendaftar..." size="small" inline />
                   ) : (
                     'Daftar'
                   )}

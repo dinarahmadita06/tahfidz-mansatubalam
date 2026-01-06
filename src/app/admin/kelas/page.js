@@ -7,6 +7,7 @@ import {
   ArrowRight, Search, Download, BookOpen, GraduationCap,
   UserCheck, Clock, MoreVertical, X
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter } from 'next/navigation';
 
@@ -647,9 +648,7 @@ export default function AdminKelasPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        </div>
+        <LoadingIndicator text="Memuat data kelas..." />
       </AdminLayout>
     );
   }

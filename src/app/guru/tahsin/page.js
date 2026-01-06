@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import Link from 'next/link';
-import { Volume2, Search, Users, BookOpen, Loader, Calendar } from 'lucide-react';
+import { Volume2, Search, Users, BookOpen, Calendar } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // TahsinHeader Component
 function TahsinHeader() {
@@ -33,7 +34,7 @@ function TahsinHeader() {
 // TahsinFilterBar Component
 function TahsinFilterBar({ searchQuery, onSearchChange }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 flex flex-col md:flex-row gap-4 items-center">
       <div className="relative w-full max-w-xl">
         <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         <input
@@ -136,12 +137,7 @@ export default function TahsinIndexPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-              <p className="text-gray-600">Memuat data kelas...</p>
-            </div>
-          </div>
+          <LoadingIndicator text="Memuat data kelas..." />
         )}
 
         {/* Grid Card Kelas */}
@@ -150,8 +146,8 @@ export default function TahsinIndexPage() {
             {filteredKelas.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
                 <div className="flex justify-center mb-4">
-                  <div className="p-4 bg-gray-50 rounded-full">
-                    <BookOpen size={48} className="text-gray-400" />
+                  <div className="p-4 bg-emerald-50 rounded-full">
+                    <BookOpen size={48} className="text-emerald-600" />
                   </div>
                 </div>
                 <h3 className="text-xl font-bold text-gray-700 mb-2">

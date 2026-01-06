@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function HafalanPage() {
   const [user, setUser] = useState(null);
@@ -28,10 +29,7 @@ export default function HafalanPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#F1F1F1] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FFB030] mx-auto"></div>
-          <p className="mt-4 text-[#1F1F1F]">Loading...</p>
-        </div>
+        <LoadingIndicator text="Loading..." />
       </div>
     );
   }

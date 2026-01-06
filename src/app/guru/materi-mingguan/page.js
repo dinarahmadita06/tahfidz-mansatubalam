@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
   BookOpen,
@@ -456,25 +457,7 @@ export default function MateriMingguan() {
           minHeight: '100vh',
           background: `linear-gradient(135deg, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
         }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              border: `4px solid ${colors.emerald[200]}`,
-              borderTopColor: colors.emerald[500],
-              borderRadius: '50%',
-              margin: '0 auto 16px',
-              animation: 'spin 1s linear infinite',
-            }} />
-            <p style={{
-              fontSize: '16px',
-              fontWeight: 500,
-              color: colors.text.secondary,
-              fontFamily: 'Poppins, system-ui, sans-serif',
-            }}>
-              Memuat data...
-            </p>
-          </div>
+          <LoadingIndicator text="Memuat data..." />
         </div>
       </GuruLayout>
     );

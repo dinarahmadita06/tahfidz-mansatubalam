@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Download, Loader, AlertTriangle, Users, BookOpen, TrendingUp, CheckCircle } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -546,10 +547,7 @@ export default function LaporanHafalanPage() {
                 className="btn-primary flex items-center gap-2"
               >
                 {loading ? (
-                  <>
-                    <Loader className="animate-spin" size={20} />
-                    Memproses...
-                  </>
+                  <LoadingIndicator inline text="Memproses..." size="small" />
                 ) : (
                   <>
                     <FileText size={20} />
@@ -563,8 +561,7 @@ export default function LaporanHafalanPage() {
         {/* Loading State */}
         {loading && (
           <div className="filter-card p-12 text-center">
-            <Loader className="animate-spin mx-auto mb-4" size={48} style={{ color: '#00C98D' }} />
-            <p className="font-medium" style={{ color: '#2F3E3A' }}>Memproses data laporan...</p>
+            <LoadingIndicator text="Memproses data laporan..." />
           </div>
         )}
 

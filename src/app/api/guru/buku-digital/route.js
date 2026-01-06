@@ -57,9 +57,19 @@ export async function GET(request) {
       orderBy: { createdAt: 'desc' }
     });
 
+    // ✅ Map to include jenisMateri for frontend compatibility
+    const formattedBooks = books.map(book => {
+      const isYouTube = book.fileUrl?.includes('youtube.com') || book.fileUrl?.includes('youtu.be');
+      return {
+        ...book,
+        jenisMateri: isYouTube ? 'YOUTUBE' : 'PDF',
+        youtubeUrl: isYouTube ? book.fileUrl : null,
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      data: books
+      data: formattedBooks
     });
   } catch (error) {
     console.error('Error fetching buku digital:', error);
@@ -95,6 +105,8 @@ export async function POST(request) {
 
     const formData = await request.formData();
     const file = formData.get('file');
+    const youtubeUrl = formData.get('youtubeUrl');
+    const jenisMateri = formData.get('jenisMateri') || 'PDF';
     const judul = formData.get('judul');
     const deskripsi = formData.get('deskripsi');
     const classId = formData.get('classId');
@@ -113,26 +125,44 @@ export async function POST(request) {
     }
 
     // Validate required fields
-    if (!file || !judul || !classId) {
+    if (!judul || !classId) {
       return NextResponse.json(
-        { error: 'File, judul, dan kelas harus diisi' },
+        { error: 'Judul dan kelas harus diisi' },
         { status: 400 }
       );
     }
 
-    // Validate file type (PDF only)
-    if (file.type !== 'application/pdf') {
+    // Validate based on jenisMateri
+    if (jenisMateri === 'PDF') {
+      if (!file) {
+        return NextResponse.json(
+          { error: 'File PDF harus diupload' },
+          { status: 400 }
+        );
+      }
+      if (file.type !== 'application/pdf') {
+        return NextResponse.json(
+          { error: 'Hanya file PDF yang diterima' },
+          { status: 400 }
+        );
+      }
+      const maxSize = 50 * 1024 * 1024;
+      if (file.size > maxSize) {
+        return NextResponse.json(
+          { error: 'Ukuran file terlalu besar. Maksimal 50MB' },
+          { status: 400 }
+        );
+      }
+    } else if (jenisMateri === 'YOUTUBE') {
+      if (!youtubeUrl) {
+        return NextResponse.json(
+          { error: 'URL YouTube harus diisi' },
+          { status: 400 }
+        );
+      }
+    } else {
       return NextResponse.json(
-        { error: 'Hanya file PDF yang diterima' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file size (max 50MB)
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: 'Ukuran file terlalu besar. Maksimal 50MB' },
+        { error: 'Jenis materi harus PDF atau YOUTUBE' },
         { status: 400 }
       );
     }
@@ -154,12 +184,27 @@ export async function POST(request) {
       );
     }
 
-    // Upload file to Vercel Blob
-    const fileName = `buku-digital-${guru.id}-${Date.now()}.pdf`;
-    const blob = await put(fileName, file, {
-      access: 'public',
-      contentType: 'application/pdf'
-    });
+    // Save to database based on jenisMateri
+    let fileUrl = null;
+    let fileName = null;
+    let fileSize = null;
+
+    if (jenisMateri === 'PDF') {
+      // Upload file to Vercel Blob
+      const pdfFileName = `buku-digital-${guru.id}-${Date.now()}.pdf`;
+      const blob = await put(pdfFileName, file, {
+        access: 'public',
+        contentType: 'application/pdf'
+      });
+      fileUrl = blob.url;
+      fileName = file.name;
+      fileSize = file.size;
+    } else if (jenisMateri === 'YOUTUBE') {
+      // Store YouTube URL directly
+      fileUrl = youtubeUrl;
+      fileName = 'YouTube Video';
+      fileSize = 0;
+    }
 
     // Save to database with classId
     const bukuDigital = await prisma.bukuDigital.create({
@@ -169,9 +214,9 @@ export async function POST(request) {
         judul,
         deskripsi: deskripsi || null,
         kategori: kategori,  // Now uppercase and validated
-        fileUrl: blob.url,
-        fileName: file.name,
-        fileSize: file.size
+        fileUrl: fileUrl,
+        fileName: fileName,
+        fileSize: fileSize
       }
     });
 
@@ -188,8 +233,8 @@ export async function POST(request) {
         judul,
         kategori,
         classId,
-        fileName: file.name,
-        fileSize: file.size,
+        fileName: fileName,
+        fileSize: fileSize,
         guruId: guru.id,
       },
     }).catch(err => console.error('Activity log error:', err));

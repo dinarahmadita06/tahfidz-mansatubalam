@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronLeft, Download, Search, TrendingUp, Users, BookOpen, Award } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function LaporanProgresPage() {
   const router = useRouter();
@@ -144,12 +145,7 @@ export default function LaporanProgresPage() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f0fdf4' }}>
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-4 text-emerald-600 font-semibold">Memuat data...</p>
-          </div>
-        </div>
+        <LoadingIndicator fullPage text="Memuat data laporan..." />
       </GuruLayout>
     );
   }

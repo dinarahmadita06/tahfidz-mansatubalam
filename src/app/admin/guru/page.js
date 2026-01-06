@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { MultiSelectKelas } from './MultiSelectKelas';
 
@@ -308,9 +309,7 @@ export default function AdminGuruPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        </div>
+        <LoadingIndicator text="Memuat data guru..." />
       </AdminLayout>
     );
   }

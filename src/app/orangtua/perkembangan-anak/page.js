@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import MonthlyPeriodFilter from '@/components/penilaian/MonthlyPeriodFilter';
 import { calculateMonthRange, getCurrentMonthYear, formatMonthYear } from '@/lib/utils/dateRangeHelpers';
 import {
@@ -406,11 +407,8 @@ export default function PerkembanganAnakPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingIndicator text="Memuat sistem..." size="large" />
       </div>
     );
   }
@@ -565,11 +563,8 @@ export default function PerkembanganAnakPage() {
             </div>
 
             {!penilaianData && !penilaianError && (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">Memuat data penilaian...</p>
-                </div>
+              <div className="py-16">
+                <LoadingIndicator text="Memuat data penilaian..." />
               </div>
             )}
 

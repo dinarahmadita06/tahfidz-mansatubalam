@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getActivityDisplay } from '@/lib/helpers/siswaActivityConstants';
 import { Clock, ChevronRight } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function AktivitasTerkiniWidget() {
   const [activities, setActivities] = useState([]);
@@ -79,10 +80,8 @@ export default function AktivitasTerkiniWidget() {
       {/* Content */}
       <div className="p-4 lg:p-6">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin">
-              <Clock size={32} className="text-emerald-500" />
-            </div>
+          <div className="py-8">
+            <LoadingIndicator size="small" text="Memuat aktivitas..." />
           </div>
         ) : error ? (
           <div className="py-8 text-center">
