@@ -48,10 +48,10 @@ export default function AnnouncementSlider({ announcements = [], loading = false
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-5 sm:p-6">
+      <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-3 lg:p-4">
         <div className="animate-pulse">
-          <div className="h-4 bg-slate-200 rounded w-1/3 mb-3"></div>
-          <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+          <div className="h-3.5 bg-slate-200 rounded w-1/4 mb-2"></div>
+          <div className="h-3 bg-slate-200 rounded w-1/2"></div>
         </div>
       </div>
     );
@@ -59,13 +59,13 @@ export default function AnnouncementSlider({ announcements = [], loading = false
 
   if (!Array.isArray(announcements) || announcements.length === 0) {
     return (
-      <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-6 text-center">
-        <div className="flex justify-center mb-3">
-          <div className="w-14 h-14 rounded-full bg-amber-200 flex items-center justify-center">
-            <Megaphone size={28} className="text-amber-600" />
+      <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-4 lg:p-5 text-center">
+        <div className="flex justify-center mb-2">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-amber-200 flex items-center justify-center">
+            <Megaphone size={22} className="text-amber-600" />
           </div>
         </div>
-        <p className="text-slate-600 font-medium text-sm">Belum ada pengumuman</p>
+        <p className="text-slate-600 font-medium text-xs lg:text-sm">Belum ada pengumuman</p>
       </div>
     );
   }
@@ -125,57 +125,57 @@ export default function AnnouncementSlider({ announcements = [], loading = false
   };
 
   return (
-    <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-5 sm:p-6">
+    <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-3 lg:p-4">
       {/* Header with "Lihat Semua" button */}
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
-            <Megaphone size={18} className="text-white" />
+      <div className="flex items-start justify-between gap-3 lg:gap-4 mb-2.5 lg:mb-3">
+        <div className="flex items-center gap-2.5 lg:gap-3">
+          <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+            <Megaphone className="text-white w-4 h-4 lg:w-[18px] lg:h-[18px]" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-amber-900">{currentConfig.title}</h3>
-            <p className="text-xs text-amber-700">{currentConfig.subtitle}</p>
+            <h3 className="text-sm lg:text-base font-bold text-amber-900 leading-tight">{currentConfig.title}</h3>
+            <p className="text-[10px] lg:text-xs text-amber-700 opacity-90">{currentConfig.subtitle}</p>
           </div>
         </div>
         <Link
           href={currentConfig.href}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-600 text-white text-[10px] lg:text-xs font-semibold hover:bg-amber-700 transition-colors flex-shrink-0"
         >
           Lihat Semua
-          <ChevronRight size={14} />
+          <ChevronRight size={12} />
         </Link>
       </div>
 
       {/* Carousel Card Container - Overlay Arrows */}
       <div className="relative group">
         {/* Card Content - Full Width */}
-        <div className="bg-white rounded-lg p-4 border border-amber-200 w-full">
+        <div className="bg-white rounded-lg p-2.5 lg:p-3 border border-amber-200 w-full">
           {/* Title & Badge */}
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="font-bold text-slate-900 text-sm leading-tight flex-1 line-clamp-2">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h4 className="font-bold text-slate-900 text-xs lg:text-sm leading-tight flex-1 line-clamp-2">
               {truncatedTitle}
             </h4>
             {newBadge && (
-              <span className="px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 text-xs font-bold flex-shrink-0">
+              <span className="px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 text-[10px] font-bold flex-shrink-0">
                 BARU
               </span>
             )}
           </div>
 
           {/* Content Summary */}
-          <p className="text-xs text-slate-600 mb-3 line-clamp-2">
+          <p className="text-[10px] lg:text-xs text-slate-600 mb-2 line-clamp-2">
             {truncatedContent}
           </p>
 
           {/* Footer: Date & CTA */}
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-slate-500">📅 {publishDate}</p>
+            <p className="text-[10px] lg:text-xs text-slate-500">📅 {publishDate}</p>
             <Link
               href={currentConfig.href}
-              className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors"
+              className="inline-flex items-center gap-0.5 px-2 py-0.5 lg:py-1 rounded-md bg-amber-600 text-white text-[10px] font-semibold hover:bg-amber-700 transition-colors"
             >
               Baca
-              <ChevronRight size={12} />
+              <ChevronRight size={10} />
             </Link>
           </div>
         </div>

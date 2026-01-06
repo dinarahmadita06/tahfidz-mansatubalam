@@ -15,6 +15,7 @@ import AnnouncementSlider from '@/components/AnnouncementSlider';
 
 // ===== CONSTANTS =====
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
+const DEFAULT_QUOTE = "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.";
 
 // ===== REUSABLE COMPONENTS =====
 
@@ -65,16 +66,16 @@ const StatsCard = ({ icon: Icon, title, value, subtitle, color = 'emerald', href
   const styles = colorConfig[color];
 
   const cardContent = (
-    <div className={`${styles.bg} backdrop-blur-sm rounded-2xl p-5 border ${styles.border} ${styles.glow} ${styles.hoverGlow} hover:-translate-y-1 transition-all duration-300 cursor-default`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-4 ${styles.iconBg} ${styles.iconRing} rounded-2xl shadow-md`}>
-          <Icon className={styles.iconColor} size={28} />
+    <div className={`${styles.bg} backdrop-blur-sm rounded-2xl p-3.5 lg:p-4 border ${styles.border} ${styles.glow} ${styles.hoverGlow} hover:-translate-y-1 transition-all duration-300 cursor-default`}>
+      <div className="flex items-center justify-between mb-2.5 lg:mb-3">
+        <div className={`p-2.5 lg:p-3 ${styles.iconBg} ${styles.iconRing} rounded-xl lg:rounded-2xl shadow-md`}>
+          <Icon className={styles.iconColor} size={20} />
         </div>
       </div>
-      <h3 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">{title}</h3>
-      <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+      <h3 className="text-[10px] lg:text-xs font-bold text-gray-500 mb-0.5 lg:mb-1 uppercase tracking-wider">{title}</h3>
+      <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-900 leading-tight">{value}</p>
       {subtitle && (
-        <p className={`text-sm ${styles.textSub} font-semibold mt-2 min-w-0 break-words`}>
+        <p className={`text-[11px] lg:text-sm ${styles.textSub} font-semibold mt-1.5 lg:mt-2 min-w-0 break-words opacity-90`}>
           {typeof subtitle === 'string' ? subtitle : subtitle}
         </p>
       )}
@@ -92,13 +93,13 @@ const SectionHeader = ({ icon: Icon, title, subtitle, iconColor = 'emerald' }) =
   };
 
   return (
-    <div className="flex items-center gap-4 mb-6">
-      <div className={`p-3.5 ${iconBgColors[iconColor]} rounded-xl`}>
-        <Icon size={28} />
+    <div className="flex items-center gap-3 lg:gap-4 mb-3 lg:mb-5">
+      <div className={`p-2 lg:p-3 ${iconBgColors[iconColor]} rounded-xl`}>
+        <Icon className="w-5 h-5 lg:w-6 lg:h-6" />
       </div>
       <div>
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-        <p className="text-xs text-gray-600">{subtitle}</p>
+        <h2 className="text-base lg:text-lg font-bold text-gray-900 leading-tight">{title}</h2>
+        <p className="text-[10px] lg:text-xs text-gray-600 opacity-80">{subtitle}</p>
       </div>
     </div>
   );
@@ -106,7 +107,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, iconColor = 'emerald' }) =
 
 const Card = ({ children, className = '' }) => {
   return (
-    <div className={`${CARD_BASE} p-6 ${className}`}>
+    <div className={`${CARD_BASE} p-4 lg:p-5 ${className}`}>
       {children}
     </div>
   );
@@ -150,6 +151,7 @@ export default function StudentDashboardContent({
   const [pengumuman, setPengumuman] = useState([]);
   const [pengumumanLoading, setPengumumanLoading] = useState(true);
   const [juzProgress, setJuzProgress] = useState([]);
+  const [tahunAjaranAktif, setTahunAjaranAktif] = useState(null);
   const [targetJuzSekolah, setTargetJuzSekolah] = useState(null);
   const [totalJuzSelesai, setTotalJuzSelesai] = useState(0);
   const [progressPercent, setProgressPercent] = useState(null);
@@ -198,7 +200,12 @@ export default function StudentDashboardContent({
         });
 
         setJuzProgress(data.juzProgress || []);
-        setTargetJuzSekolah(data.targetJuzSekolah);
+        setTahunAjaranAktif(data.tahunAjaranAktif);
+        
+        // Ensure target is a valid number and not undefined/null/NaN
+        const targetValue = parseInt(data.targetJuzSekolah);
+        setTargetJuzSekolah(!isNaN(targetValue) && targetValue > 0 ? targetValue : null);
+        
         setTotalJuzSelesai(data.totalJuzSelesai || 0);
         setProgressPercent(data.progressPercent);
         setQuote(data.quote || "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.");
@@ -219,24 +226,31 @@ export default function StudentDashboardContent({
   const laporan_href = roleContext === 'SISWA' ? '/siswa/laporan' : '/orangtua/laporan-hafalan';
   const nilai_href = roleContext === 'SISWA' ? '/siswa/penilaian-hafalan' : '/orangtua/perkembangan-anak';
   
+  // Determine safe quote with fallback
+  const safeQuote = typeof quote === 'object' ? (quote?.text || quote?.content || DEFAULT_QUOTE) : (quote || DEFAULT_QUOTE);
+  
   return (
-    <>
+    <div className="space-y-6">
       {/* Motivasi - Biru Transparan */}
-      <div className="bg-blue-50/70 backdrop-blur-sm rounded-2xl shadow-sm border border-blue-200 p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <Lightbulb className="text-blue-600" size={24} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-base sm:text-lg italic leading-relaxed text-slate-700 mb-2 font-medium break-words">
-              "{quote}"
-            </p>
-            <p className="text-sm text-slate-600 font-semibold">
-              — HR. Bukhari
-            </p>
+      {loading ? (
+        <div className="bg-blue-50/70 animate-pulse rounded-2xl border border-blue-200 p-4 lg:p-5 h-[100px]" />
+      ) : (
+        <div className="bg-blue-50/70 backdrop-blur-sm rounded-2xl shadow-sm border border-blue-200 p-4 lg:p-5 mt-2">
+          <div className="flex items-start gap-3 lg:gap-4">
+            <div className="flex-shrink-0 w-9 h-9 lg:w-11 lg:h-11 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Lightbulb className="text-blue-600 w-5 h-5 lg:w-[22px] lg:h-[22px]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm lg:text-base italic leading-relaxed text-slate-700 mb-1.5 lg:mb-2 font-medium break-words">
+                "{safeQuote}"
+              </p>
+              <p className="text-[11px] lg:text-sm text-slate-600 font-semibold">
+                — HR. Bukhari
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Pengumuman - Using Reusable AnnouncementSlider */}
       <AnnouncementSlider 
@@ -283,8 +297,8 @@ export default function StudentDashboardContent({
       </div>
 
       {/* Main Content Grid - Progress Hafalan per Juz + Aktivitas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <Card className="xl:col-span-8">
         <SectionHeader
           icon={TrendingUp}
           title="Progress Hafalan per Juz"
@@ -294,26 +308,26 @@ export default function StudentDashboardContent({
 
         {/* Highlight Target & Progress Sekolah */}
         {!loading && (
-          <div className="mb-6 bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl px-5 py-4 border border-amber-200/60 shadow-sm shadow-amber-100/50 space-y-3 relative overflow-hidden">
+          <div className="mb-4 lg:mb-6 bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl px-4 py-3.5 lg:px-5 lg:py-4 border border-amber-200/60 shadow-sm shadow-amber-100/50 space-y-2 lg:space-y-3 relative overflow-hidden">
             {/* Subtle decorative background pattern */}
             <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl pointer-events-none" />
             
-            <div className="flex justify-between items-center text-sm relative z-10">
+            <div className="flex justify-between items-center text-[11px] lg:text-sm relative z-10">
               <span className="text-slate-700 font-bold flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                Target Hafalan Sekolah Tahun Ini
+                Target Hafalan Sekolah {tahunAjaranAktif?.nama ? `(${tahunAjaranAktif.nama})` : 'Tahun Ini'}
               </span>
-              <span className="font-extrabold text-slate-900 bg-white/60 px-2.5 py-0.5 rounded-lg border border-amber-100">
-                {targetJuzSekolah ? `${targetJuzSekolah} Juz` : 'Belum ditentukan'}
+              <span className="font-extrabold text-slate-900 bg-white/60 px-2.5 py-0.5 rounded-lg border border-amber-100 whitespace-nowrap">
+                {targetJuzSekolah && !isNaN(targetJuzSekolah) ? `${targetJuzSekolah} Juz` : 'Belum ditentukan'}
               </span>
             </div>
             
-            <div className="flex justify-between items-center text-sm relative z-10">
+            <div className="flex justify-between items-center text-[11px] lg:text-sm relative z-10">
               <span className="text-slate-700 font-bold flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
                 Progress Capaian
               </span>
-              <span className="font-extrabold text-amber-700 text-right bg-amber-100/50 px-3 py-1 rounded-full border border-amber-200/50">
+              <span className="font-extrabold text-amber-700 text-right bg-amber-100/50 px-3 py-1 rounded-full border border-amber-200/50 whitespace-nowrap">
                 {totalJuzSelesai === 0 ? (
                   'Belum mulai setoran'
                 ) : targetJuzSekolah ? (
@@ -359,21 +373,21 @@ export default function StudentDashboardContent({
 
             <Link
               href={laporan_href}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white font-semibold rounded-xl transition-all duration-300 shadow-md"
+              className="mt-5 lg:mt-6 inline-flex items-center gap-2 px-5 py-2.5 lg:px-6 lg:py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white text-sm lg:text-base font-semibold rounded-xl transition-all duration-300 shadow-md"
             >
-              Lihat Laporan Lengkap <ChevronRight size={20} />
+              Lihat Laporan Lengkap <ChevronRight className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
             </Link>
           </>
         )}
       </Card>
       
-      {/* Render Activity Widget if provided (for ORANG_TUA) */}
+      {/* Render Activity Widget if provided */}
       {activityWidget && (
-        <div className="lg:col-span-1 self-start">
+        <div className="xl:col-span-4 self-start">
           {activityWidget}
         </div>
       )}
       </div>
-    </>
+    </div>
   );
 }

@@ -169,7 +169,7 @@ export default function OrangtuaPengumumanPage() {
               ))}
             </div>
           ) : filteredPengumuman.length === 0 ? (
-            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-12 text-center">
+            <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 lg:p-12 text-center">
               <div className="flex justify-center mb-4">
                 <div className="p-4 bg-emerald-100 rounded-full">
                   <Megaphone className="text-emerald-600" size={48} />

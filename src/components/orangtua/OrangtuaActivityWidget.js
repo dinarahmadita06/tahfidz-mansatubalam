@@ -36,13 +36,13 @@ export default function OrangtuaActivityWidget() {
   }, []);
 
   return (
-    <div className={`${CARD_BASE} p-6`}>
-      <div className="flex items-center justify-between mb-6">
+    <div className={`${CARD_BASE} p-4 lg:p-6`}>
+      <div className="flex items-center justify-between mb-4 lg:mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <Clock className="text-blue-600" size={20} />
+          <div className="p-2.5 lg:p-3 bg-blue-100 rounded-lg">
+            <Clock className="text-blue-600" size={18} />
           </div>
-          <h3 className="text-lg font-bold text-gray-900">Aktivitas Terkini</h3>
+          <h3 className="text-base lg:text-lg font-bold text-gray-900">Aktivitas Terkini</h3>
         </div>
       </div>
 
@@ -64,7 +64,7 @@ export default function OrangtuaActivityWidget() {
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-amber-50/50 rounded-lg transition-colors border border-gray-100"
+              className="flex items-start gap-3 p-2.5 bg-gray-50 hover:bg-amber-50/50 rounded-lg transition-colors border border-gray-100"
             >
               <span className="flex-shrink-0 text-lg mt-0.5">{getActivityIcon(activity.action)}</span>
               <div className="flex-1 min-w-0">

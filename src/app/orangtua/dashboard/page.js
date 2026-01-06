@@ -9,7 +9,7 @@ import StudentDashboardContent from '@/components/dashboard/StudentDashboardCont
 import OrangtuaActivityWidget from '@/components/orangtua/OrangtuaActivityWidget';
 
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
-const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
+const CONTAINER = 'w-full max-w-none';
 
 // Child Selector Dropdown Component
 function ChildSelector({ children, selectedChild, onSelectChild }) {
@@ -23,18 +23,17 @@ function ChildSelector({ children, selectedChild, onSelectChild }) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300"
+        className="flex items-center gap-2.5 lg:gap-3 px-3.5 py-2 lg:px-5 lg:py-2.5 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300"
       >
-        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+        <div className="w-8 h-8 lg:w-9 lg:h-9 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-xs lg:text-sm shadow-sm">
           {selectedChild?.namaLengkap?.[0] || '?'}
         </div>
         <div className="text-left">
-          <p className="text-sm text-gray-500">Pilih Anak</p>
-          <p className="font-semibold text-gray-900">{selectedChild?.namaLengkap || 'Tidak dipilih'}</p>
+          <p className="text-[10px] lg:text-xs text-gray-500 leading-tight">Pilih Anak</p>
+          <p className="text-xs lg:text-sm font-bold text-gray-900 leading-tight">{selectedChild?.namaLengkap || 'Tidak dipilih'}</p>
         </div>
         <ChevronDown
-          size={20}
-          className={`text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          className={`text-gray-600 transition-transform duration-300 w-4 h-4 lg:w-[18px] lg:h-[18px] ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -55,19 +54,19 @@ function ChildSelector({ children, selectedChild, onSelectChild }) {
                   onSelectChild(child);
                   setIsOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50 transition-colors ${
                   selectedChild?.id === child.id ? 'bg-emerald-50' : ''
                 }`}
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+                <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
                   {child.namaLengkap?.[0] || '?'}
                 </div>
-                <div className="text-left flex-1">
-                  <p className="font-semibold text-gray-900">{child.namaLengkap}</p>
-                  <p className="text-xs text-gray-600">{child.kelas || 'N/A'}</p>
+                <div className="text-left flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 text-sm truncate">{child.namaLengkap}</p>
+                  <p className="text-[10px] lg:text-xs text-gray-600 truncate">{child.kelas || 'N/A'}</p>
                 </div>
                 {selectedChild?.id === child.id && (
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
                 )}
               </button>
             ))}
@@ -226,19 +225,19 @@ export default function OrangtuaDashboardPage() {
   return (
     <OrangtuaLayout>
       <div className="min-h-screen bg-gray-50">
-        <div className={`${CONTAINER} py-6 space-y-6`}>
+        <div className={`${CONTAINER} space-y-4 lg:space-y-6`}>
         {/* Banner Header */}
-        <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-6 sm:p-8 text-white`}>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
-                <BookMarked className="text-white" size={32} />
+        <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg px-6 py-5 lg:py-6 sm:px-8 sm:py-7 lg:px-10 text-white`}>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-2.5 lg:p-3.5 rounded-xl lg:rounded-2xl flex-shrink-0">
+                <BookMarked className="text-white w-[22px] h-[22px] lg:w-[26px] lg:h-[26px]" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold break-words" suppressHydrationWarning>
+                <h1 className="text-lg lg:text-xl xl:text-2xl font-bold break-words leading-tight" suppressHydrationWarning>
                   {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
                 </h1>
-                <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal" suppressHydrationWarning>
+                <p className="text-green-50 text-xs sm:text-sm mt-0.5 whitespace-normal opacity-90" suppressHydrationWarning>
                   {isHydrated ? currentTime : ''}
                 </p>
               </div>
@@ -285,11 +284,13 @@ export default function OrangtuaDashboardPage() {
         ) : selectedChild ? (
           <>
             {/* Shared Dashboard Content dengan Progress + Aktivitas dalam grid */}
-            <StudentDashboardContent 
-              targetSiswaId={selectedChild.id} 
-              roleContext="ORANG_TUA"
-              activityWidget={<OrangtuaActivityWidget />}
-            />
+            <div className="space-y-4 lg:space-y-6">
+              <StudentDashboardContent 
+                targetSiswaId={selectedChild.id} 
+                roleContext="ORANG_TUA"
+                activityWidget={<OrangtuaActivityWidget />}
+              />
+            </div>
           </>
         ) : null}
         </div>

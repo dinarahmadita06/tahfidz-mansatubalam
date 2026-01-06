@@ -78,16 +78,16 @@ async function fetchHafalanData() {
 // 1. MotivationCard Component
 function MotivationCard() {
   return (
-    <div className="rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 shadow-sm p-5 sm:p-6">
-      <div className="flex items-start gap-3">
-        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-          <Sparkles size={22} className="text-blue-600" />
+    <div className="rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 shadow-sm p-4 lg:p-5">
+      <div className="flex items-start gap-3 lg:gap-4">
+        <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+          <Sparkles size={20} className="text-blue-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold italic leading-relaxed mb-2">
+          <p className="text-[13px] lg:text-sm font-semibold italic leading-relaxed mb-1 lg:mb-2">
             "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
           </p>
-          <p className="text-xs font-medium text-blue-700">
+          <p className="text-[11px] lg:text-xs font-medium text-blue-700 opacity-80">
             — HR. Bukhari
           </p>
         </div>
@@ -157,22 +157,22 @@ function StatsCards({ stats }) {
         return (
           <div
             key={index}
-            className={`${style.wrapper} rounded-xl border-2 p-6 shadow-sm ${CARD_HOVER}`}
+            className={`${style.wrapper} rounded-xl border-2 p-3.5 lg:p-4 shadow-sm ${CARD_HOVER}`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className={`${style.title} text-sm font-semibold mb-1 uppercase`}>
+                <p className={`${style.title} text-[10px] lg:text-xs font-bold mb-0.5 lg:mb-1 uppercase tracking-wider`}>
                   {card.title}
                 </p>
-                <h3 className={`${style.value} text-4xl font-bold`}>
+                <h3 className={`${style.value} text-lg lg:text-xl xl:text-2xl font-bold leading-tight`}>
                   {card.value}
                 </h3>
                 {card.subtitle && (
-                  <p className="text-slate-500 text-sm mt-1">{card.subtitle}</p>
+                  <p className="text-slate-500 text-[10px] lg:text-xs mt-1 opacity-80">{card.subtitle}</p>
                 )}
               </div>
-              <div className={`${style.iconBg} p-4 rounded-full`}>
-                <Icon size={32} className={style.iconColor} />
+              <div className={`${style.iconBg} p-2.5 lg:p-3 rounded-xl shadow-sm`}>
+                <Icon size={20} className={style.iconColor} />
               </div>
             </div>
           </div>
@@ -185,50 +185,50 @@ function StatsCards({ stats }) {
 // 4. ClassManagementSection Component
 function ClassManagementSection({ kelasList, loading }) {
   return (
-    <div className={`${CARD_BASE} ${CARD_HOVER} p-5 sm:p-6`}>
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
-          <BookOpen size={22} className="text-white" />
+    <div className={`${CARD_BASE} ${CARD_HOVER} p-4 lg:p-5`}>
+      <div className="flex items-center gap-3 mb-3 lg:mb-4">
+        <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
+          <BookOpen className="text-white w-5 h-5 lg:w-[22px] lg:h-[22px]" />
         </div>
-        <h3 className="text-xl font-bold text-slate-800">Kelola Kelas</h3>
+        <h3 className="text-lg lg:text-xl font-bold text-slate-800">Kelola Kelas</h3>
       </div>
 
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-slate-100 rounded-xl p-4 h-20"></div>
+            <div key={i} className="animate-pulse bg-slate-100 rounded-xl p-4 h-16 lg:h-20"></div>
           ))}
         </div>
       ) : kelasList.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <BookOpen size={32} className="text-slate-400" />
+        <div className="text-center py-10 lg:py-12">
+          <div className="w-14 h-14 lg:w-16 lg:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4">
+            <BookOpen className="text-slate-400 w-7 h-7 lg:w-8 lg:h-8" />
           </div>
-          <p className="text-slate-600 font-medium">Belum ada kelas yang diampu</p>
+          <p className="text-slate-600 font-medium text-sm">Belum ada kelas yang diampu</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5 lg:space-y-3">
           {kelasList.map((kelas) => (
             <Link
               key={kelas.id}
               href={`/guru/penilaian-hafalan/${kelas.id}`}
               className="block"
             >
-              <div className="flex items-center justify-between p-4 rounded-xl border-2 border-emerald-100 bg-gradient-to-r from-emerald-50 to-white hover:border-emerald-300 hover:shadow-md transition-all group">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <BookOpen size={20} className="text-emerald-600" />
+              <div className="flex items-center justify-between p-3 lg:p-4 rounded-xl border-2 border-emerald-100 bg-gradient-to-r from-emerald-50 to-white hover:border-emerald-300 hover:shadow-md transition-all group">
+                <div className="flex items-center gap-3 lg:gap-4">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <BookOpen className="text-emerald-600 w-[18px] h-[18px] lg:w-5 lg:h-5" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900">{kelas.nama}</h4>
-                    <p className="text-sm text-slate-600">
+                    <h4 className="font-semibold text-slate-900 text-sm lg:text-base leading-tight">{kelas.nama}</h4>
+                    <p className="text-[11px] lg:text-sm text-slate-600 mt-0.5 opacity-80">
                       {kelas._count?.siswa || 0} siswa
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-emerald-600 group-hover:translate-x-1 transition-transform">
-                  <span className="text-sm font-semibold">Lihat Kelas</span>
-                  <ChevronRight size={18} />
+                <div className="flex items-center gap-1.5 lg:gap-2 text-emerald-600 group-hover:translate-x-1 transition-transform">
+                  <span className="text-xs lg:text-sm font-bold uppercase tracking-wider">Lihat</span>
+                  <ChevronRight className="w-4 h-4 lg:w-[18px] lg:h-[18px]" />
                 </div>
               </div>
             </Link>
@@ -242,12 +242,12 @@ function ClassManagementSection({ kelasList, loading }) {
 // 5. RecentActivity Component
 function RecentActivity({ activities, loading }) {
   return (
-    <div className={`${CARD_BASE} ${CARD_HOVER} p-5 sm:p-6`}>
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
-          <FileText size={22} className="text-white" />
+    <div className={`${CARD_BASE} ${CARD_HOVER} p-4 lg:p-5`}>
+      <div className="flex items-center gap-3 mb-3 lg:mb-4">
+        <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
+          <FileText className="text-white w-5 h-5 lg:w-[22px] lg:h-[22px]" />
         </div>
-        <h3 className="text-xl font-bold text-slate-800">Aktivitas Terbaru</h3>
+        <h3 className="text-lg lg:text-xl font-bold text-slate-800">Aktivitas Terbaru</h3>
       </div>
 
       {loading ? (
@@ -409,25 +409,25 @@ export default function DashboardGuru() {
 
   return (
     <GuruLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 space-y-4 lg:space-y-6">
 
         {/* Header */}
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg px-6 py-5 lg:py-6 sm:px-8 sm:py-7 lg:px-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
+              <h1 className="text-lg lg:text-xl xl:text-2xl font-bold leading-tight">
                 Dashboard Guru Tahfidz
               </h1>
-              <p className="text-white/90 text-sm sm:text-base mt-1">
+              <p className="text-white/90 text-xs lg:text-sm mt-0.5">
                 {greeting}, {getFirstName(session?.user?.name)} • {formattedDate}
               </p>
             </div>
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
+              className="flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-xl font-semibold text-xs lg:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
             >
-              <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
+              <RefreshCw className={`w-4 h-4 lg:w-[18px] lg:h-[18px] ${refreshing ? 'animate-spin' : ''}`} />
               {refreshing ? 'Memuat...' : 'Refresh Data'}
             </button>
           </div>

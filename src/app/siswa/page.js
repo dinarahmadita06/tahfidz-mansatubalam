@@ -13,7 +13,6 @@ import {
 import Link from 'next/link';
 
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
-const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
 
 // ===== HELPER FUNCTIONS =====
 // Extract first name from full name
@@ -67,7 +66,9 @@ export default function DashboardSiswa() {
       fetch('/api/siswa/dashboard')
         .then(r => r.json())
         .then(data => {
-          setSiswaId(session.user.id);
+          if (data.siswaId) {
+            setSiswaId(data.siswaId);
+          }
           // Also set stats for banner display
           if (data.stats) {
             setStats({
@@ -86,57 +87,48 @@ export default function DashboardSiswa() {
 
   return (
     <SiswaLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className={`${CONTAINER} py-6 space-y-6`}>
-          {/* Banner Header - Hijau SIMTAQ Style */}
-          <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-6 sm:p-8 text-white`}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
-                  <BookMarked className="text-white" size={32} />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold break-words" suppressHydrationWarning>
-                    {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
-                  </h1>
-                  <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal" suppressHydrationWarning>
-                    {isHydrated ? currentTime : ''}
-                  </p>
-                </div>
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 xl:px-8 py-6 space-y-6">
+        {/* Banner Header - Hijau SIMTAQ Style */}
+        <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-4 lg:p-6 text-white`}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-3 lg:p-4 rounded-2xl flex-shrink-0">
+                <BookMarked className="text-white" size={28} />
               </div>
-            </div>
-            <div className="flex flex-wrap gap-3 items-center mt-5">
-              <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-                <Target className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-semibold text-sm whitespace-nowrap">
-                  {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-                <CalendarCheck className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-semibold text-sm whitespace-nowrap">
-                  Kehadiran {stats.kehadiran}/{stats.totalHari > 0 ? stats.totalHari : '-'}
-                </span>
+              <div className="min-w-0">
+                <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold break-words leading-tight" suppressHydrationWarning>
+                  {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
+                </h1>
+                <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal opacity-90" suppressHydrationWarning>
+                  {isHydrated ? currentTime : ''}
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Shared Dashboard Content */}
-          {siswaId && (
-            <div className="space-y-6">
-              <StudentDashboardContent 
-                targetSiswaId={siswaId} 
-                roleContext="SISWA"
-              />
+          <div className="flex flex-wrap gap-3 items-center mt-5">
+            <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
+              <Target className="text-white flex-shrink-0" size={18} />
+              <span className="text-white font-semibold text-sm whitespace-nowrap">
+                {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
+              </span>
             </div>
-          )}
-
-          {/* Aktivitas Terkini Widget - Grid Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2" />
-            <AktivitasTerkiniWidget />
+            <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
+              <CalendarCheck className="text-white flex-shrink-0" size={18} />
+              <span className="text-white font-semibold text-sm whitespace-nowrap">
+                Kehadiran {stats.kehadiran}/{stats.totalHari > 0 ? stats.totalHari : '-'}
+              </span>
+            </div>
           </div>
         </div>
+
+        {/* Dashboard Content - Including Activity Widget in 2-column grid */}
+        {siswaId && (
+          <StudentDashboardContent 
+            targetSiswaId={siswaId} 
+            roleContext="SISWA"
+            activityWidget={<AktivitasTerkiniWidget />}
+          />
+        )}
       </div>
     </SiswaLayout>
   );

@@ -25,7 +25,7 @@ import { auth } from '@/lib/auth';
 export async function GET(req, { params }) {
   try {
     const session = await auth();
-    const { siswaId } = params;
+    const { siswaId } = await params;
 
     if (!session) {
       return NextResponse.json(
@@ -92,18 +92,24 @@ export async function GET(req, { params }) {
       );
     }
 
-    // ===== 1. STATS =====
-
-    // Get total hafalan selesai (setoran)
-    const totalHafalan = await prisma.hafalan.count({
-      where: { siswaId }
+    // Get active school year precisely
+    const schoolYear = await prisma.tahunAjaran.findFirst({
+      where: { isActive: true },
+      select: {
+        id: true,
+        nama: true,
+        semester: true,
+        tanggalMulai: true,
+        tanggalSelesai: true,
+        targetHafalan: true
+      }
     });
 
-    // Get total target hafalan
-    const targetHafalan = await prisma.targetHafalan.findFirst({
-      where: { siswaId },
-      orderBy: { createdAt: 'desc' },
-      select: { targetJuz: true }
+    const schoolTarget = schoolYear?.targetHafalan || 0;
+
+    // Get total hafalan selesai (setoran)
+    const totalHafalanCount = await prisma.hafalan.count({
+      where: { siswaId }
     });
 
     // Get rata-rata nilai dari penilaian
@@ -113,21 +119,17 @@ export async function GET(req, { params }) {
     });
 
     // Get kehadiran stats (tahun ajaran aktif)
-    const tahunAjaranAktif = await prisma.tahunAjaran.findFirst({
-      where: { isActive: true }
-    });
-
     let kehadiranCount = 0;
     let totalHariCount = 0;
 
-    if (tahunAjaranAktif) {
+    if (schoolYear) {
       kehadiranCount = await prisma.presensi.count({
         where: {
           siswaId,
           status: 'HADIR',
           tanggal: {
-            gte: tahunAjaranAktif.tanggalMulai,
-            lte: tahunAjaranAktif.tanggalSelesai
+            gte: schoolYear.tanggalMulai,
+            lte: schoolYear.tanggalSelesai
           }
         }
       });
@@ -136,8 +138,8 @@ export async function GET(req, { params }) {
         where: {
           siswaId,
           tanggal: {
-            gte: tahunAjaranAktif.tanggalMulai,
-            lte: tahunAjaranAktif.tanggalSelesai
+            gte: schoolYear.tanggalMulai,
+            lte: schoolYear.tanggalSelesai
           }
         }
       });
@@ -152,8 +154,8 @@ export async function GET(req, { params }) {
     });
 
     const stats = {
-      hafalanSelesai: totalHafalan || 0,
-      totalHafalan: targetHafalan?.targetJuz || 0,
+      hafalanSelesai: totalHafalanCount || 0,
+      totalHafalan: schoolTarget, // Use school target instead of student personal target
       rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
       kehadiran: kehadiranCount || 0,
       totalHari: totalHariCount || 0,
@@ -183,25 +185,7 @@ export async function GET(req, { params }) {
 
     // ===== 3. TARGET SEKOLAH & PROGRESS =====
     
-    // Get target from active TahunAjaran or fallback to Kelas target
-    let targetJuzSekolah = null;
-    
-    if (tahunAjaranAktif?.targetHafalan) {
-      targetJuzSekolah = tahunAjaranAktif.targetHafalan;
-    } else {
-      // Fallback to student's class target
-      const student = await prisma.siswa.findUnique({
-        where: { id: siswaId },
-        select: { 
-          kelas: { 
-            select: { targetJuz: true } 
-          } 
-        }
-      });
-      if (student?.kelas?.targetJuz) {
-        targetJuzSekolah = student.kelas.targetJuz;
-      }
-    }
+    const targetJuzSekolah = schoolYear?.targetHafalan || null;
 
     // Get total juz selesai
     // Use DISTINCT juz from Hafalan table where at least one penilaian is valid (>= 75)
@@ -236,6 +220,14 @@ export async function GET(req, { params }) {
         stats,
         juzProgress: filteredJuzProgress,
         targetJuzSekolah,
+        tahunAjaranAktif: schoolYear ? {
+          id: schoolYear.id,
+          nama: schoolYear.nama,
+          semester: schoolYear.semester,
+          targetJuz: schoolYear.targetHafalan,
+          startDate: schoolYear.tanggalMulai,
+          endDate: schoolYear.tanggalSelesai
+        } : null,
         totalJuzSelesai,
         progressPercent,
         quote,

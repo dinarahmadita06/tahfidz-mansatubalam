@@ -223,7 +223,7 @@ export default function SiswaPengumumanPage() {
           pengumuman.length === 0 ? (
             <AnnouncementEmptyState />
           ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-12 text-center">
               <div className="flex justify-center mb-4">
                 <div className="p-4 bg-gray-50 rounded-full">
                   <FileText className="text-gray-400" size={48} />

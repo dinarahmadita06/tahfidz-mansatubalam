@@ -286,10 +286,10 @@ function AdminLayout({ children }) {
                 ? 'translate-x-0'
                 : '-translate-x-full'
               : sidebarOpen
-                ? 'w-72'
+                ? 'w-[240px] xl:w-[260px]'
                 : 'w-20'
           } ${
-            isMobile ? 'fixed left-0 top-0 bottom-0 w-72 z-50' : 'relative'
+            isMobile ? 'fixed left-0 top-0 bottom-0 w-[240px] z-50' : 'relative'
           } transition-all duration-300 flex flex-col islamic-pattern`}
           style={{
             background: 'linear-gradient(180deg, #E8FFF3 0%, #FFF9E7 100%)',
@@ -300,33 +300,33 @@ function AdminLayout({ children }) {
           <div className="islamic-star-ornament"></div>
           
           {/* Logo Section */}
-          <div className="h-20 flex items-center justify-between px-5 border-b border-emerald-100/60">
+          <div className="h-16 lg:h-20 flex items-center justify-between px-5 border-b border-emerald-100/60">
             {sidebarOpen ? (
               <Link
                 href="/admin/dashboard"
-                className="flex items-center gap-3 transition-all duration-200 cursor-pointer group"
+                className="flex items-center gap-2.5 lg:gap-3 transition-all duration-200 cursor-pointer group"
               >
                 <div
-                  className="p-2.5 rounded-full shadow-lg group-hover:shadow-xl transition-all duration-200"
+                  className="p-2 lg:p-2.5 rounded-full shadow-lg group-hover:shadow-xl transition-all duration-200"
                   style={{
                     background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
                   }}
                 >
-                  <BookOpen className="text-white" size={24} strokeWidth={2} />
+                  <BookOpen className="text-white w-5 h-5 lg:w-6 h-6" strokeWidth={2} />
                 </div>
-                <span className="font-bold text-lg" style={{ color: '#064E3B', letterSpacing: '0.02em' }}>
+                <span className="font-bold text-base lg:text-lg" style={{ color: '#064E3B', letterSpacing: '0.02em' }}>
                   SIMTAQ
                 </span>
               </Link>
             ) : (
               <Link
                 href="/admin/dashboard"
-                className="p-2.5 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 block"
+                className="p-2 lg:p-2.5 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 block"
                 style={{
                   background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
                 }}
               >
-                <BookOpen className="text-white" size={24} strokeWidth={2} />
+                <BookOpen className="text-white w-5 h-5 lg:w-6 h-6" strokeWidth={2} />
               </Link>
             )}
 
@@ -343,8 +343,8 @@ function AdminLayout({ children }) {
           </div>
 
           {/* Menu Navigation */}
-          <nav className="flex-1 overflow-y-auto py-5 px-4">
-            <div className="space-y-2">
+          <nav className="flex-1 overflow-y-auto py-3 lg:py-5 px-3 lg:px-4">
+            <div className="space-y-1.5 lg:space-y-2">
               {menuItems.map((item, index) => {
                 const isMenuActive = item.submenu ? isSubmenuActive(item.submenu) : isActive(item.href);
                 const showDivider = index === 3 || index === 5 || index === 6;
@@ -352,65 +352,62 @@ function AdminLayout({ children }) {
                 return (
                   <div key={item.title}>
                     {showDivider && (
-                      <div className="my-3 border-t border-emerald-100/60"></div>
+                      <div className="my-2.5 lg:my-3 border-t border-emerald-100/60"></div>
                     )}
 
                     {item.submenu ? (
                       <div>
                         <button
                           onClick={() => sidebarOpen ? toggleSubmenu(item.title) : setSidebarOpen(true)}
-                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-3' : 'justify-center px-0'} py-2.5 rounded-xl min-h-[44px] transition-colors duration-200 group ${
+                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-3' : 'justify-center px-0'} py-1.5 lg:py-2 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 group ${
                             isMenuActive
                               ? 'bg-emerald-50/70 ring-1 ring-emerald-200/40 text-emerald-700 font-semibold'
                               : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700'
                           }`}
                           title={!sidebarOpen ? item.title : ''}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2.5 lg:gap-3">
                             <item.icon
-                              size={20}
+                              className={`w-[18px] h-[18px] lg:w-5 lg:h-5 ${isMenuActive ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}`}
                               strokeWidth={1.5}
-                              className={isMenuActive ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}
                             />
                             {sidebarOpen && (
-                              <span className="text-sm font-medium">{item.title}</span>
+                              <span className="text-[13px] lg:text-sm font-medium">{item.title}</span>
                             )}
                           </div>
                           {sidebarOpen && (
                             <ChevronDown
-                              size={16}
-                              strokeWidth={2}
-                              className={`text-slate-400 transition-transform duration-200 ${
+                              className={`text-slate-400 transition-transform duration-200 w-3.5 h-3.5 lg:w-4 lg:h-4 ${
                                 expandedMenus[item.title] ? 'rotate-180' : ''
                               }`}
+                              strokeWidth={2}
                             />
                           )}
                         </button>
 
                         {sidebarOpen && expandedMenus[item.title] && (
-                          <div className="mt-2 space-y-1 transition-all duration-200">
+                          <div className="mt-1.5 space-y-1 transition-all duration-200">
                             {item.submenu.map((subitem) => (
                               <Link
                                 key={subitem.href}
                                 href={subitem.href}
                                 prefetch={false}
                                 onClick={handleLinkClick}
-                                className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-200 border-l-2 ${
+                                className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg text-xs lg:text-sm transition-colors duration-200 border-l-2 ${
                                   isActive(subitem.href)
                                     ? 'bg-emerald-50/60 text-emerald-700 font-medium border-l-emerald-400/70'
                                     : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700 border-l-transparent hover:border-l-emerald-300/40'
                                 }`}
                               >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5 lg:gap-3">
                                   <subitem.icon
-                                    size={18}
+                                    className={`w-4 h-4 lg:w-[18px] lg:h-[18px] ${isActive(subitem.href) ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}`}
                                     strokeWidth={1.5}
-                                    className={isActive(subitem.href) ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}
                                   />
                                   <span className="font-medium">{subitem.title}</span>
                                 </div>
                                 {subitem.href === '/admin/validasi-siswa' && pendingCount > 0 && (
-                                  <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                  <span className="bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
                                     {pendingCount > 99 ? '99+' : pendingCount}
                                   </span>
                                 )}
@@ -424,7 +421,7 @@ function AdminLayout({ children }) {
                         href={item.href}
                         prefetch={false}
                         onClick={handleLinkClick}
-                        className={`w-full flex items-center gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-2.5 rounded-xl min-h-[44px] transition-colors duration-200 ${
+                        className={`w-full flex items-center gap-2.5 lg:gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-1.5 lg:py-2 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 ${
                           isActive(item.href)
                             ? 'bg-emerald-50/70 ring-1 ring-emerald-200/40 text-emerald-700 font-semibold'
                             : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700'
@@ -432,12 +429,11 @@ function AdminLayout({ children }) {
                         title={!sidebarOpen ? item.title : ''}
                       >
                         <item.icon
-                          size={20}
+                          className={`w-[18px] h-[18px] lg:w-5 lg:h-5 ${isActive(item.href) ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}`}
                           strokeWidth={1.5}
-                          className={isActive(item.href) ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}
                         />
                         {sidebarOpen && (
-                          <span className="text-sm font-medium">{item.title}</span>
+                          <span className="text-[13px] lg:text-sm font-medium">{item.title}</span>
                         )}
                       </Link>
                     )}
@@ -448,20 +444,19 @@ function AdminLayout({ children }) {
           </nav>
 
           {/* Footer Section - Logout */}
-          <div className="p-4 border-t border-gray-200/50">
+          <div className="p-3 lg:p-4 border-t border-gray-200/50">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl min-h-[44px] transition-colors duration-200 group hover:bg-red-50/60 text-red-600 hover:text-red-700"
+              className="w-full flex items-center gap-2.5 lg:gap-3 px-3 py-2 lg:py-2.5 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 group hover:bg-red-50/60 text-red-600 hover:text-red-700"
             >
               <LogOut
-                size={20}
+                className="group-hover:scale-105 transition-transform duration-200 w-[18px] h-[18px] lg:w-5 lg:h-5"
                 strokeWidth={1.5}
-                className="group-hover:scale-105 transition-transform duration-200"
               />
               {sidebarOpen && (
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-sm block">Logout</span>
-                  <span className="text-xs text-red-500/70 block mt-0.5">
+                  <span className="font-semibold text-xs lg:text-sm block">Logout</span>
+                  <span className="text-[10px] text-red-500/70 block mt-0.5">
                     Keluar dari akun administrator
                   </span>
                 </div>
@@ -498,10 +493,12 @@ function AdminLayout({ children }) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-4 sm:p-6 lg:p-8">
-            <PageTransition>
-              {children}
-            </PageTransition>
+          <div className="flex-1 px-3 lg:px-4 xl:px-6 py-3 lg:py-4 xl:py-6">
+            <div className="max-w-[1200px] xl:max-w-[1400px] mx-auto w-full">
+              <PageTransition>
+                {children}
+              </PageTransition>
+            </div>
           </div>
         </main>
 
