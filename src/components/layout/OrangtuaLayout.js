@@ -52,7 +52,7 @@ const menuItems = [
   },
 ];
 
-function OrangtuaSidebar({ userName = 'Orang Tua' }) {
+function OrangtuaSidebar({ userName = 'Orang Tua', onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
@@ -189,6 +189,27 @@ function OrangtuaSidebar({ userName = 'Orang Tua' }) {
             </ul>
           </nav>
 
+          {/* Logout Button */}
+          <div className="p-2.5 lg:p-3 border-t border-emerald-100/30 mt-auto">
+            <button
+              onClick={onLogout}
+              className={`
+                w-full flex items-center gap-2.5 lg:gap-3 px-2.5 py-2 lg:px-3 lg:py-2.5 rounded-xl transition-all
+                text-gray-700 hover:bg-rose-50 hover:text-rose-600 group
+                ${isCollapsed ? 'justify-center' : ''}
+              `}
+              title={isCollapsed ? 'Logout' : ''}
+            >
+              <LogOut className={`w-[18px] h-[18px] lg:w-5 lg:h-5 transition-colors text-gray-500 group-hover:text-rose-600`} />
+              {!isCollapsed && (
+                <div className="flex-1 text-left">
+                  <p className="text-[13px] lg:text-sm font-semibold">Logout</p>
+                  <p className="text-[10px] lg:text-xs text-gray-500 mt-0.5 group-hover:text-rose-400">Keluar dari akun</p>
+                </div>
+              )}
+            </button>
+          </div>
+
           {/* Footer Tips */}
           {!isCollapsed && (
             <div className="p-3 border-t border-emerald-100/30 bg-gradient-to-br from-emerald-50/50 to-amber-50/50">
@@ -228,27 +249,23 @@ function OrangtuaLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-cream-50/30 to-amber-50/20">
-      <OrangtuaSidebar userName={session?.user?.name || "Orang Tua"} />
+      <OrangtuaSidebar userName={session?.user?.name || "Orang Tua"} onLogout={handleLogout} />
 
-      {/* Top Bar with Logout */}
+      {/* Main Content Area */}
       <div className="lg:ml-[240px] xl:ml-[260px] transition-all duration-300">
         <header className="bg-white/70 backdrop-blur-sm shadow-sm sticky top-0 z-20 border-b border-emerald-100/30">
           <div className="px-4 sm:px-6 lg:px-8 py-2.5">
-            <div className="flex justify-end">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-              >
-                <LogOut className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
-                <span className="hidden sm:inline text-sm lg:text-base">Logout</span>
-              </button>
+            <div className="flex justify-end h-8 lg:h-9">
+              {/* Logout button moved to sidebar for consistency */}
             </div>
           </div>
         </header>
 
-        <main className="px-3 lg:px-4 xl:px-6 py-3 lg:py-4 xl:py-6">
-          <div className="max-w-[1200px] xl:max-w-[1400px] mx-auto w-full">
-            {children}
+        <main className="flex-1 min-w-0">
+          <div className="w-full px-4 sm:px-6 lg:px-8 pt-5 pb-8">
+            <div className="w-full">
+              {children}
+            </div>
           </div>
         </main>
       </div>

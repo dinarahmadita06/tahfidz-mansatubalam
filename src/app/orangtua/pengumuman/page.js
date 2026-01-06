@@ -12,14 +12,7 @@ import {
   Star,
 } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
-
-// Category config
-const CATEGORY_CONFIG = {
-  UMUM: { icon: Bell, color: 'bg-blue-100 text-blue-600' },
-  AKADEMIK: { icon: BookOpen, color: 'bg-purple-100 text-purple-600' },
-  KEGIATAN: { icon: Star, color: 'bg-amber-100 text-amber-600' },
-  PENTING: { icon: Award, color: 'bg-red-100 text-red-600' },
-};
+import AnnouncementCard from '@/components/shared/AnnouncementCard';
 
 export default function OrangtuaPengumumanPage() {
   const [pengumuman, setPengumuman] = useState([]);
@@ -86,22 +79,6 @@ export default function OrangtuaPengumumanPage() {
     });
   };
 
-  const truncateText = (text, length = 120) => {
-    if (!text || text.length <= length) return text;
-    return text.substring(0, length) + '...';
-  };
-
-  const isNew = (date) => {
-    const now = new Date();
-    const created = new Date(date);
-    const diffDays = (now - created) / (1000 * 60 * 60 * 24);
-    return diffDays < 3;
-  };
-
-  const getCategoryIcon = (kategori) => {
-    return CATEGORY_CONFIG[kategori] || CATEGORY_CONFIG.UMUM;
-  };
-
   return (
     <OrangtuaLayout>
       {/* Background Gradient - SIMTAQ Style */}
@@ -160,11 +137,11 @@ export default function OrangtuaPengumumanPage() {
 
           {/* Content */}
           {loading ? (
-            <div className="grid grid-cols-1 gap-4">
-              {[1, 2, 3].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-40 bg-white/70 backdrop-blur rounded-2xl border border-white/20 animate-pulse"
+                  className="h-48 bg-white/70 backdrop-blur rounded-2xl border border-white/20 animate-pulse"
                 />
               ))}
             </div>
@@ -186,59 +163,15 @@ export default function OrangtuaPengumumanPage() {
             </div>
           ) : (
             <>
-              {/* Card List */}
-              <div className="space-y-4">
-                {filteredPengumuman.map((item) => {
-                  const categoryData = getCategoryIcon(item.kategori);
-                  const CategoryIcon = categoryData.icon;
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                      onClick={() => setSelectedPengumuman(item)}
-                    >
-                      <div className="flex items-start gap-4">
-                        {/* Icon */}
-                        <div className={`p-3 rounded-xl ${categoryData.color} flex-shrink-0`}>
-                          <CategoryIcon size={24} />
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <h3 className="font-bold text-gray-900 text-lg line-clamp-2">
-                              {item.judul}
-                            </h3>
-                            {isNew(item.createdAt) && (
-                              <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full flex-shrink-0">
-                                Baru
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-                            {truncateText(item.isi, 150)}
-                          </p>
-
-                          <div className="flex items-center gap-3 text-sm text-gray-500">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar size={16} />
-                              <span>{formatDate(item.createdAt)}</span>
-                            </div>
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
-                              {item.kategori}
-                            </span>
-                          </div>
-
-                          <button className="mt-3 text-emerald-600 hover:text-emerald-700 font-semibold text-sm flex items-center gap-1">
-                            Lihat Detail →
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              {/* Card List - Grid matches Student/Teacher */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredPengumuman.map((item) => (
+                  <AnnouncementCard 
+                    key={item.id} 
+                    announcement={item} 
+                    onClick={() => setSelectedPengumuman(item)}
+                  />
+                ))}
               </div>
 
               {/* Footer Info */}
