@@ -19,19 +19,75 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 // SUB-COMPONENTS
 // ============================================================
 
-function StatCard({ label, value, icon, color, subtitle }) {
+function StatCard({ label, value, icon: Icon, color = 'emerald', subtitle }) {
+  const getReportCardVariant = (type) => {
+    const variants = {
+      emerald: {
+        bg: 'bg-emerald-50/70',
+        border: 'border-emerald-200/70',
+        ring: 'ring-1 ring-emerald-200/50',
+        textTitle: 'text-emerald-700',
+        textValue: 'text-emerald-800',
+        textSubtitle: 'text-emerald-600',
+        iconBg: 'bg-emerald-100/70',
+        iconText: 'text-emerald-600',
+        glow: 'shadow-lg shadow-emerald-500/10'
+      },
+      amber: {
+        bg: 'bg-amber-50/70',
+        border: 'border-amber-200/70',
+        ring: 'ring-1 ring-amber-200/50',
+        textTitle: 'text-amber-700',
+        textValue: 'text-amber-800',
+        textSubtitle: 'text-amber-600',
+        iconBg: 'bg-amber-100/70',
+        iconText: 'text-amber-600',
+        glow: 'shadow-lg shadow-amber-500/10'
+      },
+      purple: {
+        bg: 'bg-purple-50/70',
+        border: 'border-purple-200/70',
+        ring: 'ring-1 ring-purple-200/50',
+        textTitle: 'text-purple-700',
+        textValue: 'text-purple-800',
+        textSubtitle: 'text-purple-600',
+        iconBg: 'bg-purple-100/70',
+        iconText: 'text-purple-600',
+        glow: 'shadow-lg shadow-purple-500/10'
+      },
+      blue: {
+        bg: 'bg-blue-50/70',
+        border: 'border-blue-200/70',
+        ring: 'ring-1 ring-blue-200/50',
+        textTitle: 'text-blue-700',
+        textValue: 'text-blue-800',
+        textSubtitle: 'text-blue-600',
+        iconBg: 'bg-blue-100/70',
+        iconText: 'text-blue-600',
+        glow: 'shadow-lg shadow-blue-500/10'
+      }
+    };
+    return variants[type] || variants.emerald;
+  };
+
+  const variant = getReportCardVariant(color);
+
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+    <div className={`${variant.bg} ${variant.border} ${variant.ring} ${variant.glow} p-5 rounded-2xl border shadow-sm hover:shadow-md transition-all group`}>
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
-          <div className="flex items-baseline gap-1">
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-            {subtitle && <span className="text-[10px] text-gray-400 font-medium">{subtitle}</span>}
+        <div className="min-w-0">
+          <p className={`${variant.textTitle} text-[10px] font-bold uppercase tracking-wider mb-1`}>{label}</p>
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <p className={`${variant.textValue} text-2xl font-bold`}>{value}</p>
+            {subtitle && (
+              <span className={`${variant.textSubtitle} text-[10px] font-semibold opacity-80 uppercase tracking-tight`}>
+                {subtitle}
+              </span>
+            )}
           </div>
         </div>
-        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white flex-shrink-0`}>
-          {icon}
+        <div className={`w-12 h-12 ${variant.iconBg} ${variant.iconText} rounded-full flex items-center justify-center shadow-sm flex-shrink-0 border ${variant.border}`}>
+          <Icon size={24} />
         </div>
       </div>
     </div>
@@ -403,29 +459,29 @@ export default function LaporanHafalanPage() {
                 <StatCard
                   label="Total Setoran"
                   value={currentStats.totalSetoran || 0}
-                  icon={<BookOpen size={24} />}
-                  color="bg-emerald-500"
+                  icon={BookOpen}
+                  color="emerald"
                   subtitle="setoran"
                 />
                 <StatCard
                   label="Rata-rata Nilai"
                   value={currentStats.rataRataNilai || 0}
-                  icon={<Award size={24} />}
-                  color="bg-amber-500"
+                  icon={Award}
+                  color="amber"
                   subtitle="dari 100"
                 />
                 <StatCard
                   label="Target Tercapai"
                   value={`${currentStats.targetTercapai || 0}%`}
-                  icon={<Target size={24} />}
-                  color="bg-purple-500"
+                  icon={Target}
+                  color="purple"
                   subtitle="progress"
                 />
                 <StatCard
                   label="Konsistensi"
                   value={currentStats.konsistensi || 0}
-                  icon={<Flame size={24} />}
-                  color="bg-sky-500"
+                  icon={Flame}
+                  color="blue"
                   subtitle="hari"
                 />
               </div>
