@@ -2,21 +2,23 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./src/lib/prisma.js";
 import bcrypt from "bcryptjs";
 
-// Test Prisma connection on startup
-let prismaReady = false;
-let prismaError = null;
-
-(async () => {
-  try {
-    console.log('🔗 [AUTH] Testing Prisma connection...');
-    await prisma.$queryRaw`SELECT 1`;
-    prismaReady = true;
-    console.log('✅ [AUTH] Prisma connection successful!');
-  } catch (error) {
-    prismaError = error;
-    console.error('❌ [AUTH] Prisma connection failed:', error.message);
+/**
+ * Lightweight retry wrapper for database queries
+ * Helps mitigate random connection timeouts in serverless environments
+ */
+async function withRetry(fn, retries = 2, delay = 800) {
+  let lastErr;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      console.warn(`⚠️ [AUTH] Database attempt ${i + 1} failed, retrying...`);
+      if (i < retries - 1) await new Promise((r) => setTimeout(r, delay));
+    }
   }
-})();
+  throw lastErr;
+}
 
 export const authConfig = {
   providers: [
@@ -27,28 +29,20 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        const email = credentials?.email?.toLowerCase().trim();
+        const password = credentials?.password;
+
+        if (!email || !password) {
+          throw new Error("Email dan password harus diisi");
+        }
+
         try {
-          console.log('🔐 [AUTH] Authorize attempt for:', credentials?.email);
+          console.log('🔐 [AUTH] Authorize attempt for:', email);
 
-          // Check if Prisma is ready
-          if (!prismaReady && prismaError) {
-            console.error('❌ [AUTH] Prisma not ready:', prismaError.message);
-            throw new Error("Database connection error. Please try again later.");
-          }
-
-          if (!credentials?.email || !credentials?.password) {
-            console.error('❌ [AUTH] Missing credentials');
-            throw new Error("Email dan password harus diisi");
-          }
-
-          console.log('🔍 [AUTH] Looking up user in database...');
-          
-          let user;
-          try {
-            user = await prisma.user.findUnique({
-              where: {
-                email: credentials.email.toLowerCase().trim(),
-              },
+          // Wrapped user lookup with retry logic
+          const user = await withRetry(() =>
+            prisma.user.findUnique({
+              where: { email },
               include: {
                 siswa: true,
                 guru: true,
@@ -67,92 +61,49 @@ export const authConfig = {
                   }
                 },
               },
-            });
-          } catch (dbError) {
-            console.error('💥 [AUTH] Database error:', dbError.message);
-            throw new Error("Terjadi kesalahan koneksi database. Silakan coba lagi.");
-          }
+            })
+          );
 
           if (!user) {
-            console.error('❌ [AUTH] User not found:', credentials.email);
-            throw new Error("Email atau password salah");
+            console.error('❌ [AUTH] User not found:', email);
+            throw new Error("INVALID_CREDENTIALS");
           }
 
-          console.log('✅ [AUTH] User found:', { id: user.id, email: user.email, role: user.role, isActive: user.isActive });
+          console.log('✅ [AUTH] User found, comparing password...');
+
+          // Password check
+          const isPasswordValid = await bcrypt.compare(String(password), user.password);
+          
+          if (!isPasswordValid) {
+            console.error('❌ [AUTH] Invalid password for:', email);
+            throw new Error("INVALID_CREDENTIALS");
+          }
 
           // Check if user account is active (applies to all roles)
           if (!user.isActive) {
-            console.warn('⚠️  [AUTH] User account is not active:', user.email);
             throw new Error("Akun Anda tidak aktif. Silakan hubungi admin sekolah.");
           }
 
-          // Check if user account is active based on role
+          // Role-specific validation
           if (user.role === 'SISWA') {
-            if (!user.siswa) {
-              console.error('❌ [AUTH] Siswa profile not found for user');
-              throw new Error("Profil siswa tidak ditemukan. Hubungi admin.");
-            }
+            if (!user.siswa) throw new Error("Profil siswa tidak ditemukan.");
             if (user.siswa.status !== 'approved') {
-              console.warn('⚠️  [AUTH] Siswa account status:', user.siswa.status);
-              throw new Error(`Akun Anda sedang dalam status ${user.siswa.status}. Hubungi admin untuk persetujuan.`);
+              throw new Error(`Akun Anda sedang dalam status ${user.siswa.status}. Hubungi admin.`);
             }
-            // Check student lifecycle status
             if (user.siswa.statusSiswa !== 'AKTIF') {
-              const statusMessages = {
-                LULUS: 'Akun Anda tidak aktif karena telah lulus. Silakan hubungi admin sekolah.',
-                PINDAH: 'Akun Anda tidak aktif karena telah pindah sekolah. Silakan hubungi admin sekolah.',
-                KELUAR: 'Akun Anda sudah tidak aktif. Silakan hubungi admin sekolah.'
-              };
-              const message = statusMessages[user.siswa.statusSiswa] || 'Akun Anda sudah tidak aktif. Silakan hubungi admin sekolah.';
-              console.warn('⚠️  [AUTH] Siswa status:', user.siswa.statusSiswa);
-              throw new Error(message);
+              throw new Error("Akun Anda sudah tidak aktif (Lulus/Pindah/Keluar).");
             }
           }
 
           if (user.role === 'ORANG_TUA') {
-            if (!user.orangTua) {
-              console.error('❌ [AUTH] OrangTua profile not found for user');
-              throw new Error("Profil orang tua tidak ditemukan. Hubungi admin.");
-            }
-            
-            // Check connected students' status (RULE: parent status depends on children)
+            if (!user.orangTua) throw new Error("Profil orang tua tidak ditemukan.");
             if (!user.orangTua.orangTuaSiswa || user.orangTua.orangTuaSiswa.length === 0) {
-              console.warn('⚠️  [AUTH] OrangTua has no connected students');
-              throw new Error("Akun Anda belum terhubung dengan siswa. Silakan hubungi admin sekolah.");
+              throw new Error("Akun Anda belum terhubung dengan siswa.");
             }
-            
-            // Check if ANY connected student has pending status
-            const hasPendingSiswa = user.orangTua.orangTuaSiswa.some(
-              (relation) => relation.siswa.status !== 'approved'
-            );
-            
+            const hasPendingSiswa = user.orangTua.orangTuaSiswa.some(r => r.siswa.status !== 'approved');
             if (hasPendingSiswa) {
-              console.warn('⚠️  [AUTH] Connected student(s) still pending validation');
-              throw new Error("Akun anak masih dalam proses validasi. Silakan tunggu persetujuan admin.");
+              throw new Error("Akun anak masih dalam proses validasi.");
             }
-          }
-
-          console.log('🔑 [AUTH] Comparing password...');
-          console.log('🔑 [AUTH] Password hash exists:', !!user.password);
-          console.log('🔑 [AUTH] Password hash length:', user.password?.length);
-
-          // Ensure we're using bcryptjs compare properly
-          let isPasswordValid = false;
-          try {
-            isPasswordValid = await bcrypt.compare(
-              String(credentials.password),
-              String(user.password)
-            );
-          } catch (bcryptError) {
-            console.error('❌ [AUTH] Bcrypt error:', bcryptError.message);
-            throw new Error("Terjadi kesalahan saat verifikasi password.");
-          }
-
-          console.log('🔑 [AUTH] Password valid:', isPasswordValid);
-
-          if (!isPasswordValid) {
-            console.error('❌ [AUTH] Invalid password for:', credentials.email);
-            throw new Error("Email atau password salah");
           }
 
           console.log('✅ [AUTH] Authentication successful for:', user.email);
@@ -171,7 +122,16 @@ export const authConfig = {
           };
         } catch (error) {
           console.error('💥 [AUTH] Error in authorize:', error.message);
-          console.error('💥 [AUTH] Error stack:', error.stack);
+          
+          if (error.message === "INVALID_CREDENTIALS") {
+            throw new Error("Email atau password salah");
+          }
+
+          // Generic error for database timeouts/connection issues
+          if (error.message.includes('Prisma') || error.message.includes('Can\'t reach database') || error.message.includes('Connection')) {
+             throw new Error("Server sedang sibuk. Coba lagi beberapa saat.");
+          }
+
           throw error;
         }
       },
