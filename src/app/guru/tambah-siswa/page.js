@@ -3,884 +3,499 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Save, X, Loader2, Eye, EyeOff, RefreshCw, AlertCircle, ArrowLeft } from 'lucide-react';
+import { 
+  UserPlus, 
+  Save, 
+  X, 
+  Loader2, 
+  Eye, 
+  EyeOff, 
+  RefreshCw, 
+  AlertCircle, 
+  ArrowLeft,
+  User,
+  Key,
+  Users,
+  Search,
+  CheckCircle2
+} from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
-
-// Islamic Modern Color Palette (same as Kelola Siswa)
-const colors = {
-  emerald: {
-    50: '#ECFDF5',
-    100: '#D1FAE5',
-    200: '#A7F3D0',
-    300: '#6EE7B7',
-    400: '#34D399',
-    500: '#1A936F',
-    600: '#059669',
-    700: '#047857',
-  },
-  amber: {
-    50: '#FEF3C7',
-    100: '#FDE68A',
-    200: '#FCD34D',
-    300: '#FBBF24',
-    400: '#F7C873',
-    500: '#F59E0B',
-    600: '#D97706',
-  },
-  white: '#FFFFFF',
-  gray: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-  },
-  text: {
-    primary: '#1B1B1B',
-    secondary: '#444444',
-    tertiary: '#6B7280',
-  },
-};
+import PasswordField from '@/components/admin/PasswordField';
+import AccountSuccessModal from '@/components/admin/AccountSuccessModal';
+import { generateSiswaEmail } from '@/lib/siswaUtils';
+import { generateWaliEmail } from '@/lib/passwordUtils';
 
 export default function TambahSiswaPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  
   const [loading, setLoading] = useState(false);
   const [kelasList, setKelasList] = useState([]);
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
+  const [parents, setParents] = useState([]);
+  const [loadingParents, setLoadingParents] = useState(false);
+  const [parentSearchTerm, setParentSearchTerm] = useState('');
+  
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAccounts, setCreatedAccounts] = useState(null);
+
+  // Parent mode: 'select' or 'create'
+  const [parentMode, setParentMode] = useState('select');
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [newParentData, setNewParentData] = useState({
     name: '',
+    phone: '',
     email: '',
     password: '',
-    nisn: '',
+    relationType: 'Ayah',
+  });
+
+  // Student form data
+  const [formData, setFormData] = useState({
+    name: '',
+    password: '',
     nis: '',
+    nisn: '',
     kelasId: '',
-    jenisKelamin: '',
-    tempatLahir: '',
-    tanggalLahir: '',
-    alamat: '',
-    noTelepon: '',
+    gender: 'LAKI_LAKI',
+    birthDate: '',
   });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     } else if (status === 'authenticated') {
-      fetchKelas();
+      fetchTeacherKelas();
+      fetchParents();
     }
   }, [status, router]);
 
-  useEffect(() => {
-    // Auto-generate password on mount
-    if (!formData.password) {
-      generatePassword();
-    }
-  }, []);
-
-  useEffect(() => {
-    // Auto-generate email when name and NIS change
-    if (formData.name && formData.nis) {
-      const firstName = formData.name.trim().split(' ')[0].toLowerCase();
-      const generatedEmail = `${firstName}.${formData.nis}@siswa.tahfidz.sch.id`;
-      setFormData(prev => ({ ...prev, email: generatedEmail }));
-    } else {
-      setFormData(prev => ({ ...prev, email: '' }));
-    }
-  }, [formData.name, formData.nis]);
-
-  const fetchKelas = async () => {
+  const fetchTeacherKelas = async () => {
     try {
-      const res = await fetch('/api/kelas?showAll=true');
-      const data = await res.json();
-      setKelasList(Array.isArray(data) ? data : []);
-
-      // Auto-select first kelas if available (guru's assigned class)
-      if (Array.isArray(data) && data.length > 0 && !formData.kelasId) {
-        setFormData(prev => ({ ...prev, kelasId: data[0].id }));
+      const response = await fetch('/api/guru/kelas');
+      const data = await response.json();
+      const list = data.kelas || [];
+      setKelasList(list);
+      if (list.length > 0 && !formData.kelasId) {
+        setFormData(prev => ({ ...prev, kelasId: list[0].id }));
       }
     } catch (error) {
-      console.error('Error fetching kelas:', error);
+      console.error('Error fetching teacher kelas:', error);
     }
   };
 
-  const generatePassword = () => {
-    // Generate random 8-digit numeric password
-    let password = '';
-    for (let i = 0; i < 8; i++) {
-      password += Math.floor(Math.random() * 10);
+  const fetchParents = async () => {
+    try {
+      setLoadingParents(true);
+      const response = await fetch('/api/teacher/parents');
+      const result = await response.json();
+      setParents(result.data || []);
+    } catch (error) {
+      console.error('Error fetching parents:', error);
+    } finally {
+      setLoadingParents(false);
     }
-    setFormData(prev => ({ ...prev, password }));
   };
+
+  // Auto-generate parent email
+  useEffect(() => {
+    if (parentMode === 'create' && newParentData.name && formData.nis) {
+      const email = generateWaliEmail(newParentData.name, formData.nis);
+      setNewParentData(prev => ({ ...prev, email }));
+    }
+  }, [newParentData.name, formData.nis, parentMode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (formData.password.length < 6) {
-      alert('Password minimal 6 karakter');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const response = await fetch('/api/siswa', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const payload = {
+        student: {
+          ...formData,
+          email: generateSiswaEmail(formData.name, formData.nis),
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          nisn: formData.nisn,
-          nis: formData.nis,
-          kelasId: formData.kelasId,
-          jenisKelamin: formData.jenisKelamin,
-          tempatLahir: formData.tempatLahir,
-          tanggalLahir: formData.tanggalLahir,
-          alamat: formData.alamat,
-          noTelepon: formData.noTelepon,
-          // Status 'pending' is set automatically by backend
-        }),
+        parentMode: parentMode === 'select' ? 'EXISTING' : 'NEW',
+        existingParentId: selectedParentId,
+        parent: parentMode === 'create' ? newParentData : null,
+      };
+
+      const response = await fetch('/api/teacher/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
 
-      if (response.ok) {
-        alert('Siswa berhasil ditambahkan!\nSiswa akan muncul di daftar dengan status "Menunggu Validasi" dan akan aktif setelah disetujui admin.');
-        router.push('/guru/siswa');
-      } else {
-        console.error('API Error:', result);
-        alert('Error: ' + (result.error || 'Failed to create siswa') +
-              (result.details ? '\n\nDetail: ' + result.details : ''));
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal menambahkan siswa');
       }
+
+      // Prepare success data
+      setCreatedAccounts({
+        student: {
+          name: formData.name,
+          email: payload.student.email,
+          password: formData.password,
+        },
+        parent: {
+          name: parentMode === 'create' ? newParentData.name : (parents.find(p => p.id === selectedParentId)?.user?.name || 'Orang Tua'),
+          email: parentMode === 'create' ? newParentData.email : (parents.find(p => p.id === selectedParentId)?.user?.email || ''),
+          password: parentMode === 'create' ? newParentData.password : '********',
+          isNew: parentMode === 'create',
+        },
+      });
+
+      setShowSuccessModal(true);
     } catch (error) {
-      console.error('Error creating siswa:', error);
-      alert('Terjadi kesalahan saat menambahkan siswa');
+      alert(`❌ ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  if (status === 'loading') {
-    return (
-      <GuruLayout>
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: colors.emerald[600] }} />
-        </div>
-      </GuruLayout>
-    );
-  }
+  const filteredParents = parents.filter(p => 
+    p.user.name.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
+    p.user.email.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
+    (p.noTelepon && p.noTelepon.includes(parentSearchTerm))
+  );
+
+  if (status === 'loading') return null;
 
   return (
     <GuruLayout>
-      <div style={{
-        background: `linear-gradient(to bottom right, ${colors.emerald[50]} 0%, ${colors.amber[50]} 100%)`,
-        minHeight: '100vh',
-        position: 'relative',
-      }}>
-        {/* Subtle Pattern Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='none' stroke='%231A936F' stroke-width='0.5' opacity='0.05'/%3E%3Ccircle cx='30' cy='30' r='8' fill='none' stroke='%23F7C873' stroke-width='0.5' opacity='0.05'/%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px',
-          pointerEvents: 'none',
-          opacity: 0.3,
-          zIndex: 0,
-        }} />
-
-        {/* Header */}
-        <div style={{
-          position: 'relative',
-          padding: '32px 48px 24px',
-          borderBottom: `1px solid ${colors.gray[200]}`,
-          background: `linear-gradient(135deg, ${colors.white}98 0%, ${colors.white}95 100%)`,
-          backdropFilter: 'blur(10px)',
-          zIndex: 2,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+      <div className="min-h-screen bg-gray-50/50 pb-20">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 pt-10 pb-24 px-6 sm:px-10">
+          <div className="max-w-5xl mx-auto">
             <button
-              onClick={() => router.push('/guru/siswa')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                background: colors.white,
-                border: `2px solid ${colors.gray[300]}`,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: '"Poppins", system-ui, sans-serif',
-              }}
-              className="back-btn"
+              onClick={() => router.push('/guru/kelola-siswa')}
+              className="flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors"
             >
-              <ArrowLeft size={20} color={colors.text.primary} />
+              <ArrowLeft size={20} />
+              <span className="font-medium">Kembali ke Daftar Siswa</span>
             </button>
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
-              background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(26, 147, 111, 0.3)',
-            }}>
-              <UserPlus size={28} color={colors.white} />
-            </div>
-            <div>
-              <h1 style={{
-                fontSize: '32px',
-                fontWeight: 700,
-                background: `linear-gradient(135deg, ${colors.emerald[600]} 0%, ${colors.emerald[500]} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '4px',
-                fontFamily: '"Poppins", system-ui, sans-serif',
-              }}>
-                Tambah Siswa Baru
-              </h1>
-              <p style={{
-                fontSize: '14px',
-                fontWeight: 500,
-                color: colors.text.secondary,
-                fontFamily: '"Poppins", system-ui, sans-serif',
-              }}>
-                Form input cepat untuk siswa pindahan atau siswa baru
-              </p>
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-xl">
+                <UserPlus size={32} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white tracking-tight">Tambah Siswa & Wali</h1>
+                <p className="text-emerald-50 font-medium opacity-90">Sistem Registrasi Terpadu (Siswa + Orang Tua)</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div style={{ position: 'relative', padding: '32px 48px 48px', zIndex: 2 }}>
-          {/* Info Alert */}
-          <div style={{
-            background: `linear-gradient(135deg, ${colors.amber[50]} 0%, ${colors.amber[100]} 100%)`,
-            border: `2px solid ${colors.amber[200]}`,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-            display: 'flex',
-            gap: '16px',
-            alignItems: 'flex-start',
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              background: `linear-gradient(135deg, ${colors.amber[400]} 0%, ${colors.amber[500]} 100%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <AlertCircle size={22} color={colors.white} />
-            </div>
-            <div>
-              <p style={{
-                fontSize: '14px',
-                fontWeight: 600,
-                color: colors.text.primary,
-                marginBottom: '4px',
-                fontFamily: '"Poppins", system-ui, sans-serif',
-              }}>
-                Informasi Penting
-              </p>
-              <p style={{
-                fontSize: '13px',
-                color: colors.text.secondary,
-                lineHeight: '1.6',
-                fontFamily: '"Poppins", system-ui, sans-serif',
-              }}>
-                Data siswa yang Anda tambahkan akan masuk ke status <strong>Menunggu Validasi</strong> dan perlu disetujui oleh Admin sebelum menjadi data aktif.
-                Namun, Anda tetap dapat melakukan input setoran, penilaian, dan presensi untuk siswa ini. Data akan tersimpan dan otomatis aktif setelah divalidasi Admin.
-              </p>
-            </div>
-          </div>
+        {/* Form Container */}
+        <div className="max-w-5xl mx-auto -mt-16 px-6 sm:px-10">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Section 1: Data Siswa */}
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-emerald-900/5 border border-white p-8">
+              <div className="flex items-center gap-3 border-b border-emerald-100 pb-4 mb-8">
+                <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+                  <User size={22} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">1. Data Diri Siswa</h3>
+              </div>
 
-          {/* Form Card */}
-          <div style={{
-            background: colors.white,
-            borderRadius: '20px',
-            padding: '32px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-            border: `2px solid ${colors.gray[200]}`,
-          }}>
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                {/* Nama Lengkap */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: colors.text.primary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    Nama Lengkap <span style={{ color: colors.emerald[600] }}>*</span>
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2.5">Nama Lengkap Siswa *</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.2s ease',
-                    }}
-                    className="form-input"
-                    placeholder="Contoh: Ahmad Zaki Mubarak"
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all"
+                    placeholder="Masukkan nama lengkap sesuai ijazah"
                   />
                 </div>
 
-                {/* NIS and NISN */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.text.primary,
-                      marginBottom: '8px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                    }}>
-                      NIS <span style={{ color: colors.emerald[600] }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.nis}
-                      onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                      }}
-                      className="form-input"
-                      placeholder="Nomor Induk Siswa"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.text.primary,
-                      marginBottom: '8px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                    }}>
-                      NISN <span style={{ color: colors.emerald[600] }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.nisn}
-                      onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                      }}
-                      className="form-input"
-                      placeholder="Nomor Induk Siswa Nasional"
-                    />
-                  </div>
-                </div>
-
-                {/* Auto-generated Email */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: colors.text.primary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    Email Siswa <span style={{ color: colors.emerald[600] }}>*</span>
-                  </label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2.5">NIS *</label>
                   <input
-                    type="email"
+                    type="text"
                     required
-                    readOnly
-                    value={formData.email}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      outline: 'none',
-                      background: colors.gray[50],
-                      color: colors.text.secondary,
-                      cursor: 'not-allowed',
-                    }}
-                    placeholder="Email akan dibuat otomatis"
+                    value={formData.nis}
+                    onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 focus:bg-white outline-none transition-all"
+                    placeholder="Nomor Induk Siswa"
                   />
-                  <p style={{
-                    fontSize: '12px',
-                    color: colors.text.tertiary,
-                    marginTop: '6px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                    fontStyle: 'italic',
-                  }}>
-                    Email dibuat otomatis dari kata pertama nama dan NIS
-                  </p>
                 </div>
 
-                {/* Auto-generated Password */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: colors.text.primary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    Password <span style={{ color: colors.emerald[600] }}>*</span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      readOnly
-                      value={formData.password}
-                      style={{
-                        width: '100%',
-                        padding: '14px 100px 14px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        outline: 'none',
-                        background: colors.gray[50],
-                        color: colors.text.primary,
-                        cursor: 'not-allowed',
-                        fontWeight: 600,
-                        letterSpacing: showPassword ? 'normal' : '2px',
-                      }}
-                    />
-                    <div style={{
-                      position: 'absolute',
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      display: 'flex',
-                      gap: '4px',
-                    }}>
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{
-                          padding: '8px',
-                          background: colors.white,
-                          border: `2px solid ${colors.gray[300]}`,
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.2s ease',
-                        }}
-                        className="icon-btn"
-                        title={showPassword ? 'Sembunyikan Password' : 'Lihat Password'}
-                      >
-                        {showPassword ? <EyeOff size={18} color={colors.text.tertiary} /> : <Eye size={18} color={colors.text.tertiary} />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={generatePassword}
-                        style={{
-                          padding: '8px',
-                          background: colors.white,
-                          border: `2px solid ${colors.emerald[300]}`,
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.2s ease',
-                        }}
-                        className="icon-btn-emerald"
-                        title="Generate Password Baru"
-                      >
-                        <RefreshCw size={18} color={colors.emerald[600]} />
-                      </button>
-                    </div>
-                  </div>
-                  <p style={{
-                    fontSize: '12px',
-                    color: colors.text.tertiary,
-                    marginTop: '6px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                    fontStyle: 'italic',
-                  }}>
-                    Password dibuat otomatis oleh sistem. Klik ikon refresh untuk membuat password baru.
-                  </p>
+                  <label className="block text-sm font-bold text-gray-700 mb-2.5">NISN (Opsional)</label>
+                  <input
+                    type="text"
+                    value={formData.nisn}
+                    onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 focus:bg-white outline-none transition-all"
+                    placeholder="Nomor Induk Siswa Nasional"
+                  />
                 </div>
 
-                {/* Kelas and Jenis Kelamin */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.text.primary,
-                      marginBottom: '8px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                    }}>
-                      Kelas <span style={{ color: colors.emerald[600] }}>*</span>
-                    </label>
-                    <select
-                      required
-                      value={formData.kelasId}
-                      onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer',
-                      }}
-                      className="form-input"
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2.5">Kelas *</label>
+                  <select
+                    required
+                    value={formData.kelasId}
+                    onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 focus:bg-white outline-none transition-all cursor-pointer"
+                  >
+                    {kelasList.map(k => (
+                      <option key={k.id} value={k.id}>{k.nama}</option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-emerald-600 mt-2 font-medium italic">Hanya menampilkan kelas yang Anda ampu</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2.5">Jenis Kelamin *</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, gender: 'LAKI_LAKI' })}
+                      className={`py-4 rounded-2xl font-bold border-2 transition-all ${formData.gender === 'LAKI_LAKI' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'}`}
                     >
-                      <option value="">Pilih Kelas</option>
-                      {kelasList.map((kelas) => (
-                        <option key={kelas.id} value={kelas.id}>
-                          {kelas.nama}
-                        </option>
+                      Laki-laki
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, gender: 'PEREMPUAN' })}
+                      className={`py-4 rounded-2xl font-bold border-2 transition-all ${formData.gender === 'PEREMPUAN' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'}`}
+                    >
+                      Perempuan
+                    </button>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2.5">Tanggal Lahir (Opsional)</label>
+                  <input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 focus:bg-white outline-none transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Akun Siswa */}
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-emerald-900/5 border border-white p-8">
+              <div className="flex items-center gap-3 border-b border-emerald-100 pb-4 mb-8">
+                <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+                  <Key size={22} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">2. Keamanan Akun Siswa</h3>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2.5">Email Akses (Otomatis)</label>
+                  <div className="w-full px-5 py-4 rounded-2xl border-2 border-gray-50 bg-gray-50/80 text-gray-400 font-medium italic">
+                    {generateSiswaEmail(formData.name, formData.nis) || 'Selesaikan Nama & NIS terlebih dahulu'}
+                  </div>
+                </div>
+
+                <PasswordField
+                  label="Password Login Siswa"
+                  value={formData.password}
+                  onChange={(val) => setFormData({ ...formData, password: val })}
+                  placeholder="Gunakan password aman"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Section 3: Data Wali */}
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-emerald-900/5 border border-white p-8">
+              <div className="flex items-center gap-3 border-b border-emerald-100 pb-4 mb-8">
+                <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+                  <Users size={22} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">3. Data Orang Tua / Wali</h3>
+              </div>
+
+              {/* Mode Selector */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+                <button
+                  type="button"
+                  onClick={() => setParentMode('select')}
+                  className={`flex-1 flex items-center gap-4 p-5 rounded-2xl border-2 transition-all text-left ${parentMode === 'select' ? 'border-emerald-500 bg-emerald-50/50 shadow-md shadow-emerald-100' : 'border-gray-100 bg-white hover:border-gray-200'}`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${parentMode === 'select' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-gray-200 text-gray-300'}`}>
+                    <Search size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Pilih Existing</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Cari orang tua yang sudah terdaftar</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setParentMode('create')}
+                  className={`flex-1 flex items-center gap-4 p-5 rounded-2xl border-2 transition-all text-left ${parentMode === 'create' ? 'border-emerald-500 bg-emerald-50/50 shadow-md shadow-emerald-100' : 'border-gray-100 bg-white hover:border-gray-200'}`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${parentMode === 'create' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-gray-200 text-gray-300'}`}>
+                    <UserPlus size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Buat Baru</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Daftarkan akun wali utama baru</p>
+                  </div>
+                </button>
+              </div>
+
+              {parentMode === 'select' ? (
+                <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="relative">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <input
+                      type="text"
+                      placeholder="Cari nama atau nomor HP orang tua..."
+                      value={parentSearchTerm}
+                      onChange={(e) => setParentSearchTerm(e.target.value)}
+                      className="w-full pl-14 pr-6 py-4 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 focus:bg-white outline-none transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-700 ml-1">Hasil Pencarian</label>
+                    <select
+                      required={parentMode === 'select'}
+                      value={selectedParentId}
+                      onChange={(e) => setSelectedParentId(e.target.value)}
+                      className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 focus:bg-white outline-none transition-all cursor-pointer"
+                    >
+                      <option value="">-- Silakan Pilih Orang Tua --</option>
+                      {filteredParents.map(p => (
+                        <option key={p.id} value={p.id}>{p.user.name} ({p.noTelepon || 'No HP -'})</option>
                       ))}
                     </select>
                   </div>
-
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.text.primary,
-                      marginBottom: '8px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                    }}>
-                      Jenis Kelamin <span style={{ color: colors.emerald[600] }}>*</span>
-                    </label>
-                    <select
-                      required
-                      value={formData.jenisKelamin}
-                      onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer',
-                      }}
-                      className="form-input"
-                    >
-                      <option value="">Pilih Jenis Kelamin</option>
-                      <option value="LAKI_LAKI">Laki-laki</option>
-                      <option value="PEREMPUAN">Perempuan</option>
-                    </select>
-                  </div>
                 </div>
-
-                {/* Tempat Lahir and Tanggal Lahir */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.text.primary,
-                      marginBottom: '8px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                    }}>
-                      Tempat Lahir <span style={{ color: colors.emerald[600] }}>*</span>
-                    </label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2.5">Jenis Wali *</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['Ayah', 'Ibu', 'Wali'].map(type => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setNewParentData({ ...newParentData, relationType: type })}
+                          className={`py-3 rounded-xl font-bold border-2 transition-all text-sm ${newParentData.relationType === type ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-100 bg-white text-gray-500'}`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2.5">Nama Lengkap Wali *</label>
                     <input
                       type="text"
-                      required
-                      value={formData.tempatLahir}
-                      onChange={(e) => setFormData({ ...formData, tempatLahir: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                      }}
-                      className="form-input"
-                      placeholder="Kota tempat lahir"
+                      required={parentMode === 'create'}
+                      value={newParentData.name}
+                      onChange={(e) => setNewParentData({ ...newParentData, name: e.target.value })}
+                      className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 outline-none transition-all"
+                      placeholder="Nama wali utama"
                     />
                   </div>
-
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.text.primary,
-                      marginBottom: '8px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                    }}>
-                      Tanggal Lahir <span style={{ color: colors.emerald[600] }}>*</span>
-                    </label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2.5">Nomor Telepon Wali *</label>
                     <input
-                      type="date"
-                      required
-                      value={formData.tanggalLahir}
-                      onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer',
-                      }}
-                      className="form-input"
+                      type="tel"
+                      required={parentMode === 'create'}
+                      value={newParentData.phone}
+                      onChange={(e) => setNewParentData({ ...newParentData, phone: e.target.value })}
+                      className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-100 bg-white/50 focus:border-emerald-500 outline-none transition-all"
+                      placeholder="08xxxxxxxxxx"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2.5">Email Wali (Otomatis)</label>
+                    <div className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-50 bg-gray-50/80 text-gray-400 font-medium italic">
+                      {newParentData.email || 'Otomatis dari Nama Wali + NIS'}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <PasswordField
+                      label="Password Login Wali"
+                      value={newParentData.password}
+                      onChange={(val) => setNewParentData({ ...newParentData, password: val })}
+                      placeholder="Gunakan password aman untuk wali"
+                      required={parentMode === 'create'}
                     />
                   </div>
                 </div>
+              )}
+            </div>
 
-                {/* Nomor HP */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: colors.text.primary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    Nomor HP
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.noTelepon}
-                    onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.2s ease',
-                    }}
-                    className="form-input"
-                    placeholder="08xx xxxx xxxx (opsional)"
-                  />
+            {/* Helpers & Info Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 bg-amber-50/50 border-2 border-amber-100 rounded-3xl flex gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
+                  <AlertCircle size={24} />
                 </div>
-
-                {/* Alamat */}
                 <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: colors.text.primary,
-                    marginBottom: '8px',
-                    fontFamily: '"Poppins", system-ui, sans-serif',
-                  }}>
-                    Alamat
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={formData.alamat}
-                    onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      outline: 'none',
-                      transition: 'all 0.2s ease',
-                      resize: 'vertical',
-                    }}
-                    className="form-input"
-                    placeholder="Alamat lengkap siswa (opsional)"
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div style={{
-                  display: 'flex',
-                  gap: '16px',
-                  paddingTop: '24px',
-                  borderTop: `2px solid ${colors.gray[200]}`,
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => router.push('/guru/siswa')}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '16px 24px',
-                      background: colors.white,
-                      border: `2px solid ${colors.gray[300]}`,
-                      borderRadius: '12px',
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      color: colors.text.primary,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                    }}
-                    className="btn-cancel"
-                  >
-                    <X size={20} />
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '16px 24px',
-                      background: loading
-                        ? colors.gray[400]
-                        : `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      color: colors.white,
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.2s ease',
-                      fontFamily: '"Poppins", system-ui, sans-serif',
-                      boxShadow: loading ? 'none' : '0 4px 12px rgba(26, 147, 111, 0.3)',
-                    }}
-                    className="btn-submit"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
-                        Menyimpan...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={20} />
-                        Simpan Siswa
-                      </>
-                    )}
-                  </button>
+                  <p className="font-bold text-amber-900">Menunggu Validasi</p>
+                  <p className="text-xs text-amber-800/70 leading-relaxed mt-1">Siswa baru akan berstatus <span className="font-bold underline italic">Pending</span> dan memerlukan persetujuan Admin sebelum aktif penuh di sistem.</p>
                 </div>
               </div>
-            </form>
-          </div>
+              <div className="p-6 bg-emerald-50/50 border-2 border-emerald-100 rounded-3xl flex gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
+                  <Users size={24} />
+                </div>
+                <div>
+                  <p className="font-bold text-emerald-900">Shared Account</p>
+                  <p className="text-xs text-emerald-800/70 leading-relaxed mt-1">Satu akun wali dapat diakses bersama oleh Ayah & Ibu untuk memantau hafalan anak dari HP masing-masing.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-end pt-10 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => router.push('/guru/kelola-siswa')}
+                disabled={loading}
+                className="w-full sm:w-auto px-10 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all disabled:opacity-50"
+              >
+                Batalkan
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto px-14 py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-xl shadow-emerald-200 hover:shadow-emerald-300 hover:-translate-y-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={22} className="animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={22} />
+                    Simpan Siswa Baru
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
-      <style jsx global>{`
-        /* Form Input Focus */
-        .form-input:focus {
-          border-color: ${colors.emerald[500]};
-          box-shadow: 0 0 0 3px ${colors.emerald[100]};
-        }
-
-        /* Icon Buttons Hover */
-        .icon-btn:hover {
-          background: ${colors.gray[50]};
-          border-color: ${colors.gray[400]};
-        }
-
-        .icon-btn-emerald:hover {
-          background: ${colors.emerald[50]};
-          border-color: ${colors.emerald[500]};
-        }
-
-        /* Back Button Hover */
-        .back-btn:hover {
-          background: ${colors.gray[50]};
-          border-color: ${colors.emerald[500]};
-          transform: translateX(-2px);
-        }
-
-        /* Action Buttons Hover */
-        .btn-cancel:hover {
-          background: ${colors.gray[50]};
-          border-color: ${colors.emerald[500]};
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(26, 147, 111, 0.4);
-        }
-
-        /* Spin Animation */
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
+      {showSuccessModal && createdAccounts && (
+        <AccountSuccessModal
+          accounts={createdAccounts}
+          onClose={() => {
+            setShowSuccessModal(false);
+            router.push('/guru/kelola-siswa');
+          }}
+        />
+      )}
     </GuruLayout>
   );
 }
