@@ -82,20 +82,23 @@ export async function GET(request) {
     });
 
     // Transform to match expected format (add jenisMateri)
-    const transformedBukuDigital = bukuDigitalList.map(buku => ({
-      id: buku.id,
-      guruId: buku.guruId,
-      judul: buku.judul,
-      deskripsi: buku.deskripsi,
-      jenisMateri: 'PDF',
-      fileUrl: buku.fileUrl,
-      youtubeUrl: null,
-      kategori: buku.kategori,
-      fileName: buku.fileName,
-      fileSize: buku.fileSize,
-      createdAt: buku.createdAt,
-      guru: buku.guru,
-    }));
+    const transformedBukuDigital = bukuDigitalList.map(buku => {
+      const isYouTube = buku.fileUrl?.includes('youtube.com') || buku.fileUrl?.includes('youtu.be');
+      return {
+        id: buku.id,
+        guruId: buku.guruId,
+        judul: buku.judul,
+        deskripsi: buku.deskripsi,
+        jenisMateri: isYouTube ? 'YOUTUBE' : 'PDF',
+        fileUrl: buku.fileUrl,
+        youtubeUrl: isYouTube ? buku.fileUrl : null,
+        kategori: buku.kategori,
+        fileName: buku.fileName,
+        fileSize: buku.fileSize,
+        createdAt: buku.createdAt,
+        guru: buku.guru,
+      };
+    });
 
     return NextResponse.json({
       success: true,

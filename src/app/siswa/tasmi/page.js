@@ -469,10 +469,7 @@ export default function SiswaTasmiPage() {
   return (
     <SiswaLayout>
       <Toaster position="top-right" />
-
-      <div className="min-h-screen bg-gray-50">
-        {/* Container - Full Width SIMTAQ Style */}
-        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="w-full space-y-6">
 
           {/* Header - SIMTAQ Green Gradient */}
           <motion.div
@@ -646,7 +643,6 @@ export default function SiswaTasmiPage() {
             )}
           </motion.div>
         </div>
-      </div>
 
       {/* Modal Daftar/Edit - SIMTAQ Green Theme */}
       {showModal && (

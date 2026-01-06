@@ -21,6 +21,13 @@ import {
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { toast, Toaster } from 'react-hot-toast';
+import DigitalMaterialCard from '@/components/shared/DigitalMaterialCard';
+import { 
+  extractYouTubeId, 
+  getYouTubeThumbnail, 
+  getMaterialIcon, 
+  getMaterialVariant 
+} from '@/lib/utils/materialHelpers';
 
 const CATEGORIES = [
   'Semua',
@@ -38,173 +45,36 @@ const JENIS_MATERI = {
   YOUTUBE: 'YOUTUBE',
 };
 
-// Extract YouTube video ID from URL
-function extractYouTubeId(url) {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-}
-
-// Get thumbnail URL for YouTube videos
-function getYouTubeThumbnail(videoId) {
-  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-}
-
-// Get icon based on material type
-function getMaterialIcon(jenisMateri, className = 'w-12 h-12') {
-  switch (jenisMateri) {
-    case 'YOUTUBE':
-      return <Play className={className} />;
-    default: // PDF
-      return <FileText className={className} />;
-  }
-}
-
-// Get color classes based on material type
-function getMaterialColors(jenisMateri) {
-  switch (jenisMateri) {
-    case 'YOUTUBE':
-      return {
-        badge: 'bg-pink-100 text-pink-700 border-pink-200',
-        icon: 'text-pink-600',
-        card: 'bg-white/70 backdrop-blur-sm border-2 border-pink-200',
-        button: 'bg-pink-500 hover:bg-pink-600',
-        buttonSecondary: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
-      };
-    default: // PDF
-      return {
-        badge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-        icon: 'text-emerald-600',
-        card: 'bg-white/70 backdrop-blur-sm border-2 border-emerald-200',
-        button: 'bg-emerald-500 hover:bg-emerald-600',
-        buttonSecondary: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700',
-      };
-  }
-}
-
-// Material Card Component
-function MaterialCard({ materi, onOpen, onDownload, onDelete }) {
-  const colors = getMaterialColors(materi.jenisMateri);
-  const isYouTube = materi.jenisMateri === 'YOUTUBE';
-  const isPDF = materi.jenisMateri === 'PDF';
-  
-  const handleOpen = () => {
-    onOpen(materi);
+function StatCard({ label, value, icon: Icon, color = 'emerald' }) {
+  const configs = {
+    emerald: {
+      bg: 'bg-emerald-50/60',
+      border: 'border-emerald-200/70',
+      text: 'text-emerald-700',
+      iconBg: 'bg-emerald-100/60',
+      iconText: 'text-emerald-600',
+      glow: 'shadow-emerald-500/10'
+    },
+    rose: {
+      bg: 'bg-rose-50/60',
+      border: 'border-rose-200/70',
+      text: 'text-rose-700',
+      iconBg: 'bg-rose-100/60',
+      iconText: 'text-rose-600',
+      glow: 'shadow-rose-500/10'
+    }
   };
-  
-  const handleDownloadClick = () => {
-    onDownload(materi);
-  };
-  
-  const handleDelete = () => {
-    onDelete(materi.id);
-  };
-  
+  const config = configs[color] || configs.emerald;
+
   return (
-    <div className={`rounded-2xl shadow-sm ${colors.card} overflow-hidden hover:shadow-md hover:shadow-emerald-500/20 transition-all duration-200`}>
-      {/* Material Type Badge */}
-      <div className="absolute top-3 left-3 z-10">
-        <span className={`px-2 py-1 ${colors.badge} text-xs font-medium rounded-full uppercase`}>
-          {materi.jenisMateri}
-        </span>
-      </div>
-      
-      {/* Thumbnail/Icon Area */}
-      <div className="h-40 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 relative">
-        {isYouTube ? (
-          <div className="relative w-full h-full">
-            {materi.youtubeUrl ? (
-              <>
-                <img 
-                  src={getYouTubeThumbnail(extractYouTubeId(materi.youtubeUrl))}
-                  alt={materi.judul}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null; // Prevent infinite loop
-                    e.target.style.display = 'none';
-                    const fallbackDiv = e.target.parentElement.querySelector('.fallback-icon');
-                    if (fallbackDiv) fallbackDiv.style.display = 'flex';
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity">
-                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
-                    <Play className="w-8 h-8 text-white" />
-                  </div>
-                </div>
-                <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-600 hidden">
-                  <Play className="w-12 h-12 text-white" />
-                </div>
-              </>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-pink-500 to-rose-600">
-                <Play className="w-12 h-12 text-white" />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
-            {getMaterialIcon(materi.jenisMateri, 'w-16 h-16 text-white/40')}
-          </div>
-        )}
-      </div>
-
-      {/* Material Info */}
-      <div className="p-4">
-        <h3 className="text-base font-bold text-gray-900 line-clamp-1 mb-2">
-          {materi.judul || 'Untitled'}
-        </h3>
-
-        <p className="text-sm text-gray-600 line-clamp-2 mb-4 min-h-[40px]">
-          {materi.deskripsi || materi.deskripsi || 'No description'}
-        </p>
-
-        {/* Upload Date */}
-        <p className="text-xs text-gray-500 mb-4">
-          {new Date(materi.createdAt || materi.uploadDate || materi.createdAt).toLocaleDateString('id-ID')}
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={handleOpen}
-            className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-white text-sm font-semibold rounded-lg transition-all ${colors.button}`}
-          >
-            <Eye size={16} />
-            {isYouTube ? 'Buka Video' : 'Lihat'}
-          </button>
-
-          {isPDF && (
-            <button
-              onClick={handleDownloadClick}
-              className={`flex items-center justify-center px-3 py-2 ${colors.buttonSecondary} rounded-lg transition-all`}
-            >
-              <Download size={16} />
-            </button>
-          )}
-
-          <button
-            onClick={handleDelete}
-            className="flex items-center justify-center px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// StatCard Component
-function StatCard({ label, value, icon, color }) {
-  return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+    <div className={`${config.bg} ${config.border} ${config.glow} p-5 rounded-2xl border shadow-sm hover:shadow-md transition-all`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className={`${config.text} text-[10px] font-bold uppercase tracking-wider mb-1 opacity-80`}>{label}</p>
+          <p className={`${config.text} text-2xl font-bold`}>{value}</p>
         </div>
-        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
-          {icon}
+        <div className={`w-12 h-12 ${config.iconBg} ${config.iconText} rounded-full flex items-center justify-center shadow-sm flex-shrink-0 border ${config.border}`}>
+          <Icon size={24} />
         </div>
       </div>
     </div>
@@ -467,14 +337,14 @@ export default function BukuDigitalPage() {
           <StatCard
             label="File PDF"
             value={loading ? '...' : totalPDF}
-            icon={<FileCheck size={24} />}
-            color="bg-emerald-500"
+            icon={FileCheck}
+            color="emerald"
           />
           <StatCard
             label="YouTube"
             value={loading ? '...' : totalYouTube}
-            icon={<Play size={24} />}
-            color="bg-pink-500"
+            icon={Play}
+            color="rose"
           />
         </div>
 
@@ -559,12 +429,13 @@ export default function BukuDigitalPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredMateri.map((materi) => (
-              <MaterialCard
+              <DigitalMaterialCard
                 key={materi.id}
                 materi={materi}
                 onOpen={handleView}
                 onDownload={handleDownload}
                 onDelete={handleDelete}
+                canDelete={true}
               />
             ))}
           </div>

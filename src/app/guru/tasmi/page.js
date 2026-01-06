@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { generateTasmiRecapPDF } from '@/lib/tasmiPdfGenerator';
 import GuruLayout from '@/components/layout/GuruLayout';
@@ -26,15 +27,44 @@ import {
 import { toast, Toaster } from 'react-hot-toast';
 
 // StatCard Component
-function StatCard({ label, value, icon, color }) {
+function StatCard({ label, value, icon, color = 'emerald' }) {
+  const configs = {
+    emerald: {
+      bg: 'bg-emerald-50/60',
+      border: 'border-emerald-200/70',
+      text: 'text-emerald-700',
+      iconBg: 'bg-emerald-100/60',
+      iconText: 'text-emerald-600',
+      glow: 'shadow-emerald-500/10'
+    },
+    amber: {
+      bg: 'bg-amber-50/60',
+      border: 'border-amber-200/70',
+      text: 'text-amber-700',
+      iconBg: 'bg-amber-100/60',
+      iconText: 'text-amber-600',
+      glow: 'shadow-amber-500/10'
+    },
+    blue: {
+      bg: 'bg-blue-50/60',
+      border: 'border-blue-200/70',
+      text: 'text-blue-700',
+      iconBg: 'bg-blue-100/60',
+      iconText: 'text-blue-600',
+      glow: 'shadow-blue-500/10'
+    }
+  };
+  
+  const config = configs[color] || configs.emerald;
+
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+    <div className={`${config.bg} ${config.border} ${config.glow} p-5 rounded-2xl border shadow-sm hover:shadow-md transition-all`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className={`${config.text} text-[10px] font-bold uppercase tracking-wider mb-1 opacity-80`}>{label}</p>
+          <p className={`${config.text} text-2xl font-bold`}>{value}</p>
         </div>
-        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+        <div className={`w-12 h-12 ${config.iconBg} ${config.iconText} rounded-full flex items-center justify-center shadow-sm flex-shrink-0 border ${config.border}`}>
           {icon}
         </div>
       </div>
@@ -486,19 +516,19 @@ export default function GuruTasmiPage() {
             label="Total Pengajuan Tasmi'"
             value={tasmiList.length}
             icon={<Users size={24} />}
-            color="bg-emerald-500"
+            color="emerald"
           />
           <StatCard
             label="Menunggu Jadwal Ujian"
             value={tasmiList.filter(t => t.statusPendaftaran === 'MENUNGGU').length}
             icon={<Clock size={24} />}
-            color="bg-amber-500"
+            color="amber"
           />
           <StatCard
             label="Sudah Dinilai / Selesai"
             value={tasmiList.filter(t => t.nilaiAkhir).length}
             icon={<CheckCircle size={24} />}
-            color="bg-blue-500"
+            color="blue"
           />
         </div>
 

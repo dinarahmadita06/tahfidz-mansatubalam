@@ -746,8 +746,7 @@ export default function ProfileSiswaPage() {
 
   return (
     <SiswaLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-        <div className="w-full max-w-none px-4 sm:px-6 lg:px-10 py-6 space-y-6">
+      <div className="w-full space-y-6">
           {/* Header */}
           <ProfileHeader />
 
@@ -780,7 +779,6 @@ export default function ProfileSiswaPage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Toast Notifications */}
       <Toaster position="top-right" />
