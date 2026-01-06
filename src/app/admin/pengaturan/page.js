@@ -29,6 +29,7 @@ import {
   Clock
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 
 export default function PengaturanPage() {
   const { data: session } = useSession();
@@ -575,10 +576,7 @@ export default function PengaturanPage() {
             className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
-              <>
-                <RefreshCw size={18} className="animate-spin" />
-                Menyimpan...
-              </>
+              <LoadingIndicator inline text="Menyimpan..." size="small" />
             ) : (
               <>
                 <Save size={18} />

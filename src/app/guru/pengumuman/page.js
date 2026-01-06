@@ -9,9 +9,9 @@ import {
   Bell,
   BookOpen,
   Award,
-  Loader,
   FileText,
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { toast, Toaster } from 'react-hot-toast';
 
 // Category icons and colors
@@ -169,12 +169,7 @@ export default function GuruPengumumanPage() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-            <p className="text-gray-600">Memuat pengumuman...</p>
-          </div>
-        </div>
+        <LoadingIndicator fullPage text="Memuat pengumuman..." />
       </GuruLayout>
     );
   }

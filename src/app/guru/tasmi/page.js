@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { generateTasmiRecapPDF } from '@/lib/tasmiPdfGenerator';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
@@ -24,6 +24,23 @@ import {
   Plus,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+
+// StatCard Component
+function StatCard({ label, value, icon, color }) {
+  return (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function GuruTasmiPage() {
   const { data: session } = useSession();
@@ -436,12 +453,7 @@ export default function GuruTasmiPage() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Memuat data...</p>
-          </div>
-        </div>
+        <LoadingIndicator text="Memuat data tasmi..." fullPage />
       </GuruLayout>
     );
   }
@@ -470,48 +482,24 @@ export default function GuruTasmiPage() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1: Total Pengajuan */}
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-600 text-sm font-semibold mb-1">TOTAL PENGAJUAN TASMI&apos;</p>
-                <h3 className="text-4xl font-bold text-emerald-700">{tasmiList.length}</h3>
-              </div>
-              <div className="bg-emerald-100 p-4 rounded-full">
-                <Users size={32} className="text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Menunggu Jadwal */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-amber-600 text-sm font-semibold mb-1">MENUNGGU JADWAL UJIAN</p>
-                <h3 className="text-4xl font-bold text-amber-700">
-                  {tasmiList.filter(t => t.statusPendaftaran === 'MENUNGGU').length}
-                </h3>
-              </div>
-              <div className="bg-amber-100 p-4 rounded-full">
-                <Clock size={32} className="text-amber-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Sudah Dinilai */}
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 text-sm font-semibold mb-1">SUDAH DINILAI / SELESAI</p>
-                <h3 className="text-4xl font-bold text-blue-700">
-                  {tasmiList.filter(t => t.nilaiAkhir).length}
-                </h3>
-              </div>
-              <div className="bg-blue-100 p-4 rounded-full">
-                <CheckCircle size={32} className="text-blue-600" />
-              </div>
-            </div>
-          </div>
+          <StatCard
+            label="Total Pengajuan Tasmi'"
+            value={tasmiList.length}
+            icon={<Users size={24} />}
+            color="bg-emerald-500"
+          />
+          <StatCard
+            label="Menunggu Jadwal Ujian"
+            value={tasmiList.filter(t => t.statusPendaftaran === 'MENUNGGU').length}
+            icon={<Clock size={24} />}
+            color="bg-amber-500"
+          />
+          <StatCard
+            label="Sudah Dinilai / Selesai"
+            value={tasmiList.filter(t => t.nilaiAkhir).length}
+            icon={<CheckCircle size={24} />}
+            color="bg-blue-500"
+          />
         </div>
 
         {/* Filter Bar */}

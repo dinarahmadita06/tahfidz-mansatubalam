@@ -9,11 +9,11 @@ import {
   TrendingUp,
   CheckCircle,
   AlertCircle,
-  Loader,
   Eye,
   Trash2,
   Edit
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { useParams, useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
 import TeacherStudentCreateModal from '@/components/guru/TeacherStudentCreateModal';
@@ -144,12 +144,7 @@ export default function KelolaSiswaByKelas() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center py-20 min-h-screen">
-          <div className="text-center">
-            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-            <p className="text-slate-600">Memuat data kelas...</p>
-          </div>
-        </div>
+        <LoadingIndicator text="Memuat data kelas..." fullPage />
       </GuruLayout>
     );
   }

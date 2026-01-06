@@ -12,9 +12,9 @@ import {
   Search,
   PlayCircle,
   ChevronDown,
-  Loader2,
   Check,
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import toast, { Toaster } from 'react-hot-toast';
 import JumpToAyahModal from '@/components/JumpToAyahModal';
 
@@ -655,10 +655,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
 
                           {/* Loading State */}
                           {isLoading ? (
-                            <div className="p-8 text-center">
-                              <Loader2 className="animate-spin text-emerald-600 mx-auto mb-2" size={32} />
-                              <p className="text-gray-600 text-sm">Memuat ayat...</p>
-                            </div>
+                            <LoadingIndicator text="Memuat ayat..." />
                           ) : (
                             /* Verses List */
                             <div className="p-4 space-y-3 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20 max-h-[600px] overflow-y-auto">
@@ -713,7 +710,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                                         title={audioLoading ? 'Memuat audio...' : 'Putar audio'}
                                       >
                                         {audioLoading ? (
-                                          <Loader2 size={16} className="text-green-700 animate-spin" />
+                                          <LoadingIndicator text="" size="small" className="!py-0" />
                                         ) : isCurrentAyat && isAudioPlaying ? (
                                           <Pause size={16} className="text-green-700" />
                                         ) : (
@@ -848,10 +845,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
 
                 {loading ? (
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                      <Loader2 className="animate-spin text-emerald-600 mx-auto mb-4" size={48} />
-                      <p className="text-gray-600">Memuat surah...</p>
-                    </div>
+                    <LoadingIndicator text="Memuat surah..." />
                   </div>
                 ) : !surahData ? (
                   <div className="flex-1 flex items-center justify-center">
@@ -1017,7 +1011,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                                 title={audioLoading ? 'Memuat audio...' : 'Putar audio'}
                               >
                                 {audioLoading ? (
-                                  <Loader2 size={20} className="text-green-700 animate-spin" />
+                                  <LoadingIndicator text="" size="small" className="!py-0" />
                                 ) : isCurrentAyat && isAudioPlaying ? (
                                   <Pause size={20} className="text-green-700" />
                                 ) : (

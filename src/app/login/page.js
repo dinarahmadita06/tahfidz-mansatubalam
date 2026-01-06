@@ -5,6 +5,7 @@ import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, BookOpen, Mail } from 'lucide-react';
 import Link from 'next/link';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -201,10 +202,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="w-12 h-12 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+        <LoadingIndicator text="Loading..." />
       </div>
     }>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4 relative overflow-hidden">
@@ -298,10 +296,7 @@ export default function LoginPage() {
                 className="w-full bg-emerald-600 text-white py-2.5 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm shadow-sm"
               >
                 {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
-                  </div>
+                  <LoadingIndicator text="Loading..." size="small" inline />
                 ) : (
                   'Login'
                 )}

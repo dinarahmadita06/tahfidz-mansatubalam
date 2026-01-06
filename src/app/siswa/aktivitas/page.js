@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { getActivityDisplay, isViewEvent, isSystemEvent, isActionEvent } from '@/lib/helpers/siswaActivityConstants';
 import { Clock, Filter, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -83,7 +84,7 @@ export default function AktivitasPage() {
           </div>
 
           {/* Search & Filter */}
-          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-4 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
             {/* Search */}
             <div className="relative">
               <Search size={20} className="absolute left-3 top-3 text-gray-400" />
@@ -142,16 +143,11 @@ export default function AktivitasPage() {
           </div>
 
           {/* Activities List */}
-          <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-6">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <div className="animate-spin mb-4">
-                      <Clock size={48} className="text-emerald-500" />
-                    </div>
-                    <p className="text-gray-600 font-medium">Memuat aktivitas...</p>
-                  </div>
+                <div className="py-12">
+                  <LoadingIndicator text="Memuat riwayat aktivitas..." />
                 </div>
               ) : error ? (
                 <div className="py-12 text-center">

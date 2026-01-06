@@ -4,13 +4,31 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import {
-  ArrowLeft, Save, Loader2, BookOpen, Plus, Trash2,
+  ArrowLeft, Save, BookOpen, Plus, Trash2,
   Eye, X, Filter, Search, Calendar, User,
   ClipboardList, CheckCircle, AlertCircle, Lightbulb, PlayCircle, Download
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+
+// StatCard Component
+function StatCard({ label, value, icon, color }) {
+  return (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all w-full">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function TahsinDetailPage() {
   const { data: session } = useSession();
@@ -289,9 +307,7 @@ export default function TahsinDetailPage() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="animate-spin text-emerald-600" size={40} />
-        </div>
+        <LoadingIndicator fullPage text="Memuat data tahsin..." />
       </GuruLayout>
     );
   }
@@ -328,14 +344,13 @@ export default function TahsinDetailPage() {
             </div>
 
             {/* Badge Total Siswa */}
-            <div className="bg-white/20 rounded-xl px-4 py-3 w-full sm:w-auto max-[380px]:flex max-[380px]:items-center max-[380px]:justify-center max-[380px]:gap-2 max-[380px]:text-center">
-              <p className="text-[10px] font-semibold tracking-wide text-white/90 uppercase max-[380px]:inline">
-                Total Siswa
-              </p>
-              <span className="hidden max-[380px]:inline text-white/90 font-bold">:</span>
-              <p className="text-xl font-bold text-white max-[380px]:inline max-[380px]:text-base">
-                {siswaList.length}
-              </p>
+            <div className="w-full sm:w-64">
+              <StatCard
+                label="Total Siswa"
+                value={siswaList.length}
+                icon={<Users size={24} />}
+                color="bg-white/20"
+              />
             </div>
           </div>
         </div>
@@ -597,10 +612,7 @@ export default function TahsinDetailPage() {
                       className="w-full rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white font-semibold py-3 shadow-md hover:shadow-lg hover:opacity-95 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? (
-                        <>
-                          <Loader2 className="animate-spin" size={20} />
-                          <span>Menyimpan...</span>
-                        </>
+                        <LoadingIndicator size="small" text="Menyimpan..." inline className="text-white" />
                       ) : (
                         <>
                           <Save size={20} />

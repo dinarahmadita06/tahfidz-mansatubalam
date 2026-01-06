@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import GuruLayout from '@/components/layout/GuruLayout';
 import AnnouncementSlider from '@/components/AnnouncementSlider';
 import PengumumanWidget from '@/components/PengumumanWidget';
@@ -75,6 +76,23 @@ async function fetchHafalanData() {
 
 // ===== COMPONENTS =====
 
+// StatCard Component
+function StatCard({ label, value, icon, color }) {
+  return (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // 1. MotivationCard Component
 function MotivationCard() {
   return (
@@ -98,86 +116,26 @@ function MotivationCard() {
 
 // 3. StatsCards Component
 function StatsCards({ stats }) {
-  const cards = [
-    {
-      icon: BookOpen,
-      title: 'KELAS DIAMPU',
-      value: stats.kelasAjaran || 0,
-      subtitle: 'Kelas yang Anda ampu',
-      variant: 'green',
-    },
-    {
-      icon: Users,
-      title: 'JUMLAH SISWA',
-      value: stats.jumlahSiswa || 0,
-      subtitle: 'Siswa di kelas binaan',
-      variant: 'blue',
-    },
-    {
-      icon: TrendingUp,
-      title: 'PROGRESS RATA-RATA',
-      value: `${stats.progressRataRata || 0}%`,
-      subtitle: stats.kelasAjaran > 0
-        ? `Rata-rata dari ${stats.kelasAjaran} kelas`
-        : 'Target belum ditetapkan',
-      variant: 'violet',
-    },
-  ];
-
-  const variants = {
-    green: {
-      wrapper: 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200',
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600',
-      title: 'text-emerald-600',
-      value: 'text-emerald-700',
-    },
-    blue: {
-      wrapper: 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      title: 'text-blue-600',
-      value: 'text-blue-700',
-    },
-    violet: {
-      wrapper: 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200',
-      iconBg: 'bg-violet-100',
-      iconColor: 'text-violet-600',
-      title: 'text-violet-600',
-      value: 'text-violet-700',
-    },
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-      {cards.map((card, index) => {
-        const Icon = card.icon;
-        const style = variants[card.variant];
-
-        return (
-          <div
-            key={index}
-            className={`${style.wrapper} rounded-xl border-2 p-3.5 lg:p-4 shadow-sm ${CARD_HOVER}`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`${style.title} text-[10px] lg:text-xs font-bold mb-0.5 lg:mb-1 uppercase tracking-wider`}>
-                  {card.title}
-                </p>
-                <h3 className={`${style.value} text-lg lg:text-xl xl:text-2xl font-bold leading-tight`}>
-                  {card.value}
-                </h3>
-                {card.subtitle && (
-                  <p className="text-slate-500 text-[10px] lg:text-xs mt-1 opacity-80">{card.subtitle}</p>
-                )}
-              </div>
-              <div className={`${style.iconBg} p-2.5 lg:p-3 rounded-xl shadow-sm`}>
-                <Icon size={20} className={style.iconColor} />
-              </div>
-            </div>
-          </div>
-        );
-      })}
+      <StatCard
+        label="Kelas Diampu"
+        value={stats.kelasAjaran || 0}
+        icon={<BookOpen size={24} />}
+        color="bg-emerald-500"
+      />
+      <StatCard
+        label="Jumlah Siswa"
+        value={stats.jumlahSiswa || 0}
+        icon={<Users size={24} />}
+        color="bg-blue-500"
+      />
+      <StatCard
+        label="Progress Rata-rata"
+        value={`${stats.progressRataRata || 0}%`}
+        icon={<TrendingUp size={24} />}
+        color="bg-violet-500"
+      />
     </div>
   );
 }
@@ -194,10 +152,8 @@ function ClassManagementSection({ kelasList, loading }) {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-slate-100 rounded-xl p-4 h-16 lg:h-20"></div>
-          ))}
+        <div className="py-10 lg:py-12">
+          <LoadingIndicator text="Memuat daftar kelas..." />
         </div>
       ) : kelasList.length === 0 ? (
         <div className="text-center py-10 lg:py-12">
@@ -251,10 +207,7 @@ function RecentActivity({ activities, loading }) {
       </div>
 
       {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600">Memuat aktivitas...</p>
-        </div>
+        <LoadingIndicator text="Memuat aktivitas..." />
       ) : (
         <ActivityList activities={activities} />
       )}
@@ -376,12 +329,7 @@ export default function DashboardGuru() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
-            <p className="text-slate-600">Memuat dashboard...</p>
-          </div>
-        </div>
+        <LoadingIndicator text="Memuat dashboard..." fullPage />
       </GuruLayout>
     );
   }
@@ -427,8 +375,14 @@ export default function DashboardGuru() {
               disabled={refreshing}
               className="flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-xl font-semibold text-xs lg:text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
             >
-              <RefreshCw className={`w-4 h-4 lg:w-[18px] lg:h-[18px] ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Memuat...' : 'Refresh Data'}
+              {refreshing ? (
+                <LoadingIndicator size="small" text="Memuat..." inline className="text-white" />
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 lg:w-[18px] lg:h-[18px]" />
+                  <span>Refresh Data</span>
+                </>
+              )}
             </button>
           </div>
         </div>

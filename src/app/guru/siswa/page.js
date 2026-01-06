@@ -7,9 +7,9 @@ import {
   TrendingUp,
   CheckCircle,
   AlertCircle,
-  Loader,
   UserPlus
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
 import TeacherStudentCreateModal from '@/components/guru/TeacherStudentCreateModal';
@@ -181,12 +181,7 @@ export default function KelolaSiswa() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-                <p className="text-slate-600">Memuat data kelas dan siswa...</p>
-              </div>
-            </div>
+            <LoadingIndicator text="Memuat data kelas dan siswa..." />
           ) : (
             <>
               {/* Statistics Cards */}

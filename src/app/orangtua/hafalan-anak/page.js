@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
+
 // Redirect from old /orangtua/hafalan-anak to new /orangtua/perkembangan-anak
 export default function HafalanAnakRedirect() {
   const router = useRouter();
@@ -13,10 +15,7 @@ export default function HafalanAnakRedirect() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Mengalihkan ke Perkembangan Anak...</p>
-      </div>
+      <LoadingIndicator text="Mengalihkan..." />
     </div>
   );
 }

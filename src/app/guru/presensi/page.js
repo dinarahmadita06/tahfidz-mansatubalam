@@ -8,11 +8,11 @@ import {
   Users,
   BookOpen,
   ChevronRight,
-  Loader2,
   CalendarCheck,
   CheckCircle2,
   School,
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function PresensiPage() {
@@ -58,12 +58,7 @@ export default function PresensiPage() {
   if (loading) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader2 size={48} className="animate-spin text-emerald-600 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Memuat data...</p>
-          </div>
-        </div>
+        <LoadingIndicator text="Memuat data kelas..." fullPage />
       </GuruLayout>
     );
   }

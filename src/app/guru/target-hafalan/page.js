@@ -14,6 +14,7 @@ import {
   Award
 } from 'lucide-react';
 import GuruLayout from '@/components/layout/GuruLayout';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function TargetHafalanGuruPage() {
   const { data: session } = useSession();
@@ -89,6 +90,20 @@ export default function TargetHafalanGuruPage() {
     return 'bg-gradient-to-r from-red-400 to-red-500';
   };
 
+  const StatCard = ({ icon, title, value, color }) => (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{title}</p>
+          <p className="text-3xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <GuruLayout>
       <div className="bg-gradient-to-br from-emerald-50/30 via-cream-50/30 to-amber-50/20 p-6 lg:p-8 rounded-2xl min-h-screen">
@@ -119,63 +134,46 @@ export default function TargetHafalanGuruPage() {
             <button
               onClick={handleSyncTarget}
               disabled={isSyncing}
-              className="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-semibold hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed min-w-[200px] justify-center"
             >
-              <RefreshCw size={20} className={isSyncing ? 'animate-spin' : ''} />
-              {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Target Sekolah'}
+              {isSyncing ? (
+                <LoadingIndicator size="small" text="Menyinkronkan..." inline className="text-white" />
+              ) : (
+                <>
+                  <RefreshCw size={20} />
+                  Sinkronkan Target Sekolah
+                </>
+              )}
             </button>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-gray-600">Memuat data...</p>
-            </div>
+          <div className="bg-white rounded-3xl shadow-xl p-20 border border-emerald-100/30 flex items-center justify-center">
+            <LoadingIndicator text="Memuat data target hafalan..." />
           </div>
         ) : (
           <>
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {/* Target Sekolah */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50/50 rounded-3xl p-6 shadow-lg border border-emerald-100/50 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <BookOpen className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Target Sekolah</p>
-                    <p className="text-3xl font-bold text-emerald-700">{statistics.targetSekolah} Juz</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Target Kelas */}
-              <div className="bg-gradient-to-br from-amber-50 to-yellow-50/50 rounded-3xl p-6 shadow-lg border border-amber-100/50 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-amber-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <Target className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Target Kelas</p>
-                    <p className="text-3xl font-bold text-amber-700">{statistics.targetKelas} Juz</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Rata-rata Progres */}
-              <div className="bg-gradient-to-br from-mint-50 to-emerald-50/50 rounded-3xl p-6 shadow-lg border border-mint-100/50 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <TrendingUp className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Rata-rata Progres</p>
-                    <p className="text-3xl font-bold text-teal-700">{statistics.rataRataProgres}%</p>
-                  </div>
-                </div>
-              </div>
+              <StatCard
+                icon={<BookOpen size={24} />}
+                title="Target Sekolah"
+                value={`${statistics.targetSekolah} Juz`}
+                color="bg-emerald-500"
+              />
+              <StatCard
+                icon={<Target size={24} />}
+                title="Target Kelas"
+                value={`${statistics.targetKelas} Juz`}
+                color="bg-amber-500"
+              />
+              <StatCard
+                icon={<TrendingUp size={24} />}
+                title="Rata-rata Progres"
+                value={`${statistics.rataRataProgres}%`}
+                color="bg-teal-500"
+              />
             </div>
 
             {/* Tabel Daftar Siswa */}

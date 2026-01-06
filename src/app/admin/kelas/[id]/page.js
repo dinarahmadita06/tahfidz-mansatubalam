@@ -6,6 +6,7 @@ import {
   UserPlus, Edit, Trash2, Search, ArrowLeft, Upload, Download,
   Users, Link as LinkIcon, X, MoreVertical, GraduationCap
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter, useParams } from 'next/navigation';
 import PasswordField from '@/components/admin/PasswordField';
@@ -948,10 +949,7 @@ export default function KelolaSiswaPage() {
                   title="Segarkan data siswa"
                 >
                   {isReloading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      <span>Memuat...</span>
-                    </>
+                    <LoadingIndicator size="small" text="Memuat..." inline className="text-white" />
                   ) : (
                     <>
                       <Users size={18} />
@@ -1033,10 +1031,7 @@ export default function KelolaSiswaPage() {
               {/* Info Text with Loading Indicator */}
               <div className="mt-4 text-xs text-gray-600 font-medium">
                 {isReloading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-emerald-500 border-t-transparent"></div>
-                    Memperbarui data...
-                  </span>
+                  <LoadingIndicator size="small" text="Memperbarui data..." inline />
                 ) : (
                   <>Menampilkan {filteredSiswa.length} dari {siswaList.length} siswa</>
                 )}
@@ -1050,8 +1045,7 @@ export default function KelolaSiswaPage() {
             {isReloading && (
               <div className="absolute inset-0 bg-white/30 backdrop-blur-sm z-40 flex items-center justify-center rounded-2xl pointer-events-none">
                 <div className="bg-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-emerald-500 border-t-transparent"></div>
-                  <span className="text-sm font-semibold text-gray-700">Memperbarui...</span>
+                  <LoadingIndicator size="small" text="Memperbarui..." inline />
                 </div>
               </div>
             )}

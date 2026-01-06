@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Key, Search, User, Mail, Shield, AlertCircle, CheckCircle, Lock, Info, Clock, UserCheck } from 'lucide-react';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 
 export default function ResetPasswordUserPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -215,10 +216,7 @@ export default function ResetPasswordUserPage() {
                 className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Mencari...</span>
-                  </div>
+                  <LoadingIndicator inline text="Mencari..." size="small" />
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <Search className="w-5 h-5" />
@@ -339,10 +337,7 @@ export default function ResetPasswordUserPage() {
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-purple-600 hover:to-purple-700 hover:shadow-[0_6px_20px_rgba(168,85,247,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {loading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Mereset Password...</span>
-                    </div>
+                    <LoadingIndicator inline text="Mereset Password..." size="small" />
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <Shield className="w-5 h-5" />

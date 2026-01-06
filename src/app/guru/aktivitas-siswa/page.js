@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import GuruLayout from "@/components/layout/GuruLayout";
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import { 
   Users, 
   BookOpen, 
@@ -15,7 +16,8 @@ import {
   Target,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  TrendingUp
 } from "lucide-react";
 
 // Extended mock data untuk aktivitas siswa yang lebih lengkap
@@ -262,8 +264,26 @@ export default function AktivitasSiswa() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <GuruLayout>
+        <LoadingIndicator text="Memuat data aktivitas..." fullPage />
+      </GuruLayout>
+    );
   }
+
+  const StatCard = ({ icon, title, value, color }) => (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
 
   const stats = getStatistics();
 
@@ -290,65 +310,36 @@ export default function AktivitasSiswa() {
         <div className="space-y-6">
           {/* Statistics Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.total}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Selesai</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.selesai}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Pending</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.pending}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                  <XCircle className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tidak Hadir</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.tidakHadir}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Target className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Rata-rata</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.rataRataNilai.toFixed(1)}</p>
-                </div>
-              </div>
-            </div>
+            <StatCard
+              icon={<Users size={20} />}
+              title="Total"
+              value={stats.total}
+              color="bg-blue-500"
+            />
+            <StatCard
+              icon={<CheckCircle size={20} />}
+              title="Selesai"
+              value={stats.selesai}
+              color="bg-emerald-500"
+            />
+            <StatCard
+              icon={<Clock size={20} />}
+              title="Pending"
+              value={stats.pending}
+              color="bg-amber-500"
+            />
+            <StatCard
+              icon={<XCircle size={20} />}
+              title="Tidak Hadir"
+              value={stats.tidakHadir}
+              color="bg-rose-500"
+            />
+            <StatCard
+              icon={<TrendingUp size={20} />}
+              title="Rata-rata"
+              value={stats.rataRataNilai.toFixed(1)}
+              color="bg-teal-600"
+            />
           </div>
 
           {/* Filters */}

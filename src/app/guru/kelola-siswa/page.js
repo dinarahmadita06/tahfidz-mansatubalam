@@ -7,9 +7,9 @@ import {
   TrendingUp,
   CheckCircle,
   AlertCircle,
-  Loader,
   UserPlus
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
 import TeacherStudentCreateModal from '@/components/guru/TeacherStudentCreateModal';
@@ -101,54 +101,19 @@ export default function KelolaSiswa() {
     setFilteredSiswa(result);
   }, [searchTerm, selectedKelas, allSiswa]);
 
-  const StatCard = ({ icon: Icon, title, value, theme = 'emerald' }) => {
-    const themeConfig = {
-      emerald: {
-        bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
-        border: 'border-2 border-emerald-200',
-        titleColor: 'text-emerald-600',
-        valueColor: 'text-emerald-700',
-        iconBg: 'bg-emerald-100',
-        iconColor: 'text-emerald-600',
-      },
-      amber: {
-        bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
-        border: 'border-2 border-amber-200',
-        titleColor: 'text-amber-600',
-        valueColor: 'text-amber-700',
-        iconBg: 'bg-amber-100',
-        iconColor: 'text-amber-600',
-      },
-      orange: {
-        bg: 'bg-gradient-to-br from-orange-50 to-red-50',
-        border: 'border-2 border-orange-200',
-        titleColor: 'text-orange-600',
-        valueColor: 'text-orange-700',
-        iconBg: 'bg-orange-100',
-        iconColor: 'text-orange-600',
-      },
-    };
-
-    const config = themeConfig[theme] || themeConfig.emerald;
-
-    return (
-      <div className={`${config.bg} rounded-2xl ${config.border} p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className={`${config.titleColor} text-xs font-bold mb-2 uppercase tracking-wide`}>
-              {title}
-            </p>
-            <h3 className={`${config.valueColor} text-3xl font-bold`}>
-              {value}
-            </h3>
-          </div>
-          <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
-            <Icon size={28} className={config.iconColor} strokeWidth={2} />
-          </div>
+  const StatCard = ({ icon, title, value, color }) => (
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+          {icon}
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   const totalSiswa = statsData.totalSiswa;
   const siswaAktif = statsData.siswaAktif;
@@ -189,33 +154,28 @@ export default function KelolaSiswa() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-                <p className="text-slate-600">Memuat data kelas dan siswa...</p>
-              </div>
-            </div>
+            <LoadingIndicator text="Memuat data kelas dan siswa..." />
           ) : (
             <>
               {/* Statistics Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <StatCard 
-                  icon={Users}
+                  icon={<Users size={24} />}
                   title="Total Siswa"
                   value={totalSiswa}
-                  theme="amber"
+                  color="bg-amber-500"
                 />
                 <StatCard 
-                  icon={CheckCircle}
+                  icon={<CheckCircle size={24} />}
                   title="Siswa Aktif"
                   value={siswaAktif}
-                  theme="emerald"
+                  color="bg-emerald-500"
                 />
                 <StatCard 
-                  icon={AlertCircle}
+                  icon={<AlertCircle size={24} />}
                   title="Menunggu Validasi"
                   value={menungguvalisasi}
-                  theme="orange"
+                  color="bg-orange-500"
                 />
               </div>
 

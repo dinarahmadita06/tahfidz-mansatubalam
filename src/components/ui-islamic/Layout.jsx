@@ -4,6 +4,7 @@
  */
 
 import { designSystem } from '@/styles/design-system';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export function Container({
   children,
@@ -353,83 +354,18 @@ export function LoadingState({
   className = '',
 }) {
   const sizeMap = {
-    sm: '24px',
-    md: '40px',
-    lg: '60px',
+    sm: 'small',
+    md: 'medium',
+    lg: 'large',
   };
 
-  const content = (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: designSystem.spacing[4],
-      }}
-    >
-      <div
-        style={{
-          width: sizeMap[size],
-          height: sizeMap[size],
-          border: `4px solid ${designSystem.colors.border.DEFAULT}`,
-          borderTop: `4px solid ${designSystem.colors.primary[500]}`,
-          borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite',
-        }}
-      />
-      {text && (
-        <p
-          style={{
-            fontSize: designSystem.typography.fontSize.base,
-            color: designSystem.colors.text.secondary,
-          }}
-        >
-          {text}
-        </p>
-      )}
-      <style jsx>{`
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
-    </div>
-  );
-
-  if (fullScreen) {
-    return (
-      <div
-        className={className}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: designSystem.colors.background.overlay,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: designSystem.zIndex.modal,
-        }}
-      >
-        {content}
-      </div>
-    );
-  }
-
   return (
-    <div
-      className={className}
-      style={{
-        padding: `${designSystem.spacing[12]} 0`,
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      {content}
+    <div className={className}>
+      <LoadingIndicator
+        size={sizeMap[size] || size}
+        text={text}
+        fullPage={fullScreen}
+      />
     </div>
   );
 }

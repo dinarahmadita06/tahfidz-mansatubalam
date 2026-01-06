@@ -21,6 +21,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 
 export default function ProfileAdminPage() {
   const { data: session } = useSession();
@@ -306,9 +307,7 @@ export default function ProfileAdminPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200 border-t-emerald-600"></div>
-        </div>
+        <LoadingIndicator fullPage text="Memuat profil..." />
       </AdminLayout>
     );
   }
@@ -716,7 +715,7 @@ export default function ProfileAdminPage() {
                   disabled={saveLoading}
                   className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-all duration-200 disabled:opacity-50"
                 >
-                  {saveLoading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  {saveLoading ? <LoadingIndicator inline text="Menyimpan..." size="small" /> : 'Simpan Perubahan'}
                 </button>
               </div>
             </div>
@@ -826,9 +825,9 @@ export default function ProfileAdminPage() {
                   type="button"
                   onClick={handleChangePasswordSubmit}
                   disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-all duration-200 disabled:opacity-50"
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200"
                 >
-                  {saveLoading ? 'Menyimpan...' : 'Ubah Password'}
+                  {saveLoading ? <LoadingIndicator inline text="Menyimpan..." size="small" /> : 'Ubah Password'}
                 </button>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Target, BookOpen, Calendar, TrendingUp, AlertCircle, Plus, Edit2, X } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import {
   ResponsiveContainer,
   ResponsiveGrid,
@@ -262,10 +263,7 @@ export default function TargetHafalanPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan="3" className="px-6 py-12 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="w-6 h-6 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-gray-500">Memuat data...</span>
-                    </div>
+                    <LoadingIndicator text="Memuat data target..." />
                   </td>
                 </tr>
               ) : targets.length === 0 ? (

@@ -16,10 +16,10 @@ import {
   Upload,
   Trash2,
   CheckCircle,
-  Loader,
   Eye,
   EyeOff
 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -606,12 +606,7 @@ export default function ProfilGuruPage() {
   if (loading || status === 'loading') {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-            <p className="text-gray-600">Memuat profil...</p>
-          </div>
-        </div>
+        <LoadingIndicator fullPage text="Memuat profil..." />
       </GuruLayout>
     );
   }

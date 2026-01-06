@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import GuruLayout from '@/components/layout/GuruLayout';
-import { FileText, Loader, AlertTriangle, BarChart3 } from 'lucide-react';
+import { FileText, AlertTriangle, BarChart3 } from 'lucide-react';
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import TabelHarian from '@/components/laporan/TabelHarian';
 import TabelBulanan from '@/components/laporan/TabelBulanan';
 import TabelSemesteran from '@/components/laporan/TabelSemesteran';
@@ -315,12 +316,7 @@ export default function LaporanGuruPage() {
   if (!session) {
     return (
       <GuruLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader className="animate-spin h-12 w-12 text-emerald-600 mx-auto mb-4" />
-            <p className="text-gray-600">Memuat...</p>
-          </div>
-        </div>
+        <LoadingIndicator text="Memuat..." fullPage />
       </GuruLayout>
     );
   }
@@ -457,8 +453,7 @@ export default function LaporanGuruPage() {
             >
               {loading ? (
                 <>
-                  <Loader className="animate-spin" size={20} />
-                  Memuat Laporan...
+                  <LoadingIndicator text="Memuat Laporan..." size="small" className="!py-0 flex-row space-y-0 gap-2" />
                 </>
               ) : (
                 <>
@@ -479,8 +474,7 @@ export default function LaporanGuruPage() {
             >
               {exporting ? (
                 <>
-                  <Loader className="animate-spin" size={20} />
-                  Export PDF...
+                  <LoadingIndicator text="Export PDF..." size="small" className="!py-0 flex-row space-y-0 gap-2" />
                 </>
               ) : (
                 <>
