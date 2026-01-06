@@ -16,6 +16,8 @@ import {
   X,
   BookOpen,
   Users,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 
@@ -463,12 +465,18 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
     confirmPassword: '',
   });
   const [saveLoading, setSaveLoading] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setShowOldPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
       setError('');
       setSuccess('');
     }
@@ -564,42 +572,69 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password Lama <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                value={formData.oldPassword}
-                onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
-                disabled={saveLoading}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
-                placeholder="Masukkan password lama"
-              />
+              <div className="relative">
+                <input
+                  type={showOldPassword ? 'text' : 'password'}
+                  value={formData.oldPassword}
+                  onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
+                  disabled={saveLoading}
+                  className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                  placeholder="Masukkan password lama"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPassword(!showOldPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password Baru <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                value={formData.newPassword}
-                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                disabled={saveLoading}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
-                placeholder="Masukkan password baru"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={formData.newPassword}
+                  onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                  disabled={saveLoading}
+                  className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                  placeholder="Masukkan password baru"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Konfirmasi Password Baru <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                disabled={saveLoading}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
-                placeholder="Konfirmasi password baru"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  disabled={saveLoading}
+                  className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                  placeholder="Konfirmasi password baru"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
