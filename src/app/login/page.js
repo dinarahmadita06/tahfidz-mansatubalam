@@ -48,16 +48,14 @@ export default function LoginPage() {
 
           if (result?.error) {
             console.error('❌ [QUICK LOGIN] Login failed:', result.error);
+            
+            // Handle NextAuth default error codes
             if (result.error === 'CredentialsSignin') {
-              setError('Username/Email/No HP atau password salah. Silakan coba lagi.');
+              setError('Email atau password salah. Silakan coba lagi.');
             } else if (result.error === 'Configuration') {
-              setError('Terjadi kesalahan konfigurasi server. Silakan refresh halaman dan coba lagi.');
-              console.error('⚠️ [QUICK LOGIN] Configuration error - check server logs');
-            } else if (result.error.includes('database')) {
-              setError('Terjadi kesalahan koneksi database. Silakan coba lagi.');
-            } else if (result.error.includes('verifikasi')) {
-              setError('Terjadi kesalahan saat verifikasi. Silakan coba lagi.');
+              setError('Terjadi kesalahan konfigurasi server.');
             } else {
+              // Show the actual error message from authorize() if available
               setError(result.error);
             }
             setLoading(false);
@@ -133,17 +131,12 @@ export default function LoginPage() {
       if (result?.error) {
         console.error('❌ [LOGIN] Login failed:', result.error);
 
-        // Provide more specific error messages
         if (result.error === 'CredentialsSignin') {
-          setError('Username/Email/No HP atau password salah. Silakan coba lagi.');
+          setError('Email atau password salah. Silakan coba lagi.');
         } else if (result.error === 'Configuration') {
-          setError('Terjadi kesalahan konfigurasi server. Silakan refresh halaman dan coba lagi.');
-          console.error('⚠️ [LOGIN] Configuration error - check server logs');
-        } else if (result.error.includes('database')) {
-          setError('Terjadi kesalahan koneksi database. Silakan coba lagi.');
-        } else if (result.error.includes('verifikasi')) {
-          setError('Terjadi kesalahan saat verifikasi. Silakan coba lagi.');
+          setError('Terjadi kesalahan konfigurasi server.');
         } else {
+          // Show the actual error message from authorize() if available
           setError(result.error);
         }
         setLoading(false);
