@@ -52,7 +52,7 @@ const menuItems = [
     color: 'sky'
   },
   {
-    title: 'Referensi Al-Qur\'an',
+    title: 'Al-Qur\'an Digital',
     icon: BookOpen,
     href: '/siswa/referensi',
     description: 'Baca & dengar Qur\'an',
@@ -285,9 +285,11 @@ function SiswaLayout({ children }) {
           </div>
         </header>
 
-        <main className="px-3 lg:px-4 xl:px-6 py-3 lg:py-4 xl:py-6">
-          <div className="max-w-[1200px] xl:max-w-[1400px] mx-auto w-full">
-            {children}
+        <main className="flex-1 min-w-0">
+          <div className="w-full px-4 sm:px-6 lg:px-8 pt-5 pb-8">
+            <div className="w-full">
+              {children}
+            </div>
           </div>
         </main>
       </div>

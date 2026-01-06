@@ -87,7 +87,7 @@ export default function DashboardSiswa() {
 
   return (
     <SiswaLayout>
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 xl:px-8 py-6 space-y-6">
+      <div className="w-full space-y-6">
         {/* Banner Header - Hijau SIMTAQ Style */}
         <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-4 lg:p-6 text-white`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
