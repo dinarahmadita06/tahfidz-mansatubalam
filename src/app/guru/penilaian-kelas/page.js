@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import LayoutGuruSimple from '@/components/guru/LayoutGuruSimple';
+import GuruLayout from '@/components/layout/GuruLayout';
 import FormPenilaianModal from '@/components/guru/FormPenilaianModal';
 import {
   ChevronLeft,
@@ -244,7 +244,7 @@ export default function PenilaianKelasPage() {
   };
 
   return (
-    <LayoutGuruSimple>
+    <GuruLayout>
       <div className="p-6 max-w-full mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -441,6 +441,6 @@ export default function PenilaianKelasPage() {
           initialData={editingData}
         />
       </div>
-    </LayoutGuruSimple>
+    </GuruLayout>
   );
 }

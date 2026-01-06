@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Topbar } from "@/components/layout/Shell";
-import { BookOpen, User, Calendar, Clock, Star, CheckCircle, XCircle, Edit, Save, Play, Pause, RotateCcw, Volume2, Users, Target, Award, TrendingUp, AlertCircle, FileText, Download, Filter, Plus, X } from "lucide-react";
+import GuruLayout from "@/components/layout/GuruLayout";
+import { BookOpen, User, Calendar, Clock, Star, CheckCircle, XCircle, Edit, Save, Play, Pause, RotateCcw, Volume2, Users, Target, Award, TrendingUp, AlertCircle, FileText, Download, Filter, Plus, X, Loader } from "lucide-react";
 
 // Mock data evaluasi
 const mockEvaluations = [
@@ -574,11 +574,28 @@ export default function EvaluasiHafalan() {
     .reduce((acc, e) => acc + e.scores.overall, 0) / completedEvaluations || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
-      <Topbar title="Evaluasi Hafalan" />
-      
-      <div className="p-4 md:p-6 pb-20 md:pb-6">
-        {/* Summary Stats */}
+    <GuruLayout>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 space-y-6">
+        
+        {/* Header Section */}
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+              <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
+                Evaluasi Hafalan
+              </h1>
+              <p className="text-white/90 text-sm sm:text-base mt-1">
+                Monitoring dan berikan penilaian mendalam pada progres hafalan siswa
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl border border-gray-200 dark:border-neutral-800">
             <div className="flex items-center gap-3">
@@ -708,5 +725,6 @@ export default function EvaluasiHafalan() {
         )}
       </div>
     </div>
-  );
+  </GuruLayout>
+);
 }
