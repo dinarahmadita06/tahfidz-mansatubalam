@@ -461,9 +461,6 @@ export default function GuruTasmiPage() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-4xl font-bold">Manajemen Tasmi&apos; Al-Qur&apos;an</h1>
-                  <span className="bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
-                    Ujian Tasmi&apos;
-                  </span>
                 </div>
                 <p className="text-green-50 text-lg">Kelola pendaftaran dan penilaian ujian bacaan Al-Qur&apos;an siswa</p>
               </div>

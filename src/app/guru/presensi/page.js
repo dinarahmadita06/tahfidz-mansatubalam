@@ -84,9 +84,6 @@ export default function PresensiPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                   <h1 className="text-2xl sm:text-4xl font-bold truncate">Presensi Siswa</h1>
-                  <span className="hidden sm:inline bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm whitespace-nowrap">
-                    Kehadiran
-                  </span>
                 </div>
                 <p className="text-green-50 text-sm sm:text-lg leading-relaxed max-w-2xl">
                   Pilih kelas untuk mencatat kehadiran siswa

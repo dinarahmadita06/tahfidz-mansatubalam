@@ -138,7 +138,7 @@ function SectionWrapper({ children, highlight = false }) {
 // TipsAlert Component
 function TipsAlert({ children }) {
   return (
-    <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3 text-emerald-800 text-sm flex items-start gap-3 max-w-3xl mx-auto">
+    <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3 text-emerald-800 text-sm flex items-start gap-3">
       <AlertCircle size={18} className="shrink-0 mt-0.5" />
       <p>{children}</p>
     </div>
@@ -273,7 +273,7 @@ export default function PenilaianHafalanIndexPage() {
 
   return (
     <GuruLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-3 sm:px-4 lg:px-5 py-6 space-y-6 w-full">
         {/* Header */}
         <HeaderSection />
 
