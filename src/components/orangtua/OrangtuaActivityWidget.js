@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { formatTimeAgo } from '@/lib/helpers/activityLoggerV2';
+import { formatTimeAgo, getActivityIcon } from '@/lib/helpers/activityLoggerV2';
 
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 
@@ -15,7 +15,7 @@ export default function OrangtuaActivityWidget() {
     const fetchActivities = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/orangtua/activity/recent');
+        const response = await fetch('/api/orangtua/activity/recent?limit=5');
         
         if (response.ok) {
           const data = await response.json();
@@ -34,11 +34,6 @@ export default function OrangtuaActivityWidget() {
     const interval = setInterval(fetchActivities, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  const getActivityIcon = (action) => {
-    // Return an icon based on action type
-    return '📋';
-  };
 
   return (
     <div className={`${CARD_BASE} p-6`}>
@@ -62,14 +57,14 @@ export default function OrangtuaActivityWidget() {
           <div className="p-4 bg-gray-100 rounded-full mb-3">
             <Clock className="text-gray-400" size={24} />
           </div>
-          <p className="text-sm text-gray-600">Belum ada aktivitas</p>
+          <p className="text-sm text-gray-600 font-medium">Belum ada aktivitas terbaru</p>
         </div>
       ) : (
         <div className="space-y-3">
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-emerald-50/50 rounded-lg transition-colors border border-gray-100"
+              className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-amber-50/50 rounded-lg transition-colors border border-gray-100"
             >
               <span className="flex-shrink-0 text-lg mt-0.5">{getActivityIcon(activity.action)}</span>
               <div className="flex-1 min-w-0">
@@ -81,13 +76,6 @@ export default function OrangtuaActivityWidget() {
               </time>
             </div>
           ))}
-
-          <Link
-            href="/orangtua/aktivitas"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors mt-3"
-          >
-            Lihat semua aktivitas <ChevronRight size={16} />
-          </Link>
         </div>
       )}
     </div>

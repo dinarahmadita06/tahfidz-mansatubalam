@@ -20,7 +20,8 @@ export async function POST(request) {
         'SISWA': ACTIVITY_ACTIONS.SISWA_LOGIN,
         'GURU': ACTIVITY_ACTIONS.GURU_LOGIN,
         'ADMIN': ACTIVITY_ACTIONS.ADMIN_LOGIN,
-        'ORANG_TUA': ACTIVITY_ACTIONS.SISWA_LOGIN, // Map to SISWA_LOGIN if no ORANG_TUA exists
+        'ORANG_TUA': ACTIVITY_ACTIONS.ORANGTUA_LOGIN,
+        'ORANGTUA': ACTIVITY_ACTIONS.ORANGTUA_LOGIN,
       };
       activityAction = roleActionMap[session.user.role] || ACTIVITY_ACTIONS.SISWA_LOGIN;
     } else if (action === 'LOGOUT') {
@@ -28,7 +29,8 @@ export async function POST(request) {
         'SISWA': ACTIVITY_ACTIONS.SISWA_LOGOUT,
         'GURU': ACTIVITY_ACTIONS.GURU_LOGOUT,
         'ADMIN': ACTIVITY_ACTIONS.ADMIN_LOGOUT,
-        'ORANG_TUA': ACTIVITY_ACTIONS.SISWA_LOGOUT,
+        'ORANG_TUA': ACTIVITY_ACTIONS.ORTU_LOGOUT,
+        'ORANGTUA': ACTIVITY_ACTIONS.ORTU_LOGOUT,
       };
       activityAction = roleActionMap[session.user.role] || ACTIVITY_ACTIONS.SISWA_LOGOUT;
     } else {

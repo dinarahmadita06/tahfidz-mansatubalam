@@ -26,9 +26,9 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Siswa not found' }, { status: 404 });
     }
 
-    // Get limit from query (default: 7)
+    // Get limit from query (default: 5)
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '7'), 50); // Max 50
+    const limit = Math.min(parseInt(searchParams.get('limit') || '5'), 20); // Max 20 for dashboard
 
     // Fetch recent activities
     const activities = await prisma.activityLog.findMany({

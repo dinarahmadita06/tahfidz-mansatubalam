@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { getOrangTuaProfile } from '@/lib/utils/parentHelpers';
+import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
 /**
  * GET /api/orangtua/profile
@@ -125,6 +126,23 @@ export async function PATCH(request) {
         data: orangTuaUpdateData
       });
     }
+
+    // Log the activity
+    await logActivity({
+      actorId: session.user.id,
+      actorRole: 'ORANG_TUA',
+      actorName: session.user.name,
+      action: ACTIVITY_ACTIONS.ORANGTUA_UBAH_PROFIL,
+      title: 'Mengubah Profil',
+      description: 'Anda memperbarui informasi profil orang tua.',
+      metadata: {
+        fieldsUpdated: [
+          namaLengkap !== undefined ? 'name' : null,
+          noTelepon !== undefined ? 'noTelepon' : null,
+          alamat !== undefined ? 'alamat' : null
+        ].filter(Boolean)
+      }
+    });
 
     // Fetch and return updated profile
     const updatedProfile = await getOrangTuaProfile(session.user.id);
