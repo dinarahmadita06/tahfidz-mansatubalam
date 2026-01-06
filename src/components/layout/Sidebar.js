@@ -17,7 +17,8 @@ import {
   CalendarCheck2,
   Book,
   Volume2,
-  Award
+  Award,
+  LogOut
 } from 'lucide-react';
 
 const menuItems = [
@@ -89,7 +90,7 @@ const menuItems = [
   },
 ];
 
-function Sidebar({ userName = 'Guru' }) {
+function Sidebar({ userName = 'Guru', onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
@@ -196,7 +197,17 @@ function Sidebar({ userName = 'Guru' }) {
 
           {/* Footer */}
           {!isCollapsed && (
-            <div className="p-3 border-t border-gray-200" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}>
+            <div className="p-3 border-t border-gray-200 space-y-2" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}>
+              {/* Logout Button */}
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-2.5 lg:gap-3 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-lg text-red-700 hover:bg-red-50 transition-all font-medium"
+              >
+                <LogOut className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
+                <span className="text-[13px] lg:text-sm font-medium">Logout</span>
+              </button>
+
+              {/* Tips Card */}
               <div className="bg-green-50 rounded-lg p-3" style={{ backgroundColor: '#F0FDF4' }}>
                 <p className="text-xs font-medium text-green-900 mb-1" style={{ color: '#15803D' }}>💡 Tips</p>
                 <p className="text-xs" style={{ color: '#16A34A' }}>

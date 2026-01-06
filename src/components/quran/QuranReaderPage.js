@@ -80,6 +80,9 @@ export default function QuranReaderPage({ role = 'siswa' }) {
   // Jump to ayah modal state
   const [showJumpModal, setShowJumpModal] = useState(false);
 
+  // Ref for verses scroll container
+  const versesContainerRef = useRef(null);
+
   // Ref for auto-scrolling to verses panel
   const versesPanelRef = useRef(null);
   const expandedSurahRef = useRef(null);
@@ -404,19 +407,27 @@ export default function QuranReaderPage({ role = 'siswa' }) {
     });
   };
 
-  // Utility function for smooth scroll to ayah
+  // Utility function for smooth scroll to ayah - Works on mobile & desktop with nested scroll container
   const scrollToAyah = (ayahNumber) => {
-    const ayahRef = ayahRefs.current[ayahNumber];
-    if (ayahRef) {
-      ayahRef.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest'
+    const container = versesContainerRef.current;
+    const target = document.getElementById(`ayat-${ayahNumber}`);
+    
+    if (container && target) {
+      // Calculate position relative to container
+      const topPosition = target.offsetTop - container.offsetTop;
+      
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        container.scrollTo({
+          top: topPosition - 12,
+          behavior: 'smooth'
+        });
       });
+      
       // Highlight briefly with ring effect
-      ayahRef.classList.add('ring-4', 'ring-emerald-400', 'ring-offset-2');
+      target.classList.add('ring-4', 'ring-emerald-400', 'ring-offset-2');
       setTimeout(() => {
-        ayahRef.classList.remove('ring-4', 'ring-emerald-400', 'ring-offset-2');
+        target.classList.remove('ring-4', 'ring-emerald-400', 'ring-offset-2');
       }, 2000);
       return true;
     }
@@ -457,7 +468,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                 <BookOpen size={32} className="text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold break-words">Al-Qur'an Digital</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">Al-Qur'an</h1>
                 <p className="text-green-50 text-sm sm:text-base mt-1">
                   Baca, dengarkan, dan pahami ayat suci Al-Qur'an dengan mudah
                 </p>
@@ -953,7 +964,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                     )}
 
                     {/* Verses List */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20">
+                    <div ref={versesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20">
                       {verses.map((verse, index) => {
                         const ayahNo = verse?.numberInSurah ?? (index + 1);
                         const playingId = `${selectedSurah}-${ayahNo}`;
@@ -962,6 +973,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                         return (
                           <div
                             key={verse.number || index}
+                            id={`ayat-${ayahNo}`}
                             ref={(el) => (ayahRefs.current[ayahNo] = el)}
                             className={`p-6 rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative ${
                               isCurrentAyat && isAudioPlaying
