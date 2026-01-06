@@ -202,6 +202,7 @@ export default function BukuDigitalPage() {
   const [showViewerModal, setShowViewerModal] = useState(false);
   const [selectedMateri, setSelectedMateri] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [guruKelas, setGuruKelas] = useState([]); // ✅ Classes the guru teaches
 
   // Form states
   const [formData, setFormData] = useState({
@@ -212,11 +213,30 @@ export default function BukuDigitalPage() {
     fileUrl: '',
     youtubeUrl: '',
     file: null,
+    classId: '', // ✅ Required for class-based access control
   });
 
   useEffect(() => {
     fetchMateri();
+    fetchGuruKelas(); // ✅ Fetch classes this guru teaches
   }, []);
+
+  // ✅ Fetch classes that this guru teaches
+  const fetchGuruKelas = async () => {
+    try {
+      const response = await fetch('/api/guru/kelas');
+      if (response.ok) {
+        const data = await response.json();
+        setGuruKelas(data.kelas || []);
+        // Auto-select first class if available
+        if (data.kelas && data.kelas.length > 0 && !formData.classId) {
+          setFormData(prev => ({ ...prev, classId: data.kelas[0].id }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching guru kelas:', error);
+    }
+  };
 
   const fetchMateri = async () => {
     try {
@@ -301,24 +321,23 @@ export default function BukuDigitalPage() {
       return;
     }
 
+    if (!formData.classId.trim()) {
+      toast.error('Pilih kelas untuk materi ini');
+      return;
+    }
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('judul', formData.judul);
       formDataToSend.append('deskripsi', formData.deskripsi);
-      formDataToSend.append('jenisMateri', formData.jenisMateri);
+      formDataToSend.append('kategori', formData.kategori);
+      formDataToSend.append('classId', formData.classId); // ✅ Required for access control
       
-      // Only include kelasId if it exists
-      if (formData.kelasId) {
-        formDataToSend.append('kelasId', formData.kelasId);
-      }
-      
-      if (formData.jenisMateri === 'YOUTUBE') {
-        formDataToSend.append('youtubeUrl', formData.youtubeUrl);
-      } else if (formData.file) {
+      if (formData.jenisMateri === 'PDF' && formData.file) {
         formDataToSend.append('file', formData.file);
       }
 
-      const response = await fetch('/api/guru/materi-tahsin', {
+      const response = await fetch('/api/guru/buku-digital', {
         method: 'POST',
         body: formDataToSend
       });
@@ -337,7 +356,7 @@ export default function BukuDigitalPage() {
           fileUrl: '',
           youtubeUrl: '',
           file: null,
-          kelasId: undefined, // Reset kelasId as well
+          classId: guruKelas.length > 0 ? guruKelas[0].id : '', // Reset to first class
         });
         toast.success('Materi digital berhasil ditambahkan!');
       } else {
@@ -607,6 +626,32 @@ export default function BukuDigitalPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* ✅ Class Selector - Required for access control */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Pilih Kelas <span className="text-red-500">*</span>
+                  </label>
+                  {guruKelas.length === 0 ? (
+                    <div className="w-full px-4 py-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-800 text-sm">
+                      Anda belum ditugaskan ke kelas manapun
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.classId}
+                      onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">-- Pilih Kelas --</option>
+                      {guruKelas.map((kelas) => (
+                        <option key={kelas.id} value={kelas.id}>
+                          {kelas.nama}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div>

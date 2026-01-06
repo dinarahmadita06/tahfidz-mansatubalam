@@ -4,8 +4,11 @@ import { NextResponse } from 'next/server';
 
 /**
  * GET /api/siswa/buku-digital
- * Fetch all buku digital and materi tahsin accessible to the student
- * Students can see all materials but cannot create/edit/delete
+ * Fetch buku digital accessible to the current student
+ * ✅ Students can ONLY see materials from:
+ *   1. Their own class (siswa.kelasId)
+ *   2. Teachers who teach their class (via GuruKelas)
+ * ✅ Prevents data leakage between classes
  */
 export async function GET(request) {
   try {
@@ -18,11 +21,44 @@ export async function GET(request) {
       );
     }
 
-    // Get all buku digital from all gurus (shared resources)
+    // ✅ Get student from session
+    const siswa = await prisma.siswa.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true, kelasId: true }
+    });
+
+    if (!siswa || !siswa.kelasId) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        count: 0,
+        message: 'Siswa tidak memiliki kelas yang ditugaskan'
+      });
+    }
+
+    // ✅ Get all teachers who teach this student's class
+    const teachersInClass = await prisma.guruKelas.findMany({
+      where: {
+        kelasId: siswa.kelasId,
+        isActive: true
+      },
+      select: { guruId: true }
+    });
+
+    const guruIds = teachersInClass.map(gk => gk.guruId);
+
+    // ✅ Get buku digital ONLY from:
+    //    - classId matches student's class
+    //    - uploaded by teachers who teach that class
     const bukuDigitalList = await prisma.bukuDigital.findMany({
+      where: {
+        classId: siswa.kelasId,
+        guruId: { in: guruIds }
+      },
       select: {
         id: true,
         guruId: true,
+        classId: true,
         judul: true,
         deskripsi: true,
         kategori: true,
@@ -40,38 +76,18 @@ export async function GET(request) {
           },
         },
       },
-    });
-
-    // Get all materi tahsin from all gurus (shared resources)
-    const materiTahsinList = await prisma.materiTahsin.findMany({
-      select: {
-        id: true,
-        guruId: true,
-        judul: true,
-        deskripsi: true,
-        jenisMateri: true,
-        fileUrl: true,
-        youtubeUrl: true,
-        createdAt: true,
-        guru: {
-          select: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 
-    // Transform bukuDigital to match materiTahsin structure with PDF type
+    // Transform to match expected format (add jenisMateri)
     const transformedBukuDigital = bukuDigitalList.map(buku => ({
       id: buku.id,
       guruId: buku.guruId,
       judul: buku.judul,
       deskripsi: buku.deskripsi,
-      jenisMateri: 'PDF', // Default type for buku digital
+      jenisMateri: 'PDF',
       fileUrl: buku.fileUrl,
       youtubeUrl: null,
       kategori: buku.kategori,
@@ -81,32 +97,10 @@ export async function GET(request) {
       guru: buku.guru,
     }));
 
-    // Transform materiTahsin items (they already have the right structure)
-    const transformedMateriTahsin = materiTahsinList.map(materi => ({
-      id: materi.id,
-      guruId: materi.guruId,
-      judul: materi.judul,
-      deskripsi: materi.deskripsi,
-      jenisMateri: materi.jenisMateri,
-      fileUrl: materi.fileUrl,
-      youtubeUrl: materi.youtubeUrl,
-      kategori: materi.jenisMateri === 'YOUTUBE' ? 'YOUTUBE' : 'UMUM', // Use special category for YouTube
-      fileName: materi.fileName,
-      fileSize: materi.fileSize,
-      createdAt: materi.createdAt,
-      guru: materi.guru,
-    }));
-
-    // Combine both lists
-    const allMaterials = [...transformedBukuDigital, ...transformedMateriTahsin];
-
-    // Sort by creation date (newest first)
-    allMaterials.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
     return NextResponse.json({
       success: true,
-      data: allMaterials,
-      count: allMaterials.length,
+      data: transformedBukuDigital,
+      count: transformedBukuDigital.length,
     });
   } catch (error) {
     console.error('Error fetching materials:', error);

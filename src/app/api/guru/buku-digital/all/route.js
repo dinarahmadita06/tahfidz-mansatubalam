@@ -4,8 +4,8 @@ import { prisma } from '@/lib/prisma';
 
 /**
  * GET /api/guru/buku-digital/all
- * Fetch all buku digital from all gurus for the guru dashboard
- * Gurus can see all materials in the system
+ * Fetch all buku digital for classes the guru teaches
+ * (NOT all materials in the system - only for their classes)
  */
 export async function GET(request) {
   try {
@@ -18,11 +18,39 @@ export async function GET(request) {
       );
     }
 
-    // Get all buku digital from all gurus (shared resources)
+    // ✅ Get guru from session
+    const guru = await prisma.guru.findUnique({
+      where: { userId: session.user.id }
+    });
+
+    if (!guru) {
+      return NextResponse.json(
+        { error: 'Guru not found' },
+        { status: 404 }
+      );
+    }
+
+    // ✅ Get classes this guru teaches
+    const guruKelas = await prisma.guruKelas.findMany({
+      where: {
+        guruId: guru.id,
+        isActive: true
+      },
+      select: { kelasId: true }
+    });
+
+    const classIds = guruKelas.map(gk => gk.kelasId);
+
+    // ✅ Get materials only from classes this guru teaches
+    // (uploaded by ANY guru, not just themselves)
     const bukuDigitalList = await prisma.bukuDigital.findMany({
+      where: {
+        classId: { in: classIds }
+      },
       select: {
         id: true,
         guruId: true,
+        classId: true,
         judul: true,
         deskripsi: true,
         kategori: true,
@@ -37,6 +65,11 @@ export async function GET(request) {
                 name: true,
               },
             },
+          },
+        },
+        kelas: {
+          select: {
+            nama: true,
           },
         },
       },
