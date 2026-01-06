@@ -50,6 +50,8 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }
     phone: '',
     email: '',
     password: '',
+    nik: '',
+    gender: 'LAKI_LAKI',
     relationType: 'Ayah',
   });
 
@@ -105,13 +107,28 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }
     }
   };
 
-  // Auto-generate parent email
+  // Auto-generate parent email and set gender
   useEffect(() => {
-    if (parentMode === 'create' && newParentData.name && formData.nis) {
-      const email = generateWaliEmail(newParentData.name, formData.nis);
-      setNewParentData(prev => ({ ...prev, email }));
+    if (parentMode === 'create') {
+      let updates = {};
+      
+      // Auto email
+      if (newParentData.name && formData.nis) {
+        updates.email = generateWaliEmail(newParentData.name, formData.nis);
+      }
+      
+      // Auto gender based on relation
+      if (newParentData.relationType === 'Ayah') {
+        updates.gender = 'LAKI_LAKI';
+      } else if (newParentData.relationType === 'Ibu') {
+        updates.gender = 'PEREMPUAN';
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        setNewParentData(prev => ({ ...prev, ...updates }));
+      }
     }
-  }, [newParentData.name, formData.nis, parentMode]);
+  }, [newParentData.name, formData.nis, newParentData.relationType, parentMode]);
 
   const resetForm = () => {
     setFormData({
@@ -130,6 +147,8 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }
       phone: '',
       email: '',
       password: '',
+      nik: '',
+      gender: 'LAKI_LAKI',
       relationType: 'Ayah',
     });
     setFieldErrors({});
@@ -416,6 +435,17 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }
                     />
                   </div>
                   <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">NIK Wali *</label>
+                    <input
+                      type="text"
+                      required={parentMode === 'create'}
+                      value={newParentData.nik}
+                      onChange={(e) => setNewParentData({ ...newParentData, nik: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 outline-none transition-all"
+                      placeholder="16 digit NIK"
+                    />
+                  </div>
+                  <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Nomor Telepon Wali *</label>
                     <input
                       type="tel"
@@ -425,6 +455,18 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess }
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 outline-none transition-all"
                       placeholder="08xxxxxxxxxx"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Jenis Kelamin Wali *</label>
+                    <select
+                      required={parentMode === 'create'}
+                      value={newParentData.gender}
+                      onChange={(e) => setNewParentData({ ...newParentData, gender: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 outline-none transition-all bg-white"
+                    >
+                      <option value="LAKI_LAKI">Laki-laki</option>
+                      <option value="PEREMPUAN">Perempuan</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Email Akun Wali (Otomatis)</label>
