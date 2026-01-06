@@ -171,23 +171,37 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => (
   </motion.div>
 );
 
-const FeatureHighlightCard = ({ icon: Icon, label, description, index }) => (
+const StatCard = ({ icon: Icon, label, value, sub, index, loading }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
+    initial={{ opacity: 0, scale: 0.9 }}
+    whileInView={{ opacity: 1, scale: 1 }}
     transition={{ delay: index * 0.1 }}
     viewport={{ once: true }}
-    className="bg-white/70 backdrop-blur-md border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border-b-4 border-b-emerald-400 group h-full"
+    className="bg-white/70 backdrop-blur-md border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border-b-4 border-b-emerald-400 group"
   >
     <div className="flex items-center gap-3 mb-4">
-      <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-emerald-100/50">
-        <Icon size={24} />
+      <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300">
+        <Icon size={20} />
       </div>
-      <div className="text-sm font-bold text-slate-800 uppercase tracking-wider leading-tight">{label}</div>
+      <div className="text-xs font-bold text-slate-800 uppercase tracking-widest leading-tight">{label}</div>
     </div>
-    <p className="text-slate-600 text-sm font-medium leading-relaxed">
-      {description}
-    </p>
+    
+    <div className="mb-2">
+      {loading ? (
+        <div className="h-10 w-20 bg-slate-100 animate-pulse rounded-lg" />
+      ) : (
+        <div className="text-4xl font-black bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 bg-clip-text text-transparent">
+          {value || 0}{label.includes('Nilai') ? '' : '+'}
+        </div>
+      )}
+    </div>
+
+    <div className="flex items-start gap-1.5">
+      <Info size={10} className="text-slate-400 mt-0.5" />
+      <p className="text-[10px] text-slate-400 font-medium leading-relaxed italic">
+        {sub || "Data akan terisi otomatis setelah penggunaan"}
+      </p>
+    </div>
   </motion.div>
 );
 
@@ -198,8 +212,33 @@ export default function SIMTAQLandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState('android');
   const [showInstallModal, setShowInstallModal] = useState(false);
+  
+  // Dynamic Stats State
+  const [stats, setStats] = useState({
+    siswaAktif: 0,
+    guruPembina: 0,
+    setoranTercatat: 0,
+    rataRataNilai: 0
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
+    // Fetch Dynamic Stats
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/public/stats');
+        const json = await res.json();
+        if (json.success) {
+          setStats(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch stats", err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchStats();
+
     // PWA Install Prompt Logic
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -388,31 +427,39 @@ export default function SIMTAQLandingPage() {
         </div>
       </section>
 
-      {/* 3. Highlight Section */}
-      <Section id="highlight" className="pt-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <FeatureHighlightCard 
+      {/* 3. Statistik Section (Dynamic) */}
+      <Section id="statistik" className="pt-0">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard 
             icon={Users} 
-            label="Multi Role Portal" 
-            description="Akses terintegrasi khusus untuk Guru, Siswa, dan Orang Tua dalam satu sistem." 
+            label="Siswa Aktif" 
+            value={stats.siswaAktif} 
+            sub={stats.siswaAktif > 0 ? "Data dari sistem SIMTAQ" : "Data akan terisi otomatis"}
+            loading={loadingStats}
             index={0} 
           />
-          <FeatureHighlightCard 
-            icon={BookOpen} 
-            label="Monitoring Hafalan" 
-            description="Rekap tajwid, kelancaran, makhraj, dan status hafalan siswa secara realtime." 
+          <StatCard 
+            icon={GraduationCap} 
+            label="Guru Pembina" 
+            value={stats.guruPembina} 
+            sub={stats.guruPembina > 0 ? "Guru aktif pembina tahfidz" : "Data akan terisi otomatis"}
+            loading={loadingStats}
             index={1} 
           />
-          <FeatureHighlightCard 
-            icon={FileText} 
-            label="Laporan PDF via WA" 
-            description="Rekap perkembangan anak otomatis tiap bulan, siap dikirimkan melalui WhatsApp." 
+          <StatCard 
+            icon={TrendingUp} 
+            label="Setoran Tercatat" 
+            value={stats.setoranTercatat} 
+            sub={stats.setoranTercatat > 0 ? "Sejak awal penggunaan sistem" : "Belum ada setoran tercatat"}
+            loading={loadingStats}
             index={2} 
           />
-          <FeatureHighlightCard 
-            icon={Smartphone} 
-            label="PWA Install App" 
-            description="Dapat di-install langsung di HP tanpa Play Store, sangat ringan dan cepat aksesnya." 
+          <StatCard 
+            icon={Award} 
+            label="Rata-rata Nilai" 
+            value={stats.rataRataNilai} 
+            sub={stats.rataRataNilai > 0 ? "Update otomatis dari penilaian" : "Belum ada penilaian hafalan"}
+            loading={loadingStats}
             index={3} 
           />
         </div>
