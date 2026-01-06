@@ -260,7 +260,7 @@ export default function LaporanHafalanPage() {
   if (initialLoading) {
     return (
       <OrangtuaLayout>
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center py-10 lg:py-20">
           <div className="text-center">
             <RefreshCw className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
             <p className="text-gray-600">Memuat data...</p>
@@ -274,7 +274,7 @@ export default function LaporanHafalanPage() {
     <OrangtuaLayout>
       <div className="-m-6 lg:-m-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-400 via-mint-300 to-amber-200 px-6 lg:px-8 py-8 lg:py-10 shadow-md">
+      <div className="bg-gradient-to-r from-emerald-400 via-mint-300 to-amber-200 px-4 lg:px-8 py-6 lg:py-10 shadow-md">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-emerald-800 text-sm mb-4">

@@ -102,21 +102,21 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
   const config = themeConfig[theme] || themeConfig.emerald;
 
   return (
-    <div className={`${config.bg} rounded-2xl ${config.border} p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
+    <div className={`${config.bg} rounded-2xl ${config.border} p-3.5 lg:p-4 shadow-sm hover:shadow-md transition-all duration-300`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className={`${config.titleColor} text-xs font-bold mb-2 uppercase tracking-wide`}>
+          <p className={`${config.titleColor} text-[10px] lg:text-xs font-bold mb-1 uppercase tracking-wide`}>
             {title}
           </p>
-          <h3 className={`${config.valueColor} text-3xl font-bold`}>
+          <h3 className={`${config.valueColor} text-lg lg:text-xl xl:text-2xl font-bold leading-tight`}>
             {value}
           </h3>
           {subtitle && (
-            <p className={`${config.subtitleColor} text-xs font-medium mt-2`}>{subtitle}</p>
+            <p className={`${config.subtitleColor} text-[10px] lg:text-xs font-medium mt-1 opacity-80`}>{subtitle}</p>
           )}
         </div>
-        <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
-          <Icon size={28} className={config.iconColor} strokeWidth={2} />
+        <div className={`${config.iconBg} p-2.5 lg:p-3 rounded-xl lg:rounded-2xl shadow-sm flex-shrink-0`}>
+          <Icon size={20} className={config.iconColor} strokeWidth={2} />
         </div>
       </div>
     </div>
@@ -126,16 +126,16 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
 // Motivational Quote Card - Blue Transparent + Glow (SIMTAQ Baseline)
 function MotivationCard() {
   return (
-    <div className="w-full rounded-2xl bg-blue-50/70 backdrop-blur-sm border border-blue-200 shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)] p-6">
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 text-blue-600">
-          <Lightbulb size={24} strokeWidth={2} />
+    <div className="w-full rounded-2xl bg-blue-50/70 backdrop-blur-sm border border-blue-200 shadow-[0_0_0_1px_rgba(14,165,233,0.25),0_12px_40px_rgba(14,165,233,0.12)] p-4 lg:p-5">
+      <div className="flex items-start gap-3 lg:gap-4">
+        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 text-blue-600">
+          <Lightbulb size={20} strokeWidth={2} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-slate-700 font-medium text-base italic leading-relaxed mb-2 break-words">
+          <p className="text-slate-700 font-medium text-sm lg:text-base italic leading-relaxed mb-1 lg:mb-2 break-words">
             &quot;Sebaik-baik kalian adalah yang mempelajari Al-Qur&apos;an dan mengajarkannya.&quot;
           </p>
-          <p className="text-sm text-slate-600 font-semibold">
+          <p className="text-[11px] lg:text-sm text-slate-600 font-semibold">
             — HR. Bukhari
           </p>
         </div>
@@ -168,21 +168,21 @@ function DashboardHeader({ userName }) {
   };
 
   return (
-    <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
+    <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-5 sm:px-8 sm:py-6 lg:py-7 overflow-hidden">
       {/* Decorative Circles */}
       <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
 
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
-            <BookOpen className="text-white" size={32} />
+        <div className="flex items-center gap-3 lg:gap-4">
+          <div className="bg-white/20 backdrop-blur-sm p-2.5 lg:p-3.5 rounded-xl lg:rounded-2xl flex-shrink-0">
+            <BookOpen className="text-white w-[22px] h-[22px] lg:w-[26px] lg:h-[26px]" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white break-words" suppressHydrationWarning>
+            <h1 className="text-lg lg:text-xl xl:text-2xl font-bold text-white break-words" suppressHydrationWarning>
               {greeting}, {getFirstName(userName)}! 👋
             </h1>
-            <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal" suppressHydrationWarning>
+            <p className="text-green-50 text-xs sm:text-sm mt-0.5 whitespace-normal opacity-90" suppressHydrationWarning>
               {currentDate || ''}
             </p>
           </div>
@@ -208,18 +208,18 @@ function ProgressBar({ percentage, label, total, achieved, color = 'emerald' }) 
   const theme = colors[color] || colors.emerald;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 lg:space-y-4">
       <div className="flex items-end justify-between">
         <div>
-           <h4 className="font-bold text-gray-800 text-lg">{percentage}%</h4>
-           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
+           <h4 className="font-bold text-gray-800 text-base lg:text-lg leading-tight">{percentage}%</h4>
+           <p className="text-[10px] lg:text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
         </div>
-        <div className={`text-xs font-bold ${theme.text} bg-white px-2 py-1 rounded-lg shadow-sm border border-gray-100`}>
+        <div className={`text-[10px] lg:text-xs font-bold ${theme.text} bg-white px-2 py-0.5 lg:py-1 rounded-lg shadow-sm border border-gray-100`}>
           {achieved} / {total}
         </div>
       </div>
       
-      <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+      <div className="relative h-3 lg:h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
         <div
           className={`absolute inset-y-0 left-0 bg-gradient-to-r ${theme.bar} rounded-full transition-all duration-1000 ease-out`}
           style={{ width: `${percentage}%` }}
@@ -356,30 +356,30 @@ export default function AdminDashboardPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="w-full max-w-none space-y-4 lg:space-y-6">
 
           {/* 1. Hero Header */}
           <DashboardHeader userName={session?.user?.name} />
 
           {/* 1.5 Pending Validation Alert */}
           {pendingCount > 0 && (
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 shadow-md">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="bg-red-100 rounded-xl p-3 flex-shrink-0">
-                    <Bell size={24} className="text-red-600" />
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-4 lg:p-5 shadow-md">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 lg:gap-4">
+                <div className="flex items-center gap-3 lg:gap-4 flex-1 min-w-0">
+                  <div className="bg-red-100 rounded-xl p-2.5 flex-shrink-0">
+                    <Bell className="text-red-600 w-5 h-5 lg:w-6 lg:h-6" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-lg font-bold text-red-700">Siswa Menunggu Validasi</h3>
-                    <p className="text-sm text-red-600 mt-0.5">Ada {pendingCount} siswa baru yang belum divalidasi. Segera tinjau data mereka.</p>
+                    <h3 className="text-base lg:text-lg font-bold text-red-700 leading-tight">Siswa Menunggu Validasi</h3>
+                    <p className="text-[11px] lg:text-sm text-red-600 mt-0.5 opacity-90">Ada {pendingCount} siswa baru yang belum divalidasi. Segera tinjau data mereka.</p>
                   </div>
                 </div>
                 <Link
                   href="/admin/validasi-siswa"
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 h-11 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex-shrink-0 mt-2 md:mt-0"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 lg:px-6 lg:py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex-shrink-0 mt-2 md:mt-0"
                 >
                   Lihat Sekarang
-                  <ChevronRight size={18} />
+                  <ChevronRight size={16} />
                 </Link>
               </div>
             </div>

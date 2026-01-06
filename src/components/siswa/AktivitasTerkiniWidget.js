@@ -66,18 +66,18 @@ export default function AktivitasTerkiniWidget() {
   return (
     <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
+      <div className="px-4 lg:px-6 py-4 lg:py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
         <div className="flex items-center gap-3">
-          <Clock size={24} className="text-white" />
+          <Clock size={22} className="text-white" />
           <div>
-            <h2 className="text-lg font-bold text-white">Aktivitas Terkini</h2>
-            <p className="text-sm text-green-50 mt-0.5">Riwayat aktivitas Anda</p>
+            <h2 className="text-base lg:text-lg font-bold text-white">Aktivitas Terkini</h2>
+            <p className="text-xs text-green-50 mt-0.5">Riwayat aktivitas Anda</p>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-4 lg:p-6">
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin">
@@ -103,7 +103,7 @@ export default function AktivitasTerkiniWidget() {
               return (
                 <div
                   key={activity.id}
-                  className="flex items-start gap-4 p-4 rounded-lg bg-white/50 border border-gray-100 hover:bg-white/80 transition-colors"
+                  className="flex items-start gap-3 lg:gap-4 p-3 lg:p-4 rounded-lg bg-white/50 border border-gray-100 hover:bg-white/80 transition-colors"
                 >
                   {/* Icon */}
                   <div className="text-2xl flex-shrink-0 pt-1">{display.icon}</div>

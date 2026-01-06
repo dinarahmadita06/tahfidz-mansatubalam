@@ -45,21 +45,21 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
   const config = themeConfig[theme] || themeConfig.emerald;
 
   return (
-    <div className={`${config.bg} rounded-2xl ${config.border} p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
+    <div className={`${config.bg} rounded-2xl ${config.border} p-4 lg:p-5 shadow-sm hover:shadow-md transition-all duration-300`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className={`${config.titleColor} text-xs font-bold mb-2 uppercase tracking-wide`}>
+          <p className={`${config.titleColor} text-[10px] lg:text-xs font-bold mb-1 lg:mb-2 uppercase tracking-wide`}>
             {title}
           </p>
-          <h3 className={`${config.valueColor} text-3xl font-bold`}>
+          <h3 className={`${config.valueColor} text-xl lg:text-2xl xl:text-3xl font-bold leading-tight`}>
             {value}
           </h3>
           {subtitle && (
-            <p className={`${config.subtitleColor} text-xs font-medium mt-2`}>{subtitle}</p>
+            <p className={`${config.subtitleColor} text-[10px] lg:text-xs font-medium mt-1`}>{subtitle}</p>
           )}
         </div>
-        <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
-          <Icon size={28} className={config.iconColor} strokeWidth={2} />
+        <div className={`${config.iconBg} p-2.5 lg:p-3 rounded-xl lg:rounded-2xl shadow-sm flex-shrink-0`}>
+          <Icon size={22} className={config.iconColor} strokeWidth={2} />
         </div>
       </div>
     </div>
@@ -69,34 +69,34 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
 // Search & Filter Toolbar - Glass Effect
 function SearchFilterBar({ searchTerm, setSearchTerm, filterStatus, setFilterStatus }) {
   return (
-    <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 p-6 shadow-sm">
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 p-4 lg:p-5 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 lg:gap-4">
         {/* Search Input */}
         <div>
-          <label className="block text-xs font-bold text-emerald-700 mb-2 uppercase tracking-wide">
+          <label className="block text-[10px] lg:text-xs font-bold text-emerald-700 mb-1.5 uppercase tracking-wide">
             Cari Guru
           </label>
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400" size={18} />
             <input
               type="text"
               placeholder="Cari berdasarkan nama, email, atau NIP..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-emerald-200/60 rounded-xl bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              className="w-full pl-11 pr-4 py-2 lg:py-2.5 border border-emerald-200/60 rounded-xl bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
             />
           </div>
         </div>
 
         {/* Filter Status */}
         <div>
-          <label className="block text-xs font-bold text-emerald-700 mb-2 uppercase tracking-wide">
+          <label className="block text-[10px] lg:text-xs font-bold text-emerald-700 mb-1.5 uppercase tracking-wide">
             Filter Status
           </label>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full md:w-48 px-4 py-3 border border-emerald-200/60 rounded-xl bg-white/70 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            className="w-full md:w-44 px-4 py-2 lg:py-2.5 border border-emerald-200/60 rounded-xl bg-white/70 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           >
             <option value="all">Semua Status</option>
             <option value="active">Aktif</option>
@@ -318,45 +318,45 @@ export default function AdminGuruPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6 space-y-4 lg:space-y-6">
 
           {/* Header Card */}
-          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden relative">
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-5 sm:px-8 sm:py-6 lg:py-7 overflow-hidden relative">
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
 
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
-                  <Users className="text-white" size={32} />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 lg:gap-6">
+              <div className="flex items-center gap-3 lg:gap-4">
+                <div className="bg-white/20 backdrop-blur-sm p-3 lg:p-3.5 rounded-xl lg:rounded-2xl flex-shrink-0">
+                  <Users className="text-white" size={24} />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white break-words">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white break-words">
                     Manajemen Guru
                   </h1>
-                  <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal">
+                  <p className="text-green-50 text-xs sm:text-sm mt-0.5 whitespace-normal opacity-90">
                     Kelola data guru tahfidz dengan mudah dan efisien
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-wrap sm:flex-nowrap gap-2 lg:gap-3">
                 <button
                   onClick={() => {
                     resetForm();
                     fetchKelas();
                     setShowModal(true);
                   }}
-                  className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-emerald-600 rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
                 >
-                  <UserPlus size={18} />
+                  <UserPlus size={16} />
                   <span>Tambah Guru</span>
                 </button>
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
                 >
-                  <Upload size={18} />
+                  <Upload size={16} />
                   <span>Import</span>
                 </button>
                 <button
@@ -378,9 +378,9 @@ export default function AdminGuruPage() {
                     link.download = `data-guru-${new Date().toISOString().split('T')[0]}.csv`;
                     link.click();
                   }}
-                  className="flex items-center justify-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
                 >
-                  <Download size={18} />
+                  <Download size={16} />
                   <span>Export</span>
                 </button>
               </div>
@@ -388,7 +388,7 @@ export default function AdminGuruPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
             <StatCard
               icon={Users}
               title="Total Guru"
@@ -426,18 +426,18 @@ export default function AdminGuruPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-emerald-50/50 text-emerald-800">
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Nama Lengkap</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Kelas Binaan</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Tanggal Bergabung</th>
-                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">Aksi</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Nama Lengkap</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Email</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Kelas Binaan</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Tanggal Bergabung</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-center text-[10px] lg:text-xs font-bold uppercase tracking-wider">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-emerald-100/40">
                   {filteredGuru.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center text-emerald-700/60 font-medium text-sm">
+                      <td colSpan="6" className="px-6 py-10 text-center text-emerald-700/60 font-medium text-sm">
                         Tidak ada data guru yang ditemukan
                       </td>
                     </tr>
@@ -449,70 +449,70 @@ export default function AdminGuruPage() {
                           key={guruItem.id}
                           className="hover:bg-emerald-50/30 transition-colors duration-200"
                         >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm ring-2 ring-emerald-200/60 shadow-sm">
+                          <td className="px-4 py-2.5 lg:px-6 lg:py-3">
+                            <div className="flex items-center gap-2.5 lg:gap-3">
+                              <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-xs lg:text-sm ring-2 ring-emerald-200/60 shadow-sm">
                                 {guruItem.user.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <div className="font-semibold text-gray-900 text-sm">
+                                <div className="font-semibold text-gray-900 text-xs lg:text-sm">
                                   {guruItem.user.name}
                                 </div>
                                 {guruItem.nip && (
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-[10px] lg:text-xs text-gray-500">
                                     NIP: {guruItem.nip}
                                   </div>
                                 )}
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-4 py-2.5 lg:px-6 lg:py-3 text-xs lg:text-sm text-gray-600">
                             {guruItem.user.email}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-2.5 lg:px-6 lg:py-3">
                             {aktivKelas && aktivKelas.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-1.5 lg:gap-2">
                                 {aktivKelas.map((gk) => (
                                   <span
                                     key={gk.id}
-                                    className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-50/70 border border-emerald-100/60 text-emerald-700 flex items-center gap-1"
+                                    className="px-2 py-0.5 lg:px-3 lg:py-1 text-[10px] lg:text-xs font-semibold rounded-full bg-emerald-50/70 border border-emerald-100/60 text-emerald-700 flex items-center gap-1"
                                   >
-                                    <GraduationCap size={12} />
+                                    <GraduationCap size={11} />
                                     {gk.kelas.nama}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-[10px] lg:text-xs text-gray-400">
                                 Belum ada kelas aktif
                               </span>
                             )}
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex px-4 py-1.5 text-xs font-semibold rounded-full bg-emerald-100/70 text-emerald-700 border border-emerald-200/60">
+                          <td className="px-4 py-2.5 lg:px-6 lg:py-3">
+                            <span className="inline-flex px-3 py-1 lg:px-4 lg:py-1.5 text-[10px] lg:text-xs font-semibold rounded-full bg-emerald-100/70 text-emerald-700 border border-emerald-200/60">
                               Aktif
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-4 py-2.5 lg:px-6 lg:py-3 text-xs lg:text-sm text-gray-600">
                             {new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
                               day: 'numeric',
                               month: 'long',
                               year: 'numeric'
                             })}
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center justify-center gap-2">
+                          <td className="px-4 py-2.5 lg:px-6 lg:py-3">
+                            <div className="flex items-center justify-center gap-1.5 lg:gap-2">
                               <button
                                 onClick={() => handleEdit(guruItem)}
-                                className="p-2 rounded-lg bg-emerald-50/70 text-emerald-600 hover:bg-emerald-100/70 hover:shadow-md transition-all"
+                                className="p-1.5 lg:p-2 rounded-lg bg-emerald-50/70 text-emerald-600 hover:bg-emerald-100/70 hover:shadow-md transition-all"
                               >
-                                <Edit size={16} />
+                                <Edit size={14} />
                               </button>
                               <button
                                 onClick={() => handleDelete(guruItem.id)}
-                                className="p-2 rounded-lg bg-rose-50/70 text-rose-600 hover:bg-rose-100/70 hover:shadow-md transition-all"
+                                className="p-1.5 lg:p-2 rounded-lg bg-rose-50/70 text-rose-600 hover:bg-rose-100/70 hover:shadow-md transition-all"
                               >
-                                <Trash2 size={16} />
+                                <Trash2 size={14} />
                               </button>
                             </div>
                           </td>
@@ -530,9 +530,9 @@ export default function AdminGuruPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-100">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-900">
+          <div className="bg-white rounded-2xl p-5 lg:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-100">
+            <div className="flex items-center justify-between mb-4 lg:mb-5">
+              <h2 className="text-xl lg:text-2xl font-bold text-slate-900">
                 {editingGuru ? 'Edit Data Guru' : 'Tambah Guru Baru'}
               </h2>
               <button
@@ -542,15 +542,15 @@ export default function AdminGuruPage() {
                 }}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
               >
-                <span className="text-2xl">✕</span>
+                <span className="text-xl lg:text-2xl">✕</span>
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
               {/* Row 1: Nama Lengkap | NIP */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Nama Lengkap *
                   </label>
                   <input
@@ -558,27 +558,27 @@ export default function AdminGuruPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     NIP
                   </label>
                   <input
                     type="text"
                     value={formData.nip}
                     onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   />
                 </div>
               </div>
 
               {/* Row 2: Email | Password */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Email *
                   </label>
                   <div className="relative">
@@ -588,21 +588,21 @@ export default function AdminGuruPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="guru.nama@tahfidz.sch.id"
-                      className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                     />
                     <button
                       type="button"
                       onClick={generateEmail}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
                       title="Generate email otomatis"
                     >
-                      <RefreshCw size={16} />
+                      <RefreshCw size={14} />
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Password {editingGuru ? '(kosongkan jika tidak diubah)' : '*'}
                   </label>
                   <div className="relative">
@@ -612,24 +612,24 @@ export default function AdminGuruPage() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder="6 digit angka"
-                      className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                     />
                     <button
                       type="button"
                       onClick={generatePassword}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
                       title="Generate password 6 digit"
                     >
-                      <RefreshCw size={16} />
+                      <RefreshCw size={14} />
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* Row 3: Kelas yang Diampu | Jenis Kelamin */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Kelas yang Diampu *
                   </label>
                   <MultiSelectKelas
@@ -642,14 +642,14 @@ export default function AdminGuruPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     Jenis Kelamin *
                   </label>
                   <select
                     required
                     value={formData.jenisKelamin}
                     onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   >
                     <option value="L">Laki-laki</option>
                     <option value="P">Perempuan</option>
@@ -659,32 +659,32 @@ export default function AdminGuruPage() {
 
               {/* Row 4: Alamat */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+                <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                   Alamat
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={formData.alamat}
                   onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                 />
               </div>
 
               {/* Buttons */}
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false);
                     resetForm();
                   }}
-                  className="px-6 py-3 border-2 border-slate-300 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all"
+                  className="px-5 py-2 lg:px-6 lg:py-2.5 border-2 border-slate-300 text-slate-600 rounded-xl font-semibold text-xs lg:text-sm hover:bg-slate-50 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                  className="px-5 py-2 lg:px-6 lg:py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold text-xs lg:text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
                 >
                   {editingGuru ? 'Update Data' : 'Simpan Data'}
                 </button>

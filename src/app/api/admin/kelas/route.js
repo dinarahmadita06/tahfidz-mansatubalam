@@ -114,7 +114,11 @@ export async function POST(request) {
 
       // 3. Add guru pendamping if provided (filter out empty values)
       if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
-        const validGuruIds = guruPendampingIds.filter(id => id && id.trim());
+        // Filter out empty values, duplicates, and ensure guru utama is not included
+        const validGuruIds = [...new Set(guruPendampingIds.filter(gid => 
+          gid && gid.trim() && gid !== guruUtamaId
+        ))];
+        
         if (validGuruIds.length > 0) {
           const guruPendampingData = validGuruIds.map((guruId) => ({
             kelasId: newKelas.id,
@@ -125,6 +129,7 @@ export async function POST(request) {
 
           await tx.guruKelas.createMany({
             data: guruPendampingData,
+            skipDuplicates: true
           });
         }
       }

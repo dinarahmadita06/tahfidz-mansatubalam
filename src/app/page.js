@@ -148,7 +148,7 @@ const UIPreviewStack = () => (
 
 // Reusable Components
 const Section = ({ id, children, className = "", dark = false }) => (
-  <section id={id} className={`py-16 px-4 md:px-8 overflow-hidden ${dark ? 'bg-[#F0FDFA]' : 'bg-white'} ${className}`}>
+  <section id={id} className={`py-10 lg:py-16 px-4 md:px-8 overflow-hidden ${dark ? 'bg-[#F0FDFA]' : 'bg-white'} ${className}`}>
     <div className="max-w-7xl mx-auto">
       {children}
     </div>
@@ -161,12 +161,12 @@ const FeatureCard = ({ icon: Icon, title, description, index }) => (
     whileInView={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.1 }}
     viewport={{ once: true }}
-    className="bg-white/70 backdrop-blur-md border border-emerald-100 p-8 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_25px_50px_-12px_rgba(16,185,129,0.15)] hover:-translate-y-2 transition-all duration-500 group"
+    className="bg-white/70 backdrop-blur-md border border-emerald-100 p-6 lg:p-8 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_25px_50px_-12px_rgba(16,185,129,0.15)] hover:-translate-y-2 transition-all duration-500 group"
   >
-    <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 via-green-400 to-teal-400 rounded-xl flex items-center justify-center mb-6 text-white shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform duration-300">
-      <Icon size={28} />
+    <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-emerald-400 via-green-400 to-teal-400 rounded-xl flex items-center justify-center mb-4 lg:mb-6 text-white shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform duration-300">
+      <Icon size={24} />
     </div>
-    <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>
+    <h3 className="text-lg lg:text-xl font-bold text-slate-900 mb-2 lg:mb-3">{title}</h3>
     <p className="text-slate-600 text-sm leading-relaxed">{description}</p>
   </motion.div>
 );
@@ -177,20 +177,20 @@ const StatCard = ({ icon: Icon, label, value, sub, index, loading }) => (
     whileInView={{ opacity: 1, scale: 1 }}
     transition={{ delay: index * 0.1 }}
     viewport={{ once: true }}
-    className="bg-white/70 backdrop-blur-md border border-emerald-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border-b-4 border-b-emerald-400 group"
+    className="bg-white/70 backdrop-blur-md border border-emerald-100 p-4 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border-b-4 border-b-emerald-400 group"
   >
-    <div className="flex items-center gap-3 mb-4">
-      <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300">
-        <Icon size={20} />
+    <div className="flex items-center gap-3 mb-3 lg:mb-4">
+      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300">
+        <Icon size={18} />
       </div>
-      <div className="text-xs font-bold text-slate-800 uppercase tracking-widest leading-tight">{label}</div>
+      <div className="text-[10px] lg:text-xs font-bold text-slate-800 uppercase tracking-widest leading-tight">{label}</div>
     </div>
     
-    <div className="mb-2">
+    <div className="mb-1.5 lg:mb-2">
       {loading ? (
-        <div className="h-10 w-20 bg-slate-100 animate-pulse rounded-lg" />
+        <div className="h-8 lg:h-10 w-16 lg:w-20 bg-slate-100 animate-pulse rounded-lg" />
       ) : (
-        <div className="text-4xl font-black bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 bg-clip-text text-transparent">
+        <div className="text-2xl lg:text-4xl font-black bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 bg-clip-text text-transparent">
           {value || 0}{label.includes('Nilai') ? '' : '+'}
         </div>
       )}
@@ -351,35 +351,35 @@ export default function SIMTAQLandingPage() {
       </nav>
 
       {/* 2. Hero Section */}
-      <section id="beranda" className="relative pt-32 pb-12 md:pt-48 md:pb-24 px-4 overflow-hidden">
+      <section id="beranda" className="relative pt-24 pb-10 md:pt-32 lg:pt-40 md:pb-20 px-4 overflow-hidden">
         {/* Subtle Blur Glows */}
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-emerald-200/30 rounded-full blur-[120px] -z-10" />
         <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-teal-200/20 rounded-full blur-[100px] -z-10" />
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-full text-xs font-bold mb-6 border border-emerald-100">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-full text-xs font-bold mb-4 lg:mb-6 border border-emerald-100">
               <Smartphone size={14} />
               Portal Aplikasi Berbasis PWA
             </div>
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] mb-4 lg:mb-6 tracking-tight">
               SIMTAQ — Sistem <br />
               <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
                 Monitoring Tahfidz
               </span>
             </h1>
-            <p className="text-lg text-slate-600 mb-10 leading-relaxed max-w-xl font-medium">
+            <p className="text-base lg:text-lg text-slate-600 mb-8 lg:mb-10 leading-relaxed max-w-xl font-medium">
               Pantau hafalan, penilaian, dan perkembangan siswa secara realtime untuk guru, siswa, dan orang tua dalam satu portal aplikasi yang ringan dan cepat.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
               <Link 
                 href="/login"
-                className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 group"
+                className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-bold text-base lg:text-lg transition-all shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 group"
               >
                 Masuk ke Portal
                 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -387,7 +387,7 @@ export default function SIMTAQLandingPage() {
               
               <button 
                 onClick={handleInstallClick}
-                className="bg-white hover:bg-emerald-50 text-emerald-600 border-2 border-emerald-100 px-8 py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-sm"
+                className="bg-white hover:bg-emerald-50 text-emerald-600 border-2 border-emerald-100 px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-bold text-base lg:text-lg transition-all flex items-center justify-center gap-3 shadow-sm"
               >
                 {isInstalled ? (
                   <>
@@ -467,9 +467,9 @@ export default function SIMTAQLandingPage() {
 
       {/* 4. Fitur SIMTAQ */}
       <Section id="fitur">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">Kenapa SIMTAQ?</h2>
-          <p className="text-slate-600 max-w-2xl mx-auto font-medium">Dirancang khusus untuk ekosistem tahfidz modern dengan fitur yang memudahkan kolaborasi antara Guru, Siswa, dan Orang Tua.</p>
+        <div className="text-center mb-10 lg:mb-16">
+          <h2 className="text-2xl lg:text-3xl xl:text-4xl font-black text-slate-900 mb-3 lg:mb-4 tracking-tight">Kenapa SIMTAQ?</h2>
+          <p className="text-slate-600 max-w-2xl mx-auto font-medium text-sm lg:text-base">Dirancang khusus untuk ekosistem tahfidz modern dengan fitur yang memudahkan kolaborasi antara Guru, Siswa, dan Orang Tua.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <FeatureCard 
@@ -513,9 +513,9 @@ export default function SIMTAQLandingPage() {
 
       {/* 5. Cara Install PWA */}
       <Section id="cara-install" dark>
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Cara Install Aplikasi</h2>
-          <p className="text-slate-600 max-w-xl mx-auto font-medium">SIMTAQ adalah aplikasi web modern yang bisa dipasang di smartphone Anda tanpa harus melalui Play Store atau App Store.</p>
+        <div className="text-center mb-8 lg:mb-12">
+          <h2 className="text-2xl lg:text-3xl font-black text-slate-900 mb-3 lg:mb-4 tracking-tight">Cara Install Aplikasi</h2>
+          <p className="text-slate-600 max-w-xl mx-auto font-medium text-sm lg:text-base">SIMTAQ adalah aplikasi web modern yang bisa dipasang di smartphone Anda tanpa harus melalui Play Store atau App Store.</p>
         </div>
 
         <div className="max-w-3xl mx-auto bg-white/70 backdrop-blur border border-emerald-100 p-4 shadow-lg rounded-[2rem]">
