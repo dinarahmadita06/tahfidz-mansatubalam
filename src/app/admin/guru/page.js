@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { MultiSelectKelas } from './MultiSelectKelas';
 
@@ -436,8 +437,13 @@ export default function AdminGuruPage() {
                 <tbody className="divide-y divide-emerald-100/40">
                   {filteredGuru.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="px-6 py-10 text-center text-emerald-700/60 font-medium text-sm">
-                        Tidak ada data guru yang ditemukan
+                      <td colSpan="6" className="px-6 py-12 text-center">
+                        <EmptyState
+                          title="Tidak ada data guru"
+                          description="Tidak ditemukan data guru yang sesuai dengan pencarian atau filter saat ini."
+                          icon={Users}
+                          className="bg-transparent border-none shadow-none py-0"
+                        />
                       </td>
                     </tr>
                   ) : (

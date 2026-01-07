@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Megaphone, ChevronRight, Calendar, X, Bell, BookOpen, Award, Star } from 'lucide-react';
 import Link from 'next/link';
+import EmptyState from '@/components/shared/EmptyState';
 
 // Category icons
 const CATEGORY_ICONS = {
@@ -122,13 +123,12 @@ export default function PengumumanWidget({ title = "Pengumuman Terbaru", limit =
 
       {/* Content */}
       {pengumuman.length === 0 ? (
-        <div className="text-center py-8 px-4 bg-emerald-50/50 rounded-lg border border-emerald-100">
-          <div className="inline-flex p-3 bg-emerald-100 rounded-full mb-3">
-            <Megaphone size={24} className="text-emerald-600" />
-          </div>
-          <p className="text-gray-600 text-sm font-medium">Belum ada pengumuman</p>
-          <p className="text-gray-500 text-xs mt-1">Nantikan kabar terbaru dari admin</p>
-        </div>
+        <EmptyState
+          title="Belum ada pengumuman"
+          description="Nantikan kabar terbaru dari admin sekolah di sini."
+          icon={Megaphone}
+          className="py-6"
+        />
       ) : (
         <div className="space-y-3">
           {pengumuman.map((item) => {

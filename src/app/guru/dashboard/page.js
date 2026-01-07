@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import GuruLayout from '@/components/layout/GuruLayout';
 import AnnouncementSlider from '@/components/AnnouncementSlider';
 import PengumumanWidget from '@/components/PengumumanWidget';
@@ -156,12 +157,12 @@ function ClassManagementSection({ kelasList, loading }) {
           <LoadingIndicator text="Memuat daftar kelas..." />
         </div>
       ) : kelasList.length === 0 ? (
-        <div className="text-center py-10 lg:py-12">
-          <div className="w-14 h-14 lg:w-16 lg:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4">
-            <BookOpen className="text-slate-400 w-7 h-7 lg:w-8 lg:h-8" />
-          </div>
-          <p className="text-slate-600 font-medium text-sm">Belum ada kelas yang diampu</p>
-        </div>
+        <EmptyState
+          title="Belum ada kelas yang diampu"
+          description="Anda belum memiliki daftar kelas binaan saat ini."
+          icon={BookOpen}
+          className="py-6"
+        />
       ) : (
         <div className="space-y-2.5 lg:space-y-3">
           {kelasList.map((kelas) => (

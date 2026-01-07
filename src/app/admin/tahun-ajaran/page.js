@@ -6,7 +6,8 @@ import {
   BookOpen, Users, GraduationCap, Clock, XCircle
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import LoadingIndicator from "@/components/shared/LoadingIndicator";
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 
 // Color Palette
 const colors = {
@@ -474,8 +475,12 @@ export default function AdminTahunAjaranPage() {
                     {tahunAjaran.length === 0 ? (
                       <tr>
                         <td colSpan="7" className="px-6 py-12 text-center">
-                          <Calendar size={48} className="text-gray-300 mx-auto mb-4" />
-                          <p className="text-gray-600 font-medium">Belum ada tahun ajaran terdaftar</p>
+                          <EmptyState
+                            title="Belum ada tahun ajaran"
+                            description="Silakan tambahkan tahun ajaran baru untuk memulai sistem."
+                            icon={Calendar}
+                            className="bg-transparent border-none shadow-none py-0"
+                          />
                         </td>
                       </tr>
                     ) : (

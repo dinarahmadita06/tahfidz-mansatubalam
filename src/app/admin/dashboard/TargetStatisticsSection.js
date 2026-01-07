@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Trophy, AlertCircle } from 'lucide-react';
+import EmptyState from '@/components/shared/EmptyState';
 
 // ============================================================================
 // TARGET KELAS CHART CARD - Horizontal Bar Chart
@@ -34,13 +35,12 @@ function TargetKelasChartCard({ data, loading, targetHafalan }) {
           ))}
         </div>
       ) : !hasData ? (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-          <div className="p-4 bg-emerald-50 rounded-full mb-4">
-            <TrendingUp className="text-emerald-400" size={32} />
-          </div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-1">Belum ada data kelas</h4>
-          <p className="text-xs text-gray-500">Data akan muncul setelah siswa menyelesaikan hafalan</p>
-        </div>
+        <EmptyState
+          title="Belum ada data kelas"
+          description="Data akan muncul setelah siswa menyelesaikan hafalan"
+          icon={TrendingUp}
+          className="py-6"
+        />
       ) : (
         <div className="space-y-4">
           {chartData.map((kelas, index) => {
@@ -123,13 +123,12 @@ function TargetSiswaDonutCard({ data, loading, targetHafalan }) {
           <div className="mt-4 h-4 bg-gray-200 rounded-full w-24 animate-pulse"></div>
         </div>
       ) : total === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-          <div className="p-4 bg-blue-50 rounded-full mb-4">
-            <Users className="text-blue-400" size={32} />
-          </div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-1">Belum ada siswa mencapai target</h4>
-          <p className="text-xs text-gray-500">Data akan muncul setelah siswa menyelesaikan hafalan</p>
-        </div>
+        <EmptyState
+          title="Belum ada siswa mencapai target"
+          description="Data akan muncul setelah siswa menyelesaikan hafalan"
+          icon={Users}
+          className="py-6"
+        />
       ) : (
         <div className="space-y-4 lg:space-y-6">
           {/* SVG Donut Chart */}
@@ -270,20 +269,18 @@ export default function TargetStatisticsSection() {
   if (!loading && !tahunAjaranAktif?.targetHafalan) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-amber-100/60 shadow-sm flex items-center justify-center">
-          <div className="text-center">
-            <AlertCircle className="text-amber-500 mx-auto mb-3" size={32} />
-            <p className="text-sm font-medium text-gray-700">Target hafalan belum diatur</p>
-            <p className="text-xs text-gray-500 mt-1">Silakan atur target di halaman Tahun Ajaran</p>
-          </div>
-        </div>
-        <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-amber-100/60 shadow-sm flex items-center justify-center">
-          <div className="text-center">
-            <AlertCircle className="text-amber-500 mx-auto mb-3" size={32} />
-            <p className="text-sm font-medium text-gray-700">Target hafalan belum diatur</p>
-            <p className="text-xs text-gray-500 mt-1">Silakan atur target di halaman Tahun Ajaran</p>
-          </div>
-        </div>
+        <EmptyState
+          title="Target hafalan belum diatur"
+          description="Silakan atur target di halaman Tahun Ajaran"
+          icon={AlertCircle}
+          className="bg-white/70 backdrop-blur-md rounded-2xl border border-amber-100/60"
+        />
+        <EmptyState
+          title="Target hafalan belum diatur"
+          description="Silakan atur target di halaman Tahun Ajaran"
+          icon={AlertCircle}
+          className="bg-white/70 backdrop-blur-md rounded-2xl border border-amber-100/60"
+        />
       </div>
     );
   }

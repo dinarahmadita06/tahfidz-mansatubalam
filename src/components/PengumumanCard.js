@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Megaphone, Calendar, AlertCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
+import EmptyState from '@/components/shared/EmptyState';
 
 export default function PengumumanCard({ limit = 3 }) {
   const [pengumumanList, setPengumumanList] = useState([]);
@@ -68,10 +69,12 @@ export default function PengumumanCard({ limit = 3 }) {
           </div>
           <h3 className="text-lg font-bold text-gray-900">Pengumuman Terbaru</h3>
         </div>
-        <div className="text-center py-8">
-          <Megaphone className="mx-auto text-gray-300 mb-2" size={40} />
-          <p className="text-gray-400 text-sm">Belum ada pengumuman</p>
-        </div>
+        <EmptyState
+          title="Belum ada pengumuman"
+          description="Nantikan kabar terbaru dari sekolah di sini."
+          icon={Megaphone}
+          className="py-4 bg-transparent border-none shadow-none"
+        />
       </div>
     );
   }

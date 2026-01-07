@@ -13,6 +13,7 @@ import {
   School,
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function PresensiPage() {
@@ -142,18 +143,12 @@ export default function PresensiPage() {
 
           <div className="p-6">
             {kelasList.length === 0 ? (
-              /* Empty State */
-              <div className="py-16 text-center">
-                <div className="flex flex-col items-center justify-center gap-4">
-                  <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center">
-                    <BookOpen size={48} className="text-emerald-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Belum Ada Kelas yang Diampu</h3>
-                    <p className="text-gray-600">Anda belum ditugaskan untuk mengampu kelas manapun.</p>
-                  </div>
-                </div>
-              </div>
+              <EmptyState
+                title="Belum Ada Kelas yang Diampu"
+                description="Anda belum ditugaskan untuk mengampu kelas manapun saat ini."
+                icon={BookOpen}
+                className="py-8"
+              />
             ) : (
               /* Kelas Grid */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,6 +1,8 @@
 'use client';
 
 import { colors } from './constants';
+import { FileText } from 'lucide-react';
+import EmptyState from '@/components/shared/EmptyState';
 
 // Helper function untuk format nilai
 const formatNilai = (nilai) => {
@@ -238,7 +240,10 @@ export default function TabelHarian({
                         siswa.pertemuan.catatan = e.target.value;
                       }
                     }}
-                    onBlur={(e) => onCatatanChange(siswa.siswaId, e.target.value)}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = colors.gray[200];
+                      onCatatanChange(siswa.siswaId, e.target.value);
+                    }}
                     placeholder="Tambahkan catatan..."
                     style={{
                       width: '100%',
@@ -251,10 +256,6 @@ export default function TabelHarian({
                       transition: 'border 0.2s',
                     }}
                     onFocus={(e) => e.target.style.borderColor = colors.emerald[500]}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = colors.gray[200];
-                      onCatatanChange(siswa.siswaId, e.target.value);
-                    }}
                   />
                 </td>
               </tr>
@@ -264,15 +265,12 @@ export default function TabelHarian({
       </table>
 
       {data.length === 0 && (
-        <div style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          color: colors.text.tertiary,
-          fontFamily: 'Poppins, system-ui, sans-serif',
-          fontSize: '15px',
-        }}>
-          Tidak ada data siswa untuk tanggal ini
-        </div>
+        <EmptyState
+          title="Tidak ada data siswa"
+          description="Belum ada data penilaian siswa untuk tanggal terpilih."
+          icon={FileText}
+          className="py-12"
+        />
       )}
     </div>
   );
