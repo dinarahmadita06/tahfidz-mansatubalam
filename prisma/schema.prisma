@@ -112,6 +112,8 @@ model User {
   jabatan          String?       // Koordinator Tahfidz, etc
   nip              String?       // NIP / Nomor Induk Pegawai (optional)
   alamat           String?
+  ttdUrl           String?
+  signatureUrl     String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   guru             Guru?
@@ -121,6 +123,7 @@ model User {
   guruActivity     GuruActivity[]
   pengumuman       Pengumuman[]
   pengumumanRead   PengumumanRead[] @relation("UserPengumumanRead")
+  kelasMengampu    Kelas[]          @relation("KelasGuruTahfidz")
 }
 
 model Guru {
@@ -240,9 +243,11 @@ model Kelas {
   kapasitas     Int?
   targetJuz     Int?
   status        StatusKelas     @default(AKTIF)
+  guruTahfidzId String?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   tahunAjaran   TahunAjaran     @relation(fields: [tahunAjaranId], references: [id], onDelete: Cascade)
+  guruTahfidz   User?           @relation("KelasGuruTahfidz", fields: [guruTahfidzId], references: [id])
   guruKelas     GuruKelas[]
   siswa         Siswa[]
   targetHafalan TargetHafalan[]

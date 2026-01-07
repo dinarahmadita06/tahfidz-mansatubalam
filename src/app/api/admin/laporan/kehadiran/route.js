@@ -19,15 +19,74 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Parameter tidak lengkap' }, { status: 400 });
     }
 
-    // Get kelas info
+    // Get kelas info with teacher
     const kelas = await prisma.kelas.findUnique({
       where: { id: kelasId },
-      select: { nama: true }
+      include: {
+        guruTahfidz: {
+          select: {
+            name: true,
+            jabatan: true,
+            ttdUrl: true,
+            signatureUrl: true
+          }
+        }
+      }
     });
 
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
     }
+
+    // Get current admin info
+    const adminUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        name: true,
+        jabatan: true,
+        ttdUrl: true,
+        signatureUrl: true
+      }
+    });
+
+    // Merge teacher signature info
+    let teacherUser = kelas.guruTahfidz;
+    
+    // Fallback: search in GuruKelas if guruTahfidz is not set (legacy data)
+    if (!teacherUser) {
+      const guruUtama = await prisma.guruKelas.findFirst({
+        where: { kelasId, peran: 'utama', isActive: true },
+        include: { 
+          guru: { 
+            include: { 
+              user: {
+                select: {
+                  name: true,
+                  jabatan: true,
+                  ttdUrl: true,
+                  signatureUrl: true
+                }
+              } 
+            } 
+          } 
+        }
+      });
+      if (guruUtama) {
+        teacherUser = guruUtama.guru.user;
+      }
+    }
+
+    const teacher = {
+      nama: teacherUser?.name || 'Belum Ditentukan',
+      jabatan: teacherUser?.jabatan || 'Guru Tahfidz',
+      ttdUrl: teacherUser?.ttdUrl || teacherUser?.signatureUrl || null
+    };
+
+    const admin = {
+      nama: adminUser?.name || session.user.name,
+      jabatan: adminUser?.jabatan || 'Koordinator Tahfidz',
+      ttdUrl: adminUser?.ttdUrl || adminUser?.signatureUrl || null
+    };
 
     // Get all siswa in this kelas
     const siswaList = await prisma.siswa.findMany({
@@ -185,6 +244,8 @@ export async function GET(request) {
         totalSakit,
         totalAlpa
       },
+      teacher,
+      admin,
       siswaData
     });
   } catch (error) {
