@@ -34,7 +34,6 @@ export async function GET() {
       where: { status: 'approved' },
       select: {
         id: true,
-        totalJuz: true,
         kelasId: true,
         kelas: {
           select: {
@@ -46,16 +45,37 @@ export async function GET() {
     });
 
     // ========================================
-    // 2. HITUNG SISWA MENCAPAI TARGET
+    // 2. HITUNG TOTAL JUZ PER SISWA
     // ========================================
-    const siswaMencapai = allSiswa.filter((s) => (s.totalJuz || 0) >= TARGET_JUZ);
+    // Get distinct juz count for each siswa
+    const hafalanData = await prisma.hafalan.groupBy({
+      by: ['siswaId'],
+      _min: {
+        juz: true
+      },
+      _max: {
+        juz: true
+      }
+    });
+
+    // Build map of siswaId to max juz
+    const siswaJuzMap = {};
+    for (const hafalan of hafalanData) {
+      const maxJuz = hafalan._max.juz || 0;
+      siswaJuzMap[hafalan.siswaId] = maxJuz; // Take the max juz completed
+    }
+
+    // ========================================
+    // 3. HITUNG SISWA MENCAPAI TARGET
+    // ========================================
+    const siswaMencapai = allSiswa.filter((s) => (siswaJuzMap[s.id] || 0) >= TARGET_JUZ);
     const siswaBelum = allSiswa.length - siswaMencapai.length;
     const persenSiswa = allSiswa.length > 0 
       ? Math.round((siswaMencapai.length / allSiswa.length) * 1000) / 10 
       : 0;
 
     // ========================================
-    // 3. HITUNG STATISTIK PER KELAS
+    // 4. HITUNG STATISTIK PER KELAS
     // ========================================
     const kelasStats = {};
     
@@ -75,13 +95,13 @@ export async function GET() {
       }
       
       kelasStats[kelasId].total += 1;
-      if ((siswa.totalJuz || 0) >= TARGET_JUZ) {
+      if ((siswaJuzMap[siswa.id] || 0) >= TARGET_JUZ) {
         kelasStats[kelasId].mencapai += 1;
       }
     });
 
     // ========================================
-    // 4. KONVERSI KE ARRAY DAN HITUNG PERSEN
+    // 5. KONVERSI KE ARRAY DAN HITUNG PERSEN
     // ========================================
     const kelasArray = Object.values(kelasStats).map((kelas) => ({
       id: kelas.id,
@@ -94,7 +114,7 @@ export async function GET() {
     }));
 
     // ========================================
-    // 5. SORT DESCENDING BY PERSEN & AMBIL TOP 5
+    // 6. SORT DESCENDING BY PERSEN & AMBIL TOP 5
     // ========================================
     const kelasTop5 = kelasArray
       .sort((a, b) => b.persen - a.persen)
