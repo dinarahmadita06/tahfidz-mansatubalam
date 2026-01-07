@@ -359,25 +359,25 @@ function AdminLayout({ children }) {
                       <div>
                         <button
                           onClick={() => sidebarOpen ? toggleSubmenu(item.title) : setSidebarOpen(true)}
-                          className={`w-full flex items-center ${sidebarOpen ? 'justify-between px-3' : 'justify-center px-0'} py-1.5 lg:py-2 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 group ${
+                          className={`w-full flex items-center justify-between gap-2 ${sidebarOpen ? 'px-3' : 'px-0'} py-1.5 lg:py-2 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 group ${
                             isMenuActive
                               ? 'bg-emerald-50/70 ring-1 ring-emerald-200/40 text-emerald-700 font-semibold'
                               : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700'
                           }`}
                           title={!sidebarOpen ? item.title : ''}
                         >
-                          <div className="flex items-center gap-2.5 lg:gap-3">
+                          <div className="flex items-center gap-2.5 lg:gap-3 shrink-0">
                             <item.icon
-                              className={`w-[18px] h-[18px] lg:w-5 lg:h-5 ${isMenuActive ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}`}
+                              className={`w-[18px] h-[18px] lg:w-5 lg:h-5 shrink-0 ${isMenuActive ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}`}
                               strokeWidth={1.5}
                             />
                             {sidebarOpen && (
-                              <span className="text-[13px] lg:text-sm font-medium">{item.title}</span>
+                              <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis truncate text-[13px] lg:text-sm font-medium">{item.title}</span>
                             )}
                           </div>
                           {sidebarOpen && (
                             <ChevronDown
-                              className={`text-slate-400 transition-transform duration-200 w-3.5 h-3.5 lg:w-4 lg:h-4 ${
+                              className={`text-slate-400 transition-transform duration-200 w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0 ${
                                 expandedMenus[item.title] ? 'rotate-180' : ''
                               }`}
                               strokeWidth={2}
