@@ -143,19 +143,26 @@ export default function AdminSiswaPage() {
   const [selectedSiswa, setSelectedSiswa] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
 
   // Initial fetch: both data in parallel
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
+      setFetchError(null);
+      
       try {
         const [siswaRes, kelasRes] = await Promise.all([
           fetch('/api/admin/siswa', { credentials: 'include' }),
           fetch('/api/kelas', { credentials: 'include' })
         ]);
 
-        if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
-        if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
+        if (siswaRes.status === 401 || siswaRes.status === 403) {
+          throw new Error(`Sesi Anda telah berakhir (Error ${siswaRes.status}). Silakan login kembali.`);
+        }
+
+        if (!siswaRes.ok) throw new Error(`Gagal memuat data siswa (Error ${siswaRes.status})`);
+        if (!kelasRes.ok) throw new Error(`Gagal memuat data kelas (Error ${kelasRes.status})`);
 
         const siswaData = await siswaRes.json();
         const kelasData = await kelasRes.json();
@@ -168,6 +175,7 @@ export default function AdminSiswaPage() {
         setKelas(parsedKelas);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setFetchError(error.message);
         setSiswa([]);
         setKelas([]);
       } finally {
@@ -214,7 +222,8 @@ export default function AdminSiswaPage() {
   const refetchSiswa = async () => {
     try {
       const response = await fetch('/api/admin/siswa', { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch');
+      if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
+      
       const result = await response.json();
       const data = result.data || (Array.isArray(result) ? result : []);
       setSiswa(data);
@@ -455,7 +464,24 @@ export default function AdminSiswaPage() {
 
         {/* Main Content */}
         <div className="relative z-10 w-full max-w-none px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-6">
+          {fetchError ? (
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-rose-200/60 p-12 text-center shadow-lg">
+              <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle size={40} className="text-rose-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">Gagal Memuat Data</h3>
+              <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                {fetchError}
+              </p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+              >
+                Muat Ulang Halaman
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -697,6 +723,7 @@ export default function AdminSiswaPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
       </div>
 
