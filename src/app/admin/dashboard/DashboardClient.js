@@ -355,10 +355,8 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-none space-y-4 lg:space-y-6">
-
-          {/* 1. Hero Header */}
+      <div className="w-full space-y-4 lg:space-y-6">
+        {/* 1. Hero Header */}
           <DashboardHeader userName={session?.user?.name} />
 
           {/* 1.5 Pending Validation Alert */}
@@ -440,9 +438,7 @@ export default function AdminDashboardPage() {
 
           {/* 5. Target Statistics Section (New) */}
           <TargetStatisticsSection />
-
         </div>
-      </div>
     </AdminLayout>
   );
 }
