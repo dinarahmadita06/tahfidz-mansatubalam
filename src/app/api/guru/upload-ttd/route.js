@@ -87,7 +87,8 @@ export async function POST(request) {
       prisma.user.update({
         where: { id: session.user.id },
         data: { 
-          signatureUrl: relativePath
+          signatureUrl: relativePath,
+          ttdUrl: relativePath  // Also update ttdUrl for consistency
         }
       })
     ]);
@@ -183,7 +184,8 @@ export async function DELETE(request) {
       prisma.user.update({
         where: { id: session.user.id },
         data: { 
-          signatureUrl: null
+          signatureUrl: null,
+          ttdUrl: null  // Also remove ttdUrl for consistency
         }
       })
     ]);

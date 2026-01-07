@@ -179,6 +179,13 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
 
 // SignatureUploader Component
 function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDelete }) {
+  const [signatureLoadError, setSignatureLoadError] = useState(false);
+
+  // Reset error state when URL changes
+  useEffect(() => {
+    setSignatureLoadError(false);
+  }, [tandaTanganUrl]);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
@@ -203,12 +210,26 @@ function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDel
                 Tanda Tangan Aktif
               </p>
               <div className="bg-white p-3 rounded-lg border border-gray-200 inline-block">
-                <img
-                  src={tandaTanganUrl}
-                  alt="Tanda Tangan"
-                  className="max-h-24 mx-auto"
-                  style={{ maxWidth: '200px' }}
-                />
+                {!signatureLoadError ? (
+                  <img
+                    src={tandaTanganUrl}
+                    alt="Tanda Tangan"
+                    className="max-h-24 mx-auto"
+                    style={{ maxWidth: '200px' }}
+                    onError={() => setSignatureLoadError(true)}
+                    onLoad={() => setSignatureLoadError(false)}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-4 text-center">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-red-600 font-medium">Gagal memuat tanda tangan</p>
+                    <p className="text-xs text-gray-500 mt-1">Silakan upload ulang</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

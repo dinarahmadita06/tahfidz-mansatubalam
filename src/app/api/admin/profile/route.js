@@ -24,7 +24,9 @@ export async function GET(request) {
         nip: true,
         jabatan: true,
         alamat: true,
-        createdAt: true
+        createdAt: true,
+        ttdUrl: true,
+        signatureUrl: true
       }
     });
 
@@ -52,7 +54,9 @@ export async function GET(request) {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
-      }) + ' WIB'
+      }) + ' WIB',
+      ttdUrl: admin.ttdUrl,
+      signatureUrl: admin.signatureUrl
     };
 
     return NextResponse.json({ profile: profileData });

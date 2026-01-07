@@ -81,7 +81,7 @@ export async function GET(request) {
         }
       },
       include: {
-        guru: { include: { user: { select: { name: true } } } }
+        guru: { include: { user: { select: { name: true, ttdUrl: true } } } }
       },
       orderBy: { createdAt: 'asc' }
     });
@@ -90,7 +90,7 @@ export async function GET(request) {
       ? {
           id: firstPenilaian.guru.id,
           nama: firstPenilaian.guru.user.name,
-          signatureUrl: firstPenilaian.guru.signatureUrl || null
+          signatureUrl: firstPenilaian.guru.signatureUrl || firstPenilaian.guru.user?.ttdUrl || null
         }
       : {
           id: null,
