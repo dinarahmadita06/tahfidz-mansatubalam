@@ -16,7 +16,7 @@ const logoKemenag = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAA
 export default function LaporanKehadiranPage() {
   const [kelasList, setKelasList] = useState([]);
   const [selectedKelas, setSelectedKelas] = useState('');
-  const [filterType, setFilterType] = useState('range'); // 'range', 'bulanan', 'semester'
+  const [filterType, setFilterType] = useState('bulanan'); // 'bulanan', 'semester'
   const [tanggalMulai, setTanggalMulai] = useState('');
   const [tanggalSelesai, setTanggalSelesai] = useState('');
   const [bulan, setBulan] = useState('');
@@ -343,16 +343,16 @@ export default function LaporanKehadiranPage() {
             <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
             
-            <div className="relative z-10 flex items-center gap-6">
+            <div className="relative z-10 flex items-center gap-4 sm:gap-6">
               {/* Icon Container - SIMTAQ Style */}
-              <div className="bg-white/15 border border-white/10 backdrop-blur-sm rounded-2xl p-4 flex-shrink-0">
-                <BarChart3 size={32} className="text-white" />
+              <div className="bg-white/15 border border-white/10 backdrop-blur-sm rounded-2xl w-14 h-14 sm:w-auto sm:h-auto p-0 sm:p-4 flex items-center justify-center flex-shrink-0">
+                <BarChart3 size={28} className="text-white sm:w-8 sm:h-8" />
               </div>
               
               {/* Header Content */}
-              <div className="flex-1">
-                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Laporan Kehadiran & Penilaian</h1>
-                <p className="text-white/90 text-sm sm:text-base">Rekap terintegrasi kehadiran dan penilaian hafalan siswa</p>
+              <div className="flex-1 flex flex-col justify-center text-left">
+                <h1 className="text-xl sm:text-4xl font-bold text-white leading-tight mb-1 sm:mb-2">Laporan Kehadiran & Penilaian</h1>
+                <p className="text-white/90 text-sm sm:text-base leading-snug">Rekap terintegrasi kehadiran dan penilaian hafalan siswa</p>
               </div>
             </div>
           </div>
@@ -373,7 +373,6 @@ export default function LaporanKehadiranPage() {
                   onChange={(e) => setFilterType(e.target.value)}
                   className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
                 >
-                  <option value="range">Range Tanggal</option>
                   <option value="bulanan">Bulanan</option>
                   <option value="semester">Per Semester</option>
                 </select>
