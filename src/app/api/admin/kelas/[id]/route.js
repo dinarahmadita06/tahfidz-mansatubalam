@@ -84,6 +84,18 @@ export async function PUT(request, { params }) {
 
     // Update kelas dengan guru menggunakan transaction
     const updatedKelas = await prisma.$transaction(async (tx) => {
+      // Get guru utama userId for Kelas.guruTahfidzId
+      let guruTahfidzUserId = null;
+      if (guruUtamaId && guruUtamaId.trim()) {
+        const guru = await tx.guru.findUnique({
+          where: { id: guruUtamaId },
+          select: { userId: true }
+        });
+        if (guru) {
+          guruTahfidzUserId = guru.userId;
+        }
+      }
+
       // 1. Update kelas data
       const updated = await tx.kelas.update({
         where: { id },
@@ -92,6 +104,7 @@ export async function PUT(request, { params }) {
           tahunAjaranId: tahunAjaranId, // Keep as string - it's a CUID
           targetJuz: targetJuz ? parseInt(targetJuz) : null,
           kapasitas: kapasitas ? parseInt(kapasitas) : null,
+          guruTahfidzId: guruTahfidzUserId,
         }
       });
 
