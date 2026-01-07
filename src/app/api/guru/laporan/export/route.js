@@ -33,6 +33,8 @@ export async function POST(request) {
         user: {
           select: {
             name: true,
+            signatureUrl: true,
+            ttdUrl: true
           },
         },
       },
@@ -171,7 +173,7 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   }
 
   // Get signature URL if available
-  const signatureUrl = guru.tandaTangan || null;
+  const signatureUrl = guru.tandaTangan || guru.user.signatureUrl || guru.user.ttdUrl || null;
 
   let html = `<!DOCTYPE html>
 <html>

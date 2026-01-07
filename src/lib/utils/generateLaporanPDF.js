@@ -303,10 +303,11 @@ export async function generateLaporanPDF(data) {
   doc.text('Guru Pembina Tahfidz', pageWidth - margin - 50, yPosition, { align: 'center' });
   yPosition += 15;
 
-  // Signature image if available
-  if (guru?.signatureUrl) {
+  // Signature image if available - check both signatureUrl and ttdUrl
+  const signatureUrl = guru?.signatureUrl || guru?.ttdUrl;
+  if (signatureUrl) {
     try {
-      doc.addImage(guru.signatureUrl, 'PNG', pageWidth - margin - 50 - 15, yPosition - 5, 30, 15);
+      doc.addImage(signatureUrl, 'PNG', pageWidth - margin - 50 - 15, yPosition - 5, 30, 15);
       yPosition += 15;
     } catch (err) {
       console.log('⚠️  Error loading signature:', err.message);

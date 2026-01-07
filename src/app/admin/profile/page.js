@@ -46,11 +46,24 @@ export default function ProfileAdminPage() {
     guru: null,
     koordinator: null
   });
+  const [signatureLoadErrors, setSignatureLoadErrors] = useState({
+    guru: false,
+    koordinator: false
+  });
 
   useEffect(() => {
     fetchProfileData();
-    loadSignatures();
   }, []);
+
+  useEffect(() => {
+    if (profileData) {
+      // Update signature preview when profile data is loaded
+      const signatureUrl = profileData.signatureUrl || profileData.ttdUrl;
+      if (signatureUrl) {
+        setSignaturePreviews(prev => ({ ...prev, koordinator: signatureUrl }));
+      }
+    }
+  }, [profileData]);
 
   const loadSignatures = async () => {
     try {
@@ -197,9 +210,9 @@ export default function ProfileAdminPage() {
     
     console.log('Uploading signature:', { type, fileName: file.name, fileSize: file.size, fileType: file.type });
     
-    // Validasi: hanya PNG
-    if (file.type !== 'image/png') {
-      const err = `Format file harus PNG saja (Anda upload: ${file.type})`;
+    // Validasi: hanya PNG atau JPG
+    if (file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/jpg') {
+      const err = `Format file harus PNG atau JPG (Anda upload: ${file.type})`;
       setError(err);
       console.error(err);
       return;
@@ -236,8 +249,10 @@ export default function ProfileAdminPage() {
         const msg = `Tanda tangan ${type === 'guru' ? 'Guru Tahfidz' : 'Koordinator Tahfidz'} berhasil diupload!`;
         setSuccess(msg);
         console.log('Success:', msg);
-        // Reload signatures to show preview
-        await loadSignatures();
+        // Clear error state and reload signatures to show preview
+        setSignatureLoadErrors(prev => ({ ...prev, [type]: false }));
+        // Reload profile data to get the updated signature
+        await fetchProfileData(); 
         setTimeout(() => setSuccess(''), 3000);
       } else {
         const err = data.error || `Gagal upload (Status: ${res.status})`;
@@ -480,12 +495,31 @@ export default function ProfileAdminPage() {
                         Tanda Tangan Aktif
                       </p>
                       <div className="bg-white p-3 rounded-lg border border-gray-200 inline-block">
-                        <img
-                          src={signaturePreviews.koordinator}
-                          alt="Tanda Tangan"
-                          className="max-h-24 mx-auto"
-                          style={{ maxWidth: '200px' }}
-                        />
+                        {!signatureLoadErrors.koordinator ? (
+                          <img
+                            src={signaturePreviews.koordinator}
+                            alt="Tanda Tangan"
+                            className="max-h-24 mx-auto"
+                            style={{ maxWidth: '200px' }}
+                            onError={() => {
+                              setSignatureLoadErrors(prev => ({ ...prev, koordinator: true }));
+                              console.log('Failed to load signature image:', signaturePreviews.koordinator);
+                            }}
+                            onLoad={() => {
+                              setSignatureLoadErrors(prev => ({ ...prev, koordinator: false }));
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-4 text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </div>
+                            <p className="text-sm text-red-600 font-medium">Gagal memuat tanda tangan</p>
+                            <p className="text-xs text-gray-500 mt-1">Silakan upload ulang</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

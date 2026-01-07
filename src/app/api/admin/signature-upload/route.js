@@ -55,7 +55,8 @@ export async function POST(request) {
     // Update user record - but only if user actually has fields in database
     try {
       const updateData = {
-        signatureUrl: relativePath
+        signatureUrl: relativePath,
+        ttdUrl: relativePath  // Also update ttdUrl for compatibility
       };
       
       await prisma.user.update({
@@ -63,7 +64,7 @@ export async function POST(request) {
         data: updateData
       });
     } catch (updateError) {
-      // If User.signatureUrl doesn't exist, just log and continue
+      // If User fields don't exist, just log and continue
       console.error('[Signature Upload] User table update note:', updateError.message);
     }
 
