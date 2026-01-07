@@ -17,7 +17,6 @@ export async function GET() {
         id: true,
         nama: true,
         semester: true,
-        tahun: true,
         targetHafalan: true,
         tanggalMulai: true,
         tanggalSelesai: true,
