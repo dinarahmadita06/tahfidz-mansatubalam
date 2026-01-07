@@ -20,6 +20,7 @@ import {
   Music,
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import { toast, Toaster } from 'react-hot-toast';
 import DigitalMaterialCard from '@/components/shared/DigitalMaterialCard';
 import { 
@@ -400,32 +401,15 @@ export default function BukuDigitalPage() {
         
         {/* Materi Grid / Empty State */}
         {!loading && filteredMateri.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-4 bg-emerald-50 rounded-full">
-                <BookOpen className="text-emerald-600" size={48} />
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">
-              {searchQuery || selectedCategory !== 'Semua'
-                ? 'Tidak ada materi yang sesuai'
-                : 'Belum ada materi digital'}
-            </h3>
-            <p className="text-gray-500 mb-6">
-              {searchQuery || selectedCategory !== 'Semua'
-                ? 'Coba gunakan kata kunci atau filter yang berbeda'
-                : 'Upload materi Tahfidz pertama Anda'}
-            </p>
-            {!searchQuery && selectedCategory === 'Semua' && (
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
-              >
-                <Upload size={20} />
-                Upload Materi Pertama
-              </button>
-            )}
-          </div>
+          <EmptyState
+            title={searchQuery || selectedCategory !== 'Semua' ? 'Tidak ada materi yang sesuai' : 'Belum ada materi digital'}
+            description={searchQuery || selectedCategory !== 'Semua' 
+              ? 'Coba gunakan kata kunci atau filter yang berbeda' 
+              : 'Silakan upload materi Tahfidz pertama Anda untuk berbagi dengan siswa.'}
+            icon={BookOpen}
+            actionLabel={!searchQuery && selectedCategory === 'Semua' ? 'Upload Materi Pertama' : null}
+            onAction={!searchQuery && selectedCategory === 'Semua' ? () => setShowUploadModal(true) : null}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredMateri.map((materi) => (

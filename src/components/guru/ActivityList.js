@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   CheckCircle2,
   Volume2,
@@ -116,20 +117,16 @@ function ActivityItem({ activity }) {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <FileText size={32} className="text-slate-400" />
-      </div>
-      <p className="text-slate-600 font-medium">Belum ada aktivitas terbaru</p>
-    </div>
-  );
-}
-
 export default function ActivityList({ activities = [] }) {
   if (activities.length === 0) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        title="Belum ada aktivitas terbaru"
+        description="Aktivitas Anda akan muncul di sini setelah melakukan pengisian data."
+        icon={FileText}
+        className="py-6"
+      />
+    );
   }
 
   return (

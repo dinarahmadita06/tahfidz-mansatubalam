@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatTimeAgo, getActivityIcon } from '@/lib/helpers/activityLoggerV2';
+import EmptyState from '@/components/shared/EmptyState';
 
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 
@@ -53,12 +54,12 @@ export default function OrangtuaActivityWidget() {
           ))}
         </div>
       ) : activities.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-          <div className="p-4 bg-gray-100 rounded-full mb-3">
-            <Clock className="text-gray-400" size={24} />
-          </div>
-          <p className="text-sm text-gray-600 font-medium">Belum ada aktivitas terbaru</p>
-        </div>
+        <EmptyState
+          title="Belum ada aktivitas"
+          description="Aktivitas Anda akan muncul di sini."
+          icon={Clock}
+          className="py-6"
+        />
       ) : (
         <div className="space-y-3">
           {activities.map((activity) => (

@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { getActivityDisplay } from '@/lib/helpers/siswaActivityConstants';
 import { Clock, ChevronRight } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 
 export default function AktivitasTerkiniWidget() {
   const [activities, setActivities] = useState([]);
@@ -89,10 +90,12 @@ export default function AktivitasTerkiniWidget() {
             <p className="text-xs text-gray-500">{error}</p>
           </div>
         ) : activities.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="text-4xl mb-3">📝</div>
-            <p className="text-gray-600 font-medium">Belum ada aktivitas terbaru</p>
-          </div>
+          <EmptyState
+            title="Belum ada aktivitas"
+            description="Aktivitas Anda akan muncul di sini setelah melakukan pengisian data."
+            icon={Clock}
+            className="py-6"
+          />
         ) : (
           <div className="space-y-3">
             {activities.map((activity) => {

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Search, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Filter, Inbox } from 'lucide-react';
+import EmptyState from '@/components/shared/EmptyState';
 
 // Status Badge Component
 export function StatusBadge({ status, type = 'default' }) {
@@ -361,13 +362,15 @@ export function DataTable({
               <td
                 colSpan={columns.length}
                 style={{
-                  padding: '3rem',
-                  textAlign: 'center',
-                  color: '#7FA393',
-                  fontSize: '0.875rem',
+                  padding: '2rem',
                 }}
               >
-                {emptyMessage}
+                <EmptyState
+                  title={emptyMessage}
+                  description="Silakan coba filter atau kata kunci lain jika Anda sedang mencari data spesifik."
+                  icon={Inbox}
+                  className="bg-transparent border-none shadow-none py-4"
+                />
               </td>
             </tr>
           ) : (
