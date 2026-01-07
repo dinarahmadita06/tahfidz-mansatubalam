@@ -946,14 +946,14 @@ export default function KelolaSiswaPage() {
                   onClick={async () => await fetchSiswa()}
                   disabled={isReloading}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm hover:bg-white/30 backdrop-blur-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Segarkan data siswa"
+                  title="Refresh data siswa"
                 >
                   {isReloading ? (
                     <LoadingIndicator size="small" text="Memuat..." inline className="text-white" />
                   ) : (
                     <>
                       <Users size={18} />
-                      <span>Segarkan</span>
+                      <span>Refresh</span>
                     </>
                   )}
                 </button>
