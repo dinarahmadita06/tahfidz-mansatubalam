@@ -112,7 +112,20 @@ export default function LaporanKehadiranPage() {
     const addSignatureImage = async (doc, url, x, y, width, height) => {
       try {
         if (!url) return false;
-        const response = await fetch(url);
+        
+        // Make sure URL is absolute for server-side fetch
+        let absoluteUrl = url;
+        if (url.startsWith('/')) {
+          // Convert relative URL to absolute
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+          absoluteUrl = `${baseUrl}${url}`;
+        }
+        
+        const response = await fetch(absoluteUrl);
+        if (!response.ok) {
+          console.error('Failed to fetch signature image:', response.status, response.statusText);
+          return false;
+        }
         const blob = await response.blob();
         const reader = new FileReader();
         const dataUrl = await new Promise((resolve) => {
