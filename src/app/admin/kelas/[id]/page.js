@@ -920,7 +920,7 @@ export default function KelolaSiswaPage() {
     <AdminLayout>
       <div className="min-h-screen bg-white relative overflow-x-hidden">
         {/* Hero Header with Green Gradient */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-4 sm:px-6 lg:px-8 py-8 rounded-3xl shadow-lg mx-4 sm:mx-6 lg:mx-8 mt-4">
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg mt-4">
           {/* Decorative Blur Circles */}
           <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -989,7 +989,7 @@ export default function KelolaSiswaPage() {
           </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-none px-4 sm:px-6 lg:px-8 py-8">
+        <div className="relative z-10 w-full max-w-none py-8">
           <div className="space-y-6">
             {/* Search & Filter - Horizontal Split Layout */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-6 shadow-sm">

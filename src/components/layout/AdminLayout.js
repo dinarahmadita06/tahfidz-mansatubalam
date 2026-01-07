@@ -493,7 +493,7 @@ function AdminLayout({ children }) {
           </div>
 
           {/* Content */}
-          <div className="w-full px-4 sm:px-6 lg:px-8 pt-5 pb-8">
+          <div className="w-full px-4 sm:px-6 lg:px-10 pt-5 pb-8">
             <div className="w-full">
               <PageTransition>
                 {children}

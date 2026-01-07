@@ -48,10 +48,10 @@ export default function AnnouncementSlider({ announcements = [], loading = false
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-3 lg:p-4">
+      <div className="rounded-2xl bg-amber-50/70 backdrop-blur-md border border-amber-200 shadow-md shadow-amber-500/10 p-3 lg:p-4">
         <div className="animate-pulse">
-          <div className="h-3.5 bg-slate-200 rounded w-1/4 mb-2"></div>
-          <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+          <div className="h-3.5 bg-amber-200/50 rounded w-1/4 mb-2"></div>
+          <div className="h-3 bg-amber-200/30 rounded w-1/2"></div>
         </div>
       </div>
     );
@@ -59,13 +59,13 @@ export default function AnnouncementSlider({ announcements = [], loading = false
 
   if (!Array.isArray(announcements) || announcements.length === 0) {
     return (
-      <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-4 lg:p-5 text-center">
+      <div className="rounded-2xl bg-amber-50/70 backdrop-blur-md border border-amber-200 shadow-md shadow-amber-500/10 p-4 lg:p-5 text-center">
         <div className="flex justify-center mb-2">
-          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-amber-200 flex items-center justify-center">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-amber-100 flex items-center justify-center shadow-sm">
             <Megaphone size={22} className="text-amber-600" />
           </div>
         </div>
-        <p className="text-slate-600 font-medium text-xs lg:text-sm">Belum ada pengumuman</p>
+        <p className="text-amber-800 font-bold text-xs lg:text-sm">Belum ada pengumuman</p>
       </div>
     );
   }
@@ -125,21 +125,21 @@ export default function AnnouncementSlider({ announcements = [], loading = false
   };
 
   return (
-    <div className="rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md p-3 lg:p-4">
+    <div className="rounded-2xl bg-amber-50/70 backdrop-blur-md border border-amber-200 shadow-md shadow-amber-500/10 p-3 lg:p-4 hover:shadow-lg hover:shadow-amber-500/20 hover:-translate-y-0.5 transition-all duration-300">
       {/* Header with "Lihat Semua" button */}
       <div className="flex items-start justify-between gap-3 lg:gap-4 mb-2.5 lg:mb-3">
         <div className="flex items-center gap-2.5 lg:gap-3">
-          <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
-            <Megaphone className="text-white w-4 h-4 lg:w-[18px] lg:h-[18px]" />
+          <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Megaphone className="text-amber-600 w-4 h-4 lg:w-[18px] lg:h-[18px]" />
           </div>
           <div>
             <h3 className="text-sm lg:text-base font-bold text-amber-900 leading-tight">{currentConfig.title}</h3>
-            <p className="text-[10px] lg:text-xs text-amber-700 opacity-90">{currentConfig.subtitle}</p>
+            <p className="text-[10px] lg:text-xs text-amber-700 font-medium">{currentConfig.subtitle}</p>
           </div>
         </div>
         <Link
           href={currentConfig.href}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-600 text-white text-[10px] lg:text-xs font-semibold hover:bg-amber-700 transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-600 text-white text-[10px] lg:text-xs font-bold hover:bg-amber-700 shadow-sm transition-colors flex-shrink-0"
         >
           Lihat Semua
           <ChevronRight size={12} />
@@ -149,7 +149,7 @@ export default function AnnouncementSlider({ announcements = [], loading = false
       {/* Carousel Card Container - Overlay Arrows */}
       <div className="relative group">
         {/* Card Content - Full Width */}
-        <div className="bg-white rounded-lg p-2.5 lg:p-3 border border-amber-200 w-full">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 lg:p-4 border border-amber-200/60 w-full shadow-sm">
           {/* Title & Badge */}
           <div className="flex items-start justify-between gap-2 mb-1">
             <h4 className="font-bold text-slate-900 text-xs lg:text-sm leading-tight flex-1 line-clamp-2">

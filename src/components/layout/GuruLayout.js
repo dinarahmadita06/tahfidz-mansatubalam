@@ -38,7 +38,7 @@ function GuruLayout({ children }) {
         </header>
 
         {/* Page Content */}
-        <main className="px-3 lg:px-4 xl:px-6 py-4 lg:py-5 xl:py-6">
+        <main className="w-full px-4 sm:px-6 lg:px-10 py-4 lg:py-6">
           <div className="w-full">
             <PageTransition>
               {children}

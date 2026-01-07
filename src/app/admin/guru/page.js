@@ -318,7 +318,7 @@ export default function AdminGuruPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6 space-y-4 lg:space-y-6">
+        <div className="w-full py-4 lg:py-6 space-y-4 lg:space-y-6">
 
           {/* Header Card */}
           <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-5 sm:px-8 sm:py-6 lg:py-7 overflow-hidden relative">
