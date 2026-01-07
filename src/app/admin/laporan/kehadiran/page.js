@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
+import toast from 'react-hot-toast';
 import { FileText, Download, Loader, AlertTriangle, BarChart3 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -107,25 +108,26 @@ export default function LaporanKehadiranPage() {
   const exportPDF = async () => {
     if (!reportData) return;
 
-    try {
-      // Fetch admin profile data for signature names
-      let adminData = { nama: 'Admin', jabatan: 'Koordinator Tahfidz' };
+    // Helper to add image to PDF
+    const addSignatureImage = async (doc, url, x, y, width, height) => {
       try {
-        const profileRes = await fetch('/api/admin/profile');
-        if (profileRes.ok) {
-          const profileResponse = await profileRes.json();
-          if (profileResponse.profile) {
-            adminData = {
-              nama: profileResponse.profile.nama,
-              jabatan: profileResponse.profile.jabatan
-            };
-          }
-        }
-      } catch (profileError) {
-        console.error('Error fetching admin profile:', profileError);
-        // Continue with default values
+        if (!url) return false;
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        const dataUrl = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        doc.addImage(dataUrl, 'PNG', x, y, width, height);
+        return true;
+      } catch (err) {
+        console.error('Failed to add signature image:', err);
+        return false;
       }
+    };
 
+    try {
       // Fetch logos as base64
       const logoMan1Data = await fetch('/logo-man1.png')
         .then(res => res.blob())
@@ -265,24 +267,16 @@ export default function LaporanKehadiranPage() {
 
       // Check if there's enough space for signature, otherwise add new page
       let signatureY = tableEndY + 15;
-      if (signatureY + 60 > pageHeight - 15) {
+      if (signatureY + 45 > pageHeight - 15) {
         doc.addPage();
         signatureY = 20;
       }
 
-      // 2-COLUMN LAYOUT FOR SIGNATURE SECTION - FULLY ALIGNED
-      // Row 1: Mengetahui, | Bandar Lampung, date
-      // Row 2: Guru Tahfidz | Koordinator Tahfidz
-      // Row 3: [TTD Guru] | [TTD Admin] (SAME Y POSITION)
-      // Row 4: (Guru Tahfidz) | (Administrator) (SAME Y POSITION)
-      
-      const colWidth = (pageWidth - 28) / 2; // Two equal columns
-      const leftColX = 14;                    // Left column at 14
-      const rightColX = 14 + colWidth + 4;  // Right column starts after left col
-      const colCenterX1 = leftColX + colWidth / 2;   // Left column center
-      const colCenterX2 = rightColX + colWidth / 2;  // Right column center
-      const sigImageMaxWidth = 38;
-      const sigImageMaxHeight = 24;
+      const colWidth = (pageWidth - 28) / 2;
+      const leftColX = 14;
+      const rightColX = 14 + colWidth + 4;
+      const colCenterX1 = leftColX + colWidth / 2;
+      const colCenterX2 = rightColX + colWidth / 2;
 
       let currentY = signatureY;
       const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -290,115 +284,49 @@ export default function LaporanKehadiranPage() {
       // ROW 1: Mengetahui, | Bandar Lampung, date
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
       doc.text('Mengetahui,', colCenterX1, currentY, { align: 'center' });
       doc.text(`Bandar Lampung, ${today}`, colCenterX2, currentY, { align: 'center' });
       currentY += 8;
 
       // ROW 2: Guru Tahfidz | Koordinator Tahfidz
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      doc.text('Guru Tahfidz', colCenterX1, currentY, { align: 'center' });
-      doc.text(adminData.jabatan, colCenterX2, currentY, { align: 'center' });
-      currentY += 8;
+      doc.text(reportData.teacher?.jabatan || 'Guru Tahfidz', colCenterX1, currentY, { align: 'center' });
+      doc.text(reportData.admin?.jabatan || 'Koordinator Tahfidz', colCenterX2, currentY, { align: 'center' });
+      currentY += 5;
 
-      // ROW 3: [TTD Guru] | [TTD Admin] - BOTH AT SAME Y
-      let sigY = currentY;
-
-      // LEFT: Guru Tahfidz Signature (centered in left column)
-      try {
-        const guruRes = await fetch('/api/admin/signature-upload?type=guru');
-        if (guruRes.ok) {
-          const guruData = await guruRes.json();
-          if (guruData.signature && guruData.signature.data) {
-            // Center signature horizontally in left column
-            const sigXLeft = colCenterX1 - sigImageMaxWidth / 2;
-            doc.addImage(
-              guruData.signature.data,
-              'PNG',
-              sigXLeft,
-              sigY,
-              sigImageMaxWidth,
-              sigImageMaxHeight,
-              undefined,
-              'FAST'
-            );
-          } else {
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(150, 150, 150);
-            doc.text('TTD belum diupload', colCenterX1, sigY + 12, { align: 'center' });
-            doc.setTextColor(0, 0, 0);
-          }
-        } else {
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(150, 150, 150);
-          doc.text('TTD belum diupload', colCenterX1, sigY + 12, { align: 'center' });
-          doc.setTextColor(0, 0, 0);
-        }
-      } catch (err) {
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(150, 150, 150);
-        doc.text('TTD belum diupload', colCenterX1, sigY + 12, { align: 'center' });
-        doc.setTextColor(0, 0, 0);
+      // ROW 3: Signatures
+      const sigWidth = 30;
+      const sigHeight = 15;
+      
+      const teacherTtdAdded = await addSignatureImage(doc, reportData.teacher?.ttdUrl, colCenterX1 - sigWidth/2, currentY, sigWidth, sigHeight);
+      if (!teacherTtdAdded) {
+        toast.error(`TTD guru ${reportData.teacher?.nama || ''} belum diupload, laporan akan menggunakan placeholder.`, { duration: 4000 });
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text('(TTD belum diupload)', colCenterX1, currentY + 10, { align: 'center' });
+        doc.setTextColor(0);
       }
 
-      // RIGHT: Koordinator Tahfidz Signature (at rightColX, centered in col)
-      try {
-        const koordinatorRes = await fetch('/api/admin/signature-upload?type=koordinator');
-        if (koordinatorRes.ok) {
-          const koordinatorData = await koordinatorRes.json();
-          if (koordinatorData.signature && koordinatorData.signature.data) {
-            // Position signature centered in right column
-            const sigXRight = colCenterX2 - sigImageMaxWidth / 2;
-            doc.addImage(
-              koordinatorData.signature.data,
-              'PNG',
-              sigXRight,
-              sigY,
-              sigImageMaxWidth,
-              sigImageMaxHeight,
-              undefined,
-              'FAST'
-            );
-          } else {
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(150, 150, 150);
-            doc.text('TTD belum diupload', colCenterX2, sigY + 12, { align: 'center' });
-            doc.setTextColor(0, 0, 0);
-          }
-        } else {
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(150, 150, 150);
-          doc.text('TTD belum diupload', colCenterX2, sigY + 12, { align: 'center' });
-          doc.setTextColor(0, 0, 0);
-        }
-      } catch (err) {
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(150, 150, 150);
-        doc.text('TTD belum diupload', colCenterX2, sigY + 12, { align: 'center' });
-        doc.setTextColor(0, 0, 0);
+      const adminTtdAdded = await addSignatureImage(doc, reportData.admin?.ttdUrl, colCenterX2 - sigWidth/2, currentY, sigWidth, sigHeight);
+      if (!adminTtdAdded) {
+        toast.error(`TTD admin ${reportData.admin?.nama || ''} belum diupload.`, { duration: 4000 });
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text('(TTD belum diupload)', colCenterX2, currentY + 10, { align: 'center' });
+        doc.setTextColor(0);
       }
 
-      sigY += sigImageMaxHeight + 6;
+      currentY += 20;
 
-      // Names below signatures - centered in each column
+      // ROW 4: Names
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(80, 80, 80);
-      doc.text('( Guru Tahfidz )', colCenterX1, sigY, { align: 'center' });
-      doc.text(`( ${adminData.nama} )`, colCenterX2, sigY, { align: 'center' });
+      doc.text(`(${reportData.teacher?.nama || '_____________________'})`, colCenterX1, currentY, { align: 'center' });
+      doc.text(`(${reportData.admin?.nama || '_____________________'})`, colCenterX2, currentY, { align: 'center' });
 
       doc.save(`Laporan_Kehadiran_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      alert('Gagal export PDF. Silahkan coba lagi.');
+      alert('Gagal mengeksport PDF');
     }
   };
 

@@ -56,24 +56,17 @@ export default function ProfileAdminPage() {
     try {
       console.log('[Load Signatures] Checking for existing signatures...');
       
-      // Check guru signature
-      const guruRes = await fetch('/api/admin/signature-upload?type=guru');
-      if (guruRes.ok) {
-        const guruData = await guruRes.json();
-        if (guruData.signature && guruData.signature.data) {
-          setSignaturePreviews(prev => ({ ...prev, guru: guruData.signature.data }));
-          console.log('[Load Signatures] Guru signature found');
+      const res = await fetch('/api/admin/signature-upload');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.signatureUrl) {
+          setSignaturePreviews(prev => ({ ...prev, koordinator: data.signatureUrl }));
+          console.log('[Load Signatures] Signature found:', data.signatureUrl);
+        } else {
+          console.log('[Load Signatures] No signature URL in response');
         }
-      }
-      
-      // Check koordinator signature
-      const koordinatorRes = await fetch('/api/admin/signature-upload?type=koordinator');
-      if (koordinatorRes.ok) {
-        const koordinatorData = await koordinatorRes.json();
-        if (koordinatorData.signature && koordinatorData.signature.data) {
-          setSignaturePreviews(prev => ({ ...prev, koordinator: koordinatorData.signature.data }));
-          console.log('[Load Signatures] Koordinator signature found');
-        }
+      } else {
+        console.log('[Load Signatures] API returned status:', res.status);
       }
     } catch (error) {
       console.error('[Load Signatures] Error:', error);
