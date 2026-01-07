@@ -465,8 +465,8 @@ function AdminLayout({ children }) {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto flex flex-col">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto min-w-0">
           {/* Mobile Header with Hamburger */}
           <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
             <button
@@ -493,8 +493,8 @@ function AdminLayout({ children }) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 px-3 lg:px-4 xl:px-6 py-3 lg:py-4 xl:py-6">
-            <div className="max-w-[1200px] xl:max-w-[1400px] mx-auto w-full">
+          <div className="w-full px-4 sm:px-6 lg:px-8 pt-5 pb-8">
+            <div className="w-full">
               <PageTransition>
                 {children}
               </PageTransition>
