@@ -14,28 +14,32 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
 
-    let whereClause = {
-      userId: session.user.id,
-    };
-
-    if (unreadOnly) {
-      whereClause.isRead = false;
-    }
-
     // Check if notification table exists by trying to query it
-    const notifications = await prisma.notification.findMany({
-      where: whereClause,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 10,
-    });
+    try {
+      let whereClause = {
+        userId: session.user.id,
+      };
 
-    return NextResponse.json(notifications);
+      if (unreadOnly) {
+        whereClause.isRead = false;
+      }
+
+      const notifications = await prisma.notification.findMany({
+        where: whereClause,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 10,
+      });
+
+      return NextResponse.json(notifications);
+    } catch (dbError) {
+      // Notification table doesn't exist or other DB error - return empty array
+      console.error('[Notifications] Database error (likely model missing):', dbError.message);
+      return NextResponse.json([]);
+    }
   } catch (error) {
-    console.error('Error fetching notifications:', error);
-    console.error('Error details:', error.message);
-
+    console.error('[Notifications] Error:', error);
     // Return empty array instead of error to prevent UI crash
     return NextResponse.json([]);
   }
