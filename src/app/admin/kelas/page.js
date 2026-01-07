@@ -670,10 +670,10 @@ export default function AdminKelasPage() {
                 <p className="text-green-50 text-sm sm:text-sm">Kelola kelas tahfidz, wali kelas, dan siswa dengan mudah</p>
               </div>
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
+              <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 flex-shrink-0 w-full md:w-auto">
                 <button
                   onClick={handleExport}
-                  className="flex items-center justify-center gap-2 h-11 px-4 py-3 bg-white/15 hover:bg-white/20 text-white border border-white/20 rounded-xl font-semibold transition-all duration-300"
+                  className="flex items-center justify-center gap-2 h-11 px-4 py-3 bg-white/15 hover:bg-white/20 text-white border border-white/20 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm transition-all duration-300"
                 >
                   <Download size={18} />
                   <span>Unduh Template</span>
@@ -683,7 +683,7 @@ export default function AdminKelasPage() {
                     resetKelasForm();
                     setShowKelasModal(true);
                   }}
-                  className="flex items-center justify-center gap-2 h-11 px-4 py-3 bg-white text-emerald-700 hover:bg-white/90 rounded-xl font-semibold transition-all duration-300"
+                  className="flex items-center justify-center gap-2 h-11 px-4 py-3 bg-white text-emerald-700 hover:bg-white/90 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm transition-all duration-300"
                 >
                   <Plus size={18} />
                   <span>Tambah Kelas</span>
