@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
+import ErrorState from '@/components/shared/ErrorState';
 import MonthlyPeriodFilter from '@/components/penilaian/MonthlyPeriodFilter';
 import { calculateMonthRange, getCurrentMonthYear, formatMonthYear } from '@/lib/utils/dateRangeHelpers';
 import {
@@ -242,7 +244,7 @@ export default function PenilaianHafalanPage() {
   const [selectedYear, setSelectedYear] = useState(currentDate.year);
 
   // Fetch data
-  const { data, error } = useSWR(
+  const { data, error, mutate } = useSWR(
     status === 'authenticated' ? (() => {
       const { startDateStr, endDateStr } = calculateMonthRange(selectedMonth, selectedYear);
       return `/api/siswa/penilaian-hafalan?startDate=${startDateStr}&endDate=${endDateStr}`;
@@ -263,6 +265,19 @@ export default function PenilaianHafalanPage() {
   if (status === 'unauthenticated') {
     router.push('/login');
     return null;
+  }
+
+  if (error) {
+    return (
+      <SiswaLayout>
+        <div className={CONTAINER + " py-8"}>
+          <ErrorState 
+            errorMessage={error.message}
+            onRetry={() => mutate()}
+          />
+        </div>
+      </SiswaLayout>
+    );
   }
 
   const { statistics, penilaianData = [], chartData = [] } = data || {};
@@ -373,10 +388,10 @@ export default function PenilaianHafalanPage() {
 
           {/* Content */}
           {error ? (
-            <div className="bg-red-50 p-8 rounded-2xl text-center border border-red-100">
-              <AlertCircle className="text-red-500 mx-auto mb-2" size={32} />
-              <p className="text-red-700">Gagal memuat data</p>
-            </div>
+            <ErrorState 
+              errorMessage={error.message}
+              onRetry={() => mutate()}
+            />
           ) : !data ? (
             <div className="py-12">
               <LoadingIndicator text="Memuat data..." />
@@ -388,11 +403,11 @@ export default function PenilaianHafalanPage() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl p-12 text-center border-2 border-dashed border-gray-100 mt-6">
-              <BookOpen className="text-gray-400 mx-auto mb-4" size={48} />
-              <h3 className="text-lg font-bold text-gray-900">Belum Ada Penilaian</h3>
-              <p className="text-gray-600 text-sm mt-1">Nilai akan muncul setelah Anda menyetorkan hafalan di periode ini.</p>
-            </div>
+            <EmptyState
+              title="Belum Ada Penilaian"
+              description={`Nilai akan muncul setelah Anda menyetorkan hafalan di periode ${periodText}.`}
+              icon={BookOpen}
+            />
           )}
         </div>
       </div>
