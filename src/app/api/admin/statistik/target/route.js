@@ -5,8 +5,9 @@ import { auth } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
-// Target hafalan minimum = 3 juz
-const TARGET_JUZ = 3;
+// Target hafalan minimum - DYNAMICALLY fetched from active tahun ajaran
+// This will be set at runtime
+let TARGET_JUZ = 3; // fallback default
 // Target kelas = 50% siswa mencapai target
 const TARGET_KELAS_PERCENTAGE = 50;
 
@@ -17,6 +18,15 @@ export async function GET() {
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Fetch active tahun ajaran to get dynamic target
+    const tahunAjaranAktif = await prisma.tahunAjaran.findFirst({
+      where: { isActive: true },
+      select: { targetHafalan: true }
+    });
+
+    // Use dynamic target from tahun ajaran, fallback to 3
+    TARGET_JUZ = tahunAjaranAktif?.targetHafalan || 3;
 
     // Validate prisma connection
     if (!prisma || !prisma.siswa) {

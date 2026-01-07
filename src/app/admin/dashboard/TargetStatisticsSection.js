@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TrendingUp, Users, Trophy } from 'lucide-react';
+import { TrendingUp, Users, Trophy, AlertCircle } from 'lucide-react';
 
 // ============================================================================
 // TARGET KELAS CHART CARD - Horizontal Bar Chart
 // ============================================================================
-function TargetKelasChartCard({ data, loading }) {
+function TargetKelasChartCard({ data, loading, targetHafalan }) {
   const chartData = data || [];
   const hasData = chartData.length > 0;
 
@@ -85,7 +85,7 @@ function TargetKelasChartCard({ data, loading }) {
       {/* Info Box */}
       <div className="mt-4 lg:mt-5 bg-emerald-50 border-l-4 border-emerald-500 rounded-xl p-3 lg:p-4">
         <p className="text-[11px] lg:text-sm text-emerald-800 font-medium leading-relaxed">
-          <span className="font-bold">Target Kelas:</span> Kelas dianggap mencapai target jika ≥ 50% siswanya telah mencapai target hafalan (≥ 3 juz)
+          <span className="font-bold">Target Kelas:</span> Kelas dianggap mencapai target jika ≥ 50% siswanya telah mencapai target hafalan (≥ {targetHafalan || 3} juz)
         </p>
       </div>
     </div>
@@ -95,7 +95,7 @@ function TargetKelasChartCard({ data, loading }) {
 // ============================================================================
 // TARGET SISWA DONUT CARD
 // ============================================================================
-function TargetSiswaDonutCard({ data, loading }) {
+function TargetSiswaDonutCard({ data, loading, targetHafalan }) {
   const siswaData = data || { mencapai: 0, belum: 0, total: 0, persen: 0 };
   const { mencapai, belum, total, persen } = siswaData;
 
@@ -207,7 +207,7 @@ function TargetSiswaDonutCard({ data, loading }) {
               <span className="font-bold">Total:</span> {total} siswa
             </p>
             <p className="text-[11px] lg:text-sm text-blue-800 mt-1 lg:mt-2 leading-relaxed">
-              <span className="font-bold">Target:</span> Hafalan ≥ 3 juz
+              <span className="font-bold">Target:</span> Hafalan ≥ {targetHafalan || 3} juz
             </p>
           </div>
         </div>
@@ -224,6 +224,7 @@ export default function TargetStatisticsSection() {
     kelasTop5: [],
     siswa: { mencapai: 0, belum: 0, total: 0, persen: 0 },
   });
+  const [tahunAjaranAktif, setTahunAjaranAktif] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -232,14 +233,30 @@ export default function TargetStatisticsSection() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch('/api/admin/statistik/target', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Gagal mengambil data statistik target');
-        const result = await res.json();
-        if (result.success) {
-          setData(result);
+        
+        // Fetch both active tahun ajaran and statistics in parallel
+        const [taRes, statsRes] = await Promise.all([
+          fetch('/api/tahun-ajaran/aktif', { cache: 'no-store' }),
+          fetch('/api/admin/statistik/target', { cache: 'no-store' })
+        ]);
+        
+        if (taRes.ok) {
+          const taData = await taRes.json();
+          if (taData.success && taData.data) {
+            setTahunAjaranAktif(taData.data);
+          }
+        }
+        
+        if (statsRes.ok) {
+          const result = await statsRes.json();
+          if (result.success) {
+            setData(result);
+          }
+        } else {
+          throw new Error('Gagal mengambil data statistik target');
         }
       } catch (err) {
-        console.error('Error:', err);
+        console.error('[TargetStatisticsSection] Error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -249,10 +266,34 @@ export default function TargetStatisticsSection() {
     fetchData();
   }, []);
 
+  // Show placeholder if target not available
+  if (!loading && !tahunAjaranAktif?.targetHafalan) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-amber-100/60 shadow-sm flex items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="text-amber-500 mx-auto mb-3" size={32} />
+            <p className="text-sm font-medium text-gray-700">Target hafalan belum diatur</p>
+            <p className="text-xs text-gray-500 mt-1">Silakan atur target di halaman Tahun Ajaran</p>
+          </div>
+        </div>
+        <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-amber-100/60 shadow-sm flex items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="text-amber-500 mx-auto mb-3" size={32} />
+            <p className="text-sm font-medium text-gray-700">Target hafalan belum diatur</p>
+            <p className="text-xs text-gray-500 mt-1">Silakan atur target di halaman Tahun Ajaran</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const targetHafalan = tahunAjaranAktif?.targetHafalan || 3;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <TargetKelasChartCard data={data.kelasTop5} loading={loading} />
-      <TargetSiswaDonutCard data={data.siswa} loading={loading} />
+      <TargetKelasChartCard data={data.kelasTop5} loading={loading} targetHafalan={targetHafalan} />
+      <TargetSiswaDonutCard data={data.siswa} loading={loading} targetHafalan={targetHafalan} />
     </div>
   );
 }
