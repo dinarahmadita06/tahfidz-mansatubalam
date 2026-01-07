@@ -214,3 +214,89 @@ export async function POST(request) {
     );
   }
 }
+
+// GET endpoint to fetch kelas list
+export async function GET(request) {
+  try {
+    const session = await auth();
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const perPage = parseInt(searchParams.get('perPage') || '10');
+    const page = parseInt(searchParams.get('page') || '1');
+    const search = searchParams.get('search') || '';
+
+    // Build where clause for search
+    let whereClause = {};
+    if (search) {
+      whereClause = {
+        OR: [
+          { nama: { contains: search, mode: 'insensitive' } },
+          { tahunAjaran: { nama: { contains: search, mode: 'insensitive' } } }
+        ]
+      };
+    }
+
+    // Fetch total count
+    const total = await prisma.kelas.count({
+      where: whereClause
+    });
+
+    // Fetch paginated kelas
+    const kelas = await prisma.kelas.findMany({
+      where: whereClause,
+      include: {
+        tahunAjaran: {
+          select: {
+            nama: true,
+            semester: true
+          }
+        },
+        guruKelas: {
+          where: { isActive: true },
+          include: {
+            guru: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            siswa: true
+          }
+        }
+      },
+      skip: (page - 1) * perPage,
+      take: perPage,
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: kelas,
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages: Math.ceil(total / perPage)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching kelas:', error);
+    return NextResponse.json(
+      { error: 'Gagal mengambil data kelas', details: error.message },
+      { status: 500 }
+    );
+  }
+}
