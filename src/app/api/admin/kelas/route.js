@@ -91,12 +91,25 @@ export async function POST(request) {
 
     // Create kelas dengan guru menggunakan transaction
     const kelas = await prisma.$transaction(async (tx) => {
+      // Get guru utama userId for Kelas.guruTahfidzId
+      let guruTahfidzUserId = null;
+      if (guruUtamaId && guruUtamaId.trim()) {
+        const guru = await tx.guru.findUnique({
+          where: { id: guruUtamaId },
+          select: { userId: true }
+        });
+        if (guru) {
+          guruTahfidzUserId = guru.userId;
+        }
+      }
+
       // 1. Create kelas
       const newKelas = await tx.kelas.create({
         data: {
           nama,
           tahunAjaranId: tahunAjaranId, // Keep as string - it's a CUID
           targetJuz: targetJuz ? parseInt(targetJuz) : 1,
+          guruTahfidzId: guruTahfidzUserId,
         }
       });
 
