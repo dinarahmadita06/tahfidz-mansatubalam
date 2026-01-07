@@ -460,13 +460,13 @@ export default function AdminOrangTuaPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 w-full md:w-auto">
                 <button
                   onClick={() => {
                     resetForm();
                     setShowModal(true);
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-sm hover:bg-emerald-50 shadow-md hover:shadow-lg transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-emerald-50 shadow-md hover:shadow-lg transition-all"
                 >
                   <UserPlus size={18} />
                   <span>Tambah Orang Tua</span>
@@ -492,7 +492,7 @@ export default function AdminOrangTuaPage() {
                     link.download = `data-orangtua-${new Date().toISOString().split('T')[0]}.csv`;
                     link.click();
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

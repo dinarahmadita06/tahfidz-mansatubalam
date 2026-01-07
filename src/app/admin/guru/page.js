@@ -340,21 +340,21 @@ export default function AdminGuruPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap sm:flex-nowrap gap-2 lg:gap-3">
+              <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 lg:gap-3 w-full md:w-auto">
                 <button
                   onClick={() => {
                     resetForm();
                     fetchKelas();
                     setShowModal(true);
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
                 >
                   <UserPlus size={16} />
                   <span>Tambah Guru</span>
                 </button>
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
                 >
                   <Upload size={16} />
                   <span>Import</span>
@@ -378,7 +378,7 @@ export default function AdminGuruPage() {
                     link.download = `data-guru-${new Date().toISOString().split('T')[0]}.csv`;
                     link.click();
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                  className="col-span-2 md:col-span-1 flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
                 >
                   <Download size={16} />
                   <span>Export</span>
