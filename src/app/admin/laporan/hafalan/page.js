@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Download, Loader, AlertTriangle, Users, BookOpen, TrendingUp, CheckCircle } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
+import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -167,11 +168,32 @@ export default function LaporanHafalanPage() {
     }
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     if (!reportData) return;
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Helper to add image to PDF
+    const addSignatureImage = async (url, x, y, width, height) => {
+      try {
+        if (!url) return false;
+        // Fetch image as blob and convert to data URL to avoid CORS/loading issues in jsPDF
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        const dataUrl = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        doc.addImage(dataUrl, 'PNG', x, y, width, height);
+        return true;
+      } catch (err) {
+        console.error('Failed to add signature image:', err);
+        return false;
+      }
+    };
 
     // Kop Surat - Professional Header
     doc.setFontSize(18);
@@ -279,11 +301,10 @@ export default function LaporanHafalanPage() {
 
     // Signature section - Dynamic positioning following table
     const tableEndY = doc.lastAutoTable?.finalY || doc.previousAutoTable?.finalY || 100;
-    const pageHeight = doc.internal.pageSize.getHeight();
 
     // Check if there's enough space for signature, otherwise add new page
     let signatureY = tableEndY + 15;
-    if (signatureY + 35 > pageHeight - 20) {
+    if (signatureY + 45 > pageHeight - 20) {
       doc.addPage();
       signatureY = 20;
     }
@@ -298,12 +319,39 @@ export default function LaporanHafalanPage() {
 
     // Left signature (Guru Tahfidz)
     doc.text('Mengetahui,', 14, signatureY);
-    doc.text('Guru Tahfidz', 14, signatureY + 20);
-    doc.text('_____________________', 14, signatureY + 25);
+    doc.text(reportData.teacher?.jabatan || 'Guru Tahfidz', 14, signatureY + 5);
+    
+    // Attempt to add teacher signature image
+    const teacherTtdAdded = await addSignatureImage(reportData.teacher?.ttdUrl, 14, signatureY + 7, 30, 15);
+    
+    if (!teacherTtdAdded) {
+      toast.error(`TTD guru ${reportData.teacher?.nama || ''} belum diupload, laporan akan menggunakan placeholder.`, { duration: 4000 });
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text('(TTD belum diupload)', 14, signatureY + 15);
+      doc.setTextColor(0);
+      doc.setFontSize(10);
+    }
 
-    // Right signature (Kepala Sekolah)
-    doc.text('Kepala Sekolah', pageWidth - 14, signatureY, { align: 'right' });
-    doc.text('_____________________', pageWidth - 14, signatureY + 25, { align: 'right' });
+    doc.text(`(${reportData.teacher?.nama || '_____________________'})`, 14, signatureY + 28);
+
+    // Right signature (Admin/Koordinator)
+    doc.text('Koordinator Tahfidz,', pageWidth - 14, signatureY, { align: 'right' });
+    doc.text(reportData.admin?.jabatan || 'Koordinator Tahfidz', pageWidth - 14, signatureY + 5, { align: 'right' });
+
+    // Attempt to add admin signature image
+    const adminTtdAdded = await addSignatureImage(reportData.admin?.ttdUrl, pageWidth - 44, signatureY + 7, 30, 15);
+    
+    if (!adminTtdAdded) {
+      toast.error(`TTD admin ${reportData.admin?.nama || ''} belum diupload.`, { duration: 4000 });
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text('(TTD belum diupload)', pageWidth - 14, signatureY + 15, { align: 'right' });
+      doc.setTextColor(0);
+      doc.setFontSize(10);
+    }
+
+    doc.text(`(${reportData.admin?.nama || '_____________________'})`, pageWidth - 14, signatureY + 28, { align: 'right' });
 
     doc.save(`Laporan_Hafalan_${reportData.kelasNama}_${new Date().getTime()}.pdf`);
   };
