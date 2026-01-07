@@ -516,7 +516,7 @@ export default function LaporanHafalanPage() {
         background: 'linear-gradient(180deg, #FEFFD9 0%, #F7FFE5 40%, #F5FBEF 100%)'
       }}>
         {/* Header Card - SIMTAQ Baseline Style */}
-        <div className="px-6 lg:px-10 py-8">
+        <div className="py-8">
           <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
             {/* Soft overlay highlight */}
             <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
@@ -541,7 +541,7 @@ export default function LaporanHafalanPage() {
         </div>
 
         {/* Main Container */}
-        <div className="px-6 lg:px-10 pb-8">
+        <div className="pb-8">
           {/* Filter Card */}
           <div className="filter-card p-8 mb-8">
             <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Filter Laporan</h2>

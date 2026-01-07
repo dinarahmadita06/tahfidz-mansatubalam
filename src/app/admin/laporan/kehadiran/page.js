@@ -347,7 +347,7 @@ export default function LaporanKehadiranPage() {
     <AdminLayout>
       <div className="min-h-screen bg-gradient-to-b from-[#F6FBEF] via-[#FBFDF6] to-white">
         {/* Header Card - SIMTAQ Baseline Style (identik Manajemen Siswa) */}
-        <div className="px-6 lg:px-10 py-8">
+        <div className="py-8">
           <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
             {/* Soft overlay highlight */}
             <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
@@ -372,7 +372,7 @@ export default function LaporanKehadiranPage() {
         </div>
 
         {/* Main Container */}
-        <div className="px-6 lg:px-10 py-8">
+        <div className="py-8">
           <div className="space-y-6">
           {/* Filter Card */}
           <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-6">

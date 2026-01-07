@@ -411,7 +411,7 @@ export default function AdminSiswaPage() {
     <AdminLayout>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 relative overflow-x-hidden">
         {/* Hero Header with Green Gradient */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-4 sm:px-6 lg:px-8 py-8 rounded-3xl shadow-lg mx-4 sm:mx-6 lg:mx-8">
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg">
           {/* Decorative Blur Circles */}
           <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -463,7 +463,7 @@ export default function AdminSiswaPage() {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 w-full max-w-none px-4 sm:px-6 lg:px-8 py-8">
+        <div className="relative z-10 w-full max-w-none py-8">
           {fetchError ? (
             <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-rose-200/60 p-12 text-center shadow-lg">
               <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">

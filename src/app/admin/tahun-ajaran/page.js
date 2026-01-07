@@ -325,7 +325,7 @@ export default function AdminTahunAjaranPage() {
     <AdminLayout>
       <div className="min-h-screen bg-white">
         {/* Header Section */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-4 sm:px-6 lg:px-8 py-8 rounded-3xl shadow-lg mx-4 sm:mx-6 lg:mx-8 mt-4 mb-8">
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg mb-8 mt-4">
           <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -356,7 +356,7 @@ export default function AdminTahunAjaranPage() {
         </div>
 
         {/* Main Content */}
-        <div className="w-full px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="w-full pb-8">
           <div className="space-y-6">
             {/* Stats Cards - Responsive Grid */}
             <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">

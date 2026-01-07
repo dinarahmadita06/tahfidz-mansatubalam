@@ -155,7 +155,7 @@ export default function LaporanProgresPage() {
       <div className="min-h-screen" style={{ backgroundColor: '#f0fdf4', fontFamily: 'Poppins, sans-serif' }}>
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="w-full py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -180,7 +180,7 @@ export default function LaporanProgresPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full py-8">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-md">

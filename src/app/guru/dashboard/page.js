@@ -23,8 +23,8 @@ import {
 } from 'lucide-react';
 
 // Style constants
-const CARD_BASE = 'rounded-2xl bg-white border border-slate-200 shadow-sm';
-const CARD_HOVER = 'hover:shadow-md hover:-translate-y-0.5 transition-all';
+const CARD_BASE = 'rounded-2xl backdrop-blur-md border shadow-md';
+const CARD_HOVER = 'hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300';
 
 // ===== HELPER FUNCTIONS =====
 
@@ -79,15 +79,50 @@ async function fetchHafalanData() {
 // ===== COMPONENTS =====
 
 // StatCard Component
-function StatCard({ label, value, icon, color }) {
+function StatCard({ label, value, icon, theme = 'emerald' }) {
+  const themes = {
+    emerald: {
+      bg: 'bg-emerald-50/70',
+      border: 'border-emerald-100',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      titleColor: 'text-emerald-600',
+      valueColor: 'text-emerald-700',
+      shadow: 'shadow-emerald-500/10',
+      hoverShadow: 'hover:shadow-emerald-500/20'
+    },
+    blue: {
+      bg: 'bg-blue-50/70',
+      border: 'border-blue-100',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      titleColor: 'text-blue-600',
+      valueColor: 'text-blue-700',
+      shadow: 'shadow-blue-500/10',
+      hoverShadow: 'hover:shadow-blue-500/20'
+    },
+    violet: {
+      bg: 'bg-violet-50/70',
+      border: 'border-violet-100',
+      iconBg: 'bg-violet-100',
+      iconColor: 'text-violet-600',
+      titleColor: 'text-violet-600',
+      valueColor: 'text-violet-700',
+      shadow: 'shadow-violet-500/10',
+      hoverShadow: 'hover:shadow-violet-500/20'
+    }
+  };
+
+  const config = themes[theme] || themes.emerald;
+
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+    <div className={`${config.bg} backdrop-blur-md p-5 rounded-2xl border ${config.border} shadow-md ${config.shadow} hover:-translate-y-0.5 ${config.hoverShadow} transition-all duration-300`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className={`${config.titleColor} text-[10px] font-bold uppercase tracking-wider mb-1`}>{label}</p>
+          <p className={`text-2xl font-bold ${config.valueColor}`}>{value}</p>
         </div>
-        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
+        <div className={`w-12 h-12 ${config.iconBg} rounded-xl flex items-center justify-center shadow-sm ${config.iconColor}`}>
           {icon}
         </div>
       </div>
@@ -124,19 +159,19 @@ function StatsCards({ stats }) {
         label="Kelas Diampu"
         value={stats.kelasAjaran || 0}
         icon={<BookOpen size={24} />}
-        color="bg-emerald-500"
+        theme="emerald"
       />
       <StatCard
         label="Jumlah Siswa"
         value={stats.jumlahSiswa || 0}
         icon={<Users size={24} />}
-        color="bg-blue-500"
+        theme="blue"
       />
       <StatCard
         label="Progress Rata-rata"
         value={`${stats.progressRataRata || 0}%`}
         icon={<TrendingUp size={24} />}
-        color="bg-violet-500"
+        theme="violet"
       />
     </div>
   );
@@ -145,12 +180,12 @@ function StatsCards({ stats }) {
 // 4. ClassManagementSection Component
 function ClassManagementSection({ kelasList, loading }) {
   return (
-    <div className={`${CARD_BASE} ${CARD_HOVER} p-4 lg:p-5`}>
+    <div className={`${CARD_BASE} ${CARD_HOVER} p-4 lg:p-5 bg-emerald-50/70 border-emerald-100 shadow-emerald-500/10 hover:shadow-emerald-500/20`}>
       <div className="flex items-center gap-3 mb-3 lg:mb-4">
-        <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
-          <BookOpen className="text-white w-5 h-5 lg:w-[22px] lg:h-[22px]" />
+        <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-emerald-100 flex items-center justify-center">
+          <BookOpen className="text-emerald-600 w-5 h-5 lg:w-[22px] lg:h-[22px]" />
         </div>
-        <h3 className="text-lg lg:text-xl font-bold text-slate-800">Kelola Kelas</h3>
+        <h3 className="text-lg lg:text-xl font-bold text-emerald-800">Kelola Kelas</h3>
       </div>
 
       {loading ? (
@@ -200,12 +235,12 @@ function ClassManagementSection({ kelasList, loading }) {
 // 5. RecentActivity Component
 function RecentActivity({ activities, loading }) {
   return (
-    <div className={`${CARD_BASE} ${CARD_HOVER} p-4 lg:p-5`}>
+    <div className={`${CARD_BASE} ${CARD_HOVER} p-4 lg:p-5 bg-blue-50/70 border-blue-100 shadow-blue-500/10 hover:shadow-blue-500/20`}>
       <div className="flex items-center gap-3 mb-3 lg:mb-4">
-        <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center">
-          <FileText className="text-white w-5 h-5 lg:w-[22px] lg:h-[22px]" />
+        <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-blue-100 flex items-center justify-center">
+          <FileText className="text-blue-600 w-5 h-5 lg:w-[22px] lg:h-[22px]" />
         </div>
-        <h3 className="text-lg lg:text-xl font-bold text-slate-800">Aktivitas Terbaru</h3>
+        <h3 className="text-lg lg:text-xl font-bold text-blue-800">Aktivitas Terbaru</h3>
       </div>
 
       {loading ? (
@@ -373,10 +408,11 @@ export default function DashboardGuru() {
 
   return (
     <GuruLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 space-y-4 lg:space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <div className="w-full space-y-6">
 
-        {/* Header */}
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg px-6 py-5 lg:py-6 sm:px-8 sm:py-7 lg:px-10">
+          {/* Header */}
+          <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg px-6 py-5 lg:py-6 sm:px-8 sm:py-7 lg:px-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-lg lg:text-xl xl:text-2xl font-bold leading-tight">
@@ -422,6 +458,7 @@ export default function DashboardGuru() {
         </div>
 
       </div>
-    </GuruLayout>
-  );
+    </div>
+  </GuruLayout>
+);
 }

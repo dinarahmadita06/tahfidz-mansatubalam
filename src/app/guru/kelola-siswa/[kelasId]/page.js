@@ -172,7 +172,7 @@ export default function KelolaSiswaByKelas() {
   return (
     <GuruLayout>
       <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-10 py-6 space-y-6">
+        <div className="w-full py-6 space-y-6">
           {/* Header Section */}
           <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>

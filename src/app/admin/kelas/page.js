@@ -657,7 +657,7 @@ export default function AdminKelasPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="w-full max-w-none py-6 space-y-6">
           {/* Header Section */}
           <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
             {/* Decorative Circles */}

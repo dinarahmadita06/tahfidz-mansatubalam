@@ -262,7 +262,7 @@ function OrangtuaLayout({ children }) {
         </header>
 
         <main className="flex-1 min-w-0">
-          <div className="w-full px-4 sm:px-6 lg:px-8 pt-5 pb-8">
+          <div className="w-full px-4 sm:px-6 lg:px-10 pt-5 pb-8">
             <div className="w-full">
               {children}
             </div>

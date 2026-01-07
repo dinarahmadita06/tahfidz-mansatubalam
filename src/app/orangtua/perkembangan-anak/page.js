@@ -33,7 +33,7 @@ import { getStatusBadgeConfig } from '@/lib/helpers/statusHelpers';
 
 // ===== CONSTANTS - SIMTAQ BASELINE =====
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
-const CONTAINER = 'w-full max-w-none px-4 sm:px-6 lg:px-8';
+const CONTAINER = 'w-full max-w-none';
 
 // ===== DATA FETCHER =====
 const fetcher = async (url) => {
