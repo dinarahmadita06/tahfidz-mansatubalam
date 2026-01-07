@@ -386,14 +386,14 @@ function AdminLayout({ children }) {
                         </button>
 
                         {sidebarOpen && expandedMenus[item.title] && (
-                          <div className="mt-1.5 space-y-1 transition-all duration-200">
+                          <div className="mt-1.5 space-y-1 pl-6 border-l border-emerald-100/50 transition-all duration-200">
                             {item.submenu.map((subitem) => (
                               <Link
                                 key={subitem.href}
                                 href={subitem.href}
                                 prefetch={false}
                                 onClick={handleLinkClick}
-                                className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg text-xs lg:text-sm transition-colors duration-200 border-l-2 ${
+                                className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg text-xs lg:text-sm transition-colors duration-200 border-l-2 ml-2 ${
                                   isActive(subitem.href)
                                     ? 'bg-emerald-50/60 text-emerald-700 font-medium border-l-emerald-400/70'
                                     : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700 border-l-transparent hover:border-l-emerald-300/40'
