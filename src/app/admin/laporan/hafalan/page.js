@@ -502,14 +502,33 @@ export default function LaporanHafalanPage() {
         minHeight: '100vh',
         background: 'linear-gradient(180deg, #FEFFD9 0%, #F7FFE5 40%, #F5FBEF 100%)'
       }}>
-        {/* Header Section */}
-        <div className="laporan-header">
-          <h1 className="text-4xl font-bold" style={{ color: '#2F3E3A', fontWeight: 700, fontSize: '24px', letterSpacing: '-0.3px' }}>Laporan Hafalan</h1>
-          <p className="mt-2" style={{ color: '#6B7E75', fontSize: '15px' }}>Generate dan unduh laporan hafalan siswa secara terperinci</p>
+        {/* Header Card - SIMTAQ Baseline Style */}
+        <div className="px-6 lg:px-10 py-8">
+          <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
+            {/* Soft overlay highlight */}
+            <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
+            
+            {/* Decorative blur circles */}
+            <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div className="relative z-10 flex items-center gap-4 sm:gap-6">
+              {/* Icon Container - SIMTAQ Style */}
+              <div className="bg-white/15 border border-white/10 backdrop-blur-sm rounded-2xl w-14 h-14 sm:w-auto sm:h-auto p-0 sm:p-4 flex items-center justify-center flex-shrink-0">
+                <TrendingUp size={28} className="text-white sm:w-8 sm:h-8" />
+              </div>
+              
+              {/* Header Content */}
+              <div className="flex-1 flex flex-col justify-center text-left">
+                <h1 className="text-xl sm:text-4xl font-bold text-white leading-tight mb-1 sm:mb-2">Laporan Hafalan</h1>
+                <p className="text-white/90 text-sm sm:text-base leading-snug">Generate dan unduh laporan hafalan siswa secara terperinci</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Main Container */}
-        <div className="laporan-container">
+        <div className="px-6 lg:px-10 pb-8">
           {/* Filter Card */}
           <div className="filter-card p-8 mb-8">
             <h2 className="text-xl font-bold mb-8" style={{ color: '#2F3E3A', fontWeight: 700, letterSpacing: '-0.3px' }}>Filter Laporan</h2>
@@ -554,12 +573,9 @@ export default function LaporanHafalanPage() {
                   onChange={(e) => setFilters({ ...filters, periode: e.target.value })}
                   className="select-input w-full px-4"
                 >
-                  <option value="mingguan">Mingguan (7 hari terakhir)</option>
                   <option value="bulanan">Bulanan</option>
                   <option value="semester1">Semester 1 (Juli - Desember)</option>
                   <option value="semester2">Semester 2 (Januari - Juni)</option>
-                  <option value="tahunan">Tahunan</option>
-                  <option value="custom">Custom</option>
                 </select>
               </div>
 
