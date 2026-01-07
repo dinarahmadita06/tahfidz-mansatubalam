@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
+import ErrorState from '@/components/shared/ErrorState';
 import GuruLayout from '@/components/layout/GuruLayout';
 import AnnouncementSlider from '@/components/AnnouncementSlider';
 import PengumumanWidget from '@/components/PengumumanWidget';
@@ -229,6 +230,7 @@ export default function DashboardGuru() {
   const [activities, setActivities] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
 
@@ -246,6 +248,7 @@ export default function DashboardGuru() {
     }
 
     try {
+      setError(null);
       // Fetch kelas yang diampu guru
       const kelasRes = await fetch('/api/guru/kelas');
       const kelasData = await kelasRes.json();
@@ -279,6 +282,7 @@ export default function DashboardGuru() {
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setError(error.message);
     } finally {
       if (isRefresh) {
         setRefreshing(false);
@@ -331,6 +335,17 @@ export default function DashboardGuru() {
     return (
       <GuruLayout>
         <LoadingIndicator text="Memuat dashboard..." fullPage />
+      </GuruLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <GuruLayout>
+        <ErrorState 
+          errorMessage={error}
+          onRetry={fetchData}
+        />
       </GuruLayout>
     );
   }

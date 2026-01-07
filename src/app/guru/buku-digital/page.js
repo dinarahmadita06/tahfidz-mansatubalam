@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
+import ErrorState from '@/components/shared/ErrorState';
 import { toast, Toaster } from 'react-hot-toast';
 import DigitalMaterialCard from '@/components/shared/DigitalMaterialCard';
 import { 
@@ -90,6 +91,7 @@ export default function BukuDigitalPage() {
   const [showViewerModal, setShowViewerModal] = useState(false);
   const [selectedMateri, setSelectedMateri] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [guruKelas, setGuruKelas] = useState([]); // ✅ Classes the guru teaches
 
   // Form states
@@ -128,16 +130,17 @@ export default function BukuDigitalPage() {
   const fetchMateri = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch('/api/guru/buku-digital');
       if (response.ok) {
         const data = await response.json();
         setMateriList(data.data || []);
       } else {
-        toast.error('Gagal memuat materi digital');
+        throw new Error('Gagal memuat materi digital');
       }
     } catch (error) {
       console.error('Error fetching materi:', error);
-      toast.error('Terjadi kesalahan saat memuat materi');
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -400,7 +403,12 @@ export default function BukuDigitalPage() {
         )}
         
         {/* Materi Grid / Empty State */}
-        {!loading && filteredMateri.length === 0 ? (
+        {!loading && error ? (
+          <ErrorState
+            errorMessage={error}
+            onRetry={fetchMateri}
+          />
+        ) : !loading && filteredMateri.length === 0 ? (
           <EmptyState
             title={searchQuery || selectedCategory !== 'Semua' ? 'Tidak ada materi yang sesuai' : 'Belum ada materi digital'}
             description={searchQuery || selectedCategory !== 'Semua' 

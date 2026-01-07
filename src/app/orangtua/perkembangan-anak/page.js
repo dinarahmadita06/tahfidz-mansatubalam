@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
+import ErrorState from '@/components/shared/ErrorState';
 import MonthlyPeriodFilter from '@/components/penilaian/MonthlyPeriodFilter';
 import { calculateMonthRange, getCurrentMonthYear, formatMonthYear } from '@/lib/utils/dateRangeHelpers';
 import {
@@ -365,7 +366,7 @@ export default function PerkembanganAnakPage() {
   const [selectedYear, setSelectedYear] = useState(currentDate.year);
 
   // Fetch children list
-  const { data: childrenData } = useSWR(
+  const { data: childrenData, error: childrenError, mutate: mutateChildren } = useSWR(
     status === 'authenticated' ? '/api/orangtua/penilaian-hafalan' : null,
     fetcher
   );
@@ -384,7 +385,7 @@ export default function PerkembanganAnakPage() {
   }, [childrenData, selectedChild]);
 
   // Fetch penilaian data for selected child and month range
-  const { data: penilaianData, error: penilaianError } = useSWR(
+  const { data: penilaianData, error: penilaianError, mutate: mutatePenilaian } = useSWR(
     selectedChild?.id ? (() => {
       const { startDateStr, endDateStr } = calculateMonthRange(selectedMonth, selectedYear);
       return `/api/orangtua/penilaian-hafalan?siswaId=${selectedChild.id}&startDate=${startDateStr}&endDate=${endDateStr}`;
@@ -413,6 +414,22 @@ export default function PerkembanganAnakPage() {
     setSelectedMonth(month);
     setSelectedYear(year);
   };
+
+  if (childrenError || penilaianError) {
+    return (
+      <OrangtuaLayout>
+        <div className={CONTAINER + " py-8"}>
+          <ErrorState 
+            errorMessage={(childrenError || penilaianError)?.message}
+            onRetry={() => {
+              if (childrenError) mutateChildren();
+              if (penilaianError) mutatePenilaian();
+            }}
+          />
+        </div>
+      </OrangtuaLayout>
+    );
+  }
 
   const penilaianRows = penilaianData?.penilaianData
     ? penilaianData.penilaianData.map((assessment) => {

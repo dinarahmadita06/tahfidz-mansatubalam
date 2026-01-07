@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Trophy, AlertCircle } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
+import ErrorState from '@/components/shared/ErrorState';
 
 // ============================================================================
 // TARGET KELAS CHART CARD - Horizontal Bar Chart
@@ -227,41 +228,41 @@ export default function TargetStatisticsSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch both active tahun ajaran and statistics in parallel
-        const [taRes, statsRes] = await Promise.all([
-          fetch('/api/tahun-ajaran/aktif', { cache: 'no-store' }),
-          fetch('/api/admin/statistik/target', { cache: 'no-store' })
-        ]);
-        
-        if (taRes.ok) {
-          const taData = await taRes.json();
-          if (taData.success && taData.data) {
-            setTahunAjaranAktif(taData.data);
-          }
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch both active tahun ajaran and statistics in parallel
+      const [taRes, statsRes] = await Promise.all([
+        fetch('/api/tahun-ajaran/aktif', { cache: 'no-store' }),
+        fetch('/api/admin/statistik/target', { cache: 'no-store' })
+      ]);
+      
+      if (taRes.ok) {
+        const taData = await taRes.json();
+        if (taData.success && taData.data) {
+          setTahunAjaranAktif(taData.data);
         }
-        
-        if (statsRes.ok) {
-          const result = await statsRes.json();
-          if (result.success) {
-            setData(result);
-          }
-        } else {
-          throw new Error('Gagal mengambil data statistik target');
-        }
-      } catch (err) {
-        console.error('[TargetStatisticsSection] Error:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      if (statsRes.ok) {
+        const result = await statsRes.json();
+        if (result.success) {
+          setData(result);
+        }
+      } else {
+        throw new Error('Gagal mengambil data statistik target');
+      }
+    } catch (err) {
+      console.error('[TargetStatisticsSection] Error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -286,6 +287,15 @@ export default function TargetStatisticsSection() {
   }
 
   const targetHafalan = tahunAjaranAktif?.targetHafalan || 3;
+
+  if (error) {
+    return (
+      <ErrorState
+        errorMessage={error}
+        onRetry={fetchData}
+      />
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
