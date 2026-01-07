@@ -226,7 +226,7 @@ export default function OrangtuaDashboardPage() {
     <OrangtuaLayout>
       <div className="w-full space-y-4 lg:space-y-6">
         {/* Banner Header */}
-        <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg px-6 py-5 lg:py-6 sm:px-8 sm:py-7 lg:px-10 text-white`}>
+        <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-5 lg:p-6 text-white`}>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
             <div className="flex items-center gap-3 lg:gap-4">
               <div className="bg-white/20 backdrop-blur-sm p-2.5 lg:p-3.5 rounded-xl lg:rounded-2xl flex-shrink-0">

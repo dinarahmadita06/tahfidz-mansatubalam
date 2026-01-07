@@ -342,7 +342,7 @@ export default function PengumumanPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gradient-to-b from-[#F6FBEF] via-[#FBFDF6] to-white">
-        <div className="px-6 lg:px-10 py-8 space-y-6">
+        <div className="py-8 space-y-6">
           {/* Header Card - SIMTAQ Baseline */}
           <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
             {/* Soft overlay highlight */}

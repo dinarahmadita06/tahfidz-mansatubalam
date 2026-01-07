@@ -7,7 +7,7 @@ import GuruLayout from '@/components/layout/GuruLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import {
   ArrowLeft, Save, BookOpen, Plus, Trash2,
-  Eye, X, Filter, Search, Calendar, User,
+  Eye, X, Filter, Search, Calendar, User, Users,
   ClipboardList, CheckCircle, AlertCircle, Lightbulb, PlayCircle, Download
 } from 'lucide-react';
 import Link from 'next/link';
@@ -314,7 +314,7 @@ export default function TahsinDetailPage() {
 
   return (
     <GuruLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-6 space-y-6">
         {/* Header Card with Gradient - Tasmi Style */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -388,7 +388,7 @@ export default function TahsinDetailPage() {
         </div>
 
         {/* Content Based on Active Tab */}
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
           {activeTab === 'pencatatan' && (
             /* PENCATATAN TAB */
             <>

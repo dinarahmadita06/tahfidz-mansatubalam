@@ -118,7 +118,7 @@ export default function TahsinIndexPage() {
 
   return (
     <GuruLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-3 sm:px-4 lg:px-5 py-6 space-y-6 w-full">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-6 space-y-6 w-full">
         {/* Header */}
         <TahsinHeader />
 
