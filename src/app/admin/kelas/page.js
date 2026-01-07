@@ -8,6 +8,7 @@ import {
   UserCheck, Clock, MoreVertical, X
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useRouter } from 'next/navigation';
 
@@ -798,9 +799,12 @@ export default function AdminKelasPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {activeKelas.length === 0 ? (
-                <div className="col-span-full bg-white rounded-2xl p-12 text-center shadow-lg border border-slate-100">
-                  <BookOpen size={48} className="mx-auto mb-4 text-slate-300" />
-                  <p className="text-slate-500 font-medium">Tidak ada kelas aktif yang ditemukan</p>
+                <div className="col-span-full">
+                  <EmptyState
+                    title="Tidak ada kelas aktif"
+                    description="Tidak ditemukan kelas aktif untuk periode tahun ajaran ini."
+                    icon={BookOpen}
+                  />
                 </div>
               ) : (
                 activeKelas.map((kelasItem, index) => {
@@ -1076,9 +1080,12 @@ export default function AdminKelasPage() {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {inactiveKelas.length === 0 ? (
-                    <div className="col-span-full bg-white rounded-2xl p-12 text-center shadow-lg border border-slate-100">
-                      <BookOpen size={48} className="mx-auto mb-4 text-slate-300" />
-                      <p className="text-slate-500 font-medium">Tidak ada kelas nonaktif yang ditemukan</p>
+                    <div className="col-span-full">
+                      <EmptyState
+                        title="Tidak ada kelas nonaktif"
+                        description="Semua kelas saat ini dalam status aktif."
+                        icon={BookOpen}
+                      />
                     </div>
                   ) : (
                     inactiveKelas.map((kelasItem, index) => {

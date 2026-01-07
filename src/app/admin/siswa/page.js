@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Upload, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen, CheckCircle, XCircle, ArrowUpRight, Award } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
 import SmartImport from '@/components/SmartImport';
 import StudentCreateModal from '@/components/admin/StudentCreateModal';
@@ -599,8 +600,13 @@ export default function AdminSiswaPage() {
                   <tbody>
                     {filteredSiswa.length === 0 ? (
                       <tr>
-                        <td colSpan="8" className="px-6 py-12 text-center text-gray-400 text-sm">
-                          Tidak ada data siswa yang ditemukan
+                        <td colSpan="8" className="px-6 py-12 text-center">
+                          <EmptyState
+                            title="Tidak ada data siswa"
+                            description="Tidak ditemukan data siswa yang sesuai dengan filter atau pencarian saat ini."
+                            icon={Users}
+                            className="bg-transparent border-none shadow-none py-0"
+                          />
                         </td>
                       </tr>
                     ) : (

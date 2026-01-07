@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, Upload, Search, Users, UserCheck, UserX } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import EmptyState from '@/components/shared/EmptyState';
 import ParentActionMenu from '@/components/admin/ParentActionMenu';
 import ParentDetailModal from '@/components/admin/ParentDetailModal';
 import ResetPasswordModal from '@/components/admin/ResetPasswordModal';
@@ -620,8 +621,13 @@ export default function AdminOrangTuaPage() {
                   <tbody>
                     {filteredOrangTua.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-gray-400 text-sm">
-                          Tidak ada data orang tua yang ditemukan
+                        <td colSpan="7" className="px-6 py-12 text-center">
+                          <EmptyState
+                            title="Tidak ada data orang tua"
+                            description="Tidak ditemukan data orang tua yang sesuai dengan filter atau pencarian saat ini."
+                            icon={Users}
+                            className="bg-transparent border-none shadow-none py-0"
+                          />
                         </td>
                       </tr>
                     ) : (

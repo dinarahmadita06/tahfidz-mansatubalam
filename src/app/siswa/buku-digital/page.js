@@ -14,6 +14,7 @@ import {
   FileCheck,
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import toast, { Toaster } from 'react-hot-toast';
 import DigitalMaterialCard from '@/components/shared/DigitalMaterialCard';
 import { getMaterialVariant } from '@/lib/utils/materialHelpers';
@@ -240,23 +241,13 @@ export default function SiswaBukuDigitalPage() {
         
         {/* Materi Grid / Empty State */}
         {!loading && filteredBooks.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-4 bg-emerald-50 rounded-full">
-                <BookOpen className="text-emerald-600" size={48} />
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">
-              {searchQuery || selectedCategory !== 'Semua'
-                ? 'Tidak ada materi yang sesuai'
-                : 'Belum ada materi digital'}
-            </h3>
-            <p className="text-gray-500 mb-6">
-              {searchQuery || selectedCategory !== 'Semua'
-                ? 'Coba gunakan kata kunci atau filter yang berbeda'
-                : 'Materi buku digital belum tersedia'}
-            </p>
-          </div>
+          <EmptyState
+            title={searchQuery || selectedCategory !== 'Semua' ? 'Tidak ada materi yang sesuai' : 'Belum ada materi digital'}
+            description={searchQuery || selectedCategory !== 'Semua' 
+              ? 'Coba gunakan kata kunci atau filter yang berbeda' 
+              : 'Materi buku digital belum tersedia untuk kelas Anda.'}
+            icon={BookOpen}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredBooks.map((materi) => (

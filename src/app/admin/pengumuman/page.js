@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import PageWrapper from '@/components/PageWrapper';
-import LoadingIndicator from "@/components/shared/LoadingIndicator";
+import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   Home,
   ChevronRight,
@@ -164,16 +165,11 @@ function AnnouncementCard({ announcement, onEdit, onDelete }) {
 // EmptyState Component
 function AnnouncementEmptyState() {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-      <div className="flex justify-center mb-4">
-        <div className="p-4 bg-emerald-50 rounded-full">
-          <Megaphone className="text-emerald-600" size={48} />
-        </div>
-      </div>
-      <h3 className="text-xl font-bold text-gray-700 mb-2">Belum Ada Pengumuman</h3>
-      <p className="text-gray-500 mb-1">Nantikan kabar terbaru di sini</p>
-      <p className="text-sm text-gray-400">Buat pengumuman baru untuk memulai</p>
-    </div>
+    <EmptyState
+      title="Belum Ada Pengumuman"
+      description="Nantikan kabar terbaru di sini. Buat pengumuman baru untuk memulai."
+      icon={Megaphone}
+    />
   );
 }
 
@@ -445,19 +441,11 @@ export default function PengumumanPage() {
           ) : pengumumanList.length === 0 ? (
             <AnnouncementEmptyState />
           ) : filteredPengumuman.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-gray-50 rounded-full">
-                  <FileText className="text-gray-400" size={48} />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">
-                Tidak Ada Hasil
-              </h3>
-              <p className="text-gray-500">
-                Tidak ditemukan pengumuman yang sesuai dengan pencarian
-              </p>
-            </div>
+            <EmptyState
+              title="Tidak Ada Hasil"
+              description="Tidak ditemukan pengumuman yang sesuai dengan pencarian Anda."
+              icon={FileText}
+            />
           ) : (
             <>
               {/* Grid Layout - 2 Columns */}

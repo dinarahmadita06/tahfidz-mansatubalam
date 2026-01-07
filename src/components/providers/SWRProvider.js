@@ -17,22 +17,44 @@ const fetcher = async (url) => {
 };
 
 export default function SWRProvider({ children }) {
+  // Global state untuk tracking waktu focus terakhir
+  // Menggunakan global variable karena SWRProvider sering di-render ulang
+  if (typeof window !== 'undefined' && !window._simtaqLastFocusAt) {
+    window._simtaqLastFocusAt = Date.now();
+  }
+
   return (
     <SWRConfig
       value={{
         fetcher,
-        // Revalidate otomatis saat window focus
-        revalidateOnFocus: true,
+        // Revalidate otomatis saat window focus - dengan aturan smart
+        revalidateOnFocus: (data, key, config) => {
+          if (typeof window === 'undefined') return false;
+          
+          const now = Date.now();
+          const lastFocus = window._simtaqLastFocusAt || now;
+          window._simtaqLastFocusAt = now;
+
+          // Jika user meninggalkan tab < 60 detik, jangan revalidate
+          const timeSinceLastFocus = (now - lastFocus) / 1000;
+          
+          if (timeSinceLastFocus < 60) {
+            return false;
+          }
+
+          // Jika >= 60 detik, boleh revalidate (silent refresh)
+          return true;
+        },
         // Revalidate otomatis saat reconnect
-        revalidateOnReconnect: true,
-        // Dedupe requests dalam 2 detik
-        dedupingInterval: 2000,
-        // Refresh setiap 30 detik untuk data real-time
-        refreshInterval: 30000,
+        revalidateOnReconnect: false, // Di-disable sesuai request agar tidak mengganggu
+        // Dedupe requests dalam 5 detik (ditingkatkan dari 2s)
+        dedupingInterval: 5000,
+        // Refresh interval di-disable (jangan auto refresh setiap 30 detik tanpa aktivitas)
+        refreshInterval: 0,
         // Fokus throttle untuk menghindari request berlebihan
-        focusThrottleInterval: 5000,
+        focusThrottleInterval: 60000, // Minimal 60 detik antar focus revalidation
         // Error retry dengan exponential backoff
-        errorRetryCount: 3,
+        errorRetryCount: 2,
         errorRetryInterval: 5000,
         // Keep data saat error
         shouldRetryOnError: true,

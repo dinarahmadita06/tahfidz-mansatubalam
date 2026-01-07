@@ -12,8 +12,7 @@ export function useData(url, config = {}) {
     url,
     null, // fetcher sudah di-define di SWRProvider
     {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
+      // Mewarisi konfigurasi global dari SWRProvider (smart focus revalidation)
       ...config,
     }
   );
