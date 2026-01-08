@@ -242,7 +242,7 @@ export default function AdminSiswaPage() {
   const handleExportData = () => {
     try {
       // Prepare data for export
-      const exportData = filteredSiswa.map(s => ({
+      const exportData = (Array.isArray(filteredSiswa) ? filteredSiswa : []).map(s => ({
         'NIS': s.nis || '-',
         'NISN': s.nisn || '-',
         'Nama Lengkap': s.user.name,
@@ -409,14 +409,14 @@ export default function AdminSiswaPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 relative overflow-x-hidden">
+      <div className="w-full space-y-6">
         {/* Hero Header with Green Gradient */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg">
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg px-6 mt-4">
           {/* Decorative Blur Circles */}
           <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
-          <div className="w-full max-w-none relative z-10">
+          <div className="w-full relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4">
               <div>
                 <div className="flex items-center gap-3 mb-3">
@@ -463,7 +463,6 @@ export default function AdminSiswaPage() {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 w-full max-w-none py-8">
           {fetchError ? (
             <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-rose-200/60 p-12 text-center shadow-lg">
               <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -565,7 +564,7 @@ export default function AdminSiswaPage() {
                     className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
                   >
                     <option value="all">Semua Kelas</option>
-                    {kelas.map(k => (
+                    {(Array.isArray(kelas) ? kelas : []).map(k => (
                       <option key={k.id} value={k.id}>{k.nama}</option>
                     ))}
                   </select>
@@ -624,7 +623,7 @@ export default function AdminSiswaPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSiswa.length === 0 ? (
+                    {(!Array.isArray(filteredSiswa) || filteredSiswa.length === 0) ? (
                       <tr>
                         <td colSpan="8" className="px-6 py-12 text-center">
                           <EmptyState
@@ -636,7 +635,7 @@ export default function AdminSiswaPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredSiswa.map((siswaItem) => {
+                      (Array.isArray(filteredSiswa) ? filteredSiswa : []).map((siswaItem) => {
                         const totalHafalan = getSiswaHafalan(siswaItem);
                         const isValidated = siswaItem.status === 'approved';
                         const statusBadge = getStatusBadgeConfig(siswaItem.statusSiswa || 'AKTIF');
@@ -724,7 +723,6 @@ export default function AdminSiswaPage() {
             </div>
           </div>
           )}
-        </div>
       </div>
 
       {/* Student Create Modal */}

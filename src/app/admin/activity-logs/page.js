@@ -143,64 +143,45 @@ export default function ActivityLogsPage() {
 
   return (
     <AdminLayout>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+      <div className="w-full space-y-6">
+        {/* Header Section */}
+        <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
+          {/* Decorative Circles */}
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
 
-        body {
-          font-family: 'Poppins', sans-serif;
-        }
-        
-        /* Mobile Responsive Padding for Activity Logs */
-        .activity-container {
-          padding: 32px;
-        }
-        
-        @media (max-width: 768px) {
-          .activity-container {
-            padding: 16px;
-          }
-        }
-      `}</style>
-
-      <div
-        className="min-h-screen activity-container"
-        style={{
-          background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
-          fontFamily: 'Poppins, sans-serif'
-        }}
-      >
-        {/* Header with Badge */}
-        <div className="flex justify-between items-start mb-8">
-          <div className="flex items-start gap-4">
-            <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-3 rounded-xl shadow-lg">
-              <Activity className="text-white" size={28} />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-md rounded-2xl p-3 shadow-lg">
+                <Activity className="text-white" size={28} />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Log Activity</h1>
+                <p className="text-green-50 text-sm opacity-90">Tracking semua aktivitas pengguna dalam sistem</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                Log Activity
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Tracking semua aktivitas yang dilakukan oleh pengguna sistem Tahfidz
-              </p>
+            
+            {/* Action Button & Status */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full border border-white/30 shadow-sm animate-pulse">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                <span className="text-xs font-semibold uppercase tracking-wider">Realtime Tracking ON</span>
+              </div>
+              <button
+                onClick={handleExport}
+                className="flex items-center justify-center gap-2 h-11 px-5 bg-white text-emerald-700 hover:bg-white/90 rounded-xl font-bold text-sm transition-all duration-300 shadow-md"
+              >
+                <FileDown size={18} />
+                <span>Export Excel</span>
+              </button>
             </div>
-          </div>
-
-          {/* Realtime Badge */}
-          <div className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-full shadow-lg animate-pulse">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-            <span className="text-sm font-semibold">Realtime Tracking ON</span>
           </div>
         </div>
 
         {/* Filter Card */}
-        <div
-          className="bg-white rounded-2xl p-8 mb-6"
-          style={{
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)'
-          }}
-        >
-          <h2 className="font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <Filter size={20} className="text-emerald-600" />
+        <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100 shadow-md shadow-emerald-100/30 p-6">
+          <h2 className="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2 uppercase tracking-wide">
+            <Filter size={18} className="text-emerald-600" />
             Filter & Pencarian
           </h2>
 
@@ -380,7 +361,7 @@ export default function ActivityLogsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {logs.map((log, index) => (
+                    {(Array.isArray(logs) ? logs : []).map((log, index) => (
                       <tr
                         key={log.id}
                         className="hover:bg-emerald-50/30 transition-colors duration-150"

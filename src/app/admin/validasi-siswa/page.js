@@ -418,9 +418,9 @@ export default function ValidasiSiswaPage() {
 
   // Stats - Hitung berdasarkan data terbaru
   const stats = {
-    total: siswa.length,
-    menunggu: siswa.filter(s => s.status === 'pending').length,
-    divalidasi: siswa.filter(s => s.status === 'approved').length,
+    total: Array.isArray(siswa) ? siswa.length : 0,
+    menunggu: Array.isArray(siswa) ? siswa.filter(s => s.status === 'pending').length : 0,
+    divalidasi: Array.isArray(siswa) ? siswa.filter(s => s.status === 'approved').length : 0,
   };
 
   if (loading) {
@@ -433,7 +433,7 @@ export default function ValidasiSiswaPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 relative overflow-x-hidden">
+      <div className="w-full space-y-6">
         {/* Toast */}
         {toast && (
           <Toast
@@ -445,19 +445,19 @@ export default function ValidasiSiswaPage() {
         )}
 
         {/* Header */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg">
+        <div className="relative z-10 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-2xl shadow-lg">
           <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
-          <div className="w-full max-w-none relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4">
+          <div className="px-6 sm:px-8 relative z-10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3">
                   <div className="bg-white/20 backdrop-blur-md rounded-full p-3 shadow-lg">
                     <CheckCircle size={24} className="text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl sm:text-4xl font-bold text-white">Validasi Siswa</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white">Validasi Siswa</h1>
                     <p className="text-white/90 text-sm mt-1">Verifikasi dan kelola pendaftaran siswa baru</p>
                   </div>
                 </div>
@@ -543,7 +543,7 @@ export default function ValidasiSiswaPage() {
                     className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
                   >
                     <option value="all">Semua Kelas</option>
-                    {kelas.map(k => (
+                    {Array.isArray(kelas) && kelas.map(k => (
                       <option key={k.id} value={k.id}>{k.nama}</option>
                     ))}
                   </select>
@@ -566,7 +566,7 @@ export default function ValidasiSiswaPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {siswa.length === 0 ? (
+                    {!Array.isArray(siswa) || siswa.length === 0 ? (
                       <tr>
                         <td colSpan="6" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center gap-3">

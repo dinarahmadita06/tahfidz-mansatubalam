@@ -96,17 +96,8 @@ export default function ResetPasswordUserPage() {
 
   return (
     <AdminLayout>
-      {/* Decorative Background Pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.02]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10 L35 25 45 25 37 32 40 45 30 38 20 45 23 32 15 25 25 25 Z' fill='%2310B981' /%3E%3C/svg%3E")`,
-        backgroundSize: '60px 60px'
-      }}></div>
-
-      <div className="relative min-h-screen py-8 px-4 reset-password-container">
-        {/* Container utama dengan max-width lebih besar & centered */}
-        <div className="max-w-[750px] mx-auto space-y-6">
-
-          {/* Header Section - Elegant */}
+      <div className="w-full space-y-6">
+        {/* Header Section - Elegant */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-xl mb-5">
               <Key className="w-10 h-10 text-white" strokeWidth={2.5} />
@@ -348,7 +339,6 @@ export default function ResetPasswordUserPage() {
               </form>
             </div>
           )}
-        </div>
       </div>
 
       {/* Custom Animations */}

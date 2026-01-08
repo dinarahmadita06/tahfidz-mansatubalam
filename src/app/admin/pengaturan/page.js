@@ -104,21 +104,7 @@ export default function PengaturanPage() {
 
   return (
     <AdminLayout>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-        body {
-          font-family: 'Poppins', sans-serif;
-        }
-      `}</style>
-
-      <div
-        className="min-h-screen p-8 settings-container"
-        style={{
-          background: 'linear-gradient(180deg, #FAFFF8 0%, #FFFBE9 100%)',
-          fontFamily: 'Poppins, sans-serif'
-        }}
-      >
+      <div className="w-full space-y-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
           <Home size={16} />
@@ -591,8 +577,9 @@ export default function PengaturanPage() {
           Perubahan pengaturan akan disimpan secara otomatis. Pastikan Anda memiliki hak akses sebagai administrator
           utama.
         </div>
+      </div>
 
-        {/* Password Modal */}
+      {/* Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
@@ -699,15 +686,6 @@ export default function PengaturanPage() {
             </div>
           </div>
         )}
-      </div>
-
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          .settings-container {
-            padding: 16px !important;
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 }

@@ -438,85 +438,9 @@ export default function LaporanHafalanPage() {
 
   return (
     <AdminLayout>
-      <style jsx>{`
-        .filter-card {
-          background: #FFFFFF;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-          border-radius: 20px;
-          border: 1px solid #E6F4EF;
-        }
-        .filter-card:hover {
-          border-color: #00C98D;
-        }
-        .preview-empty {
-          background: #F3FCF8;
-          border-radius: 16px;
-          padding: 32px;
-        }
-        .select-input {
-          height: 48px;
-          border: 1px solid #DDE6E1;
-          border-radius: 12px;
-          background: white;
-          color: #2F3E3A;
-          transition: border-color 0.2s ease;
-        }
-        .select-input:hover {
-          border-color: #00C98D;
-        }
-        .select-input:focus {
-          border-color: #00C98D;
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(0, 201, 141, 0.3);
-        }
-        .btn-primary {
-          background: linear-gradient(90deg, #00C98D, #00B77E);
-          color: white;
-          border-radius: 12px;
-          padding: 12px 28px;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .btn-primary:hover:not(:disabled) {
-          background: #00B77E;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 201, 141, 0.3);
-        }
-        .btn-primary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        
-        /* Mobile Responsive Padding */
-        .laporan-header {
-          padding: 48px;
-          margin-bottom: 24px;
-        }
-        
-        .laporan-container {
-          padding: 0 48px 48px 48px;
-        }
-        
-        @media (max-width: 768px) {
-          .laporan-header {
-            padding: 24px 16px 20px 16px;
-            margin-bottom: 16px;
-          }
-          
-          .laporan-container {
-            padding: 0 16px 24px 16px;
-          }
-        }
-      `}</style>
-
-      <div style={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #FEFFD9 0%, #F7FFE5 40%, #F5FBEF 100%)'
-      }}>
+      <div className="w-full space-y-6">
         {/* Header Card - SIMTAQ Baseline Style */}
-        <div className="py-8">
+        <div className="py-2">
           <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
             {/* Soft overlay highlight */}
             <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
@@ -555,7 +479,7 @@ export default function LaporanHafalanPage() {
                   className="select-input w-full px-4"
                 >
                   <option value="">Pilih Kelas</option>
-                  {kelas.map((k) => (
+                  {(Array.isArray(kelas) ? kelas : []).map((k) => (
                     <option key={k.id} value={k.id}>{k.nama}</option>
                   ))}
                 </select>
@@ -571,7 +495,7 @@ export default function LaporanHafalanPage() {
                   style={{ opacity: !filters.kelasId ? 0.5 : 1 }}
                 >
                   <option value="">Semua Siswa</option>
-                  {Array.isArray(siswaList) && siswaList.length > 0 && siswaList.map((s) => (
+                  {(Array.isArray(siswaList) ? siswaList : []).map((s) => (
                     s && s.id && s.user && s.user.name ? (
                       <option key={s.id} value={s.id}>{s.user.name}</option>
                     ) : null
@@ -762,7 +686,7 @@ export default function LaporanHafalanPage() {
                   </thead>
                   <tbody style={{ borderTop: '2px solid #DDE6E1' }}>
                     {reportData.type === 'kelas' && Array.isArray(reportData.siswaData) && reportData.siswaData.length > 0 ? (
-                      reportData.siswaData.map((siswa, idx) => (
+                      (Array.isArray(reportData.siswaData) ? reportData.siswaData : []).map((siswa, idx) => (
                         siswa && siswa.id ? (
                           <tr key={siswa.id || idx} style={{ borderBottom: '1px solid #DDE6E1' }}>
                             <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>{idx + 1}</td>
@@ -783,7 +707,7 @@ export default function LaporanHafalanPage() {
                         ) : null
                       ))
                     ) : reportData.type !== 'kelas' && Array.isArray(reportData.hafalan) && reportData.hafalan.length > 0 ? (
-                      reportData.hafalan.map((h, idx) => (
+                      (Array.isArray(reportData.hafalan) ? reportData.hafalan : []).map((h, idx) => (
                         h && h.id ? (
                           <tr key={h.id || idx} style={{ borderBottom: '1px solid #DDE6E1' }}>
                             <td className="px-6 py-4 text-sm" style={{ color: '#2F3E3A' }}>
@@ -853,7 +777,7 @@ export default function LaporanHafalanPage() {
           </div>
         )}
       </div>
-      </div>
-    </AdminLayout>
+    </div>
+  </AdminLayout>
   );
 }

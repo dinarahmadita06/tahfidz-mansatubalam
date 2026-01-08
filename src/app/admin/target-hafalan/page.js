@@ -278,8 +278,7 @@ export default function TargetHafalanPage() {
                     </div>
                   </td>
                 </tr>
-              ) : (
-                targets.map((target, index) => (
+              ) : (Array.isArray(targets) ? targets : []).map((target, index) => (
                   <tr
                     key={target.id}
                     className={`border-b border-gray-100 hover:bg-mint-50/30 transition-colors ${
@@ -303,7 +302,7 @@ export default function TargetHafalanPage() {
                     </td>
                   </tr>
                 ))
-              )}
+              }
             </tbody>
           </table>
           </ResponsiveTableWrapper>
@@ -347,25 +346,25 @@ export default function TargetHafalanPage() {
               </p>
 
             <form onSubmit={handleAddTarget} className="space-y-5">
-              {/* Pilih Kelas */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Kelas <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.kelasId}
-                  onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">-- Pilih Kelas --</option>
-                  {kelasList.map((kelas) => (
-                    <option key={kelas.id} value={kelas.id}>
-                      {kelas.nama} - {kelas.tahunAjaran?.nama || 'N/A'}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Pilih Kelas */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Kelas <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.kelasId}
+                      onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">-- Pilih Kelas --</option>
+                      {(Array.isArray(kelasList) ? kelasList : []).map((kelas) => (
+                        <option key={kelas.id} value={kelas.id}>
+                          {kelas.nama} - {kelas.tahunAjaran?.nama || 'N/A'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
               <div className="grid grid-cols-2 gap-4">
                 {/* Target Juz */}
@@ -548,14 +547,6 @@ export default function TargetHafalanPage() {
           )}
         </ResponsiveCard>
       </ResponsiveContainer>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .responsive-container {
-            padding: 16px !important;
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 }
