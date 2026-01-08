@@ -23,6 +23,8 @@ export async function PUT(request, { params }) {
       nisn,
       nis,
       kelasId,
+      tahunAjaranMasukId,
+      kelasAngkatan,
       jenisKelamin,
       tempatLahir,
       tanggalLahir,
@@ -91,6 +93,8 @@ export async function PUT(request, { params }) {
     if (tempatLahir !== undefined) siswaUpdateData.tempatLahir = tempatLahir;
     if (tanggalLahir !== undefined) siswaUpdateData.tanggalLahir = new Date(tanggalLahir);
     if (alamat !== undefined) siswaUpdateData.alamat = alamat;
+    if (tahunAjaranMasukId !== undefined) siswaUpdateData.tahunAjaranMasukId = tahunAjaranMasukId || null;
+    if (kelasAngkatan !== undefined) siswaUpdateData.kelasAngkatan = kelasAngkatan || null;
     // Support both noHP and noTelepon
     if (noHP !== undefined) siswaUpdateData.noTelepon = noHP;
     if (noTelepon !== undefined) siswaUpdateData.noTelepon = noTelepon;

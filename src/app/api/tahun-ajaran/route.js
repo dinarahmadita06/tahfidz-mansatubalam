@@ -17,7 +17,8 @@ export async function GET(request) {
         semester: true,
         isActive: true,
         tanggalMulai: true,
-        tanggalSelesai: true
+        tanggalSelesai: true,
+        targetHafalan: true
       },
       orderBy: [
         { isActive: 'desc' },

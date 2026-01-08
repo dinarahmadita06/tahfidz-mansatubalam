@@ -280,8 +280,7 @@ export default function AdminKelasPage() {
     nama: '', // Menggunakan field 'nama' sesuai schema
     tahunAjaranId: '',
     targetJuz: 1,
-    guruUtamaId: '', // Guru utama/wali kelas
-    guruPendampingIds: [], // Array ID guru pendamping
+    guruUtamaId: '', // Guru Pembina
   });
 
   useEffect(() => {
@@ -289,6 +288,13 @@ export default function AdminKelasPage() {
     fetchTahunAjaran();
     fetchGuruList();
   }, []);
+
+  // Refetch tahun ajaran when modal opens to get latest data
+  useEffect(() => {
+    if (showKelasModal) {
+      fetchTahunAjaran();
+    }
+  }, [showKelasModal]);
 
   // Watch for editingKelas changes and sync form data
   useEffect(() => {
@@ -303,7 +309,6 @@ export default function AdminKelasPage() {
         tahunAjaranId: tahunAjaranId,
         targetJuz: editingKelas.targetJuz || 1,
         guruUtamaId: guruUtama ? String(guruUtama.guruId) : '',
-        guruPendampingIds: (Array.isArray(guruPendamping) ? guruPendamping : []).map(gp => String(gp.guruId)),
       };
       console.log('SYNC EFFECT - Setting form data:', newFormData);
       setKelasFormData(newFormData);
@@ -324,13 +329,17 @@ export default function AdminKelasPage() {
 
   const fetchTahunAjaran = async () => {
     try {
-      const response = await fetch('/api/tahun-ajaran');
-      const data = await response.json();
-      // IDs are CUIDs (strings), don't convert to numbers
-      setTahunAjaran(data);
-      console.log('Tahun Ajaran data loaded:', data);
+      const response = await fetch(`/api/tahun-ajaran?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Pragma': 'no-cache' }
+      });
+      const result = await response.json();
+      const taList = result.data || [];
+      setTahunAjaran(taList);
+      console.log('Tahun Ajaran data loaded:', taList);
     } catch (error) {
       console.error('Error fetching tahun ajaran:', error);
+      setTahunAjaran([]);
     }
   };
 
@@ -356,9 +365,9 @@ export default function AdminKelasPage() {
       console.log('SUBMIT - forceSubmit:', forceSubmit);
 
       // Validate data before sending
-      if (!kelasFormData.nama || !kelasFormData.tahunAjaranId) {
-        alert('Nama kelas dan Tahun Ajaran harus diisi');
-        console.log('Validation failed - nama or tahunAjaranId empty');
+      if (!kelasFormData.nama || !kelasFormData.tahunAjaranId || !kelasFormData.guruUtamaId) {
+        alert('Nama kelas, Tahun Ajaran, dan Guru Pembina harus diisi');
+        console.log('Validation failed - nama, tahunAjaranId or guruUtamaId empty');
         return;
       }
 
@@ -367,10 +376,7 @@ export default function AdminKelasPage() {
         ...kelasFormData,
         // Keep tahunAjaranId as string (it's a CUID in database)
         targetJuz: kelasFormData.targetJuz ? parseInt(kelasFormData.targetJuz) : null,
-        guruUtamaId: kelasFormData.guruUtamaId && kelasFormData.guruUtamaId.trim() ? kelasFormData.guruUtamaId : null,
-        guruPendampingIds: kelasFormData.guruPendampingIds?.length > 0
-          ? kelasFormData.guruPendampingIds.filter(id => id && id.trim())
-          : [],
+        guruUtamaId: kelasFormData.guruUtamaId.trim(),
       };
 
       // Add force flag if this is a confirmed submission
@@ -444,7 +450,6 @@ export default function AdminKelasPage() {
         tahunAjaranId: tahunAjaranId,
         targetJuz: kelasItem.targetJuz || 1,
         guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
-        guruPendampingIds: (Array.isArray(guruPendamping) ? guruPendamping : []).map(gp => gp.guruId.toString()),
       };
       console.log('EDIT KELAS - Form state updated to:', newState);
       return newState;
@@ -586,31 +591,12 @@ export default function AdminKelasPage() {
     setShowDetailModal(true);
   };
 
-  const handleExport = () => {
-    const csvContent = [
-      ['Nama Kelas', 'Tahun Ajaran', 'Guru Tahfidz', 'Jumlah Siswa'],
-      ...(Array.isArray(filteredKelas) ? filteredKelas : []).map(k => [
-        k.nama,
-        k.tahunAjaran?.nama || '-',
-        Array.isArray(k.guruKelas) ? k.guruKelas.filter(kg => kg.peran === 'utama').map(kg => kg.guru.user.name).join(', ') : '-',
-        k._count?.siswa || 0
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `data-kelas-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-  };
-
   const resetKelasForm = () => {
     setKelasFormData({
       nama: '',
       tahunAjaranId: '',
       targetJuz: 1,
       guruUtamaId: '',
-      guruPendampingIds: [],
     });
     setEditingKelas(null);
   };
@@ -670,14 +656,7 @@ export default function AdminKelasPage() {
                 <p className="text-green-50 text-sm sm:text-sm">Kelola kelas tahfidz, wali kelas, dan siswa dengan mudah</p>
               </div>
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 flex-shrink-0 w-full md:w-auto">
-                <button
-                  onClick={handleExport}
-                  className="flex items-center justify-center gap-2 h-11 px-4 py-3 bg-white/15 hover:bg-white/20 text-white border border-white/20 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm transition-all duration-300"
-                >
-                  <Download size={18} />
-                  <span>Unduh Template</span>
-                </button>
+              <div className="flex items-center gap-3 flex-shrink-0">
                 <button
                   onClick={() => {
                     resetKelasForm();
@@ -925,7 +904,7 @@ export default function AdminKelasPage() {
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px',
                           }}>
-                            Guru Tahfidz
+                            Guru Pembina
                           </span>
                         </div>
                         <p style={{
@@ -934,7 +913,7 @@ export default function AdminKelasPage() {
                           color: colors.text.primary,
                           fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                         }}>
-                          {guruUtama ? guruUtama.guru.user.name : 'Belum ada guru'}
+                          {guruUtama ? guruUtama.guru.user.name : 'Belum ada guru pembina'}
                         </p>
                       </div>
 
@@ -1531,11 +1510,11 @@ export default function AdminKelasPage() {
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                   textTransform: 'uppercase',
                 }}>
-                  Guru Pengampu
+                  Guru Pembina
                 </label>
-                {(Array.isArray(selectedKelas?.kelasGuru) && selectedKelas.kelasGuru.length > 0) ? (
+                {(Array.isArray(selectedKelas?.guruKelas) && selectedKelas.guruKelas.length > 0) ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {(Array.isArray(selectedKelas.kelasGuru) ? selectedKelas.kelasGuru : []).map(kg => (
+                    {(Array.isArray(selectedKelas.guruKelas) ? selectedKelas.guruKelas : []).filter(kg => kg.peran === 'utama').map(kg => (
                       <div key={kg.id} style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1544,11 +1523,7 @@ export default function AdminKelasPage() {
                         background: colors.gray[50],
                         borderRadius: '8px',
                       }}>
-                        {kg.peran === 'utama' ? (
-                          <ShieldCheck size={16} color={colors.emerald[600]} />
-                        ) : (
-                          <Shield size={16} color={colors.gray[400]} />
-                        )}
+                        <ShieldCheck size={16} color={colors.emerald[600]} />
                         <span style={{
                           fontSize: '14px',
                           fontWeight: 600,
@@ -1557,24 +1532,11 @@ export default function AdminKelasPage() {
                         }}>
                           {kg.guru.user.name}
                         </span>
-                        <span style={{
-                          fontSize: '12px',
-                          color: colors.text.tertiary,
-                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        }}>
-                          ({kg.peran})
-                        </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p style={{
-                    fontSize: '14px',
-                    color: colors.text.tertiary,
-                    fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  }}>
-                    Belum ada guru pengampu
-                  </p>
+                  <p style={{ fontSize: '14px', color: colors.text.tertiary }}>Belum ada guru pembina</p>
                 )}
               </div>
             </div>
@@ -1774,7 +1736,7 @@ export default function AdminKelasPage() {
                 </div>
               </div>
 
-              {/* Guru Utama */}
+              {/* Guru Pembina */}
               <div>
                 <label style={{
                   display: 'block',
@@ -1784,9 +1746,10 @@ export default function AdminKelasPage() {
                   marginBottom: '8px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}>
-                  Guru Utama (Wali Kelas)
+                  Guru Pembina *
                 </label>
                 <select
+                  required
                   value={kelasFormData.guruUtamaId}
                   onChange={(e) => setKelasFormData({ ...kelasFormData, guruUtamaId: e.target.value })}
                   style={{
@@ -1802,96 +1765,13 @@ export default function AdminKelasPage() {
                   }}
                   className="form-input"
                 >
-                  <option value="">Pilih Guru Utama (Opsional)</option>
+                  <option value="">Pilih Guru Pembina</option>
                   {Array.isArray(guruList) && guruList.map((guru) => (
                     <option key={guru.id} value={guru.id.toString()}>
                       {guru.user.name}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              {/* Guru Pendamping */}
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: colors.text.secondary,
-                  marginBottom: '8px',
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                }}>
-                  Guru Pendamping (Opsional)
-                </label>
-                <div style={{
-                  border: `2px solid ${colors.gray[200]}`,
-                  borderRadius: '12px',
-                  padding: '12px',
-                  maxHeight: '150px',
-                  overflowY: 'auto',
-                }}>
-                  {Array.isArray(guruList) && guruList.length > 0 ? (
-                    (Array.isArray(guruList) ? guruList : []).map((guru) => (
-                      <div key={guru.id} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px',
-                        marginBottom: '4px',
-                      }}>
-                        <input
-                          type="checkbox"
-                          id={`guru-${guru.id}`}
-                          checked={kelasFormData.guruPendampingIds.includes(guru.id.toString())}
-                          disabled={kelasFormData.guruUtamaId === guru.id.toString()}
-                          onChange={(e) => {
-                            const guruId = guru.id.toString();
-                            if (e.target.checked) {
-                              setKelasFormData({
-                                ...kelasFormData,
-                                guruPendampingIds: [...kelasFormData.guruPendampingIds, guruId]
-                              });
-                            } else {
-                              setKelasFormData({
-                                ...kelasFormData,
-                                guruPendampingIds: kelasFormData.guruPendampingIds.filter(id => id !== guruId)
-                              });
-                            }
-                          }}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <label htmlFor={`guru-${guru.id}`} style={{
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          color: kelasFormData.guruUtamaId === guru.id.toString() ? colors.text.tertiary : colors.text.secondary,
-                          fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                          cursor: 'pointer',
-                        }}>
-                          {guru.user.name}
-                          {kelasFormData.guruUtamaId === guru.id.toString() && ' (Guru Utama)'}
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{
-                      fontSize: '13px',
-                      color: colors.text.tertiary,
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      textAlign: 'center',
-                      padding: '8px',
-                    }}>
-                      Tidak ada guru tersedia
-                    </p>
-                  )}
-                </div>
-                <p style={{
-                  fontSize: '11px',
-                  color: colors.text.tertiary,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  marginTop: '6px',
-                }}>
-                  Pilih guru pendamping jika diperlukan (bisa lebih dari 1)
-                </p>
               </div>
 
               <div style={{

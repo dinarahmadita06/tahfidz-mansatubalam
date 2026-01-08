@@ -12,6 +12,7 @@ import { useRouter, useParams } from 'next/navigation';
 import PasswordField from '@/components/admin/PasswordField';
 import ParentLinkSection from '@/components/admin/ParentLinkSection';
 import AccountSuccessModal from '@/components/admin/AccountSuccessModal';
+import StudentCreateModal from '@/components/admin/StudentCreateModal';
 import * as XLSX from 'xlsx';
 import {
   generateSiswaEmail,
@@ -303,10 +304,6 @@ export default function KelolaSiswaPage() {
   const [importResults, setImportResults] = useState(null);
   const [previewData, setPreviewData] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
-  const [parentMode, setParentMode] = useState('select');
-  const [selectedParentId, setSelectedParentId] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [createdAccounts, setCreatedAccounts] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const dropdownRefs = useRef({});
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -314,57 +311,6 @@ export default function KelolaSiswaPage() {
   const [showChangeClassModal, setShowChangeClassModal] = useState(false);
   const [kelasOptions, setKelasOptions] = useState([]);
   const [selectedNewClass, setSelectedNewClass] = useState(null);
-  const [selectedSiswaForParent, setSelectedSiswaForParent] = useState(null);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    nisn: '',
-    nis: '',
-    email: '',
-    password: '',
-    jenisKelamin: 'LAKI_LAKI',
-    tanggalLahir: '',
-    alamat: '',
-    noTelepon: ''
-  });
-
-  const [newParentData, setNewParentData] = useState({
-    name: '',
-    noHP: '',
-    email: '',
-    password: '',
-    jenisWali: 'Ayah',
-  });
-
-  // ============ DRAFT & LOCALSTORAGE HELPERS ============
-  const draftKey = (siswaId) => `draftParentData_${siswaId}`;
-  
-  const saveDraftToStorage = (siswaId, data) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(draftKey(siswaId), JSON.stringify(data));
-      console.log('💾 Draft saved for siswa:', siswaId);
-    }
-  };
-  
-  const loadDraftFromStorage = (siswaId) => {
-    if (typeof window !== 'undefined') {
-      const draft = localStorage.getItem(draftKey(siswaId));
-      if (draft) {
-        console.log('📂 Draft loaded for siswa:', siswaId);
-        return JSON.parse(draft);
-      }
-    }
-    return null;
-  };
-  
-  const deleteDraftFromStorage = (siswaId) => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(draftKey(siswaId));
-      console.log('🗑️ Draft deleted for siswa:', siswaId);
-    }
-  };
-
-  // ============ EFFECTS ============
   // Debounce search term (400ms)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -380,71 +326,10 @@ export default function KelolaSiswaPage() {
     }
   }, [kelasId]);
 
-  useEffect(() => {
-    if (formData.name && formData.nis) {
-      const generatedEmail = generateSiswaEmail(formData.name, formData.nis);
-      setFormData(prev => ({ ...prev, email: generatedEmail }));
-    }
-  }, [formData.name, formData.nis]);
-
-  useEffect(() => {
-    if (parentMode === 'create' && newParentData.name && newParentData.noHP && formData.nis) {
-      const generatedEmail = generateParentEmail(newParentData.name, formData.nis);
-      setNewParentData(prev => ({ ...prev, email: generatedEmail }));
-    }
-  }, [parentMode, newParentData.name, newParentData.noHP, formData.nis]);
-
-  // ============ PREFILL PARENT DATA WHEN MODAL OPENS FOR LINKING ============
-  useEffect(() => {
-    if (showModal && selectedSiswaForParent && selectedSiswaForParent.id) {
-      const siswaId = selectedSiswaForParent.id;
-      
-      // Check if siswa already has parent
-      if (selectedSiswaForParent.orangTuaSiswa && selectedSiswaForParent.orangTuaSiswa.length > 0) {
-        // Load existing parent data
-        const existingParent = selectedSiswaForParent.orangTuaSiswa[0].orangTua;
-        console.log('🔍 Siswa sudah punya orang tua, default ke mode "Pilih"');
-        setParentMode('select');
-        setSelectedParentId(existingParent.id);
-        // Form will be populated by ParentLinkSection component
-      } else {
-        // Check for draft
-        const draft = loadDraftFromStorage(siswaId);
-        if (draft) {
-          console.log('📂 Draft found, default ke mode "Buat baru" + prefill draft');
-          setParentMode('create');
-          setNewParentData(draft);
-        } else {
-          // No parent & no draft - default to 'select' mode
-          console.log('🙄 No parent & no draft, default ke "Pilih existing"');
-          setParentMode('select');
-          setSelectedParentId('');
-          setNewParentData({
-            name: '',
-            noHP: '',
-            email: '',
-            password: '',
-            jenisWali: 'Ayah',
-          });
-        }
-      }
-    }
-  }, [showModal, selectedSiswaForParent]);
-
-  // ============ AUTO-SAVE DRAFT WHEN PARENT DATA CHANGES ============
-  useEffect(() => {
-    if (showModal && selectedSiswaForParent && parentMode === 'create' && selectedSiswaForParent.id) {
-      // Only save if there's actual data
-      if (newParentData.name || newParentData.noHP || newParentData.email || newParentData.password) {
-        saveDraftToStorage(selectedSiswaForParent.id, newParentData);
-      }
-    }
-  }, [newParentData, showModal, selectedSiswaForParent, parentMode]);
-
   // ============ DATA FETCHING ============
   const fetchKelasDetail = async () => {
     try {
-      const response = await fetch(`/api/kelas/${kelasId}`);
+      const response = await fetch(`/api/kelas/${kelasId}?t=${Date.now()}`);
       const data = await response.json();
       setKelas(data);
     } catch (error) {
@@ -462,7 +347,7 @@ export default function KelolaSiswaPage() {
       }
       
       console.log('🔄 Fetching siswa for kelasId:', kelasId);
-      const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}`);
+      const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}&t=${Date.now()}`);
       const result = await response.json();
       
       console.log('📦 API response:', result);
@@ -486,238 +371,9 @@ export default function KelolaSiswaPage() {
     }
   };
 
-  // ============ FORM HANDLERS ============
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // 🔍 Check if editing
-    const isEditing = !!editingSiswa;
-    console.log('📝 Form submit - Mode:', isEditing ? 'EDIT' : 'CREATE', 'siswaId:', editingSiswa?.id);
-
-    // Only validate password for new student (not for edit)
-    if (!isEditing && (!formData.password || formData.password.length < 8)) {
-      alert('Password siswa minimal 8 karakter');
-      return;
-    }
-
-    const nisnValidation = validateNISN(formData.nisn);
-    if (!nisnValidation.valid) {
-      alert(nisnValidation.error);
-      return;
-    }
-
-    const nisValidation = validateNIS(formData.nis);
-    if (!nisValidation.valid) {
-      alert(nisValidation.error);
-      return;
-    }
-
-    if (parentMode === 'select' && !selectedParentId) {
-      alert('Silakan pilih orang tua atau buat orang tua baru');
-      return;
-    }
-
-    if (parentMode === 'create') {
-      if (!newParentData.name || !newParentData.noHP || !newParentData.email || !newParentData.password) {
-        alert('Data orang tua tidak lengkap');
-        return;
-      }
-      if (newParentData.password.length < 8) {
-        alert('Password orang tua minimal 8 karakter');
-        return;
-      }
-    }
-
-    try {
-      const siswaPayload = {
-        ...formData,
-        kelasId,
-        jenisKelamin: normalizeGender(formData.jenisKelamin),
-      };
-
-      // 🔄 EDIT MODE: Use PATCH request
-      if (isEditing) {
-        console.log('🔄 Updating siswa:', editingSiswa.id, 'with payload:', siswaPayload);
-        
-        const updateResponse = await fetch(`/api/admin/siswa/${editingSiswa.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(siswaPayload),
-        });
-
-        const updateResult = await updateResponse.json();
-        
-        if (!updateResponse.ok) {
-          console.error('❌ Update failed:', updateResult);
-          throw new Error(updateResult.error || 'Gagal mengupdate siswa');
-        }
-        
-        console.log('✅ Siswa updated successfully');
-      } else {
-        // 📝 CREATE MODE: Use POST request with ATOMIC transaction
-        // Send siswa + parent data together in ONE request
-        
-        let parentDataToSend = null;
-        
-        // If creating new parent, include parent data in request
-        if (parentMode === 'create' && newParentData.name) {
-          parentDataToSend = {
-            name: newParentData.name.trim(),
-            noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''),
-            email: newParentData.email.trim().toLowerCase(),
-            password: newParentData.password.trim(),
-          };
-        }
-        
-        // Payload includes both siswa AND parent data
-        const combinedPayload = {
-          ...siswaPayload,
-          parentData: parentDataToSend
-        };
-        
-        console.log('📝 Combined payload (siswa + parent):', combinedPayload);
-        
-        const siswaResponse = await fetch('/api/admin/siswa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(combinedPayload),
-        });
-
-        const siswaResult = await siswaResponse.json();
-
-        if (!siswaResponse.ok) {
-          // Handle validation errors with field-specific messages
-          if (siswaResponse.status === 422 && siswaResult.invalidFields) {
-            const fieldErrors = Object.entries(siswaResult.invalidFields)
-              .map(([field, msg]) => `${field}: ${msg}`)
-              .join('\n');
-            throw new Error(`Validasi gagal:\n${fieldErrors}`);
-          }
-          throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
-        }
-
-        const siswaId = siswaResult.id;
-        const siswaEmail = siswaResult.user.email;
-
-        let parentEmail = '';
-        let parentPassword = '';
-        let parentName = '';
-
-        if (parentMode === 'select') {
-          // Link to existing parent
-          console.log('🔗 Linking to existing parent:', selectedParentId);
-          const linkResponse = await fetch('/api/admin/orangtua-siswa', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              siswaId,
-              orangTuaId: selectedParentId,
-              hubungan: 'Orang Tua',
-            }),
-          });
-
-          if (!linkResponse.ok) {
-            const linkError = await linkResponse.json();
-            throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
-          }
-
-          const parentData = await fetch(`/api/admin/orangtua/${selectedParentId}`);
-          const parent = await parentData.json();
-          parentEmail = parent.user?.email || '';
-          parentName = parent.user?.name || '';
-          parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
-        } else if (parentMode === 'create') {
-          // Parent was created in same transaction
-          console.log('✅ Parent created in same transaction (atomic)');
-          parentEmail = parentDataToSend?.email || '';
-          parentPassword = parentDataToSend?.password || '';
-          parentName = parentDataToSend?.name || '';
-        }
-
-        setCreatedAccounts({
-          student: {
-            name: formData.name,
-            email: siswaEmail,
-            password: formData.password,
-          },
-          parent: {
-            name: parentName,
-            email: parentEmail,
-            password: parentPassword,
-            isNew: parentMode === 'create',
-          },
-        });
-      }
-
-      setShowSuccessModal(!isEditing); // Only show success modal for CREATE
-      setShowModal(false);
-      // Delete draft after successful save
-      if (selectedSiswaForParent?.id) {
-        deleteDraftFromStorage(selectedSiswaForParent.id);
-        console.log('✅ Draft deleted after successful save for siswa:', selectedSiswaForParent.id);
-        setSelectedSiswaForParent(null);
-      }
-      
-      if (isEditing) {
-        alert('✅ Data siswa berhasil diperbarui');
-      }
-      
-      resetForm();
-      fetchSiswa();
-    } catch (error) {
-      console.error('Error:', isEditing ? 'updating' : 'creating', 'student:', error);
-      alert(`❌ ${error.message}`);
-    }
-  };
-
   const handleEdit = (siswa) => {
-    console.log('✏️ Editing siswa:', siswa.id, 'with parent data:', siswa.orangTuaSiswa);
-    
+    console.log('✏️ Editing siswa:', siswa.id);
     setEditingSiswa(siswa);
-    
-    // ✅ Prefill siswa data
-    setFormData({
-      name: siswa.user.name,
-      nisn: siswa.nisn || '',
-      nis: siswa.nis,
-      email: siswa.user.email,
-      jenisKelamin: siswa.jenisKelamin,
-      tanggalLahir: siswa.tanggalLahir ? new Date(siswa.tanggalLahir).toISOString().split('T')[0] : '',
-      alamat: siswa.alamat || '',
-      noTelepon: siswa.noTelepon || ''
-    });
-    
-    // ✅ Prefill parent data if exists
-    if (siswa.orangTuaSiswa && siswa.orangTuaSiswa.length > 0) {
-      const parentData = siswa.orangTuaSiswa[0].orangTua;
-      console.log('👨‍👩‍👧 Parent data found:', parentData);
-      
-      // Mode: select existing parent
-      setParentMode('select');
-      setSelectedParentId(parentData.id);
-      
-      // Also set newParentData for display (read-only in select mode)
-      setNewParentData({
-        name: parentData.user?.name || '',
-        noHP: parentData.noTelepon || '',
-        email: parentData.user?.email || '',
-        password: '(Password tidak ditampilkan)',
-        jenisWali: 'Ayah',
-      });
-    } else {
-      // No parent linked yet - default to select mode
-      console.log('❌ No parent linked yet');
-      setParentMode('select');
-      setSelectedParentId('');
-      setNewParentData({
-        name: '',
-        noHP: '',
-        email: '',
-        password: '',
-        jenisWali: 'Ayah',
-      });
-    }
-    
     setShowModal(true);
   };
 
@@ -740,26 +396,6 @@ export default function KelolaSiswaPage() {
   };
 
   const resetForm = () => {
-    setFormData({
-      name: '',
-      nisn: '',
-      nis: '',
-      email: '',
-      password: '',
-      jenisKelamin: 'LAKI_LAKI',
-      tanggalLahir: '',
-      alamat: '',
-      noTelepon: ''
-    });
-    setParentMode('select');
-    setSelectedParentId('');
-    setNewParentData({
-      name: '',
-      noHP: '',
-      email: '',
-      password: '',
-      jenisWali: 'Ayah',
-    });
     setEditingSiswa(null);
   };
 
@@ -920,27 +556,43 @@ export default function KelolaSiswaPage() {
     <AdminLayout>
       <div className="min-h-screen bg-white relative overflow-x-hidden">
         {/* Hero Header with Green Gradient */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg mt-4">
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-10 rounded-[2.5rem] shadow-lg mt-6 overflow-hidden mx-4 sm:mx-6 lg:mx-8">
           {/* Decorative Blur Circles */}
-          <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute top-0 -right-16 -top-20 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
-          <div className="w-full max-w-none relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4">
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="bg-white/20 backdrop-blur-md rounded-full p-3 shadow-lg">
-                    <GraduationCap size={24} className="text-white" />
+          <div className="w-full px-8 relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+              <div className="flex items-center gap-5 sm:gap-7">
+                {/* Icon Container (SIMTAQ Header Style) */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 shadow-xl border border-white/30 animate-in zoom-in-95 duration-500">
+                  <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" />
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <button 
+                      onClick={() => router.back()}
+                      className="p-1.5 hover:bg-white/20 rounded-lg transition-all text-white/80 hover:text-white"
+                      title="Kembali"
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                    <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight drop-shadow-sm">Kelola Siswa</h1>
                   </div>
-                  <div>
-                    <h1 className="text-3xl sm:text-4xl font-bold text-white">Kelola Siswa</h1>
-                    <p className="text-white/90 text-sm mt-1">{kelas?.nama} • Tahun Ajaran {kelas?.tahunAjaran?.nama}</p>
-                  </div>
+                  <p className="text-white/90 text-sm sm:text-lg font-medium flex items-center gap-2 pl-1">
+                    <span className="opacity-75">Kelas:</span>
+                    <span className="bg-white/20 px-3 py-0.5 rounded-lg backdrop-blur-sm border border-white/10 text-white">
+                      {kelas?.nama || '...'}
+                    </span>
+                    <span className="hidden sm:inline opacity-50 text-xs">•</span>
+                    <span className="hidden sm:inline opacity-75 text-sm italic">Th. Ajaran {kelas?.tahunAjaran?.nama}</span>
+                  </p>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
                 {/* Reload Button with Loading Indicator */}
                 <button
                   onClick={async () => await fetchSiswa()}
@@ -989,7 +641,7 @@ export default function KelolaSiswaPage() {
           </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-none py-8">
+        <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="space-y-6">
             {/* Search & Filter - Horizontal Split Layout */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-6 shadow-sm">
@@ -1137,7 +789,6 @@ export default function KelolaSiswaPage() {
                                 onEdit={() => handleEdit(siswa)}
                                 onDelete={() => handleDelete(siswa.id)}
                                 onLinkParent={() => {
-                                  setSelectedSiswaForParent(siswa);
                                   setShowModal(true);
                                 }}
                                 onChangeClass={() => handleChangeClass(siswa)}
@@ -1155,41 +806,18 @@ export default function KelolaSiswaPage() {
         </div>
       </div>
 
-      {/* Modals - kept from original */}
-      {showModal && (
-        <ModalFormSiswa
-          formData={formData}
-          setFormData={setFormData}
-          parentMode={parentMode}
-          setParentMode={setParentMode}
-          selectedParentId={selectedParentId}
-          setSelectedParentId={setSelectedParentId}
-          newParentData={newParentData}
-          setNewParentData={setNewParentData}
-          onSubmit={handleSubmit}
-          onClose={() => { 
-            setShowModal(false);
-            // Only reset if not in linking mode, or if explicitly closing from linking
-            if (!selectedSiswaForParent) {
-              resetForm();
-            }
-          }}
-          isEditing={!!editingSiswa}
-          selectedSiswaId={selectedSiswaForParent?.id}
-          onDeleteDraft={() => {
-            if (selectedSiswaForParent?.id) {
-              deleteDraftFromStorage(selectedSiswaForParent.id);
-              setNewParentData({
-                name: '',
-                noHP: '',
-                email: '',
-                password: '',
-                jenisWali: 'Ayah',
-              });
-            }
-          }}
-        />
-      )}
+      {/* Unified Student Modal */}
+      <StudentCreateModal
+        isOpen={showModal}
+        onClose={() => { 
+          setShowModal(false);
+          setEditingSiswa(null);
+        }}
+        onSuccess={fetchSiswa}
+        userRole="ADMIN"
+        initialKelasId={kelasId}
+        editingSiswa={editingSiswa}
+      />
 
       {/* Detail Siswa Modal */}
       {showDetailModal && detailSiswa && (
@@ -1334,13 +962,6 @@ export default function KelolaSiswaPage() {
         </div>
       )}
 
-      {showSuccessModal && createdAccounts && (
-        <AccountSuccessModal
-          accounts={createdAccounts}
-          onClose={() => setShowSuccessModal(false)}
-        />
-      )}
-
       {showPreviewModal && previewData.length > 0 && (
         <ModalPreviewExcel
           data={previewData}
@@ -1368,187 +989,7 @@ export default function KelolaSiswaPage() {
   );
 }
 
-// ============ SUB-COMPONENTS (from original) ============
-function ModalFormSiswa({
-  formData,
-  setFormData,
-  parentMode,
-  setParentMode,
-  selectedParentId,
-  setSelectedParentId,
-  newParentData,
-  setNewParentData,
-  onSubmit,
-  onClose,
-  isEditing,
-  selectedSiswaId,
-  onDeleteDraft
-}) {
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px', backdropFilter: 'blur(4px)' }}>
-      <div style={{ background: colors.white, borderRadius: '24px', padding: '32px', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', color: colors.gray[900] }}>
-            {isEditing ? 'Edit Siswa' : 'Tambah Siswa Baru'}
-          </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
-            <X size={24} />
-          </button>
-        </div>
-
-        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Nama */}
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: colors.gray[900] }}>Nama Lengkap *</label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              style={{ width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none' }}
-              placeholder="Contoh: Ahmad Fauzi"
-            />
-          </div>
-
-          {/* NISN & NIS */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: colors.gray[900] }}>NISN *</label>
-              <input
-                type="text"
-                required
-                value={formData.nisn}
-                onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
-                style={{ width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none' }}
-                placeholder="10 digit"
-                maxLength="10"
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: colors.gray[900] }}>NIS *</label>
-              <input
-                type="text"
-                required
-                value={formData.nis}
-                onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
-                style={{ width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none' }}
-                placeholder="Contoh: 2024001"
-              />
-            </div>
-          </div>
-
-          {/* Email (Auto-generated) */}
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: colors.gray[900] }}>Email (Otomatis)</label>
-            <input
-              type="email"
-              value={formData.email}
-              readOnly
-              style={{ width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none', background: colors.gray[50], cursor: 'not-allowed' }}
-              placeholder="Akan otomatis dibuat dari nama dan NIS"
-            />
-            <p style={{ fontSize: '11px', color: colors.gray[500], marginTop: '4px' }}>
-              Format: katapertama.NIS@siswa.tahfidz.sch.id
-            </p>
-          </div>
-
-          {/* Password */}
-          <PasswordField
-            label="Password Akun Siswa"
-            value={formData.password}
-            onChange={(password) => setFormData({ ...formData, password })}
-            placeholder="Password untuk akun siswa"
-            required={true}
-            helperText="Gunakan password kuat. Bisa generate otomatis."
-          />
-
-          {/* Gender & Tanggal Lahir */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: colors.gray[900] }}>Jenis Kelamin *</label>
-              <select
-                required
-                value={formData.jenisKelamin}
-                onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
-                style={{ width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none' }}
-              >
-                <option value="LAKI_LAKI">Laki-laki</option>
-                <option value="PEREMPUAN">Perempuan</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: colors.gray[900] }}>Tanggal Lahir</label>
-              <input
-                type="date"
-                value={formData.tanggalLahir}
-                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-                style={{ width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none' }}
-              />
-            </div>
-          </div>
-
-          {/* Alamat */}
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: colors.gray[900] }}>Alamat</label>
-            <textarea
-              value={formData.alamat}
-              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-              style={{ width: '100%', padding: '12px 16px', border: `2px solid ${colors.gray[200]}`, borderRadius: '12px', fontSize: '14px', outline: 'none', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
-              placeholder="Alamat lengkap siswa"
-            />
-          </div>
-
-          {/* Parent Link Section */}
-          <ParentLinkSection
-            mode={parentMode}
-            onModeChange={setParentMode}
-            selectedParentId={selectedParentId}
-            onSelectParent={setSelectedParentId}
-            newParentData={newParentData}
-            onNewParentChange={setNewParentData}
-            siswaFormData={formData}
-          />
-
-          {/* Buttons */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
-            {selectedSiswaId && onDeleteDraft && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm('Hapus draft data orang tua?')) {
-                    onDeleteDraft();
-                  }
-                }}
-                style={{ flex: 1, minWidth: '120px', padding: '12px', border: `2px solid ${colors.red[600]}`, borderRadius: '12px', background: 'transparent', color: colors.red[600], fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = colors.red[50]; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                title="Hapus draft yang tersimpan untuk siswa ini"
-              >
-                Hapus Draft
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ flex: 1, padding: '12px', border: `2px solid ${colors.gray[300]}`, borderRadius: '12px', background: colors.white, fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease' }}
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', background: `linear-gradient(135deg, ${colors.emerald[500]}, ${colors.emerald[600]})`, color: colors.white, fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)' }}
-            >
-              {isEditing ? 'Update' : 'Simpan'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
+// ============ SUB-COMPONENTS ============
 function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
