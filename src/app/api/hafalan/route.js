@@ -3,34 +3,8 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 
-// Simple in-memory cache
-const cache = new Map();
-const CACHE_DURATION = 180000; // 3 minutes in milliseconds
-
-// Function to get cached data
-function getCachedData(key) {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
-  }
-  return null;
-}
-
-// Function to set cached data
-function setCachedData(key, data) {
-  cache.set(key, {
-    data,
-    timestamp: Date.now()
-  });
-}
-
-// Function to generate cache key based on parameters
-function generateCacheKey(session, siswaId, guruId) {
-  const role = session.user.role;
-  const userId = role === 'SISWA' ? session.user.siswaId : 
-                 role === 'GURU' ? session.user.guruId : 'admin';
-  return `hafalan-${role}-${userId}-${siswaId || 'all'}-${guruId || 'all'}`;
-}
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // GET - List hafalan
 export async function GET(request) {
@@ -45,21 +19,7 @@ export async function GET(request) {
     const siswaId = searchParams.get('siswaId');
     const guruId = searchParams.get('guruId');
 
-    // Generate cache key
-    const cacheKey = generateCacheKey(session, siswaId, guruId);
-    
-    // Check if we have cached data
-    const cachedData = getCachedData(cacheKey);
-    
-    if (cachedData) {
-      console.log(`Returning cached hafalan data for key: ${cacheKey}`);
-      return NextResponse.json({
-        success: true,
-        data: Array.isArray(cachedData) ? cachedData : [],
-      });
-    }
-
-    console.log(`Fetching fresh hafalan data for key: ${cacheKey}`);
+    console.log(`Fetching fresh hafalan data for params: siswaId=${siswaId}, guruId=${guruId}`);
 
     let whereClause = {};
 
@@ -110,9 +70,6 @@ export async function GET(request) {
         tanggal: 'desc',
       },
     });
-
-    // Cache the response data (array only)
-    setCachedData(cacheKey, hafalan);
 
     return NextResponse.json({
       success: true,
@@ -229,19 +186,6 @@ export async function POST(request) {
     });
 
     console.log('🔵 Activity logging completed, returning response...');
-
-    // Invalidate cache for this user/siswa
-    const invalidateKeys = [
-      `hafalan-SISWA-${siswaId}-all-all`,
-      `hafalan-GURU-${session.user.guruId}-all-all`,
-      `hafalan-GURU-${session.user.guruId}-${siswaId}-all`,
-      `hafalan-ADMIN-all-all-all`
-    ];
-    
-    invalidateKeys.forEach(key => {
-      cache.delete(key);
-      console.log(`Invalidated cache key: ${key}`);
-    });
 
     return NextResponse.json(hafalan, { status: 201 });
   } catch (error) {

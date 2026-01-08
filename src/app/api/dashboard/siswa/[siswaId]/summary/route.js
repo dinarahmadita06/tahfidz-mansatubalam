@@ -68,10 +68,10 @@ export async function GET(req, { params }) {
         select: { kelasId: true }
       });
 
-      if (siswa) {
+      if (siswa && session.user.guruId) {
         const guruKelas = await prisma.guruKelas.findFirst({
           where: {
-            guruId: session.user.id,
+            guruId: session.user.guruId,
             kelasId: siswa.kelasId
           }
         });

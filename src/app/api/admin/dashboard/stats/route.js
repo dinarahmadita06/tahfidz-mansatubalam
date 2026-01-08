@@ -6,42 +6,13 @@ import { auth } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Simple in-memory cache
-const cache = new Map();
-const CACHE_DURATION = 300000; // 5 minutes in milliseconds
-
-// Function to get cached data
-function getCachedData(key) {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
-  }
-  return null;
-}
-
-// Function to set cached data
-function setCachedData(key, data) {
-  cache.set(key, {
-    data,
-    timestamp: Date.now()
-  });
-}
-
+// GET dashboard stats
 export async function GET(request) {
   try {
     const session = await auth();
 
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if we have cached data
-    const cacheKey = 'admin-dashboard-stats';
-    const cachedData = getCachedData(cacheKey);
-    
-    if (cachedData) {
-      console.log('Returning cached dashboard stats');
-      return NextResponse.json(cachedData);
     }
 
     console.log('Fetching fresh dashboard stats from database');
@@ -227,9 +198,6 @@ export async function GET(request) {
         count: s._count
       }))
     };
-
-    // Cache the response
-    setCachedData(cacheKey, responseData);
 
     return NextResponse.json(responseData);
   } catch (error) {
