@@ -160,6 +160,8 @@ model Siswa {
   nisn           String?        @unique
   nis            String         @unique
   kelasId        String?
+  tahunAjaranMasukId String?    // Tahun ajaran saat siswa masuk
+  kelasAngkatan  String?        // X/XI/XII saat siswa masuk
   alamat         String?
   noTelepon      String?
   tempatLahir    String?
@@ -172,6 +174,7 @@ model Siswa {
   updatedAt      DateTime       @updatedAt
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   kelas          Kelas?         @relation(fields: [kelasId], references: [id], onDelete: SetNull)
+  tahunAjaranMasuk TahunAjaran? @relation("SiswaTahunAjaranMasuk", fields: [tahunAjaranMasukId], references: [id], onDelete: SetNull)
   orangTuaSiswa  OrangTuaSiswa[]
   hafalan        Hafalan[]
   penilaian      Penilaian[]
@@ -185,6 +188,7 @@ model Siswa {
   @@index([kelasId])
   @@index([nisn])
   @@index([nis])
+  @@index([tahunAjaranMasukId])
 }
 
 model OrangTua {
@@ -231,6 +235,7 @@ model TahunAjaran {
   updatedAt     DateTime        @updatedAt
   kelas         Kelas[]
   targetHafalanData TargetHafalan[]
+  siswaMasuk    Siswa[] @relation("SiswaTahunAjaranMasuk")
 
   @@index([isActive])
 }

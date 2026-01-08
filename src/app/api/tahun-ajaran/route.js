@@ -11,20 +11,21 @@ export async function GET(request) {
     }
 
     const tahunAjaran = await prisma.tahunAjaran.findMany({
+      select: {
+        id: true,
+        nama: true,
+        semester: true,
+        isActive: true,
+        tanggalMulai: true,
+        tanggalSelesai: true
+      },
       orderBy: [
         { isActive: 'desc' },
         { tanggalMulai: 'desc' }
-      ],
-      include: {
-        _count: {
-          select: {
-            kelas: true
-          }
-        }
-      }
+      ]
     });
 
-    return NextResponse.json(tahunAjaran);
+    return NextResponse.json({ data: tahunAjaran });
   } catch (error) {
     console.error('Error fetching tahun ajaran:', error);
     return NextResponse.json(

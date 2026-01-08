@@ -166,6 +166,8 @@ export async function POST(request) {
       nisn,
       nis,
       kelasId,
+      tahunAjaranMasukId,
+      kelasAngkatan,
       jenisKelamin,
       tanggalLahir,
       alamat,
@@ -272,6 +274,8 @@ export async function POST(request) {
           tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
           alamat,
           noTelepon,
+          tahunAjaranMasukId: tahunAjaranMasukId || null,
+          kelasAngkatan: kelasAngkatan || null,
           status: 'approved', // Admin-created students are auto-approved
           kelas: {
             connect: {
