@@ -449,12 +449,10 @@ export default function LaporanGuruPage() {
             <button
               onClick={handleGenerateLaporan}
               disabled={loading || !filters.kelasId}
-              className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="min-w-max w-full sm:w-auto px-6 py-3 h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold rounded-lg shadow-sm hover:shadow-md active:shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
-                <>
-                  <LoadingIndicator text="Memuat Laporan..." size="small" className="!py-0 flex-row space-y-0 gap-2" />
-                </>
+                <LoadingIndicator text="Memuat Laporan..." size="small" inline className="!space-x-2" />
               ) : (
                 <>
                   <BarChart3 size={20} />
@@ -466,16 +464,14 @@ export default function LaporanGuruPage() {
             <button
               onClick={handleExportPDF}
               disabled={exporting || !reportGenerated || laporanData.length === 0}
-              className={`w-full sm:w-auto px-6 py-3 font-semibold rounded-lg border-2 shadow-sm transition-all flex items-center justify-center gap-2 ${
+              className={`min-w-max w-full sm:w-auto px-6 py-3 h-12 font-semibold rounded-lg border-2 shadow-sm transition-colors flex items-center justify-center gap-2 ${
                 reportGenerated && laporanData.length > 0
-                  ? 'bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-600 cursor-pointer'
+                  ? 'bg-white hover:bg-emerald-50 active:bg-emerald-100 text-emerald-700 border-emerald-600 hover:shadow-md active:shadow-sm cursor-pointer'
                   : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed opacity-50 pointer-events-none'
               }`}
             >
               {exporting ? (
-                <>
-                  <LoadingIndicator text="Export PDF..." size="small" className="!py-0 flex-row space-y-0 gap-2" />
-                </>
+                <LoadingIndicator text="Export PDF..." size="small" inline className="!space-x-2" />
               ) : (
                 <>
                   <FileText size={20} />

@@ -53,12 +53,6 @@ const menuItems = [
     description: 'Ujian hafalan siswa'
   },
   {
-    title: 'Presensi',
-    icon: CalendarCheck2,
-    href: '/guru/presensi',
-    description: 'Catat kehadiran siswa'
-  },
-  {
     title: 'Al-Qur\'an Digital',
     icon: BookOpen,
     href: '/referensi',

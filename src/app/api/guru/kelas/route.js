@@ -34,10 +34,8 @@ export async function GET() {
     const guruKelas = await prisma.guruKelas.findMany({
       where: {
         guruId: guru.id,
-        isActive: true,
-        kelas: {
-          status: 'AKTIF'  // FILTER: Only show AKTIF classes
-        }
+        isActive: true
+        // REMOVED: kelas.status: 'AKTIF' - let frontend handle display filtering
       },
       include: {
         kelas: {
@@ -56,7 +54,7 @@ export async function GET() {
       },
     });
 
-    console.log('[API /guru/kelas] GuruKelas found (AKTIF only):', guruKelas.length, guruKelas.map(gk => ({ kelasNama: gk.kelas.nama, siswaCount: gk.kelas._count.siswa })));
+    console.log('[API /guru/kelas] GuruKelas found:', guruKelas.length, guruKelas.map(gk => ({ kelasNama: gk.kelas.nama, status: gk.kelas.status, siswaCount: gk.kelas._count.siswa })));
 
     const kelas = guruKelas.map((gk) => gk.kelas);
 

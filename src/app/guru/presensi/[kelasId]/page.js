@@ -160,7 +160,7 @@ export default function PresensiDetailPage() {
   };
 
   const handleSimpanPresensi = async () => {
-    if (!session?.user?.guru?.id) {
+    if (!session?.user?.guruId) {
       toast.error('Sesi guru tidak ditemukan');
       return;
     }
@@ -173,10 +173,10 @@ export default function PresensiDetailPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           kelasId,
           tanggal,
-          guruId: session.user.guru.id,
           presensi: presensiData,
         }),
       });

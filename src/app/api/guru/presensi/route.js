@@ -80,24 +80,44 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
-    if (!session || session.user.role !== 'GURU') {
+    if (!session) {
+      console.log('[PRESENSI POST] Session not found');
       return NextResponse.json(
-        { message: 'Unauthorized - Hanya guru yang dapat mengakses' },
+        { message: 'Sesi guru tidak ditemukan' },
         { status: 401 }
       );
     }
 
-    const body = await request.json();
-    const { kelasId, tanggal, guruId, presensi } = body;
+    if (session.user.role !== 'GURU') {
+      console.log('[PRESENSI POST] User role is not GURU:', session.user.role);
+      return NextResponse.json(
+        { message: 'Unauthorized - Hanya guru yang dapat mengakses' },
+        { status: 403 }
+      );
+    }
 
-    if (!kelasId || !tanggal || !guruId || !presensi || !Array.isArray(presensi)) {
+    if (!session.user.guruId) {
+      console.log('[PRESENSI POST] Guru ID not found in session:', session.user);
+      return NextResponse.json(
+        { message: 'Guru ID tidak ditemukan di session' },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const { kelasId, tanggal, presensi } = body;
+
+    if (!kelasId || !tanggal || !presensi || !Array.isArray(presensi)) {
+      console.log('[PRESENSI POST] Incomplete data:', { kelasId, tanggal, presensi: !!presensi });
       return NextResponse.json(
         { message: 'Data tidak lengkap' },
         { status: 400 }
       );
     }
+
+    const guruId = session.user.guruId;
 
     // Verify guru exists
     const guru = await prisma.guru.findUnique({
@@ -105,11 +125,14 @@ export async function POST(request) {
     });
 
     if (!guru) {
+      console.log('[PRESENSI POST] Guru not found:', guruId);
       return NextResponse.json(
-        { message: 'Data guru tidak ditemukan' },
+        { message: 'Data guru tidak ditemukan di database' },
         { status: 404 }
       );
     }
+
+    console.log('[PRESENSI POST] Saving presensi for guru:', guruId, 'kelas:', kelasId, 'tanggal:', tanggal);
 
     // Parse tanggal
     const presensiDate = new Date(tanggal);
@@ -163,13 +186,15 @@ export async function POST(request) {
       }
     }
 
+    console.log('[PRESENSI POST] Successfully saved', results.length, 'presensi records');
+
     return NextResponse.json({
       message: 'Presensi berhasil disimpan',
       count: results.length,
       presensi: results,
     });
   } catch (error) {
-    console.error('Error saving presensi:', error);
+    console.error('[PRESENSI POST] Error:', error);
     return NextResponse.json(
       { message: 'Internal server error', error: error.message },
       { status: 500 }

@@ -22,53 +22,75 @@ export default function TabelBulanan({ data, onCatatanChange }) {
   };
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', border: `1px solid ${colors.gray[200]}`, borderRadius: '8px', overflow: 'hidden' }}>
       <thead>
-        <tr style={{ borderBottom: `2px solid ${colors.emerald[200]}` }}>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>No</th>
-          <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nama Lengkap</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Jumlah Setoran</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Hafalan Terakhir</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Tajwid</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Kelancaran</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Makhraj</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Implementasi</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', background: `${colors.emerald[50]}` }}>Rata-rata Nilai</th>
-          <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Hafalan</th>
+        {/* Group Header Row */}
+        <tr style={{ background: colors.emerald[50] }}>
+          <th colSpan="2" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: colors.emerald[800], textTransform: 'none', letterSpacing: '0.05em', borderBottom: `1px solid ${colors.emerald[200]}` }}>Informasi Siswa</th>
+          <th colSpan="4" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: colors.emerald[800], textTransform: 'none', letterSpacing: '0.05em', borderBottom: `1px solid ${colors.emerald[200]}`, borderLeft: `1px solid ${colors.emerald[100]}`, borderRight: `1px solid ${colors.emerald[100]}` }}>Rekap Kehadiran</th>
+          <th colSpan="8" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: colors.emerald[800], textTransform: 'none', letterSpacing: '0.05em', borderBottom: `1px solid ${colors.emerald[200]}` }}>Capaian Hafalan & Nilai</th>
+        </tr>
+        <tr style={{ background: 'white', borderBottom: `2px solid ${colors.emerald[200]}` }}>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>No</th>
+          <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Nama Lengkap</th>
+          <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', borderLeft: `1px solid ${colors.gray[100]}` }}>H</th>
+          <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>I</th>
+          <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>S</th>
+          <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', borderRight: `1px solid ${colors.gray[100]}` }}>A</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Setoran</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Hafalan Terakhir</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Avg Tajwid</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Avg Lancar</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Avg Makhraj</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Avg Impl.</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', background: colors.emerald[50] }}>Rata-rata Nilai</th>
+          <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status</th>
         </tr>
       </thead>
       <tbody>
         {data.map((siswa, idx) => {
           return (
-            <tr key={siswa.siswaId} style={{ borderBottom: `1px solid ${colors.gray[200]}` }}>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+            <tr key={siswa.siswaId} style={{ borderBottom: `1px solid ${colors.gray[100]}`, background: 'white' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 500, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {siswa.no || (idx + 1)}
               </td>
-              <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', fontSize: '13px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {siswa.namaLengkap}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', borderLeft: `1px solid ${colors.gray[50]}` }}>
+                {siswa.hadir || 0}
+              </td>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                {siswa.izin || 0}
+              </td>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                {siswa.sakit || 0}
+              </td>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', borderRight: `1px solid ${colors.gray[50]}` }}>
+                {siswa.alfa || 0}
+              </td>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {siswa.jumlahSetoran || 0}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: colors.text.secondary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: colors.text.secondary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {siswa.hafalanTerakhir || '-'}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataTajwid), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {formatNilai(siswa.rataRataTajwid)}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataKelancaran), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {formatNilai(siswa.rataRataKelancaran)}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataMakhraj), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {formatNilai(siswa.rataRataMakhraj)}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: getNilaiColor(siswa.rataRataImplementasi), fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {formatNilai(siswa.rataRataImplementasi)}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '15px', fontWeight: 700, color: getNilaiColor(siswa.rataRataNilaiBulanan), fontFamily: 'Poppins, system-ui, sans-serif', background: `${colors.emerald[50]}` }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '14px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', background: colors.emerald[50] }}>
                 {formatNilai(siswa.rataRataNilaiBulanan)}
               </td>
-              <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
+              <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: siswa.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {siswa.statusHafalan || '-'}
               </td>
             </tr>
