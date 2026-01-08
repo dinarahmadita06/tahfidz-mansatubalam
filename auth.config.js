@@ -91,7 +91,7 @@ export const authConfig = {
               throw new Error(`Akun Anda sedang dalam status ${user.siswa.status}. Hubungi admin.`);
             }
             if (user.siswa.statusSiswa !== 'AKTIF') {
-              throw new Error("Akun Anda sudah tidak aktif (Lulus/Pindah/Keluar).");
+              throw new Error("Akun Anda sudah nonaktif karena status LULUS.");
             }
           }
 
