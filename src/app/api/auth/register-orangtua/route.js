@@ -79,14 +79,10 @@ export async function POST(request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate unique NIK (format: noHP + timestamp)
-    const nik = `${noHP}${Date.now()}`;
-
     // Create parent account with ATOMIC transaction
     // Parent account is automatically ACTIVE when student is successfully created
     const orangTua = await prisma.orangTua.create({
       data: {
-        nik,
         noTelepon: noHP,
         jenisKelamin: 'LAKI_LAKI', // Default value
         status: 'approved', // Parent auto-activated when student is created
@@ -147,8 +143,6 @@ export async function POST(request) {
       let errorMsg = 'Data sudah terdaftar';
       if (field === 'email') {
         errorMsg = 'Email sudah terdaftar, silakan gunakan email lain';
-      } else if (field === 'nik') {
-        errorMsg = 'NIK sudah terdaftar';
       }
       return NextResponse.json(
         { error: errorMsg },
