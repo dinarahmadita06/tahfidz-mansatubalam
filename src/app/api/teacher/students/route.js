@@ -21,8 +21,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Data siswa tidak lengkap' }, { status: 400 });
     }
 
-    if (parentMode === 'NEW' && (!parent || !parent.name || !parent.phone || !parent.email || !parent.password || !parent.nik || !parent.gender)) {
-      return NextResponse.json({ error: 'Data orang tua baru tidak lengkap (Nama, No HP, Email, Password, NIK, dan Jenis Kelamin wajib diisi)' }, { status: 400 });
+    if (parentMode === 'NEW' && (!parent || !parent.name || !parent.phone || !parent.email || !parent.password || !parent.gender)) {
+      return NextResponse.json({ error: 'Data orang tua baru tidak lengkap (Nama, No HP, Email, Password, dan Jenis Kelamin wajib diisi)' }, { status: 400 });
     }
 
     if (parentMode === 'EXISTING' && !existingParentId) {
@@ -104,7 +104,6 @@ export async function POST(request) {
         const newParent = await tx.orangTua.create({
           data: {
             userId: parentUser.id,
-            nik: parent.nik,
             noTelepon: parent.phone,
             jenisKelamin: parent.gender,
             status: 'approved', // Wali biasanya langsung approved jika dibuat guru/admin

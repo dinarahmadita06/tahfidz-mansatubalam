@@ -337,7 +337,6 @@ export async function POST(request) {
 
         const orangTua = await tx.orangTua.create({
           data: {
-            nik: `NIK${Date.now()}${Math.random().toString().slice(2, 10)}`, // Generate unique NIK
             noTelepon: parentData.noHP.replace(/[^0-9]/g, ''),
             userId: parentUser.id,
             jenisKelamin: 'LAKI_LAKI' // Default value
