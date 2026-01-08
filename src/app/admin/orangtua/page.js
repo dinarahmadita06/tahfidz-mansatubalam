@@ -438,14 +438,14 @@ export default function AdminOrangTuaPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 relative overflow-x-hidden">
+      <div className="w-full space-y-6">
         {/* Hero Header with Green Gradient */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg">
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg px-6">
           {/* Decorative Blur Circles */}
           <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
-          <div className="w-full max-w-none relative z-10">
+          <div className="w-full relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4">
               <div>
                 <div className="flex items-center gap-3 mb-3">
@@ -475,7 +475,7 @@ export default function AdminOrangTuaPage() {
                   onClick={() => {
                     const csvContent = [
                       ['Nama Lengkap', 'Email', 'No HP', 'Pekerjaan', 'Anak Terhubung', 'Status Akun', 'Tanggal Pendaftaran'],
-                      ...filteredOrangTua.map(o => [
+                      ...(Array.isArray(filteredOrangTua) ? filteredOrangTua : []).map(o => [
                         o.user.name,
                         o.user.email,
                         o.noHP || '-',
@@ -507,7 +507,7 @@ export default function AdminOrangTuaPage() {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 w-full max-w-none py-8">
+        <div className="w-full py-2">
           <div className="space-y-6">
 
             {/* Stat Cards */}
@@ -619,7 +619,7 @@ export default function AdminOrangTuaPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredOrangTua.length === 0 ? (
+                    {(!Array.isArray(filteredOrangTua) || filteredOrangTua.length === 0) ? (
                       <tr>
                         <td colSpan="7" className="px-6 py-12 text-center">
                           <EmptyState
@@ -631,7 +631,7 @@ export default function AdminOrangTuaPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredOrangTua.map((orangTuaItem, index) => {
+                      (Array.isArray(filteredOrangTua) ? filteredOrangTua : []).map((orangTuaItem, index) => {
                         const childrenCount = orangTuaItem._count?.siswa || 0;
                         const isConnected = childrenCount > 0;
 

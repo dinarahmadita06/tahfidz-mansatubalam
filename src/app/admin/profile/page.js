@@ -322,7 +322,7 @@ export default function ProfileAdminPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="w-full space-y-6">
         {/* Header */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">

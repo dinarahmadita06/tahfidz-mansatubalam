@@ -202,7 +202,7 @@ export default function PengumumanPage() {
       const res = await fetch('/api/admin/pengumuman');
       if (res.ok) {
         const data = await res.json();
-        setPengumumanList(data.pengumuman || []);
+        setPengumumanList(Array.isArray(data.pengumuman) ? data.pengumuman : []);
       }
     } catch (error) {
       console.error('Error fetching pengumuman:', error);
@@ -341,8 +341,7 @@ export default function PengumumanPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gradient-to-b from-[#F6FBEF] via-[#FBFDF6] to-white">
-        <div className="py-8 space-y-6">
+      <div className="w-full space-y-6">
           {/* Header Card - SIMTAQ Baseline */}
           <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
             {/* Soft overlay highlight */}
@@ -450,7 +449,7 @@ export default function PengumumanPage() {
             <>
               {/* Grid Layout - 2 Columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredPengumuman.map((announcement) => (
+                {(Array.isArray(filteredPengumuman) ? filteredPengumuman : []).map((announcement) => (
                   <AnnouncementCard
                     key={announcement.id}
                     announcement={announcement}
@@ -470,7 +469,6 @@ export default function PengumumanPage() {
               </div>
             </>
           )}
-        </div>
       </div>
 
       {/* Modal Create/Edit */}
