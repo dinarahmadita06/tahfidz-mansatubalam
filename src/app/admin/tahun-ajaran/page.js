@@ -323,9 +323,9 @@ export default function AdminTahunAjaranPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-white">
+      <div className="w-full space-y-6">
         {/* Header Section */}
-        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg mb-8 mt-4">
+        <div className="relative z-20 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 py-8 rounded-3xl shadow-lg mb-8 mt-4 px-6">
           <div className="absolute top-0 -right-16 -top-20 w-40 h-40 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -356,227 +356,223 @@ export default function AdminTahunAjaranPage() {
         </div>
 
         {/* Main Content */}
-        <div className="w-full pb-8">
-          <div className="space-y-6">
-            {/* Stats Cards - Responsive Grid */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
-              {/* Card 1: Active Period - Amber Theme */}
-              <div className="md:col-span-6 col-span-12 bg-amber-50/70 backdrop-blur rounded-2xl p-6 border border-amber-200/60 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 ring-1 ring-amber-200/40">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="h-12 w-12 rounded-full bg-amber-100/70 text-amber-700 flex items-center justify-center flex-shrink-0">
-                    <Calendar size={22} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-amber-800 tracking-wide uppercase">Tahun Ajaran Aktif</p>
-                    <h3 className="text-lg font-bold text-amber-800 mt-2">{stats.activePeriod}</h3>
-                  </div>
-                </div>
-                {stats.activePeriodSubtitle && (
-                  <p className="text-xs text-amber-600/80 px-0.5 mb-4">{stats.activePeriodSubtitle}</p>
-                )}
-                
-                {/* Target Hafalan Widget - Amber Themed */}
-                {stats.activePeriod !== 'Belum ada' && (
-                  <div className="mt-4 p-4 bg-amber-50/80 border border-amber-200/50 ring-1 ring-amber-200/30 rounded-xl">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold text-amber-800 tracking-wide uppercase">Target Tahun Ini</p>
-                        <p className="text-2xl font-bold text-amber-700 mt-0.5">{stats.activeTargetHafalan || '-'} Juz</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (stats.activeTahunAjaranId) {
-                            setTargetHafalanInput(stats.activeTargetHafalan?.toString() || '');
-                            setShowUpdateTargetModal(true);
-                          }
-                        }}
-                        className="h-9 px-4 bg-white rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors duration-200 whitespace-nowrap"
-                      >
-                        Perbarui
-                      </button>
-                    </div>
-                  </div>
-                )}
+        {/* Stats Cards - Responsive Grid */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Card 1: Active Period - Amber Theme */}
+          <div className="md:col-span-6 col-span-12 bg-amber-50/70 backdrop-blur rounded-2xl p-6 border border-amber-200/60 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 ring-1 ring-amber-200/40">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="h-12 w-12 rounded-full bg-amber-100/70 text-amber-700 flex items-center justify-center flex-shrink-0">
+                <Calendar size={22} />
               </div>
-
-              {/* Card 2: Total Classes - Blue Theme */}
-              <div className="md:col-span-3 col-span-12 bg-blue-50/70 backdrop-blur rounded-2xl p-6 border border-blue-200/60 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 ring-1 ring-blue-200/40">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="h-12 w-12 rounded-full bg-blue-100/70 text-blue-700 flex items-center justify-center flex-shrink-0">
-                    <BookOpen size={22} />
-                  </div>
-                  <p className="text-xs font-semibold text-blue-800 tracking-wide uppercase mt-1">Jumlah Kelas</p>
-                </div>
-                {summaryLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-10 bg-blue-200/40 rounded-lg w-20 ml-16 mb-3"></div>
-                    <div className="h-4 bg-blue-200/40 rounded-lg w-32"></div>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="text-3xl font-bold text-blue-700 ml-16 -mt-12">{summary.jumlahKelas ?? '−'}</h3>
-                    <p className="text-xs text-blue-600/80 mt-3">Periode aktif</p>
-                  </>
-                )}
-              </div>
-
-              {/* Card 3: Total Students - Emerald Theme */}
-              <div className="md:col-span-3 col-span-12 bg-emerald-50/70 backdrop-blur rounded-2xl p-6 border border-emerald-200/60 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 ring-1 ring-emerald-200/40">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="h-12 w-12 rounded-full bg-emerald-100/70 text-emerald-700 flex items-center justify-center flex-shrink-0">
-                    <Users size={22} />
-                  </div>
-                  <p className="text-xs font-semibold text-emerald-800 tracking-wide uppercase mt-1">Jumlah Siswa</p>
-                </div>
-                {summaryLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-10 bg-emerald-200/40 rounded-lg w-20 ml-16 mb-3"></div>
-                    <div className="h-4 bg-emerald-200/40 rounded-lg w-32"></div>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="text-3xl font-bold text-emerald-700 ml-16 -mt-12">{summary.jumlahSiswa ?? '−'}</h3>
-                    <p className="text-xs text-emerald-600/80 mt-3">Semua periode</p>
-                  </>
-                )}
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-amber-800 tracking-wide uppercase">Tahun Ajaran Aktif</p>
+                <h3 className="text-lg font-bold text-amber-800 mt-2">{stats.activePeriod}</h3>
               </div>
             </div>
-
-            {/* Table Section */}
-            <div className="mt-6 bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm overflow-hidden">
-              {/* Table Toolbar */}
-              <div className="px-6 py-4 border-b border-emerald-100/50 bg-white/40">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <GraduationCap size={20} className="text-emerald-700" />
-                    <h2 className="text-lg font-bold text-emerald-900">Daftar Periode Tahun Ajaran</h2>
+            {stats.activePeriodSubtitle && (
+              <p className="text-xs text-amber-600/80 px-0.5 mb-4">{stats.activePeriodSubtitle}</p>
+            )}
+            
+            {/* Target Hafalan Widget - Amber Themed */}
+            {stats.activePeriod !== 'Belum ada' && (
+              <div className="mt-4 p-4 bg-amber-50/80 border border-amber-200/50 ring-1 ring-amber-200/30 rounded-xl">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-amber-800 tracking-wide uppercase">Target Tahun Ini</p>
+                    <p className="text-2xl font-bold text-amber-700 mt-0.5">{stats.activeTargetHafalan || '-'} Juz</p>
                   </div>
-                  <div className="text-xs text-gray-600 font-medium">
-                    Total: {tahunAjaran.length} periode
-                  </div>
+                  <button
+                    onClick={() => {
+                      if (stats.activeTahunAjaranId) {
+                        setTargetHafalanInput(stats.activeTargetHafalan?.toString() || '');
+                        setShowUpdateTargetModal(true);
+                      }
+                    }}
+                    className="h-9 px-4 bg-white rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors duration-200 whitespace-nowrap"
+                  >
+                    Perbarui
+                  </button>
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Table Content */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-emerald-50/70 border-b border-emerald-100/50">
-                      <th className="w-1 px-0"></th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Tahun Ajaran</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Periode</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Status</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Tanggal Mulai</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Tanggal Selesai</th>
-                      <th className="px-6 py-3.5 text-center text-xs font-bold text-emerald-800 uppercase tracking-wide">Aksi</th>
+          {/* Card 2: Total Classes - Blue Theme */}
+          <div className="md:col-span-3 col-span-12 bg-blue-50/70 backdrop-blur rounded-2xl p-6 border border-blue-200/60 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 ring-1 ring-blue-200/40">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="h-12 w-12 rounded-full bg-blue-100/70 text-blue-700 flex items-center justify-center flex-shrink-0">
+                <BookOpen size={22} />
+              </div>
+              <p className="text-xs font-semibold text-blue-800 tracking-wide uppercase mt-1">Jumlah Kelas</p>
+            </div>
+            {summaryLoading ? (
+              <div className="animate-pulse">
+                <div className="h-10 bg-blue-200/40 rounded-lg w-20 ml-16 mb-3"></div>
+                <div className="h-4 bg-blue-200/40 rounded-lg w-32"></div>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-3xl font-bold text-blue-700 ml-16 -mt-12">{summary.jumlahKelas ?? '−'}</h3>
+                <p className="text-xs text-blue-600/80 mt-3">Periode aktif</p>
+              </>
+            )}
+          </div>
+
+          {/* Card 3: Total Students - Emerald Theme */}
+          <div className="md:col-span-3 col-span-12 bg-emerald-50/70 backdrop-blur rounded-2xl p-6 border border-emerald-200/60 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 ring-1 ring-emerald-200/40">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="h-12 w-12 rounded-full bg-emerald-100/70 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                <Users size={22} />
+              </div>
+              <p className="text-xs font-semibold text-emerald-800 tracking-wide uppercase mt-1">Jumlah Siswa</p>
+            </div>
+            {summaryLoading ? (
+              <div className="animate-pulse">
+                <div className="h-10 bg-emerald-200/40 rounded-lg w-20 ml-16 mb-3"></div>
+                <div className="h-4 bg-emerald-200/40 rounded-lg w-32"></div>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-3xl font-bold text-emerald-700 ml-16 -mt-12">{summary.jumlahSiswa ?? '−'}</h3>
+                <p className="text-xs text-emerald-600/80 mt-3">Semua periode</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Table Section */}
+        <div className="mt-6 bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm overflow-hidden">
+          {/* Table Toolbar */}
+          <div className="px-6 py-4 border-b border-emerald-100/50 bg-white/40">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <GraduationCap size={20} className="text-emerald-700" />
+                <h2 className="text-lg font-bold text-emerald-900">Daftar Periode Tahun Ajaran</h2>
+              </div>
+              <div className="text-xs text-gray-600 font-medium">
+                Total: {tahunAjaran.length} periode
+              </div>
+            </div>
+          </div>
+
+          {/* Table Content */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-emerald-50/70 border-b border-emerald-100/50">
+                  <th className="w-1 px-0"></th>
+                  <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Tahun Ajaran</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Periode</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Status</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Tanggal Mulai</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-bold text-emerald-800 uppercase tracking-wide">Tanggal Selesai</th>
+                  <th className="px-6 py-3.5 text-center text-xs font-bold text-emerald-800 uppercase tracking-wide">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(!Array.isArray(tahunAjaran) || tahunAjaran.length === 0) ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center">
+                      <EmptyState
+                        title="Belum ada tahun ajaran"
+                        description="Silakan tambahkan tahun ajaran baru untuk memulai sistem."
+                        icon={Calendar}
+                        className="bg-transparent border-none shadow-none py-0"
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  (Array.isArray(tahunAjaran) ? tahunAjaran : []).map((taItem, index) => (
+                    <tr
+                      key={taItem.id}
+                      className={`border-b border-emerald-100/40 transition-colors duration-200 ${
+                        taItem.isActive
+                          ? 'border-l-4 border-l-emerald-300/70 hover:bg-emerald-50/50 bg-white/40'
+                          : 'hover:bg-emerald-50/30 bg-white/20'
+                      }`}
+                      style={{ animation: `fadeInUp 0.4s ease-out ${0.4 + (index * 0.05)}s both` }}
+                    >
+                      {/* Accent Strip */}
+                      <td className="w-1" style={{
+                        background: taItem.isActive ? 'linear-gradient(to bottom, rgb(16, 185, 129), rgb(5, 150, 105))' : '#E5E7EB',
+                      }}></td>
+
+                      <td className="px-6 py-4 font-semibold text-gray-900">{taItem.nama}</td>
+
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50/70 text-sky-700 rounded-lg text-xs font-medium">
+                          <Clock size={13} />
+                          Semester {taItem.semester === 1 ? 'Ganjil' : 'Genap'}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+                          style={{
+                            background: taItem.isActive ? '#DCFCE7' : '#F1F5F9',
+                            borderColor: taItem.isActive ? '#BBF7D0' : '#E2E8F0',
+                            color: taItem.isActive ? '#166534' : '#475569',
+                          }}>
+                          {taItem.isActive ? '● Aktif' : '○ Nonaktif'}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {new Date(taItem.tanggalMulai).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {new Date(taItem.tanggalSelesai).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2 justify-center flex-wrap">
+                          {taItem.isActive ? (
+                            <button
+                              onClick={() => handleDeactivate(taItem.id)}
+                              className="h-8 w-8 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 transition-colors duration-200 flex items-center justify-center"
+                              title="Nonaktifkan"
+                            >
+                              <XCircle size={15} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleActivatePeriod(taItem)}
+                              className="h-8 w-8 rounded-lg bg-emerald-100/80 text-emerald-600 hover:bg-emerald-200 transition-colors duration-200 flex items-center justify-center"
+                              title="Aktifkan"
+                            >
+                              <CheckCircle2 size={15} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleEdit(taItem)}
+                            className="h-8 w-8 rounded-lg bg-amber-100/80 text-amber-600 hover:bg-amber-200 transition-colors duration-200 flex items-center justify-center"
+                            title="Edit"
+                          >
+                            <Edit size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(taItem.id)}
+                            className="h-8 w-8 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 transition-colors duration-200 flex items-center justify-center"
+                            title="Hapus"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {tahunAjaran.length === 0 ? (
-                      <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center">
-                          <EmptyState
-                            title="Belum ada tahun ajaran"
-                            description="Silakan tambahkan tahun ajaran baru untuk memulai sistem."
-                            icon={Calendar}
-                            className="bg-transparent border-none shadow-none py-0"
-                          />
-                        </td>
-                      </tr>
-                    ) : (
-                      tahunAjaran.map((taItem, index) => (
-                        <tr
-                          key={taItem.id}
-                          className={`border-b border-emerald-100/40 transition-colors duration-200 ${
-                            taItem.isActive
-                              ? 'border-l-4 border-l-emerald-300/70 hover:bg-emerald-50/50 bg-white/40'
-                              : 'hover:bg-emerald-50/30 bg-white/20'
-                          }`}
-                          style={{ animation: `fadeInUp 0.4s ease-out ${0.4 + (index * 0.05)}s both` }}
-                        >
-                          {/* Accent Strip */}
-                          <td className="w-1" style={{
-                            background: taItem.isActive ? 'linear-gradient(to bottom, rgb(16, 185, 129), rgb(5, 150, 105))' : '#E5E7EB',
-                          }}></td>
-
-                          <td className="px-6 py-4 font-semibold text-gray-900">{taItem.nama}</td>
-
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50/70 text-sky-700 rounded-lg text-xs font-medium">
-                              <Clock size={13} />
-                              Semester {taItem.semester === 1 ? 'Ganjil' : 'Genap'}
-                            </span>
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium border transition-colors"
-                              style={{
-                                background: taItem.isActive ? '#DCFCE7' : '#F1F5F9',
-                                borderColor: taItem.isActive ? '#BBF7D0' : '#E2E8F0',
-                                color: taItem.isActive ? '#166534' : '#475569',
-                              }}>
-                              {taItem.isActive ? '● Aktif' : '○ Nonaktif'}
-                            </span>
-                          </td>
-
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {new Date(taItem.tanggalMulai).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </td>
-
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {new Date(taItem.tanggalSelesai).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </td>
-
-                          <td className="px-6 py-4">
-                            <div className="flex gap-2 justify-center flex-wrap">
-                              {taItem.isActive ? (
-                                <button
-                                  onClick={() => handleDeactivate(taItem.id)}
-                                  className="h-8 w-8 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 transition-colors duration-200 flex items-center justify-center"
-                                  title="Nonaktifkan"
-                                >
-                                  <XCircle size={15} />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleActivatePeriod(taItem)}
-                                  className="h-8 w-8 rounded-lg bg-emerald-100/80 text-emerald-600 hover:bg-emerald-200 transition-colors duration-200 flex items-center justify-center"
-                                  title="Aktifkan"
-                                >
-                                  <CheckCircle2 size={15} />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleEdit(taItem)}
-                                className="h-8 w-8 rounded-lg bg-amber-100/80 text-amber-600 hover:bg-amber-200 transition-colors duration-200 flex items-center justify-center"
-                                title="Edit"
-                              >
-                                <Edit size={15} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(taItem.id)}
-                                className="h-8 w-8 rounded-lg bg-rose-100/80 text-rose-600 hover:bg-rose-200 transition-colors duration-200 flex items-center justify-center"
-                                title="Hapus"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

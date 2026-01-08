@@ -210,7 +210,7 @@ export default function LaporanKehadiranPage() {
       let yPos = 72;
 
       // Table with attendance and assessment data
-      const tableData = reportData.siswaData.map((s, idx) => [
+      const tableData = (Array.isArray(reportData?.siswaData) ? reportData.siswaData : []).map((s, idx) => [
         idx + 1,
         s.nama,
         s.hadir || 0,
@@ -345,65 +345,60 @@ export default function LaporanKehadiranPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gradient-to-b from-[#F6FBEF] via-[#FBFDF6] to-white">
+      <div className="w-full space-y-6">
         {/* Header Card - SIMTAQ Baseline Style (identik Manajemen Siswa) */}
-        <div className="py-8">
-          <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
-            {/* Soft overlay highlight */}
-            <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
+        <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 rounded-2xl shadow-lg shadow-emerald-200/40 p-8 ring-1 ring-emerald-200/30">
+          {/* Soft overlay highlight */}
+          <div className="absolute inset-0 bg-white/5 opacity-70 pointer-events-none"></div>
+          
+          {/* Decorative blur circles */}
+          <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div className="relative z-10 flex items-center gap-4 sm:gap-6">
+            {/* Icon Container - SIMTAQ Style */}
+            <div className="bg-white/15 border border-white/10 backdrop-blur-sm rounded-2xl w-14 h-14 sm:w-auto sm:h-auto p-0 sm:p-4 flex items-center justify-center flex-shrink-0">
+              <BarChart3 size={28} className="text-white sm:w-8 sm:h-8" />
+            </div>
             
-            {/* Decorative blur circles */}
-            <div className="absolute top-0 -right-16 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute -bottom-10 -left-16 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
-            
-            <div className="relative z-10 flex items-center gap-4 sm:gap-6">
-              {/* Icon Container - SIMTAQ Style */}
-              <div className="bg-white/15 border border-white/10 backdrop-blur-sm rounded-2xl w-14 h-14 sm:w-auto sm:h-auto p-0 sm:p-4 flex items-center justify-center flex-shrink-0">
-                <BarChart3 size={28} className="text-white sm:w-8 sm:h-8" />
-              </div>
-              
-              {/* Header Content */}
-              <div className="flex-1 flex flex-col justify-center text-left">
-                <h1 className="text-xl sm:text-4xl font-bold text-white leading-tight mb-1 sm:mb-2">Laporan Kehadiran & Penilaian</h1>
-                <p className="text-white/90 text-sm sm:text-base leading-snug">Rekap terintegrasi kehadiran dan penilaian hafalan siswa</p>
-              </div>
+            {/* Header Content */}
+            <div className="flex-1 flex flex-col justify-center text-left">
+              <h1 className="text-xl sm:text-4xl font-bold text-white leading-tight mb-1 sm:mb-2">Laporan Kehadiran & Penilaian</h1>
+              <p className="text-white/90 text-sm sm:text-base leading-snug">Rekap terintegrasi kehadiran dan penilaian hafalan siswa</p>
             </div>
           </div>
         </div>
 
-        {/* Main Container */}
-        <div className="py-8">
-          <div className="space-y-6">
-          {/* Filter Card */}
-          <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-6">
-            <h2 className="text-lg font-bold mb-6 text-emerald-900">Filter Laporan</h2>
+        {/* Filter Card */}
+        <div className="bg-white/70 backdrop-blur rounded-2xl border border-emerald-100/60 shadow-sm p-6">
+          <h2 className="text-lg font-bold mb-6 text-emerald-900">Filter Laporan</h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div>
-                <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Tipe Filter</label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
-                >
-                  <option value="bulanan">Bulanan</option>
-                  <option value="semester">Per Semester</option>
-                </select>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div>
+              <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Tipe Filter</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
+              >
+                <option value="bulanan">Bulanan</option>
+                <option value="semester">Per Semester</option>
+              </select>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Kelas <span className="text-rose-600">*</span></label>
-                <select
-                  value={selectedKelas}
-                  onChange={(e) => setSelectedKelas(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
-                >
-                  <option value="">Pilih Kelas</option>
-                  {kelasList.map((kelas) => (
-                    <option key={kelas.id} value={kelas.id}>{kelas.nama}</option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="block text-xs font-semibold mb-2 text-emerald-900 uppercase tracking-wide">Kelas <span className="text-rose-600">*</span></label>
+              <select
+                value={selectedKelas}
+                onChange={(e) => setSelectedKelas(e.target.value)}
+                className="w-full px-4 py-2.5 border border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 hover:bg-white/70 transition-all"
+              >
+                <option value="">Pilih Kelas</option>
+                {(Array.isArray(kelasList) ? kelasList : []).map((kelas) => (
+                  <option key={kelas.id} value={kelas.id}>{kelas.nama}</option>
+                ))}
+              </select>
+            </div>
 
               {filterType === 'semester' && (
                 <div>
@@ -567,7 +562,7 @@ export default function LaporanKehadiranPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {reportData.siswaData.map((siswa, idx) => (
+                    {(Array.isArray(reportData?.siswaData) ? reportData.siswaData : []).map((siswa, idx) => (
                       <tr key={idx} className="border-b border-emerald-100/40 hover:bg-emerald-50/40 transition-colors duration-200">
                         <td className="px-6 py-4 text-sm text-gray-900">{idx + 1}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{siswa.nama}</td>
@@ -590,8 +585,6 @@ export default function LaporanKehadiranPage() {
             {/* Export Buttons - Removed from here */}
           </>
         )}
-          </div>
-        </div>
       </div>
     </AdminLayout>
   );

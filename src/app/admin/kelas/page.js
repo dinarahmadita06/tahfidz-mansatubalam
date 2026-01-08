@@ -303,7 +303,7 @@ export default function AdminKelasPage() {
         tahunAjaranId: tahunAjaranId,
         targetJuz: editingKelas.targetJuz || 1,
         guruUtamaId: guruUtama ? String(guruUtama.guruId) : '',
-        guruPendampingIds: guruPendamping.map(gp => String(gp.guruId)),
+        guruPendampingIds: (Array.isArray(guruPendamping) ? guruPendamping : []).map(gp => String(gp.guruId)),
       };
       console.log('SYNC EFFECT - Setting form data:', newFormData);
       setKelasFormData(newFormData);
@@ -338,9 +338,10 @@ export default function AdminKelasPage() {
     try {
       const response = await fetch('/api/guru');
       const data = await response.json();
-      setGuruList(data);
+      setGuruList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching guru:', error);
+      setGuruList([]);
     }
   };
 
@@ -443,7 +444,7 @@ export default function AdminKelasPage() {
         tahunAjaranId: tahunAjaranId,
         targetJuz: kelasItem.targetJuz || 1,
         guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
-        guruPendampingIds: guruPendamping.map(gp => gp.guruId.toString()),
+        guruPendampingIds: (Array.isArray(guruPendamping) ? guruPendamping : []).map(gp => gp.guruId.toString()),
       };
       console.log('EDIT KELAS - Form state updated to:', newState);
       return newState;
@@ -588,10 +589,10 @@ export default function AdminKelasPage() {
   const handleExport = () => {
     const csvContent = [
       ['Nama Kelas', 'Tahun Ajaran', 'Guru Tahfidz', 'Jumlah Siswa'],
-      ...filteredKelas.map(k => [
+      ...(Array.isArray(filteredKelas) ? filteredKelas : []).map(k => [
         k.nama,
         k.tahunAjaran?.nama || '-',
-        k.guruKelas?.filter(kg => kg.peran === 'utama').map(kg => kg.guru.user.name).join(', ') || '-',
+        Array.isArray(k.guruKelas) ? k.guruKelas.filter(kg => kg.peran === 'utama').map(kg => kg.guru.user.name).join(', ') : '-',
         k._count?.siswa || 0
       ])
     ].map(row => row.join(',')).join('\n');
@@ -656,8 +657,7 @@ export default function AdminKelasPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-none py-6 space-y-6">
+      <div className="w-full space-y-6">
           {/* Header Section */}
           <div className="relative w-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-8 sm:px-8 sm:py-10 overflow-hidden">
             {/* Decorative Circles */}
@@ -756,7 +756,7 @@ export default function AdminKelasPage() {
                   }}
                 >
                   <option value="all">Semua Guru</option>
-                  {guruList.map(g => (
+                  {Array.isArray(guruList) && guruList.map(g => (
                     <option key={g.id} value={g.id}>{g.user.name}</option>
                   ))}
                 </select>
@@ -798,7 +798,7 @@ export default function AdminKelasPage() {
               ✅ Kelas Aktif
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {activeKelas.length === 0 ? (
+              {(Array.isArray(activeKelas) && activeKelas.length === 0) ? (
                 <div className="col-span-full">
                   <EmptyState
                     title="Tidak ada kelas aktif"
@@ -807,7 +807,7 @@ export default function AdminKelasPage() {
                   />
                 </div>
               ) : (
-                activeKelas.map((kelasItem, index) => {
+                (Array.isArray(activeKelas) ? activeKelas : []).map((kelasItem, index) => {
                   const isActive = true; // Selalu true untuk active section
                   const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
                   const jumlahSiswa = kelasItem._count?.siswa || 0;
@@ -1079,7 +1079,7 @@ export default function AdminKelasPage() {
                   ⏸️ Kelas Nonaktif
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {inactiveKelas.length === 0 ? (
+                  {(Array.isArray(inactiveKelas) && inactiveKelas.length === 0) ? (
                     <div className="col-span-full">
                       <EmptyState
                         title="Tidak ada kelas nonaktif"
@@ -1088,7 +1088,7 @@ export default function AdminKelasPage() {
                       />
                     </div>
                   ) : (
-                    inactiveKelas.map((kelasItem, index) => {
+                    (Array.isArray(inactiveKelas) ? inactiveKelas : []).map((kelasItem, index) => {
                       const isActive = false; // Selalu false untuk inactive section
                       const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
                       const jumlahSiswa = kelasItem._count?.siswa || 0;
@@ -1308,7 +1308,6 @@ export default function AdminKelasPage() {
             )}
           </div>
         </div>
-      </div>
 
       {/* Dropdown Menu dengan Portal */}
       {openMenuId && buttonRefs.current[openMenuId] && (() => {
@@ -1534,9 +1533,9 @@ export default function AdminKelasPage() {
                 }}>
                   Guru Pengampu
                 </label>
-                {selectedKelas.kelasGuru && selectedKelas.kelasGuru.length > 0 ? (
+                {(Array.isArray(selectedKelas?.kelasGuru) && selectedKelas.kelasGuru.length > 0) ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {selectedKelas.kelasGuru.map(kg => (
+                    {(Array.isArray(selectedKelas.kelasGuru) ? selectedKelas.kelasGuru : []).map(kg => (
                       <div key={kg.id} style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1762,14 +1761,14 @@ export default function AdminKelasPage() {
                     }}
                   >
                     <option value="">Pilih Tahun Ajaran</option>
-                    {tahunAjaran.length === 0 ? (
-                      <option disabled>Tidak ada tahun ajaran tersedia</option>
-                    ) : (
+                    {(Array.isArray(tahunAjaran) && tahunAjaran.length > 0) ? (
                       tahunAjaran.map((ta) => (
                         <option key={ta.id} value={ta.id}>
                           {ta.nama} - Semester {ta.semester} {ta.isActive && '(Aktif)'}
                         </option>
                       ))
+                    ) : (
+                      <option disabled>Tidak ada tahun ajaran tersedia</option>
                     )}
                   </select>
                 </div>
@@ -1804,7 +1803,7 @@ export default function AdminKelasPage() {
                   className="form-input"
                 >
                   <option value="">Pilih Guru Utama (Opsional)</option>
-                  {guruList.map((guru) => (
+                  {Array.isArray(guruList) && guruList.map((guru) => (
                     <option key={guru.id} value={guru.id.toString()}>
                       {guru.user.name}
                     </option>
@@ -1831,8 +1830,8 @@ export default function AdminKelasPage() {
                   maxHeight: '150px',
                   overflowY: 'auto',
                 }}>
-                  {guruList.length > 0 ? (
-                    guruList.map((guru) => (
+                  {Array.isArray(guruList) && guruList.length > 0 ? (
+                    (Array.isArray(guruList) ? guruList : []).map((guru) => (
                       <div key={guru.id} style={{
                         display: 'flex',
                         alignItems: 'center',

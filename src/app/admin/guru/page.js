@@ -149,7 +149,7 @@ export default function AdminGuruPage() {
       const url = skipCache ? `/api/guru?t=${Date.now()}` : '/api/guru';
       const response = await fetch(url);
       const data = await response.json();
-      setGuru(data);
+      setGuru(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching guru:', error);
     } finally {
@@ -162,7 +162,7 @@ export default function AdminGuruPage() {
     try {
       const response = await fetch('/api/kelas?showAll=true');
       const data = await response.json();
-      const aktivKelas = data.filter(k => k.status === STATUS_AKTIF);
+      const aktivKelas = Array.isArray(data) ? data.filter(k => k.status === STATUS_AKTIF) : [];
       setKelas(aktivKelas);
     } catch (error) {
       console.error('Error fetching kelas:', error);
@@ -317,9 +317,7 @@ export default function AdminGuruPage() {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="w-full py-4 lg:py-6 space-y-4 lg:space-y-6">
-
+      <div className="w-full space-y-6">
           {/* Header Card */}
           <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg px-6 py-5 sm:px-8 sm:py-6 lg:py-7 overflow-hidden relative">
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
@@ -363,7 +361,7 @@ export default function AdminGuruPage() {
                   onClick={() => {
                     const csvContent = [
                       ['Nama Lengkap', 'Email', 'NIP', 'Status', 'Tanggal Bergabung'],
-                      ...filteredGuru.map(g => [
+                      ...(Array.isArray(filteredGuru) ? filteredGuru : []).map(g => [
                         g.user.name,
                         g.user.email,
                         g.nip || '-',
@@ -435,7 +433,7 @@ export default function AdminGuruPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-emerald-100/40">
-                  {filteredGuru.length === 0 ? (
+                  {(!Array.isArray(filteredGuru) || filteredGuru.length === 0) ? (
                     <tr>
                       <td colSpan="6" className="px-6 py-12 text-center">
                         <EmptyState
@@ -447,7 +445,7 @@ export default function AdminGuruPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredGuru.map((guruItem) => {
+                    (Array.isArray(filteredGuru) ? filteredGuru : []).map((guruItem) => {
                       const aktivKelas = getAktifKelas(guruItem.guruKelas);
                       return (
                         <tr
@@ -477,7 +475,7 @@ export default function AdminGuruPage() {
                           <td className="px-4 py-2.5 lg:px-6 lg:py-3">
                             {aktivKelas && aktivKelas.length > 0 ? (
                               <div className="flex flex-wrap gap-1.5 lg:gap-2">
-                                {aktivKelas.map((gk) => (
+                                {(Array.isArray(aktivKelas) ? aktivKelas : []).map((gk) => (
                                   <span
                                     key={gk.id}
                                     className="px-2 py-0.5 lg:px-3 lg:py-1 text-[10px] lg:text-xs font-semibold rounded-full bg-emerald-50/70 border border-emerald-100/60 text-emerald-700 flex items-center gap-1"
@@ -529,7 +527,6 @@ export default function AdminGuruPage() {
               </table>
             </div>
           </div>
-        </div>
       </div>
 
       {/* Modal */}

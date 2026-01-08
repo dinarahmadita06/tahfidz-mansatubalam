@@ -769,7 +769,7 @@ export default function SiswaTasmiPage() {
                   required
                 >
                   <option value="">Pilih guru pengampu tahfidz</option>
-                  {guruList.map((guru) => (
+                  {Array.isArray(guruList) && guruList.map((guru) => (
                     <option key={guru.id} value={guru.id}>
                       {guru.user?.name || 'Guru Tanpa Nama'}
                     </option>
