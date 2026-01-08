@@ -281,15 +281,15 @@ export default function AdminDashboardPage() {
       const siswaData = await siswaRes.json();
       const kelasData = await kelasRes.json();
 
-      const siswaList = siswaData.siswa || [];
-      const kelasList = kelasData.kelas || [];
+      const siswaList = Array.isArray(siswaData) ? siswaData : (siswaData.data || siswaData.siswa || []);
+      const kelasList = Array.isArray(kelasData) ? kelasData : (kelasData.data || kelasData.kelas || []);
 
       // Calculate siswa stats
       const siswaMencapai = siswaList.filter((s) => (s.totalJuz || 0) >= 3).length;
       const siswaBelum = siswaList.length - siswaMencapai;
 
       // Calculate kelas stats
-      const kelasAktif = kelasList.filter((k) => k.isActive);
+      const kelasAktif = kelasList.filter((k) => k.status === 'AKTIF' || k.isActive);
       const kelasMencapai = kelasAktif.filter((kelas) => {
         const siswaKelas = siswaList.filter((s) => s.kelasId === kelas.id);
         if (siswaKelas.length === 0) return false;
