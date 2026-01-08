@@ -113,13 +113,18 @@ export async function POST(request) {
       }
 
       // d. Create Relation (OrangTuaSiswa)
-      await tx.orangTuaSiswa.create({
-        data: {
-          siswaId: studentData.id,
-          orangTuaId: parentId,
-          hubungan: parent.relationType || 'Orang Tua',
-        }
-      });
+      try {
+        await tx.orangTuaSiswa.create({
+          data: {
+            siswaId: studentData.id,
+            orangTuaId: parentId,
+            hubungan: parent?.relationType || 'Orang Tua',
+          }
+        });
+      } catch (relError) {
+        console.error('❌ [Teacher API] Failed to create OrangTuaSiswa relation:', relError);
+        throw new Error('Gagal menghubungkan siswa dengan orang tua');
+      }
 
       return {
         student: {
@@ -141,9 +146,26 @@ export async function POST(request) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error in teacher add student:', error);
+    console.error('❌ [Teacher API Error]:', error);
+    
+    // Return specific status code for known errors
+    if (error.message === 'Orang tua yang dipilih tidak ditemukan') {
+      return NextResponse.json({ 
+        error: 'Relasi tidak ditemukan',
+        message: error.message
+      }, { status: 404 });
+    }
+
+    if (error.message === 'Gagal menghubungkan siswa dengan orang tua') {
+      return NextResponse.json({ 
+        error: 'Bad Request',
+        message: error.message
+      }, { status: 400 });
+    }
+
     return NextResponse.json({ 
-      error: error.message || 'Terjadi kesalahan saat memproses data',
+      error: 'Terjadi kesalahan saat memproses data',
+      message: error.message,
       details: error.meta || null
     }, { status: 500 });
   }
