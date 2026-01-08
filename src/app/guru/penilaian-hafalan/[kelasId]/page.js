@@ -12,6 +12,8 @@ import {
   X,
   AlertCircle,
   Bookmark,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import Link from 'next/link';
@@ -190,6 +192,18 @@ export default function PenilaianHafalanPage() {
     }
   };
 
+  const handlePrevDate = () => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() - 1);
+    setSelectedDate(date.toISOString().split('T')[0]);
+  };
+
+  const handleNextDate = () => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() + 1);
+    setSelectedDate(date.toISOString().split('T')[0]);
+  };
+
   const handleStatusChange = async (siswaId, status) => {
     try {
       const response = await fetch('/api/guru/penilaian-hafalan/presensi', {
@@ -222,6 +236,11 @@ export default function PenilaianHafalanPage() {
       toast.error('Terjadi kesalahan');
     }
   };
+
+  const handleTodayDate = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+  };
+
 
   const openPenilaianPopup = (siswa) => {
     setSelectedSiswa(siswa);
@@ -358,7 +377,7 @@ export default function PenilaianHafalanPage() {
                 Penilaian Hafalan
               </h1>
               <p className="text-white/90 text-sm sm:text-base font-medium break-words">
-                Input penilaian hafalan per pertemuan — {kelasInfo?.nama || 'Loading...'}
+                {kelasInfo?.nama ? `Input penilaian hafalan per pertemuan — ${kelasInfo.nama}` : 'Input penilaian hafalan per pertemuan'}
               </p>
             </div>
           </div>
@@ -366,30 +385,78 @@ export default function PenilaianHafalanPage() {
 
         <div className="space-y-6">
 
-          {/* Date Filter Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                <Calendar className="w-5 h-5 text-emerald-600" />
+          {/* Date Filter Card with Navigation Group - Blue Theme */}
+          <div className="bg-white rounded-2xl shadow-md border border-blue-100 p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-50 rounded-full blur-2xl -ml-12 -mb-12 opacity-50"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-100/80 flex items-center justify-center shrink-0 shadow-sm border border-blue-200">
+                  <Calendar className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Tanggal Pertemuan</h3>
+                  <p className="text-xs text-slate-500 font-medium">Navigasi tanggal untuk input penilaian</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tanggal Pertemuan</label>
-                <div className="flex gap-3 items-center flex-wrap">
+
+              <div className="flex items-center gap-2 bg-blue-50/40 p-2 rounded-2xl border border-blue-100 shadow-inner flex-wrap justify-center backdrop-blur-sm">
+                {/* Previous Button */}
+                <button
+                  onClick={handlePrevDate}
+                  className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-xl border border-slate-200 hover:border-blue-300 transition-all duration-200 shadow-sm active:scale-95 group"
+                >
+                  <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform text-blue-500" />
+                  <span className="text-sm font-bold">Sebelumnya</span>
+                </button>
+
+                {/* Date Picker - Center Focus */}
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 z-10 pointer-events-none group-focus-within:text-blue-700 transition-colors">
+                    <Calendar size={18} />
+                  </div>
                   <input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                    className="pl-10 pr-4 py-2.5 text-sm bg-white border-2 border-blue-200 hover:border-blue-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none font-bold text-slate-800 transition-all duration-200 min-w-[160px] shadow-sm cursor-pointer"
                   />
-                  <span className="text-sm text-slate-700 font-medium">
-                    {new Date(selectedDate).toLocaleDateString('id-ID', {
-                      weekday: 'long',
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </span>
                 </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={handleNextDate}
+                  className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-xl border border-slate-200 hover:border-blue-300 transition-all duration-200 shadow-sm active:scale-95 group"
+                >
+                  <span className="text-sm font-bold">Berikutnya</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform text-blue-500" />
+                </button>
+
+                {/* Today Button - Distinct Blue Outline */}
+                <div className="w-px h-8 bg-blue-200 mx-1 hidden sm:block"></div>
+                <button
+                  onClick={handleTodayDate}
+                  className="px-4 py-2 bg-blue-100/50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 rounded-xl border-2 border-blue-200 hover:border-blue-300 transition-all duration-200 font-black text-xs uppercase tracking-widest shadow-sm active:scale-95"
+                >
+                  Hari Ini
+                </button>
+              </div>
+
+              {/* Formatted Date Display */}
+              <div className="hidden lg:block text-right">
+                <p className="text-sm font-black text-blue-700">
+                  {new Date(selectedDate).toLocaleDateString('id-ID', {
+                    weekday: 'long'
+                  })}
+                </p>
+                <p className="text-xs font-bold text-slate-500">
+                  {new Date(selectedDate).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </p>
               </div>
             </div>
           </div>

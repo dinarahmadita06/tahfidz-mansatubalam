@@ -131,11 +131,15 @@ function generateCSV(data, viewMode) {
     });
   } else {
     // Header for bulanan/semesteran
-    csv += 'No,Nama Lengkap,Jumlah Setoran,Hafalan Terakhir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Rata-rata Nilai,Status Hafalan\n';
+    csv += 'No,Nama Lengkap,Hadir,Izin,Sakit,Alfa,Jumlah Setoran,Hafalan Terakhir,Rata-rata Tajwid,Rata-rata Kelancaran,Rata-rata Makhraj,Rata-rata Implementasi,Rata-rata Nilai,Status Hafalan\n';
 
     // Rows
     data.forEach((siswa, idx) => {
       csv += `${siswa.no || (idx + 1)},"${siswa.namaLengkap}",`;
+      csv += `${siswa.hadir || 0},`;
+      csv += `${siswa.izin || 0},`;
+      csv += `${siswa.sakit || 0},`;
+      csv += `${siswa.alfa || 0},`;
       csv += `${siswa.jumlahSetoran || 0},`;
       csv += `"${siswa.hafalanTerakhir || '-'}",`;
       csv += `${formatNilai(siswa.rataRataTajwid)},`;
@@ -522,16 +526,27 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
         <th style="width: 15%;">Catatan</th>`;
   } else {
     html += `
-        <th style="width: 5%;">No</th>
-        <th style="width: 25%;">Nama Lengkap</th>
-        <th class="center" style="width: 8%;">Jumlah Setoran</th>
-        <th class="center" style="width: 9%;">Hafalan Terakhir</th>
-        <th class="center" style="width: 8%;">Avg Tajwid</th>
-        <th class="center" style="width: 8%;">Avg Kelancaran</th>
-        <th class="center" style="width: 8%;">Avg Makhraj</th>
-        <th class="center" style="width: 8%;">Avg Impl.</th>
-        <th class="center" style="width: 10%; background: #ECFDF5;">Rata-rata Nilai</th>
-        <th class="center" style="width: 8%;">Status</th>`;
+        <tr>
+          <th colspan="2" style="background: #ECFDF5; border-bottom: 1px solid #A7F3D0; text-align: center; color: #047857; font-size: 10px; text-transform: none;">Informasi Siswa</th>
+          <th colspan="4" style="background: #ECFDF5; border-bottom: 1px solid #A7F3D0; text-align: center; color: #047857; font-size: 10px; text-transform: none; border-left: 1px solid #A7F3D0; border-right: 1px solid #A7F3D0;">Rekap Kehadiran</th>
+          <th colspan="8" style="background: #ECFDF5; border-bottom: 1px solid #A7F3D0; text-align: center; color: #047857; font-size: 10px; text-transform: none;">Capaian Hafalan & Nilai</th>
+        </tr>
+        <tr>
+          <th style="width: 3%; background: #F9FAFB;">No</th>
+          <th style="width: 15%; background: #F9FAFB;">Nama Lengkap</th>
+          <th class="center" style="width: 4%; background: #F9FAFB; border-left: 1px solid #E5E7EB;">H</th>
+          <th class="center" style="width: 4%; background: #F9FAFB;">I</th>
+          <th class="center" style="width: 4%; background: #F9FAFB;">S</th>
+          <th class="center" style="width: 4%; background: #F9FAFB; border-right: 1px solid #E5E7EB;">A</th>
+          <th class="center" style="width: 6%; background: #F9FAFB;">Setoran</th>
+          <th class="center" style="width: 9%; background: #F9FAFB;">Hafalan Terakhir</th>
+          <th class="center" style="width: 7%; background: #F9FAFB;">Avg Tajwid</th>
+          <th class="center" style="width: 7%; background: #F9FAFB;">Avg Lancar</th>
+          <th class="center" style="width: 7%; background: #F9FAFB;">Avg Makhraj</th>
+          <th class="center" style="width: 7%; background: #F9FAFB;">Avg Impl.</th>
+          <th class="center" style="width: 12%; background: #ECFDF5; color: #047857;">Rata-rata Nilai</th>
+          <th class="center" style="width: 8%; background: #F9FAFB;">Status</th>
+        </tr>`;
   }
 
   html += `
@@ -565,14 +580,18 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
     } else {
       html += `<td>${siswa.no || (idx + 1)}</td>`;
       html += `<td>${siswa.namaLengkap}</td>`;
-      html += `<td class="center" style="font-weight: 700;">${siswa.jumlahSetoran || 0}</td>`;
-      html += `<td class="center" style="font-size: 10px;">${siswa.hafalanTerakhir || '-'}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataTajwid)}">${formatNilai(siswa.rataRataTajwid)}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataKelancaran)}">${formatNilai(siswa.rataRataKelancaran)}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataMakhraj)}">${formatNilai(siswa.rataRataMakhraj)}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataImplementasi)}">${formatNilai(siswa.rataRataImplementasi)}</td>`;
-      html += `<td class="center ${getNilaiClass(siswa.rataRataNilaiBulanan)}" style="background: #ECFDF5; font-weight: 700;">${formatNilai(siswa.rataRataNilaiBulanan)}</td>`;
-      html += `<td class="center">${siswa.statusHafalan}</td>`;
+      html += `<td class="center" style="border-left: 1px solid #F3F4F6;">${siswa.hadir || 0}</td>`;
+      html += `<td class="center">${siswa.izin || 0}</td>`;
+      html += `<td class="center">${siswa.sakit || 0}</td>`;
+      html += `<td class="center" style="border-right: 1px solid #F3F4F6;">${siswa.alfa || 0}</td>`;
+      html += `<td class="center" style="font-weight: 600;">${siswa.jumlahSetoran || 0}</td>`;
+      html += `<td class="center" style="font-size: 9px; color: #4B5563;">${siswa.hafalanTerakhir || '-'}</td>`;
+      html += `<td class="center">${formatNilai(siswa.rataRataTajwid)}</td>`;
+      html += `<td class="center">${formatNilai(siswa.rataRataKelancaran)}</td>`;
+      html += `<td class="center">${formatNilai(siswa.rataRataMakhraj)}</td>`;
+      html += `<td class="center">${formatNilai(siswa.rataRataImplementasi)}</td>`;
+      html += `<td class="center" style="background: #ECFDF5; font-weight: bold; color: #1B1B1B;">${formatNilai(siswa.rataRataNilaiBulanan)}</td>`;
+      html += `<td class="center" style="font-size: 9px;">${siswa.statusHafalan}</td>`;
     }
 
     html += '</tr>';
