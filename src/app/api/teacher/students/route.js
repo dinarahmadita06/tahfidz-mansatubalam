@@ -73,6 +73,8 @@ export async function POST(request) {
           nis: student.nis,
           nisn: student.nisn || null,
           kelasId: student.kelasId,
+          tahunAjaranMasukId: student.tahunAjaranMasukId || null,
+          kelasAngkatan: student.kelasAngkatan || null,
           jenisKelamin: student.gender,
           tanggalLahir: student.birthDate ? new Date(student.birthDate) : null,
           status: 'pending', // Menunggu validasi admin sesuai sistem existing

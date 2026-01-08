@@ -67,16 +67,21 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
     nis: '',
     nisn: '',
     kelasId: '',
+    tahunAjaranMasukId: '',
+    kelasAngkatan: '',
     gender: 'LAKI_LAKI',
     birthDate: '',
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
+  const [tahunAjaranList, setTahunAjaranList] = useState([]);
+  const [loadingTA, setLoadingTA] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       fetchTeacherKelas();
       fetchParents();
+      fetchTahunAjaran();
     }
   }, [isOpen]);
 
@@ -108,6 +113,25 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
       console.error('Error fetching parents:', error);
     } finally {
       setLoadingParents(false);
+    }
+  };
+
+  const fetchTahunAjaran = async () => {
+    try {
+      setLoadingTA(true);
+      const response = await fetch('/api/tahun-ajaran');
+      const result = await response.json();
+      const taList = result.data || [];
+      setTahunAjaranList(taList);
+      // Auto-select active tahun ajaran
+      const activeTa = taList.find(ta => ta.isActive);
+      if (activeTa && !formData.tahunAjaranMasukId) {
+        setFormData(prev => ({ ...prev, tahunAjaranMasukId: activeTa.id }));
+      }
+    } catch (error) {
+      console.error('Error fetching tahun ajaran:', error);
+    } finally {
+      setLoadingTA(false);
     }
   };
 
@@ -149,6 +173,8 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
       nis: '',
       nisn: '',
       kelasId: initialKelasId || (kelas.length > 0 ? kelas[0].id : ''),
+      tahunAjaranMasukId: tahunAjaranList.find(ta => ta.isActive)?.id || '',
+      kelasAngkatan: '',
       gender: 'LAKI_LAKI',
       birthDate: '',
     });
@@ -338,6 +364,40 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
                     onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Tahun Ajaran Masuk *</label>
+                  <select
+                    required
+                    value={formData.tahunAjaranMasukId}
+                    onChange={(e) => setFormData({ ...formData, tahunAjaranMasukId: e.target.value })}
+                    disabled={loadingTA}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">{loadingTA ? 'Memuat...' : '-- Pilih Tahun Ajaran --'}</option>
+                    {tahunAjaranList.map(ta => (
+                      <option key={ta.id} value={ta.id}>
+                        {ta.nama}{ta.isActive ? ' (Aktif)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Diterima di Kelas *</label>
+                  <select
+                    required
+                    value={formData.kelasAngkatan}
+                    onChange={(e) => setFormData({ ...formData, kelasAngkatan: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all bg-white"
+                  >
+                    <option value="">-- Pilih Angkatan Kelas --</option>
+                    <option value="X">X</option>
+                    <option value="XI">XI</option>
+                    <option value="XII">XII</option>
+                  </select>
+                  <p className="text-[11px] text-gray-500 mt-1.5 px-1 italic">Untuk mekanisme naik kelas otomatis</p>
                 </div>
               </div>
             </div>
