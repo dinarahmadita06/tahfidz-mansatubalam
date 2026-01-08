@@ -230,7 +230,7 @@ export default function PenilaianHafalanIndexPage() {
         // Fetch semua kelas dari /api/kelas?showAll=true
         const resAll = await fetch('/api/kelas?showAll=true');
         const dataAll = await resAll.json();
-        setSemuaKelas(dataAll || []);
+        setSemuaKelas(Array.isArray(dataAll) ? dataAll : (dataAll.kelas || []));
       } catch (error) {
         console.error('Error fetching kelas:', error);
       } finally {
@@ -242,7 +242,7 @@ export default function PenilaianHafalanIndexPage() {
   }, []);
 
   // Filter kelas non-binaan berdasarkan search query
-  const filteredSemuaKelas = semuaKelas.filter(kelas =>
+  const filteredSemuaKelas = (Array.isArray(semuaKelas) ? semuaKelas : []).filter(kelas =>
     kelas.nama.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

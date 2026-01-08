@@ -84,22 +84,47 @@ export async function GET(request) {
       const endDate = new Date(tanggalSelesai);
       endDate.setHours(23, 59, 59, 999);
       
-      const hafalan = await prisma.hafalan.findMany({
-        where: {
-          guruId: session.user.guruId,
-          siswa: {
-            kelasId: kelasId
+      // Parallel fetch for performance: hafalan and presensi
+      const [hafalan, presensi] = await Promise.all([
+        prisma.hafalan.findMany({
+          where: {
+            guruId: session.user.guruId,
+            siswa: {
+              kelasId: kelasId
+            },
+            tanggal: {
+              gte: new Date(tanggalMulai),
+              lte: endDate
+            }
           },
-          tanggal: {
-            gte: new Date(tanggalMulai),
-            lte: endDate
+          include: {
+            penilaian: true
+          },
+          orderBy: {
+            tanggal: 'desc'
           }
-        },
-        include: {
-          penilaian: true
-        },
-        orderBy: {
-          tanggal: 'desc'
+        }),
+        prisma.presensi.findMany({
+          where: {
+            siswa: {
+              kelasId: kelasId
+            },
+            tanggal: {
+              gte: new Date(tanggalMulai),
+              lte: endDate
+            }
+          }
+        })
+      ]);
+
+      // Group presensi by student
+      const groupedPresensi = {};
+      presensi.forEach(p => {
+        if (!groupedPresensi[p.siswaId]) {
+          groupedPresensi[p.siswaId] = { HADIR: 0, IZIN: 0, SAKIT: 0, ALFA: 0 };
+        }
+        if (groupedPresensi[p.siswaId][p.status] !== undefined) {
+          groupedPresensi[p.siswaId][p.status]++;
         }
       });
 
@@ -146,14 +171,23 @@ export async function GET(request) {
         // Get hafalan terakhir (latest) from the list
         const hafalanTerakhir = siswaHafalanData.hafalanList.length > 0 ? siswaHafalanData.hafalanList[0] : null;
         const hafalanTerakhirText = hafalanTerakhir ? `Surah ${hafalanTerakhir.surah}` : '-';
+
+        // Attendance stats
+        const pCounts = groupedPresensi[siswa.id] || { HADIR: 0, IZIN: 0, SAKIT: 0, ALFA: 0 };
+        const kehadiranRecap = `H:${pCounts.HADIR} I:${pCounts.IZIN} S:${pCounts.SAKIT} A:${pCounts.ALFA}`;
         
         return {
           no: idx + 1,
           siswaId: siswa.id,
           namaLengkap: siswa.user.name,
           kelasNama: siswa.kelas.nama,
-          totalHadir: '-', // Not needed for recap, but keeping structure
-          totalTidakHadir: '-', // Not needed for recap
+          hadir: pCounts.HADIR,
+          izin: pCounts.IZIN,
+          sakit: pCounts.SAKIT,
+          alfa: pCounts.ALFA,
+          totalHadir: pCounts.HADIR,
+          totalTidakHadir: pCounts.IZIN + pCounts.SAKIT + pCounts.ALFA,
+          kehadiran: kehadiranRecap,
           jumlahSetoran: jumlahSetoran,
           hafalanTerakhir: hafalanTerakhirText,
           rataRataTajwid: rataRataTajwid ? Math.round(rataRataTajwid * 10) / 10 : '-',

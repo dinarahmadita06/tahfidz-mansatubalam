@@ -56,14 +56,13 @@ export async function GET(request) {
 
     console.log('[API /guru/siswa] Found guru:', { guruId: guru.id, userId: session.user.id });
 
-    // Step 2: Get guru's assigned classes that are AKTIF
+    // Step 2: Get guru's assigned classes (ALL classes, not just AKTIF)
+    // Removed hardcoded status filter - let frontend/UI handle display filtering
     const guruKelas = await prisma.guruKelas.findMany({
       where: {
         guruId: guru.id,
-        isActive: true,
-        kelas: {
-          status: 'AKTIF'  // Only AKTIF classes
-        }
+        isActive: true
+        // REMOVED: kelas.status: 'AKTIF' - this was causing data to disappear
       },
       select: {
         kelasId: true
