@@ -12,7 +12,7 @@ import {
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
-import TeacherStudentCreateModal from '@/components/guru/TeacherStudentCreateModal';
+import StudentCreateModal from '@/components/admin/StudentCreateModal';
 
 export default function KelolaSiswa() {
   const router = useRouter();
@@ -306,10 +306,11 @@ export default function KelolaSiswa() {
           )}
         </div>
 
-        <TeacherStudentCreateModal
+        <StudentCreateModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={fetchData}
+          userRole="GURU"
         />
       </div>
     </GuruLayout>

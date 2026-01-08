@@ -426,7 +426,7 @@ export default function AdminGuruPage() {
                   <tr className="bg-emerald-50/50 text-emerald-800">
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Nama Lengkap</th>
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Email</th>
-                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Kelas Binaan</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Kelas Binaan (Pembina)</th>
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Status</th>
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Tanggal Bergabung</th>
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-center text-[10px] lg:text-xs font-bold uppercase tracking-wider">Aksi</th>
@@ -628,11 +628,11 @@ export default function AdminGuruPage() {
                 </div>
               </div>
 
-              {/* Row 3: Kelas yang Diampu | Jenis Kelamin */}
+              {/* Row 3: Kelas Binaan (Pembina) | Jenis Kelamin */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Kelas yang Diampu *
+                    Kelas Binaan (Pembina) *
                   </label>
                   <MultiSelectKelas
                     kelas={kelas}
@@ -641,6 +641,9 @@ export default function AdminGuruPage() {
                     loading={loadingKelas}
                     error={kelas.length === 0 && !loadingKelas ? 'Tidak ada kelas AKTIF tersedia' : null}
                   />
+                  <p className="text-[10px] text-slate-500 mt-1 italic">
+                    Guru akan menjadi Pembina untuk kelas yang dipilih.
+                  </p>
                 </div>
 
                 <div>

@@ -523,13 +523,24 @@ export default function PenilaianHafalanPage() {
                         ALFA: 'Alpa',
                       };
 
+                      const isValidated = siswa.status === 'approved';
+                      
                       return (
                     <tr key={siswa.id} className="hover:bg-emerald-50 transition-colors">
                       {/* No */}
                       <td className="px-6 py-4 text-sm font-semibold text-slate-700">{index + 1}</td>
 
                       {/* Nama Siswa */}
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-900">{siswa.user?.name || siswa.nama}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-900">
+                        <div className="flex items-center gap-3">
+                          <span>{siswa.user?.name || siswa.nama}</span>
+                          {!isValidated && (
+                            <span className="inline-block px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded-full border border-amber-300">
+                              Menunggu Validasi
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
                       {/* Kehadiran */}
                       <td className="px-6 py-4 text-center">

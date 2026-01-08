@@ -128,21 +128,34 @@ export async function POST(request) {
     // Validate kelasIds if provided - only AKTIF kelas allowed
     if (kelasIds && kelasIds.length > 0) {
       console.log('🔍 Validating kelas IDs:', kelasIds);
-      const validKelas = await prisma.kelas.findMany({
+      const kelasWithPembina = await prisma.kelas.findMany({
         where: {
           id: { in: kelasIds },
           status: STATUS_AKTIF
         },
-        select: { id: true, nama: true }
+        include: {
+          guruKelas: {
+            where: { peran: 'utama', isActive: true },
+            include: { guru: { include: { user: { select: { name: true } } } } }
+          }
+        }
       });
 
-      if (validKelas.length !== kelasIds.length) {
-        console.log('❌ Invalid atau inactive kelas provided');
+      if (kelasWithPembina.length !== kelasIds.length) {
         return NextResponse.json({
           error: 'Beberapa kelas tidak valid atau tidak aktif'
         }, { status: 400 });
       }
-      console.log('✅ All kelas valid:', validKelas.map(k => k.nama));
+
+      // Check if any class already has a Pembina
+      for (const k of kelasWithPembina) {
+        if (k.guruKelas.length > 0) {
+          return NextResponse.json({
+            error: `Kelas ${k.nama} sudah memiliki Guru Pembina: ${k.guruKelas[0].guru.user.name}`
+          }, { status: 400 });
+        }
+      }
+      console.log('✅ All kelas valid and available for Pembina');
     }
 
     // Normalize jenisKelamin dari L/P ke LAKI_LAKI/PEREMPUAN
@@ -221,9 +234,19 @@ export async function POST(request) {
       const guruKelasData = kelasIds.map(kelasId => ({
         guruId: guru.id,
         kelasId: kelasId,
-        peran: 'pendamping',
+        peran: 'utama', // Single source of truth: Teacher is Pembina
         isActive: true
       }));
+
+      // Also update Kelas.guruTahfidzId for legacy compatibility if needed
+      // But we prefer centralized management. 
+      // For each class, set this guru as the main tahfidz guru.
+      await Promise.all(kelasIds.map(kid => 
+        prisma.kelas.update({
+          where: { id: kid },
+          data: { guruTahfidzId: guru.userId }
+        })
+      ));
 
       await prisma.guruKelas.createMany({
         data: guruKelasData,

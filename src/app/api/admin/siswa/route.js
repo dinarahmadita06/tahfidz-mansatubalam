@@ -343,7 +343,7 @@ export async function POST(request) {
           data: {
             noTelepon: parentData.noHP.replace(/[^0-9]/g, ''),
             userId: parentUser.id,
-            jenisKelamin: 'LAKI_LAKI' // Default value
+            jenisKelamin: parentData.jenisKelamin || 'LAKI_LAKI' // Use provided gender or default
           }
         });
 

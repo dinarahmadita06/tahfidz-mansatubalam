@@ -14,16 +14,46 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const { name, email, password, nip, jenisKelamin, noHP, noTelepon, alamat } = await request.json();
+    const { name, email, password, nip, jenisKelamin, noHP, noTelepon, alamat, kelasIds } = await request.json();
 
     // Cari guru
     const guru = await prisma.guru.findUnique({
       where: { id },
-      include: { user: true }
+      include: { 
+        user: true,
+        guruKelas: {
+          where: { isActive: true, peran: 'utama' }
+        }
+      }
     });
 
     if (!guru) {
       return NextResponse.json({ error: 'Guru tidak ditemukan' }, { status: 404 });
+    }
+
+    // Validate kelasIds if provided
+    if (kelasIds && Array.isArray(kelasIds)) {
+      const kelasWithPembina = await prisma.kelas.findMany({
+        where: {
+          id: { in: kelasIds },
+          status: 'AKTIF'
+        },
+        include: {
+          guruKelas: {
+            where: { peran: 'utama', isActive: true },
+            include: { guru: { include: { user: { select: { name: true } } } } }
+          }
+        }
+      });
+
+      // Check if any class already has a Pembina (who is NOT this guru)
+      for (const k of kelasWithPembina) {
+        if (k.guruKelas.length > 0 && k.guruKelas[0].guruId !== id) {
+          return NextResponse.json({
+            error: `Kelas ${k.nama} sudah memiliki Guru Pembina: ${k.guruKelas[0].guru.user.name}`
+          }, { status: 400 });
+        }
+      }
     }
 
     // Normalize jenisKelamin dari L/P ke LAKI_LAKI/PEREMPUAN
@@ -57,18 +87,54 @@ export async function PUT(request, { params }) {
       updateData.user.update.password = hashedPassword;
     }
 
-    const updatedGuru = await prisma.guru.update({
-      where: { id },
-      data: updateData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+    const updatedGuru = await prisma.$transaction(async (tx) => {
+      // 1. Update Profile
+      const updated = await tx.guru.update({
+        where: { id },
+        data: updateData,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
           }
         }
+      });
+
+      // 2. Handle Kelas Sync if provided
+      if (kelasIds && Array.isArray(kelasIds)) {
+        // Clear all classes where this guru was Pembina or pendamping
+        await tx.guruKelas.deleteMany({
+          where: { guruId: id }
+        });
+
+        // Set as Pembina for selected classes
+        if (kelasIds.length > 0) {
+          const guruKelasData = kelasIds.map(kelasId => ({
+            guruId: id,
+            kelasId: kelasId,
+            peran: 'utama',
+            isActive: true
+          }));
+
+          await tx.guruKelas.createMany({
+            data: guruKelasData,
+            skipDuplicates: true
+          });
+
+          // Sync Kelas.guruTahfidzId for legacy compatibility
+          await Promise.all(kelasIds.map(kid => 
+            tx.kelas.update({
+              where: { id: kid },
+              data: { guruTahfidzId: updated.userId }
+            })
+          ));
+        }
       }
+
+      return updated;
     });
 
     // Log activity

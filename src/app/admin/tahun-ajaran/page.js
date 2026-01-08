@@ -124,7 +124,10 @@ export default function AdminTahunAjaranPage() {
   const fetchSummary = async () => {
     try {
       setSummaryLoading(true);
-      const response = await fetch('/api/tahun-ajaran/summary');
+      const response = await fetch(`/api/tahun-ajaran/summary?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Pragma': 'no-cache' }
+      });
       const data = await response.json();
       setSummary(data);
     } catch (error) {
@@ -138,11 +141,15 @@ export default function AdminTahunAjaranPage() {
 
   const fetchTahunAjaran = async () => {
     try {
-      const response = await fetch('/api/tahun-ajaran');
-      const data = await response.json();
-      setTahunAjaran(data);
+      const response = await fetch(`/api/tahun-ajaran?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Pragma': 'no-cache' }
+      });
+      const result = await response.json();
+      setTahunAjaran(result.data || []);
     } catch (error) {
       console.error('Error fetching tahun ajaran:', error);
+      setTahunAjaran([]);
     } finally {
       setLoading(false);
     }
@@ -292,7 +299,11 @@ export default function AdminTahunAjaranPage() {
         alert('Target hafalan berhasil diperbarui.');
         setShowUpdateTargetModal(false);
         setTargetHafalanInput('');
-        fetchTahunAjaran();
+        // Parallel refetch for speed
+        await Promise.all([
+          fetchTahunAjaran(),
+          fetchSummary()
+        ]);
       } else {
         alert(data.error || 'Gagal memperbarui target hafalan');
       }

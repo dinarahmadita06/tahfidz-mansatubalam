@@ -33,8 +33,10 @@ export default function PasswordField({
   required = true,
   helperText = 'Gunakan password kuat. Bisa generate otomatis.',
   showGenerateButton = true,
+  iconOnlyGenerate = false,
   autoFocus = false,
   error = null,
+  disabled = false,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -68,7 +70,7 @@ export default function PasswordField({
         {required && <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>}
       </label>
 
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'start' }}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         {/* Password Input */}
         <div style={{ position: 'relative', flex: 1 }}>
           <input
@@ -79,6 +81,7 @@ export default function PasswordField({
             placeholder={placeholder}
             required={required}
             autoFocus={autoFocus}
+            disabled={disabled}
             style={{
               width: '100%',
               paddingLeft: '16px',
@@ -91,6 +94,9 @@ export default function PasswordField({
               fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
               outline: 'none',
               transition: 'all 0.3s ease',
+              background: disabled ? '#F9FAFB' : colors.white,
+              color: disabled ? colors.text.tertiary : 'inherit',
+              cursor: disabled ? 'not-allowed' : 'text',
             }}
             className="password-input"
           />
@@ -125,27 +131,30 @@ export default function PasswordField({
           <button
             type="button"
             onClick={handleGenerate}
+            disabled={disabled}
             style={{
-              padding: '12px 16px',
+              padding: iconOnlyGenerate ? '12px' : '12px 16px',
               border: `2px solid ${colors.emerald[500]}20`,
               borderRadius: '12px',
               background: `${colors.emerald[500]}10`,
               color: colors.emerald[700],
               fontSize: '13px',
               fontWeight: 600,
-              cursor: 'pointer',
+              cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               fontFamily: '"Poppins", system-ui, sans-serif',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '6px',
               whiteSpace: 'nowrap',
+              opacity: disabled ? 0.5 : 1,
             }}
             className="generate-password-btn"
             title="Generate password otomatis"
           >
             <RefreshCw size={16} />
-            Generate
+            {!iconOnlyGenerate && 'Generate'}
           </button>
         )}
 
@@ -154,17 +163,19 @@ export default function PasswordField({
           <button
             type="button"
             onClick={handleCopy}
+            disabled={disabled}
             style={{
               padding: '12px',
               border: `2px solid ${colors.gray[200]}`,
               borderRadius: '12px',
               background: colors.white,
               color: copied ? colors.emerald[600] : colors.text.tertiary,
-              cursor: 'pointer',
+              cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              opacity: disabled ? 0.5 : 1,
             }}
             className="copy-password-btn"
             title={copied ? 'Berhasil disalin!' : 'Salin password'}
@@ -212,13 +223,13 @@ export default function PasswordField({
           color: ${colors.emerald[600]} !important;
         }
 
-        .generate-password-btn:hover {
+        .generate-password-btn:hover:not(:disabled) {
           background: ${colors.emerald[500]}20 !important;
           border-color: ${colors.emerald[500]}40 !important;
           transform: translateY(-2px);
         }
 
-        .copy-password-btn:hover {
+        .copy-password-btn:hover:not(:disabled) {
           background: ${colors.gray[200]} !important;
           transform: scale(1.05);
         }

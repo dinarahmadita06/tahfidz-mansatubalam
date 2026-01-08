@@ -1,47 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, UserPlus, Key, Users, BookOpen, User } from 'lucide-react';
+import { X, UserPlus, Key, Users, User, Search, AlertCircle, RefreshCw, Edit } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import PasswordField from './PasswordField';
-import ParentLinkSection from './ParentLinkSection';
 import AccountSuccessModal from './AccountSuccessModal';
 import { generateSiswaEmail } from '@/lib/siswaUtils';
+import { generateWaliEmail, generatePasswordMixed } from '@/lib/passwordUtils';
 
-const colors = {
-  emerald: {
-    50: '#ECFDF5',
-    100: '#D1FAE5',
-    500: '#1A936F',
-    600: '#059669',
-    700: '#047857',
-  },
-  teal: {
-    500: '#14b8a6',
-    600: '#0d9488',
-  },
-  amber: {
-    50: '#FEF3C7',
-    200: '#FCD34D',
-  },
-  white: '#FFFFFF',
-  gray: {
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-  },
-  text: {
-    primary: '#1B1B1B',
-    secondary: '#444444',
-    tertiary: '#6B7280',
-  },
-};
-
-export default function StudentCreateModal({ isOpen, onClose, onSuccess, defaultKelasId = null }) {
+export default function StudentCreateModal({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  userRole = 'ADMIN', // 'ADMIN' or 'GURU'
+  initialKelasId = '',
+  editingSiswa = null // If provided, we are in Edit mode
+}) {
   const [kelas, setKelas] = useState([]);
+  const [tahunAjaranList, setTahunAjaranList] = useState([]);
+  const [parents, setParents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingInitial, setLoadingInitial] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState(null);
+  const [parentSearchTerm, setParentSearchTerm] = useState('');
+
+  const isEditing = !!editingSiswa;
 
   // Parent mode: 'select' or 'create'
   const [parentMode, setParentMode] = useState('select');
@@ -52,6 +36,7 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
     email: '',
     password: '',
     jenisWali: 'Ayah',
+    jenisKelamin: 'LAKI_LAKI',
   });
 
   // Student form data
@@ -60,33 +45,79 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
     password: '',
     nis: '',
     nisn: '',
-    kelasId: defaultKelasId || '',
+    kelasId: initialKelasId || '',
+    tahunAjaranMasukId: '',
+    kelasAngkatan: '',
     jenisKelamin: 'LAKI_LAKI',
     tanggalLahir: '',
-    alamat: '',
-    noTelepon: '',
+    email: '', // Add email field to state
   });
 
-  // Error state for field-level validation
   const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     if (isOpen) {
-      fetchKelas();
-      // Set defaultKelasId when modal opens
-      if (defaultKelasId) {
-        setFormData(prev => ({ ...prev, kelasId: defaultKelasId }));
+      fetchInitialData();
+      if (isEditing) {
+        setFormData({
+          name: editingSiswa.user?.name || '',
+          password: '', 
+          nis: editingSiswa.nis || '',
+          nisn: editingSiswa.nisn || '',
+          kelasId: editingSiswa.kelasId || initialKelasId || '',
+          tahunAjaranMasukId: editingSiswa.tahunAjaranMasukId || '',
+          kelasAngkatan: editingSiswa.kelasAngkatan || '',
+          jenisKelamin: editingSiswa.jenisKelamin || 'LAKI_LAKI',
+          tanggalLahir: editingSiswa.tanggalLahir ? new Date(editingSiswa.tanggalLahir).toISOString().split('T')[0] : '',
+          email: editingSiswa.user?.email || '',
+        });
+        
+        // Handle parent data for editing
+        if (editingSiswa.orangTuaSiswa && editingSiswa.orangTuaSiswa.length > 0) {
+          setParentMode('select');
+          setSelectedParentId(editingSiswa.orangTuaSiswa[0].orangTuaId);
+        }
+      } else {
+        resetForm();
       }
     }
-  }, [isOpen, defaultKelasId]);
+  }, [isOpen, initialKelasId, editingSiswa]);
 
-  const fetchKelas = async () => {
+  const fetchInitialData = async () => {
     try {
-      const response = await fetch('/api/kelas');
-      const data = await response.json();
-      setKelas(data || []);
+      setLoadingInitial(true);
+      const endpoints = [
+        fetch('/api/tahun-ajaran'),
+        userRole === 'GURU' ? fetch('/api/guru/kelas') : fetch('/api/kelas'),
+        userRole === 'GURU' ? fetch('/api/teacher/parents') : fetch('/api/admin/orangtua?limit=1000')
+      ];
+
+      const [taRes, kelasRes, parentRes] = await Promise.all(endpoints);
+      
+      const taData = await taRes.json();
+      const kelasData = await kelasRes.json();
+      const parentData = await parentRes.json();
+
+      const taList = taData.data || [];
+      setTahunAjaranList(taList);
+      
+      // Auto-select active year for new student
+      if (!isEditing) {
+        const activeTa = taList.find(ta => ta.isActive);
+        if (activeTa) {
+          setFormData(prev => ({ ...prev, tahunAjaranMasukId: activeTa.id }));
+        }
+      }
+
+      const kelasList = userRole === 'GURU' ? (kelasData.kelas || []) : (kelasData || []);
+      setKelas(kelasList);
+      
+      const parentsList = parentData.data || (Array.isArray(parentData) ? parentData : []);
+      setParents(parentsList);
     } catch (error) {
-      console.error('Error fetching kelas:', error);
+      console.error('Error fetching initial data:', error);
+    } finally {
+      setLoadingInitial(false);
     }
   };
 
@@ -96,11 +127,12 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
       password: '',
       nis: '',
       nisn: '',
-      kelasId: defaultKelasId || '',
+      kelasId: initialKelasId || '',
+      tahunAjaranMasukId: '',
+      kelasAngkatan: '',
       jenisKelamin: 'LAKI_LAKI',
       tanggalLahir: '',
-      alamat: '',
-      noTelepon: '',
+      email: '',
     });
     setParentMode('select');
     setSelectedParentId('');
@@ -110,767 +142,477 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
       email: '',
       password: '',
       jenisWali: 'Ayah',
+      jenisKelamin: 'LAKI_LAKI',
     });
     setFieldErrors({});
+    setParentSearchTerm('');
   };
 
-  // Clear error for specific field when user starts typing
-  const handleFieldChange = (fieldName, value) => {
-    setFormData(prev => ({ ...prev, [fieldName]: value }));
-    // Clear error for this field when user starts typing
-    if (fieldErrors[fieldName]) {
-      setFieldErrors(prev => {
-        const updated = { ...prev };
-        delete updated[fieldName];
-        return updated;
-      });
+  // Auto-generate student email (Manual password generation only)
+  useEffect(() => {
+    if (!isEditing && formData.name && formData.nis) {
+      const generatedEmail = generateSiswaEmail(formData.name, formData.nis);
+      setFormData(prev => ({ 
+        ...prev, 
+        email: generatedEmail
+      }));
     }
-  };
+  }, [formData.name, formData.nis, isEditing]);
 
-  // Scroll to first error field
-  const scrollToFirstError = (errorMap) => {
-    const firstErrorField = Object.keys(errorMap)[0];
-    if (firstErrorField) {
-      setTimeout(() => {
-        const element = document.querySelector(`[name="${firstErrorField}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.focus();
-        }
-      }, 100);
-    }
-  };
+  // Auto-generate parent email (Manual password generation only)
+  useEffect(() => {
+    if (parentMode === 'create' && newParentData.name && formData.nis) {
+      const generatedEmail = generateWaliEmail(newParentData.name, formData.nis);
+      const updates = { email: generatedEmail };
+      
+      // Auto gender based on relation
+      if (newParentData.jenisWali === 'Ayah') {
+        updates.jenisKelamin = 'LAKI_LAKI';
+      } else if (newParentData.jenisWali === 'Ibu') {
+        updates.jenisKelamin = 'PEREMPUAN';
+      }
 
-  const handleClose = () => {
-    if (!loading) {
-      resetForm();
-      onClose();
+      setNewParentData(prev => ({ ...prev, ...updates }));
     }
-  };
+  }, [newParentData.name, formData.nis, newParentData.jenisWali, parentMode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setFieldErrors({}); // Clear previous errors
+    setFieldErrors({});
 
     try {
-      // 1. Create student
-      const siswaPayload = {
-        ...formData,
-        email: generateSiswaEmail(formData.name, formData.nis),
-      };
+      const studentEmail = formData.email || generateSiswaEmail(formData.name, formData.nis);
+      
+      let payload;
+      let endpoint;
+      let method = isEditing ? 'PATCH' : 'POST';
 
-      const siswaResponse = await fetch('/api/admin/siswa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(siswaPayload),
-      });
-
-      const siswaResult = await siswaResponse.json();
-
-      if (!siswaResponse.ok) {
-        // Handle validation errors from backend
-        if (siswaResponse.status === 400) {
-          // Missing fields error
-          if (siswaResult.missingFields) {
-            const errors = {};
-            siswaResult.missingFields.forEach(field => {
-              errors[field] = 'Wajib diisi';
-            });
-            setFieldErrors(errors);
-            scrollToFirstError(errors);
-            throw new Error('Beberapa field masih kosong. Silakan periksa kembali.');
-          }
-        } else if (siswaResponse.status === 422) {
-          // Invalid format error
-          if (siswaResult.invalidFields) {
-            setFieldErrors(siswaResult.invalidFields);
-            scrollToFirstError(siswaResult.invalidFields);
-            throw new Error('Beberapa field memiliki format yang tidak valid.');
-          }
-        }
-        throw new Error(siswaResult.error || 'Gagal membuat akun siswa');
+      if (userRole === 'GURU') {
+        endpoint = isEditing ? `/api/teacher/students/${editingSiswa.id}` : '/api/teacher/students';
+        payload = {
+          student: {
+            ...formData,
+            email: studentEmail,
+            gender: formData.jenisKelamin, // Guru API uses 'gender'
+            birthDate: formData.tanggalLahir, // Guru API uses 'birthDate'
+          },
+          parentMode: parentMode === 'select' ? 'EXISTING' : 'NEW',
+          existingParentId: selectedParentId,
+          parent: parentMode === 'create' ? {
+            ...newParentData,
+            phone: newParentData.noHP, // Guru API uses 'phone'
+            gender: newParentData.jenisKelamin, // Guru API uses 'gender'
+            relationType: newParentData.jenisWali // Guru API uses 'relationType'
+          } : null,
+        };
+      } else {
+        endpoint = isEditing ? `/api/admin/siswa/${editingSiswa.id}` : '/api/admin/siswa';
+        payload = {
+          ...formData,
+          email: studentEmail,
+          parentData: parentMode === 'create' ? newParentData : null,
+          existingParentId: parentMode === 'select' ? selectedParentId : null,
+        };
       }
 
-      const siswaId = siswaResult.id;
-      const siswaEmail = siswaResult.user.email;
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-      let parentEmail = '';
-      let parentPassword = '';
-      let parentName = '';
+      const result = await response.json();
 
-      // 2. Handle parent linking
-      if (parentMode === 'select') {
-        // Link to existing parent
-        if (!selectedParentId) {
-          throw new Error('Silakan pilih orang tua');
-        }
+      if (!response.ok) {
+        if (result.invalidFields) setFieldErrors(result.invalidFields);
+        throw new Error(result.error || result.message || 'Gagal menyimpan data');
+      }
 
-        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
+      if (isEditing) {
+        alert('Siswa berhasil diperbarui');
+        if (onSuccess) onSuccess();
+        onClose();
+        return;
+      }
+
+      // Prepare success details
+      setCreatedAccounts({
+        student: {
+          name: formData.name,
+          email: studentEmail,
+          password: formData.password,
+        },
+        parent: {
+          name: parentMode === 'create' ? newParentData.name : (parents.find(p => p.id === selectedParentId)?.user?.name || 'Orang Tua'),
+          email: parentMode === 'create' ? newParentData.email : (parents.find(p => p.id === selectedParentId)?.user?.email || ''),
+          password: parentMode === 'create' ? newParentData.password : '********',
+          isNew: parentMode === 'create',
+        },
+      });
+
+      // Special case for admin: if existing parent, link if needed
+      if (userRole === 'ADMIN' && parentMode === 'select' && selectedParentId) {
+        await fetch('/api/admin/orangtua-siswa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            siswaId,
+            siswaId: result.id,
             orangTuaId: selectedParentId,
             hubungan: 'Orang Tua',
           }),
         });
-
-        if (!linkResponse.ok) {
-          const linkError = await linkResponse.json();
-          throw new Error(linkError.error || 'Gagal menghubungkan dengan orang tua');
-        }
-
-        // Fetch parent data for display
-        const parentData = await fetch(`/api/admin/orangtua/${selectedParentId}`);
-        const parent = await parentData.json();
-        parentEmail = parent.user?.email || '';
-        parentName = parent.user?.name || '';
-        parentPassword = '(Password orang tua yang sudah ada tidak ditampilkan)';
-      } else {
-        // Create new parent
-        // Validate all required parent fields
-        const missingParentFields = [];
-        if (!newParentData.name || !newParentData.name.trim()) missingParentFields.push('Nama orang tua');
-        if (!newParentData.noHP || !newParentData.noHP.trim()) missingParentFields.push('Nomor telepon');
-        if (!newParentData.email || !newParentData.email.trim()) missingParentFields.push('Email wali');
-        if (!newParentData.password || !newParentData.password.trim()) missingParentFields.push('Password wali');
-        if (!newParentData.jenisWali) missingParentFields.push('Jenis wali');
-
-        if (missingParentFields.length > 0) {
-          throw new Error(`Data orang tua tidak lengkap: ${missingParentFields.join(', ')}`);
-        }
-
-        // Normalize data before sending
-        const parentPayload = {
-          name: newParentData.name.trim(),
-          noHP: newParentData.noHP.trim().replace(/[^0-9]/g, ''), // Remove non-digits
-          email: newParentData.email.trim().toLowerCase(),
-          password: newParentData.password.trim(),
-          jenisKelamin: 'LAKI_LAKI',  // Default, could be enhanced
-        };
-
-        console.log('Creating parent with payload:', parentPayload);
-
-        const parentResponse = await fetch('/api/admin/orangtua', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(parentPayload),
-        });
-
-        const parentResult = await parentResponse.json();
-
-        console.log('Parent creation response:', parentResult);
-
-        if (!parentResponse.ok) {
-          console.error('❌ Parent creation failed:', parentResult);
-          // Show specific error messages from backend
-          if (parentResult.error === 'Email sudah terdaftar') {
-            throw new Error('Email wali sudah digunakan');
-          }
-          throw new Error(parentResult.error || 'Gagal membuat akun orang tua');
-        }
-
-        const orangTuaId = parentResult.id;
-        parentEmail = parentResult.user.email;
-        parentPassword = newParentData.password;
-        parentName = parentResult.user.name;
-
-        console.log('✅ Parent created successfully:', { orangTuaId, parentName, parentEmail });
-
-        // Link new parent to student
-        const linkResponse = await fetch('/api/admin/orangtua-siswa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            siswaId,
-            orangTuaId,
-            hubungan: 'Orang Tua',
-          }),
-        });
-
-        const linkResult = await linkResponse.json();
-
-        if (!linkResponse.ok) {
-          console.error('❌ Link creation failed:', linkResult);
-          throw new Error(linkResult.error || 'Gagal menghubungkan dengan orang tua');
-        }
-
-        console.log('✅ Parent linked to student successfully');
       }
 
-      // 3. Show success modal with account details
-      setCreatedAccounts({
-        student: {
-          name: formData.name,
-          email: siswaEmail,
-          password: formData.password,
-        },
-        parent: {
-          name: parentName,
-          email: parentEmail,
-          password: parentPassword,
-          isNew: parentMode === 'create',
-        },
-      });
       setShowSuccessModal(true);
-
-      // 4. Call onSuccess callback
-      if (onSuccess) {
-        onSuccess();
-      }
+      if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error creating student:', error);
       alert(`❌ ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSuccessModalClose = () => {
-    setShowSuccessModal(false);
-    resetForm();
-    onClose();
-  };
+  const filteredParents = parents.filter(p => 
+    p.user?.name?.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
+    p.user?.email?.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
+    (p.noHP && p.noHP.includes(parentSearchTerm)) ||
+    (p.noTelepon && p.noTelepon.includes(parentSearchTerm))
+  );
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Main Modal */}
-      <div
-        onClick={handleClose}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 50,
-          animation: 'fadeIn 0.2s ease-out',
-        }}
-      >
-        <div
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={onClose}>
+        <div 
+          className="bg-white rounded-[2rem] w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-2xl border border-emerald-100 animate-in zoom-in-95 duration-300"
           onClick={(e) => e.stopPropagation()}
-          style={{
-            background: colors.white,
-            borderRadius: '24px',
-            width: '100%',
-            maxWidth: '800px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            border: `2px solid ${colors.emerald[100]}`,
-            animation: 'modalSlideIn 0.3s ease-out',
-          }}
         >
           {/* Header */}
-          <div
-            style={{
-              position: 'sticky',
-              top: 0,
-              background: colors.white,
-              borderBottom: `2px solid ${colors.gray[100]}`,
-              padding: '24px 32px',
-              borderRadius: '24px 24px 0 0',
-              zIndex: 10,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '14px',
-                    background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <UserPlus size={24} color={colors.white} />
-                </div>
-                <div>
-                  <h2
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 700,
-                      color: colors.text.primary,
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      marginBottom: '2px',
-                    }}
-                  >
-                    Tambah Siswa Baru
-                  </h2>
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: colors.text.tertiary,
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                    }}
-                  >
-                    Lengkapi data siswa dan hubungkan dengan orang tua
-                  </p>
-                </div>
+          <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 p-6 sm:p-8 z-20 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                {isEditing ? <Edit size={24} className="text-white" /> : <UserPlus size={24} className="text-white" />}
               </div>
-              <button
-                onClick={handleClose}
-                disabled={loading}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  transition: 'all 0.2s ease',
-                  opacity: loading ? 0.5 : 1,
-                }}
-                className="close-modal-btn"
-              >
-                <X size={24} color={colors.text.tertiary} />
-              </button>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{isEditing ? 'Edit Data Siswa' : 'Tambah Siswa & Wali'}</h2>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium">
+                  {isEditing ? 'Perbarui informasi data diri dan kelas siswa' : 'Daftarkan siswa baru ke dalam sistem Tahfidz'}
+                </p>
+              </div>
             </div>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <X size={24} className="text-gray-400" />
+            </button>
           </div>
 
-          {/* Form Content */}
-          <form onSubmit={handleSubmit}>
-            <div style={{ padding: '32px' }}>
-              {/* Section 1: Data Siswa */}
-              <div style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                  <User size={20} color={colors.teal[600]} />
-                  <h3
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: colors.text.primary,
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                    }}
-                  >
-                    Data Siswa
-                  </h3>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {/* Name */}
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: colors.text.secondary,
-                        marginBottom: '8px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}
-                    >
-                      Nama Lengkap
-                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={(e) => handleFieldChange('name', e.target.value)}
-                      placeholder="Contoh: Ahmad Zaki"
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: fieldErrors.name ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.3s ease',
-                      }}
-                      className="form-input"
-                    />
-                    {fieldErrors.name && (
-                      <p style={{
-                        fontSize: '12px',
-                        color: '#dc2626',
-                        marginTop: '6px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}>
-                        {fieldErrors.name}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* NIS */}
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: colors.text.secondary,
-                        marginBottom: '8px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}
-                    >
-                      NIS
-                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="nis"
-                      value={formData.nis}
-                      onChange={(e) => handleFieldChange('nis', e.target.value)}
-                      placeholder="Nomor Induk Siswa"
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: fieldErrors.nis ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.3s ease',
-                      }}
-                      className="form-input"
-                    />
-                    {fieldErrors.nis && (
-                      <p style={{
-                        fontSize: '12px',
-                        color: '#dc2626',
-                        marginTop: '6px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}>
-                        {fieldErrors.nis}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* NISN */}
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: colors.text.secondary,
-                        marginBottom: '8px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}
-                    >
-                      NISN (Opsional)
-                    </label>
-                    <input
-                      type="text"
-                      name="nisn"
-                      value={formData.nisn}
-                      onChange={(e) => handleFieldChange('nisn', e.target.value)}
-                      placeholder="Nomor Induk Siswa Nasional"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: fieldErrors.nisn ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.3s ease',
-                      }}
-                      className="form-input"
-                    />
-                    {fieldErrors.nisn && (
-                      <p style={{
-                        fontSize: '12px',
-                        color: '#dc2626',
-                        marginTop: '6px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}>
-                        {fieldErrors.nisn}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Kelas */}
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: colors.text.secondary,
-                        marginBottom: '8px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}
-                    >
-                      Kelas
-                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
-                    </label>
-                    <select
-                      name="kelasId"
-                      value={formData.kelasId}
-                      onChange={(e) => handleFieldChange('kelasId', e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: fieldErrors.kelasId ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        background: colors.white,
-                      }}
-                      className="form-input"
-                    >
-                      <option value="">-- Pilih Kelas --</option>
-                      {kelas.map((k) => (
-                        <option key={k.id} value={k.id}>
-                          {k.nama}
-                        </option>
-                      ))}
-                    </select>
-                    {fieldErrors.kelasId && (
-                      <p style={{
-                        fontSize: '12px',
-                        color: '#dc2626',
-                        marginTop: '6px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}>
-                        {fieldErrors.kelasId}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Jenis Kelamin */}
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: colors.text.secondary,
-                        marginBottom: '8px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}
-                    >
-                      Jenis Kelamin
-                      <span style={{ color: '#DC2626', marginLeft: '4px' }}>*</span>
-                    </label>
-                    <select
-                      name="jenisKelamin"
-                      value={formData.jenisKelamin}
-                      onChange={(e) => handleFieldChange('jenisKelamin', e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: fieldErrors.jenisKelamin ? '2px solid #ef4444' : `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        background: colors.white,
-                      }}
-                      className="form-input"
-                    >
-                      <option value="LAKI_LAKI">Laki-laki</option>
-                      <option value="PEREMPUAN">Perempuan</option>
-                    </select>
-                    {fieldErrors.jenisKelamin && (
-                      <p style={{
-                        fontSize: '12px',
-                        color: '#dc2626',
-                        marginTop: '6px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}>
-                        {fieldErrors.jenisKelamin}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Tanggal Lahir */}
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: colors.text.secondary,
-                        marginBottom: '8px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      }}
-                    >
-                      Tanggal Lahir (Opsional)
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.tanggalLahir}
-                      onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: `2px solid ${colors.gray[200]}`,
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                        outline: 'none',
-                        transition: 'all 0.3s ease',
-                      }}
-                      className="form-input"
-                    />
-                  </div>
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-10">
+            {/* Warning for Guru */}
+            {userRole === 'GURU' && !isEditing && (
+              <div className="p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl flex gap-4 animate-pulse">
+                <AlertCircle className="text-amber-600 shrink-0" size={24} />
+                <div>
+                  <p className="text-sm font-bold text-amber-900">Menunggu Validasi Admin</p>
+                  <p className="text-xs text-amber-800/80 leading-relaxed mt-0.5">Siswa yang Anda tambahkan akan berstatus <span className="font-bold">Pending</span>. Admin perlu memvalidasi data sebelum siswa aktif sepenuhnya.</p>
                 </div>
               </div>
+            )}
 
-              {/* Section 2: Akun Siswa */}
-              <div style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                  <Key size={20} color={colors.teal[600]} />
-                  <h3
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: colors.text.primary,
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                    }}
-                  >
-                    Akun Siswa
-                  </h3>
-                </div>
+            {/* Section 1: Data Siswa */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-emerald-100 pb-3">
+                <User size={20} className="text-emerald-600" />
+                <h3 className="text-lg font-bold text-gray-900">Data Diri Siswa</h3>
+              </div>
 
-                {/* Email (Auto) */}
-                <div style={{ marginBottom: '16px' }}>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: colors.text.secondary,
-                      marginBottom: '8px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                    }}
-                  >
-                    Email (Otomatis)
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Row 1: Nama Lengkap — Jenis Kelamin */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">Nama Lengkap Siswa *</label>
                   <input
-                    type="email"
-                    value={formData.name && formData.nis ? generateSiswaEmail(formData.name, formData.nis) : ''}
-                    disabled
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: `2px solid ${colors.gray[200]}`,
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                      outline: 'none',
-                      background: colors.gray[100],
-                      color: colors.text.tertiary,
-                    }}
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+                    placeholder="Nama lengkap"
                   />
-                  <p
-                    style={{
-                      fontSize: '12px',
-                      color: colors.text.tertiary,
-                      marginTop: '6px',
-                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                    }}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">Jenis Kelamin *</label>
+                  <select
+                    required
+                    value={formData.jenisKelamin}
+                    onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white"
                   >
-                    Email otomatis dibuat dari Nama + NIS siswa
-                  </p>
+                    <option value="LAKI_LAKI">Laki-laki</option>
+                    <option value="PEREMPUAN">Perempuan</option>
+                  </select>
                 </div>
 
-                {/* Password */}
-                <PasswordField
-                  label="Password Akun Siswa"
-                  value={formData.password}
-                  onChange={(password) => handleFieldChange('password', password)}
-                  placeholder="Password untuk akun siswa"
-                  required={true}
-                  helperText="Gunakan kombinasi angka dan huruf. Bisa generate otomatis."
-                  error={fieldErrors.password}
-                />
-              </div>
+                {/* Row 2: NISN — NIS */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">NISN</label>
+                  <input
+                    type="text"
+                    value={formData.nisn}
+                    onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="10 digit NISN"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">NIS *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.nis}
+                    onChange={(e) => setFormData({ ...formData, nis: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="Nomor Induk Siswa"
+                  />
+                </div>
 
-              {/* Section 3: Parent Linking */}
-              <ParentLinkSection
-                mode={parentMode}
-                onModeChange={setParentMode}
-                selectedParentId={selectedParentId}
-                onSelectParent={setSelectedParentId}
-                newParentData={newParentData}
-                onNewParentChange={setNewParentData}
-                siswaFormData={formData}
-              />
+                {/* Row 3: Diterima di Kelas — Kelas */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">Diterima di Kelas *</label>
+                  <select
+                    required
+                    value={formData.kelasAngkatan}
+                    onChange={(e) => setFormData({ ...formData, kelasAngkatan: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white"
+                  >
+                    <option value="">-- Pilih Angkatan --</option>
+                    <option value="X">X (Sepuluh)</option>
+                    <option value="XI">XI (Sebelas)</option>
+                    <option value="XII">XII (Duabelas)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">Kelas Saat Ini *</label>
+                  <select
+                    required
+                    value={formData.kelasId}
+                    onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white"
+                  >
+                    <option value="">-- Pilih Kelas --</option>
+                    {kelas.map(k => (
+                      <option key={k.id} value={k.id}>{k.nama}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Row 4: Tahun Ajaran Masuk — Tanggal Lahir */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">Tahun Ajaran Masuk *</label>
+                  <select
+                    required
+                    value={formData.tahunAjaranMasukId}
+                    onChange={(e) => setFormData({ ...formData, tahunAjaranMasukId: e.target.value })}
+                    disabled={loadingInitial}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white disabled:bg-gray-50"
+                  >
+                    <option value="">{loadingInitial ? 'Memuat...' : '-- Pilih Tahun Ajaran --'}</option>
+                    {tahunAjaranList.map(ta => (
+                      <option key={ta.id} value={ta.id}>{ta.nama}{ta.isActive ? ' (Aktif)' : ''}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">Tanggal Lahir</label>
+                  <input
+                    type="date"
+                    value={formData.tanggalLahir}
+                    onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
             </div>
 
+            {/* Section 2: Akun Siswa (Only for create) */}
+            {!isEditing && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 border-b border-emerald-100 pb-3">
+                  <Key size={20} className="text-emerald-600" />
+                  <h3 className="text-lg font-bold text-gray-900">Akun Siswa</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Email (Otomatis)</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={formData.email || 'Akan otomatis dibuat'}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-50 bg-gray-50 text-gray-500 outline-none italic"
+                    />
+                  </div>
+                  <PasswordField
+                    label="Password Siswa"
+                    value={formData.password}
+                    onChange={(val) => setFormData({ ...formData, password: val })}
+                    placeholder="Password"
+                    required
+                    iconOnlyGenerate={true}
+                    helperText="Klik icon generate untuk mengisi password siswa."
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Section 3: Data Wali (Only for create) */}
+            {!isEditing && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 border-b border-emerald-100 pb-3">
+                  <Users size={20} className="text-emerald-600" />
+                  <h3 className="text-lg font-bold text-gray-900">Data Orang Tua / Wali</h3>
+                </div>
+
+                {/* Mode Selector */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${parentMode === 'select' ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100' : 'border-gray-100 hover:border-gray-200 bg-gray-50/50'}`}>
+                    <input type="radio" name="pMode" checked={parentMode === 'select'} onChange={() => setParentMode('select')} className="w-5 h-5 accent-emerald-600" />
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">Pilih Orang Tua Existing</p>
+                      <p className="text-[11px] text-gray-500">Cari dari database terdaftar</p>
+                    </div>
+                  </label>
+                  <label className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${parentMode === 'create' ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100' : 'border-gray-100 hover:border-gray-200 bg-gray-50/50'}`}>
+                    <input type="radio" name="pMode" checked={parentMode === 'create'} onChange={() => setParentMode('create')} className="w-5 h-5 accent-emerald-600" />
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">Buat Orang Tua Baru</p>
+                      <p className="text-[11px] text-gray-500">Daftarkan wali baru untuk siswa</p>
+                    </div>
+                  </label>
+                </div>
+
+                {parentMode === 'select' ? (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Cari nama atau nomor HP orang tua..."
+                        value={parentSearchTerm}
+                        onChange={(e) => setParentSearchTerm(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all text-sm"
+                      />
+                    </div>
+                    <select
+                      required={parentMode === 'select'}
+                      value={selectedParentId}
+                      onChange={(e) => setSelectedParentId(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white text-sm"
+                    >
+                      <option value="">-- Pilih Orang Tua --</option>
+                      {filteredParents.map(p => (
+                        <option key={p.id} value={p.id}>{p.user?.name} ({p.noHP || p.noTelepon || 'No HP -'})</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {/* Row 1: Jenis Wali — Nama Lengkap Wali */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-700">Jenis Wali *</label>
+                      <select
+                        required={parentMode === 'create'}
+                        value={newParentData.jenisWali}
+                        onChange={(e) => setNewParentData({ ...newParentData, jenisWali: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white"
+                      >
+                        <option value="Ayah">Ayah</option>
+                        <option value="Ibu">Ibu</option>
+                        <option value="Wali Lainnya">Wali Lainnya</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-700">Nama Lengkap Wali *</label>
+                      <input
+                        type="text"
+                        required={parentMode === 'create'}
+                        value={newParentData.name}
+                        onChange={(e) => setNewParentData({ ...newParentData, name: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
+                        placeholder="Nama lengkap wali"
+                      />
+                    </div>
+
+                    {/* Row 2: Jenis Kelamin Wali — No Telp Wali */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-700">Jenis Kelamin Wali *</label>
+                      <select
+                        required={parentMode === 'create'}
+                        value={newParentData.jenisKelamin}
+                        onChange={(e) => setNewParentData({ ...newParentData, jenisKelamin: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white"
+                      >
+                        <option value="LAKI_LAKI">Laki-laki</option>
+                        <option value="PEREMPUAN">Perempuan</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-700">No Telp Wali *</label>
+                      <input
+                        type="tel"
+                        required={parentMode === 'create'}
+                        value={newParentData.noHP}
+                        onChange={(e) => setNewParentData({ ...newParentData, noHP: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
+                        placeholder="Contoh: 08123456789"
+                      />
+                    </div>
+
+                    {/* Row 3: Email Akun Wali — Password Akun Wali */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-700">Email Wali (Otomatis)</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={newParentData.email || 'Akan otomatis dibuat'}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-50 bg-gray-50 text-gray-500 outline-none italic"
+                      />
+                    </div>
+                    <PasswordField
+                      label="Password Wali"
+                      value={newParentData.password}
+                      onChange={(val) => setNewParentData({ ...newParentData, password: val })}
+                      placeholder="Password"
+                      required={parentMode === 'create'}
+                      iconOnlyGenerate={true}
+                      helperText="Klik icon generate untuk mengisi password wali."
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Footer Actions */}
-            <div
-              style={{
-                position: 'sticky',
-                bottom: 0,
-                background: colors.white,
-                borderTop: `2px solid ${colors.gray[100]}`,
-                padding: '20px 32px',
-                display: 'flex',
-                gap: '12px',
-                justifyContent: 'flex-end',
-                borderRadius: '0 0 24px 24px',
-              }}
-            >
+            <div className="flex gap-4 justify-end pt-6 border-t border-gray-100 sticky bottom-0 bg-white/80 backdrop-blur-md pb-2">
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={onClose}
                 disabled={loading}
-                style={{
-                  padding: '12px 24px',
-                  border: `2px solid ${colors.gray[200]}`,
-                  borderRadius: '12px',
-                  background: colors.white,
-                  color: colors.text.secondary,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.3s ease',
-                  opacity: loading ? 0.5 : 1,
-                }}
-                className="cancel-btn"
+                className="px-8 py-3 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-all disabled:opacity-50"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                style={{
-                  padding: '12px 32px',
-                  border: 'none',
-                  borderRadius: '12px',
-                  background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`,
-                  color: colors.white,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(26, 147, 111, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  opacity: loading ? 0.7 : 1,
-                }}
-                className="submit-btn"
+                className="px-10 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-3"
               >
                 {loading ? (
-                  <LoadingIndicator size="small" inline text="Menyimpan..." className="text-white" />
+                  <LoadingIndicator size="small" text="Memproses..." inline className="text-white" />
                 ) : (
-                  'Simpan Siswa'
+                  <>
+                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                    <span>{isEditing ? 'Simpan Perubahan' : 'Simpan Siswa'}</span>
+                  </>
                 )}
               </button>
             </div>
@@ -878,56 +620,15 @@ export default function StudentCreateModal({ isOpen, onClose, onSuccess, default
         </div>
       </div>
 
-      {/* Success Modal */}
       {showSuccessModal && createdAccounts && (
-        <AccountSuccessModal accounts={createdAccounts} onClose={handleSuccessModalClose} />
+        <AccountSuccessModal
+          accounts={createdAccounts}
+          onClose={() => {
+            setShowSuccessModal(false);
+            onClose();
+          }}
+        />
       )}
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes modalSlideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .close-modal-btn:hover {
-          background: ${colors.gray[100]} !important;
-        }
-
-        .form-input:focus {
-          border-color: ${fieldErrors.name || fieldErrors.nis || fieldErrors.nisn || fieldErrors.kelasId || fieldErrors.jenisKelamin ? '#ef4444' : colors.emerald[500]} !important;
-          box-shadow: 0 0 0 3px ${fieldErrors.name || fieldErrors.nis || fieldErrors.nisn || fieldErrors.kelasId || fieldErrors.jenisKelamin ? '#ef444420' : colors.emerald[500]}20 !important;
-        }
-
-        .cancel-btn:hover {
-          background: ${colors.gray[100]} !important;
-        }
-
-        .submit-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(26, 147, 111, 0.3) !important;
-        }
-      `}</style>
     </>
   );
 }

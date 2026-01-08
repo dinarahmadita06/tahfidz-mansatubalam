@@ -20,12 +20,12 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { nama, tahunAjaranId, targetJuz, kapasitas, guruUtamaId, guruPendampingIds, forceUpdate } = body;
+    const { nama, tahunAjaranId, targetJuz, kapasitas, guruUtamaId, forceUpdate } = body;
 
     // Validate required fields
-    if (!nama || !tahunAjaranId) {
+    if (!nama || !tahunAjaranId || !guruUtamaId) {
       return NextResponse.json(
-        { error: 'Data tidak lengkap' },
+        { error: 'Data tidak lengkap. Nama kelas, tahun ajaran, dan guru pembina harus diisi.' },
         { status: 400 }
       );
     }
@@ -113,40 +113,18 @@ export async function PUT(request, { params }) {
         where: { kelasId: id }
       });
 
-      // 3. Add guru utama if provided (non-null, non-empty)
-      if (guruUtamaId && guruUtamaId.trim()) {
-        await tx.guruKelas.create({
-          data: {
-            kelasId: id,
-            guruId: guruUtamaId, // Keep as string - it's a CUID
-            peran: 'utama',
-            isActive: true,
-          },
-        });
-      }
+      // 3. Add guru pembina
+      await tx.guruKelas.create({
+        data: {
+          kelasId: id,
+          guruId: guruUtamaId, // Keep as string - it's a CUID
+          peran: 'utama',
+          isActive: true,
+        },
+      });
 
-      // 4. Add guru pendamping if provided (filter out empty values)
-      if (guruPendampingIds && Array.isArray(guruPendampingIds) && guruPendampingIds.length > 0) {
-        // Filter out empty values, duplicates, and ensure guru utama is not included
-        const validGuruIds = [...new Set(guruPendampingIds.filter(gid => 
-          gid && gid.trim() && gid !== guruUtamaId
-        ))];
-        
-        if (validGuruIds.length > 0) {
-          const guruPendampingData = validGuruIds.map((guruId) => ({
-            kelasId: id,
-            guruId: guruId, // Keep as string - it's a CUID
-            peran: 'pendamping',
-            isActive: true,
-          }));
-
-          await tx.guruKelas.createMany({
-            data: guruPendampingData,
-            skipDuplicates: true
-          });
-        }
-      }
-
+      // 4. Removed guru pendamping handling as requested
+      
       // 5. Fetch complete kelas data
       const kelasWithRelations = await tx.kelas.findUnique({
         where: { id },
@@ -196,8 +174,7 @@ export async function PUT(request, { params }) {
         userAgent: getUserAgent(request),
         metadata: {
           kelasId: updatedKelas.id,
-          guruUtamaId: guruUtamaId || null,
-          guruPendampingCount: guruPendampingIds?.length || 0
+          guruPembinaId: guruUtamaId,
         }
       });
     } catch (logError) {

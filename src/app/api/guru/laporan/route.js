@@ -50,15 +50,17 @@ export async function GET(request) {
     }
 
     if (viewMode === 'bulanan' || viewMode === 'semesteran') {
-      // For monthly/semester reports, we need ALL siswa from the kelas with aggregated data
+      // For monthly/semester reports, we need ALL APPROVED siswa from the kelas with aggregated data
+      // PENDING students are excluded from official reports
       
-      // First, get all siswa in the selected kelas
+      // First, get all APPROVED siswa in the selected kelas
       let allSiswa = [];
       if (kelasId) {
         allSiswa = await prisma.siswa.findMany({
           where: {
             kelasId: kelasId,
-            statusSiswa: 'AKTIF' // Only active students
+            statusSiswa: 'AKTIF', // Only active students
+            status: 'approved' // Only approved students (exclude PENDING)
           },
           include: {
             user: {
@@ -90,7 +92,8 @@ export async function GET(request) {
           where: {
             guruId: session.user.guruId,
             siswa: {
-              kelasId: kelasId
+              kelasId: kelasId,
+              status: 'approved' // Only include penilaian from approved students in official reports
             },
             tanggal: {
               gte: new Date(tanggalMulai),
@@ -107,7 +110,8 @@ export async function GET(request) {
         prisma.presensi.findMany({
           where: {
             siswa: {
-              kelasId: kelasId
+              kelasId: kelasId,
+              status: 'approved' // Only include attendance from approved students in official reports
             },
             tanggal: {
               gte: new Date(tanggalMulai),
