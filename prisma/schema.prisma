@@ -190,7 +190,6 @@ model Siswa {
 model OrangTua {
   id             String         @id @default(cuid())
   userId         String         @unique
-  nik            String         @unique
   pekerjaan      String?
   alamat         String?
   noTelepon      String?

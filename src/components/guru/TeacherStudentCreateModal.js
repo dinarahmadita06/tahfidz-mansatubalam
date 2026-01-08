@@ -51,7 +51,6 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
     phone: '',
     email: '',
     password: '',
-    nik: '',
     gender: 'LAKI_LAKI',
     relationType: 'Ayah',
   });
@@ -112,21 +111,29 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
     }
   };
 
-  // Auto-generate parent email and set gender
+  // Auto-generate parent email, password and set gender
   useEffect(() => {
     if (parentMode === 'create') {
       let updates = {};
       
       // Auto email
       if (newParentData.name && formData.nis) {
-        updates.email = generateWaliEmail(newParentData.name, formData.nis);
+        const generatedEmail = generateWaliEmail(newParentData.name, formData.nis);
+        if (newParentData.email !== generatedEmail) {
+          updates.email = generatedEmail;
+        }
+      }
+
+      // Auto password if empty
+      if (!newParentData.password && newParentData.name && formData.nis) {
+        updates.password = generatePasswordMixed();
       }
       
       // Auto gender based on relation
       if (newParentData.relationType === 'Ayah') {
-        updates.gender = 'LAKI_LAKI';
+        if (newParentData.gender !== 'LAKI_LAKI') updates.gender = 'LAKI_LAKI';
       } else if (newParentData.relationType === 'Ibu') {
-        updates.gender = 'PEREMPUAN';
+        if (newParentData.gender !== 'PEREMPUAN') updates.gender = 'PEREMPUAN';
       }
       
       if (Object.keys(updates).length > 0) {
@@ -152,7 +159,6 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
       phone: '',
       email: '',
       password: '',
-      nik: '',
       gender: 'LAKI_LAKI',
       relationType: 'Ayah',
     });
@@ -415,6 +421,7 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                  {/* Row 1: Jenis Wali | Nama Lengkap Wali */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Jenis Wali *</label>
                     <select
@@ -439,28 +446,8 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
                       placeholder="Nama wali utama"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">NIK Wali *</label>
-                    <input
-                      type="text"
-                      required={parentMode === 'create'}
-                      value={newParentData.nik}
-                      onChange={(e) => setNewParentData({ ...newParentData, nik: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 outline-none transition-all"
-                      placeholder="16 digit NIK"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Nomor Telepon Wali *</label>
-                    <input
-                      type="tel"
-                      required={parentMode === 'create'}
-                      value={newParentData.phone}
-                      onChange={(e) => setNewParentData({ ...newParentData, phone: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 outline-none transition-all"
-                      placeholder="08xxxxxxxxxx"
-                    />
-                  </div>
+
+                  {/* Row 2: Jenis Kelamin Wali | Nomor Telepon Wali */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Jenis Kelamin Wali *</label>
                     <select
@@ -474,6 +461,19 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
                     </select>
                   </div>
                   <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Nomor Telepon Wali *</label>
+                    <input
+                      type="tel"
+                      required={parentMode === 'create'}
+                      value={newParentData.phone}
+                      onChange={(e) => setNewParentData({ ...newParentData, phone: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 outline-none transition-all"
+                      placeholder="08xxxxxxxxxx"
+                    />
+                  </div>
+
+                  {/* Row 3: Email Akun Wali (Otomatis) | Password Akun Wali (Otomatis) */}
+                  <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Email Akun Wali (Otomatis)</label>
                     <input
                       type="text"
@@ -482,9 +482,9 @@ export default function TeacherStudentCreateModal({ isOpen, onClose, onSuccess, 
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 bg-gray-50 text-gray-500 outline-none cursor-not-allowed italic"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
                     <PasswordField
-                      label="Password Akun Wali"
+                      label="Password Akun Wali (Otomatis)"
                       value={newParentData.password}
                       onChange={(val) => setNewParentData({ ...newParentData, password: val })}
                       placeholder="Gunakan password aman untuk wali"

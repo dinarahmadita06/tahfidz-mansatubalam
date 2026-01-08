@@ -127,7 +127,6 @@ export async function POST(request) {
               orangTua = await prisma.orangTua.create({
                 data: {
                   noTelepon: noHPOrtu || null,
-                  nik: `NIK${Date.now()}${Math.random().toString(36).substr(2, 9)}`, // Generate unique NIK
                   jenisKelamin: 'LAKI_LAKI', // Default, bisa diubah nanti
                   status: 'approved', // Auto-approve
                   user: {
