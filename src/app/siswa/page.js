@@ -8,7 +8,6 @@ import StudentDashboardContent from '@/components/dashboard/StudentDashboardCont
 import {
   BookMarked,
   Target,
-  CalendarCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,8 +31,6 @@ export default function DashboardSiswa() {
     hafalanSelesai: 0,
     totalHafalan: 0,
     rataRataNilai: 0,
-    kehadiran: 0,
-    totalHari: 0,
     catatanGuru: 0,
   });
 
@@ -75,8 +72,6 @@ export default function DashboardSiswa() {
               hafalanSelesai: data.stats.hafalanSelesai || 0,
               totalHafalan: data.stats.totalHafalan || 0,
               rataRataNilai: data.stats.rataRataNilai || 0,
-              kehadiran: data.stats.kehadiran || 0,
-              totalHari: data.stats.totalHari || 0,
               catatanGuru: data.stats.catatanGuru || 0,
             });
           }
@@ -110,12 +105,6 @@ export default function DashboardSiswa() {
               <Target className="text-white flex-shrink-0" size={18} />
               <span className="text-white font-semibold text-sm whitespace-nowrap">
                 {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
-              </span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-              <CalendarCheck className="text-white flex-shrink-0" size={18} />
-              <span className="text-white font-semibold text-sm whitespace-nowrap">
-                Kehadiran {stats.kehadiran}/{stats.totalHari > 0 ? stats.totalHari : '-'}
               </span>
             </div>
           </div>

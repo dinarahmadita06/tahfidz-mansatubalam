@@ -10,7 +10,6 @@ import {
   Star,
   Book,
   BookOpen,
-  CalendarCheck,
   TrendingUp,
   UserCircle,
   Menu,
@@ -57,13 +56,6 @@ const menuItems = [
     href: '/siswa/referensi',
     description: 'Baca & dengar Qur\'an',
     color: 'emerald'
-  },
-  {
-    title: 'Presensi',
-    icon: CalendarCheck,
-    href: '/siswa/presensi',
-    description: 'Riwayat kehadiran',
-    color: 'sky'
   },
   {
     title: 'Laporan Hafalan',
