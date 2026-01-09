@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { Key, Search, User, Mail, Shield, AlertCircle, CheckCircle, Lock, Info, Clock, UserCheck } from 'lucide-react';
+import { Key, Search, User, Mail, Shield, AlertCircle, CheckCircle, Lock, Info, Clock, UserCheck, RefreshCw } from 'lucide-react';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
+import { generateStudentPassword, generateParentPassword } from '@/lib/passwordUtils';
 
 export default function ResetPasswordUserPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,8 +43,11 @@ export default function ResetPasswordUserPage() {
     setError('');
     setSuccess('');
 
-    if (newPassword.length < 8) {
-      setError('Password minimal 8 karakter');
+    // Default student/parent passwords might be shorter than 8 (e.g. 10 digit NISN)
+    // But requirement says NISN (10 digits).
+    // Let's keep a reasonable minimum.
+    if (newPassword.length < 6) {
+      setError('Password minimal 6 karakter');
       return;
     }
 
@@ -62,7 +66,7 @@ export default function ResetPasswordUserPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(`Password untuk ${searchResult.name} berhasil direset!`);
+        setSuccess('Password berhasil di-reset');
         setNewPassword('');
         setSearchResult(null);
         setSearchQuery('');
@@ -73,6 +77,35 @@ export default function ResetPasswordUserPage() {
       setError('Terjadi kesalahan saat reset password');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUseDefaultPassword = () => {
+    if (!searchResult) return;
+    setError('');
+    setSuccess('');
+    
+    if (searchResult.role === 'SISWA' && searchResult.siswa) {
+      if (!searchResult.siswa.nisn) {
+        setError('NISN tidak ditemukan untuk siswa ini');
+        return;
+      }
+      setNewPassword(searchResult.siswa.nisn);
+      setSuccess('Password default diatur ke NISN');
+    } else if (searchResult.role === 'ORANG_TUA' && searchResult.orangTua) {
+      const firstSiswa = searchResult.orangTua.orangTuaSiswa?.[0]?.siswa;
+      if (firstSiswa && firstSiswa.nisn) {
+        if (!firstSiswa.tanggalLahir) {
+          setError('Tanggal lahir tidak tersedia, password wali di-reset ke NISN');
+        } else {
+          setSuccess('Password default diatur ke NISN-TahunLahir');
+        }
+        setNewPassword(generateParentPassword(firstSiswa.nisn, firstSiswa.tanggalLahir));
+      } else {
+        setError('Data siswa terhubung tidak ditemukan untuk wali ini');
+      }
+    } else {
+      setError('Password default hanya tersedia untuk Siswa dan Orang Tua');
     }
   };
 
@@ -299,14 +332,27 @@ export default function ResetPasswordUserPage() {
                     <Lock className="w-4 h-4 text-gray-500" />
                     Password Baru
                   </label>
-                  <input
-                    type="text"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-purple-500 focus:ring-3 focus:ring-purple-100 transition-all duration-200 outline-none"
-                    placeholder="Minimal 8 karakter"
-                  />
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      className="flex-1 px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-purple-500 focus:ring-3 focus:ring-purple-100 transition-all duration-200 outline-none"
+                      placeholder="Minimal 6 karakter"
+                    />
+                    {(searchResult.role === 'SISWA' || searchResult.role === 'ORANG_TUA') && (
+                      <button
+                        type="button"
+                        onClick={handleUseDefaultPassword}
+                        className="px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-all flex items-center gap-2"
+                        title="Gunakan format default (NISN / NISN-YYYY)"
+                      >
+                        <RefreshCw size={16} />
+                        <span className="hidden sm:inline">Gunakan Default</span>
+                      </button>
+                    )}
+                  </div>
                   <div className="mt-2 flex items-start gap-2 text-xs text-gray-500">
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     <p>Password akan langsung aktif dan user dapat login dengan password baru ini</p>

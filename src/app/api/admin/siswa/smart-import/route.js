@@ -141,7 +141,12 @@ export async function POST(request) {
             // Create new orang tua account
             const orangTuaEmail = orangtuaData.email ||
               `${generateUsername(orangtuaData.nama, 'ortu')}@tahfidz.ortu`;
-            const orangTuaPassword = generatePassword(8);
+            
+            // New password format: NISN-YYYY
+            const birthDate = siswaData.tanggalLahir ? new Date(siswaData.tanggalLahir) : null;
+            const birthYear = birthDate && !isNaN(birthDate.getTime()) ? birthDate.getFullYear() : null;
+            const orangTuaPassword = birthYear ? `${nisValue}-${birthYear}` : nisValue.toString();
+            
             const hashedPassword = await bcrypt.hash(orangTuaPassword, 10);
 
             // Check if email already exists
@@ -184,7 +189,10 @@ export async function POST(request) {
         if (autoCreateAccount) {
           // Auto-generate email using consistent format: firstname.nis@siswa.tahfidz.sch.id
           siswaEmail = generateSiswaEmail(siswaData.nama, siswaData.nis);
-          siswaPassword = siswaData.nis?.toString() || generatePassword(8);
+          
+          // New password format: always NISN (SIMTAQ standard)
+          const nisnValue = siswaData.nisn || siswaData.nis;
+          siswaPassword = nisnValue.toString();
 
           // Check if email already exists
           const existingUserEmail = await prisma.user.findUnique({

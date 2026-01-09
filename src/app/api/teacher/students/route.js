@@ -16,13 +16,13 @@ export async function POST(request) {
     const body = await request.json();
     const { student, parentMode, existingParentId, parent } = body;
 
-    // 2. Validasi input dasar
-    if (!student || !student.name || !student.nis || !student.kelasId || !student.password) {
+    // 2. Validasi input dasar (Password now optional for standard generation)
+    if (!student || !student.name || !student.nis || !student.kelasId) {
       return NextResponse.json({ error: 'Data siswa tidak lengkap' }, { status: 400 });
     }
 
-    if (parentMode === 'NEW' && (!parent || !parent.name || !parent.phone || !parent.email || !parent.password || !parent.gender)) {
-      return NextResponse.json({ error: 'Data orang tua baru tidak lengkap (Nama, No HP, Email, Password, dan Jenis Kelamin wajib diisi)' }, { status: 400 });
+    if (parentMode === 'NEW' && (!parent || !parent.name || !parent.phone || !parent.email || !parent.gender)) {
+      return NextResponse.json({ error: 'Data orang tua baru tidak lengkap (Nama, No HP, Email, dan Jenis Kelamin wajib diisi)' }, { status: 400 });
     }
 
     if (parentMode === 'EXISTING' && !existingParentId) {
@@ -54,8 +54,17 @@ export async function POST(request) {
 
     // 4. Atomic Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // a. Create Student User
-      const hashedStudentPassword = await bcrypt.hash(student.password, 10);
+      // a. Determine Student Password (Standard: NISN)
+      let studentPassword = student.password;
+      if (!studentPassword || studentPassword.trim() === '') {
+        if (!student.nisn || student.nisn.trim().length !== 10) {
+          throw new Error('NISN wajib 10 digit untuk generate password default');
+        }
+        studentPassword = student.nisn.trim();
+      }
+
+      // b. Create Student User
+      const hashedStudentPassword = await bcrypt.hash(studentPassword, 10);
       const studentUser = await tx.user.create({
         data: {
           name: student.name,
@@ -66,7 +75,7 @@ export async function POST(request) {
         }
       });
 
-      // b. Create Student Data
+      // c. Create Student Data
       const studentData = await tx.siswa.create({
         data: {
           userId: studentUser.id,
@@ -85,8 +94,10 @@ export async function POST(request) {
         }
       });
 
-      // c. Handle Parent
+      // d. Handle Parent
       let parentId;
+      let finalParentPassword = '';
+
       if (parentMode === 'EXISTING') {
         const existingParent = await tx.orangTua.findUnique({
           where: { id: existingParentId }
@@ -94,8 +105,28 @@ export async function POST(request) {
         if (!existingParent) throw new Error('Orang tua yang dipilih tidak ditemukan');
         parentId = existingParent.id;
       } else {
+        // Determine Parent Password (Standard: NISN-YYYY)
+        let parentPassword = parent.password;
+        if (!parentPassword || parentPassword.trim() === '') {
+          if (!student.nisn || student.nisn.trim().length !== 10) {
+            throw new Error('NISN wajib 10 digit untuk generate password wali');
+          }
+          const baseNISN = student.nisn.trim();
+          if (student.birthDate) {
+            const date = new Date(student.birthDate);
+            if (!isNaN(date.getTime())) {
+              parentPassword = `${baseNISN}-${date.getFullYear()}`;
+            } else {
+              parentPassword = baseNISN;
+            }
+          } else {
+            parentPassword = baseNISN;
+          }
+        }
+        finalParentPassword = parentPassword;
+
         // Create New Parent User
-        const hashedParentPassword = await bcrypt.hash(parent.password, 10);
+        const hashedParentPassword = await bcrypt.hash(parentPassword, 10);
         const parentUser = await tx.user.create({
           data: {
             name: parent.name,
@@ -118,7 +149,7 @@ export async function POST(request) {
         parentId = newParent.id;
       }
 
-      // d. Create Relation (OrangTuaSiswa)
+      // e. Create Relation (OrangTuaSiswa)
       try {
         await tx.orangTuaSiswa.create({
           data: {
@@ -136,11 +167,13 @@ export async function POST(request) {
         student: {
           id: studentData.id,
           name: studentUser.name,
-          email: studentUser.email
+          email: studentUser.email,
+          password: studentPassword // Return for success display if needed
         },
         parent: {
           id: parentId,
-          email: parentMode === 'NEW' ? parent.email : null
+          email: parentMode === 'NEW' ? parent.email : null,
+          password: finalParentPassword // Return for success display if needed
         }
       };
     });

@@ -24,9 +24,9 @@ export async function POST(request) {
     }
 
     // Validasi panjang password
-    if (newPassword.length < 8) {
+    if (newPassword.length < 6) {
       return NextResponse.json(
-        { error: 'Password minimal 8 karakter' },
+        { error: 'Password minimal 6 karakter' },
         { status: 400 }
       );
     }
@@ -73,7 +73,7 @@ export async function POST(request) {
     console.log(`✅ Admin ${session.user.email} reset password untuk ${user.email}`);
 
     return NextResponse.json(
-      { message: 'Password berhasil direset' },
+      { message: 'Password berhasil di-reset' },
       { status: 200 }
     );
   } catch (error) {

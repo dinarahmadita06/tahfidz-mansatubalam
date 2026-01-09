@@ -177,10 +177,9 @@ export async function POST(request) {
     } = body;
     console.log(`⏱️ Parse body: ${Date.now() - parseStart}ms`);
 
-    // Validate required fields
+    // Validate required fields (Password optional for standard generation)
     const missingFields = [];
     if (!name || name.trim() === '') missingFields.push('name');
-    if (!password || password.trim() === '') missingFields.push('password');
     if (!nis || nis.trim() === '') missingFields.push('nis');
     if (!kelasId || kelasId.trim() === '') missingFields.push('kelasId');
     if (!jenisKelamin || jenisKelamin.trim() === '') missingFields.push('jenisKelamin');
@@ -253,9 +252,21 @@ export async function POST(request) {
       );
     }
 
-    // OPTIMIZED: Hash password dengan saltRounds explicit (10 untuk balance security vs speed)
+    // Determine student password
+    let studentPassword = password;
+    if (!studentPassword || studentPassword.trim() === '') {
+      if (!nisn || nisn.trim().length !== 10) {
+        return NextResponse.json(
+          { error: 'Password wajib diisi atau NISN harus 10 digit untuk password default' },
+          { status: 400 }
+        );
+      }
+      studentPassword = nisn.trim();
+    }
+
+    // Hash password
     const hashStart = Date.now();
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(studentPassword, 10);
     console.log(`⏱️ Password hashing: ${Date.now() - hashStart}ms`);
 
     // ============ ATOMIC TRANSACTION: Siswa + Orang Tua ============
@@ -311,16 +322,34 @@ export async function POST(request) {
       console.log('✅ Siswa created:', newSiswa.id);
 
       // Step 2: Create parent if parentData is provided
-      if (parentData && parentData.name && parentData.noHP && parentData.email && parentData.password) {
+      if (parentData && parentData.name && parentData.noHP && parentData.email) {
         console.log('📝 Step 2: Creating orang tua...');
 
-        // Validate parent data
-        if (parentData.password.length < 8) {
-          throw new Error('Password orang tua minimal 8 karakter');
+        // Determine parent password
+        let pPassword = parentData.password;
+        if (!pPassword || pPassword.trim() === '') {
+          if (!nisn || nisn.trim().length !== 10) {
+             throw new Error('NISN wajib 10 digit untuk generate password orang tua');
+          }
+          const baseNISN = nisn.trim();
+          if (tanggalLahir) {
+            const date = new Date(tanggalLahir);
+            if (!isNaN(date.getTime())) {
+              pPassword = `${baseNISN}-${date.getFullYear()}`;
+            } else {
+              pPassword = baseNISN;
+            }
+          } else {
+            pPassword = baseNISN;
+          }
+        }
+
+        if (pPassword.length < 6) {
+          throw new Error('Password orang tua minimal 6 karakter');
         }
 
         // Hash parent password
-        const parentHashedPassword = await bcrypt.hash(parentData.password, 10);
+        const parentHashedPassword = await bcrypt.hash(pPassword, 10);
 
         // Check if parent email exists
         const existingParentEmail = await tx.user.findUnique({

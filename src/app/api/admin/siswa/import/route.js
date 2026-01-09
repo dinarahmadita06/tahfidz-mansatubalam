@@ -122,7 +122,12 @@ export async function POST(request) {
 
             if (!existingUser) {
               // Create new orang tua
-              const hashedPasswordOrtu = await bcrypt.hash('password123', 10); // Default password
+              // Default password according to SIMTAQ standard: NISN-YYYY
+              const birthDate = tanggalLahir ? new Date(tanggalLahir) : null;
+              const birthYear = birthDate && !isNaN(birthDate.getTime()) ? birthDate.getFullYear() : null;
+              const passwordOrtu = birthYear ? `${nisn}-${birthYear}` : nisn;
+              
+              const hashedPasswordOrtu = await bcrypt.hash(passwordOrtu, 10);
 
               orangTua = await prisma.orangTua.create({
                 data: {
@@ -160,8 +165,8 @@ export async function POST(request) {
           continue;
         }
 
-        // Default password is NIS
-        const hashedPassword = await bcrypt.hash(nis, 10);
+        // Default password is NISN (SIMTAQ standard)
+        const hashedPassword = await bcrypt.hash(nisn, 10);
 
         // Create siswa
         const siswa = await prisma.siswa.create({

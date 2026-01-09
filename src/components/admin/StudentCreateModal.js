@@ -28,7 +28,12 @@ import PasswordField from './PasswordField';
 import AccountSuccessModal from './AccountSuccessModal';
 import toast from 'react-hot-toast';
 import { generateSiswaEmail } from '@/lib/siswaUtils';
-import { generateWaliEmail, generatePasswordMixed } from '@/lib/passwordUtils';
+import { 
+  generateWaliEmail, 
+  generatePasswordMixed,
+  generateStudentPassword,
+  generateParentPassword
+} from '@/lib/passwordUtils';
 
 export default function StudentCreateModal({ 
   isOpen, 
@@ -204,6 +209,26 @@ export default function StudentCreateModal({
     }
   }, [newParentData.name, formData.nis, newParentData.jenisWali, parentMode]);
 
+  // Auto-fill student password from NISN
+  useEffect(() => {
+    if (!isEditing && formData.nisn && formData.nisn.trim().length === 10 && !formData.password) {
+      setFormData(prev => ({ 
+        ...prev, 
+        password: generateStudentPassword(formData.nisn)
+      }));
+    }
+  }, [formData.nisn, isEditing, formData.password]);
+
+  // Auto-fill parent password from NISN and birth date
+  useEffect(() => {
+    if (parentMode === 'create' && formData.nisn && formData.nisn.trim().length === 10 && formData.tanggalLahir && !newParentData.password) {
+      setNewParentData(prev => ({ 
+        ...prev, 
+        password: generateParentPassword(formData.nisn, formData.tanggalLahir)
+      }));
+    }
+  }, [formData.nisn, formData.tanggalLahir, parentMode, newParentData.password]);
+
   const handleResetPassword = async () => {
     if (!window.confirm('Apakah Anda yakin ingin mereset password siswa ini? Password lama akan langsung tidak berlaku.')) {
       return;
@@ -221,7 +246,7 @@ export default function StudentCreateModal({
       const data = await res.json();
       setNewGeneratedPassword(data.newPassword);
       setShowGeneratedPassword(true);
-      toast.success('Password berhasil direset!');
+      toast.success('Password berhasil di-reset');
     } catch (error) {
       console.error(error);
       toast.error('Gagal mereset password siswa');
@@ -236,6 +261,30 @@ export default function StudentCreateModal({
     setCopied(true);
     toast.success('Password disalin ke clipboard');
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleGenerateStudentPassword = () => {
+    if (!formData.nisn || formData.nisn.trim().length !== 10) {
+      toast.error('NISN wajib diisi (10 digit) terlebih dahulu');
+      return;
+    }
+    const pwd = generateStudentPassword(formData.nisn);
+    setFormData({ ...formData, password: pwd });
+    toast.success('Password siswa di-generate dari NISN');
+  };
+
+  const handleGenerateParentPassword = () => {
+    if (!formData.nisn || formData.nisn.trim().length !== 10) {
+      toast.error('NISN wajib diisi (10 digit) terlebih dahulu');
+      return;
+    }
+    if (!formData.tanggalLahir) {
+      toast.error('Tanggal lahir wajib diisi untuk generate password wali');
+      return;
+    }
+    const pwd = generateParentPassword(formData.nisn, formData.tanggalLahir);
+    setNewParentData({ ...newParentData, password: pwd });
+    toast.success('Password wali di-generate (NISN-TahunLahir)');
   };
 
   const handleSubmit = async (e) => {
@@ -520,7 +569,8 @@ export default function StudentCreateModal({
                     placeholder="Password"
                     required
                     iconOnlyGenerate={true}
-                    helperText="Klik icon generate untuk mengisi password siswa."
+                    onGenerateCustom={handleGenerateStudentPassword}
+                    helperText="Klik icon generate untuk mengisi password siswa dari NISN."
                   />
                 </div>
               </div>
@@ -714,7 +764,8 @@ export default function StudentCreateModal({
                       placeholder="Password"
                       required={parentMode === 'create'}
                       iconOnlyGenerate={true}
-                      helperText="Klik icon generate untuk mengisi password wali."
+                      onGenerateCustom={handleGenerateParentPassword}
+                      helperText="Klik icon generate untuk mengisi password wali (NISN-TahunLahir)."
                     />
                   </div>
                 )}
