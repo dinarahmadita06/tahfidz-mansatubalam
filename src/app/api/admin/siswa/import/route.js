@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { invalidateCache } from '@/lib/cache';
-import { generateSiswaEmail } from '@/lib/siswaUtils';
+import { generateSiswaEmail, generateOrangTuaEmail } from '@/lib/siswaUtils';
 
 export async function POST(request) {
   try {
@@ -29,67 +29,74 @@ export async function POST(request) {
     // Process each siswa
     for (const data of siswaData) {
       try {
-        let {
-          name,
-          nisn,
-          nis,
-          kelasId,
-          jenisKelamin,
-          tempatLahir,
-          tanggalLahir,
-          namaOrtu,
-          emailOrtu,
-          noHPOrtu
-        } = data;
+        // Map Excel headers to internal fields
+        const name = data['Nama Siswa'] || data.name;
+        const nisn = String(data['NISN'] || data.nisn || '').trim();
+        const nis = String(data['NIS'] || data.nis || '').trim();
+        const kelasInput = String(data['Kelas Saat Ini'] || data.kelasId || '').trim();
+        const jenisKelamin = data['Jenis Kelamin'] || data.jenisKelamin;
+        const tanggalLahir = data['Tanggal Lahir'] || data.tanggalLahir;
+        const alamat = data['Alamat'] || data.alamat;
+        const noWhatsApp = data['Nomor WhatsApp Siswa'] || data.noWhatsApp;
+        const kelasAngkatan = data['Diterima di Kelas / Angkatan'] || data.kelasAngkatan;
+        const tahunAjaranMasuk = data['Tahun Ajaran Masuk'] || data.tahunAjaranMasuk;
 
-        // Convert NISN and NIS to string (in case Excel reads as number)
-        nisn = String(nisn || '').trim();
-        nis = String(nis || '').trim();
-        let kelasInput = String(kelasId || '').trim();
-        noHPOrtu = noHPOrtu ? String(noHPOrtu).trim() : null;
+        const jenisWali = data['Jenis Wali'] || data.hubungan || 'Orang Tua';
+        const namaWali = data['Nama Wali'] || data.namaOrtu;
+        const jkWali = data['Jenis Kelamin Wali'] || 'LAKI_LAKI';
+        const noHPWali = data['No HP Wali'] || data.noHPOrtu;
 
-        // Validate required fields - NISN and NIS are both required now
-        if (!name || !nisn || !nis || !kelasInput || !jenisKelamin || !tanggalLahir) {
+        // Validate required fields
+        if (!name || !nisn || !nis || !kelasInput || !jenisKelamin || !tanggalLahir || !tahunAjaranMasuk || !namaWali || !noHPWali) {
           results.failed.push({
             data,
-            error: 'Data siswa tidak lengkap (NISN, NIS, Nama, Jenis Kelamin, Tanggal Lahir wajib diisi)'
+            error: 'Data tidak lengkap. Pastikan Nama Siswa, NISN, NIS, JK, Tgl Lahir, Kelas, Angkatan, Tahun Ajaran Masuk, Nama Wali, dan No HP Wali diisi.'
           });
           continue;
         }
 
         // Check if nisn or nis already exists
-        const existingNisn = await prisma.siswa.findUnique({ where: { nisn } });
-        if (existingNisn) {
+        const existingSiswa = await prisma.siswa.findFirst({
+          where: {
+            OR: [
+              { nis: nis },
+              { nisn: nisn }
+            ]
+          }
+        });
+
+        if (existingSiswa) {
           results.failed.push({
             data,
-            error: `NISN ${nisn} sudah terdaftar`
+            error: `NIS ${nis} atau NISN ${nisn} sudah terdaftar`
           });
           continue;
         }
 
-        const existingNis = await prisma.siswa.findUnique({ where: { nis } });
-        if (existingNis) {
+        // Find Tahun Ajaran
+        const ta = await prisma.tahunAjaran.findFirst({
+          where: {
+            nama: { contains: String(tahunAjaranMasuk), mode: 'insensitive' }
+          }
+        });
+
+        if (!ta) {
           results.failed.push({
             data,
-            error: `NIS ${nis} sudah terdaftar`
+            error: `Tahun Ajaran "${tahunAjaranMasuk}" tidak ditemukan`
           });
           continue;
         }
 
-        // Check if kelas exists - try to find by ID first, then by name
-        let kelas = await prisma.kelas.findUnique({ where: { id: kelasInput } });
-
-        // If not found by ID, try to find by name
-        if (!kelas) {
-          kelas = await prisma.kelas.findFirst({
-            where: {
-              nama: {
-                equals: kelasInput,
-                mode: 'insensitive'
-              }
-            }
-          });
-        }
+        // Check if kelas exists
+        let kelas = await prisma.kelas.findFirst({
+          where: {
+            OR: [
+              { id: { equals: kelasInput } },
+              { nama: { equals: kelasInput, mode: 'insensitive' } }
+            ]
+          }
+        });
 
         if (!kelas) {
           results.failed.push({
@@ -99,46 +106,43 @@ export async function POST(request) {
           continue;
         }
 
-        // Use the found kelas ID
-        kelasId = kelas.id;
-
-        // Handle orang tua - check if exists or create new
+        // Handle orang tua
         let orangTuaId = null;
+        let finalEmailWali = generateOrangTuaEmail(name, nis);
 
-        if (emailOrtu && namaOrtu) {
-          // Try to find existing orang tua by email
+        if (namaWali) {
+          // Default password according to SIMTAQ standard: NISN-YYYY
+          const bDate = new Date(tanggalLahir);
+          const bYear = !isNaN(bDate.getTime()) ? bDate.getFullYear() : null;
+          const passwordOrtu = bYear ? `${nisn}-${bYear}` : nisn;
+          const hashedPasswordOrtu = await bcrypt.hash(passwordOrtu, 10);
+
           let orangTua = await prisma.orangTua.findFirst({
             where: {
-              user: {
-                email: emailOrtu
-              }
+              user: { email: finalEmailWali }
             }
           });
 
-          // If not found, create new orang tua
           if (!orangTua) {
-            // Check if email is already used by other role
-            const existingUser = await prisma.user.findUnique({ where: { email: emailOrtu } });
-
+            const existingUser = await prisma.user.findUnique({ where: { email: finalEmailWali } });
             if (!existingUser) {
-              // Create new orang tua
-              // Default password according to SIMTAQ standard: NISN-YYYY
-              const birthDate = tanggalLahir ? new Date(tanggalLahir) : null;
-              const birthYear = birthDate && !isNaN(birthDate.getTime()) ? birthDate.getFullYear() : null;
-              const passwordOrtu = birthYear ? `${nisn}-${birthYear}` : nisn;
-              
-              const hashedPasswordOrtu = await bcrypt.hash(passwordOrtu, 10);
+              // Normalize gender wali
+              let normGkWali = 'LAKI_LAKI';
+              const jkW = String(jkWali).toUpperCase();
+              if (jkW === 'P' || jkW === 'PEREMPUAN' || jkW === 'WANITA' || jkW === 'FEMALE') {
+                normGkWali = 'PEREMPUAN';
+              }
 
               orangTua = await prisma.orangTua.create({
                 data: {
-                  noTelepon: noHPOrtu || null,
-                  jenisKelamin: 'LAKI_LAKI', // Default, bisa diubah nanti
-                  status: 'approved', // Auto-approve
+                  noTelepon: noHPWali ? String(noHPWali) : null,
+                  jenisKelamin: normGkWali,
+                  status: 'approved',
                   user: {
                     create: {
-                      email: emailOrtu,
+                      email: finalEmailWali,
                       password: hashedPasswordOrtu,
-                      name: namaOrtu,
+                      name: namaWali,
                       role: 'ORANG_TUA'
                     }
                   }
@@ -152,7 +156,14 @@ export async function POST(request) {
           }
         }
 
-        // Auto-generate email using consistent format: firstname.nis@siswa.tahfidz.sch.id
+        // Normalize gender siswa
+        let normGkSiswa = 'LAKI_LAKI';
+        const jkS = String(jenisKelamin).toUpperCase();
+        if (jkS === 'P' || jkS === 'PEREMPUAN' || jkS === 'WANITA' || jkS === 'FEMALE') {
+          normGkSiswa = 'PEREMPUAN';
+        }
+
+        // Auto-generate email using consistent format
         const emailSiswa = generateSiswaEmail(name, nis);
 
         // Check if email already exists
@@ -160,58 +171,52 @@ export async function POST(request) {
         if (existingUserEmail) {
           results.failed.push({
             data,
-            error: `Email ${emailSiswa} sudah terdaftar (kombinasi Nama + NIS sudah ada)`
+            error: `Email ${emailSiswa} sudah terdaftar`
           });
           continue;
         }
 
-        // Default password is NISN (SIMTAQ standard)
-        const hashedPassword = await bcrypt.hash(nisn, 10);
+        // Default password is NISN
+        const hashedPasswordSiswa = await bcrypt.hash(nisn, 10);
 
         // Create siswa
         const siswa = await prisma.siswa.create({
           data: {
             nisn,
             nis,
-            jenisKelamin,
+            jenisKelamin: normGkSiswa,
             tanggalLahir: new Date(tanggalLahir),
-            status: 'approved', // Auto-approve admin imports
+            alamat: alamat || '',
+            noTelepon: noWhatsApp ? String(noWhatsApp) : null,
+            kelasAngkatan: kelasAngkatan ? String(kelasAngkatan) : null,
+            tahunAjaranMasukId: ta.id,
+            status: 'approved',
+            statusSiswa: 'AKTIF',
             user: {
               create: {
                 email: emailSiswa,
-                password: hashedPassword,
+                password: hashedPasswordSiswa,
                 name,
                 role: 'SISWA'
               }
             },
             kelas: {
-              connect: {
-                id: kelasId
-              }
+              connect: { id: kelas.id }
             }
           },
           include: {
-            user: {
-              select: {
-                name: true,
-                email: true
-              }
-            },
-            kelas: {
-              select: {
-                nama: true
-              }
-            }
+            user: { select: { name: true, email: true } },
+            kelas: { select: { nama: true } }
           }
         });
 
-        // Create OrangTuaSiswa relation if orangTua exists
+        // Create relation
         if (orangTuaId) {
           await prisma.orangTuaSiswa.create({
             data: {
-              orangTuaId: orangTuaId,
+              orangTuaId,
               siswaId: siswa.id,
-              hubungan: 'Orang Tua'
+              hubungan: jenisWali
             }
           });
         }

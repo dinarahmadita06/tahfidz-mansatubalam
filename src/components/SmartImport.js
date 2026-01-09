@@ -38,22 +38,34 @@ const COLUMN_PATTERNS = {
     nama: ['nama siswa', 'nama lengkap siswa', 'nama', 'name', 'student name', 'namasw', 'namesiswa'],
     nis: ['nis', 'nomor induk siswa', 'no induk', 'nisp'],
     nisn: ['nisn', 'nomor induk siswa nasional'],
-    kelas: ['kelas', 'class', 'tingkat', 'kelasid'],
+    kelas: ['kelas saat ini', 'kelas', 'class', 'tingkat', 'kelasid'],
+    kelasAngkatan: ['diterima di kelas / angkatan', 'diterima di kelas', 'kelas angkatan', 'angkatan masuk'],
+    tahunAjaranMasuk: ['tahun ajaran masuk', 'ta masuk', 'tahun masuk'],
     jenisKelamin: ['jenis kelamin', 'gender', 'l/p', 'jk', 'jeniskelamin'],
     tanggalLahir: ['tanggal lahir', 'tgl lahir', 'birth date', 'dob', 'tanggallahir'],
     tempatLahir: ['tempat lahir', 'place of birth', 'tempatLahir'],
     alamat: ['alamat', 'address', 'alamat siswa'],
-    email: ['email siswa', 'email', 'e-mail'],
+    noWhatsApp: ['nomor whatsapp siswa', 'wa siswa', 'whatsapp siswa', 'wa'],
   },
   orangtua: {
-    nama: ['nama orang tua', 'nama ortu', 'nama ayah/ibu', 'parent name', 'nama wali', 'namaorang', 'namaaortu'],
-    email: ['email orang tua', 'email ortu', 'parent email', 'emailortu'],
-    noHP: ['no hp orang tua', 'no hp ortu', 'telepon', 'phone', 'no hp', 'no telepon', 'nohp', 'nohportu'],
-    hubungan: ['hubungan', 'relation', 'status'],
+    jenisWali: ['jenis wali', 'hubungan', 'status'],
+    nama: ['nama wali', 'nama orang tua', 'nama ortu', 'nama ayah/ibu', 'parent name', 'namaorang', 'namaaortu'],
+    jenisKelamin: ['jenis kelamin wali', 'jk wali', 'jk orang tua'],
+    noHP: ['no hp wali', 'no hp orang tua', 'no hp ortu', 'telepon', 'phone', 'no hp', 'no telepon', 'nohp', 'nohportu'],
+  },
+  guru: {
+    nama: ['nama lengkap', 'nama guru', 'nama', 'name', 'full name'],
+    email: ['email', 'email address', 'username'],
+    nip: ['nip', 'nomor induk pegawai'],
+    jenisKelamin: ['jenis kelamin', 'gender', 'l/p', 'jk'],
+    tanggalLahir: ['tanggal lahir', 'tgl lahir', 'birth date', 'dob'],
+    noWhatsApp: ['nomor whatsapp', 'wa', 'no hp', 'telepon', 'phone'],
+    kelasBinaan: ['kelas binaan', 'kelas', 'pembina kelas'],
+    alamat: ['alamat', 'address'],
   }
 };
 
-export default function SmartImport({ onSuccess, onClose }) {
+export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
   const [step, setStep] = useState(1); // 1: Upload, 2: Preview, 3: Processing, 4: Result
   const [file, setFile] = useState(null);
   const [parsedData, setParsedData] = useState([]);
@@ -103,6 +115,23 @@ export default function SmartImport({ onSuccess, onClose }) {
         mapping[`orangtua_${field}`] = headers[matchedIndex];
       }
     });
+
+    // Detect guru columns
+    if (COLUMN_PATTERNS.guru) {
+      Object.keys(COLUMN_PATTERNS.guru).forEach(field => {
+        const patterns = COLUMN_PATTERNS.guru[field];
+        const matchedIndex = headers.findIndex(header => {
+          const normalizedHeader = normalizeForMatching(header);
+          return patterns.some(pattern => {
+            const normalizedPattern = normalizeForMatching(pattern);
+            return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
+          });
+        });
+        if (matchedIndex !== -1) {
+          mapping[`guru_${field}`] = headers[matchedIndex];
+        }
+      });
+    }
 
     return mapping;
   };
@@ -165,8 +194,9 @@ export default function SmartImport({ onSuccess, onClose }) {
       const processedData = parsedData.map((row, index) => {
         const siswaData = {};
         const orangtuaData = {};
+        const guruData = {};
 
-        // Map siswa fields
+        // Map fields
         Object.keys(columnMapping).forEach(key => {
           const columnName = columnMapping[key];
           const value = row[columnName];
@@ -177,23 +207,21 @@ export default function SmartImport({ onSuccess, onClose }) {
           } else if (key.startsWith('orangtua_')) {
             const field = key.replace('orangtua_', '');
             orangtuaData[field] = value;
+          } else if (key.startsWith('guru_')) {
+            const field = key.replace('guru_', '');
+            guruData[field] = value;
           }
         });
 
-        // Debug logging
-        if (index === 0) {
-          console.log('Sample processed row:', { siswa: siswaData, orangtua: orangtuaData });
-          console.log('Column mapping:', columnMapping);
-          console.log('Raw row:', row);
-        }
-
+        if (type === 'guru') return { guru: guruData };
         return { siswa: siswaData, orangtua: orangtuaData };
       });
 
       console.log('Total rows to import:', processedData.length);
 
       // Send to API
-      const response = await fetch('/api/admin/siswa/smart-import', {
+      const endpoint = type === 'guru' ? '/api/admin/guru/smart-import' : '/api/admin/siswa/smart-import';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -319,7 +347,7 @@ export default function SmartImport({ onSuccess, onClose }) {
                 color: colors.gray[400],
                 margin: 0
               }}>
-                Import data siswa & orang tua otomatis dengan deteksi kolom pintar
+                Import data {type === 'guru' ? 'guru' : 'siswa & orang tua'} otomatis dengan deteksi kolom pintar
               </p>
             </div>
           </div>
@@ -480,26 +508,51 @@ export default function SmartImport({ onSuccess, onClose }) {
               fontSize: '13px',
               color: colors.gray[600]
             }}>
-              <div>
-                <strong>Data Siswa:</strong>
-                <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                  <li>Nama Siswa</li>
-                  <li>NIS/NISN</li>
-                  <li>Kelas</li>
-                  <li>Jenis Kelamin</li>
-                  <li>Tanggal Lahir</li>
-                  <li>Alamat</li>
-                </ul>
-              </div>
-              <div>
-                <strong>Data Orang Tua:</strong>
-                <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                  <li>Nama Orang Tua</li>
-                  <li>No. HP</li>
-                  <li>Email</li>
-                  <li>Hubungan (Ayah/Ibu)</li>
-                </ul>
-              </div>
+              {type === 'guru' ? (
+                <>
+                  <div>
+                    <strong>Data Guru:</strong>
+                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+                      <li>Nama Lengkap (wajib)</li>
+                      <li>Email (wajib)</li>
+                      <li>NIP (opsional)</li>
+                      <li>Jenis Kelamin (wajib)</li>
+                      <li>Tanggal Lahir (wajib)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <strong>Tambahan:</strong>
+                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+                      <li>Nomor WhatsApp</li>
+                      <li>Kelas Binaan</li>
+                      <li>Alamat</li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <strong>Data Siswa:</strong>
+                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+                      <li>Nama Siswa (wajib)</li>
+                      <li>NISN & NIS (wajib)</li>
+                      <li>JK & Tgl Lahir (wajib)</li>
+                      <li>Kelas & Angkatan (wajib)</li>
+                      <li>Tahun Ajaran Masuk (wajib)</li>
+                      <li>WA Siswa & Alamat</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <strong>Data Wali:</strong>
+                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+                      <li>Jenis Wali (wajib)</li>
+                      <li>Nama Wali (wajib)</li>
+                      <li>JK Wali (wajib)</li>
+                      <li>No HP Wali (wajib)</li>
+                    </ul>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -562,7 +615,7 @@ export default function SmartImport({ onSuccess, onClose }) {
                       color: colors.gray[400],
                       margin: 0
                     }}>
-                      {key.replace('siswa_', 'Siswa: ').replace('orangtua_', 'Ortu: ')}
+                      {key.replace('siswa_', 'Siswa: ').replace('orangtua_', 'Ortu: ').replace('guru_', 'Guru: ')}
                     </p>
                     <p style={{
                       fontSize: '14px',

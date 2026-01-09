@@ -160,17 +160,25 @@ export default function ImportExportToolbar({
       let exportData = [];
 
       if (kategori === 'guru') {
-        exportData = data.map(item => ({
-          'Nama Lengkap': item.user?.name || item.nama || '',
-          'Email': item.user?.email || item.email || '',
-          'NIP': item.nip || '',
-          'Jenis Kelamin': item.jenisKelamin === 'LAKI_LAKI' ? 'L' : item.jenisKelamin === 'PEREMPUAN' ? 'P' : '',
-          'Mata Pelajaran': item.bidangKeahlian || item.mataPelajaran || '',
-          'No. Telepon': item.noTelepon || item.phone || '',
-          'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
-          'Username': item.user?.email || '',
-          'Password': '(encrypted)'
-        }));
+        exportData = data.map(item => {
+          const aktifKelas = (item.guruKelas || [])
+            .filter(gk => gk.kelas && gk.kelas.status === 'AKTIF')
+            .map(gk => gk.kelas.nama)
+            .join(', ');
+
+          return {
+            'Nama Lengkap': item.user?.name || item.nama || '',
+            'Email': item.user?.email || item.email || '',
+            'NIP': item.nip || '',
+            'Jenis Kelamin': item.jenisKelamin === 'LAKI_LAKI' || item.jenisKelamin === 'L' ? 'L' : 'P',
+            'Tanggal Lahir': item.tanggalLahir ? new Date(item.tanggalLahir).toISOString().split('T')[0] : '',
+            'Nomor WhatsApp': item.noTelepon || '',
+            'Kelas Binaan': aktifKelas,
+            'Alamat': item.alamat || '',
+            'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
+            'Tanggal Bergabung': item.user?.createdAt ? new Date(item.user.createdAt).toISOString().split('T')[0] : ''
+          };
+        });
       } else if (kategori === 'siswa') {
         exportData = data.map(item => ({
           'Nama Lengkap': item.user?.name || item.nama || '',
@@ -382,9 +390,33 @@ export default function ImportExportToolbar({
               onClick={() => {
                 // Generate template
                 const templateData = kategori === 'guru'
-                  ? [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'guru@example.com', 'NIP': '1234567890', 'Jenis Kelamin': 'L', 'Mata Pelajaran': 'Tahfidz', 'No. Telepon': '08123456789' }]
+                  ? [{ 
+                      'Nama Lengkap': 'Ahmad Fauzi', 
+                      'Email': 'guru.ahmad@tahfidz.sch.id', 
+                      'NIP': '198501012010011001', 
+                      'Jenis Kelamin': 'L', 
+                      'Tanggal Lahir': '1985-05-20',
+                      'Nomor WhatsApp': '081234567890',
+                      'Kelas Binaan': '7A, 7B',
+                      'Alamat': 'Jl. Pendidikan No. 45, Bandung'
+                    }]
                   : kategori === 'siswa'
-                  ? [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'siswa@example.com', 'NIS': '1234567890', 'Kelas': '10A', 'Tanggal Lahir': '2005-01-01', 'Jenis Kelamin': 'L', 'Alamat': 'Alamat lengkap' }]
+                  ? [{ 
+                      'Nama Siswa': 'Abdullah Rahman', 
+                      'NISN': '0012345678', 
+                      'NIS': '24001', 
+                      'Jenis Kelamin': 'L', 
+                      'Tanggal Lahir': '2010-05-15', 
+                      'Diterima di Kelas / Angkatan': '7',
+                      'Kelas Saat Ini': '7A',
+                      'Tahun Ajaran Masuk': '2024/2025',
+                      'Alamat': 'Jl. Masjid No. 123, Jakarta',
+                      'Nomor WhatsApp Siswa': '081234567890',
+                      'Jenis Wali': 'Ayah',
+                      'Nama Wali': 'Ahmad Rahman',
+                      'Jenis Kelamin Wali': 'L',
+                      'No HP Wali': '081234567891'
+                    }]
                   : [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'orangtua@example.com', 'No. Telepon': '08123456789', 'Hubungan': 'Ayah', 'Nama Siswa': 'Nama Anak' }];
 
                 const ws = XLSX.utils.json_to_sheet(templateData);
