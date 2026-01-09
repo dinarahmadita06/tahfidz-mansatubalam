@@ -29,7 +29,8 @@ export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Debug logging
-  console.log('🔍 [MIDDLEWARE] Path:', pathname, '| Has Token:', !!token, '| Role:', token?.role);
+// No log for performance
+
 
   // Additional debug for production
   if (process.env.NODE_ENV === 'production') {
@@ -52,7 +53,8 @@ export async function middleware(request) {
   // If user is already logged in and trying to access login page, redirect to their dashboard
   if (isLoginPage && token) {
     const dashboardUrl = getDashboardUrl(token.role);
-    console.log('🔄 [MIDDLEWARE] User already logged in, redirecting from /login to:', dashboardUrl);
+// No log for performance
+
     return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
 
@@ -70,7 +72,8 @@ export async function middleware(request) {
   if (!token) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
-    console.log('❌ [MIDDLEWARE] No token, redirecting to login');
+// No log for performance
+
     return NextResponse.redirect(loginUrl);
   }
 
@@ -80,45 +83,52 @@ export async function middleware(request) {
   // Admin routes
   if (pathname.startsWith('/admin') && role !== 'ADMIN') {
     const redirectUrl = getDashboardUrl(role);
-    console.log('🚫 [MIDDLEWARE] Access denied to /admin, redirecting to:', redirectUrl);
+// No log for performance
+
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Guru routes
   if (pathname.startsWith('/guru') && role !== 'GURU') {
     const redirectUrl = getDashboardUrl(role);
-    console.log('🚫 [MIDDLEWARE] Access denied to /guru, redirecting to:', redirectUrl);
+// No log for performance
+
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Orangtua routes
   if (pathname.startsWith('/orangtua') && role !== 'ORANGTUA' && role !== 'ORANG_TUA') {
     const redirectUrl = getDashboardUrl(role);
-    console.log('🚫 [MIDDLEWARE] Access denied to /orangtua, redirecting to:', redirectUrl);
+// No log for performance
+
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Siswa routes
   if (pathname.startsWith('/siswa') && role !== 'SISWA') {
     const redirectUrl = getDashboardUrl(role);
-    console.log('🚫 [MIDDLEWARE] Access denied to /siswa, redirecting to:', redirectUrl);
+// No log for performance
+
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Handle removed student presensi route
   if (pathname === '/siswa/presensi' && role === 'SISWA') {
-    console.log('🔄 [MIDDLEWARE] Student Presensi menu removed, redirecting to /siswa');
+// No log for performance
+
     return NextResponse.redirect(new URL('/siswa', request.url));
   }
 
   // Redirect root and /dashboard to role-specific dashboard
   if (pathname === '/' || pathname === '/dashboard') {
     const targetUrl = getDashboardUrl(role);
-    console.log('🔄 [MIDDLEWARE] Redirecting from', pathname, 'to', targetUrl, '(Role:', role + ')');
+// No log for performance
+
     return NextResponse.redirect(new URL(targetUrl, request.url));
   }
 
-  console.log('✅ [MIDDLEWARE] Access granted to:', pathname);
+// No log for performance
+
 
   return NextResponse.next();
 }

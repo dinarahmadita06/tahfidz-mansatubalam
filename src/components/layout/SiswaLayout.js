@@ -189,7 +189,6 @@ function SiswaSidebar({ userName = 'Siswa', onLogout }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      prefetch={false}
                       onClick={() => setIsOpen(false)}
                       className={`
                         flex items-center gap-2.5 lg:gap-3 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-xl transition-all

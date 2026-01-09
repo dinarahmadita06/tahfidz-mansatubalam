@@ -37,7 +37,8 @@ export const authConfig = {
         }
 
         try {
-          console.log('🔐 [AUTH] Authorize attempt for:', email);
+// No log for performance
+
 
           // Wrapped user lookup with retry logic
           const user = await withRetry(() =>
@@ -69,7 +70,8 @@ export const authConfig = {
             throw new Error("INVALID_CREDENTIALS");
           }
 
-          console.log('✅ [AUTH] User found, comparing password...');
+// No log for performance
+
 
           // Password check
           const isPasswordValid = await bcrypt.compare(String(password), user.password);
@@ -106,7 +108,8 @@ export const authConfig = {
             }
           }
 
-          console.log('✅ [AUTH] Authentication successful for:', user.email);
+// No log for performance
+
 
           return {
             id: user.id,
@@ -140,7 +143,8 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log('🔑 [JWT] Creating token for user:', { id: user.id, role: user.role, isActive: user.isActive });
+// No log for performance
+
         token.id = user.id;
         token.role = user.role;
         token.isActive = user.isActive;
@@ -153,7 +157,8 @@ export const authConfig = {
     },
     async session({ session, token }) {
       if (token) {
-        console.log('📦 [SESSION] Creating session for token:', { id: token.id, role: token.role, isActive: token.isActive });
+// No log for performance
+
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.isActive = token.isActive;
@@ -165,7 +170,8 @@ export const authConfig = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      console.log('🔄 [REDIRECT CALLBACK] url:', url, 'baseUrl:', baseUrl);
+// No log for performance
+
 
       // If url starts with / (relative path), it's safe to prepend baseUrl
       if (url.startsWith('/')) {

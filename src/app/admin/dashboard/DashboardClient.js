@@ -269,56 +269,29 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const fetchChartData = async () => {
-    try {
-      const [siswaRes, kelasRes] = await Promise.all([
-        fetch('/api/admin/siswa?perPage=1000', { cache: 'no-store' }),
-        fetch('/api/admin/kelas?perPage=1000', { cache: 'no-store' }),
-      ]);
-
-      if (!siswaRes.ok || !kelasRes.ok) throw new Error('Gagal mengambil data chart');
-
-      const siswaData = await siswaRes.json();
-      const kelasData = await kelasRes.json();
-
-      const siswaList = Array.isArray(siswaData) ? siswaData : (siswaData.data || siswaData.siswa || []);
-      const kelasList = Array.isArray(kelasData) ? kelasData : (kelasData.data || kelasData.kelas || []);
-
-      // Calculate siswa stats
-      const siswaMencapai = siswaList.filter((s) => (s.totalJuz || 0) >= 3).length;
-      const siswaBelum = siswaList.length - siswaMencapai;
-
-      // Calculate kelas stats
-      const kelasAktif = kelasList.filter((k) => k.status === 'AKTIF' || k.isActive);
-      const kelasMencapai = kelasAktif.filter((kelas) => {
-        const siswaKelas = siswaList.filter((s) => s.kelasId === kelas.id);
-        if (siswaKelas.length === 0) return false;
-        const siswaMencapaiTarget = siswaKelas.filter((s) => (s.totalJuz || 0) >= 3).length;
-        return (siswaMencapaiTarget / siswaKelas.length) >= 0.5;
-      }).length;
-
-      const kelasPersentase = kelasAktif.length > 0
-        ? Math.round((kelasMencapai / kelasAktif.length) * 100)
-        : 0;
-
-      setChartData({
-        siswaStats: { mencapai: siswaMencapai, belum: siswaBelum },
-        kelasStats: { mencapai: kelasMencapai, total: kelasAktif.length, persentase: kelasPersentase },
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/dashboard', { cache: 'no-store' }); // Disable cache
+      const res = await fetch('/api/admin/dashboard'); 
       if (!res.ok) throw new Error('Gagal mengambil data dashboard');
       const result = await res.json();
       setData(result);
-      await fetchChartData();
+      
+      // Map server data to chart data
+      if (result.stats) {
+        setChartData({
+          siswaStats: { 
+            mencapai: result.stats.siswaMencapaiTarget || 0, 
+            belum: (result.stats.siswaAktif || 0) - (result.stats.siswaMencapaiTarget || 0) 
+          },
+          kelasStats: { 
+            mencapai: result.stats.kelasMencapaiTarget || 0, 
+            total: result.stats.totalKelas || 0, 
+            persentase: result.stats.persentaseSiswaMencapaiTarget || 0 
+          },
+        });
+      }
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -326,6 +299,7 @@ export default function AdminDashboardPage() {
       setLoading(false);
     }
   };
+
 
   const fetchPengumuman = async () => {
     try {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
+
 import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle } from 'lucide-react';
 
 /**
@@ -14,13 +15,14 @@ import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle } from 'lucide-
  * - onPindah: callback for transferring student
  * - onKeluar: callback for removing student
  */
-export default function RowActionMenu({
+function RowActionMenu({
   statusSiswa = 'AKTIF',
   onAktifkan,
   onLulus,
   onPindah,
   onKeluar,
 }) {
+
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
@@ -138,3 +140,6 @@ export default function RowActionMenu({
     </div>
   );
 }
+
+export default memo(RowActionMenu);
+
