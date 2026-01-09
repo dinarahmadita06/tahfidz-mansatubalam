@@ -86,6 +86,7 @@ export default function KelolaSiswa() {
       const term = searchTerm.toLowerCase();
       result = result.filter(s => 
         s.user?.name?.toLowerCase().includes(term) ||
+        s.user?.email?.toLowerCase().includes(term) ||
         s.nis?.includes(term)
       );
     }
@@ -160,14 +161,19 @@ export default function KelolaSiswa() {
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-teal-400/20 rounded-full blur-2xl"></div>
 
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                  Kelola Siswa
-                </h1>
-                <p className="text-green-50 text-sm sm:text-base">
-                  Monitoring siswa kelas binaan dan tracking progress hafalan
-                </p>
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 shadow-lg border border-white/10">
+                  <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+                    Kelola Siswa
+                  </h1>
+                  <p className="text-green-50 text-sm sm:text-base mt-1">
+                    Monitoring siswa kelas binaan dan tracking progress hafalan
+                  </p>
+                </div>
               </div>
 
               <button
@@ -260,6 +266,7 @@ export default function KelolaSiswa() {
                       <tr>
                         <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
                         <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Siswa</th>
+                        <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Email</th>
                         <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">NIS</th>
                         <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Kelas</th>
                         <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Status</th>
@@ -273,7 +280,11 @@ export default function KelolaSiswa() {
                           </td>
                           <td className="py-4 px-6">
                             <p className="font-medium text-gray-900">{siswa.user?.name || 'N/A'}</p>
-                            <p className="text-xs text-gray-500">{siswa.user?.email || ''}</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="text-sm text-gray-600 truncate max-w-[200px]" title={siswa.user?.email}>
+                              {siswa.user?.email || '-'}
+                            </p>
                           </td>
                           <td className="py-4 px-6">
                             <p className="text-sm text-gray-600">{siswa.nis || '-'}</p>

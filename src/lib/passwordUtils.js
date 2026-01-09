@@ -154,6 +154,59 @@ export function generateParentPassword(nisn, birthDate) {
 }
 
 /**
+ * Generate email for Guru based on first name
+ * Format: guru.<katapertamanama>@tahfidz.sch.id
+ *
+ * @param {string} name - Full name of guru
+ * @returns {string} Generated guru email
+ */
+export function generateGuruEmail(name) {
+  if (!name || name.trim().length === 0) return '';
+  
+  const firstName = name
+    .trim()
+    .split(/\s+/)[0]
+    .toLowerCase()
+    .replace(/[^a-z]/g, '');
+    
+  if (!firstName) return '';
+  
+  return `guru.${firstName}@tahfidz.sch.id`;
+}
+
+/**
+ * Generate password for Guru based on first name and birth date
+ * Format: guru.<katapertamanama>-YYYY
+ *
+ * @param {string} name - Full name of guru
+ * @param {string|Date} birthDate - Birth date of guru
+ * @returns {string} Generated guru password
+ */
+export function generateGuruPassword(name, birthDate) {
+  if (!name || name.trim().length === 0) return '';
+  
+  const firstName = name
+    .trim()
+    .split(/\s+/)[0]
+    .toLowerCase()
+    .replace(/[^a-z]/g, '');
+    
+  if (!firstName) return '';
+  
+  if (!birthDate) return `guru.${firstName}`;
+  
+  try {
+    const date = new Date(birthDate);
+    if (isNaN(date.getTime())) return `guru.${firstName}`;
+    
+    const year = date.getFullYear();
+    return `guru.${firstName}-${year}`;
+  } catch (error) {
+    return `guru.${firstName}`;
+  }
+}
+
+/**
  * Copy text to clipboard
  * @param {string} text - Text to copy
  * @returns {Promise<boolean>} Success status

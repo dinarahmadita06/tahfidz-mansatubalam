@@ -365,9 +365,9 @@ export default function AdminKelasPage() {
       console.log('SUBMIT - forceSubmit:', forceSubmit);
 
       // Validate data before sending
-      if (!kelasFormData.nama || !kelasFormData.tahunAjaranId || !kelasFormData.guruUtamaId) {
-        alert('Nama kelas, Tahun Ajaran, dan Guru Pembina harus diisi');
-        console.log('Validation failed - nama, tahunAjaranId or guruUtamaId empty');
+      if (!kelasFormData.nama || !kelasFormData.tahunAjaranId) {
+        alert('Nama kelas dan Tahun Ajaran harus diisi');
+        console.log('Validation failed - nama or tahunAjaranId empty');
         return;
       }
 
@@ -376,7 +376,7 @@ export default function AdminKelasPage() {
         ...kelasFormData,
         // Keep tahunAjaranId as string (it's a CUID in database)
         targetJuz: kelasFormData.targetJuz ? parseInt(kelasFormData.targetJuz) : null,
-        guruUtamaId: kelasFormData.guruUtamaId.trim(),
+        guruUtamaId: kelasFormData.guruUtamaId ? kelasFormData.guruUtamaId.trim() : null,
       };
 
       // Add force flag if this is a confirmed submission
@@ -1746,10 +1746,9 @@ export default function AdminKelasPage() {
                   marginBottom: '8px',
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
                 }}>
-                  Guru Pembina *
+                  Guru Pembina (Opsional)
                 </label>
                 <select
-                  required
                   value={kelasFormData.guruUtamaId}
                   onChange={(e) => setKelasFormData({ ...kelasFormData, guruUtamaId: e.target.value })}
                   style={{
@@ -1765,13 +1764,16 @@ export default function AdminKelasPage() {
                   }}
                   className="form-input"
                 >
-                  <option value="">Pilih Guru Pembina</option>
+                  <option value="">Pilih Guru Pembina (Kosongkan jika belum ada)</option>
                   {Array.isArray(guruList) && guruList.map((guru) => (
                     <option key={guru.id} value={guru.id.toString()}>
                       {guru.user.name}
                     </option>
                   ))}
                 </select>
+                <p style={{ fontSize: '11px', color: colors.text.tertiary, marginTop: '4px', fontStyle: 'italic' }}>
+                  * Guru pembina dapat ditetapkan nanti melalui menu edit.
+                </p>
               </div>
 
               <div style={{

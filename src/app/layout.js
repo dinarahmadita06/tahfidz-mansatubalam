@@ -5,6 +5,7 @@ import "@/styles/charts-responsive.css";
 import SessionProvider from "@/components/providers/SessionProvider";
 import SWRProvider from "@/components/providers/SWRProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
+import PasswordChangeSuggestion from "@/components/shared/PasswordChangeSuggestion";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
           <SWRProvider>
             <QueryProvider>
               {children}
+              <PasswordChangeSuggestion />
             </QueryProvider>
           </SWRProvider>
         </SessionProvider>
