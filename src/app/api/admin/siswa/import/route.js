@@ -189,7 +189,7 @@ export async function POST(request) {
             alamat: alamat || '',
             noTelepon: noWhatsApp ? String(noWhatsApp) : null,
             kelasAngkatan: kelasAngkatan ? String(kelasAngkatan) : null,
-            tahunAjaranMasukId: ta.id,
+            tahunAjaranMasuk: { connect: { id: ta.id } },
             status: 'approved',
             statusSiswa: 'AKTIF',
             user: {

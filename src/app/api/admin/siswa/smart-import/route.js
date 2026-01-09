@@ -319,7 +319,7 @@ export async function POST(request) {
               alamat: siswaData.alamat || '',
               noTelepon: siswaData.noWhatsApp || null,
               kelasAngkatan: siswaData.kelasAngkatan?.toString() || null,
-              tahunAjaranMasukId: tahunAjaranMasukId,
+              tahunAjaranMasuk: { connect: { id: tahunAjaranMasukId } },
               status: 'approved',
               statusSiswa: 'AKTIF',
               kelas: {
