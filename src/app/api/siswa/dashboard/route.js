@@ -51,38 +51,9 @@ export async function GET(req) {
       _avg: { nilaiAkhir: true }
     });
 
-    // Get kehadiran stats (tahun ajaran aktif)
     const tahunAjaranAktif = await prisma.tahunAjaran.findFirst({
       where: { isActive: true }
     });
-
-    let kehadiranCount = 0;
-    let totalHariCount = 0;
-
-    if (tahunAjaranAktif) {
-      // Count total kehadiran HADIR
-      kehadiranCount = await prisma.presensi.count({
-        where: {
-          siswaId,
-          status: 'HADIR',
-          tanggal: {
-            gte: tahunAjaranAktif.tanggalMulai,
-            lte: tahunAjaranAktif.tanggalSelesai
-          }
-        }
-      });
-
-      // Count total hari (all presensi records in active tahun ajaran)
-      totalHariCount = await prisma.presensi.count({
-        where: {
-          siswaId,
-          tanggal: {
-            gte: tahunAjaranAktif.tanggalMulai,
-            lte: tahunAjaranAktif.tanggalSelesai
-          }
-        }
-      });
-    }
 
     // Get catatan guru count
     const catatanGuruCount = await prisma.penilaian.count({
@@ -96,8 +67,6 @@ export async function GET(req) {
       hafalanSelesai: totalHafalan || 0,
       totalHafalan: tahunAjaranAktif?.targetHafalan || targetHafalan?.targetJuz || 0,
       rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
-      kehadiran: kehadiranCount || 0,
-      totalHari: totalHariCount || 0,
       catatanGuru: catatanGuruCount || 0
     };
 
@@ -196,29 +165,6 @@ export async function GET(req) {
       }
     });
 
-    // Activity 4: Presensi
-    const recentPresensi = await prisma.presensi.findMany({
-      where: { siswaId },
-      orderBy: { createdAt: 'desc' },
-      take: 5
-    });
-
-    recentPresensi.forEach(presensi => {
-      const statusText = {
-        HADIR: 'Hadir',
-        IZIN: 'Izin',
-        SAKIT: 'Sakit',
-        ALFA: 'Alfa'
-      };
-      activities.push({
-        id: `presensi-${presensi.id}`,
-        type: 'presensi',
-        title: `Presensi: ${statusText[presensi.status]}`,
-        timestamp: presensi.createdAt.toISOString()
-      });
-    });
-
-    // Sort all activities by timestamp (newest first) and limit to 5
     const sortedActivities = activities
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       .slice(0, 5);

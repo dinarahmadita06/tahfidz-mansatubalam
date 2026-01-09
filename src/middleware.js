@@ -105,6 +105,12 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
+  // Handle removed student presensi route
+  if (pathname === '/siswa/presensi' && role === 'SISWA') {
+    console.log('🔄 [MIDDLEWARE] Student Presensi menu removed, redirecting to /siswa');
+    return NextResponse.redirect(new URL('/siswa', request.url));
+  }
+
   // Redirect root and /dashboard to role-specific dashboard
   if (pathname === '/' || pathname === '/dashboard') {
     const targetUrl = getDashboardUrl(role);
