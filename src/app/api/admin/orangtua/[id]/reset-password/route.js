@@ -34,24 +34,10 @@ export async function POST(request, { params }) {
     }
 
     const { id } = await params;
-    const { newPassword } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    let { newPassword } = body;
 
-    // Validate input
-    if (!newPassword || newPassword.trim() === '') {
-      return NextResponse.json(
-        { error: 'Password baru harus diisi' },
-        { status: 400 }
-      );
-    }
-
-    if (newPassword.length < 6) {
-      return NextResponse.json(
-        { error: 'Password minimal 6 karakter' },
-        { status: 400 }
-      );
-    }
-
-    // Find parent account
+    // Find parent account with student data for password generation
     const orangTua = await prisma.orangTua.findUnique({
       where: { id },
       include: {
@@ -60,6 +46,16 @@ export async function POST(request, { params }) {
             id: true,
             email: true,
             name: true
+          }
+        },
+        orangTuaSiswa: {
+          include: {
+            siswa: {
+              select: {
+                nisn: true,
+                tanggalLahir: true
+              }
+            }
           }
         }
       }
@@ -70,6 +66,21 @@ export async function POST(request, { params }) {
         { error: 'Akun orang tua tidak ditemukan' },
         { status: 404 }
       );
+    }
+
+    // Standard SIMTAQ password generation if not provided
+    if (!newPassword || newPassword.trim() === '') {
+      const firstSiswa = orangTua.orangTuaSiswa?.[0]?.siswa;
+      if (firstSiswa && firstSiswa.nisn) {
+        const birthDate = firstSiswa.tanggalLahir ? new Date(firstSiswa.tanggalLahir) : null;
+        const birthYear = birthDate && !isNaN(birthDate.getTime()) ? birthDate.getFullYear() : null;
+        newPassword = birthYear ? `${firstSiswa.nisn}-${birthYear}` : firstSiswa.nisn;
+      } else {
+        return NextResponse.json(
+          { error: 'Password baru harus diisi (data siswa terhubung tidak ditemukan)' },
+          { status: 400 }
+        );
+      }
     }
 
     // Hash the new password with bcrypt
@@ -116,7 +127,8 @@ export async function POST(request, { params }) {
         success: true,
         userId: updatedUser.id,
         updatedAt: updatedUser.updatedAt,
-        message: 'Password berhasil diperbarui'
+        newPassword: newPassword, // Return the used password
+        message: 'Password berhasil di-reset'
       },
       { status: 200 }
     );

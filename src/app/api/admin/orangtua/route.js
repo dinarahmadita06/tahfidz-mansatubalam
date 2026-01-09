@@ -58,6 +58,7 @@ export async function GET(request) {
                   id: true,
                   nis: true,
                   nisn: true,
+                  tanggalLahir: true,
                   statusSiswa: true,
                   user: {
                     select: {

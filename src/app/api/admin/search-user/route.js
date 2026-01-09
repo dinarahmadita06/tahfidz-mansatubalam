@@ -36,7 +36,21 @@ export async function GET(request) {
         include: {
           guru: true,
           siswa: true,
-          orangTua: true,
+          orangTua: {
+            include: {
+              orangTuaSiswa: {
+                include: {
+                  siswa: {
+                    select: {
+                      id: true,
+                      nisn: true,
+                      tanggalLahir: true
+                    }
+                  }
+                }
+              }
+            }
+          },
         },
       });
     } else if (type === 'nis') {
@@ -77,7 +91,20 @@ export async function GET(request) {
       });
       const orangTua = await prisma.orangTua.findFirst({
         where: { noTelepon: query },
-        include: { user: true },
+        include: { 
+          user: true,
+          orangTuaSiswa: {
+            include: {
+              siswa: {
+                select: {
+                  id: true,
+                  nisn: true,
+                  tanggalLahir: true
+                }
+              }
+            }
+          }
+        },
       });
 
       if (guru) {

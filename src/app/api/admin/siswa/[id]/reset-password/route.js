@@ -25,8 +25,12 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 });
     }
 
-    // Generate random password (8 characters)
-    const newPassword = Math.random().toString(36).slice(-8).toUpperCase() + Math.random().toString(36).slice(-4);
+    if (!siswa.nisn) {
+      return NextResponse.json({ error: 'NISN tidak ditemukan, gagal mereset password' }, { status: 400 });
+    }
+
+    // New password for student is always NISN
+    const newPassword = siswa.nisn;
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password
@@ -58,7 +62,7 @@ export async function POST(request, { params }) {
     // In production, you should send this via email and not return it in response
 
     return NextResponse.json({
-      message: 'Password berhasil direset',
+      message: 'Password berhasil di-reset',
       newPassword: newPassword,
       email: siswa.user.email,
       name: siswa.user.name

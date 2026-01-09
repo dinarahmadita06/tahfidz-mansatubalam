@@ -120,6 +120,40 @@ export function generateWaliEmail(namaWali, nis) {
 }
 
 /**
+ * Generate student password based on NISN
+ * @param {string} nisn - Student NISN (10 digits)
+ * @returns {string} Generated student password
+ */
+export function generateStudentPassword(nisn) {
+  if (!nisn || nisn.trim().length === 0) return '';
+  return nisn.trim();
+}
+
+/**
+ * Generate parent password based on NISN and birth date
+ * @param {string} nisn - Student NISN
+ * @param {string|Date} birthDate - Student birth date
+ * @returns {string} Generated parent password
+ */
+export function generateParentPassword(nisn, birthDate) {
+  if (!nisn || nisn.trim().length === 0) return '';
+  
+  const baseNISN = nisn.trim();
+  
+  if (!birthDate) return baseNISN;
+  
+  try {
+    const date = new Date(birthDate);
+    if (isNaN(date.getTime())) return baseNISN;
+    
+    const year = date.getFullYear();
+    return `${baseNISN}-${year}`;
+  } catch (error) {
+    return baseNISN;
+  }
+}
+
+/**
  * Copy text to clipboard
  * @param {string} text - Text to copy
  * @returns {Promise<boolean>} Success status
