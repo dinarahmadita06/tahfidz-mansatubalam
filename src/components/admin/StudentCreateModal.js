@@ -1,10 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, UserPlus, Key, Users, User, Search, AlertCircle, RefreshCw, Edit } from 'lucide-react';
+import { 
+  X, 
+  UserPlus, 
+  Key, 
+  Users, 
+  User, 
+  Search, 
+  AlertCircle, 
+  RefreshCw, 
+  Edit,
+  Mail, 
+  Lock, 
+  Calendar, 
+  Hash, 
+  UserCircle, 
+  Info, 
+  Copy,
+  Eye,
+  EyeOff,
+  Check,
+  ShieldAlert
+} from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import PasswordField from './PasswordField';
 import AccountSuccessModal from './AccountSuccessModal';
+import toast from 'react-hot-toast';
 import { generateSiswaEmail } from '@/lib/siswaUtils';
 import { generateWaliEmail, generatePasswordMixed } from '@/lib/passwordUtils';
 
@@ -22,6 +44,10 @@ export default function StudentCreateModal({
   const [loading, setLoading] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [newGeneratedPassword, setNewGeneratedPassword] = useState('');
+  const [showGeneratedPassword, setShowGeneratedPassword] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState(null);
   const [parentSearchTerm, setParentSearchTerm] = useState('');
 
@@ -58,6 +84,8 @@ export default function StudentCreateModal({
   useEffect(() => {
     if (isOpen) {
       fetchInitialData();
+      setNewGeneratedPassword('');
+      setShowGeneratedPassword(false);
       if (isEditing) {
         setFormData({
           name: editingSiswa.user?.name || '',
@@ -175,6 +203,40 @@ export default function StudentCreateModal({
       setNewParentData(prev => ({ ...prev, ...updates }));
     }
   }, [newParentData.name, formData.nis, newParentData.jenisWali, parentMode]);
+
+  const handleResetPassword = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin mereset password siswa ini? Password lama akan langsung tidak berlaku.')) {
+      return;
+    }
+
+    try {
+      setResettingPassword(true);
+      const res = await fetch(`/api/admin/siswa/${editingSiswa.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!res.ok) throw new Error('Gagal mereset password');
+
+      const data = await res.json();
+      setNewGeneratedPassword(data.newPassword);
+      setShowGeneratedPassword(true);
+      toast.success('Password berhasil direset!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Gagal mereset password siswa');
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+  const handleCopyPassword = () => {
+    if (!newGeneratedPassword) return;
+    navigator.clipboard.writeText(newGeneratedPassword);
+    setCopied(true);
+    toast.success('Password disalin ke clipboard');
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -460,6 +522,74 @@ export default function StudentCreateModal({
                     iconOnlyGenerate={true}
                     helperText="Klik icon generate untuk mengisi password siswa."
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Section 2 (B): Reset Password (Only for edit admin) */}
+            {isEditing && userRole === 'ADMIN' && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 border-b border-rose-100 pb-3">
+                  <ShieldAlert size={20} className="text-rose-600" />
+                  <h3 className="text-lg font-bold text-gray-900">Reset Password Akun Siswa</h3>
+                </div>
+
+                <div className="p-6 bg-rose-50 border-2 border-rose-100 rounded-[2rem] flex flex-col md:flex-row items-center gap-6">
+                  <div className="flex-1 space-y-2 text-center md:text-left">
+                    <p className="text-sm font-bold text-rose-900">Generate Password Baru</p>
+                    <p className="text-xs text-rose-800/70 leading-relaxed">
+                      Lakukan generate ulang password jika siswa lupa kredensial login.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-rose-100 min-w-[280px]">
+                    <div className="flex-1 px-4 py-2 font-mono text-lg font-bold text-rose-600 tracking-wider">
+                      {newGeneratedPassword ? (
+                        showGeneratedPassword ? newGeneratedPassword : '••••••••'
+                      ) : (
+                        <span className="text-slate-300 text-sm font-sans font-normal">Password baru...</span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      {newGeneratedPassword && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setShowGeneratedPassword(!showGeneratedPassword)}
+                            className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500"
+                            title={showGeneratedPassword ? "Sembunyikan" : "Tampilkan"}
+                          >
+                            {showGeneratedPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCopyPassword}
+                            className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500"
+                            title="Salin Password"
+                          >
+                            {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                          </button>
+                        </>
+                      )}
+                      
+                      <button
+                        type="button"
+                        onClick={handleResetPassword}
+                        disabled={resettingPassword}
+                        className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-rose-200 disabled:opacity-50"
+                      >
+                        {resettingPassword ? (
+                          <RefreshCw size={16} className="animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw size={16} />
+                            <span>Generate</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
