@@ -326,9 +326,6 @@ export default function BukuDigitalPage() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl md:text-4xl font-bold">Buku Digital</h1>
-                  <span className="bg-white/30 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
-                    Materi
-                  </span>
                 </div>
                 <p className="text-green-50 text-base md:text-lg">Kumpulan materi & panduan Tahfidz yang dapat diakses oleh guru dan siswa</p>
               </div>
