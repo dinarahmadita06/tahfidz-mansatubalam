@@ -194,10 +194,10 @@ export async function POST(request) {
           tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
           alamat,
           noTelepon,
-          tahunAjaranMasukId,
+          tahunAjaranMasuk: tahunAjaranMasukId ? { connect: { id: tahunAjaranMasukId } } : undefined,
+          kelas: kelasId ? { connect: { id: kelasId } } : undefined,
           kelasAngkatan: kelasAngkatan || null,
           status: 'approved',
-          kelasId,
           user: {
             create: {
               email,
