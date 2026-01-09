@@ -428,7 +428,6 @@ export default function KelolaSiswaPage() {
             alamat: row['Alamat'] || row['alamat'] || '',
             kelasId,
             namaOrtu: row['Nama Orang Tua'] || row['namaOrtu'] || '',
-            emailOrtu: row['Email Orang Tua'] || row['emailOrtu'] || '',
             noHPOrtu: row['No HP Orang Tua'] || row['noHPOrtu'] || ''
           };
         });
@@ -475,15 +474,20 @@ export default function KelolaSiswaPage() {
 
   const downloadTemplate = () => {
     const template = [{
-      'Nama Siswa': 'Ahmad Fauzi',
-      'NISN': '1234567890',
-      'NIS': '2024001',
+      'Nama Siswa': 'Abdullah Rahman',
+      'NISN': '0012345678',
+      'NIS': '24001',
       'Jenis Kelamin': 'L',
-      'Tanggal Lahir': '2010-01-15',
-      'Alamat': 'Jl. Contoh No. 123',
-      'Nama Orang Tua': 'Budi Santoso',
-      'Email Orang Tua': 'budi@example.com',
-      'No HP Orang Tua': '081234567890'
+      'Tanggal Lahir': '2010-05-15',
+      'Diterima di Kelas / Angkatan': '7',
+      'Kelas Saat Ini': kelas?.nama || '7A',
+      'Tahun Ajaran Masuk': '2024/2025',
+      'Alamat': 'Jl. Masjid No. 123, Jakarta',
+      'Nomor WhatsApp Siswa': '081234567890',
+      'Jenis Wali': 'Ayah',
+      'Nama Wali': 'Ahmad Rahman',
+      'Jenis Kelamin Wali': 'L',
+      'No HP Wali': '081234567891'
     }];
 
     const ws = XLSX.utils.json_to_sheet(template);

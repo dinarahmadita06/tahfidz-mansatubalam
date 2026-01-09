@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { getCachedData, setCachedData } from '@/lib/cache';
 
 // Mark this as a dynamic route - do not call during build
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const CACHE_KEY = 'admin-dashboard-stats';
 
 export async function GET() {
   try {
@@ -14,7 +17,14 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Try to get from cache first
+    const cachedData = getCachedData(CACHE_KEY);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
+
     // Hitung semua statistik dari database
+
     const [
       totalSiswa,
       siswaAktif,
@@ -171,8 +181,7 @@ export async function GET() {
       }
     });
 
-    // Return data dalam format yang diharapkan dashboard
-    return NextResponse.json({
+    const responseData = {
       stats: {
         totalSiswa,
         siswaAktif,
@@ -185,7 +194,14 @@ export async function GET() {
         kelasMencapaiTarget,
         totalKelas: kelasAktif,
       }
-    });
+    };
+
+    // Cache the data
+    setCachedData(CACHE_KEY, responseData);
+
+    // Return data dalam format yang diharapkan dashboard
+    return NextResponse.json(responseData);
+
 
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
