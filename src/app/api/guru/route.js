@@ -107,7 +107,7 @@ export async function POST(request) {
     const body = await request.json();
     console.log('📝 Request body:', JSON.stringify(body, null, 2));
 
-    const { name, email, password, nip, jenisKelamin, noHP, noTelepon, alamat, kelasIds } = body;
+    const { name, email, password, nip, jenisKelamin, tanggalLahir, noHP, noTelepon, alamat, kelasIds } = body;
 
     // Validasi input - NIP is now optional
     if (!name || !email || !password || !jenisKelamin) {
@@ -194,6 +194,7 @@ export async function POST(request) {
     const createData = {
       nip: nip || null,
       jenisKelamin: normalizedJenisKelamin,
+      tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
       noTelepon: noTelepon || noHP || null,
       alamat: alamat || null,
       user: {

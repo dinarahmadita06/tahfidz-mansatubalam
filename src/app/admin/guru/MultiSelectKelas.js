@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ChevronDown } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
@@ -13,13 +14,50 @@ export function MultiSelectKelas({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, placement: 'bottom' });
+  const containerRef = useRef(null);
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Function to calculate and update dropdown position
+  const updatePosition = () => {
+    if (containerRef.current && isOpen) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownHeight = 350; // Estimated max height
+      
+      const spaceBelow = viewportHeight - rect.bottom;
+      const shouldFlip = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
+      
+      setDropdownPosition({
+        top: shouldFlip ? rect.top - 8 : rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+        placement: shouldFlip ? 'top' : 'bottom'
+      });
+    }
+  };
+
+  // Update position when opening or scrolling/resizing
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+    }
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      if (
+        containerRef.current && !containerRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -84,7 +122,7 @@ export function MultiSelectKelas({
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative" ref={containerRef}>
       {/* Input Field with Selected Chips */}
       <div
         onClick={() => setIsOpen(!isOpen)}
@@ -131,13 +169,24 @@ export function MultiSelectKelas({
         </div>
       </div>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-300 rounded-xl shadow-lg z-50">
+      {/* Dropdown Menu - Rendered via Portal */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div 
+          ref={dropdownRef}
+          style={{ 
+            position: 'fixed',
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+            transform: dropdownPosition.placement === 'top' ? 'translateY(-100%)' : 'none'
+          }}
+          className="bg-white border border-slate-300 rounded-xl shadow-2xl z-[9999] overflow-hidden"
+        >
           {/* Search Input */}
           <div className="p-3 border-b border-slate-200">
             <input
               ref={inputRef}
+              autoFocus
               type="text"
               placeholder="Cari kelas..."
               value={searchTerm}
@@ -148,7 +197,7 @@ export function MultiSelectKelas({
           </div>
 
           {/* Kelas List */}
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-[260px] overflow-y-auto">
             {filteredKelas.length === 0 ? (
               <div className="p-4 text-center text-slate-500 text-sm">
                 Tidak ada kelas yang cocok
@@ -158,6 +207,7 @@ export function MultiSelectKelas({
                 <label
                   key={k.id}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <input
                     type="checkbox"
@@ -187,7 +237,8 @@ export function MultiSelectKelas({
               ✓ {selectedKelasObjects.length} kelas dipilih
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

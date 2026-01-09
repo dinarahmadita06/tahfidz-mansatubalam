@@ -14,7 +14,7 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const { name, email, password, nip, jenisKelamin, noHP, noTelepon, alamat, kelasIds } = await request.json();
+    const { name, email, password, nip, jenisKelamin, tanggalLahir, noHP, noTelepon, alamat, kelasIds } = await request.json();
 
     // Cari guru
     const guru = await prisma.guru.findUnique({
@@ -71,6 +71,7 @@ export async function PUT(request, { params }) {
     const updateData = {
       nip: nip || null,
       jenisKelamin: normalizedJenisKelamin,
+      tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
       noTelepon: noTelepon || noHP,
       alamat,
       user: {

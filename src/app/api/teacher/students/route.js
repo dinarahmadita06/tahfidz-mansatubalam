@@ -81,12 +81,8 @@ export async function POST(request) {
           userId: studentUser.id,
           nis: student.nis,
           nisn: student.nisn || null,
-          kelas: {
-            connect: { id: student.kelasId }
-          },
-          tahunAjaranMasuk: student.tahunAjaranMasukId ? {
-            connect: { id: student.tahunAjaranMasukId }
-          } : undefined,
+          kelasId: student.kelasId,
+          tahunAjaranMasukId: student.tahunAjaranMasukId || null,
           kelasAngkatan: student.kelasAngkatan || null,
           jenisKelamin: student.gender,
           tanggalLahir: student.birthDate ? new Date(student.birthDate) : null,

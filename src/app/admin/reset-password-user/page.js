@@ -66,7 +66,10 @@ export default function ResetPasswordUserPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Password berhasil di-reset');
+        const message = data.newPassword 
+          ? `Password berhasil di-reset menjadi: ${data.newPassword}` 
+          : (data.message || 'Password berhasil di-reset');
+        setSuccess(message);
         setNewPassword('');
         setSearchResult(null);
         setSearchQuery('');
@@ -104,8 +107,11 @@ export default function ResetPasswordUserPage() {
       } else {
         setError('Data siswa terhubung tidak ditemukan untuk wali ini');
       }
+    } else if (searchResult.role === 'GURU') {
+      setNewPassword('DEFAULT_FORMAT');
+      setSuccess('Password akan di-reset ke format guru.<namaPertama>-YYYY');
     } else {
-      setError('Password default hanya tersedia untuk Siswa dan Orang Tua');
+      setError('Password default tidak tersedia untuk role ini');
     }
   };
 
@@ -335,13 +341,14 @@ export default function ResetPasswordUserPage() {
                   <div className="flex gap-3">
                     <input
                       type="text"
-                      value={newPassword}
+                      value={newPassword === 'DEFAULT_FORMAT' ? 'Format Default Guru (guru.<nama>-YYYY)' : newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      className="flex-1 px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-purple-500 focus:ring-3 focus:ring-purple-100 transition-all duration-200 outline-none"
+                      readOnly={newPassword === 'DEFAULT_FORMAT'}
+                      className={`flex-1 px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:border-purple-500 focus:ring-3 focus:ring-purple-100 transition-all duration-200 outline-none ${newPassword === 'DEFAULT_FORMAT' ? 'font-bold text-emerald-600' : ''}`}
                       placeholder="Minimal 6 karakter"
                     />
-                    {(searchResult.role === 'SISWA' || searchResult.role === 'ORANG_TUA') && (
+                    {(searchResult.role === 'SISWA' || searchResult.role === 'ORANG_TUA' || searchResult.role === 'GURU') && (
                       <button
                         type="button"
                         onClick={handleUseDefaultPassword}

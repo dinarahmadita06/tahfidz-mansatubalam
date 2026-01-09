@@ -23,9 +23,9 @@ export async function PUT(request, { params }) {
     const { nama, tahunAjaranId, targetJuz, kapasitas, guruUtamaId, forceUpdate } = body;
 
     // Validate required fields
-    if (!nama || !tahunAjaranId || !guruUtamaId) {
+    if (!nama || !tahunAjaranId) {
       return NextResponse.json(
-        { error: 'Data tidak lengkap. Nama kelas, tahun ajaran, dan guru pembina harus diisi.' },
+        { error: 'Data tidak lengkap. Nama kelas dan tahun ajaran harus diisi.' },
         { status: 400 }
       );
     }
@@ -113,15 +113,17 @@ export async function PUT(request, { params }) {
         where: { kelasId: id }
       });
 
-      // 3. Add guru pembina
-      await tx.guruKelas.create({
-        data: {
-          kelasId: id,
-          guruId: guruUtamaId, // Keep as string - it's a CUID
-          peran: 'utama',
-          isActive: true,
-        },
-      });
+      // 3. Add guru pembina if provided
+      if (guruUtamaId && guruUtamaId.trim()) {
+        await tx.guruKelas.create({
+          data: {
+            kelasId: id,
+            guruId: guruUtamaId, // Keep as string - it's a CUID
+            peran: 'utama',
+            isActive: true,
+          },
+        });
+      }
 
       // 4. Removed guru pendamping handling as requested
       

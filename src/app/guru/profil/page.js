@@ -133,10 +133,37 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <Phone size={16} className="text-gray-400" />
-            Nomor Telepon
+            Nomor WhatsApp
+          </label>
+          <div className={`px-4 py-3 rounded-xl border ${!profileData?.phone ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-gray-50'}`}>
+            {profileData?.phone ? (
+              <p className="font-medium text-gray-900">{profileData.phone}</p>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-amber-700 text-sm italic">Belum diisi</span>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const editBtn = document.querySelector('button[onClick*="onEditProfile"]');
+                    if (editBtn) editBtn.click();
+                  }}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+                >
+                  Lengkapi nomor WhatsApp
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tanggal Lahir */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Calendar size={16} className="text-gray-400" />
+            Tanggal Lahir
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.phone)}</p>
+            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.tanggalLahir)}</p>
           </div>
         </div>
 
@@ -389,7 +416,8 @@ export default function ProfilGuruPage() {
           phone: guruData.noTelepon || '',
           alamat: guruData.alamat || '',
           bidangKeahlian: guruData.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: formatDateForInput(guruData.mulaiMengajar)
+          mulaiMengajar: formatDateForInput(guruData.mulaiMengajar),
+          tanggalLahir: formatDateForInput(guruData.tanggalLahir)
         });
       } else {
         console.error('Failed to fetch guru profile:', response.status);
@@ -447,7 +475,8 @@ export default function ProfilGuruPage() {
       phone: profileData.phone,
       alamat: profileData.alamat,
       bidangKeahlian: profileData.bidangKeahlian,
-      mulaiMengajar: profileData.mulaiMengajar
+      mulaiMengajar: profileData.mulaiMengajar,
+      tanggalLahir: profileData.tanggalLahir
     });
     setShowEditModal(true);
   };
@@ -488,7 +517,8 @@ export default function ProfilGuruPage() {
           phone: responseData.data.noTelepon || '',
           alamat: responseData.data.alamat || '',
           bidangKeahlian: responseData.data.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: formatDateForInput(responseData.data.mulaiMengajar)
+          mulaiMengajar: formatDateForInput(responseData.data.mulaiMengajar),
+          tanggalLahir: formatDateForInput(responseData.data.tanggalLahir)
         });
         
         await update();
@@ -721,13 +751,27 @@ export default function ProfilGuruPage() {
                 {/* Nomor Telepon */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nomor Telepon
+                    Nomor WhatsApp
                   </label>
                   <input
                     type="tel"
                     value={editFormData.phone || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                    placeholder="08xx xxxx xxxx"
+                    placeholder="Contoh: 08123456789"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Tanggal Lahir */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Lahir <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={editFormData.tanggalLahir || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, tanggalLahir: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
