@@ -413,31 +413,31 @@ export default function AdminSiswaPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 w-full md:w-auto">
+              <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-end gap-3 w-full md:w-auto">
                 <button
                   onClick={() => setShowModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm shadow-md hover:bg-emerald-50 hover:shadow-lg transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-sm md:text-xs lg:text-sm shadow-md hover:bg-emerald-50 hover:shadow-lg transition-all whitespace-nowrap"
                 >
                   <UserPlus size={18} />
                   <span>Tambah Siswa</span>
                 </button>
                 <button
                   onClick={handleDownloadTemplate}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm md:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all whitespace-nowrap"
                 >
                   <Download size={18} />
                   <span>Template</span>
                 </button>
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm md:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all whitespace-nowrap"
                 >
                   <Upload size={18} />
                   <span>Import</span>
                 </button>
                 <button
                   onClick={handleExportData}
-                  className="col-span-2 md:col-span-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-sm md:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all whitespace-nowrap"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

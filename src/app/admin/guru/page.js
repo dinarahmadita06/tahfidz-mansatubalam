@@ -392,34 +392,34 @@ export default function AdminGuruPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 lg:gap-3 w-full md:w-auto">
+              <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-end gap-3 w-full md:w-auto">
                   <button
                   onClick={() => {
                     resetForm();
                     setShowModal(true);
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-sm md:text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 whitespace-nowrap"
                 >
                   <UserPlus size={16} />
                   <span>Tambah Guru</span>
                 </button>
                 <button
                   onClick={handleDownloadTemplate}
-                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-sm md:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300 whitespace-nowrap"
                 >
                   <FileSpreadsheet size={16} />
                   <span>Template</span>
                 </button>
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-sm md:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300 whitespace-nowrap"
                 >
                   <Upload size={16} />
                   <span>Import</span>
                 </button>
                 <button
                   onClick={handleExportData}
-                  className="col-span-2 md:col-span-1 flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-sm md:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300 whitespace-nowrap"
                 >
                   <Download size={16} />
                   <span>Export</span>
