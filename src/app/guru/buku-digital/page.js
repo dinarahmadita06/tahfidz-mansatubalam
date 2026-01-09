@@ -47,15 +47,15 @@ const JENIS_MATERI = {
   YOUTUBE: 'YOUTUBE',
 };
 
-function StatCard({ label, value, icon: Icon, color = 'emerald' }) {
+function StatCard({ label, value, icon: Icon, color = 'blue' }) {
   const configs = {
-    emerald: {
-      bg: 'bg-emerald-50/60',
-      border: 'border-emerald-200/70',
-      text: 'text-emerald-700',
-      iconBg: 'bg-emerald-100/60',
-      iconText: 'text-emerald-600',
-      glow: 'shadow-emerald-500/10'
+    blue: {
+      bg: 'bg-blue-50/60',
+      border: 'border-blue-200/70',
+      text: 'text-blue-700',
+      iconBg: 'bg-blue-100/60',
+      iconText: 'text-blue-600',
+      glow: 'shadow-blue-500/10'
     },
     rose: {
       bg: 'bg-rose-50/60',
@@ -66,7 +66,7 @@ function StatCard({ label, value, icon: Icon, color = 'emerald' }) {
       glow: 'shadow-rose-500/10'
     }
   };
-  const config = configs[color] || configs.emerald;
+  const config = configs[color] || configs.blue;
 
   return (
     <div className={`${config.bg} ${config.border} ${config.glow} p-5 rounded-2xl border shadow-sm hover:shadow-md transition-all`}>
@@ -339,7 +339,7 @@ export default function BukuDigitalPage() {
             label="File PDF"
             value={loading ? '...' : totalPDF}
             icon={FileCheck}
-            color="emerald"
+            color="blue"
           />
           <StatCard
             label="YouTube"
