@@ -39,7 +39,13 @@ export async function GET(request) {
         }
       }),
       prisma.orangTua.count(),
-      prisma.hafalan.count(),
+      prisma.hafalan.count({
+        where: {
+          siswa: {
+            status: 'approved'
+          }
+        }
+      }),
       prisma.tahunAjaran.findFirst({
         where: { isActive: true }
       }),
@@ -131,19 +137,22 @@ export async function GET(request) {
     const hadirCount = presensiStats.find(s => s.status === 'HADIR')?._count || 0;
     const kehadiranPercentage = totalPresensi > 0 ? Math.round((hadirCount / totalPresensi) * 100) : 0;
 
-    // Calculate average nilai hafalan
-    const hafalanWithNilai = await prisma.hafalan.aggregate({
+    // Calculate average nilai hafalan from Penilaian table for approved students
+    const avgPenilaian = await prisma.penilaian.aggregate({
       _avg: {
         nilaiAkhir: true
       },
       where: {
         nilaiAkhir: {
           not: null
+        },
+        siswa: {
+          status: 'approved'
         }
       }
     });
 
-    const rataRataNilai = hafalanWithNilai._avg.nilaiAkhir || 0;
+    const rataRataNilai = avgPenilaian._avg.nilaiAkhir || 0;
 
     // Get kelas yang belum update hafalan minggu ini
     const startOfWeek = new Date();
@@ -199,7 +208,13 @@ export async function GET(request) {
       }))
     };
 
-    return NextResponse.json(responseData);
+    return NextResponse.json(responseData, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
     return NextResponse.json(

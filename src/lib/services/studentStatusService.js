@@ -3,7 +3,7 @@
  * Handles business logic for student status lifecycle (AKTIF, LULUS, PINDAH, KELUAR)
  */
 
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Check if user account should be active based on student status
@@ -68,10 +68,10 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
     throw new Error('Siswa tidak ditemukan');
   }
 
-  // Get admin user data for role field in LogActivity
+  // Get admin user data for role field in ActivityLog
   const adminUser = await prisma.user.findUnique({
     where: { id: adminId },
-    select: { role: true },
+    select: { role: true, name: true },
   });
 
   if (!adminUser) {
@@ -82,9 +82,9 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
   const isLeavingActive = siswa.statusSiswa === 'AKTIF' && newStatusSiswa !== 'AKTIF';
 
   // Start transaction
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (trx) => {
     // 1. Update siswa status
-    const updatedSiswa = await tx.siswa.update({
+    const updatedSiswa = await trx.siswa.update({
       where: { id: siswaId },
       data: {
         statusSiswa: newStatusSiswa,
@@ -97,7 +97,7 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
     });
 
     // 2. Update user.isActive based on new status
-    await tx.user.update({
+    await trx.user.update({
       where: { id: siswa.userId },
       data: {
         isActive: isUserActive(newStatusSiswa),
@@ -108,11 +108,11 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
     if (isLeavingActive || isBecomingActive) {
       for (const relation of siswa.orangTuaSiswa) {
         const parentShouldBeActive = await isParentActiveInTransaction(
-          tx,
+          trx,
           relation.orangTuaId
         );
 
-        await tx.user.update({
+        await trx.user.update({
           where: { id: relation.orangTua.userId },
           data: {
             isActive: parentShouldBeActive,
@@ -122,13 +122,22 @@ export async function updateStudentStatus(siswaId, newStatusSiswa, adminId) {
     }
 
     // 4. Log activity with correct fields
-    await tx.logActivity.create({
+    await trx.activityLog.create({
       data: {
-        userId: adminId,
-        role: adminUser.role,
-        aktivitas: 'UPDATE',
-        modul: 'Manajemen Siswa',
-        deskripsi: `Mengubah status siswa ${siswa.user.name} (${siswa.nis}) dari ${siswa.statusSiswa} ke ${newStatusSiswa}`,
+        actorId: adminId,
+        actorRole: adminUser.role,
+        actorName: adminUser.name,
+        action: 'SISWA_UPDATE_STATUS',
+        title: 'Update Status Siswa',
+        description: `Mengubah status siswa ${siswa.user.name} (${siswa.nis}) dari ${siswa.statusSiswa} ke ${newStatusSiswa}`,
+        targetUserId: siswa.userId,
+        targetRole: 'SISWA',
+        targetName: siswa.user.name,
+        metadata: {
+          siswaId,
+          oldStatus: siswa.statusSiswa,
+          newStatus: newStatusSiswa,
+        },
       },
     });
 

@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { getCachedData, setCachedData } from '@/lib/cache';
 
 // Mark this as a dynamic route - do not call during build
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const CACHE_KEY = 'admin-dashboard-stats';
 
 export async function GET() {
   try {
@@ -15,12 +12,6 @@ export async function GET() {
 
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Try to get from cache first
-    const cachedData = getCachedData(CACHE_KEY);
-    if (cachedData) {
-      return NextResponse.json(cachedData);
     }
 
     // Hitung semua statistik dari database
@@ -67,8 +58,13 @@ export async function GET() {
         }
       }),
 
-      // Semua hafalan untuk menghitung rata-rata nilai
+      // Semua hafalan untuk menghitung rata-rata nilai (hanya dari siswa approved)
       prisma.hafalan.findMany({
+        where: {
+          siswa: {
+            status: 'approved'
+          }
+        },
         include: {
           penilaian: {
             select: {
@@ -78,15 +74,25 @@ export async function GET() {
         }
       }),
 
-      // Semua penilaian untuk backup rata-rata nilai
+      // Semua penilaian untuk backup rata-rata nilai (hanya dari siswa approved)
       prisma.penilaian.aggregate({
+        where: {
+          siswa: {
+            status: 'approved'
+          }
+        },
         _avg: {
           nilaiAkhir: true
         }
       }),
 
-      // Semua presensi untuk menghitung kehadiran
+      // Semua presensi untuk menghitung kehadiran (hanya dari siswa approved)
       prisma.presensi.findMany({
+        where: {
+          siswa: {
+            status: 'approved'
+          }
+        },
         select: {
           status: true
         }
@@ -196,11 +202,14 @@ export async function GET() {
       }
     };
 
-    // Cache the data
-    setCachedData(CACHE_KEY, responseData);
-
     // Return data dalam format yang diharapkan dashboard
-    return NextResponse.json(responseData);
+    return NextResponse.json(responseData, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
 
 
   } catch (error) {
