@@ -20,6 +20,20 @@ export function generateSiswaEmail(name, nis) {
 }
 
 /**
+ * Generate email orang tua berdasarkan data siswa
+ * Format: kataAwalNamaSiswa.NIS@ortu.tahfidz.sch.id
+ * Contoh: Ahmad Fauzi + NIS 2024001 = ahmad.2024001@ortu.tahfidz.sch.id
+ */
+export function generateOrangTuaEmail(studentName, studentNis) {
+  if (!studentName || !studentNis) return '';
+
+  const firstName = studentName.trim().split(' ')[0].toLowerCase();
+  const cleanNis = String(studentNis).trim().replace(/[^a-zA-Z0-9]/g, '');
+
+  return `${firstName}.${cleanNis}@ortu.tahfidz.sch.id`;
+}
+
+/**
  * Normalize gender input ke enum yang valid
  * Accepts: "Laki-laki", "LAKI_LAKI", "Pria", "L", "P", "Wanita", "Perempuan"
  * Returns: "LAKI_LAKI" atau "PEREMPUAN"

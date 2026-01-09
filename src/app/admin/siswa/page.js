@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { UserPlus, Upload, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen, CheckCircle, XCircle, ArrowUpRight, Award } from 'lucide-react';
+import { useState, useEffect, memo } from 'react';
+import useSWR from 'swr';
+import Skeleton, { TableRowSkeleton, StatCardSkeleton } from '@/components/shared/Skeleton';
+
+import { UserPlus, Upload, Download, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen, CheckCircle, XCircle, ArrowUpRight, Award } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -43,7 +46,8 @@ function formatTanggal(dateValue) {
 }
 
 // Komponen StatCard (Reusable - Tasmi Style)
-function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
+const StatCard = memo(function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
+
   const themeConfig = {
     cyan: {
       bg: 'bg-yellow-50/80',
@@ -125,12 +129,18 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
       </div>
     </div>
   );
-}
+});
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function AdminSiswaPage() {
-  const [siswa, setSiswa] = useState([]);
-  const [kelas, setKelas] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: siswaData, error: siswaError, mutate: refetchSiswa } = useSWR('/api/admin/siswa', fetcher);
+  const { data: kelasData, error: kelasError } = useSWR('/api/kelas', fetcher);
+
+  const siswa = siswaData?.data || (Array.isArray(siswaData) ? siswaData : []);
+  const kelas = Array.isArray(kelasData) ? kelasData : (kelasData?.data || []);
+  const loading = !siswaData && !siswaError;
+
   const [searching, setSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTimeoutId, setSearchTimeoutId] = useState(null);
@@ -143,48 +153,9 @@ export default function AdminSiswaPage() {
   const [selectedSiswa, setSelectedSiswa] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [fetchError, setFetchError] = useState(null);
 
-  // Initial fetch: both data in parallel
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      setFetchError(null);
-      
-      try {
-        const [siswaRes, kelasRes] = await Promise.all([
-          fetch('/api/admin/siswa', { credentials: 'include' }),
-          fetch('/api/kelas', { credentials: 'include' })
-        ]);
+  const fetchError = siswaError?.message || kelasError?.message;
 
-        if (siswaRes.status === 401 || siswaRes.status === 403) {
-          throw new Error(`Sesi Anda telah berakhir (Error ${siswaRes.status}). Silakan login kembali.`);
-        }
-
-        if (!siswaRes.ok) throw new Error(`Gagal memuat data siswa (Error ${siswaRes.status})`);
-        if (!kelasRes.ok) throw new Error(`Gagal memuat data kelas (Error ${kelasRes.status})`);
-
-        const siswaData = await siswaRes.json();
-        const kelasData = await kelasRes.json();
-
-        // Handle API response structure (data property or direct array)
-        const parsedSiswa = siswaData.data || (Array.isArray(siswaData) ? siswaData : []);
-        const parsedKelas = Array.isArray(kelasData) ? kelasData : (kelasData.data || []);
-
-        setSiswa(parsedSiswa);
-        setKelas(parsedKelas);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setFetchError(error.message);
-        setSiswa([]);
-        setKelas([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, []);
 
   // Debounced search effect
   useEffect(() => {
@@ -219,24 +190,40 @@ export default function AdminSiswaPage() {
   }, [searchTimeoutId]);
 
   // Refresh data after status change or create
-  const refetchSiswa = async () => {
-    try {
-      const response = await fetch('/api/admin/siswa', { credentials: 'include' });
-      if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
-      
-      const result = await response.json();
-      const data = result.data || (Array.isArray(result) ? result : []);
-      setSiswa(data);
-    } catch (error) {
-      console.error('Error refetching siswa:', error);
-    }
-  };
+  // Mutate is handled by SWR mutate function refetchSiswa
+
 
   const handleImport = async (e) => {
     e.preventDefault();
     // TODO: Implement import CSV
     alert('Fitur import CSV akan segera tersedia.');
     setShowImportModal(false);
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        'Nama Siswa': 'Abdullah Rahman',
+        'NISN': '0012345678',
+        'NIS': '24001',
+        'Jenis Kelamin': 'L',
+        'Tanggal Lahir': '2010-05-15',
+        'Diterima di Kelas / Angkatan': '7',
+        'Kelas Saat Ini': '7A',
+        'Tahun Ajaran Masuk': '2024/2025',
+        'Alamat': 'Jl. Masjid No. 123, Jakarta',
+        'Nomor WhatsApp Siswa': '081234567890',
+        'Jenis Wali': 'Ayah',
+        'Nama Wali': 'Ahmad Rahman',
+        'Jenis Kelamin Wali': 'L',
+        'No HP Wali': '081234567891'
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Import Siswa');
+    XLSX.writeFile(wb, 'Template_Import_Siswa_Wali.xlsx');
   };
 
   const handleExportData = () => {
@@ -399,13 +386,8 @@ export default function AdminSiswaPage() {
     },
   };
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <LoadingIndicator text="Memuat data siswa..." />
-      </AdminLayout>
-    );
-  }
+  // No full page loading, use skeletons instead
+
 
   return (
     <AdminLayout>
@@ -438,6 +420,13 @@ export default function AdminSiswaPage() {
                 >
                   <UserPlus size={18} />
                   <span>Tambah Siswa</span>
+                </button>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/20 text-white border border-white/40 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 backdrop-blur-sm transition-all"
+                >
+                  <Download size={18} />
+                  <span>Template</span>
                 </button>
                 <button
                   onClick={() => setShowImportModal(true)}
@@ -484,49 +473,58 @@ export default function AdminSiswaPage() {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <StatCard
-                icon={Users}
-                title="Total Siswa"
-                value={stats.total}
-                subtitle="Total siswa terdaftar"
-                theme="cyan"
-              />
-              <StatCard
-                icon={UserCheck}
-                title="Siswa Aktif"
-                value={stats.active}
-                subtitle="Siswa tervalidasi dan aktif"
-                theme="sky"
-              />
-              <StatCard
-                icon={AlertCircle}
-                title="Belum Divalidasi"
-                value={stats.unvalidated}
-                subtitle="Menunggu validasi"
-                theme="orange"
-              />
-              <StatCard
-                icon={GraduationCap}
-                title="Siswa Lulus"
-                value={stats.statusCounts.LULUS}
-                subtitle="Siswa yang telah lulus"
-                theme="emerald"
-              />
-              <StatCard
-                icon={ArrowUpRight}
-                title="Siswa Pindah"
-                value={stats.statusCounts.PINDAH}
-                subtitle="Siswa yang pindah sekolah"
-                theme="fuchsia"
-              />
-              <StatCard
-                icon={XCircle}
-                title="Siswa Keluar"
-                value={stats.statusCounts.KELUAR}
-                subtitle="Siswa yang keluar/non-aktif"
-                theme="rose"
-              />
+              {loading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <StatCardSkeleton key={i} />
+                ))
+              ) : (
+                <>
+                  <StatCard
+                    icon={Users}
+                    title="Total Siswa"
+                    value={stats.total}
+                    subtitle="Total siswa terdaftar"
+                    theme="cyan"
+                  />
+                  <StatCard
+                    icon={UserCheck}
+                    title="Siswa Aktif"
+                    value={stats.active}
+                    subtitle="Siswa tervalidasi dan aktif"
+                    theme="sky"
+                  />
+                  <StatCard
+                    icon={AlertCircle}
+                    title="Belum Divalidasi"
+                    value={stats.unvalidated}
+                    subtitle="Menunggu validasi"
+                    theme="orange"
+                  />
+                  <StatCard
+                    icon={GraduationCap}
+                    title="Siswa Lulus"
+                    value={stats.statusCounts.LULUS}
+                    subtitle="Siswa yang telah lulus"
+                    theme="emerald"
+                  />
+                  <StatCard
+                    icon={ArrowUpRight}
+                    title="Siswa Pindah"
+                    value={stats.statusCounts.PINDAH}
+                    subtitle="Siswa yang pindah sekolah"
+                    theme="fuchsia"
+                  />
+                  <StatCard
+                    icon={XCircle}
+                    title="Siswa Keluar"
+                    value={stats.statusCounts.KELUAR}
+                    subtitle="Siswa yang keluar/non-aktif"
+                    theme="rose"
+                  />
+                </>
+              )}
             </div>
+
 
             {/* Search & Filter Section - Glass Effect */}
             <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 p-6 shadow-sm">
@@ -623,7 +621,12 @@ export default function AdminSiswaPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(!Array.isArray(filteredSiswa) || filteredSiswa.length === 0) ? (
+                    {loading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRowSkeleton key={i} columns={8} />
+                      ))
+                    ) : (!Array.isArray(filteredSiswa) || filteredSiswa.length === 0) ? (
+
                       <tr>
                         <td colSpan="8" className="px-6 py-12 text-center">
                           <EmptyState

@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload, FileSpreadsheet } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { MultiSelectKelas } from './MultiSelectKelas';
 import { generateGuruEmail, generateGuruPassword } from '@/lib/passwordUtils';
+import * as XLSX from 'xlsx';
+import SmartImport from '@/components/SmartImport';
 
 // Constant for class status
 const STATUS_AKTIF = 'AKTIF';
@@ -121,11 +123,22 @@ const getAktifKelas = (guruKelas) => {
 
 // ===== MAIN COMPONENT =====
 
+import useSWR from 'swr';
+import Skeleton, { TableRowSkeleton, StatCardSkeleton } from '@/components/shared/Skeleton';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
+
 export default function AdminGuruPage() {
-  const [guru, setGuru] = useState([]);
-  const [kelas, setKelas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingKelas, setLoadingKelas] = useState(false);
+  const { data: guruData, error: guruError, mutate: refetchGuru } = useSWR('/api/guru', fetcher);
+  const { data: kelasData, error: kelasError } = useSWR('/api/kelas?showAll=true', fetcher);
+
+  const guru = Array.isArray(guruData) ? guruData : [];
+  const allKelas = Array.isArray(kelasData) ? kelasData : (kelasData?.data || []);
+  const aktivKelasList = allKelas.filter(k => k.status === STATUS_AKTIF);
+  
+  const loading = !guruData && !guruError;
+  const loadingKelas = !kelasData && !kelasError;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -143,46 +156,16 @@ export default function AdminGuruPage() {
   });
   const [selectedKelas, setSelectedKelas] = useState([]);
 
-  useEffect(() => {
-    fetchGuru();
-  }, []);
-
-  const fetchGuru = async (skipCache = false) => {
-    try {
-      const url = skipCache ? `/api/guru?t=${Date.now()}` : '/api/guru';
-      const response = await fetch(url);
-      const data = await response.json();
-      setGuru(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching guru:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchKelas = async () => {
-    setLoadingKelas(true);
-    try {
-      const response = await fetch('/api/kelas?showAll=true');
-      const data = await response.json();
-      const aktivKelas = Array.isArray(data) ? data.filter(k => k.status === STATUS_AKTIF) : [];
-      setKelas(aktivKelas);
-    } catch (error) {
-      console.error('Error fetching kelas:', error);
-    } finally {
-      setLoadingKelas(false);
-    }
-  };
-
+  // Replace fetchGuru with refetchGuru from SWR
   const handleRefresh = async () => {
-    setLoading(true);
     try {
       await fetch('/api/admin/clear-cache', { method: 'POST' });
+      refetchGuru();
     } catch (err) {
       console.error('Error clearing cache:', err);
     }
-    await fetchGuru(true);
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -223,7 +206,7 @@ export default function AdminGuruPage() {
         alert(editingGuru ? 'Guru berhasil diupdate' : 'Guru berhasil ditambahkan');
         setShowModal(false);
         resetForm();
-        fetchGuru();
+        refetchGuru();
       } else {
         const error = await response.json();
         alert(error.error || 'Gagal menyimpan data guru');
@@ -251,7 +234,6 @@ export default function AdminGuruPage() {
       noTelepon: guruItem.noTelepon || ''
     });
     setSelectedKelas(aktivKelasIds);
-    fetchKelas();
     setShowModal(true);
   };
 
@@ -265,7 +247,7 @@ export default function AdminGuruPage() {
 
       if (response.ok) {
         alert('Guru berhasil dihapus');
-        fetchGuru();
+        refetchGuru();
       } else {
         const error = await response.json();
         alert(error.error || 'Gagal menghapus guru');
@@ -314,6 +296,58 @@ export default function AdminGuruPage() {
     setFormData({ ...formData, password });
   };
 
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        'Nama Lengkap': 'Ahmad Fauzi',
+        'Email': 'guru.ahmad@tahfidz.sch.id',
+        'NIP': '198501012010011001',
+        'Jenis Kelamin': 'L',
+        'Tanggal Lahir': '1985-05-20',
+        'Nomor WhatsApp': '081234567890',
+        'Kelas Binaan': '7A, 7B',
+        'Alamat': 'Jl. Pendidikan No. 45, Bandung'
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Import Guru');
+    XLSX.writeFile(wb, 'Template_Import_Guru.xlsx');
+  };
+
+  const handleExportData = () => {
+    if (filteredGuru.length === 0) {
+      alert('Tidak ada data untuk di-export');
+      return;
+    }
+
+    const exportData = filteredGuru.map(item => {
+      const aktifKelas = (item.guruKelas || [])
+        .filter(gk => gk.kelas && gk.kelas.status === 'AKTIF')
+        .map(gk => gk.kelas.nama)
+        .join(', ');
+
+      return {
+        'Nama Lengkap': item.user?.name || item.nama || '',
+        'Email': item.user?.email || item.email || '',
+        'NIP': item.nip || '',
+        'Jenis Kelamin': item.jenisKelamin === 'LAKI_LAKI' || item.jenisKelamin === 'L' ? 'L' : 'P',
+        'Tanggal Lahir': item.tanggalLahir ? new Date(item.tanggalLahir).toISOString().split('T')[0] : '',
+        'Nomor WhatsApp': item.noTelepon || '',
+        'Kelas Binaan': aktifKelas,
+        'Alamat': item.alamat || '',
+        'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
+        'Tanggal Bergabung': item.user?.createdAt ? new Date(item.user.createdAt).toISOString().split('T')[0] : ''
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Guru');
+    XLSX.writeFile(wb, `Data_Guru_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   // Filter guru data
   const filteredGuru = Array.isArray(guru) ? guru.filter(g => {
     const matchSearch = g.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -332,13 +366,8 @@ export default function AdminGuruPage() {
     inactive: 0,
   };
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <LoadingIndicator text="Memuat data guru..." />
-      </AdminLayout>
-    );
-  }
+  // No full page loading, use skeletons instead
+
 
   return (
     <AdminLayout>
@@ -364,16 +393,22 @@ export default function AdminGuruPage() {
               </div>
 
               <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 lg:gap-3 w-full md:w-auto">
-                <button
+                  <button
                   onClick={() => {
                     resetForm();
-                    fetchKelas();
                     setShowModal(true);
                   }}
                   className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
                 >
                   <UserPlus size={16} />
                   <span>Tambah Guru</span>
+                </button>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
+                >
+                  <FileSpreadsheet size={16} />
+                  <span>Template</span>
                 </button>
                 <button
                   onClick={() => setShowImportModal(true)}
@@ -383,24 +418,7 @@ export default function AdminGuruPage() {
                   <span>Import</span>
                 </button>
                 <button
-                  onClick={() => {
-                    const csvContent = [
-                      ['Nama Lengkap', 'Email', 'NIP', 'Status', 'Tanggal Bergabung'],
-                      ...(Array.isArray(filteredGuru) ? filteredGuru : []).map(g => [
-                        g.user.name,
-                        g.user.email,
-                        g.nip || '-',
-                        'Aktif',
-                        new Date(g.user.createdAt).toLocaleDateString('id-ID')
-                      ])
-                    ].map(row => row.join(',')).join('\n');
-
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `data-guru-${new Date().toISOString().split('T')[0]}.csv`;
-                    link.click();
-                  }}
+                  onClick={handleExportData}
                   className="col-span-2 md:col-span-1 flex items-center justify-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-white/30 hover:shadow-md transition-all duration-300"
                 >
                   <Download size={16} />
@@ -412,28 +430,37 @@ export default function AdminGuruPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            <StatCard
-              icon={Users}
-              title="Total Guru"
-              value={stats.total}
-              subtitle="Total guru terdaftar"
-              theme="emerald"
-            />
-            <StatCard
-              icon={UserCheck}
-              title="Guru Aktif"
-              value={stats.active}
-              subtitle="Guru yang aktif mengajar"
-              theme="sky"
-            />
-            <StatCard
-              icon={UserX}
-              title="Guru Non-Aktif"
-              value={stats.inactive}
-              subtitle="Guru yang tidak aktif"
-              theme="amber"
-            />
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <StatCardSkeleton key={i} />
+              ))
+            ) : (
+              <>
+                <StatCard
+                  icon={Users}
+                  title="Total Guru"
+                  value={stats.total}
+                  subtitle="Total guru terdaftar"
+                  theme="emerald"
+                />
+                <StatCard
+                  icon={UserCheck}
+                  title="Guru Aktif"
+                  value={stats.active}
+                  subtitle="Guru yang aktif mengajar"
+                  theme="sky"
+                />
+                <StatCard
+                  icon={UserX}
+                  title="Guru Non-Aktif"
+                  value={stats.inactive}
+                  subtitle="Guru yang tidak aktif"
+                  theme="amber"
+                />
+              </>
+            )}
           </div>
+
 
           {/* Search & Filter Bar */}
           <SearchFilterBar
@@ -458,7 +485,12 @@ export default function AdminGuruPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-emerald-100/40">
-                  {(!Array.isArray(filteredGuru) || filteredGuru.length === 0) ? (
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRowSkeleton key={i} columns={6} />
+                    ))
+                  ) : (!Array.isArray(filteredGuru) || filteredGuru.length === 0) ? (
+
                     <tr>
                       <td colSpan="6" className="px-6 py-12 text-center">
                         <EmptyState
@@ -555,6 +587,21 @@ export default function AdminGuruPage() {
       </div>
 
       {/* Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="max-w-4xl w-full">
+            <SmartImport 
+              type="guru"
+              onClose={() => setShowImportModal(false)}
+              onSuccess={() => {
+                setShowImportModal(false);
+                refetchGuru();
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-5 lg:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-emerald-100">
@@ -709,11 +756,11 @@ export default function AdminGuruPage() {
                     Kelas Binaan (Pembina)
                   </label>
                   <MultiSelectKelas
-                    kelas={kelas}
+                    kelas={aktivKelasList}
                     selectedKelas={selectedKelas}
                     onSelectionChange={setSelectedKelas}
                     loading={loadingKelas}
-                    error={kelas.length === 0 && !loadingKelas ? 'Tidak ada kelas AKTIF tersedia' : null}
+                    error={aktivKelasList.length === 0 && !loadingKelas ? 'Tidak ada kelas AKTIF tersedia' : null}
                   />
                   <p className="text-[10px] text-slate-500 mt-1 italic">
                     Opsional. Guru akan menjadi Pembina untuk kelas yang dipilih. Dapat ditambahkan nanti.
