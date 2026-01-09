@@ -67,12 +67,14 @@ export default function QuranReaderPage({ role = 'siswa' }) {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastRead, setLastRead] = useState(null);
+  const [targetAyah, setTargetAyah] = useState(null);
   const [showTajwid, setShowTajwid] = useState(false);
 
   // Global singleton audio player state
   const [currentPlayingId, setCurrentPlayingId] = useState(null); // Format: "surah-ayah"
   const [isAudioPlaying, setIsAudioPlaying] = useState(false); // Track if audio is actually playing
   const [audioLoading, setAudioLoading] = useState(false); // Track audio loading state
+  const lastTapRef = useRef(0);
 
   // Singleton audio player ref (created once, never recreated)
   const audioRef = useRef(null);
@@ -150,8 +152,24 @@ export default function QuranReaderPage({ role = 'siswa' }) {
     }
   };
 
-  const fetchSurahData = async (surahNumber, isMobileAccordion = false) => {
+  // Effect to handle automatic scrolling when verses are loaded
+  useEffect(() => {
+    if (verses.length > 0 && targetAyah) {
+      // Delay to ensure DOM elements are fully rendered
+      const timer = setTimeout(() => {
+        const success = scrollToAyah(targetAyah);
+        if (success) {
+          setTargetAyah(null); // Clear target after successful scroll
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [verses, targetAyah]);
+
+  const fetchSurahData = async (surahNumber, isMobileAccordion = false, initialAyah = null) => {
     setLoading(true);
+    if (initialAyah) setTargetAyah(initialAyah);
+
     try {
       const response = await fetch(`/api/quran/surah/${surahNumber}`);
       if (!response.ok) throw new Error('Failed to fetch surah');
@@ -384,27 +402,95 @@ export default function QuranReaderPage({ role = 'siswa' }) {
   };
 
   const handleBookmark = () => {
-    if (!selectedSurah) return;
+    if (!selectedSurah || !surahData) return;
+
+    // Get current playing ayah or fallback to first ayah of the loaded surah
+    let ayahNo = 1;
+    if (currentPlayingId && currentPlayingId.startsWith(`${selectedSurah}-`)) {
+      const parts = currentPlayingId.split('-');
+      ayahNo = parseInt(parts[1]);
+    } else if (verses && verses.length > 0) {
+      // If no audio playing, but verses are loaded, use the first one's number
+      ayahNo = verses[0]?.numberInSurah || 1;
+    }
+
+    saveLastRead(selectedSurah, surahData.englishName, ayahNo);
+  };
+
+  /**
+   * Standardized function to save last read progress
+   * Structure: { surahId, surahName, ayatNumber, updatedAt }
+   */
+  const saveLastRead = (surahId, surahName, ayatNumber) => {
+    // Validation
+    const parsedAyat = parseInt(ayatNumber);
+    if (!ayatNumber || isNaN(parsedAyat)) {
+      toast.error('Nomor ayat tidak ditemukan', {
+        icon: '⚠️',
+        style: { borderRadius: '12px' }
+      });
+      return;
+    }
 
     const bookmark = {
-      surah: surahData?.englishName || 'Unknown',
-      surahNumber: selectedSurah,
-      verse: currentPlayingId?.split('-')[1] || 1,
-      date: new Date().toISOString(),
+      surahId: parseInt(surahId),
+      surahName: surahName || 'Unknown',
+      ayatNumber: parsedAyat,
+      updatedAt: new Date().toISOString(),
     };
 
     // Save to localStorage based on role
     localStorage.setItem(`last_read_quran_${role}`, JSON.stringify(bookmark));
     setLastRead(bookmark);
 
-    toast.success('Ayat terakhir berhasil ditandai!', {
-      icon: '📖',
+    // Toast with safe fallbacks
+    const displaySurah = bookmark.surahName || '-';
+    const displayAyat = bookmark.ayatNumber || '-';
+
+    toast.success(`Terakhir dibaca disimpan: ${displaySurah} – Ayat ${displayAyat}`, {
+      icon: '🔖',
       style: {
         borderRadius: '12px',
-        background: '#10B981',
+        background: '#059669',
         color: '#fff',
       },
+      duration: 2000,
     });
+  };
+
+  // Handle jump to last read position
+  const handleJumpToLastRead = () => {
+    if (!lastRead) return;
+    
+    const surahId = lastRead.surahId || lastRead.surahNumber;
+    const ayatNo = lastRead.ayatNumber || lastRead.verse;
+
+    if (selectedSurah === surahId) {
+      scrollToAyah(ayatNo);
+    } else {
+      // If mobile, expand the accordion first
+      if (window.innerWidth < 1024) {
+        setExpandedSurahMobile(surahId);
+      }
+      fetchSurahData(surahId, window.innerWidth < 1024, ayatNo);
+    }
+  };
+
+  // Double tap/click handler for verses
+  const handleVerseInteraction = (verse, explicitNumber) => {
+    if (!surahData) return;
+    // Use explicit number from map loop if available, fallback to verse object, then fallback to 1
+    const ayahNo = explicitNumber || verse?.numberInSurah || 1;
+    saveLastRead(selectedSurah, surahData.englishName, ayahNo);
+  };
+
+  const handleVerseClick = (verse, explicitNumber) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      handleVerseInteraction(verse, explicitNumber);
+    }
+    lastTapRef.current = now;
   };
 
   // Utility function for smooth scroll to ayah - Works on mobile & desktop with nested scroll container
@@ -668,7 +754,9 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                                   <div
                                     key={verse.number || index}
                                     ref={(el) => (ayahRefs.current[ayahNo] = el)}
-                                    className={`p-4 rounded-xl border-2 bg-white/90 backdrop-blur-sm transition-all ${
+                                    onClick={() => handleVerseClick(verse)}
+                                    onDoubleClick={() => handleVerseInteraction(verse)}
+                                    className={`p-4 rounded-xl border-2 bg-white/90 backdrop-blur-sm transition-all cursor-pointer select-none ${
                                       isCurrentAyat && isAudioPlaying
                                         ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_8px_20px_rgba(16,185,129,0.2)]'
                                         : 'border-gray-100 hover:border-emerald-200 shadow-sm'
@@ -679,7 +767,10 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                                       <div className="flex items-center gap-2">
                                         {/* Circular Number Badge - Like Guru Page */}
                                         <button
-                                          onClick={() => setShowJumpModal(true)}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowJumpModal(true);
+                                          }}
                                           className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                                           title="Klik untuk pindah ke ayat"
                                         >
@@ -969,7 +1060,9 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                             key={verse.number || index}
                             id={`ayat-${ayahNo}`}
                             ref={(el) => (ayahRefs.current[ayahNo] = el)}
-                            className={`p-6 rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative ${
+                            onClick={() => handleVerseClick(verse, ayahNo)}
+                            onDoubleClick={() => handleVerseInteraction(verse, ayahNo)}
+                            className={`p-6 rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative cursor-pointer select-none ${
                               isCurrentAyat && isAudioPlaying
                                 ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_12px_28px_rgba(16,185,129,0.2)]'
                                 : 'border-gray-100 hover:border-emerald-200 shadow-sm hover:shadow-md'
@@ -980,7 +1073,10 @@ export default function QuranReaderPage({ role = 'siswa' }) {
                               <div className="flex items-center gap-3">
                                 {/* Circular Number Badge - Like Guru Page */}
                                 <button
-                                  onClick={() => setShowJumpModal(true)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowJumpModal(true);
+                                  }}
                                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                                   title="Klik untuk pindah ke ayat"
                                 >
@@ -1059,11 +1155,19 @@ export default function QuranReaderPage({ role = 'siswa' }) {
 
         {/* Last Read Toast - Bottom Right (Pastel) */}
         {lastRead && (
-          <div className="fixed bottom-6 right-6 bg-emerald-50/95 backdrop-blur-sm border-2 border-emerald-200 text-emerald-900 px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 max-w-xs">
-            <Bookmark size={18} className="flex-shrink-0 text-emerald-600" />
+          <div 
+            onClick={handleJumpToLastRead}
+            className="fixed bottom-6 right-6 bg-emerald-50/95 backdrop-blur-sm border-2 border-emerald-200 text-emerald-900 px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 max-w-xs transition-all animate-in fade-in slide-in-from-bottom-4 cursor-pointer hover:bg-emerald-100 hover:scale-105 active:scale-95 group"
+          >
+            <Bookmark size={18} className="flex-shrink-0 text-emerald-600 group-hover:scale-110 transition-transform" />
             <div className="text-sm">
-              <p className="font-semibold text-emerald-800">Terakhir dibaca:</p>
-              <p className="text-emerald-700">{lastRead.surah} - Ayat {lastRead.verse}</p>
+              <p className="font-semibold text-emerald-800 flex items-center gap-2">
+                Terakhir dibaca:
+                <span className="text-[10px] bg-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Lanjutkan</span>
+              </p>
+              <p className="text-emerald-700">
+                {(lastRead.surahName || lastRead.surah) || '-'} – Ayat {(lastRead.ayatNumber || lastRead.verse) || '-'}
+              </p>
             </div>
           </div>
         )}
