@@ -231,7 +231,6 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
   if (!children || children.length === 0) return null;
 
   const hasMultipleChildren = children.length > 1;
-  const selectedStatusBadge = getStatusBadgeConfig(selectedChild?.statusSiswa || 'AKTIF');
 
   return (
     <div className="relative flex-shrink-0">
@@ -245,11 +244,6 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
         <div className="text-left flex-1">
           <p className="text-sm text-gray-600">Anak yang Dipilih</p>
           <p className="font-semibold text-gray-900">{selectedChild?.nama || 'Pilih Anak'}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${selectedStatusBadge.bgColor} ${selectedStatusBadge.textColor} ${selectedStatusBadge.borderColor}`}>
-              {selectedStatusBadge.emoji} {selectedStatusBadge.label}
-            </span>
-          </div>
         </div>
         {hasMultipleChildren && (
           <ChevronDown
@@ -267,7 +261,6 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
           />
           <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-[999] max-h-[300px] overflow-y-auto">
             {children.map((child, index) => {
-              const statusBadge = getStatusBadgeConfig(child.statusSiswa || 'AKTIF');
               return (
                 <button
                   key={child.id || index}
@@ -287,9 +280,6 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
                   <div className="text-left flex-1">
                     <p className="font-semibold text-gray-900">{child.nama || child.namaLengkap}</p>
                     <p className="text-xs text-gray-600">Kelas {child.kelas || child.kelas?.namaKelas}</p>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border mt-1 ${statusBadge.bgColor} ${statusBadge.textColor} ${statusBadge.borderColor}`}>
-                      {statusBadge.emoji} {statusBadge.label}
-                    </span>
                   </div>
                   {selectedChild?.id === child.id && (
                     <div className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0"></div>
