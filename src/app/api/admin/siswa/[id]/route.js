@@ -93,7 +93,20 @@ export async function PUT(request, { params }) {
     if (tempatLahir !== undefined) siswaUpdateData.tempatLahir = tempatLahir;
     if (tanggalLahir !== undefined) siswaUpdateData.tanggalLahir = new Date(tanggalLahir);
     if (alamat !== undefined) siswaUpdateData.alamat = alamat;
-    if (tahunAjaranMasukId !== undefined) siswaUpdateData.tahunAjaranMasukId = tahunAjaranMasukId || null;
+    
+    // Use relational connect for tahunAjaranMasuk instead of scalar field
+    if (tahunAjaranMasukId) {
+      siswaUpdateData.tahunAjaranMasuk = {
+        connect: {
+          id: tahunAjaranMasukId
+        }
+      };
+    } else if (tahunAjaranMasukId === null) {
+      siswaUpdateData.tahunAjaranMasuk = {
+        disconnect: true
+      };
+    }
+
     if (kelasAngkatan !== undefined) siswaUpdateData.kelasAngkatan = kelasAngkatan || null;
     // Support both noHP and noTelepon
     if (noHP !== undefined) siswaUpdateData.noTelepon = noHP;
