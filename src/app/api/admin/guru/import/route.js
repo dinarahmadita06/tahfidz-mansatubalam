@@ -45,6 +45,10 @@ export async function POST(request) {
         const email = row['Email'] || row['email'];
         const nip = row['NIP'] || row['nip'] || null;
         const jenisKelamin = row['Jenis Kelamin'] || row['jenisKelamin'] || row['L/P'];
+        const tanggalLahirStr = row['Tanggal Lahir'] || row['tanggalLahir'];
+        const noWhatsApp = row['Nomor WhatsApp'] || row['No. Telepon'] || row['noTelepon'];
+        const alamat = row['Alamat'] || row['alamat'];
+        const kelasBinaan = row['Kelas Binaan'] || row['kelasBinaan'];
 
         if (!nama || !email) {
           failedCount++;
@@ -55,6 +59,25 @@ export async function POST(request) {
         if (!jenisKelamin) {
           failedCount++;
           errors.push(`Baris ${i + 2}: Jenis Kelamin harus diisi (L/P)`);
+          continue;
+        }
+
+        // Parse tanggal lahir
+        let tanggalLahir = null;
+        if (tanggalLahirStr) {
+          try {
+            const parsed = new Date(tanggalLahirStr);
+            if (!isNaN(parsed.getTime())) {
+              tanggalLahir = parsed;
+            }
+          } catch (e) {
+            console.log(`Invalid date for row ${i + 2}:`, tanggalLahirStr);
+          }
+        }
+
+        if (!tanggalLahir) {
+          failedCount++;
+          errors.push(`Baris ${i + 2}: Tanggal lahir wajib diisi (format YYYY-MM-DD)`);
           continue;
         }
 
@@ -112,27 +135,46 @@ export async function POST(request) {
           await prisma.guru.update({
             where: { id: existingGuru.id },
             data: {
-              nip: nip,
+              nip: nip ? String(nip) : null,
               jenisKelamin: normalizedJenisKelamin,
-              bidangKeahlian: row['Mata Pelajaran'] || row['Bidang Keahlian'] || row['bidangKeahlian'] || 'Tahfidz',
-              jabatan: row['Jabatan'] || row['jabatan'] || existingGuru.jabatan,
-              noTelepon: row['No. Telepon'] || row['noTelepon'] || existingGuru.noTelepon,
-              alamat: row['Alamat'] || row['alamat'] || existingGuru.alamat,
+              tanggalLahir: tanggalLahir,
+              noTelepon: noWhatsApp ? String(noWhatsApp) : null,
+              alamat: alamat || '',
             }
           });
         } else {
           // Create new guru
-          await prisma.guru.create({
+          const newGuru = await prisma.guru.create({
             data: {
               userId,
-              nip: nip,
+              nip: nip ? String(nip) : null,
               jenisKelamin: normalizedJenisKelamin,
-              bidangKeahlian: row['Mata Pelajaran'] || row['Bidang Keahlian'] || row['bidangKeahlian'] || 'Tahfidz',
-              jabatan: row['Jabatan'] || row['jabatan'] || null,
-              noTelepon: row['No. Telepon'] || row['noTelepon'] || null,
-              alamat: row['Alamat'] || row['alamat'] || null,
+              tanggalLahir: tanggalLahir,
+              noTelepon: noWhatsApp ? String(noWhatsApp) : null,
+              alamat: alamat || '',
             }
           });
+
+          // Handle Kelas Binaan for new guru
+          if (kelasBinaan) {
+            const kelasNames = String(kelasBinaan).split(',').map(s => s.trim()).filter(Boolean);
+            for (const name of kelasNames) {
+              const kelas = await prisma.kelas.findFirst({
+                where: { 
+                  nama: { equals: name, mode: 'insensitive' },
+                  status: 'AKTIF'
+                }
+              });
+              if (kelas) {
+                await prisma.guruKelas.create({
+                  data: {
+                    guruId: newGuru.id,
+                    kelasId: kelas.id
+                  }
+                });
+              }
+            }
+          }
         }
 
         successCount++;

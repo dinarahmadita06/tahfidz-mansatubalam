@@ -41,7 +41,6 @@ async function exportSiswaTanpaOrangTua() {
         siswa.tanggalLahir.toISOString().split('T')[0] : '',
       'Alamat': siswa.alamat || '',
       'Nama Orang Tua': '', // Kosong - untuk diisi
-      'Email Orang Tua': '', // Kosong - untuk diisi (opsional)
       'No HP Orang Tua': '' // Kosong - untuk diisi
     }));
 
@@ -59,7 +58,6 @@ async function exportSiswaTanpaOrangTua() {
       { wch: 15 }, // Tanggal Lahir
       { wch: 35 }, // Alamat
       { wch: 25 }, // Nama Orang Tua
-      { wch: 30 }, // Email Orang Tua
       { wch: 15 }  // No HP Orang Tua
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Data Siswa Tanpa Ortu');
@@ -80,30 +78,24 @@ async function exportSiswaTanpaOrangTua() {
       },
       {
         'No': 3,
-        'Instruksi': 'Isi kolom "Email Orang Tua" (opsional, akan di-generate otomatis jika kosong)',
-        'Wajib': 'Tidak',
-        'Contoh': 'ahmad.subhan@gmail.com'
-      },
-      {
-        'No': 4,
         'Instruksi': 'JANGAN UBAH kolom data siswa (Nama, NIS, NISN, Kelas, dll)',
         'Wajib': 'Ya',
         'Contoh': 'Biarkan apa adanya'
       },
       {
-        'No': 5,
+        'No': 4,
         'Instruksi': 'Setelah selesai mengisi, upload file ini di menu Admin → Siswa → Smart Import',
         'Wajib': 'Ya',
         'Contoh': '-'
       },
       {
-        'No': 6,
-        'Instruksi': 'Sistem akan otomatis membuat akun orang tua dengan email & password random',
+        'No': 5,
+        'Instruksi': 'Sistem akan otomatis membuat akun orang tua dengan email & password sesuai data siswa',
         'Wajib': '-',
         'Contoh': '-'
       },
       {
-        'No': 7,
+        'No': 6,
         'Instruksi': 'Setelah import, download file "Akun Baru" untuk mendapat username & password',
         'Wajib': '-',
         'Contoh': '-'
@@ -127,10 +119,9 @@ async function exportSiswaTanpaOrangTua() {
     console.log('📝 File berisi', siswaTanpaOrangTua.length, 'siswa yang perlu dilengkapi data orang tuanya\n');
     console.log('📋 Langkah selanjutnya:');
     console.log('   1. Buka file Excel:', filename);
-    console.log('   2. Isi kolom "Nama Orang Tua", "Email Orang Tua", dan "No HP Orang Tua"');
+    console.log('   2. Isi kolom "Nama Orang Tua" dan "No HP Orang Tua"');
     console.log('   3. Upload di menu Admin → Siswa → Smart Import');
-    console.log('   4. Sistem akan otomatis membuat 21 akun orang tua baru');
-    console.log('   5. Download file "Akun Baru" untuk mendapat username & password\n');
+    console.log('   4. Sistem akan otomatis membuat akun orang tua baru\n');
 
   } catch (error) {
     console.error('❌ Error:', error);
