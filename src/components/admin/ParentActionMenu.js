@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MoreVertical } from 'lucide-react';
 
 /**
@@ -18,15 +19,66 @@ export default function ParentActionMenu({
   onRefresh
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const menuRef = useRef(null);
+  const buttonRef = useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Track if component is mounted (for Portal SSR safety)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const childrenCount = orangTuaItem._count?.siswa || 0;
   const isActive = orangTuaItem.user.isActive;
 
+  // Calculate dropdown position with auto-placement logic
+  const calculateDropdownPosition = () => {
+    if (!buttonRef.current) return { top: 0, left: 0 };
+
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = 280; // Approximate dropdown height
+    const dropdownWidth = 224; // w-56 = 14rem = 224px
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const threshold = 20; // Padding from edge
+
+    let top = buttonRect.bottom + 4; // Below button with small gap
+    let left = buttonRect.right - dropdownWidth; // Align to right
+
+    // Auto-placement: If dropdown goes below viewport, move up
+    if (top + dropdownHeight > viewportHeight - threshold) {
+      top = buttonRect.top - dropdownHeight - 4;
+    }
+
+    // Auto-placement: If dropdown goes beyond right edge, move left
+    if (left + dropdownWidth > viewportWidth - threshold) {
+      left = viewportWidth - dropdownWidth - threshold;
+    }
+
+    // Ensure left doesn't go negative
+    if (left < threshold) {
+      left = threshold;
+    }
+
+    return { top, left };
+  };
+
+  // Update position when dropdown opens or window resizes
+  useEffect(() => {
+    if (isOpen) {
+      setDropdownPos(calculateDropdownPosition());
+      const handleResize = () => setDropdownPos(calculateDropdownPosition());
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [isOpen]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      if (menuRef.current && !menuRef.current.contains(event.target) && 
+          buttonRef.current && !buttonRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
@@ -57,19 +109,32 @@ export default function ParentActionMenu({
   };
 
   return (
-    <div className="relative" ref={menuRef}>
-      {/* Kebab Button */}
+    <>
+      {/* Kebab Button - In-place */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) {
+            setTimeout(() => setDropdownPos(calculateDropdownPosition()), 0);
+          }
+        }}
         className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
         aria-label="Menu aksi"
       >
         <MoreVertical size={18} className="text-gray-600" />
       </button>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute right-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+      {/* Dropdown Menu - Portal (Escaped from table overflow) */}
+      {isOpen && isMounted && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed w-56 bg-white rounded-2xl shadow-lg border border-gray-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+          style={{
+            top: `${dropdownPos.top}px`,
+            left: `${dropdownPos.left}px`,
+          }}
+        >
           <div className="py-1">
             {/* Menu Item: Lihat Detail */}
             <button
@@ -139,8 +204,9 @@ export default function ParentActionMenu({
               {childrenCount > 0 && <span className="ml-auto text-xs text-gray-500">({childrenCount} siswa)</span>}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
