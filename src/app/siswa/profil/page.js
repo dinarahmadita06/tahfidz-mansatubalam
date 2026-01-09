@@ -145,10 +145,10 @@ function PersonalInfoCard({ profileData }) {
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <Phone size={16} className="text-gray-400" />
-            Nomor Telepon
+            Nomor WhatsApp
           </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.phone || '-'}</p>
+          <div className={`px-4 py-3 rounded-xl border ${!profileData?.phone ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-gray-50'}`}>
+            <p className="font-medium text-gray-900">{profileData?.phone ? profileData.phone : <span className="text-amber-700 italic">Belum diisi</span>}</p>
           </div>
         </div>
 
