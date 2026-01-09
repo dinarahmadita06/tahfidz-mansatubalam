@@ -124,6 +124,9 @@ model User {
   pengumuman       Pengumuman[]
   pengumumanRead   PengumumanRead[] @relation("UserPengumumanRead")
   kelasMengampu    Kelas[]          @relation("KelasGuruTahfidz")
+
+  @@index([role])
+  @@index([createdAt])
 }
 
 model Guru {
@@ -152,6 +155,8 @@ model Guru {
   tasmiVerifikasi Tasmi[] @relation("GuruVerifikasi")
   tasmiPenguji    Tasmi[] @relation("GuruPenguji")
   agenda         Agenda[]
+
+  @@index([createdAt])
 }
 
 model Siswa {
@@ -191,6 +196,7 @@ model Siswa {
   @@index([nis])
   @@index([tahunAjaranMasukId])
   @@index([lulusAt]) // For quick lookup of recently graduated students
+  @@index([createdAt])
 }
 
 model OrangTua {
@@ -208,6 +214,7 @@ model OrangTua {
   orangTuaSiswa  OrangTuaSiswa[]
 
   @@index([status])
+  @@index([createdAt])
 }
 
 model OrangTuaSiswa {
@@ -262,6 +269,8 @@ model Kelas {
 
   @@index([status])
   @@index([tahunAjaranId])
+  @@index([guruTahfidzId])
+  @@index([createdAt])
 }
 
 model GuruKelas {
@@ -330,6 +339,7 @@ model Hafalan {
   @@index([guruId])
   @@index([juz])
   @@index([surahNumber])
+  @@index([createdAt])
 }
 
 model Penilaian {
@@ -352,6 +362,7 @@ model Penilaian {
   @@index([siswaId])
   @@index([guruId])
   @@index([hafalanId])
+  @@index([createdAt])
 }
 
 model Tahsin {
@@ -378,6 +389,7 @@ model Tahsin {
   @@index([tanggal(sort: Desc)])
   @@index([level])
   @@index([statusPembelajaran])
+  @@index([createdAt])
 }
 
 model MateriTahsin {
@@ -414,6 +426,7 @@ model Presensi {
   @@unique([siswaId, tanggal])
   @@index([tanggal(sort: Desc)])
   @@index([status])
+  @@index([createdAt])
 }
 
 model Pengumuman {
@@ -447,6 +460,7 @@ model PengumumanRead {
   @@index([userId])
   @@index([pengumumanId])
   @@index([closedAt(sort: Desc)])
+  @@index([createdAt])
 }
 
 model BukuDigital {

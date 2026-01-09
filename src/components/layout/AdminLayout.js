@@ -391,7 +391,6 @@ function AdminLayout({ children }) {
                               <Link
                                 key={subitem.href}
                                 href={subitem.href}
-                                prefetch={false}
                                 onClick={handleLinkClick}
                                 className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 rounded-lg text-xs lg:text-sm transition-colors duration-200 border-l-2 ml-2 ${
                                   isActive(subitem.href)
@@ -419,7 +418,6 @@ function AdminLayout({ children }) {
                     ) : (
                       <Link
                         href={item.href}
-                        prefetch={false}
                         onClick={handleLinkClick}
                         className={`w-full flex items-center gap-2.5 lg:gap-3 ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} py-1.5 lg:py-2 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 ${
                           isActive(item.href)
