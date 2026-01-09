@@ -24,24 +24,26 @@ export function getMaterialIcon(jenisMateri, className = 'w-12 h-12') {
 export function getMaterialVariant(type) {
   const variants = {
     PDF: {
-      bg: 'bg-emerald-50/60',
-      border: 'border-emerald-200/70',
-      badge: 'bg-emerald-100/70 text-emerald-700 border-emerald-200/50',
-      iconBg: 'bg-emerald-100/60',
-      iconText: 'text-emerald-600',
-      button: 'bg-emerald-500/90 hover:bg-emerald-600',
-      buttonSecondary: 'bg-emerald-100/70 hover:bg-emerald-200/80 text-emerald-700',
-      glow: 'shadow-emerald-500/10'
+      bg: 'bg-white/70 backdrop-blur-md',
+      border: 'border-blue-200/60',
+      badge: 'bg-blue-100/70 text-blue-700 border-blue-200/50',
+      iconBg: 'bg-blue-100/60',
+      iconText: 'text-blue-600',
+      button: 'bg-blue-500/10 text-blue-700 border border-blue-300/40 hover:bg-blue-500/15',
+      buttonSecondary: 'bg-blue-50/50 hover:bg-blue-100/70 text-blue-600',
+      glow: 'shadow-lg shadow-blue-200/25',
+      gradient: 'from-blue-500/15 to-white/0'
     },
     YOUTUBE: {
-      bg: 'bg-rose-50/60',
-      border: 'border-rose-200/70',
+      bg: 'bg-white/70 backdrop-blur-md',
+      border: 'border-rose-200/50',
       badge: 'bg-rose-100/70 text-rose-700 border-rose-200/50',
       iconBg: 'bg-rose-100/60',
       iconText: 'text-rose-600',
-      button: 'bg-rose-500/80 hover:bg-rose-500',
-      buttonSecondary: 'bg-rose-100/70 hover:bg-rose-200/80 text-rose-700',
-      glow: 'shadow-rose-500/10'
+      button: 'bg-rose-500/10 text-rose-700 border border-rose-300/40 hover:bg-rose-500/15',
+      buttonSecondary: 'bg-rose-50/50 hover:bg-rose-100/70 text-rose-600',
+      glow: 'shadow-rose-500/5',
+      gradient: 'from-rose-500/15 to-white/0'
     }
   };
   return variants[type] || variants.PDF;

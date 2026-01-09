@@ -23,7 +23,10 @@ export default function DigitalMaterialCard({
   const thumbnail = isYouTube ? getYouTubeThumbnail(videoId) : null;
 
   return (
-    <div className={`group relative rounded-2xl shadow-sm ${variant.bg} ${variant.border} border overflow-hidden hover:shadow-lg ${variant.glow} transition-all duration-300 flex flex-col h-full`}>
+    <div className={`group relative rounded-2xl shadow-sm ${variant.bg} ${variant.border} border overflow-hidden hover:shadow-xl ${variant.glow} ${isPDF ? 'hover:border-blue-300/80' : ''} transition-all duration-300 flex flex-col h-full`}>
+      {/* Background Gradient Tint */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${variant.gradient} pointer-events-none`} />
+      
       {/* Material Type Badge */}
       <div className="absolute top-3 left-3 z-10">
         <span className={`px-2 py-1 ${variant.badge} text-[10px] font-bold rounded-lg border uppercase backdrop-blur-md`}>
@@ -48,8 +51,8 @@ export default function DigitalMaterialCard({
                     if (fallback) fallback.classList.remove('hidden');
                   }}
                 />
-                <div className="fallback hidden absolute inset-0 flex items-center justify-center bg-gradient-to-br from-rose-400 to-rose-500">
-                  <Play className="w-16 h-16 text-white/50" />
+                <div className="fallback hidden absolute inset-0 flex items-center justify-center bg-gradient-to-br from-rose-50 to-rose-100">
+                  <Play className="w-16 h-16 text-rose-300/50" />
                 </div>
                 {/* Play Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
@@ -59,14 +62,31 @@ export default function DigitalMaterialCard({
                 </div>
               </>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-400 to-rose-500">
-                <Play className="w-16 h-16 text-white/50" />
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-50 to-rose-100">
+                <Play className="w-16 h-16 text-rose-300/50" />
               </div>
             )}
           </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-400 to-teal-500">
-            {getMaterialIcon(materi.jenisMateri, 'w-20 h-20 text-white/30')}
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 relative group-hover:bg-blue-200/20 transition-colors duration-300">
+            {/* Pattern Overlay - Pure CSS Subtle Grid */}
+            <div className="absolute inset-0 opacity-[0.05] pointer-events-none [background-image:linear-gradient(#3b82f6_1px,transparent_1px),linear-gradient(90deg,#3b82f6_1px,transparent_1px)] [background-size:20px_20px]" />
+            
+            {/* Mock PDF Page */}
+            <div className="relative w-28 h-36 bg-white rounded-lg shadow-xl border border-blue-100/50 p-3 transform group-hover:-translate-y-1.5 transition-transform duration-500 ease-out">
+              {/* Fake Lines */}
+              <div className="w-full h-2 bg-blue-50 rounded mb-2" />
+              <div className="w-3/4 h-1 bg-gray-50 rounded mb-1.5" />
+              <div className="w-full h-1 bg-gray-50 rounded mb-1.5" />
+              <div className="w-5/6 h-1 bg-gray-50 rounded mb-1.5" />
+              <div className="w-full h-1 bg-gray-50 rounded mb-4" />
+              
+              <div className="flex justify-center mt-3">
+                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100 shadow-inner">
+                  {getMaterialIcon('PDF', 'w-6 h-6 text-blue-500')}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -98,7 +118,7 @@ export default function DigitalMaterialCard({
             <div className="flex gap-2">
               <button
                 onClick={() => onOpen(materi)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 ${variant.button}`}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 ${variant.button}`}
               >
                 <Eye size={18} />
                 {isYouTube ? 'Buka Video' : 'Lihat'}
