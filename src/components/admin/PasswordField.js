@@ -37,11 +37,16 @@ export default function PasswordField({
   autoFocus = false,
   error = null,
   disabled = false,
+  onGenerateCustom = null,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleGenerate = () => {
+    if (onGenerateCustom) {
+      onGenerateCustom();
+      return;
+    }
     const newPassword = generatePasswordMixed();
     onChange(newPassword);
   };

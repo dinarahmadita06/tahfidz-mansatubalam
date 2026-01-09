@@ -1,18 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Eye, EyeOff } from 'lucide-react';
-import { generatePasswordMixed } from '@/lib/passwordUtils';
+import { generatePasswordMixed, generateParentPassword } from '@/lib/passwordUtils';
+import toast from 'react-hot-toast';
 
 /**
  * Reset Password Modal Component
  * Generates and displays a new password for parent account
  */
 export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, isLoading }) {
-  const [newPassword, setNewPassword] = useState(() => generatePasswordMixed());
+  const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const firstSiswa = orangTuaItem.orangTuaSiswa?.[0]?.siswa;
+    if (firstSiswa && firstSiswa.nisn) {
+      if (!firstSiswa.tanggalLahir) {
+        toast.error('Tanggal lahir tidak tersedia, password wali di-reset ke NISN', {
+          duration: 4000,
+          icon: '⚠️',
+        });
+      }
+      setNewPassword(generateParentPassword(firstSiswa.nisn, firstSiswa.tanggalLahir));
+    } else {
+      // Fallback for parents without linked students
+      setNewPassword(generatePasswordMixed());
+    }
+  }, [orangTuaItem]);
 
   const handleCopyPassword = async () => {
     try {
@@ -73,7 +90,9 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Format: 7 angka + 1 huruf kapital random posisi
+            Format: {orangTuaItem.orangTuaSiswa?.[0]?.siswa?.nisn 
+              ? (orangTuaItem.orangTuaSiswa?.[0]?.siswa?.tanggalLahir ? 'NISN-TahunLahir' : 'NISN') 
+              : 'Random (8 karakter)'}
           </p>
         </div>
 

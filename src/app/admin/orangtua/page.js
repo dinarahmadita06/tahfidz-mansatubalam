@@ -235,7 +235,7 @@ export default function AdminOrangTuaPage() {
 
       if (response.ok) {
         const result = await response.json();
-        setToast({ type: 'success', message: '✓ Password berhasil direset' });
+        setToast({ type: 'success', message: 'Password berhasil di-reset' });
         setModalState(prev => ({ ...prev, resetPasswordModal: null }));
         fetchOrangTua();
       } else {
