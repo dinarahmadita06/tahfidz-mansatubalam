@@ -16,9 +16,9 @@ export async function POST(request) {
     const { nama, tahunAjaranId, targetJuz, guruUtamaId, forceCreate } = body;
 
     // Validate required fields
-    if (!nama || !tahunAjaranId || !guruUtamaId) {
+    if (!nama || !tahunAjaranId) {
       return NextResponse.json(
-        { error: 'Data tidak lengkap. Nama kelas, tahun ajaran, dan guru pembina harus diisi.' },
+        { error: 'Data tidak lengkap. Nama kelas dan tahun ajaran harus diisi.' },
         { status: 400 }
       );
     }
@@ -113,15 +113,17 @@ export async function POST(request) {
         }
       });
 
-      // 2. Add guru pembina
-      await tx.guruKelas.create({
-        data: {
-          kelasId: newKelas.id,
-          guruId: guruUtamaId, // Keep as string - it's a CUID
-          peran: 'utama',
-          isActive: true,
-        },
-      });
+      // 2. Add guru pembina if provided
+      if (guruUtamaId && guruUtamaId.trim()) {
+        await tx.guruKelas.create({
+          data: {
+            kelasId: newKelas.id,
+            guruId: guruUtamaId, // Keep as string - it's a CUID
+            peran: 'utama',
+            isActive: true,
+          },
+        });
+      }
 
       // 3. Clear any unintended existing assignments for this class (not possible on create but for consistency)
       // Remove guru pendamping handling as requested

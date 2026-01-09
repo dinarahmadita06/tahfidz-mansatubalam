@@ -6,6 +6,7 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { MultiSelectKelas } from './MultiSelectKelas';
+import { generateGuruEmail, generateGuruPassword } from '@/lib/passwordUtils';
 
 // Constant for class status
 const STATUS_AKTIF = 'AKTIF';
@@ -136,7 +137,9 @@ export default function AdminGuruPage() {
     password: '',
     nip: '',
     jenisKelamin: 'L',
-    alamat: ''
+    alamat: '',
+    tanggalLahir: '',
+    noTelepon: ''
   });
   const [selectedKelas, setSelectedKelas] = useState([]);
 
@@ -184,17 +187,27 @@ export default function AdminGuruPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (selectedKelas.length === 0) {
-      alert('Pilih minimal 1 kelas yang akan diampu');
+    const method = editingGuru ? 'PUT' : 'POST';
+
+    // Normalisasi Nomor WhatsApp: 08... / +628... / 628... -> 628...
+    let normalizedPhone = formData.noTelepon ? formData.noTelepon.replace(/[^0-9]/g, '') : '';
+    if (normalizedPhone.startsWith('08')) {
+      normalizedPhone = '628' + normalizedPhone.slice(2);
+    } else if (normalizedPhone.startsWith('8')) {
+      normalizedPhone = '628' + normalizedPhone.slice(1);
+    }
+
+    // Validasi ringan nomor Indonesia
+    if (normalizedPhone && (normalizedPhone.length < 10 || normalizedPhone.length > 15)) {
+      alert('Nomor WhatsApp tidak valid. Pastikan format benar (minimal 10 digit).');
       return;
     }
 
     try {
       const url = editingGuru ? `/api/guru/${editingGuru.id}` : '/api/guru';
-      const method = editingGuru ? 'PUT' : 'POST';
-
       const payload = {
         ...formData,
+        noTelepon: normalizedPhone,
         kelasIds: selectedKelas
       };
 
@@ -233,7 +246,9 @@ export default function AdminGuruPage() {
       password: '',
       nip: guruItem.nip || '',
       jenisKelamin: guruItem.jenisKelamin,
-      alamat: guruItem.alamat || ''
+      alamat: guruItem.alamat || '',
+      tanggalLahir: guruItem.tanggalLahir ? new Date(guruItem.tanggalLahir).toISOString().split('T')[0] : '',
+      noTelepon: guruItem.noTelepon || ''
     });
     setSelectedKelas(aktivKelasIds);
     fetchKelas();
@@ -268,7 +283,9 @@ export default function AdminGuruPage() {
       password: '',
       nip: '',
       jenisKelamin: 'L',
-      alamat: ''
+      alamat: '',
+      tanggalLahir: '',
+      noTelepon: ''
     });
     setSelectedKelas([]);
     setEditingGuru(null);
@@ -276,16 +293,24 @@ export default function AdminGuruPage() {
 
   const generateEmail = () => {
     if (!formData.name) {
-      alert('Masukkan nama terlebih dahulu');
+      alert('Nama guru wajib diisi');
       return;
     }
-    const firstName = formData.name.trim().split(' ')[0].toLowerCase();
-    const generatedEmail = `guru.${firstName}@tahfidz.sch.id`;
+    const generatedEmail = generateGuruEmail(formData.name);
     setFormData({ ...formData, email: generatedEmail });
   };
 
   const generatePassword = () => {
-    const password = Math.floor(100000 + Math.random() * 900000).toString();
+    if (!formData.name) {
+      alert('Nama lengkap wajib diisi terlebih dahulu');
+      return;
+    }
+    if (!formData.tanggalLahir) {
+      alert('Tanggal lahir wajib diisi untuk generate password guru');
+      return;
+    }
+    
+    const password = generateGuruPassword(formData.name, formData.tanggalLahir);
     setFormData({ ...formData, password });
   };
 
@@ -566,6 +591,22 @@ export default function AdminGuruPage() {
 
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Tanggal Lahir *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.tanggalLahir}
+                    onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: NIP | Jenis Kelamin */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+                <div>
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     NIP
                   </label>
                   <input
@@ -575,6 +616,38 @@ export default function AdminGuruPage() {
                     className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Nomor WhatsApp
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.noTelepon}
+                    onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
+                    placeholder="Contoh: 08123456789"
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2.5: Jenis Kelamin */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+                <div>
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Jenis Kelamin *
+                  </label>
+                  <select
+                    required
+                    value={formData.jenisKelamin}
+                    onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  >
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
+                  </select>
+                </div>
+                <div className="hidden md:block"></div>
               </div>
 
               {/* Row 2: Email | Password */}
@@ -587,10 +660,11 @@ export default function AdminGuruPage() {
                     <input
                       type="email"
                       required
+                      readOnly
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="guru.nama@tahfidz.sch.id"
-                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                      placeholder="Klik ikon reload untuk generate email"
+                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-slate-50 text-gray-500 text-sm focus:outline-none cursor-not-allowed"
                     />
                     <button
                       type="button"
@@ -613,14 +687,14 @@ export default function AdminGuruPage() {
                       required={!editingGuru}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="6 digit angka"
+                      placeholder="guru.<nama>-YYYY"
                       className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                     />
                     <button
                       type="button"
                       onClick={generatePassword}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
-                      title="Generate password 6 digit"
+                      title="Generate password default"
                     >
                       <RefreshCw size={14} />
                     </button>
@@ -628,11 +702,11 @@ export default function AdminGuruPage() {
                 </div>
               </div>
 
-              {/* Row 3: Kelas Binaan (Pembina) | Jenis Kelamin */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+              {/* Row 3: Kelas Binaan (Pembina) */}
+              <div className="grid grid-cols-1 gap-3 lg:gap-4">
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Kelas Binaan (Pembina) *
+                    Kelas Binaan (Pembina)
                   </label>
                   <MultiSelectKelas
                     kelas={kelas}
@@ -642,23 +716,8 @@ export default function AdminGuruPage() {
                     error={kelas.length === 0 && !loadingKelas ? 'Tidak ada kelas AKTIF tersedia' : null}
                   />
                   <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Guru akan menjadi Pembina untuk kelas yang dipilih.
+                    Opsional. Guru akan menjadi Pembina untuk kelas yang dipilih. Dapat ditambahkan nanti.
                   </p>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Jenis Kelamin *
-                  </label>
-                  <select
-                    required
-                    value={formData.jenisKelamin}
-                    onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
-                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                  >
-                    <option value="L">Laki-laki</option>
-                    <option value="P">Perempuan</option>
-                  </select>
                 </div>
               </div>
 
