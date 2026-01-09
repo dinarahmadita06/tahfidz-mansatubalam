@@ -27,28 +27,38 @@ export async function GET() {
       prisma.siswa.count(),
       prisma.siswa.count({ where: { status: 'approved' } }),
       prisma.guru.count(),
-      prisma.hafalan.count(),
-      prisma.penilaian.count(),
+      prisma.hafalan.count({ where: { siswa: { status: 'approved' } } }),
+      prisma.penilaian.count({ where: { siswa: { status: 'approved' } } }),
       prisma.kelas.count(),
-      prisma.presensi.count(),
+      prisma.presensi.count({ where: { siswa: { status: 'approved' } } }),
       prisma.tahunAjaran.count(),
     ]);
 
-    // Calculate rata-rata nilai if there are penilaian
+    // Calculate rata-rata nilai if there are penilaian for approved students
     let rataRataNilai = 0;
     if (totalPenilaian > 0) {
       const penilaianData = await prisma.penilaian.findMany({
-        select: { nilai: true }
+        where: {
+          siswa: {
+            status: 'approved'
+          }
+        },
+        select: { nilaiAkhir: true }
       });
-      const totalNilai = penilaianData.reduce((sum, p) => sum + (p.nilai || 0), 0);
+      const totalNilai = penilaianData.reduce((sum, p) => sum + (p.nilaiAkhir || 0), 0);
       rataRataNilai = totalNilai / totalPenilaian;
     }
 
-    // Calculate rata-rata kehadiran
+    // Calculate rata-rata kehadiran for approved students
     let rataRataKehadiran = 0;
     if (totalPresensi > 0) {
       const presensiHadir = await prisma.presensi.count({
-        where: { status: 'HADIR' }
+        where: { 
+          status: 'HADIR',
+          siswa: {
+            status: 'approved'
+          }
+        }
       });
       rataRataKehadiran = (presensiHadir / totalPresensi) * 100;
     }
@@ -61,6 +71,9 @@ export async function GET() {
 
     const setoranHariIni = await prisma.hafalan.count({
       where: {
+        siswa: {
+          status: 'approved'
+        },
         createdAt: {
           gte: today,
           lt: tomorrow,
@@ -86,6 +99,12 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       stats,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
     });
 
   } catch (error) {

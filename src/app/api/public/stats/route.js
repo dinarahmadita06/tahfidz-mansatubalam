@@ -2,28 +2,34 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
     const [siswaCount, guruCount, setoranCount, avgNilai] = await Promise.all([
-      // 1. Siswa Aktif (Status Siswa Aktif & User Account Active)
+      // 1. Siswa Aktif (Status approved - tervalidasi)
       prisma.siswa.count({
         where: {
-          statusSiswa: 'AKTIF',
-          user: { isActive: true }
+          status: 'approved'
         }
       }),
-      // 2. Guru Pembina (Role GURU & User Account Active)
-      prisma.user.count({
+      // 2. Guru Pembina (Total records in Guru table)
+      prisma.guru.count(),
+      // 3. Setoran Tercatat (Total Hafalan records from approved students)
+      prisma.hafalan.count({
         where: {
-          role: 'GURU',
-          isActive: true
+          siswa: {
+            status: 'approved'
+          }
         }
       }),
-      // 3. Setoran Tercatat (Total Hafalan records)
-      prisma.hafalan.count(),
-      // 4. Rata-rata Nilai (From Penilaian table)
+      // 4. Rata-rata Nilai (From Penilaian table for approved students)
       prisma.penilaian.aggregate({
+        where: {
+          siswa: {
+            status: 'approved'
+          }
+        },
         _avg: {
           nilaiAkhir: true
         }
@@ -37,6 +43,12 @@ export async function GET() {
         guruPembina: guruCount || 0,
         setoranTercatat: setoranCount || 0,
         rataRataNilai: avgNilai._avg.nilaiAkhir ? parseFloat(avgNilai._avg.nilaiAkhir.toFixed(1)) : 0
+      }
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       }
     });
   } catch (error) {
