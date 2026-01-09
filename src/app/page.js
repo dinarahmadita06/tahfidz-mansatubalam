@@ -226,7 +226,10 @@ export default function SIMTAQLandingPage() {
     // Fetch Dynamic Stats
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/public/stats');
+        const res = await fetch('/api/public/stats', {
+          cache: 'no-store',
+          next: { revalidate: 0 }
+        });
         const json = await res.json();
         if (json.success) {
           setStats(json.data);
