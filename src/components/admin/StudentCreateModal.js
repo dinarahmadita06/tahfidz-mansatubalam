@@ -81,7 +81,8 @@ export default function StudentCreateModal({
     kelasAngkatan: '',
     jenisKelamin: 'LAKI_LAKI',
     tanggalLahir: '',
-    email: '', // Add email field to state
+    noTelepon: '',
+    email: '',
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
@@ -102,6 +103,7 @@ export default function StudentCreateModal({
           kelasAngkatan: editingSiswa.kelasAngkatan || '',
           jenisKelamin: editingSiswa.jenisKelamin || 'LAKI_LAKI',
           tanggalLahir: editingSiswa.tanggalLahir ? new Date(editingSiswa.tanggalLahir).toISOString().split('T')[0] : '',
+          noTelepon: editingSiswa.noTelepon || '',
           email: editingSiswa.user?.email || '',
         });
         
@@ -165,6 +167,7 @@ export default function StudentCreateModal({
       kelasAngkatan: '',
       jenisKelamin: 'LAKI_LAKI',
       tanggalLahir: '',
+      noTelepon: '',
       email: '',
     });
     setParentMode('select');
@@ -295,6 +298,14 @@ export default function StudentCreateModal({
     try {
       const studentEmail = formData.email || generateSiswaEmail(formData.name, formData.nis);
       
+      // Normalize phone number: 08... / 62... / +62... → 628...
+      let normalizedPhone = formData.noTelepon ? formData.noTelepon.replace(/[^0-9]/g, '') : '';
+      if (normalizedPhone.startsWith('08')) {
+        normalizedPhone = '628' + normalizedPhone.slice(2);
+      } else if (normalizedPhone.startsWith('8')) {
+        normalizedPhone = '628' + normalizedPhone.slice(1);
+      }
+      
       let payload;
       let endpoint;
       let method = isEditing ? 'PATCH' : 'POST';
@@ -304,6 +315,7 @@ export default function StudentCreateModal({
         payload = {
           student: {
             ...formData,
+            noTelepon: normalizedPhone,
             email: studentEmail,
             gender: formData.jenisKelamin, // Guru API uses 'gender'
             birthDate: formData.tanggalLahir, // Guru API uses 'birthDate'
@@ -321,6 +333,7 @@ export default function StudentCreateModal({
         endpoint = isEditing ? `/api/admin/siswa/${editingSiswa.id}` : '/api/admin/siswa';
         payload = {
           ...formData,
+          noTelepon: normalizedPhone,
           email: studentEmail,
           parentData: parentMode === 'create' ? newParentData : null,
           existingParentId: parentMode === 'select' ? selectedParentId : null,
@@ -541,10 +554,20 @@ export default function StudentCreateModal({
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
+
+                {/* Row 5: Nomor WhatsApp Siswa (Optional) */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">Nomor WhatsApp Siswa</label>
+                  <input
+                    type="tel"
+                    value={formData.noTelepon}
+                    onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="Contoh: 08123456789"
+                  />
+                </div>
               </div>
             </div>
-
-            {/* Section 2: Akun Siswa (Only for create) */}
             {!isEditing && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 border-b border-emerald-100 pb-3">

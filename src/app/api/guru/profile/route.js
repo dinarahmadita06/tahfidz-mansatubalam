@@ -64,7 +64,7 @@ export async function GET(request) {
 
 /**
  * PATCH - Update guru profile
- * Updates: name, email, phone, alamat, bidangKeahlian, mulaiMengajar
+ * Updates: name, email, phone, alamat, tanggalLahir
  */
 export async function PATCH(request) {
   try {
@@ -78,7 +78,7 @@ export async function PATCH(request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, alamat, bidangKeahlian, mulaiMengajar, tanggalLahir } = body;
+    const { name, email, phone, alamat, tanggalLahir } = body;
 
     // Update User profile
     const updatedUser = await prisma.user.update({
@@ -106,8 +106,6 @@ export async function PATCH(request) {
       data: {
         ...(phone && { noTelepon: phone }),
         ...(alamat && { alamat }),
-        ...(bidangKeahlian && { bidangKeahlian }),
-        ...(mulaiMengajar && { mulaiMengajar: new Date(mulaiMengajar) }),
         ...(tanggalLahir && { tanggalLahir: new Date(tanggalLahir) })
       },
       include: {
@@ -135,8 +133,6 @@ export async function PATCH(request) {
           email && 'email',
           phone && 'noTelepon',
           alamat && 'alamat',
-          bidangKeahlian && 'bidangKeahlian',
-          mulaiMengajar && 'mulaiMengajar',
           tanggalLahir && 'tanggalLahir'
         ].filter(Boolean)
       }

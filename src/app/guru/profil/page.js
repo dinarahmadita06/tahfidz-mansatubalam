@@ -163,29 +163,28 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
             Tanggal Lahir
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.tanggalLahir)}</p>
+            <div className="font-medium text-gray-900">{formatDisplayValue(profileData?.tanggalLahir)}</div>
           </div>
         </div>
 
-        {/* Bidang Keahlian */}
+        {/* Kelas yang Diampu */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <BookOpen size={16} className="text-gray-400" />
-            Bidang Keahlian
+            Kelas yang Diampu
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.bidangKeahlian)}</p>
-          </div>
-        </div>
-
-        {/* Mulai Mengajar */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Calendar size={16} className="text-gray-400" />
-            Mulai Mengajar
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.mulaiMengajar)}</p>
+            {profileData?.kelas?.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profileData.kelas.map((k, i) => (
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                    {k}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-amber-700 text-sm italic">Belum diampu</span>
+            )}
           </div>
         </div>
 
@@ -196,7 +195,7 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
             Alamat
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{formatDisplayValue(profileData?.alamat)}</p>
+            <div className="font-medium text-gray-900">{formatDisplayValue(profileData?.alamat)}</div>
           </div>
         </div>
       </div>
@@ -373,7 +372,7 @@ export default function ProfilGuruPage() {
    */
   const formatDisplayValue = (value) => {
     if (!value || typeof value !== 'string' || !value.trim()) {
-      return '-';
+      return <span className="text-amber-700 text-sm italic">Belum diisi</span>;
     }
     return value.trim();
   };
@@ -415,9 +414,8 @@ export default function ProfilGuruPage() {
           email: guruData.user?.email || '',
           phone: guruData.noTelepon || '',
           alamat: guruData.alamat || '',
-          bidangKeahlian: guruData.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: formatDateForInput(guruData.mulaiMengajar),
-          tanggalLahir: formatDateForInput(guruData.tanggalLahir)
+          tanggalLahir: formatDateForInput(guruData.tanggalLahir),
+          kelas: guruData.guruKelas?.map(gk => gk.kelas.nama) || []
         });
       } else {
         console.error('Failed to fetch guru profile:', response.status);
@@ -428,8 +426,8 @@ export default function ProfilGuruPage() {
           email: '',
           phone: '',
           alamat: '',
-          bidangKeahlian: 'Tahfidz Al-Quran',
-          mulaiMengajar: ''
+          tanggalLahir: '',
+          kelas: []
         });
       }
     } catch (error) {
@@ -441,8 +439,8 @@ export default function ProfilGuruPage() {
         email: '',
         phone: '',
         alamat: '',
-        bidangKeahlian: 'Tahfidz Al-Quran',
-        mulaiMengajar: ''
+        tanggalLahir: '',
+        kelas: []
       });
     } finally {
       setLoading(false);
@@ -474,8 +472,6 @@ export default function ProfilGuruPage() {
       email: profileData.email,
       phone: profileData.phone,
       alamat: profileData.alamat,
-      bidangKeahlian: profileData.bidangKeahlian,
-      mulaiMengajar: profileData.mulaiMengajar,
       tanggalLahir: profileData.tanggalLahir
     });
     setShowEditModal(true);
@@ -516,9 +512,8 @@ export default function ProfilGuruPage() {
           email: responseData.data.user.email || '',
           phone: responseData.data.noTelepon || '',
           alamat: responseData.data.alamat || '',
-          bidangKeahlian: responseData.data.bidangKeahlian || 'Tahfidz Al-Quran',
-          mulaiMengajar: formatDateForInput(responseData.data.mulaiMengajar),
-          tanggalLahir: formatDateForInput(responseData.data.tanggalLahir)
+          tanggalLahir: formatDateForInput(responseData.data.tanggalLahir),
+          kelas: profileData.kelas // Kelas usually doesn't change from profile update
         });
         
         await update();
@@ -772,33 +767,6 @@ export default function ProfilGuruPage() {
                     required
                     value={editFormData.tanggalLahir || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, tanggalLahir: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Bidang Keahlian */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bidang Keahlian
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.bidangKeahlian || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, bidangKeahlian: e.target.value })}
-                    placeholder="Contoh: Tahfidz Al-Quran, Tahsin, dll"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Mulai Mengajar */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mulai Mengajar
-                  </label>
-                  <input
-                    type="date"
-                    value={editFormData.mulaiMengajar || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, mulaiMengajar: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>

@@ -86,6 +86,7 @@ export async function POST(request) {
           kelasAngkatan: student.kelasAngkatan || null,
           jenisKelamin: student.gender,
           tanggalLahir: student.birthDate ? new Date(student.birthDate) : null,
+          noTelepon: student.noTelepon || null,
           status: 'pending', // Menunggu validasi admin sesuai sistem existing
         }
       });
