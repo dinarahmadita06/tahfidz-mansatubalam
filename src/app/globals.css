@@ -136,6 +136,14 @@ input, textarea, select {
   -webkit-text-fill-color: #111827 !important;
 }
 
+/* Ensure Placeholder stays soft */
+input::placeholder, 
+textarea::placeholder {
+  color: #9CA3AF !important;
+  -webkit-text-fill-color: #9CA3AF !important;
+  opacity: 1;
+}
+
 /* Fix Chrome/WebView Autofill Override */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
