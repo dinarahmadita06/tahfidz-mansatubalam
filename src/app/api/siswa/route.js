@@ -120,9 +120,8 @@ export async function GET(request) {
 
     // Transform data to include calculated totals
     const transformedSiswa = siswa.map(s => {
-      // Calculate Total Juz (count of distinct juz values)
-      const uniqueJuz = [...new Set(s.hafalan.map(h => h.juz))];
-      const totalJuz = uniqueJuz.length;
+      // ✅ Use pre-calculated latestJuzAchieved for better performance and consistency
+      const totalJuz = s.latestJuzAchieved || 0;
 
       // Calculate Total Setoran (count of hafalan records)
       const totalSetoran = s.hafalan.length;

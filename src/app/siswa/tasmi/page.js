@@ -294,6 +294,8 @@ export default function SiswaTasmiPage() {
       return data.siswa;
     },
     enabled: !!session,
+    staleTime: 0, // ✅ Ensure fresh data when visiting the page
+    refetchOnWindowFocus: true,
   });
 
   // Fetch Guru List
@@ -322,6 +324,8 @@ export default function SiswaTasmiPage() {
     },
     enabled: !!session,
     keepPreviousData: true,
+    staleTime: 0, // ✅ Ensure fresh stats (like totalJuzHafalan) when visiting
+    refetchOnWindowFocus: true,
   });
 
   // Fetch target hafalan dynamically from API
@@ -329,9 +333,24 @@ export default function SiswaTasmiPage() {
 
   const tasmiList = tasmiData?.tasmi || [];
   const totalJuzHafalan = tasmiData?.totalJuzHafalan || 0;
-  // Use dynamic target from API, fallback to 3 if not set or error
-  const targetJuzSekolah = targetJuz || 3;
+  // Get active class from tasmiData (which checks active school year)
+  const activeClass = tasmiData?.siswa?.activeClass;
+  // Use target from API response first for consistency, then fallback to hook, then default 3
+  const targetJuzSekolah = tasmiData?.targetJuzSekolah || targetJuz || 3;
   const pagination = tasmiData?.pagination || {};
+
+  // Add debug logging as requested
+  useEffect(() => {
+    if (tasmiData) {
+      console.log('[DEBUG/TASMI] Eligibility Data Sync:', {
+        targetJuzMinimal: targetJuzSekolah,
+        progressJuz: totalJuzHafalan,
+        eligibleTasmi: tasmiData.isEligible,
+        schoolYearId: tasmiData.schoolYearId,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [tasmiData, targetJuzSekolah, totalJuzHafalan]);
 
   // Update formData when totalJuzHafalan changes
   useEffect(() => {
@@ -450,9 +469,14 @@ export default function SiswaTasmiPage() {
     setShowModal(true);
   };
 
-  // Calculate registration status dynamically
+  // Calculate registration status dynamically using centralized logic
   const minimalHafalan = targetJuzSekolah;
-  const isSiapMendaftar = targetJuz ? totalJuzHafalan >= minimalHafalan : false;
+  // Prioritize server-side eligibility check for consistency
+  // Also requires an active class to be eligible for registration
+  const isSiapMendaftar = (tasmiData && typeof tasmiData.isEligible === 'boolean' 
+    ? tasmiData.isEligible 
+    : (totalJuzHafalan >= minimalHafalan)) && !!activeClass;
+
   const statusPendaftaran = isNotSet
     ? 'Admin belum mengatur target'
     : isSiapMendaftar
@@ -673,6 +697,16 @@ export default function SiswaTasmiPage() {
                   </p>
                 </div>
               </div>
+            ) : !activeClass ? (
+              <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
+                <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-800">Kelas Tidak Aktif</p>
+                  <p className="text-sm text-red-700 mt-1">
+                    Siswa belum terdaftar di kelas aktif untuk tahun ajaran ini. Silakan hubungi admin untuk pembaruan data kelas.
+                  </p>
+                </div>
+              </div>
             ) : !isSiapMendaftar && (
               <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
                 <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -707,9 +741,10 @@ export default function SiswaTasmiPage() {
                   </label>
                   <input
                     type="text"
-                    value={siswaData?.kelas?.nama || '-'}
-                    disabled
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    value={activeClass?.nama || '-'}
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                    title="Kelas terisi otomatis dari data aktif"
                   />
                 </div>
               </div>
@@ -852,10 +887,10 @@ export default function SiswaTasmiPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={!isSiapMendaftar && !editMode}
+                  disabled={(!isSiapMendaftar || !activeClass) && !editMode}
                   className={`flex-1 px-4 py-3 rounded-lg transition-all font-semibold ${
-                    !isSiapMendaftar && !editMode
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    (!isSiapMendaftar || !activeClass) && !editMode
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
                       : 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white hover:shadow-lg'
                   }`}
                 >
