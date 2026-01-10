@@ -1,276 +1,45 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
-import {
-  Megaphone,
-  Search,
-  Calendar,
-  Bell,
-  BookOpen,
-  Award,
-  FileText,
-  X,
-} from 'lucide-react';
-import LoadingIndicator from '@/components/shared/LoadingIndicator';
-import { toast, Toaster } from 'react-hot-toast';
-import AnnouncementCard from '@/components/shared/AnnouncementCard';
+import { Megaphone } from 'lucide-react';
+import { ListSection } from '@/components/guru/pengumuman/PengumumanSections';
+import { PengumumanGridSkeleton } from '@/components/guru/pengumuman/PengumumanSkeletons';
 
-// Detail Modal Component
-function AnnouncementDetailModal({ announcement, isOpen, onClose }) {
-  if (!isOpen || !announcement) return null;
-
-  const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
+// PengumumanHeader Component
+function PengumumanHeader() {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white p-6 flex items-center justify-between">
-          <h2 className="text-xl lg:text-2xl font-bold">{announcement.judul}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Dates */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-4 border-b border-gray-200">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar size={18} className="text-emerald-600" />
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase">Tanggal Mulai</p>
-                <p className="font-semibold text-gray-900">{formatDate(announcement.tanggalMulai || announcement.createdAt)}</p>
-              </div>
-            </div>
-            {announcement.tanggalSelesai && (
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar size={18} className="text-amber-600" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase">Tanggal Akhir</p>
-                  <p className="font-semibold text-gray-900">{formatDate(announcement.tanggalSelesai)}</p>
-                </div>
-              </div>
-            )}
+    <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-5 sm:p-7">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            <Megaphone className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
           </div>
 
-          {/* Description */}
-          <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Deskripsi</p>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{announcement.isi}</p>
+          <div className="min-w-0">
+            <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
+              Pengumuman
+            </h1>
+            <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
+              Pantau informasi dan kabar terbaru dari sekolah
+            </p>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// EmptyState Component
-function AnnouncementEmptyState() {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-      <div className="flex justify-center mb-4">
-        <div className="p-4 bg-emerald-50 rounded-full">
-          <Megaphone className="text-emerald-600" size={48} />
-        </div>
-      </div>
-      <h3 className="text-xl font-bold text-gray-700 mb-2">Belum Ada Pengumuman</h3>
-      <p className="text-gray-500 mb-1">Nantikan kabar terbaru di sini</p>
-      <p className="text-sm text-gray-400">
-        Admin akan segera mengirimkan informasi penting untuk guru
-      </p>
     </div>
   );
 }
 
 export default function GuruPengumumanPage() {
-  const [pengumuman, setPengumuman] = useState([]);
-  const [filteredPengumuman, setFilteredPengumuman] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState('Semua');
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-
-  useEffect(() => {
-    fetchPengumuman();
-  }, []);
-
-  useEffect(() => {
-    filterPengumuman();
-  }, [searchQuery, filterCategory, pengumuman]);
-
-  const fetchPengumuman = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/pengumuman?limit=100', {
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        throw new Error('Gagal memuat pengumuman');
-      }
-
-      const data = await res.json();
-
-      // Empty array is valid, not an error
-      const announcements = data.pengumuman || [];
-      setPengumuman(announcements);
-      setFilteredPengumuman(announcements);
-    } catch (err) {
-      console.error('Error fetching pengumuman:', err);
-      toast.error('Gagal memuat pengumuman. Coba refresh halaman.');
-      setPengumuman([]);
-      setFilteredPengumuman([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterPengumuman = () => {
-    let filtered = pengumuman;
-
-    // Filter by category
-    if (filterCategory !== 'Semua') {
-      filtered = filtered.filter((p) => p.kategori === filterCategory);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(
-        (p) =>
-          p.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.isi.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    setFilteredPengumuman(filtered);
-  };
-
-  const handleCardClick = (announcement) => {
-    setSelectedAnnouncement(announcement);
-    setIsDetailOpen(true);
-  };
-
-  const handleCloseDetail = () => {
-    setIsDetailOpen(false);
-    setSelectedAnnouncement(null);
-  };
-
-  if (loading) {
-    return (
-      <GuruLayout>
-        <LoadingIndicator fullPage text="Memuat pengumuman..." />
-      </GuruLayout>
-    );
-  }
-
   return (
     <GuruLayout>
-      <Toaster position="top-right" />
+      <div className="space-y-6 py-6">
+        {/* Header */}
+        <PengumumanHeader />
 
-      <div className="space-y-6">
-        {/* Header Gradient Hijau - Style Tasmi (Responsive) */}
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-5 sm:p-7">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4 sm:gap-6 min-w-0">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-                <Megaphone className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-              </div>
-
-              <div className="min-w-0">
-                <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight whitespace-normal break-words">
-                  Pengumuman
-                </h1>
-                <p className="text-white/90 text-sm sm:text-base mt-1 whitespace-normal">
-                  Pantau informasi dan kabar terbaru 
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filter Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {/* Search Bar - Full Width */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Cari Pengumuman
-            </label>
-            <div className="relative">
-              <Search size={18} className="absolute left-3 top-3 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari pengumuman..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Announcement List or Empty State */}
-        {filteredPengumuman.length === 0 ? (
-          pengumuman.length === 0 ? (
-            <AnnouncementEmptyState />
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-gray-50 rounded-full">
-                  <FileText className="text-gray-400" size={48} />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">
-                Tidak Ada Hasil
-              </h3>
-              <p className="text-gray-500">
-                Tidak ditemukan pengumuman yang sesuai dengan pencarian atau filter
-              </p>
-            </div>
-          )
-        ) : (
-          <>
-            {/* Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredPengumuman.map((announcement) => (
-                <AnnouncementCard 
-                  key={announcement.id} 
-                  announcement={announcement}
-                  onClick={() => handleCardClick(announcement)}
-                />
-              ))}
-            </div>
-
-            {/* Footer Info */}
-            <div className="bg-emerald-50 rounded-lg p-4 text-center border border-emerald-100">
-              <p className="text-sm text-gray-700">
-                Menampilkan{' '}
-                <span className="font-bold text-emerald-700">{filteredPengumuman.length}</span> dari{' '}
-                <span className="font-bold text-emerald-700">{pengumuman.length}</span> pengumuman
-              </p>
-            </div>
-          </>
-        )}
+        {/* List Section - Streams in */}
+        <Suspense fallback={<PengumumanGridSkeleton />}>
+          <ListSection />
+        </Suspense>
       </div>
-
-      {/* Detail Modal */}
-      <AnnouncementDetailModal 
-        announcement={selectedAnnouncement}
-        isOpen={isDetailOpen}
-        onClose={handleCloseDetail}
-      />
     </GuruLayout>
   );
 }

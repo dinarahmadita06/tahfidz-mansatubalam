@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
  * Fetch dashboard statistics untuk guru berdasarkan kelas AKTIF yang diampu
  */
 export async function GET(request) {
+  console.time('[API /guru/dashboard/stats]');
   try {
     const session = await auth();
 
@@ -89,6 +90,7 @@ export async function GET(request) {
 
     console.log('[API /guru/dashboard/stats] Progress rata-rata:', progressRataRata);
 
+    console.timeEnd('[API /guru/dashboard/stats]');
     return NextResponse.json({
       kelasDiampu,
       jumlahSiswa,
