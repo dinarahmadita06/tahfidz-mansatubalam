@@ -15,7 +15,7 @@ export default function LupaPasswordPage() {
 
     // Format pesan WhatsApp
     const message = `Assalamu'alaikum Admin, saya ${namaLengkap} ingin meminta reset password akun SIMTAQ. Mohon bantuannya.`;
-    const whatsappUrl = `https://wa.me/6287713814763?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/62877138147631?text=${encodeURIComponent(message)}`;
 
     // Buka WhatsApp di tab baru
     window.open(whatsappUrl, '_blank');
