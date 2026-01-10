@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { calculateStudentProgress } from '@/lib/services/siswaProgressService';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,7 +20,7 @@ export async function GET(req) {
     // Get siswa data
     const siswa = await prisma.siswa.findUnique({
       where: { userId: session.user.id },
-      select: { id: true }
+      select: { id: true, latestJuzAchieved: true }
     });
 
     if (!siswa) {
@@ -55,6 +56,10 @@ export async function GET(req) {
       where: { isActive: true }
     });
 
+    // Use centralized service for progress calculation (active school year)
+    const progressData = await calculateStudentProgress(prisma, siswa.id, tahunAjaranAktif?.id);
+    const totalJuzSelesai = progressData.totalJuz;
+
     // Get catatan guru count
     const catatanGuruCount = await prisma.penilaian.count({
       where: {
@@ -62,13 +67,6 @@ export async function GET(req) {
         catatan: { not: null }
       }
     });
-
-    const stats = {
-      hafalanSelesai: totalHafalan || 0,
-      totalHafalan: tahunAjaranAktif?.targetHafalan || targetHafalan?.targetJuz || 0,
-      rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
-      catatanGuru: catatanGuruCount || 0
-    };
 
     // ===== 2. RECENT ACTIVITIES (EVENT-BASED) =====
 
@@ -169,37 +167,34 @@ export async function GET(req) {
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       .slice(0, 5);
 
-    // ===== 3. JUZ PROGRESS =====
+    // ===== 3. JUZ PROGRESS (PER SCHOOL YEAR) =====
 
-    // Get all hafalan grouped by juz
-    const hafalanByJuz = await prisma.hafalan.groupBy({
-      by: ['juz'],
-      where: { siswaId },
-      _count: { id: true }
-    });
-
-    // Calculate progress per juz
-    // Assuming each juz has ~20 pages, and each setoran is roughly 1-2 pages
-    // We'll use a simple percentage based on count of setoran
-    const juzProgress = hafalanByJuz.map(item => {
-      // Simple calculation: each setoran counts toward progress
-      // A typical juz might need ~10-20 setoran to complete
-      // So we calculate: (count / 15) * 100, capped at 100%
-      const estimatedProgress = Math.min(Math.round((item._count.id / 15) * 100), 100);
-
+    const juzProgress = progressData.uniqueJuzs.map(juz => {
       return {
-        label: `Juz ${item.juz}`,
-        progress: estimatedProgress,
-        juz: item.juz
+        label: `Juz ${juz}`,
+        progress: 100, // Show achieved juzs as 100% or count records if needed
+        juz: juz
       };
     });
 
-    // Filter only juz with progress > 0 and sort by juz number
+    const stats = {
+      hafalanSelesai: totalJuzSelesai, // ✅ Use synchronized value
+      totalHafalan: tahunAjaranAktif?.targetHafalan || targetHafalan?.targetJuz || 0,
+      rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
+      catatanGuru: catatanGuruCount || 0
+    };
+
+    // Filter and sort
     const filteredJuzProgress = juzProgress
-      .filter(juz => juz.progress > 0)
       .sort((a, b) => a.juz - b.juz);
 
     // ===== RETURN RESPONSE =====
+
+    console.log(`[DEBUG/DASHBOARD] Student ${siswaId} Dashboard:
+    - Hafalan Selesai (Juz): ${siswa.latestJuzAchieved}
+    - Setoran Count: ${totalHafalan}
+    - Juz Progress Count: ${filteredJuzProgress.length}
+    `);
 
     return NextResponse.json({
       siswaId,

@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Lightbulb,
   ChevronRight,
+  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import AnnouncementSlider from '@/components/AnnouncementSlider';
@@ -157,6 +158,7 @@ export default function StudentDashboardContent({
   const [progressPercent, setProgressPercent] = useState(null);
   const [quote, setQuote] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch pengumuman
   useEffect(() => {
@@ -177,46 +179,47 @@ export default function StudentDashboardContent({
     fetchPengumuman();
   }, []);
 
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/dashboard/siswa/${targetSiswaId}/summary`);
+
+      if (!response.ok) {
+        throw new Error('Gagal memuat data dashboard');
+      }
+
+      const data = await response.json();
+
+      setStats({
+        hafalanSelesai: data.stats?.hafalanSelesai || 0,
+        totalHafalan: data.stats?.totalHafalan || 0,
+        rataRataNilai: data.stats?.rataRataNilai || 0,
+        kehadiran: data.stats?.kehadiran || 0,
+        totalHari: data.stats?.totalHari || 0,
+        catatanGuru: data.stats?.catatanGuru || 0,
+      });
+
+      setJuzProgress(data.juzProgress || []);
+      setTahunAjaranAktif(data.tahunAjaranAktif);
+      
+      const targetValue = parseInt(data.targetJuzSekolah);
+      setTargetJuzSekolah(!isNaN(targetValue) && targetValue > 0 ? targetValue : null);
+      
+      setTotalJuzSelesai(data.totalJuzSelesai || 0);
+      setProgressPercent(data.progressPercent);
+      setQuote(data.quote || "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.");
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch dashboard summary data
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/dashboard/siswa/${targetSiswaId}/summary`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
-
-        const data = await response.json();
-
-        setStats({
-          hafalanSelesai: data.stats?.hafalanSelesai || 0,
-          totalHafalan: data.stats?.totalHafalan || 0,
-          rataRataNilai: data.stats?.rataRataNilai || 0,
-          kehadiran: data.stats?.kehadiran || 0,
-          totalHari: data.stats?.totalHari || 0,
-          catatanGuru: data.stats?.catatanGuru || 0,
-        });
-
-        setJuzProgress(data.juzProgress || []);
-        setTahunAjaranAktif(data.tahunAjaranAktif);
-        
-        // Ensure target is a valid number and not undefined/null/NaN
-        const targetValue = parseInt(data.targetJuzSekolah);
-        setTargetJuzSekolah(!isNaN(targetValue) && targetValue > 0 ? targetValue : null);
-        
-        setTotalJuzSelesai(data.totalJuzSelesai || 0);
-        setProgressPercent(data.progressPercent);
-        setQuote(data.quote || "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.");
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (targetSiswaId) {
       fetchDashboardData();
     }
@@ -229,6 +232,26 @@ export default function StudentDashboardContent({
   // Determine safe quote with fallback
   const safeQuote = typeof quote === 'object' ? (quote?.text || quote?.content || DEFAULT_QUOTE) : (quote || DEFAULT_QUOTE);
   
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center space-y-4">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+          <AlertCircle className="text-red-600 w-8 h-8" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-red-900">Gagal Memuat Data</h3>
+          <p className="text-red-700 text-sm mt-1">{error}</p>
+        </div>
+        <button 
+          onClick={fetchDashboardData}
+          className="px-6 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
+        >
+          Coba Lagi
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Motivasi - Biru Transparan */}

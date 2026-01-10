@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { calculateMonthRange } from '@/lib/utils/dateRangeHelpers';
+import { surahNameToNumber, getJuzsFromRange } from '@/lib/quranUtils';
 
 export async function GET(request) {
   try {
@@ -23,14 +25,15 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || 'bulanan';
     const year = parseInt(searchParams.get('year') || new Date().getFullYear());
-    const month = parseInt(searchParams.get('month') || new Date().getMonth()); // 0-11
+    const month = parseInt(searchParams.get('month') || new Date().getMonth().toString()); // 0-11
 
     // Calculate date range based on period
     let startDate, endDate;
 
     if (period === 'bulanan') {
-      startDate = new Date(year, month, 1);
-      endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
+      const range = calculateMonthRange(month, year);
+      startDate = range.startDate;
+      endDate = range.endDate;
     } else {
       // tahunan
       startDate = new Date(year, 0, 1);
@@ -69,14 +72,26 @@ export async function GET(request) {
     let penilaianCount = 0;
 
     hafalan.forEach((h) => {
-      // Track unique days
-      const dateStr = h.tanggal.toISOString().split('T')[0];
+      // Track unique days using local date string to avoid timezone shift
+      const dateStr = new Date(h.tanggal).toLocaleDateString('en-CA'); // YYYY-MM-DD
       uniqueDays.add(dateStr);
 
-      // Track juz distribution
+      // Track juz distribution with mapping fallback
+      let recordJuzs = new Set();
       if (h.juz) {
-        juzMap.set(h.juz, (juzMap.get(h.juz) || 0) + 1);
+        recordJuzs.add(h.juz);
+      } else {
+        // Fallback mapping if juz is missing
+        const sNum = h.surahNumber || surahNameToNumber[h.surah];
+        if (sNum && h.ayatMulai && h.ayatSelesai) {
+          const juzs = getJuzsFromRange(sNum, h.ayatMulai, h.ayatSelesai);
+          juzs.forEach(j => recordJuzs.add(j));
+        }
       }
+
+      recordJuzs.forEach(juz => {
+        juzMap.set(juz, (juzMap.get(juz) || 0) + 1);
+      });
 
       // Calculate penilaian averages
       if (h.penilaian && h.penilaian.length > 0) {

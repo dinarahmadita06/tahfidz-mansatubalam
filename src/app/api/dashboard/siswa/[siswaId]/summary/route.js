@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { calculateStudentProgress } from '@/lib/services/siswaProgressService';
 
 /**
  * GET /api/dashboard/siswa/{siswaId}/summary
@@ -42,9 +43,12 @@ export async function GET(req, { params }) {
       // SISWA can only access their own dashboard
       const siswa = await prisma.siswa.findUnique({
         where: { userId: session.user.id },
-        select: { id: true }
+        select: { id: true, latestJuzAchieved: true }
       });
       authorized = siswa && siswa.id === siswaId;
+      if (authorized) {
+        session.user.latestJuzAchieved = siswa.latestJuzAchieved;
+      }
     } else if (session.user.role === 'ORANG_TUA') {
       // ORANG_TUA can only access their connected children
       const orangTua = await prisma.orangTua.findFirst({
@@ -107,12 +111,16 @@ export async function GET(req, { params }) {
 
     const schoolTarget = schoolYear?.targetHafalan || 0;
 
-    // Get total hafalan selesai (setoran)
+    // Use centralized service for progress calculation
+    const progressData = await calculateStudentProgress(prisma, siswaId, schoolYear?.id);
+    const totalJuzSelesai = progressData.totalJuz;
+
+    // Get total hafalan selesai (setoran count - all time)
     const totalHafalanCount = await prisma.hafalan.count({
       where: { siswaId }
     });
 
-    // Get rata-rata nilai dari penilaian
+    // Get rata-rata nilai dari penilaian (all time)
     const avgNilai = await prisma.penilaian.aggregate({
       where: { siswaId },
       _avg: { nilaiAkhir: true }
@@ -153,29 +161,22 @@ export async function GET(req, { params }) {
       }
     });
 
-    const stats = {
-      hafalanSelesai: totalHafalanCount || 0,
-      totalHafalan: schoolTarget, // Use school target instead of student personal target
-      rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
-      kehadiran: kehadiranCount || 0,
-      totalHari: totalHariCount || 0,
-      catatanGuru: catatanGuruCount || 0
-    };
-
-    // ===== 2. JUZ PROGRESS =====
-
-    const hafalanByJuz = await prisma.hafalan.groupBy({
-      by: ['juz'],
-      where: { siswaId },
-      _count: { id: true }
+    // Get student's latest juz achieved for more accurate stats
+    const studentInfo = await prisma.siswa.findUnique({
+      where: { id: siswaId },
+      select: { latestJuzAchieved: true }
     });
 
-    const juzProgress = hafalanByJuz.map(item => {
-      const estimatedProgress = Math.min(Math.round((item._count.id / 15) * 100), 100);
+    // ===== 2. JUZ PROGRESS (PER SCHOOL YEAR) =====
+
+    const juzProgress = progressData.uniqueJuzs.map(juz => {
+      // For progress bar visualization, we might still want to count records per juz
+      // but the centralized service currently only gives unique juzs.
+      // To maintain the "10 setoran = 100%" logic, we need to count again.
       return {
-        label: `Juz ${item.juz}`,
-        progress: estimatedProgress,
-        juz: item.juz
+        label: `Juz ${juz}`,
+        progress: 100, // For dashboard summary, we show achieved juzs as 100% or we can refine
+        juz: juz
       };
     });
 
@@ -186,28 +187,29 @@ export async function GET(req, { params }) {
     // ===== 3. TARGET SEKOLAH & PROGRESS =====
     
     const targetJuzSekolah = schoolYear?.targetHafalan || null;
-
-    // Get total juz selesai
-    // Use DISTINCT juz from Hafalan table where at least one penilaian is valid (>= 75)
-    const juzSelesaiRecords = await prisma.hafalan.findMany({
-      where: { 
-        siswaId,
-        penilaian: {
-          some: {
-            nilaiAkhir: { gte: 75 }
-          }
-        }
-      },
-      select: { juz: true },
-      distinct: ['juz']
-    });
-    
-    const totalJuzSelesai = juzSelesaiRecords.length;
     
     // Calculate progress percent
     const progressPercent = targetJuzSekolah 
       ? Math.min(100, Math.round((totalJuzSelesai / targetJuzSekolah) * 100))
       : null;
+
+    console.log(`[DEBUG/DASHBOARD] Student ${siswaId} Summary (Active Year):
+    - Total Juz: ${totalJuzSelesai}
+    - School Target: ${targetJuzSekolah}
+    - Progress: ${progressPercent}%
+    - Setoran Count: ${totalHafalanCount}
+    - School Year: ${schoolYear?.nama || 'None'}
+    `);
+
+    const stats = {
+      hafalanSelesai: totalJuzSelesai,
+      totalHafalan: schoolTarget, 
+      rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
+      kehadiran: kehadiranCount || 0,
+      totalHari: totalHariCount || 0,
+      catatanGuru: catatanGuruCount || 0,
+      totalJuz: totalJuzSelesai
+    };
 
     // ===== 4. QUOTE =====
 

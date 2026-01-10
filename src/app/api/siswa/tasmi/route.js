@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
+import { calculateStudentProgress, isEligibleForTasmi } from '@/lib/services/siswaProgressService';
+
 // GET - Fetch siswa's own tasmi history with pagination
 export async function GET(request) {
   try {
@@ -20,9 +22,25 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    // Get siswa data
+    // Get siswa data with current class info
     const siswa = await prisma.siswa.findUnique({
       where: { userId: session.user.id },
+      select: { 
+        id: true, 
+        latestJuzAchieved: true,
+        kelas: {
+          select: {
+            id: true,
+            nama: true,
+            tahunAjaran: {
+              select: {
+                id: true,
+                isActive: true
+              }
+            }
+          }
+        }
+      }
     });
 
     if (!siswa) {
@@ -32,8 +50,14 @@ export async function GET(request) {
       );
     }
 
+    // Verify if the student is in a class belonging to the active school year
+    const activeClass = (siswa.kelas && siswa.kelas.tahunAjaran?.isActive) ? {
+      id: siswa.kelas.id,
+      nama: siswa.kelas.nama
+    } : null;
+
     // Parallel fetch for independent data
-    const [tasmi, totalCount, hafalanData] = await Promise.all([
+    const [tasmi, totalCount] = await Promise.all([
       // Fetch tasmi history with pagination
       // NOTE: Explicitly EXCLUDE nilai fields from siswa view (security)
       prisma.tasmi.findMany({
@@ -49,7 +73,7 @@ export async function GET(request) {
           juzYangDitasmi: true,
           jumlahHafalan: true,
           tanggalDaftar: true,
-          catatanPengajuan: true,
+          catatan: true,
           // EXCLUDED FOR SECURITY: nilaiAkhir, nilaiKelancaran, nilaiAdab, nilaiTajwid, nilaiIrama, catatanPenguji, predikat, publishedAt, pdfUrl
           siswa: {
             include: {
@@ -88,30 +112,38 @@ export async function GET(request) {
           siswaId: siswa.id,
         },
       }),
-
-      // Calculate total juz hafalan from DISTINCT juz in Hafalan table
-      prisma.hafalan.findMany({
-        where: {
-          siswaId: siswa.id,
-        },
-        select: {
-          juz: true,
-        },
-        distinct: ['juz'],
-      }),
     ]);
 
-    const totalJuzHafalan = hafalanData.length;
-
-    // Target juz sekolah (default 3, could be from settings in the future)
-    const targetJuzSekolah = 3;
-
     const totalPages = Math.ceil(totalCount / limit);
+
+    // Get school year for active progress calculation
+    const schoolYear = await prisma.tahunAjaran.findFirst({
+      where: { isActive: true },
+      select: { id: true, targetHafalan: true, nama: true }
+    });
+
+    // Use centralized service for progress calculation (active school year)
+    const progressData = await calculateStudentProgress(prisma, siswa.id, schoolYear?.id);
+    const totalJuzHafalan = progressData.totalJuz;
+    const targetJuzSekolah = progressData.targetJuzMinimal;
+    const isEligible = isEligibleForTasmi(totalJuzHafalan, targetJuzSekolah);
+
+    console.log(`[DEBUG/TASMI] Student ${siswa.id} GET:
+    - Target Juz: ${targetJuzSekolah}
+    - Progress Juz (Active Year): ${totalJuzHafalan}
+    - Eligible: ${isEligible}
+    - School Year: ${schoolYear?.nama || 'None'}
+    `);
 
     return NextResponse.json({
       tasmi,
       totalJuzHafalan,
       targetJuzSekolah,
+      isEligible,
+      siswa: {
+        id: siswa.id,
+        activeClass
+      },
       pagination: {
         page,
         limit,
@@ -200,7 +232,7 @@ export async function POST(request) {
       );
     }
 
-    // Check if already has pending tasmi
+    // Check already has pending tasmi
     const pendingTasmi = await prisma.tasmi.findFirst({
       where: {
         siswaId: siswa.id,
@@ -215,11 +247,19 @@ export async function POST(request) {
       );
     }
 
-    // Validasi minimal hafalan (minimal 3 juz atau target sekolah, ambil yang lebih besar)
-    const minimalHafalan = 3; // Default minimal 3 juz
-    if (jumlahHafalan < minimalHafalan) {
+    // Validasi minimal hafalan (Gunakan Centralized Service)
+    const schoolYear = await prisma.tahunAjaran.findFirst({
+      where: { isActive: true },
+      select: { id: true, targetHafalan: true }
+    });
+
+    const progressData = await calculateStudentProgress(prisma, siswa.id, schoolYear?.id);
+    const currentJuzCount = progressData.totalJuz;
+    const minimalHafalan = progressData.targetJuzMinimal;
+    
+    if (!isEligibleForTasmi(currentJuzCount, minimalHafalan)) {
       return NextResponse.json(
-        { message: `Hafalan belum memenuhi syarat minimal Tasmi (minimal ${minimalHafalan} juz). Saat ini Anda baru ${jumlahHafalan} juz.` },
+        { message: `Hafalan belum memenuhi syarat minimal Tasmi (minimal ${minimalHafalan} juz di tahun ajaran ini). Saat ini capaian Anda baru ${currentJuzCount} juz.` },
         { status: 400 }
       );
     }
@@ -228,7 +268,7 @@ export async function POST(request) {
     const tasmi = await prisma.tasmi.create({
       data: {
         siswaId: siswa.id,
-        jumlahHafalan: parseInt(jumlahHafalan),
+        jumlahHafalan: currentJuzCount, // ✅ Use DB value, ignore body.jumlahHafalan for security
         juzYangDitasmi,
         jamTasmi,
         tanggalTasmi: new Date(tanggalTasmi),
