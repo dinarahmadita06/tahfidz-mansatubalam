@@ -20,6 +20,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.time('GET /api/admin/siswa');
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const kelasId = searchParams.get('kelasId');
@@ -27,13 +29,17 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Use cache key that includes kelasId to avoid mixing data between classes
-    const cacheKey = kelasId ? `siswa-list-kelasId-${kelasId}` : 'siswa-list-all';
+    // Build cache key
+    const cacheKey = kelasId 
+      ? `siswa-list-kelasId-${kelasId}-page-${page}`
+      : search
+        ? `siswa-list-search-${search}-page-${page}`
+        : `siswa-list-all-page-${page}`;
     
-    // Check if we have cached data
+    // Check cache
     const cachedData = getCachedData(cacheKey);
-
     if (cachedData) {
+      console.timeEnd('GET /api/admin/siswa');
       return NextResponse.json(cachedData);
     }
 
@@ -55,15 +61,27 @@ export async function GET(request) {
       ];
     }
 
-    // Get total count for pagination
+    // Parallel: count + findMany
+    console.time('siswa-count-query');
     const totalCount = await prisma.siswa.count({ where: whereClause });
+    console.timeEnd('siswa-count-query');
     const totalPages = Math.ceil(totalCount / limit);
 
+    console.time('siswa-findMany-query');
     const siswa = await prisma.siswa.findMany({
       where: whereClause,
       skip: (page - 1) * limit,
       take: limit,
-      include: {
+      select: {
+        id: true,
+        nisn: true,
+        nis: true,
+        jenisKelamin: true,
+        tanggalLahir: true,
+        alamat: true,
+        noTelepon: true,
+        status: true,
+        createdAt: true,
         user: {
           select: {
             id: true,
@@ -79,17 +97,12 @@ export async function GET(request) {
             nama: true,
           }
         },
-        hafalan: {
-          select: {
-            id: true,
-            juz: true,
-            surah: true
-          }
-        },
         orangTuaSiswa: {
-          include: {
+          select: {
             orangTua: {
-              include: {
+              select: {
+                id: true,
+                noTelepon: true,
                 user: {
                   select: {
                     name: true,
@@ -110,6 +123,7 @@ export async function GET(request) {
         createdAt: 'desc'
       }
     });
+    console.timeEnd('siswa-findMany-query');
 
     const responseData = {
       data: siswa,
@@ -121,9 +135,10 @@ export async function GET(request) {
       }
     };
 
-    // Cache the response
+    // Cache response
     setCachedData(cacheKey, responseData);
 
+    console.timeEnd('GET /api/admin/siswa');
     return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching siswa:', error);

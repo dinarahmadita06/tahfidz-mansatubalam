@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 export async function POST(request) {
   try {
@@ -59,36 +57,30 @@ export async function POST(request) {
       );
     }
 
-    // Create uploads directory if not exists
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'signatures');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
     // Generate unique filename
     const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop();
-    const fileName = `ttd-${guru.id}-${timestamp}.${fileExtension}`;
-    const filePath = join(uploadsDir, fileName);
+    const fileName = `signatures/ttd-${guru.id}-${timestamp}.${fileExtension}`;
 
-    // Convert file to buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+    // Upload to Vercel Blob
+    const blob = await put(fileName, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
+
+    const finalUrl = blob.url;
 
     // Update database with file path
-    const relativePath = `/uploads/signatures/${fileName}`;
-    
     await prisma.$transaction([
       prisma.guru.update({
         where: { id: guru.id },
-        data: { tandaTangan: relativePath }
+        data: { tandaTangan: finalUrl }
       }),
       prisma.user.update({
         where: { id: session.user.id },
         data: { 
-          signatureUrl: relativePath,
-          ttdUrl: relativePath  // Also update ttdUrl for consistency
+          signatureUrl: finalUrl,
+          ttdUrl: finalUrl  // Also update ttdUrl for consistency
         }
       })
     ]);
@@ -99,7 +91,7 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       message: 'Tanda tangan berhasil diupload',
-      tandaTanganUrl: relativePath
+      tandaTanganUrl: finalUrl
     });
 
   } catch (error) {
