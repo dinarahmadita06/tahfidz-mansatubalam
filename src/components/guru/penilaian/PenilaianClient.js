@@ -140,17 +140,70 @@ function ConfirmationModal({ isOpen, kelas, onClose }) {
 }
 
 export function PenilaianBinaanSection({ classes }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('Semua');
+
+  const filteredClasses = useMemo(() => {
+    return classes.filter(kelas => {
+      const matchesSearch = kelas.nama.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      let matchesLevel = true;
+      if (selectedLevel !== 'Semua') {
+        const name = kelas.nama.trim();
+        if (selectedLevel === 'X') {
+          matchesLevel = name.startsWith('X ') || name === 'X';
+        } else if (selectedLevel === 'XI') {
+          matchesLevel = name.startsWith('XI ') || name === 'XI';
+        } else if (selectedLevel === 'XII') {
+          matchesLevel = name.startsWith('XII ') || name === 'XII';
+        }
+      }
+      
+      return matchesSearch && matchesLevel;
+    });
+  }, [classes, searchQuery, selectedLevel]);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {classes.length === 0 ? (
-        <div className="col-span-full">
-          <EmptyState message="Anda belum memiliki kelas binaan" />
-        </div>
-      ) : (
-        classes.map((kelas) => (
-          <ClassCard key={kelas.id} kelas={kelas} />
-        ))
-      )}
+    <div className="space-y-5">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 border-b border-emerald-100/50 pb-4">
+        <LevelFilter selected={selectedLevel} onSelect={setSelectedLevel} />
+        <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Cari kelas binaan..." />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredClasses.length === 0 ? (
+          <div className="col-span-full">
+            <EmptyState message={searchQuery || selectedLevel !== 'Semua' ? "Tidak ada kelas binaan yang sesuai filter" : "Anda belum memiliki kelas binaan"} />
+          </div>
+        ) : (
+          filteredClasses.map((kelas) => (
+            <ClassCard key={kelas.id} kelas={kelas} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// LevelFilter Component
+function LevelFilter({ selected, onSelect }) {
+  const levels = ['Semua', 'X', 'XI', 'XII'];
+  
+  return (
+    <div className="flex bg-slate-100/50 p-1 rounded-xl border border-slate-200 w-fit shrink-0">
+      {levels.map((level) => (
+        <button
+          key={level}
+          onClick={() => onSelect(level)}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            selected === level
+              ? 'bg-white text-emerald-600 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+          }`}
+        >
+          {level}
+        </button>
+      ))}
     </div>
   );
 }
@@ -158,14 +211,33 @@ export function PenilaianBinaanSection({ classes }) {
 export function PenilaianSemuaClient({ allClasses, binaanIds }) {
   const [showAllKelas, setShowAllKelas] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('Semua');
   const [selectedKelas, setSelectedKelas] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const filteredSemuaKelas = useMemo(() => {
-    return allClasses.filter(kelas =>
-      kelas.nama.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [allClasses, searchQuery]);
+    return allClasses.filter(kelas => {
+      // 1. Filter Search
+      const matchesSearch = kelas.nama.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // 2. Filter Tingkat (Segmented Button)
+      let matchesLevel = true;
+      if (selectedLevel !== 'Semua') {
+        const name = kelas.nama.trim();
+        // Cek tingkat 10 (X), 11 (XI), 12 (XII) berdasarkan prefix
+        if (selectedLevel === 'X') {
+          // Hanya tangkap X, jangan tangkap XI atau XII
+          matchesLevel = name.startsWith('X ') || name === 'X';
+        } else if (selectedLevel === 'XI') {
+          matchesLevel = name.startsWith('XI ') || name === 'XI';
+        } else if (selectedLevel === 'XII') {
+          matchesLevel = name.startsWith('XII ') || name === 'XII';
+        }
+      }
+      
+      return matchesSearch && matchesLevel;
+    });
+  }, [allClasses, searchQuery, selectedLevel]);
 
   const handleKelasClick = (e, kelas) => {
     if (!binaanIds.includes(kelas.id)) {
@@ -184,13 +256,16 @@ export function PenilaianSemuaClient({ allClasses, binaanIds }) {
 
       {showAllKelas && (
         <div className="space-y-5 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <h2 className="text-xl font-bold text-slate-800">Semua Kelas</h2>
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 border-b border-slate-100 pb-4">
+            <div className="space-y-3">
+              <h2 className="text-xl font-bold text-slate-800">Semua Kelas</h2>
+              <LevelFilter selected={selectedLevel} onSelect={setSelectedLevel} />
+            </div>
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
           </div>
 
           {filteredSemuaKelas.length === 0 ? (
-            <EmptyState message="Tidak ada kelas yang ditemukan" />
+            <EmptyState message={searchQuery || selectedLevel !== 'Semua' ? "Tidak ada kelas yang sesuai filter" : "Tidak ada kelas yang ditemukan"} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredSemuaKelas.map((kelas) => (
