@@ -55,6 +55,8 @@ export default function StudentCreateModal({
   const [copied, setCopied] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState(null);
   const [parentSearchTerm, setParentSearchTerm] = useState('');
+  const [isGeneratedStudentPw, setIsGeneratedStudentPw] = useState(false);
+  const [isGeneratedParentPw, setIsGeneratedParentPw] = useState(false);
 
   const isEditing = !!editingSiswa;
 
@@ -182,6 +184,8 @@ export default function StudentCreateModal({
     });
     setFieldErrors({});
     setParentSearchTerm('');
+    setIsGeneratedStudentPw(false);
+    setIsGeneratedParentPw(false);
   };
 
   // Auto-generate student email (Manual password generation only)
@@ -212,7 +216,8 @@ export default function StudentCreateModal({
     }
   }, [newParentData.name, formData.nis, newParentData.jenisWali, parentMode]);
 
-  // Auto-fill student password from NISN
+  // Auto-fill student password from NISN - REMOVED per user request
+  /*
   useEffect(() => {
     if (!isEditing && formData.nisn && formData.nisn.trim().length === 10 && !formData.password) {
       setFormData(prev => ({ 
@@ -221,8 +226,10 @@ export default function StudentCreateModal({
       }));
     }
   }, [formData.nisn, isEditing, formData.password]);
+  */
 
-  // Auto-fill parent password from NISN and birth date
+  // Auto-fill parent password from NISN and birth date - REMOVED per user request
+  /*
   useEffect(() => {
     if (parentMode === 'create' && formData.nisn && formData.nisn.trim().length === 10 && formData.tanggalLahir && !newParentData.password) {
       setNewParentData(prev => ({ 
@@ -231,6 +238,7 @@ export default function StudentCreateModal({
       }));
     }
   }, [formData.nisn, formData.tanggalLahir, parentMode, newParentData.password]);
+  */
 
   const handleResetPassword = async () => {
     if (!window.confirm('Apakah Anda yakin ingin mereset password siswa ini? Password lama akan langsung tidak berlaku.')) {
@@ -273,6 +281,7 @@ export default function StudentCreateModal({
     }
     const pwd = generateStudentPassword(formData.nisn);
     setFormData({ ...formData, password: pwd });
+    setIsGeneratedStudentPw(true);
     toast.success('Password siswa di-generate dari NISN');
   };
 
@@ -287,6 +296,7 @@ export default function StudentCreateModal({
     }
     const pwd = generateParentPassword(formData.nisn, formData.tanggalLahir);
     setNewParentData({ ...newParentData, password: pwd });
+    setIsGeneratedParentPw(true);
     toast.success('Password wali di-generate (NISN-TahunLahir)');
   };
 
@@ -588,12 +598,20 @@ export default function StudentCreateModal({
                   <PasswordField
                     label="Password Siswa"
                     value={formData.password}
-                    onChange={(val) => setFormData({ ...formData, password: val })}
+                    onChange={(val) => {
+                      setFormData({ ...formData, password: val });
+                      setIsGeneratedStudentPw(false);
+                    }}
                     placeholder="Password"
                     required
                     iconOnlyGenerate={true}
                     onGenerateCustom={handleGenerateStudentPassword}
-                    helperText="Klik icon generate untuk mengisi password siswa dari NISN."
+                    generateDisabled={!formData.nisn || formData.nisn.trim().length !== 10}
+                    helperText={
+                      isGeneratedStudentPw && formData.password !== generateStudentPassword(formData.nisn)
+                        ? "Klik generate ulang untuk memperbarui password."
+                        : "Klik icon generate untuk mengisi password siswa dari NISN."
+                    }
                   />
                 </div>
               </div>
@@ -783,12 +801,20 @@ export default function StudentCreateModal({
                     <PasswordField
                       label="Password Wali"
                       value={newParentData.password}
-                      onChange={(val) => setNewParentData({ ...newParentData, password: val })}
+                      onChange={(val) => {
+                        setNewParentData({ ...newParentData, password: val });
+                        setIsGeneratedParentPw(false);
+                      }}
                       placeholder="Password"
                       required={parentMode === 'create'}
                       iconOnlyGenerate={true}
                       onGenerateCustom={handleGenerateParentPassword}
-                      helperText="Klik icon generate untuk mengisi password wali (NISN-TahunLahir)."
+                      generateDisabled={!formData.nisn || formData.nisn.trim().length !== 10 || !formData.tanggalLahir}
+                      helperText={
+                        isGeneratedParentPw && newParentData.password !== generateParentPassword(formData.nisn, formData.tanggalLahir)
+                          ? "Klik generate ulang untuk memperbarui password."
+                          : "Klik icon generate untuk mengisi password wali (NISN-TahunLahir)."
+                      }
                     />
                   </div>
                 )}

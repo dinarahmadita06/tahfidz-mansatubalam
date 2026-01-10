@@ -38,6 +38,7 @@ export default function PasswordField({
   error = null,
   disabled = false,
   onGenerateCustom = null,
+  generateDisabled = false,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -136,7 +137,7 @@ export default function PasswordField({
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={disabled}
+            disabled={disabled || generateDisabled}
             style={{
               padding: iconOnlyGenerate ? '12px' : '12px 16px',
               border: `2px solid ${colors.emerald[500]}20`,
@@ -145,7 +146,7 @@ export default function PasswordField({
               color: colors.emerald[700],
               fontSize: '13px',
               fontWeight: 600,
-              cursor: disabled ? 'not-allowed' : 'pointer',
+              cursor: (disabled || generateDisabled) ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               fontFamily: '"Poppins", system-ui, sans-serif',
               display: 'flex',
@@ -153,7 +154,7 @@ export default function PasswordField({
               justifyContent: 'center',
               gap: '6px',
               whiteSpace: 'nowrap',
-              opacity: disabled ? 0.5 : 1,
+              opacity: (disabled || generateDisabled) ? 0.5 : 1,
             }}
             className="generate-password-btn"
             title="Generate password otomatis"
@@ -232,6 +233,12 @@ export default function PasswordField({
           background: ${colors.emerald[500]}20 !important;
           border-color: ${colors.emerald[500]}40 !important;
           transform: translateY(-2px);
+        }
+
+        .generate-password-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.5 !important;
+          transform: none !important;
         }
 
         .copy-password-btn:hover:not(:disabled) {
