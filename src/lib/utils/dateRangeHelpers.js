@@ -15,12 +15,20 @@
  * }
  */
 export function calculateMonthRange(month, year) {
-  // Use UTC to ensure consistent date strings regardless of local timezone
-  const startDate = new Date(Date.UTC(year, month, 1));
-  const endDate = new Date(Date.UTC(year, month + 1, 1));
+  // Use local timezone to ensure consistency with how dates are stored in the database
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 1);
 
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
+  // Format as YYYY-MM-DD for the API query
+  const formatYMD = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const startDateStr = formatYMD(startDate);
+  const endDateStr = formatYMD(endDate);
 
   return {
     startDate,
