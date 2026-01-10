@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Users, 
   Search, 
@@ -9,79 +9,53 @@ import {
   AlertCircle,
   UserPlus
 } from 'lucide-react';
-import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { useRouter } from 'next/navigation';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import GuruLayout from '@/components/layout/GuruLayout';
 import StudentCreateModal from '@/components/admin/StudentCreateModal';
+import { PageSkeleton } from '@/components/shared/Skeleton';
 
 export default function KelolaSiswa() {
   const router = useRouter();
-  const [allSiswa, setAllSiswa] = useState([]);
-  const [filteredSiswa, setFilteredSiswa] = useState([]);
-  const [kelasDiampu, setKelasDiampu] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedKelas, setSelectedKelas] = useState('');
-  const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [statsData, setStatsData] = useState({
-    totalSiswa: 0,
-    siswaAktif: 0,
-    menungguValidasi: 0,
-  });
 
-  // Fetch kelas aktif dan siswa mereka
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      const kelasRes = await fetch('/api/guru/kelas', { credentials: 'include' });
+  // Fetch data using React Query for better performance and caching
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['guru-siswa'],
+    queryFn: async () => {
+      const kelasRes = await fetch('/api/guru/kelas');
       if (!kelasRes.ok) throw new Error('Failed to fetch kelas');
       const kelasData = await kelasRes.json();
       const kelasList = kelasData.kelas || [];
-      setKelasDiampu(kelasList);
       
-      // Fetch siswa hanya dari kelas aktif yang diampu guru
+      let siswaList = [];
       if (kelasList.length > 0) {
         const klasIds = kelasList.map(k => k.id).join(',');
-        const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`, { credentials: 'include' });
+        const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`);
         if (!siswaRes.ok) throw new Error('Failed to fetch siswa');
         const siswaData = await siswaRes.json();
-        const siswaList = siswaData.data || [];
-        setAllSiswa(siswaList);
-        setFilteredSiswa(siswaList);
-        
-        // Calculate stats
-        const approved = siswaList.filter(s => s.status === 'approved').length;
-        const pending = siswaList.filter(s => s.status !== 'approved').length;
-        setStatsData({
-          totalSiswa: siswaList.length,
-          siswaAktif: approved,
-          menungguValidasi: pending,
-        });
+        siswaList = siswaData.data || [];
       }
-    } catch (error) {
-      console.error('❌ Error fetching data:', error);
-      setKelasDiampu([]);
-      setAllSiswa([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+      
+      return { kelasList, siswaList };
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const allSiswa = data?.siswaList || [];
+  const kelasDiampu = data?.kelasList || [];
 
-  // Filter siswa berdasarkan search dan selected kelas
-  useEffect(() => {
+  // Filter siswa berdasarkan search dan selected kelas (client-side for instant response)
+  const filteredSiswa = useMemo(() => {
     let result = allSiswa;
     
-    // Filter by selected kelas
     if (selectedKelas) {
       result = result.filter(s => s.kelasId === selectedKelas);
     }
     
-    // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(s => 
@@ -91,8 +65,19 @@ export default function KelolaSiswa() {
       );
     }
     
-    setFilteredSiswa(result);
+    return result;
   }, [searchTerm, selectedKelas, allSiswa]);
+
+  // Calculate stats
+  const statsData = useMemo(() => {
+    const approved = allSiswa.filter(s => s.status === 'approved').length;
+    const pending = allSiswa.filter(s => s.status !== 'approved').length;
+    return {
+      totalSiswa: allSiswa.length,
+      siswaAktif: approved,
+      menungguValidasi: pending,
+    };
+  }, [allSiswa]);
 
   const StatCard = ({ icon: Icon, title, value, theme = 'emerald' }) => {
     const themeConfig = {
@@ -186,8 +171,8 @@ export default function KelolaSiswa() {
             </div>
           </div>
 
-          {loading ? (
-            <LoadingIndicator text="Memuat data kelas dan siswa..." />
+          {isLoading ? (
+            <PageSkeleton />
           ) : (
             <>
               {/* Statistics Cards */}
@@ -320,7 +305,7 @@ export default function KelolaSiswa() {
         <StudentCreateModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={fetchData}
+          onSuccess={refetch}
           userRole="GURU"
         />
       </div>

@@ -3,6 +3,7 @@
 import { useState, memo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Users,
@@ -88,6 +89,34 @@ function Sidebar({ userName = 'Guru', onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const queryClient = useQueryClient();
+
+  const prefetchData = (href) => {
+    // Determine which query to prefetch based on href
+    if (href === '/guru/siswa') {
+      queryClient.prefetchQuery({
+        queryKey: ['guru-siswa'],
+        queryFn: async () => {
+          const res = await fetch('/api/guru/kelas');
+          const data = await res.json();
+          const klasIds = (data.kelas || []).map(k => k.id).join(',');
+          if (klasIds) {
+            const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`);
+            return siswaRes.json();
+          }
+          return data;
+        }
+      });
+    } else if (href === '/guru') {
+      queryClient.prefetchQuery({
+        queryKey: ['guru-dashboard-stats'],
+        queryFn: async () => {
+          const res = await fetch('/api/guru/dashboard/summary');
+          return res.json();
+        }
+      });
+    }
+  };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
@@ -160,6 +189,7 @@ function Sidebar({ userName = 'Guru', onLogout }) {
                     <Link
                       href={item.href}
                       onClick={() => setIsOpen(false)}
+                      onMouseEnter={() => prefetchData(item.href)}
                       className={`
                         flex items-center gap-2.5 lg:gap-3 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-lg transition-all
                         ${isActive

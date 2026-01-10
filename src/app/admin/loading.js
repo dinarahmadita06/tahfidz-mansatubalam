@@ -1,5 +1,5 @@
-import LoadingIndicator from "@/components/shared/LoadingIndicator";
+import { PageSkeleton } from "@/components/shared/Skeleton";
 
 export default function Loading() {
-  return <LoadingIndicator fullPage text="Memuat halaman admin..." />;
+  return <PageSkeleton />;
 }
