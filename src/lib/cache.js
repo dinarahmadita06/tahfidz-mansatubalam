@@ -1,32 +1,39 @@
 // Simple in-memory cache utility
 const cache = new Map();
-const CACHE_DURATION = 300000; // 5 minutes in milliseconds
+const DEFAULT_CACHE_DURATION = 300000; // 5 minutes in milliseconds
+const STATS_CACHE_DURATION = 60000; // 60 seconds for stats
 
 // Function to get cached data
 export function getCachedData(key) {
   const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+  if (cached && Date.now() - cached.timestamp < cached.duration) {
     return cached.data;
   }
+  cache.delete(key); // Clean up expired cache
   return null;
 }
 
-// Function to set cached data
-export function setCachedData(key, data) {
+// Function to set cached data with optional custom duration (in seconds)
+export function setCachedData(key, data, durationSeconds = null) {
+  const duration = durationSeconds 
+    ? durationSeconds * 1000 
+    : DEFAULT_CACHE_DURATION;
+  
   cache.set(key, {
     data,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    duration
   });
 }
 
 // Function to invalidate specific cache key
 export function invalidateCache(key) {
   cache.delete(key);
-  console.log(`Invalidated cache key: ${key}`);
+  console.log(`✨ Invalidated cache key: ${key}`);
 }
 
 // Function to clear all cache
 export function clearAllCache() {
   cache.clear();
-  console.log('Cleared all cache');
+  console.log('🧹 Cleared all cache');
 }

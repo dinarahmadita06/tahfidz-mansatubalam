@@ -30,6 +30,11 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Signature not found' }, { status: 404 });
     }
 
+    // Handle Vercel Blob URLs
+    if (signaturePath.startsWith('http')) {
+      return NextResponse.redirect(signaturePath);
+    }
+
     // Ensure the path is within the public directory
     const fullPath = path.join(process.cwd(), 'public', signaturePath);
     
