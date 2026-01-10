@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
+import { useQuery } from '@tanstack/react-query';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import AktivitasTerkiniWidget from '@/components/siswa/AktivitasTerkiniWidget';
 import StudentDashboardContent from '@/components/dashboard/StudentDashboardContent';
+import { PageSkeleton } from '@/components/shared/Skeleton';
 import {
   BookMarked,
   Target,
@@ -14,7 +16,6 @@ import Link from 'next/link';
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 
 // ===== HELPER FUNCTIONS =====
-// Extract first name from full name
 const getFirstName = (fullName) => {
   if (!fullName) return 'Siswa';
   return fullName.split(' ')[0];
@@ -23,62 +24,60 @@ const getFirstName = (fullName) => {
 // ===== MAIN COMPONENT =====
 export default function DashboardSiswa() {
   const { data: session } = useSession();
-  const [currentTime, setCurrentTime] = useState('');
-  const [greeting, setGreeting] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
-  const [siswaId, setSiswaId] = useState(null);
-  const [stats, setStats] = useState({
-    hafalanSelesai: 0,
-    totalHafalan: 0,
-    rataRataNilai: 0,
-    catatanGuru: 0,
-  });
 
-  // Greeting and time setup
+  // Greeting and time setup (client-only to avoid hydration mismatch)
   useEffect(() => {
     setIsHydrated(true);
-
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Selamat Pagi');
-    else if (hour < 15) setGreeting('Selamat Siang');
-    else if (hour < 18) setGreeting('Selamat Sore');
-    else setGreeting('Selamat Malam');
-
-    const updateTime = () => {
-      const now = new Date();
-      const options = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      };
-      setCurrentTime(now.toLocaleDateString('id-ID', options));
-    };
-    updateTime();
   }, []);
 
-  // Get siswaId and stats
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetch('/api/siswa/dashboard')
-        .then(r => r.json())
-        .then(data => {
-          if (data.siswaId) {
-            setSiswaId(data.siswaId);
-          }
-          // Also set stats for banner display
-          if (data.stats) {
-            setStats({
-              hafalanSelesai: data.stats.hafalanSelesai || 0,
-              totalHafalan: data.stats.totalHafalan || 0,
-              rataRataNilai: data.stats.rataRataNilai || 0,
-              catatanGuru: data.stats.catatanGuru || 0,
-            });
-          }
-        })
-        .catch(e => console.error(e));
-    }
-  }, [session?.user?.id]);
+  const greeting = useMemo(() => {
+    if (!isHydrated) return '';
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  }, [isHydrated]);
+
+  const currentTime = useMemo(() => {
+    if (!isHydrated) return '';
+    const now = new Date();
+    return now.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }, [isHydrated]);
+
+  // Use React Query for dashboard data
+  const { data, isLoading } = useQuery({
+    queryKey: ['siswa-dashboard-summary'],
+    queryFn: async () => {
+      const res = await fetch('/api/siswa/dashboard');
+      if (!res.ok) throw new Error('Failed to fetch dashboard');
+      return res.json();
+    },
+    enabled: !!session?.user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const siswaId = data?.siswaId;
+  const stats = {
+    hafalanSelesai: data?.stats?.hafalanSelesai || 0,
+    totalHafalan: data?.stats?.totalHafalan || 0,
+    rataRataNilai: data?.stats?.rataRataNilai || 0,
+    catatanGuru: data?.stats?.catatanGuru || 0,
+  };
+
+  if (isLoading) {
+    return (
+      <SiswaLayout>
+        <PageSkeleton />
+      </SiswaLayout>
+    );
+  }
 
   return (
     <SiswaLayout>
