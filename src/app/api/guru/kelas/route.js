@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
+  console.time('[API /guru/kelas]');
   try {
     const session = await auth();
 
@@ -16,26 +17,13 @@ export async function GET() {
       );
     }
 
-    console.log('[API /guru/kelas] User session:', { id: session.user.id, email: session.user.email, name: session.user.name });
+    console.log('[API /guru/kelas] User session:', { id: session.user.id, email: session.user.email });
     
-    const guru = await prisma.guru.findUnique({
-      where: { userId: session.user.id },
-    });
-
-    console.log('[API /guru/kelas] Guru lookup result:', guru ? { id: guru.id } : 'NOT_FOUND');
-    
-    if (!guru) {
-      return NextResponse.json(
-        { message: 'Data guru tidak ditemukan', userId: session.user.id },
-        { status: 404 }
-      );
-    }
-
+    // Combined query to avoid multiple round-trips
     const guruKelas = await prisma.guruKelas.findMany({
       where: {
-        guruId: guru.id,
+        guru: { userId: session.user.id },
         isActive: true
-        // REMOVED: kelas.status: 'AKTIF' - let frontend handle display filtering
       },
       include: {
         kelas: {
@@ -54,10 +42,11 @@ export async function GET() {
       },
     });
 
-    console.log('[API /guru/kelas] GuruKelas found:', guruKelas.length, guruKelas.map(gk => ({ kelasNama: gk.kelas.nama, status: gk.kelas.status, siswaCount: gk.kelas._count.siswa })));
+    console.log('[API /guru/kelas] GuruKelas found:', guruKelas.length);
 
     const kelas = guruKelas.map((gk) => gk.kelas);
 
+    console.timeEnd('[API /guru/kelas]');
     return NextResponse.json({ kelas });
   } catch (error) {
     console.error('Error fetching kelas guru:', error);

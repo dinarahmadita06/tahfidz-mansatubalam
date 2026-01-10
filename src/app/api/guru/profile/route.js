@@ -7,6 +7,7 @@ import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
  * GET - Fetch guru profile
  */
 export async function GET(request) {
+  console.time('[API /guru/profile]');
   try {
     const session = await auth();
     console.log('[GURU PROFILE GET] Session:', session?.user?.id, 'Role:', session?.user?.role);
@@ -52,6 +53,7 @@ export async function GET(request) {
     }
 
     console.log('[GURU PROFILE GET] Success, returning guru data');
+    console.timeEnd('[API /guru/profile]');
     return NextResponse.json(guru);
   } catch (error) {
     console.error('[GURU PROFILE GET] Error:', error);

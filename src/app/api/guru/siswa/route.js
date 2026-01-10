@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic';
  *   - limit: items per page (default: 100)
  */
 export async function GET(request) {
+  console.time('[API /guru/siswa]');
   try {
     const session = await auth();
 
@@ -41,156 +42,75 @@ export async function GET(request) {
       userId: session.user.id 
     });
 
-    // Step 1: Get guru record from user ID
-    const guru = await prisma.guru.findUnique({
-      where: { userId: session.user.id }
-    });
-
-    if (!guru) {
-      console.log('[API /guru/siswa] Guru record not found for userId:', session.user.id);
-      return NextResponse.json({
-        data: [],
-        pagination: { page, limit, totalCount: 0, totalPages: 0 }
-      });
-    }
-
-    console.log('[API /guru/siswa] Found guru:', { guruId: guru.id, userId: session.user.id });
-
-    // Step 2: Get guru's assigned classes (ALL classes, not just AKTIF)
-    // Removed hardcoded status filter - let frontend/UI handle display filtering
-    const guruKelas = await prisma.guruKelas.findMany({
-      where: {
-        guruId: guru.id,
-        isActive: true
-        // REMOVED: kelas.status: 'AKTIF' - this was causing data to disappear
-      },
-      select: {
-        kelasId: true
-      }
-    });
-
-    const aktivKelasIds = guruKelas.map(gk => gk.kelasId);
-    console.log('[API /guru/siswa] Guru aktif kelas:', aktivKelasIds);
-
-    // If guru has no active classes, return empty
-    if (aktivKelasIds.length === 0) {
-      console.log('[API /guru/siswa] Guru has no active kelas');
-      return NextResponse.json({
-        data: [],
-        pagination: {
-          page,
-          limit,
-          totalCount: 0,
-          totalPages: 0
+    // Combined where clause to find students from guru's active classes
+    const baseWhere = {
+      kelas: {
+        guruKelas: {
+          some: {
+            guru: { userId: session.user.id },
+            isActive: true
+          }
         }
-      });
-    }
-
-    // Step 3: Parse kelasIds parameter properly
-    // Handle both comma-separated and array formats
-    let targetKelasIds = aktivKelasIds;
-    
-    if (kelasIdsParam) {
-      let requestedIds = [];
-      
-      // Parse comma-separated string: "id1,id2,id3"
-      if (typeof kelasIdsParam === 'string') {
-        requestedIds = kelasIdsParam
-          .split(',')
-          .map(id => id.trim())
-          .filter(id => id.length > 0);
-      } 
-      // Handle array format (if passed as array)
-      else if (Array.isArray(kelasIdsParam)) {
-        requestedIds = kelasIdsParam
-          .map(id => String(id).trim())
-          .filter(id => id.length > 0);
-      }
-      
-      console.log('[API /guru/siswa] Requested kelasIds:', requestedIds);
-      
-      // Filter to only allow kelas that guru actually teaches AND that are AKTIF
-      targetKelasIds = aktivKelasIds.filter(id => requestedIds.includes(id));
-      
-      console.log('[API /guru/siswa] After filtering with kelasIds param:', targetKelasIds);
-      
-      // If requested IDs don't match guru's classes, return 400
-      if (requestedIds.length > 0 && targetKelasIds.length === 0) {
-        console.warn('[API /guru/siswa] Requested kelas IDs do not match guru active classes');
-        return NextResponse.json({
-          error: 'Kelas yang diminta tidak valid atau tidak diampu',
-          data: [],
-          pagination: { page, limit, totalCount: 0, totalPages: 0 }
-        }, { status: 400 });
-      }
-    }
-
-    // Step 4: Build where clause for siswa
-    let whereClause = {
-      kelasId: {
-        in: targetKelasIds
       }
     };
 
+    // If specific kelasIds are requested, add them to the filter
+    if (kelasIdsParam) {
+      const requestedIds = kelasIdsParam.split(',').map(id => id.trim()).filter(Boolean);
+      if (requestedIds.length > 0) {
+        baseWhere.kelasId = { in: requestedIds };
+      }
+    }
+
     // Add search filter if provided
+    let whereClause = { ...baseWhere };
     if (search) {
-      whereClause.AND = [
-        {
-          kelasId: {
-            in: targetKelasIds
-          }
-        },
-        {
-          OR: [
-            { user: { name: { contains: search, mode: 'insensitive' } } },
-            { nis: { contains: search } },
-            { user: { email: { contains: search, mode: 'insensitive' } } }
-          ]
-        }
+      whereClause.OR = [
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { nis: { contains: search } },
+        { user: { email: { contains: search, mode: 'insensitive' } } }
       ];
     }
 
     console.log('[API /guru/siswa] Query whereClause:', JSON.stringify(whereClause, null, 2));
 
-    // Step 5: Get siswa count and list
-    const totalCount = await prisma.siswa.count({ where: whereClause });
-    console.log('[API /guru/siswa] Total count:', totalCount);
-
-    const totalPages = Math.ceil(totalCount / limit);
-
-    const siswa = await prisma.siswa.findMany({
-      where: whereClause,
-      skip: (page - 1) * limit,
-      take: limit,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            isActive: true,
-            createdAt: true
+    // Step 5: Get siswa count and list in parallel
+    const [totalCount, siswa] = await Promise.all([
+      prisma.siswa.count({ where: whereClause }),
+      prisma.siswa.findMany({
+        where: whereClause,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              isActive: true,
+              createdAt: true
+            }
+          },
+          kelas: {
+            select: {
+              id: true,
+              nama: true,
+              status: true
+            }
+          },
+          _count: {
+            select: {
+              hafalan: true
+            }
           }
         },
-        kelas: {
-          select: {
-            id: true,
-            nama: true,
-            status: true
-          }
-        },
-        _count: {
-          select: {
-            hafalan: true
-          }
+        orderBy: {
+          createdAt: 'desc'
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+      })
+    ]);
 
-    console.log('[API /guru/siswa] Siswa returned:', siswa.length);
+    console.log('[API /guru/siswa] Total count:', totalCount, 'Siswa returned:', siswa.length);
     
     // Include hafalan count in response
     const transformedSiswa = siswa.map(s => ({
@@ -208,6 +128,7 @@ export async function GET(request) {
       }
     };
 
+    console.timeEnd('[API /guru/siswa]');
     return NextResponse.json(responseData);
   } catch (error) {
     console.error('[API /guru/siswa] Error:', error.message);
