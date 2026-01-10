@@ -1,9 +1,7 @@
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 // Helper function to get image dimensions from PNG buffer
 function getPNGDimensions(buffer) {
@@ -32,31 +30,28 @@ export async function POST(request) {
       return NextResponse.json({ error: 'File harus disediakan' }, { status: 400 });
     }
 
-    // Create uploads directory if not exists
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'signatures');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
     // Generate unique filename
     const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop();
-    const fileName = `ttd-${session.user.id}-${timestamp}.${fileExtension}`;
-    const filePath = join(uploadsDir, fileName);
+    const fileName = `signatures/ttd-${session.user.id}-${timestamp}.${fileExtension}`;
 
-    // Convert file to buffer and save
+    // Convert file to buffer for dimensions (optional, but kept for legacy)
     const buffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(buffer);
-    await writeFile(filePath, Buffer.from(uint8Array));
-
-    const relativePath = `/uploads/signatures/${fileName}`;
     const dimensions = getPNGDimensions(buffer);
 
-    // Update user record - but only if user actually has fields in database
+    // Upload to Vercel Blob
+    const blob = await put(fileName, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
+
+    const finalUrl = blob.url;
+
+    // Update user record
     try {
       const updateData = {
-        signatureUrl: relativePath,
-        ttdUrl: relativePath  // Also update ttdUrl for compatibility
+        signatureUrl: finalUrl,
+        ttdUrl: finalUrl
       };
       
       await prisma.user.update({
@@ -73,7 +68,7 @@ export async function POST(request) {
       await prisma.adminSignature.upsert({
         where: { type },
         update: {
-          signatureData: relativePath,
+          signatureData: finalUrl,
           fileName: file.name,
           fileSize: file.size,
           imageWidth: dimensions.width,
@@ -82,7 +77,7 @@ export async function POST(request) {
         },
         create: {
           type,
-          signatureData: relativePath,
+          signatureData: finalUrl,
           fileName: file.name,
           fileSize: file.size,
           imageWidth: dimensions.width,
@@ -94,7 +89,7 @@ export async function POST(request) {
     return NextResponse.json({ 
       success: true,
       message: 'Tanda tangan berhasil diupload',
-      signatureUrl: relativePath
+      signatureUrl: finalUrl
     });
 
   } catch (error) {

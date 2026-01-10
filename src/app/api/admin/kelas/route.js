@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
-import { invalidateCache } from '@/lib/cache';
+import { invalidateCache, getCachedData, setCachedData } from '@/lib/cache';
 
 export async function POST(request) {
   try {
@@ -204,11 +204,25 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.time('GET /api/admin/kelas');
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const perPage = parseInt(searchParams.get('perPage') || '10');
     const page = parseInt(searchParams.get('page') || '1');
     const search = searchParams.get('search') || '';
+
+    // Build cache key with pagination
+    const cacheKey = search
+      ? `kelas-list-search-${search}-page-${page}`
+      : `kelas-list-all-page-${page}`;
+
+    // Check cache
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      console.timeEnd('GET /api/admin/kelas');
+      return NextResponse.json(cachedData);
+    }
 
     // Build where clause for search
     let whereClause = {};
@@ -221,15 +235,22 @@ export async function GET(request) {
       };
     }
 
-    // Fetch total count
+    // Parallel: count + findMany
+    console.time('kelas-count-query');
     const total = await prisma.kelas.count({
       where: whereClause
     });
+    console.timeEnd('kelas-count-query');
 
     // Fetch paginated kelas
+    console.time('kelas-findMany-query');
     const kelas = await prisma.kelas.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        nama: true,
+        targetJuz: true,
+        createdAt: true,
         tahunAjaran: {
           select: {
             nama: true,
@@ -238,9 +259,11 @@ export async function GET(request) {
         },
         guruKelas: {
           where: { isActive: true },
-          include: {
+          select: {
+            id: true,
             guru: {
-              include: {
+              select: {
+                id: true,
                 user: {
                   select: {
                     id: true,
@@ -261,8 +284,9 @@ export async function GET(request) {
       take: perPage,
       orderBy: { createdAt: 'desc' }
     });
+    console.timeEnd('kelas-findMany-query');
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: kelas,
       pagination: {
@@ -271,7 +295,13 @@ export async function GET(request) {
         total,
         totalPages: Math.ceil(total / perPage)
       }
-    });
+    };
+
+    // Cache response
+    setCachedData(cacheKey, responseData);
+
+    console.timeEnd('GET /api/admin/kelas');
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching kelas:', error);
     return NextResponse.json(

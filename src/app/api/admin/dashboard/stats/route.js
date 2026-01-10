@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { getCachedData, setCachedData } from '@/lib/cache';
 
 // Mark this as a dynamic route - do not call during build
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// GET dashboard stats
+// GET dashboard stats with aggressive caching (60 seconds)
 export async function GET(request) {
   try {
     const session = await auth();
@@ -15,74 +16,96 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Fetching fresh dashboard stats from database');
+    console.time('GET /api/admin/dashboard/stats');
 
-    // Get total counts
+    // CACHE: Dashboard stats can be cached for 60 seconds (non-realtime data)
+    const cacheKey = 'dashboard-stats-cache';
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      console.log('📦 Using cached dashboard stats');
+      console.timeEnd('GET /api/admin/dashboard/stats');
+      return NextResponse.json(cachedData, {
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+        }
+      });
+    }
+
+    console.log('📊 Fetching fresh dashboard stats from database');
+
+    // OPTIMIZATION 1: Parallel basic counts
+    console.time('parallel-counts');
     const [
       totalGuru,
       totalSiswa,
-      totalKelasAktif,
       totalOrangTua,
-      totalHafalan,
-      tahunAjaranAktif,
-      siswaMenungguValidasi
+      siswaMenungguValidasi,
+      tahunAjaranAktif
     ] = await Promise.all([
       prisma.guru.count(),
       prisma.siswa.count({
         where: { status: 'approved' }
       }),
-      prisma.kelas.count({
-        where: {
-          tahunAjaran: {
-            isActive: true
-          }
-        }
-      }),
       prisma.orangTua.count(),
-      prisma.hafalan.count({
-        where: {
-          siswa: {
-            status: 'approved'
-          }
-        }
+      prisma.siswa.count({
+        where: { status: 'pending' }
       }),
       prisma.tahunAjaran.findFirst({
         where: { isActive: true }
-      }),
-      prisma.siswa.count({
-        where: { status: 'pending' }
       })
     ]);
+    console.timeEnd('parallel-counts');
 
-    // Get hafalan stats per kelas
+    // OPTIMIZATION 2: Get kelas aktif count efficiently
+    console.time('kelas-count-query');
+    const totalKelasAktif = await prisma.kelas.count({
+      where: {
+        tahunAjaran: {
+          isActive: true
+        }
+      }
+    });
+    console.timeEnd('kelas-count-query');
+
+    // OPTIMIZATION 3: Get hafalan count efficiently
+    console.time('hafalan-count-query');
+    const totalHafalan = await prisma.hafalan.count({
+      where: {
+        siswa: {
+          status: 'approved'
+        }
+      }
+    });
+    console.timeEnd('hafalan-count-query');
+
+    // OPTIMIZATION 4: Get hafalan stats per kelas (only essential data)
+    console.time('kelas-hafalan-stats');
     const kelasWithHafalan = await prisma.kelas.findMany({
       where: {
         tahunAjaran: {
           isActive: true
         }
       },
-      include: {
+      select: {
+        id: true,
+        nama: true,
+        targetJuz: true,
         siswa: {
           where: {
             status: 'approved'
           },
-          include: {
+          select: {
+            id: true,
             hafalan: {
               select: {
-                juz: true,
-                nilaiAkhir: true
+                juz: true
               }
             }
-          }
-        },
-        targetHafalan: {
-          where: {
-            bulan: new Date().getMonth() + 1,
-            tahun: new Date().getFullYear()
           }
         }
       }
     });
+    console.timeEnd('kelas-hafalan-stats');
 
     // Calculate hafalan progress per kelas
     const hafalanPerKelas = kelasWithHafalan.map(kelas => {
@@ -107,7 +130,8 @@ export async function GET(request) {
       };
     });
 
-    // Get recent hafalan activity (last 7 days)
+    // OPTIMIZATION 5: Get recent hafalan activity (last 7 days)
+    console.time('recent-hafalan-query');
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -118,8 +142,10 @@ export async function GET(request) {
         }
       }
     });
+    console.timeEnd('recent-hafalan-query');
 
-    // Get kehadiran stats (last 30 days)
+    // OPTIMIZATION 6: Get kehadiran stats (last 30 days)
+    console.time('kehadiran-stats-query');
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -132,12 +158,14 @@ export async function GET(request) {
       },
       _count: true
     });
+    console.timeEnd('kehadiran-stats-query');
 
     const totalPresensi = presensiStats.reduce((sum, stat) => sum + stat._count, 0);
     const hadirCount = presensiStats.find(s => s.status === 'HADIR')?._count || 0;
     const kehadiranPercentage = totalPresensi > 0 ? Math.round((hadirCount / totalPresensi) * 100) : 0;
 
-    // Calculate average nilai hafalan from Penilaian table for approved students
+    // OPTIMIZATION 7: Calculate average nilai hafalan
+    console.time('avg-penilaian-query');
     const avgPenilaian = await prisma.penilaian.aggregate({
       _avg: {
         nilaiAkhir: true
@@ -151,10 +179,12 @@ export async function GET(request) {
         }
       }
     });
+    console.timeEnd('avg-penilaian-query');
 
     const rataRataNilai = avgPenilaian._avg.nilaiAkhir || 0;
 
-    // Get kelas yang belum update hafalan minggu ini
+    // OPTIMIZATION 8: Get kelas yang belum update hafalan minggu ini
+    console.time('kelas-not-updated-query');
     const startOfWeek = new Date();
     startOfWeek.setDate(startOfWeek.getDate() - 7);
 
@@ -179,6 +209,7 @@ export async function GET(request) {
         id: true
       }
     });
+    console.timeEnd('kelas-not-updated-query');
 
     const kelasWithRecentHafalanIds = new Set(kelasWithRecentHafalan.map(k => k.id));
     const kelasBelumUpdate = kelasWithHafalan.filter(k => !kelasWithRecentHafalanIds.has(k.id));
@@ -208,11 +239,13 @@ export async function GET(request) {
       }))
     };
 
+    // Cache for 60 seconds
+    setCachedData(cacheKey, responseData, 60);
+
+    console.timeEnd('GET /api/admin/dashboard/stats');
     return NextResponse.json(responseData, {
       headers: {
-        'Cache-Control': 'no-store, max-age=0, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        'Cache-Control': 'public, max-age=60, s-maxage=60',
       }
     });
   } catch (error) {
