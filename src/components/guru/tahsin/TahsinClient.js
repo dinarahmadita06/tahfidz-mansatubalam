@@ -4,11 +4,36 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Volume2, Search, Users, BookOpen, Calendar } from 'lucide-react';
 
-// TahsinFilterBar Component
-function TahsinFilterBar({ searchQuery, onSearchChange }) {
+// LevelFilter Component
+function LevelFilter({ selected, onSelect }) {
+  const levels = ['Semua', 'X', 'XI', 'XII'];
+  
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 flex flex-col md:flex-row gap-4 items-center">
-      <div className="relative w-full max-w-xl">
+    <div className="flex bg-slate-100/50 p-1 rounded-xl border border-slate-200 w-fit shrink-0">
+      {levels.map((level) => (
+        <button
+          key={level}
+          onClick={() => onSelect(level)}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+            selected === level
+              ? 'bg-white text-emerald-600 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+          }`}
+        >
+          {level}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// TahsinFilterBar Component
+function TahsinFilterBar({ searchQuery, onSearchChange, selectedLevel, onLevelChange }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <LevelFilter selected={selectedLevel} onSelect={onLevelChange} />
+      
+      <div className="relative w-full max-w-sm">
         <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         <input
           type="text"
@@ -56,18 +81,37 @@ function TahsinClassCard({ kelas }) {
 
 export default function TahsinClient({ initialClasses }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('Semua');
 
   const filteredKelas = useMemo(() => {
-    return initialClasses.filter(kelas =>
-      kelas.nama.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [initialClasses, searchQuery]);
+    return initialClasses.filter(kelas => {
+      // 1. Search Filter
+      const matchesSearch = kelas.nama.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // 2. Level Filter
+      let matchesLevel = true;
+      if (selectedLevel !== 'Semua') {
+        const name = kelas.nama.trim();
+        if (selectedLevel === 'X') {
+          matchesLevel = name.startsWith('X ') || name === 'X';
+        } else if (selectedLevel === 'XI') {
+          matchesLevel = name.startsWith('XI ') || name === 'XI';
+        } else if (selectedLevel === 'XII') {
+          matchesLevel = name.startsWith('XII ') || name === 'XII';
+        }
+      }
+      
+      return matchesSearch && matchesLevel;
+    });
+  }, [initialClasses, searchQuery, selectedLevel]);
 
   return (
     <div className="space-y-6">
       <TahsinFilterBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        selectedLevel={selectedLevel}
+        onLevelChange={setSelectedLevel}
       />
 
       <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3">
