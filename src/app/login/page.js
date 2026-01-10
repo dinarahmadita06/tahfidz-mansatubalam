@@ -154,7 +154,7 @@ export default function LoginPage() {
               {/* Username/Email/HP Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Username / Email / No HP
+                  Username 
                 </label>
                 <div className="relative">
                   <Mail size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600" />
