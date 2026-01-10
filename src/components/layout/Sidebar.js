@@ -92,30 +92,8 @@ function Sidebar({ userName = 'Guru', onLogout }) {
   const queryClient = useQueryClient();
 
   const prefetchData = (href) => {
-    // Determine which query to prefetch based on href
-    if (href === '/guru/siswa') {
-      queryClient.prefetchQuery({
-        queryKey: ['guru-siswa'],
-        queryFn: async () => {
-          const res = await fetch('/api/guru/kelas');
-          const data = await res.json();
-          const klasIds = (data.kelas || []).map(k => k.id).join(',');
-          if (klasIds) {
-            const siswaRes = await fetch(`/api/guru/siswa?kelasIds=${klasIds}`);
-            return siswaRes.json();
-          }
-          return data;
-        }
-      });
-    } else if (href === '/guru') {
-      queryClient.prefetchQuery({
-        queryKey: ['guru-dashboard-stats'],
-        queryFn: async () => {
-          const res = await fetch('/api/guru/dashboard/summary');
-          return res.json();
-        }
-      });
-    }
+    // RSC and Streaming pages don't need React Query prefetching anymore
+    return;
   };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
