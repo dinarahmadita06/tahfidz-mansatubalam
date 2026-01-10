@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { calcAverageScore, calcStatisticAverage, normalizeNilaiAkhir } from '@/lib/helpers/calcAverageScore';
 import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
+import { updateSiswaLatestJuz, surahNameToNumber, getJuzFromSurahAyah } from '@/lib/quranUtils';
 
 export async function GET(request) {
   try {
@@ -185,6 +186,12 @@ export async function POST(request) {
     // ✅ Calculate nilai akhir with consistent rounding using shared utility
     const nilaiAkhir = calcAverageScore(tajwid, kelancaran, makhraj, implementasi, 2);
 
+    // ✅ Resolve Surah Number and Juz
+    const resolvedSurahNumber = surahNameToNumber[surah] || null;
+    const mappedJuz = resolvedSurahNumber ? getJuzFromSurahAyah(resolvedSurahNumber, ayatMulai) : null;
+
+    console.log(`[DEBUG/PENILAIAN] Siswa: ${siswaId}, Surah: ${surah} (${resolvedSurahNumber}), Ayah: ${ayatMulai}-${ayatSelesai}, Mapped Juz: ${mappedJuz}`);
+
     // ✅ UPSERT: Check if hafalan exists for this siswa + tanggal
     // Query by hafalan.tanggal (not penilaian.createdAt) to prevent duplicates
     const existingHafalan = await prisma.hafalan.findFirst({
@@ -207,6 +214,8 @@ export async function POST(request) {
         data: {
           tanggal: normalizedDate,
           surah,
+          surahNumber: resolvedSurahNumber,
+          juz: mappedJuz || existingHafalan.juz,
           ayatMulai,
           ayatSelesai,
           ...(cleanedSurahTambahan.length > 0 && { surahTambahan: cleanedSurahTambahan }),
@@ -251,8 +260,9 @@ export async function POST(request) {
           siswaId,
           guruId: guru.id,
           tanggal: normalizedDate,
-          juz: 1,
+          juz: mappedJuz,
           surah,
+          surahNumber: resolvedSurahNumber,
           ayatMulai,
           ayatSelesai,
           ...(cleanedSurahTambahan.length > 0 && { surahTambahan: cleanedSurahTambahan }),
@@ -322,6 +332,9 @@ export async function POST(request) {
         implementasi
       }
     });
+
+    // ✅ 🎯 UPDATE SISWA PROGRESS SUMMARY
+    await updateSiswaLatestJuz(prisma, siswaId);
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { getJuzFromSurahAyah } from '@/lib/helpers/quran-mapping';
+import { updateSiswaLatestJuz, parseSurahRange } from '@/lib/quranUtils';
 
 // GET - Fetch hafalan
 export async function GET(request) {
@@ -118,29 +119,54 @@ export async function POST(request) {
     // 🎯 AUTO-MAP JUZ: Jika juz tidak disediakan, hitung otomatis
     let mappedJuz = juz ? parseInt(juz) : null;
     let resolvedSurahNumber = surahNumber ? parseInt(surahNumber) : null;
+    let finalSurahName = surah;
+    let finalAyatMulai = parseInt(ayatMulai);
+    let finalAyatSelesai = parseInt(ayatSelesai);
+
+    // 🎯 PARSE SURAH STRING: Jika surah mengandung range (e.g. "Ali Imran (1-198)")
+    const parsedRanges = parseSurahRange(surah);
+    let extraSurahsFromParsing = [];
+    
+    if (parsedRanges.length > 0) {
+      // First range goes to main fields
+      const firstRange = parsedRanges[0];
+      resolvedSurahNumber = firstRange.surahNumber || resolvedSurahNumber;
+      if (firstRange.ayatMulai) finalAyatMulai = firstRange.ayatMulai;
+      if (firstRange.ayatSelesai) finalAyatSelesai = firstRange.ayatSelesai;
+      finalSurahName = firstRange.surahName || finalSurahName;
+      
+      // Additional ranges go to surahTambahan
+      if (parsedRanges.length > 1) {
+        extraSurahsFromParsing = parsedRanges.slice(1).map(r => ({
+          surah: r.surahName,
+          surahNumber: r.surahNumber,
+          ayatMulai: r.ayatMulai || 1,
+          ayatSelesai: r.ayatSelesai || 1
+        }));
+      }
+    } else {
+      // Fallback: If parsing fails and it's not a simple surah name from the list
+      // Check if it's a known surah name. If not, maybe it was a malformed range.
+      console.warn(`[PARSE WARNING] Surah string "${surah}" could not be parsed as a range.`);
+    }
+
+    if (!resolvedSurahNumber && !mappedJuz) {
+       return NextResponse.json(
+         { error: 'Format setoran tidak valid (Nama surah tidak dikenali atau range tidak sesuai)' },
+         { status: 400 }
+       );
+    }
 
     if (!mappedJuz) {
-      console.log(`[AUTO-MAP JUZ] surah="${surah}", surahNumber=${surahNumber}, ayatMulai=${ayatMulai}`);
+      console.log(`[AUTO-MAP JUZ] surah="${finalSurahName}", surahNumber=${resolvedSurahNumber}, ayatMulai=${finalAyatMulai}`);
       
       // Jika ada surahNumber, langsung gunakan untuk mapping
       if (resolvedSurahNumber) {
-        mappedJuz = getJuzFromSurahAyah(resolvedSurahNumber, parseInt(ayatMulai));
+        mappedJuz = getJuzFromSurahAyah(resolvedSurahNumber, finalAyatMulai);
         if (mappedJuz) {
-          console.log(`[AUTO-MAP JUZ] ✅ Mapped: Surah ${resolvedSurahNumber}, Ayah ${ayatMulai} -> Juz ${mappedJuz}`);
+          console.log(`[AUTO-MAP JUZ] ✅ Mapped: Surah ${resolvedSurahNumber}, Ayah ${finalAyatMulai} -> Juz ${mappedJuz}`);
         } else {
-          console.warn(`[AUTO-MAP JUZ] ⚠️ Mapping gagal: Surah ${resolvedSurahNumber}, Ayah ${ayatMulai}`);
-        }
-      } else {
-        // Fallback: Coba parse surah number dari string surah (e.g., "1. Al-Fatihah" -> 1)
-        const match = surah.match(/^(\d+)/);
-        if (match) {
-          resolvedSurahNumber = parseInt(match[1], 10);
-          mappedJuz = getJuzFromSurahAyah(resolvedSurahNumber, parseInt(ayatMulai));
-          if (mappedJuz) {
-            console.log(`[AUTO-MAP JUZ] ✅ Mapped dari surah string: "${surah}" -> Surah ${resolvedSurahNumber} -> Juz ${mappedJuz}`);
-          }
-        } else {
-          console.warn(`[AUTO-MAP JUZ] ⚠️ Tidak bisa parse surah number dari: "${surah}"`);
+          console.warn(`[AUTO-MAP JUZ] ⚠️ Mapping gagal: Surah ${resolvedSurahNumber}, Ayah ${finalAyatMulai}`);
         }
       }
     }
@@ -153,9 +179,9 @@ export async function POST(request) {
 
     // ✅ HELPER: Clean and validate surahTambahan
     const cleanSurahTambahan = (surahArray) => {
-      if (!Array.isArray(surahArray)) return null;
+      if (!Array.isArray(surahArray)) return [];
       
-      const cleaned = surahArray
+      return surahArray
         .filter(item => {
           if (!item.surah || (typeof item.surah === 'string' && !item.surah.trim())) {
             return false;
@@ -165,21 +191,18 @@ export async function POST(request) {
           if (isNaN(ayatMulai) || isNaN(ayatSelesai) || ayatMulai <= 0 || ayatSelesai <= 0) {
             return false;
           }
-          if (ayatMulai > ayatSelesai) {
-            return false;
-          }
           return true;
         })
         .map(item => ({
           surah: typeof item.surah === 'string' ? item.surah.trim() : item.surah,
+          surahNumber: item.surahNumber || null,
           ayatMulai: Number(item.ayatMulai),
           ayatSelesai: Number(item.ayatSelesai)
         }));
-      
-      return cleaned.length > 0 ? cleaned : null;
     };
 
-    const cleanedSurahTambahan = cleanSurahTambahan(surahTambahan);
+    const initialSurahTambahan = Array.isArray(surahTambahan) ? surahTambahan : [];
+    const combinedSurahTambahan = cleanSurahTambahan([...extraSurahsFromParsing, ...initialSurahTambahan]);
 
     // Create hafalan
     const hafalan = await prisma.hafalan.create({
@@ -188,11 +211,11 @@ export async function POST(request) {
         guruId: session.user.guruId,
         tanggal: tanggal ? new Date(tanggal) : new Date(),
         juz: mappedJuz, // Use auto-mapped juz
-        surah,
+        surah: finalSurahName,
         surahNumber: resolvedSurahNumber, // Save numeric surah ID
-        ayatMulai: parseInt(ayatMulai),
-        ayatSelesai: parseInt(ayatSelesai),
-        ...(cleanedSurahTambahan && { surahTambahan: cleanedSurahTambahan }),
+        ayatMulai: finalAyatMulai,
+        ayatSelesai: finalAyatSelesai,
+        surahTambahan: combinedSurahTambahan,
         keterangan: keterangan || null
       },
       include: {
@@ -205,6 +228,9 @@ export async function POST(request) {
         }
       }
     });
+
+    // 🎯 UPDATE SISWA LATEST JUZ
+    await updateSiswaLatestJuz(prisma, siswaId);
 
     return NextResponse.json(hafalan, { status: 201 });
   } catch (error) {
@@ -291,12 +317,44 @@ export async function PUT(request) {
     const cleanedSurahTambahan = cleanSurahTambahan(surahTambahan);
 
     // 🎯 AUTO-MAP JUZ for UPDATE: Jika ada perubahan surah/ayat tapi juz tidak disertakan
+    let finalSurahName = surah;
+    let finalSurahNumber = surahNumber;
+    let finalAyatMulai = ayatMulai ? parseInt(ayatMulai) : undefined;
+    let finalAyatSelesai = ayatSelesai ? parseInt(ayatSelesai) : undefined;
+
+    // 🎯 PARSE SURAH STRING: Jika surah mengandung range (e.g. "Ali Imran (1-198)")
+    let extraSurahsFromParsing = [];
+    if (surah) {
+      const parsedRanges = parseSurahRange(surah);
+      if (parsedRanges.length > 0) {
+        const firstRange = parsedRanges[0];
+        finalSurahNumber = firstRange.surahNumber || finalSurahNumber;
+        if (firstRange.ayatMulai) finalAyatMulai = firstRange.ayatMulai;
+        if (firstRange.ayatSelesai) finalAyatSelesai = firstRange.ayatSelesai;
+        finalSurahName = firstRange.surahName || finalSurahName;
+
+        // Additional ranges go to surahTambahan
+        if (parsedRanges.length > 1) {
+          extraSurahsFromParsing = parsedRanges.slice(1).map(r => ({
+            surah: r.surahName,
+            surahNumber: r.surahNumber,
+            ayatMulai: r.ayatMulai || 1,
+            ayatSelesai: r.ayatSelesai || 1
+          }));
+        }
+      }
+    }
+
+    const initialSurahTambahan = Array.isArray(surahTambahan) ? surahTambahan : [];
+    const combinedSurahTambahan = cleanSurahTambahan([...extraSurahsFromParsing, ...initialSurahTambahan]);
+
     let updateData = {
       tanggal: tanggal ? new Date(tanggal) : undefined,
-      surah: surah || undefined,
-      ayatMulai: ayatMulai ? parseInt(ayatMulai) : undefined,
-      ayatSelesai: ayatSelesai ? parseInt(ayatSelesai) : undefined,
-      ...(cleanedSurahTambahan && { surahTambahan: cleanedSurahTambahan }),
+      surah: finalSurahName || undefined,
+      surahNumber: finalSurahNumber ? parseInt(finalSurahNumber) : undefined,
+      ayatMulai: finalAyatMulai,
+      ayatSelesai: finalAyatSelesai,
+      surahTambahan: combinedSurahTambahan.length > 0 ? combinedSurahTambahan : undefined,
       keterangan: keterangan || null
     };
 
@@ -309,26 +367,14 @@ export async function PUT(request) {
       });
 
       if (currentHafalan) {
-        const finalSurah = surah || currentHafalan.surah;
-        const finalSurahNumber = surahNumber || currentHafalan.surahNumber;
-        const finalAyatMulai = ayatMulai ? parseInt(ayatMulai) : currentHafalan.ayatMulai;
+        const activeSurahNum = finalSurahNumber || currentHafalan.surahNumber;
+        const activeAyatMulai = finalAyatMulai || currentHafalan.ayatMulai;
 
-        if (finalSurahNumber) {
-          const mappedJuz = getJuzFromSurahAyah(finalSurahNumber, finalAyatMulai);
+        if (activeSurahNum) {
+          const mappedJuz = getJuzFromSurahAyah(activeSurahNum, activeAyatMulai);
           if (mappedJuz) {
-            console.log(`[AUTO-MAP JUZ UPDATE] ✅ Mapped: Surah ${finalSurahNumber}, Ayah ${finalAyatMulai} -> Juz ${mappedJuz}`);
+            console.log(`[AUTO-MAP JUZ UPDATE] ✅ Mapped: Surah ${activeSurahNum}, Ayah ${activeAyatMulai} -> Juz ${mappedJuz}`);
             updateData.juz = mappedJuz;
-          }
-        } else {
-          const match = finalSurah.match(/^(\d+)/);
-          if (match) {
-            const parsedSurahNum = parseInt(match[1], 10);
-            const mappedJuz = getJuzFromSurahAyah(parsedSurahNum, finalAyatMulai);
-            if (mappedJuz) {
-              console.log(`[AUTO-MAP JUZ UPDATE] ✅ Mapped dari surah string: "${finalSurah}" -> Juz ${mappedJuz}`);
-              updateData.juz = mappedJuz;
-              updateData.surahNumber = parsedSurahNum;
-            }
           }
         }
       }
@@ -359,6 +405,9 @@ export async function PUT(request) {
         }
       }
     });
+
+    // 🎯 UPDATE SISWA LATEST JUZ
+    await updateSiswaLatestJuz(prisma, hafalan.siswaId);
 
     return NextResponse.json(hafalan);
   } catch (error) {
@@ -401,6 +450,16 @@ export async function DELETE(request) {
       );
     }
 
+    // Get siswaId before deletion
+    const hafalan = await prisma.hafalan.findUnique({
+      where: { id },
+      select: { siswaId: true }
+    });
+
+    if (!hafalan) {
+      return NextResponse.json({ error: 'Hafalan tidak ditemukan' }, { status: 404 });
+    }
+
     // Delete hafalan (will cascade delete penilaian)
     await prisma.hafalan.delete({
       where: {
@@ -408,6 +467,9 @@ export async function DELETE(request) {
         guruId: session.user.guruId
       }
     });
+
+    // 🎯 UPDATE SISWA LATEST JUZ
+    await updateSiswaLatestJuz(prisma, hafalan.siswaId);
 
     return NextResponse.json({ message: 'Hafalan berhasil dihapus' });
   } catch (error) {
