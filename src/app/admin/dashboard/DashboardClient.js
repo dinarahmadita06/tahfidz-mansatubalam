@@ -233,9 +233,9 @@ function ProgressBar({ percentage, label, total, achieved, color = 'emerald' }) 
 // MAIN COMPONENT
 // ============================================================================
 
-export default function AdminDashboardPage() {
+export default function AdminDashboardPage({ initialData }) {
   const { data: session } = useSession();
-  const [data, setData] = useState({
+  const [data, setData] = useState(initialData || {
     stats: {
       totalSiswa: 0,
       siswaAktif: 0,
@@ -245,53 +245,27 @@ export default function AdminDashboardPage() {
       rataRataNilai: 0,
       rataRataKehadiran: 0,
     },
+    statistikTarget: {
+      kelasTop5: [],
+      siswa: { mencapai: 0, belum: 0, total: 0, persen: 0 }
+    },
+    pengumuman: [],
+    pendingCount: 0,
+    tahunAjaranAktif: null
   });
-  const [pengumuman, setPengumuman] = useState([]);
-  const [pengumumanLoading, setPengumumanLoading] = useState(true);
-  const [chartData, setChartData] = useState({
-    siswaStats: { mencapai: 0, belum: 0 },
-    kelasStats: { mencapai: 0, total: 0, persentase: 0 },
-  });
-  const [loading, setLoading] = useState(true);
+
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
-
-  const fetchPendingCount = async () => {
-    try {
-      const res = await fetch('/api/admin/siswa?status=pending&limit=1');
-      if (res.ok) {
-        const data = await res.json();
-        setPendingCount(data.pagination?.totalCount || 0);
-      }
-    } catch (error) {
-      // Silently fail
-    }
-  };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/dashboard'); 
+      const res = await fetch('/api/admin/dashboard/summary'); 
       if (!res.ok) throw new Error('Gagal mengambil data dashboard');
       const result = await res.json();
       setData(result);
-      
-      // Map server data to chart data
-      if (result.stats) {
-        setChartData({
-          siswaStats: { 
-            mencapai: result.stats.siswaMencapaiTarget || 0, 
-            belum: (result.stats.siswaAktif || 0) - (result.stats.siswaMencapaiTarget || 0) 
-          },
-          kelasStats: { 
-            mencapai: result.stats.kelasMencapaiTarget || 0, 
-            total: result.stats.totalKelas || 0, 
-            persentase: result.stats.persentaseSiswaMencapaiTarget || 0 
-          },
-        });
-      }
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -300,32 +274,18 @@ export default function AdminDashboardPage() {
     }
   };
 
-
-  const fetchPengumuman = async () => {
-    try {
-      setPengumumanLoading(true);
-      const res = await fetch('/api/pengumuman?limit=5');
-      if (res.ok) {
-        const data = await res.json();
-        setPengumuman(data.pengumuman || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch pengumuman', error);
-    } finally {
-      setPengumumanLoading(false);
-    }
-  };
-
   useEffect(() => {
     setIsClient(true);
-    fetchDashboardData();
-    fetchPendingCount();
-    fetchPengumuman();
-  }, []);
+    if (!initialData) {
+      fetchDashboardData();
+    }
+  }, [initialData]);
 
   if (!isClient) {
-    return null; // or a loading spinner strictly for client mount
+    return null;
   }
+
+  const { stats, pengumuman, pendingCount, statistikTarget, tahunAjaranAktif } = data;
 
   return (
     <AdminLayout>
@@ -361,7 +321,7 @@ export default function AdminDashboardPage() {
           <MotivationCard />
 
           {/* 3. Announcement Card - FULL WIDTH */}
-          <AnnouncementSlider announcements={pengumuman} loading={pengumumanLoading} variant="admin" />
+          <AnnouncementSlider announcements={pengumuman || []} loading={loading} variant="admin" />
 
           {/* 4. Stat Cards - Pastel Transparent + Glow */}
           {!error && (
@@ -373,35 +333,35 @@ export default function AdminDashboardPage() {
                   <StatCard
                     icon={Users}
                     title="Total Siswa"
-                    value={data.stats.totalSiswa || 0}
-                    subtitle={`${data.stats.siswaAktif || 0} aktif`}
+                    value={stats.totalSiswa || 0}
+                    subtitle={`${stats.siswaAktif || 0} aktif`}
                     theme="emerald"
                   />
                   <StatCard
                     icon={UserCog}
                     title="Total Guru"
-                    value={data.stats.totalGuru || 0}
+                    value={stats.totalGuru || 0}
                     subtitle="Guru aktif"
                     theme="amber"
                   />
                   <StatCard
                     icon={BookOpen}
                     title="Total Hafalan"
-                    value={`${data.stats.totalJuz || 0} Juz`}
+                    value={`${stats.totalJuz || 0} Juz`}
                     subtitle="Akumulasi"
                     theme="purple"
                   />
                   <StatCard
                     icon={Award}
                     title="Rata² Nilai"
-                    value={data.stats.rataRataNilai || 0}
+                    value={stats.rataRataNilai || 0}
                     subtitle="Kualitas hafalan"
                     theme="blue"
                   />
                   <StatCard
                     icon={CheckCircle2}
                     title="Rata² Kehadiran"
-                    value={`${data.stats.rataRataKehadiran || 0}%`}
+                    value={`${stats.rataRataKehadiran || 0}%`}
                     subtitle="Tingkat kehadiran"
                     theme="sky"
                   />
@@ -411,7 +371,7 @@ export default function AdminDashboardPage() {
           )}
 
           {/* 5. Target Statistics Section (New) */}
-          <TargetStatisticsSection />
+          <TargetStatisticsSection initialData={statistikTarget} tahunAjaranAktif={tahunAjaranAktif} />
         </div>
     </AdminLayout>
   );

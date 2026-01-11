@@ -1,31 +1,86 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { getCachedData, setCachedData } from '@/lib/cache';
 
 // GET - Mengambil daftar pengumuman
 export async function GET(request) {
+  const startTotal = performance.now();
+  console.log('--- [API ADMIN PENGUMUMAN] REQUEST START ---');
+
   try {
+    const startAuth = performance.now();
     const session = await auth();
+    const endAuth = performance.now();
+    console.log(`[API ADMIN PENGUMUMAN] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
 
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const pengumuman = await prisma.pengumuman.findMany({
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
 
-    return NextResponse.json({ pengumuman });
+    // Cache key
+    const cacheKey = `admin-pengumuman-p${page}-l${limit}`;
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      console.log('[API ADMIN PENGUMUMAN] Returning cached data');
+      return NextResponse.json(cachedData, {
+        headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' }
+      });
+    }
+
+    const startQueries = performance.now();
+    const [totalCount, pengumuman] = await Promise.all([
+      prisma.pengumuman.count(),
+      prisma.pengumuman.findMany({
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          judul: true,
+          isi: true,
+          tanggalMulai: true,
+          tanggalSelesai: true,
+          isPinned: true,
+          createdAt: true,
+          user: {
+            select: {
+              name: true,
+              email: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
+    ]);
+    const endQueries = performance.now();
+    console.log(`[API ADMIN PENGUMUMAN] prisma.findMany: ${(endQueries - startQueries).toFixed(2)} ms`);
+
+    const responseData = { 
+      pengumuman,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    };
+
+    setCachedData(cacheKey, responseData, 30);
+
+    const endTotal = performance.now();
+    console.log(`[API ADMIN PENGUMUMAN] total: ${(endTotal - startTotal).toFixed(2)} ms`);
+    console.log('--- [API ADMIN PENGUMUMAN] REQUEST END ---');
+
+    return NextResponse.json(responseData, {
+      headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' }
+    });
   } catch (error) {
     console.error('Error fetching pengumuman:', error);
     return NextResponse.json(
@@ -115,7 +170,7 @@ export async function POST(request) {
 
     // Log aktivitas
     try {
-      await prisma.logActivity.create({
+      await prisma.activityLog.create({
         data: {
           userId: session.user.id,
           role: session.user.role,
@@ -237,7 +292,7 @@ export async function PUT(request) {
 
     // Log aktivitas
     try {
-      await prisma.logActivity.create({
+      await prisma.activityLog.create({
         data: {
           userId: session.user.id,
           role: session.user.role,
@@ -299,7 +354,7 @@ export async function DELETE(request) {
     });
 
     // Log aktivitas
-    await prisma.logActivity.create({
+    await prisma.activityLog.create({
       data: {
         userId: session.user.id,
         role: session.user.role,

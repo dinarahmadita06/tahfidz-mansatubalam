@@ -9,27 +9,50 @@ import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 const STATUS_AKTIF = 'AKTIF';
 
 export async function GET(request) {
+  const startTotal = performance.now();
+  console.log('--- [API GURU] REQUEST START ---');
   try {
+    const startAuth = performance.now();
     const session = await auth();
+    const endAuth = performance.now();
+    console.log(`[API GURU] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const noCache = searchParams.get('noCache') === 'true';
+
     // Check if we have cached data
     const cacheKey = 'guru-list';
-    const cachedData = getCachedData(cacheKey);
-    
-    if (cachedData) {
-      console.log('Returning cached guru data');
-      return NextResponse.json(cachedData);
+    if (!noCache) {
+      const cachedData = getCachedData(cacheKey);
+      if (cachedData) {
+        console.log('[API GURU] Returning cached guru data');
+        const endTotal = performance.now();
+        console.log(`[API GURU] total (CACHED): ${(endTotal - startTotal).toFixed(2)} ms`);
+        return NextResponse.json(cachedData, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+          }
+        });
+      }
     }
 
-    console.log('Fetching fresh guru data from database');
+    console.log('[API GURU] Fetching fresh guru data from database');
 
+    const startQueries = performance.now();
     // Filter kelas to only AKTIF status in the guruKelas relation
     const guru = await prisma.guru.findMany({
-      include: {
+      select: {
+        id: true,
+        nip: true,
+        jenisKelamin: true,
+        tanggalLahir: true,
+        noTelepon: true,
+        alamat: true,
+        userId: true,
         user: {
           select: {
             id: true,
@@ -45,7 +68,9 @@ export async function GET(request) {
               status: STATUS_AKTIF
             }
           },
-          include: {
+          select: {
+            peran: true,
+            isActive: true,
             kelas: {
               select: {
                 id: true,
@@ -78,11 +103,21 @@ export async function GET(request) {
         }
       }
     });
+    const endQueries = performance.now();
+    console.log(`[API GURU] prisma.findMany: ${(endQueries - startQueries).toFixed(2)} ms`);
 
     // Cache the response
-    setCachedData(cacheKey, guru);
+    setCachedData(cacheKey, guru, 60);
 
-    return NextResponse.json(guru);
+    const endTotal = performance.now();
+    console.log(`[API GURU] total: ${(endTotal - startTotal).toFixed(2)} ms`);
+    console.log('--- [API GURU] REQUEST END ---');
+
+    return NextResponse.json(guru, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+      }
+    });
   } catch (error) {
     console.error('Error fetching guru:', error);
     return NextResponse.json(

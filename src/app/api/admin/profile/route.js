@@ -1,20 +1,41 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { getCachedData, setCachedData } from '@/lib/cache';
+
+// Force Node.js runtime
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // GET - Mengambil data profil admin
 export async function GET(request) {
+  const startTotal = performance.now();
+  
   try {
+    const startAuth = performance.now();
     const session = await auth();
+    const endAuth = performance.now();
+    const authDuration = (endAuth - startAuth).toFixed(2);
 
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = session.user.id;
+    const cacheKey = `admin-profile-${userId}`;
+    
+    // Check cache
+    const cached = getCachedData(cacheKey);
+    if (cached) {
+      console.log(`[API PROFILE] total: ${(performance.now() - startTotal).toFixed(2)} ms (CACHED)`);
+      return NextResponse.json(cached);
+    }
+
     // Ambil data admin dari database
+    const startPrisma = performance.now();
     const admin = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -29,12 +50,15 @@ export async function GET(request) {
         signatureUrl: true
       }
     });
+    const endPrisma = performance.now();
+    const prismaDuration = (endPrisma - startPrisma).toFixed(2);
 
     if (!admin) {
       return NextResponse.json({ error: 'Admin tidak ditemukan' }, { status: 404 });
     }
 
     // Format data profil
+    const startTransform = performance.now();
     const profileData = {
       nama: admin.name,
       email: admin.email,
@@ -58,8 +82,23 @@ export async function GET(request) {
       ttdUrl: admin.ttdUrl,
       signatureUrl: admin.signatureUrl
     };
+    const endTransform = performance.now();
+    const transformDuration = (endTransform - startTransform).toFixed(2);
 
-    return NextResponse.json({ profile: profileData });
+    const response = { profile: profileData };
+    
+    // Cache for 60 seconds
+    setCachedData(cacheKey, response, 60);
+
+    const endTotal = performance.now();
+    const totalDuration = (endTotal - startTotal).toFixed(2);
+
+    console.log(`[API PROFILE] total: ${totalDuration} ms`);
+    console.log(`[API PROFILE] session/auth: ${authDuration} ms`);
+    console.log(`[API PROFILE] prisma.user.findUnique: ${prismaDuration} ms`);
+    console.log(`[API PROFILE] transform response: ${transformDuration} ms`);
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching admin profile:', error);
     return NextResponse.json(

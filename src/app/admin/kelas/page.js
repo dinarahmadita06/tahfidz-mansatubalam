@@ -329,9 +329,8 @@ export default function AdminKelasPage() {
 
   const fetchTahunAjaran = async () => {
     try {
-      const response = await fetch(`/api/tahun-ajaran?t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Pragma': 'no-cache' }
+      const response = await fetch(`/api/tahun-ajaran`, {
+        cache: 'default'
       });
       const result = await response.json();
       const taList = result.data || [];
