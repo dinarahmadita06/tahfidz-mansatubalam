@@ -24,8 +24,11 @@ import { calculateStudentProgress } from '@/lib/services/siswaProgressService';
  * }
  */
 export async function GET(req, { params }) {
+  console.time('SUMMARY_GET_Total');
   try {
+    console.time('SUMMARY_GET_Auth');
     const session = await auth();
+    console.timeEnd('SUMMARY_GET_Auth');
     const { siswaId } = await params;
 
     if (!session) {
@@ -96,7 +99,8 @@ export async function GET(req, { params }) {
       );
     }
 
-    // Get active school year precisely
+    // First get school year separately since it's needed for the presence queries
+    console.time('SUMMARY_GET_SchoolYear');
     const schoolYear = await prisma.tahunAjaran.findFirst({
       where: { isActive: true },
       select: {
@@ -108,58 +112,60 @@ export async function GET(req, { params }) {
         targetHafalan: true
       }
     });
+    console.timeEnd('SUMMARY_GET_SchoolYear');
+
+    // Execute remaining queries in parallel for better performance
+    console.time('SUMMARY_GET_ParallelQueries');
+    const [
+      progressData,
+      totalHafalanCount,
+      avgNilai,
+      [kehadiranCount, totalHariCount],
+      catatanGuruCount
+    ] = await Promise.all([
+      // Calculate progress
+      calculateStudentProgress(prisma, siswaId, schoolYear?.id),
+      // Count hafalan
+      prisma.hafalan.count({ where: { siswaId } }),
+      // Aggregate nilai
+      prisma.penilaian.aggregate({
+        where: { siswaId },
+        _avg: { nilaiAkhir: true }
+      }),
+      // Get kehadiran stats if school year exists
+      (schoolYear ? Promise.all([
+        prisma.presensi.count({
+          where: {
+            siswaId,
+            status: 'HADIR',
+            tanggal: {
+              gte: schoolYear.tanggalMulai,
+              lte: schoolYear.tanggalSelesai
+            }
+          }
+        }),
+        prisma.presensi.count({
+          where: {
+            siswaId,
+            tanggal: {
+              gte: schoolYear.tanggalMulai,
+              lte: schoolYear.tanggalSelesai
+            }
+          }
+        })
+      ]) : Promise.resolve([0, 0])),
+      // Count catatan guru
+      prisma.penilaian.count({
+        where: {
+          siswaId,
+          catatan: { not: null }
+        }
+      })
+    ]);
+    console.timeEnd('SUMMARY_GET_ParallelQueries');
 
     const schoolTarget = schoolYear?.targetHafalan || 0;
-
-    // Use centralized service for progress calculation
-    const progressData = await calculateStudentProgress(prisma, siswaId, schoolYear?.id);
     const totalJuzSelesai = progressData.totalJuz;
-
-    // Get total hafalan selesai (setoran count - all time)
-    const totalHafalanCount = await prisma.hafalan.count({
-      where: { siswaId }
-    });
-
-    // Get rata-rata nilai dari penilaian (all time)
-    const avgNilai = await prisma.penilaian.aggregate({
-      where: { siswaId },
-      _avg: { nilaiAkhir: true }
-    });
-
-    // Get kehadiran stats (tahun ajaran aktif)
-    let kehadiranCount = 0;
-    let totalHariCount = 0;
-
-    if (schoolYear) {
-      kehadiranCount = await prisma.presensi.count({
-        where: {
-          siswaId,
-          status: 'HADIR',
-          tanggal: {
-            gte: schoolYear.tanggalMulai,
-            lte: schoolYear.tanggalSelesai
-          }
-        }
-      });
-
-      totalHariCount = await prisma.presensi.count({
-        where: {
-          siswaId,
-          tanggal: {
-            gte: schoolYear.tanggalMulai,
-            lte: schoolYear.tanggalSelesai
-          }
-        }
-      });
-    }
-
-    // Get catatan guru count
-    const catatanGuruCount = await prisma.penilaian.count({
-      where: {
-        siswaId,
-        catatan: { not: null }
-      }
-    });
 
     // Get student's latest juz achieved for more accurate stats
     const studentInfo = await prisma.siswa.findUnique({
@@ -201,6 +207,8 @@ export async function GET(req, { params }) {
     - School Year: ${schoolYear?.nama || 'None'}
     `);
 
+    console.timeEnd('SUMMARY_GET_Total');
+
     const stats = {
       hafalanSelesai: totalJuzSelesai,
       totalHafalan: schoolTarget, 
@@ -237,7 +245,7 @@ export async function GET(req, { params }) {
       },
       {
         headers: {
-          'Cache-Control': 'no-store'
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60'
         }
       }
     );

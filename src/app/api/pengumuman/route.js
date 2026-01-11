@@ -4,15 +4,20 @@ import { auth } from '@/lib/auth';
 
 // GET - Mengambil pengumuman untuk user berdasarkan role
 export async function GET(request) {
+  console.time('PENGUMUMAN_GET_Total');
   try {
+    console.time('PENGUMUMAN_GET_Auth');
     const session = await auth();
+    console.timeEnd('PENGUMUMAN_GET_Auth');
 
     if (!session) {
+      console.timeEnd('PENGUMUMAN_GET_Total');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '5');
+    const limitParam = parseInt(searchParams.get('limit') || '3'); // Changed default from 5 to 3 for dashboard
+    const limit = Math.min(limitParam, 100); // Cap at 100 to prevent excessive data
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
     const now = new Date();
 
@@ -61,14 +66,21 @@ export async function GET(request) {
 
     console.log('GET PENGUMUMAN - Where clause:', JSON.stringify(baseWhere, null, 2));
 
+    console.time('PENGUMUMAN_GET_Query');
     // Ambil semua pengumuman yang masih aktif (belum expired)
     const pengumuman = await prisma.pengumuman.findMany({
       where: baseWhere,
-      include: {
+      select: {
+        id: true,
+        judul: true,
+        konten: true,
+        tanggalMulai: true,
+        tanggalSelesai: true,
+        createdAt: true,
+        lampiran: true,
         user: {
           select: {
             name: true,
-            email: true
           }
         },
         _count: {
@@ -82,6 +94,7 @@ export async function GET(request) {
       },
       take: limit
     });
+    console.timeEnd('PENGUMUMAN_GET_Query');
 
     console.log('GET PENGUMUMAN - Found pengumuman:', {
       count: pengumuman.length,
@@ -95,7 +108,15 @@ export async function GET(request) {
       }))
     });
 
-    return NextResponse.json({ pengumuman });
+    console.time('PENGUMUMAN_GET_Response');
+    const response = NextResponse.json({ pengumuman });
+    
+    // Add caching headers as requested
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    console.timeEnd('PENGUMUMAN_GET_Response');
+    console.timeEnd('PENGUMUMAN_GET_Total');
+    
+    return response;
   } catch (error) {
     console.error('Error fetching pengumuman:', error);
     console.error('Error details:', {
