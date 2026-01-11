@@ -1,9 +1,13 @@
 import { auth } from '@/lib/auth';
-import SiswaSidebarClient from './SiswaSidebarClient';
+import SiswaSidebarClient from '@/components/layout/SiswaSidebarClient';
 
-export default async function SiswaLayout({ children }) {
+export default async function SiswaAppLayout({ children }) {
   const session = await auth();
   
+  if (!session || session.user.role !== 'SISWA') {
+    return children; // Auth check usually handled by middleware, but safe to keep
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-cream-50 to-amber-50/30">
       <SiswaSidebarClient userName={session?.user?.name || "Siswa"} />

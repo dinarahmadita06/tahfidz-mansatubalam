@@ -139,9 +139,10 @@ export default function StudentDashboardContent({
   targetSiswaId, 
   roleContext = 'SISWA',
   onActivityLog = null,
-  activityWidget = null
+  activityWidget = null,
+  initialData = null
 }) {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState(initialData?.stats || {
     hafalanSelesai: 0,
     totalHafalan: 0,
     rataRataNilai: 0,
@@ -149,35 +150,39 @@ export default function StudentDashboardContent({
     totalHari: 0,
     catatanGuru: 0,
   });
-  const [pengumuman, setPengumuman] = useState([]);
-  const [pengumumanLoading, setPengumumanLoading] = useState(true);
-  const [juzProgress, setJuzProgress] = useState([]);
-  const [tahunAjaranAktif, setTahunAjaranAktif] = useState(null);
-  const [targetJuzSekolah, setTargetJuzSekolah] = useState(null);
-  const [totalJuzSelesai, setTotalJuzSelesai] = useState(0);
-  const [progressPercent, setProgressPercent] = useState(null);
-  const [quote, setQuote] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [pengumuman, setPengumuman] = useState(initialData?.pengumuman || []);
+  const [pengumumanLoading, setPengumumanLoading] = useState(!initialData);
+  const [juzProgress, setJuzProgress] = useState(initialData?.juzProgress || []);
+  const [tahunAjaranAktif, setTahunAjaranAktif] = useState(initialData?.tahunAjaranAktif || null);
+  const [targetJuzSekolah, setTargetJuzSekolah] = useState(initialData?.targetJuzSekolah || null);
+  const [totalJuzSelesai, setTotalJuzSelesai] = useState(initialData?.totalJuzSelesai || 0);
+  const [progressPercent, setProgressPercent] = useState(initialData?.progressPercent ?? null);
+  const [quote, setQuote] = useState(initialData?.quote || '');
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(null);
 
-  // Fetch pengumuman
+  // Fetch data if not provided
   useEffect(() => {
-    const fetchPengumuman = async () => {
-      try {
-        setPengumumanLoading(true);
-        const res = await fetch('/api/pengumuman?limit=3');
-        if (res.ok) {
-          const data = await res.json();
-          setPengumuman(data.pengumuman || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch pengumuman', error);
-      } finally {
-        setPengumumanLoading(false);
+    if (!initialData && targetSiswaId) {
+      fetchDashboardData();
+      fetchPengumuman();
+    }
+  }, [targetSiswaId, initialData]);
+
+  const fetchPengumuman = async () => {
+    try {
+      setPengumumanLoading(true);
+      const res = await fetch('/api/pengumuman?limit=3');
+      if (res.ok) {
+        const data = await res.json();
+        setPengumuman(data.pengumuman || []);
       }
-    };
-    fetchPengumuman();
-  }, []);
+    } catch (error) {
+      console.error('Failed to fetch pengumuman', error);
+    } finally {
+      setPengumumanLoading(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -217,13 +222,6 @@ export default function StudentDashboardContent({
       setLoading(false);
     }
   };
-
-  // Fetch dashboard summary data
-  useEffect(() => {
-    if (targetSiswaId) {
-      fetchDashboardData();
-    }
-  }, [targetSiswaId]);
 
   // Determine report links based on role context
   const laporan_href = roleContext === 'SISWA' ? '/siswa/laporan' : '/orangtua/laporan-hafalan';

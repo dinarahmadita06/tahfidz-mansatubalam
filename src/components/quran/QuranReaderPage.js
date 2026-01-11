@@ -58,7 +58,7 @@ const cleanTranslation = (text) => {
     .trim();
 };
 
-export default function QuranReaderPage({ role = 'siswa' }) {
+export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
   const [surahs, setSurahs] = useState([]);
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [expandedSurahMobile, setExpandedSurahMobile] = useState(null); // For mobile accordion
@@ -537,7 +537,7 @@ export default function QuranReaderPage({ role = 'siswa' }) {
   );
 
   // Determine layout based on role
-  const Layout = role === 'guru' ? GuruLayout : SiswaLayout;
+  const Layout = noLayout ? ({ children }) => <>{children}</> : (role === 'guru' ? GuruLayout : SiswaLayout);
 
   return (
     <Layout>
