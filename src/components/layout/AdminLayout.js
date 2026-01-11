@@ -63,11 +63,6 @@ const menuItems = [
     href: '/admin/pengumuman',
   },
   {
-    title: 'Reset Password User',
-    icon: Key,
-    href: '/admin/reset-password-user',
-  },
-  {
     title: 'Profil',
     icon: User,
     href: '/admin/profile',
