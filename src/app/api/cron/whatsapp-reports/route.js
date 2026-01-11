@@ -16,6 +16,8 @@
 import { NextResponse } from 'next/server';
 import { runWhatsAppReportScheduler } from '@/lib/utils/whatsappReportScheduler';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // Security: Verify request is from Vercel Cron or authorized source
