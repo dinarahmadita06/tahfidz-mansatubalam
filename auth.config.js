@@ -127,6 +127,10 @@ export const authConfig = {
 
           // 3. Try password against each potential user
           for (const u of potentialUsers) {
+            // Secure debug logging (non-sensitive)
+            const passPrefix = u.password?.substring(0, 7) || 'none';
+            console.log(`🔍 [AUTH] Attempting login for: ${u.username || u.email} (${u.role}) | Hash prefix: ${passPrefix}... | Hash length: ${u.password?.length || 0}`);
+
             let isValid = await bcrypt.compare(String(password), u.password);
             
             // Fallback for Parent data inconsistency (Legacy YYYY-MM-DD passwords)
@@ -215,7 +219,7 @@ export const authConfig = {
           console.error('💥 [AUTH] Error in authorize:', error.message);
           
           if (error.message === "INVALID_CREDENTIALS") {
-            throw new Error("Email atau password salah");
+            throw new Error("Username atau password salah");
           }
 
           // Generic error for database timeouts/connection issues
