@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
@@ -6,7 +8,6 @@ import { getCachedData, setCachedData } from '@/lib/cache';
 
 // Force Node.js runtime
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 // GET - Mengambil data profil admin
 export async function GET(request) {

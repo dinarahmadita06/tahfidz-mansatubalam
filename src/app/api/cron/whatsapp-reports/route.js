@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 /**
  * Cron Job Endpoint untuk WhatsApp Report Scheduler
  * Dipanggil oleh Vercel Cron Jobs (atau external cron service)
@@ -15,8 +17,6 @@
 
 import { NextResponse } from 'next/server';
 import { runWhatsAppReportScheduler } from '@/lib/utils/whatsappReportScheduler';
-
-export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {

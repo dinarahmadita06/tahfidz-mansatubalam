@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
@@ -5,7 +7,6 @@ import bcrypt from 'bcryptjs';
 import { invalidateCache } from '@/lib/cache';
 import { generateGuruEmail, generateGuruPassword } from '@/lib/passwordUtils';
 
-export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {

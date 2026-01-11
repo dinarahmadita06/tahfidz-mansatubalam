@@ -1,11 +1,11 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { getCachedData, setCachedData } from '@/lib/cache';
 
 // Mark this as a dynamic route - do not call during build
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 // GET dashboard stats with aggressive caching (60 seconds)
 export async function GET(request) {
