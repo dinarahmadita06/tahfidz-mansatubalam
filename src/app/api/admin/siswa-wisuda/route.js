@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Mengambil daftar siswa yang eligible untuk wisuda (lulus ujian juz 1 dan juz 2)
 export async function GET(request) {
   try {

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // Audio providers dengan prioritas fallback
 const AUDIO_PROVIDERS = [
   {
