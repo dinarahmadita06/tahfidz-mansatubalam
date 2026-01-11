@@ -53,6 +53,7 @@ export async function GET(request) {
       whereClause.OR = [
         { user: { name: { contains: search, mode: 'insensitive' } } },
         { nis: { contains: search } },
+        { nisn: { contains: search } },
         { user: { email: { contains: search, mode: 'insensitive' } } }
       ];
     }
@@ -74,7 +75,6 @@ export async function GET(request) {
       jenisKelamin: true,
       tanggalLahir: true,
       alamat: true,
-      noTelepon: true,
       status: true,
       createdAt: true,
       user: {
@@ -97,7 +97,6 @@ export async function GET(request) {
           orangTua: {
             select: {
               id: true,
-              noTelepon: true,
               user: {
                 select: {
                   name: true,
@@ -202,7 +201,6 @@ export async function POST(request) {
       jenisKelamin,
       tanggalLahir,
       alamat,
-      noTelepon,
       parentData
     } = body;
 
@@ -223,12 +221,29 @@ export async function POST(request) {
     // Hash password
     let studentPassword = password;
     if (!studentPassword || studentPassword.trim() === '') {
-      studentPassword = nisn && nisn.trim().length === 10 ? nisn.trim() : nis;
+      if (!tanggalLahir) {
+        throw new Error('Tanggal lahir wajib diisi untuk generate password default');
+      }
+      studentPassword = tanggalLahir;
     }
-    const hashedPassword = await bcrypt.hash(studentPassword, 10);
+    // Format as YYYY-MM-DD
+    const birthDate = new Date(tanggalLahir);
+    const formattedBirthDate = birthDate.getFullYear() + '-' + 
+      String(birthDate.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(birthDate.getDate()).padStart(2, '0');
+    const hashedPassword = await bcrypt.hash(formattedBirthDate, 10);
 
     // ============ ATOMIC TRANSACTION ============
     const siswa = await prisma.$transaction(async (tx) => {
+      // Check if username already exists
+      const existingUser = await tx.user.findUnique({
+        where: { username: nis }
+      });
+      
+      if (existingUser) {
+        throw new Error(`NIS ${nis} sudah terdaftar. Gunakan NIS lain atau cek data siswa yang sudah ada.`);
+      }
+      
       // 1. Create siswa
       const newSiswa = await tx.siswa.create({
         data: {
@@ -237,7 +252,6 @@ export async function POST(request) {
           jenisKelamin,
           tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
           alamat,
-          noTelepon,
           tahunAjaranMasuk: tahunAjaranMasukId ? { connect: { id: tahunAjaranMasukId } } : undefined,
           kelas: kelasId ? { connect: { id: kelasId } } : undefined,
           kelasAngkatan: kelasAngkatan || null,
@@ -245,6 +259,7 @@ export async function POST(request) {
           user: {
             create: {
               email,
+              username: nis,
               password: hashedPassword,
               name,
               role: 'SISWA'
@@ -255,21 +270,28 @@ export async function POST(request) {
       });
 
       // 2. Handle Parent Data
-      if (parentData && parentData.name && parentData.noHP) {
+      if (parentData && parentData.name) {
         // Auto-generate email based on student if not provided
         const finalEmailWali = parentData.email && parentData.email.trim() !== '' 
           ? parentData.email.toLowerCase() 
           : generateOrangTuaEmail(name, nis);
 
-        // Password parent: NISN-YYYY
+        // Password parent: birth date DDMMYYYY
         let pPassword = parentData.password;
         if (!pPassword || pPassword.trim() === '') {
-          const bYear = tanggalLahir ? new Date(tanggalLahir).getFullYear() : null;
-          pPassword = bYear ? `${nisn || nis}-${bYear}` : (nisn || nis);
+          if (!tanggalLahir) {
+            throw new Error('Tanggal lahir wajib diisi untuk generate password wali');
+          }
+          // Format as DDMMYYYY
+          const birthDate = new Date(tanggalLahir);
+          const day = String(birthDate.getDate()).padStart(2, '0');
+          const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+          const year = birthDate.getFullYear();
+          pPassword = `${day}${month}${year}`;
         }
         const parentHashedPassword = await bcrypt.hash(pPassword, 10);
 
-        // Check duplicate
+        // Check if there's an existing parent with the same email
         const existingParent = await tx.user.findUnique({ where: { email: finalEmailWali } });
         if (existingParent && existingParent.name.toLowerCase() !== parentData.name.toLowerCase()) {
            throw new Error(`Email ${finalEmailWali} sudah digunakan oleh wali lain (${existingParent.name})`);
@@ -282,9 +304,19 @@ export async function POST(request) {
         }
 
         if (!orangTuaId) {
+          // For parent, create a separate user with a unique username
+          const parentUsername = `${nis}_wali`; // Create a unique username for parent
+          
+          // Check if this parent username already exists
+          const existingParentUser = await tx.user.findUnique({ where: { username: parentUsername } });
+          if (existingParentUser) {
+            throw new Error(`Akun wali untuk NIS ${nis} sudah terdaftar. Siswa dan wali tidak bisa menggunakan akun yang sama.`);
+          }
+          
           const parentUser = await tx.user.create({
             data: {
               email: finalEmailWali,
+              username: parentUsername,
               password: parentHashedPassword,
               name: parentData.name,
               role: 'ORANG_TUA'
@@ -293,7 +325,6 @@ export async function POST(request) {
 
           const orangTua = await tx.orangTua.create({
             data: {
-              noTelepon: parentData.noHP.replace(/[^0-9]/g, ''),
               userId: parentUser.id,
               jenisKelamin: parentData.jenisKelamin || 'LAKI_LAKI'
             }
@@ -332,6 +363,13 @@ export async function POST(request) {
     return NextResponse.json(siswa, { status: 201 });
   } catch (error) {
     console.error('Error creating siswa:', error);
+    // Check if this is a unique constraint error related to NIS
+    if (error.message && (error.message.includes('NIS') && error.message.includes('sudah terdaftar'))) {
+      return NextResponse.json({ 
+        error: error.message,
+        invalidFields: { nis: error.message }
+      }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message || 'Gagal menambahkan siswa' }, { status: 500 });
   }
 }

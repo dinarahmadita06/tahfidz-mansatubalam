@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * IslamicPageHeader - Modern Islamic page header
  * Header dengan gradient background dan pattern
@@ -27,7 +29,22 @@ export function IslamicPageHeader({
         <div className="flex items-center gap-4">
           {Icon && (
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
-              <Icon className="w-7 h-7 text-white" strokeWidth={2.5} />
+              {(() => {
+                if (React.isValidElement(Icon)) return Icon;
+                const isComponent = 
+                  typeof Icon === 'function' || 
+                  (typeof Icon === 'object' && Icon !== null && (
+                    Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                    Icon.$$typeof === Symbol.for('react.memo') ||
+                    Icon.render || 
+                    Icon.displayName
+                  ));
+                if (isComponent) {
+                  const IconComp = Icon;
+                  return <IconComp className="w-7 h-7 text-white" strokeWidth={2.5} />;
+                }
+                return null;
+              })()}
             </div>
           )}
           <div>

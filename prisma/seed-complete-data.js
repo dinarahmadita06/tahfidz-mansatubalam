@@ -337,8 +337,8 @@ async function main() {
   console.log(`- Pengumuman: ${pengumumanData.length}`);
   console.log('\n🔐 Login credentials:');
   console.log('Admin:');
-  console.log('  Email: admin@tahfidz.sch.id');
-  console.log('  Password: password123');
+  console.log('  Username: admin.tahfidz1');
+  console.log('  Password: admin.mansatu');
   console.log('\nGuru (example):');
   console.log('  Email: ahmad.fauzi@tahfidz.sch.id');
   console.log('  Password: password123');

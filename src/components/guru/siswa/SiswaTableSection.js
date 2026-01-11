@@ -24,7 +24,7 @@ export async function SiswaTableSection({ userId, searchTerm = '', selectedKelas
     whereClause.OR = [
       { user: { name: { contains: searchTerm, mode: 'insensitive' } } },
       { nis: { contains: searchTerm } },
-      { user: { email: { contains: searchTerm, mode: 'insensitive' } } }
+      { nisn: { contains: searchTerm } }
     ];
   }
 
@@ -33,12 +33,12 @@ export async function SiswaTableSection({ userId, searchTerm = '', selectedKelas
     select: {
       id: true,
       nis: true,
+      nisn: true,
       status: true,
       kelasId: true,
       user: {
         select: {
           name: true,
-          email: true,
         }
       },
       kelas: {
@@ -68,7 +68,7 @@ export async function SiswaTableSection({ userId, searchTerm = '', selectedKelas
             <tr>
               <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
               <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Siswa</th>
-              <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Email</th>
+              <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">NISN</th>
               <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">NIS</th>
               <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Kelas</th>
               <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Status</th>
@@ -91,9 +91,7 @@ export async function SiswaTableSection({ userId, searchTerm = '', selectedKelas
                     <p className="font-medium text-gray-900">{siswa.user?.name || 'N/A'}</p>
                   </td>
                   <td className="py-4 px-6">
-                    <p className="text-sm text-gray-600 truncate max-w-[200px]" title={siswa.user?.email}>
-                      {siswa.user?.email || '-'}
-                    </p>
+                    <p className="text-sm text-gray-600">{siswa.nisn || '-'}</p>
                   </td>
                   <td className="py-4 px-6">
                     <p className="text-sm text-gray-600">{siswa.nis || '-'}</p>

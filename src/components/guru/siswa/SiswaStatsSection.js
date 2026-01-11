@@ -44,7 +44,26 @@ function StatCard({ icon: Icon, title, value, theme = 'emerald' }) {
           </h3>
         </div>
         <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
-          <Icon size={28} className={config.iconColor} strokeWidth={2} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={28} className={config.iconColor} strokeWidth={2} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>

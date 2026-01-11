@@ -316,7 +316,15 @@ export function EmptyState({
             color: designSystem.colors.text.muted,
           }}
         >
-          {icon}
+          {(() => {
+            const React = require('react');
+            if (React.isValidElement(icon)) return icon;
+            if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && (icon.$$typeof || icon.render))) {
+              const IconComp = icon;
+              return <IconComp size={48} />;
+            }
+            return icon;
+          })()}
         </div>
       )}
       <h3

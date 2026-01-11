@@ -129,12 +129,7 @@ export async function GET() {
       relativeTime: getRelativeTime(activity.createdAt)
     }));
 
-    const juzProgress = progressData.uniqueJuzs
-      .map(juz => ({
-        label: `Juz ${juz}`,
-        progress: 100,
-        juz: juz
-      }))
+    const juzProgress = progressData.juzProgress
       .sort((a, b) => a.juz - b.juz);
 
     const targetJuzSekolah = schoolYear?.targetHafalan || null;

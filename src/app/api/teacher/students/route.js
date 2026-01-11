@@ -21,8 +21,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Data siswa tidak lengkap' }, { status: 400 });
     }
 
-    if (parentMode === 'NEW' && (!parent || !parent.name || !parent.phone || !parent.email || !parent.gender)) {
-      return NextResponse.json({ error: 'Data orang tua baru tidak lengkap (Nama, No HP, Email, dan Jenis Kelamin wajib diisi)' }, { status: 400 });
+    if (parentMode === 'NEW' && (!parent || !parent.name || !parent.email || !parent.gender)) {
+      return NextResponse.json({ error: 'Data orang tua baru tidak lengkap (Nama, Email, dan Jenis Kelamin wajib diisi)' }, { status: 400 });
     }
 
     if (parentMode === 'EXISTING' && !existingParentId) {
@@ -54,13 +54,27 @@ export async function POST(request) {
 
     // 4. Atomic Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // a. Determine Student Password (Standard: NISN)
+      // Check if username already exists
+      const existingUser = await tx.user.findUnique({
+        where: { username: student.username }
+      });
+      
+      if (existingUser) {
+        throw new Error(`NIS ${student.username} sudah terdaftar. Gunakan NIS lain atau cek data siswa yang sudah ada.`);
+      }
+      
+      // a. Determine Student Password (Standard: birth date YYYY-MM-DD)
       let studentPassword = student.password;
       if (!studentPassword || studentPassword.trim() === '') {
-        if (!student.nisn || student.nisn.trim().length !== 10) {
-          throw new Error('NISN wajib 10 digit untuk generate password default');
+        if (!student.birthDate) {
+          throw new Error('Tanggal lahir wajib diisi untuk generate password default');
         }
-        studentPassword = student.nisn.trim();
+        // Format as YYYY-MM-DD
+        const birthDate = new Date(student.birthDate);
+        const formattedBirthDate = birthDate.getFullYear() + '-' + 
+          String(birthDate.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(birthDate.getDate()).padStart(2, '0');
+        studentPassword = formattedBirthDate;
       }
 
       // b. Create Student User
@@ -69,6 +83,7 @@ export async function POST(request) {
         data: {
           name: student.name,
           email: student.email,
+          username: student.username,
           password: hashedStudentPassword,
           role: 'SISWA',
           isActive: true, // Akun aktif tapi status siswa pending validasi
@@ -86,7 +101,6 @@ export async function POST(request) {
           kelasAngkatan: student.kelasAngkatan || null,
           jenisKelamin: student.gender,
           tanggalLahir: student.birthDate ? new Date(student.birthDate) : null,
-          noTelepon: student.noTelepon || null,
           status: 'pending', // Menunggu validasi admin sesuai sistem existing
         }
       });
@@ -102,32 +116,36 @@ export async function POST(request) {
         if (!existingParent) throw new Error('Orang tua yang dipilih tidak ditemukan');
         parentId = existingParent.id;
       } else {
-        // Determine Parent Password (Standard: NISN-YYYY)
+        // Determine Parent Password (Standard: birth date DDMMYYYY)
         let parentPassword = parent.password;
         if (!parentPassword || parentPassword.trim() === '') {
-          if (!student.nisn || student.nisn.trim().length !== 10) {
-            throw new Error('NISN wajib 10 digit untuk generate password wali');
+          if (!student.birthDate) {
+            throw new Error('Tanggal lahir wajib diisi untuk generate password wali');
           }
-          const baseNISN = student.nisn.trim();
-          if (student.birthDate) {
-            const date = new Date(student.birthDate);
-            if (!isNaN(date.getTime())) {
-              parentPassword = `${baseNISN}-${date.getFullYear()}`;
-            } else {
-              parentPassword = baseNISN;
-            }
-          } else {
-            parentPassword = baseNISN;
-          }
+          // Format as DDMMYYYY
+          const birthDate = new Date(student.birthDate);
+          const day = String(birthDate.getDate()).padStart(2, '0');
+          const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+          const year = birthDate.getFullYear();
+          parentPassword = `${day}${month}${year}`;
         }
         finalParentPassword = parentPassword;
 
-        // Create New Parent User
+        // Create New Parent User with unique username
         const hashedParentPassword = await bcrypt.hash(parentPassword, 10);
+        const parentUsername = `${student.username}_wali`; // Create a unique username for parent
+        
+        // Check if this parent username already exists
+        const existingParentUser = await tx.user.findUnique({ where: { username: parentUsername } });
+        if (existingParentUser) {
+          throw new Error(`Akun wali untuk NIS ${student.username} sudah terdaftar. Siswa dan wali tidak bisa menggunakan akun yang sama.`);
+        }
+        
         const parentUser = await tx.user.create({
           data: {
             name: parent.name,
             email: parent.email,
+            username: parentUsername,
             password: hashedParentPassword,
             role: 'ORANG_TUA',
             isActive: true,
@@ -138,7 +156,6 @@ export async function POST(request) {
         const newParent = await tx.orangTua.create({
           data: {
             userId: parentUser.id,
-            noTelepon: parent.phone,
             jenisKelamin: parent.gender,
             status: 'approved', // Wali biasanya langsung approved jika dibuat guru/admin
           }
@@ -199,6 +216,14 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
+    // Check if this is a unique constraint error related to NIS
+    if (error.message && (error.message.includes('NIS') && error.message.includes('sudah terdaftar'))) {
+      return NextResponse.json({ 
+        error: error.message,
+        message: error.message,
+        invalidFields: { nis: error.message }
+      }, { status: 400 });
+    }
     return NextResponse.json({ 
       error: 'Terjadi kesalahan saat memproses data',
       message: error.message,

@@ -1,5 +1,7 @@
 "use client";
 
+import React from 'react';
+
 export default function StatCard({ title, value, icon: Icon, color = "blue" }) {
   const colorClasses = {
     blue: {
@@ -36,7 +38,26 @@ export default function StatCard({ title, value, icon: Icon, color = "blue" }) {
           </p>
         </div>
         <div className={`p-3 rounded-full ${colors.bg}`}>
-          <Icon className={`w-6 h-6 ${colors.icon}`} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp className={`w-6 h-6 ${colors.icon}`} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload, FileSpreadsheet } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
@@ -64,7 +64,26 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
           )}
         </div>
         <div className={`${config.iconBg} p-2.5 lg:p-3 rounded-xl lg:rounded-2xl shadow-sm flex-shrink-0`}>
-          <Icon size={22} className={config.iconColor} strokeWidth={2} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={22} className={config.iconColor} strokeWidth={2} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>
@@ -85,7 +104,7 @@ function SearchFilterBar({ searchTerm, setSearchTerm, filterStatus, setFilterSta
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400" size={18} />
             <input
               type="text"
-              placeholder="Cari berdasarkan nama, email, atau NIP..."
+              placeholder="Cari berdasarkan nama atau NIP..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-11 pr-4 py-2 lg:py-2.5 border border-emerald-200/60 rounded-xl bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
@@ -146,13 +165,12 @@ export default function AdminGuruPage() {
   const [editingGuru, setEditingGuru] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     password: '',
+    username: '',
     nip: '',
     jenisKelamin: 'L',
-    alamat: '',
     tanggalLahir: '',
-    noTelepon: ''
+    kelasIds: []
   });
   const [selectedKelas, setSelectedKelas] = useState([]);
 
@@ -172,25 +190,11 @@ export default function AdminGuruPage() {
 
     const method = editingGuru ? 'PUT' : 'POST';
 
-    // Normalisasi Nomor WhatsApp: 08... / +628... / 628... -> 628...
-    let normalizedPhone = formData.noTelepon ? formData.noTelepon.replace(/[^0-9]/g, '') : '';
-    if (normalizedPhone.startsWith('08')) {
-      normalizedPhone = '628' + normalizedPhone.slice(2);
-    } else if (normalizedPhone.startsWith('8')) {
-      normalizedPhone = '628' + normalizedPhone.slice(1);
-    }
-
-    // Validasi ringan nomor Indonesia
-    if (normalizedPhone && (normalizedPhone.length < 10 || normalizedPhone.length > 15)) {
-      alert('Nomor WhatsApp tidak valid. Pastikan format benar (minimal 10 digit).');
-      return;
-    }
-
     try {
       const url = editingGuru ? `/api/guru/${editingGuru.id}` : '/api/guru';
       const payload = {
         ...formData,
-        noTelepon: normalizedPhone,
+        username: formData.username, // Include username in the payload
         kelasIds: selectedKelas
       };
 
@@ -225,13 +229,12 @@ export default function AdminGuruPage() {
     setEditingGuru(guruItem);
     setFormData({
       name: guruItem.user.name,
-      email: guruItem.user.email,
       password: '',
+      username: guruItem.user.username || '',
       nip: guruItem.nip || '',
       jenisKelamin: guruItem.jenisKelamin,
-      alamat: guruItem.alamat || '',
       tanggalLahir: guruItem.tanggalLahir ? new Date(guruItem.tanggalLahir).toISOString().split('T')[0] : '',
-      noTelepon: guruItem.noTelepon || ''
+      kelasIds: aktivKelasIds
     });
     setSelectedKelas(aktivKelasIds);
     setShowModal(true);
@@ -261,38 +264,46 @@ export default function AdminGuruPage() {
   const resetForm = () => {
     setFormData({
       name: '',
-      email: '',
       password: '',
+      username: '',
       nip: '',
       jenisKelamin: 'L',
-      alamat: '',
       tanggalLahir: '',
-      noTelepon: ''
+      kelasIds: []
     });
     setSelectedKelas([]);
     setEditingGuru(null);
   };
 
-  const generateEmail = () => {
-    if (!formData.name) {
-      alert('Nama guru wajib diisi');
-      return;
+
+
+  const generateNextUsername = async () => {
+    try {
+      // Call the new API endpoint to generate the next available username
+      const response = await fetch('/api/guru/generate-username');
+      
+      if (!response.ok) {
+        throw new Error('Gagal mengambil username guru');
+      }
+      
+      const data = await response.json();
+      setFormData({ ...formData, username: data.username });
+    } catch (error) {
+      console.error('Error generating username:', error);
+      alert('Gagal menghasilkan username guru: ' + error.message);
     }
-    const generatedEmail = generateGuruEmail(formData.name);
-    setFormData({ ...formData, email: generatedEmail });
   };
 
-  const generatePassword = () => {
-    if (!formData.name) {
-      alert('Nama lengkap wajib diisi terlebih dahulu');
-      return;
-    }
+
+
+  const generatePasswordFromDOB = () => {
     if (!formData.tanggalLahir) {
-      alert('Tanggal lahir wajib diisi untuk generate password guru');
+      alert('Tanggal lahir wajib diisi untuk generate password dari tanggal lahir');
       return;
     }
     
-    const password = generateGuruPassword(formData.name, formData.tanggalLahir);
+    // Format password as YYYY-MM-DD from tanggalLahir
+    const password = formData.tanggalLahir; // Already in YYYY-MM-DD format
     setFormData({ ...formData, password });
   };
 
@@ -300,13 +311,10 @@ export default function AdminGuruPage() {
     const templateData = [
       {
         'Nama Lengkap': 'Ahmad Fauzi',
-        'Email': 'guru.ahmad@tahfidz.sch.id',
         'NIP': '198501012010011001',
         'Jenis Kelamin': 'L',
         'Tanggal Lahir': '1985-05-20',
-        'Nomor WhatsApp': '081234567890',
-        'Kelas Binaan': '7A, 7B',
-        'Alamat': 'Jl. Pendidikan No. 45, Bandung'
+        'Kelas Binaan': '7A, 7B'
       }
     ];
 
@@ -330,13 +338,10 @@ export default function AdminGuruPage() {
 
       return {
         'Nama Lengkap': item.user?.name || item.nama || '',
-        'Email': item.user?.email || item.email || '',
         'NIP': item.nip || '',
         'Jenis Kelamin': item.jenisKelamin === 'LAKI_LAKI' || item.jenisKelamin === 'L' ? 'L' : 'P',
         'Tanggal Lahir': item.tanggalLahir ? new Date(item.tanggalLahir).toISOString().split('T')[0] : '',
-        'Nomor WhatsApp': item.noTelepon || '',
         'Kelas Binaan': aktifKelas,
-        'Alamat': item.alamat || '',
         'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
         'Tanggal Bergabung': item.user?.createdAt ? new Date(item.user.createdAt).toISOString().split('T')[0] : ''
       };
@@ -351,7 +356,6 @@ export default function AdminGuruPage() {
   // Filter guru data
   const filteredGuru = Array.isArray(guru) ? guru.filter(g => {
     const matchSearch = g.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      g.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (g.nip && g.nip.includes(searchTerm));
 
     const matchFilter = filterStatus === 'all' || filterStatus === 'active';
@@ -394,9 +398,20 @@ export default function AdminGuruPage() {
 
               <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-end gap-3 w-full md:w-auto">
                   <button
-                  onClick={() => {
+                  onClick={async () => {
                     resetForm();
                     setShowModal(true);
+                    
+                    // Generate next username when creating a new teacher
+                    try {
+                      const response = await fetch('/api/guru/generate-username');
+                      if (response.ok) {
+                        const data = await response.json();
+                        setFormData(prev => ({ ...prev, username: data.username }));
+                      }
+                    } catch (error) {
+                      console.error('Error auto-generating username:', error);
+                    }
                   }}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-sm md:text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 whitespace-nowrap"
                 >
@@ -477,7 +492,8 @@ export default function AdminGuruPage() {
                 <thead>
                   <tr className="bg-emerald-50/50 text-emerald-800">
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Nama Lengkap</th>
-                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Email</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">USERNAME</th>
+                    <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">NIP</th>
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Kelas Binaan (Pembina)</th>
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Status</th>
                     <th className="px-4 py-3 lg:px-6 lg:py-4 text-left text-[10px] lg:text-xs font-bold uppercase tracking-wider">Tanggal Bergabung</th>
@@ -490,7 +506,6 @@ export default function AdminGuruPage() {
                       <TableRowSkeleton key={i} columns={6} />
                     ))
                   ) : (!Array.isArray(filteredGuru) || filteredGuru.length === 0) ? (
-
                     <tr>
                       <td colSpan="6" className="px-6 py-12 text-center">
                         <EmptyState
@@ -518,16 +533,14 @@ export default function AdminGuruPage() {
                                 <div className="font-semibold text-gray-900 text-xs lg:text-sm">
                                   {guruItem.user.name}
                                 </div>
-                                {guruItem.nip && (
-                                  <div className="text-[10px] lg:text-xs text-gray-500">
-                                    NIP: {guruItem.nip}
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-2.5 lg:px-6 lg:py-3 text-xs lg:text-sm text-gray-600">
-                            {guruItem.user.email}
+                            {guruItem.user.username || '-'}
+                          </td>
+                          <td className="px-4 py-2.5 lg:px-6 lg:py-3 text-xs lg:text-sm text-gray-600">
+                            {guruItem.nip || '-'}
                           </td>
                           <td className="px-4 py-2.5 lg:px-6 lg:py-3">
                             {aktivKelas && aktivKelas.length > 0 ? (
@@ -638,22 +651,6 @@ export default function AdminGuruPage() {
 
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Tanggal Lahir *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.tanggalLahir}
-                    onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Row 2: NIP | Jenis Kelamin */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
-                <div>
-                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                     NIP
                   </label>
                   <input
@@ -663,22 +660,9 @@ export default function AdminGuruPage() {
                     className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Nomor WhatsApp
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.noTelepon}
-                    onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
-                    placeholder="Contoh: 08123456789"
-                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                  />
-                </div>
               </div>
 
-              {/* Row 2.5: Jenis Kelamin */}
+              {/* Row 2: Jenis Kelamin | Tanggal Lahir */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -694,58 +678,79 @@ export default function AdminGuruPage() {
                     <option value="P">Perempuan</option>
                   </select>
                 </div>
-                <div className="hidden md:block"></div>
+
+                <div>
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Tanggal Lahir *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.tanggalLahir}
+                    onChange={(e) => {
+                      setFormData({ ...formData, tanggalLahir: e.target.value });
+                      // Auto-update password when date of birth changes
+                      if (e.target.value) {
+                        setFormData(prev => ({ ...prev, password: e.target.value }));
+                      }
+                    }}
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  />
+                </div>
               </div>
 
-              {/* Row 2: Email | Password */}
+              {/* Row 3: Username Guru | Password */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Email *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      required
-                      readOnly
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="Klik ikon reload untuk generate email"
-                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-slate-50 text-gray-500 text-sm focus:outline-none cursor-not-allowed"
-                    />
-                    <button
-                      type="button"
-                      onClick={generateEmail}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
-                      title="Generate email otomatis"
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Password {editingGuru ? '(kosongkan jika tidak diubah)' : '*'}
+                    Username Guru (Otomatis) *
                   </label>
                   <div className="relative">
                     <input
                       type="text"
                       required={!editingGuru}
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="guru.<nama>-YYYY"
-                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                      readOnly
+                      value={formData.username}
+                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-slate-50 text-gray-500 text-sm focus:outline-none cursor-not-allowed"
                     />
                     <button
                       type="button"
-                      onClick={generatePassword}
+                      onClick={generateNextUsername}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
-                      title="Generate password default"
+                      title="Generate username otomatis"
+                      disabled={editingGuru} // Disable for edit mode
                     >
                       <RefreshCw size={14} />
                     </button>
                   </div>
+                  <p className="text-[10px] text-slate-500 mt-1 italic">
+                    Username dibuat otomatis (G001, G002, ...)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    Password (Otomatis) *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      readOnly
+                      value={formData.password}
+                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-slate-50 text-gray-500 text-sm focus:outline-none cursor-not-allowed"
+                    />
+                    <button
+                      type="button"
+                      onClick={generatePasswordFromDOB}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
+                      title="Reset ke DOB (YYYY-MM-DD)"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1 italic">
+                    Password awal = tanggal lahir (YYYY-MM-DD)
+                  </p>
                 </div>
               </div>
 
@@ -766,19 +771,6 @@ export default function AdminGuruPage() {
                     Opsional. Guru akan menjadi Pembina untuk kelas yang dipilih. Dapat ditambahkan nanti.
                   </p>
                 </div>
-              </div>
-
-              {/* Row 4: Alamat */}
-              <div>
-                <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                  Alamat
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.alamat}
-                  onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                  className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
-                />
               </div>
 
               {/* Buttons */}

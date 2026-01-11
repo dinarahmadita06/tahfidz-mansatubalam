@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import useSWR from 'swr';
 import Skeleton, { TableRowSkeleton, StatCardSkeleton } from '@/components/shared/Skeleton';
 
@@ -111,7 +111,26 @@ const StatCard = memo(function StatCard({ icon: Icon, title, value, subtitle, th
     <div className={`${config.bg} ${config.border} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all`}>
       <div className="flex items-center gap-4">
         <div className={`${config.iconBg} rounded-full p-4 shadow-md flex-shrink-0`}>
-          <Icon size={24} className={config.iconColor} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={24} className={config.iconColor} />;
+            }
+            
+            return null;
+          })()}
         </div>
         <div className="flex-1">
           <p className={`${config.titleColor} text-xs font-semibold mb-1 tracking-wide`}>
@@ -233,10 +252,9 @@ export default function AdminSiswaPage() {
         'NIS': s.nis || '-',
         'NISN': s.nisn || '-',
         'Nama Lengkap': s.user.name,
-        'Email': s.user.email,
+        'Tanggal Lahir': s.tanggalLahir ? new Date(s.tanggalLahir).toISOString().split('T')[0] : '-',
         'Jenis Kelamin': s.jenisKelamin || '-',
         'Tempat Lahir': s.tempatLahir || '-',
-        'Tanggal Lahir': s.tanggalLahir ? new Date(s.tanggalLahir).toLocaleDateString('id-ID') : '-',
         'Alamat': s.alamat || '-',
         'No. HP': s.noTelepon || '-',
         'Kelas': s.kelas?.nama || '-',
@@ -252,10 +270,9 @@ export default function AdminSiswaPage() {
         { wch: 12 }, // NIS
         { wch: 15 }, // NISN
         { wch: 25 }, // Nama
-        { wch: 30 }, // Email
+        { wch: 15 }, // Tanggal Lahir
         { wch: 15 }, // Jenis Kelamin
         { wch: 20 }, // Tempat Lahir
-        { wch: 15 }, // Tanggal Lahir
         { wch: 35 }, // Alamat
         { wch: 15 }, // No HP
         { wch: 15 }, // Kelas
@@ -344,7 +361,7 @@ export default function AdminSiswaPage() {
   // Filter data
   const filteredSiswa = siswa.filter(s => {
     const matchSearch = s.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.nis && s.nis.includes(searchTerm)) ||
       (s.nisn && s.nisn.includes(searchTerm));
 
     const matchKelas = filterKelas === 'all' ||
@@ -538,7 +555,7 @@ export default function AdminSiswaPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="text"
-                      placeholder="Cari nama, email, NISN..."
+                      placeholder="Cari nama, NIS, NISN..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white/50 hover:bg-white/70"
@@ -611,7 +628,8 @@ export default function AdminSiswaPage() {
                   <thead>
                     <tr className="bg-emerald-50/50 border-b border-emerald-100/40">
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Nama Lengkap</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">NIS</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Tanggal Lahir</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Kelas</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Validasi</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Status Siswa</th>
@@ -660,8 +678,13 @@ export default function AdminSiswaPage() {
                               </div>
                             </td>
 
-                            {/* Email */}
-                            <td className="px-6 py-4 text-sm text-gray-700">{siswaItem.user.email}</td>
+                            {/* NIS */}
+                            <td className="px-6 py-4 text-sm text-gray-700 font-semibold">{siswaItem.nis}</td>
+
+                            {/* Tanggal Lahir */}
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {siswaItem.tanggalLahir ? new Date(siswaItem.tanggalLahir).toISOString().split('T')[0] : '-'}
+                            </td>
 
                             {/* Kelas */}
                             <td className="px-6 py-4">
@@ -781,7 +804,7 @@ export default function AdminSiswaPage() {
                 </div>
                 <div>
                   <p className="font-bold text-gray-900">{selectedSiswa.user.name}</p>
-                  <p className="text-xs text-gray-600">{selectedSiswa.user.email}</p>
+                  <p className="text-xs text-gray-600">NIS: {selectedSiswa.nis}</p>
                 </div>
               </div>
 

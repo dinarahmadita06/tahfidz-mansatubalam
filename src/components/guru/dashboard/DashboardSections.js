@@ -52,7 +52,26 @@ export function StatCard({ label, value, icon, theme = 'emerald' }) {
           <p className={`text-2xl font-bold ${config.valueColor}`}>{value}</p>
         </div>
         <div className={`w-12 h-12 ${config.iconBg} rounded-xl flex items-center justify-center shadow-sm ${config.iconColor}`}>
-          {icon}
+          {(() => {
+            if (!icon) return null;
+            if (React.isValidElement(icon)) return icon;
+            
+            const isComponent = 
+              typeof icon === 'function' || 
+              (typeof icon === 'object' && icon !== null && (
+                icon.$$typeof === Symbol.for('react.forward_ref') || 
+                icon.$$typeof === Symbol.for('react.memo') ||
+                icon.render || 
+                icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = icon;
+              return <IconComp size={24} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>
@@ -205,7 +224,7 @@ export async function ClassManagementSection({ userId }) {
         <EmptyState
           title="Belum ada kelas yang diampu"
           description="Anda belum memiliki daftar kelas binaan saat ini."
-          icon={BookOpen}
+          icon={<BookOpen size={28} />}
           className="py-6"
         />
       ) : (

@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { invalidateCache } from '@/lib/cache';
+import { generateNextTeacherUsername } from '@/lib/passwordUtils';
 
 export async function PUT(request, { params }) {
   try {
@@ -14,7 +15,7 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const { name, email, password, nip, jenisKelamin, tanggalLahir, noHP, noTelepon, alamat, kelasIds } = await request.json();
+    let { name, email, password, username, nip, jenisKelamin, tanggalLahir, kelasIds } = await request.json();
 
     // Cari guru
     const guru = await prisma.guru.findUnique({
@@ -67,20 +68,53 @@ export async function PUT(request, { params }) {
       }
     }
 
+    // Check if username already exists for another user
+    if (username) {
+      try {
+        const existingUserWithUsername = await prisma.user.findUnique({
+          where: { username }
+        });
+
+        if (existingUserWithUsername && existingUserWithUsername.id !== guru.userId) {
+          return NextResponse.json({ error: 'Username sudah terdaftar oleh pengguna lain' }, { status: 400 });
+        }
+      } catch (error) {
+        console.warn('⚠️ Username field not available in database, skipping username uniqueness check');
+        // Continue without username check if field doesn't exist
+      }
+    }
+
+    // Check if email already exists for another user (only if email is provided)
+    if (email) {
+      const existingUserWithEmail = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (existingUserWithEmail && existingUserWithEmail.id !== guru.userId) {
+        return NextResponse.json({ error: 'Email sudah terdaftar oleh pengguna lain' }, { status: 400 });
+      }
+    }
+
+    // If no email provided, use the existing email
+    if (!email) {
+      email = guru.user.email; // Keep existing email if not provided in update
+    }
+
     // Update data
     const updateData = {
-      nip: nip || null,
+      nip: nip !== undefined ? nip || null : undefined,
       jenisKelamin: normalizedJenisKelamin,
       tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
-      noTelepon: noTelepon || noHP,
-      alamat,
       user: {
         update: {
           name,
-          email
+          email,
+          ...(username && { username }) // Only update username if provided (with error handling)
         }
       }
     };
+
+
 
     // Update password jika disediakan
     if (password) {

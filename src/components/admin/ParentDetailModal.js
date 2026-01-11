@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { getParentStatusContext } from '@/lib/helpers/parentStatusHelper';
 
 /**
  * Parent Detail Modal Component
@@ -33,52 +34,27 @@ export default function ParentDetailModal({ orangTuaItem, siswaList, onClose }) 
         <div className="space-y-6">
           {/* Avatar & Name */}
           <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
-            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-md">
               {orangTuaItem.user.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-900">{orangTuaItem.user.name}</p>
-              <p className="text-xs text-gray-500">{orangTuaItem.user.email}</p>
+              <p className="text-lg font-bold text-gray-900 leading-tight">{orangTuaItem.user.name}</p>
+              {(() => {
+                const statusContext = getParentStatusContext(orangTuaItem);
+                const statusDisplay = statusContext.statusDisplay;
+                return (
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border shadow-sm mt-1.5 ${statusDisplay.bg} ${statusDisplay.text} ${statusDisplay.border}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${statusDisplay.dot}`}></span>
+                    {statusDisplay.label}
+                  </span>
+                );
+              })()}
             </div>
           </div>
-
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-1">No. HP</p>
-              <p className="text-sm font-semibold text-gray-900">{orangTuaItem.noHP || orangTuaItem.noTelepon || '-'}</p>
-            </div>
-
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-1">Status Akun</p>
-              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                orangTuaItem.user.isActive
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-red-100 text-red-700'
-              }`}>
-                {orangTuaItem.user.isActive ? 'Aktif' : 'Tidak Aktif'}
-              </span>
-            </div>
-          </div>
-
-          {/* Additional Info */}
-          {orangTuaItem.pekerjaan && (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-1">Pekerjaan</p>
-              <p className="text-sm font-semibold text-gray-900">{orangTuaItem.pekerjaan}</p>
-            </div>
-          )}
-
-          {orangTuaItem.alamat && (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-1">Alamat</p>
-              <p className="text-sm font-semibold text-gray-900">{orangTuaItem.alamat}</p>
-            </div>
-          )}
 
           {/* Tanggal Pendaftaran */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <p className="text-xs font-semibold text-gray-600 mb-1">Tanggal Pendaftaran</p>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 shadow-sm">
+            <p className="text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Tanggal Pendaftaran</p>
             <p className="text-sm font-semibold text-gray-900">
               {new Date(orangTuaItem.user.createdAt).toLocaleDateString('id-ID', {
                 day: 'numeric',
