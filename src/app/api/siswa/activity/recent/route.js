@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 /**
  * API Route: GET /api/siswa/activity/recent
  * Fetch recent activities untuk siswa (untuk widget)

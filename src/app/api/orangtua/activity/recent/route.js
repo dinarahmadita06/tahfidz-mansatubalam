@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 /**
  * API Route: GET /api/orangtua/activity/recent
  * Fetch recent activities for parent portal

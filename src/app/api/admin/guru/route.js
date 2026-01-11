@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
@@ -5,7 +7,6 @@ import { getCachedData, setCachedData } from '@/lib/cache';
 
 // Force Node.js runtime for Prisma
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 // GET - List all guru with statistics (Admin only)
 export async function GET(request) {

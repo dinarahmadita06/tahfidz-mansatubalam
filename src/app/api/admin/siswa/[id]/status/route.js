@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 /**
  * API Endpoint: Update Student Status
  * PATCH /api/admin/siswa/[id]/status

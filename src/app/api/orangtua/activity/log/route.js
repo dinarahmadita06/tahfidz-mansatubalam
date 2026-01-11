@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 /**
  * API Route: POST /api/orangtua/activity/log
  * Log activities for parent portal (ORANG_TUA role only)

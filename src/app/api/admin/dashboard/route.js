@@ -1,10 +1,10 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
 // Mark this as a dynamic route - do not call during build
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export async function GET() {
   try {

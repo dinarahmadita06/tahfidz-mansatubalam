@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'; // Gunakan singleton prisma
 import { auth } from '@/lib/auth';
 import { getCachedData, setCachedData } from '@/lib/cache';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   const startTotal = performance.now();

@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { calculateStudentProgress } from '@/lib/services/siswaProgressService';
 import { getRelativeTime } from '@/lib/helpers/siswaActivityLogger';
 
-export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const startTime = performance.now();

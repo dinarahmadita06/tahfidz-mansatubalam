@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 /**
  * API Route: POST /api/siswa/activity/log
  * Log activity untuk siswa (view, action, atau system events)
