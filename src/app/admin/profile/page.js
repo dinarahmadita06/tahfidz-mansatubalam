@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import AdminLayout from '@/components/layout/AdminLayout';
 import ProfileClient from './ProfileClient';
 import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ProfileAdminPage() {
   const startTotal = performance.now();
