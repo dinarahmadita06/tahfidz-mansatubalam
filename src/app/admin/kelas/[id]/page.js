@@ -329,7 +329,7 @@ export default function KelolaSiswaPage() {
   // ============ DATA FETCHING ============
   const fetchKelasDetail = async () => {
     try {
-      const response = await fetch(`/api/kelas/${kelasId}?t=${Date.now()}`);
+      const response = await fetch(`/api/kelas/${kelasId}`);
       const data = await response.json();
       setKelas(data);
     } catch (error) {

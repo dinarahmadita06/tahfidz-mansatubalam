@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 export async function POST(request) {
   try {
@@ -47,6 +48,10 @@ export async function POST(request) {
         }
       }
     });
+
+    // Invalidate cache
+    invalidateCache('admin-tahun-ajaran-list');
+    invalidateCache('admin-tahun-ajaran-summary');
 
     // Log activity
     await logActivity({

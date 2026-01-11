@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 // PUT - Update tahun ajaran
 export async function PUT(request, { params }) {
@@ -59,6 +60,10 @@ export async function PUT(request, { params }) {
         }
       }
     });
+
+    // Invalidate cache
+    invalidateCache('admin-tahun-ajaran-list');
+    invalidateCache('admin-tahun-ajaran-summary');
 
     // Log activity
     await logActivity({
@@ -127,6 +132,10 @@ export async function DELETE(request, { params }) {
     await prisma.tahunAjaran.delete({
       where: { id }
     });
+
+    // Invalidate cache
+    invalidateCache('admin-tahun-ajaran-list');
+    invalidateCache('admin-tahun-ajaran-summary');
 
     // Log activity
     await logActivity({
