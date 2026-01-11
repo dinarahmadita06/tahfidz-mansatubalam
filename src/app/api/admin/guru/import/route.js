@@ -5,6 +5,8 @@ import * as XLSX from 'xlsx';
 import bcrypt from 'bcryptjs';
 import { invalidateCache } from '@/lib/cache';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const session = await auth();

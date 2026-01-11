@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import { invalidateCache } from '@/lib/cache';
 import { generateGuruEmail, generateGuruPassword } from '@/lib/passwordUtils';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const session = await auth();
