@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import dynamicImport from 'next/dynamic';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 const DashboardClient = dynamicImport(() => import('./DashboardClient'), {

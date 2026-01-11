@@ -1,8 +1,9 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { auth } from '@/lib/auth';
 import SiswaDashboardClient from './SiswaDashboardClient';
 import { headers } from 'next/headers';
 
-export const dynamic = 'force-dynamic';
 
 export default async function DashboardSiswa() {
   const session = await auth();

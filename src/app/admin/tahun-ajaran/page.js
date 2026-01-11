@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -5,8 +7,6 @@ import TahunAjaranClient from '@/components/admin/tahun-ajaran/TahunAjaranClient
 import { getCachedData, setCachedData } from '@/lib/cache';
 
 // Optimasi TTFB: Server Component dengan Parallel Data Fetching & Caching
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default async function AdminTahunAjaranPage() {
   console.time('AdminTahunAjaranPage: Total');
