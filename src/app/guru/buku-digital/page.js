@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import {
   Book,
@@ -76,7 +76,26 @@ function StatCard({ label, value, icon: Icon, color = 'blue' }) {
           <p className={`${config.text} text-2xl font-bold`}>{value}</p>
         </div>
         <div className={`w-12 h-12 ${config.iconBg} ${config.iconText} rounded-full flex items-center justify-center shadow-sm flex-shrink-0 border ${config.border}`}>
-          <Icon size={24} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={24} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>
@@ -411,7 +430,7 @@ export default function BukuDigitalPage() {
             description={searchQuery || selectedCategory !== 'Semua' 
               ? 'Coba gunakan kata kunci atau filter yang berbeda' 
               : 'Silakan upload materi Tahfidz pertama Anda untuk berbagi dengan siswa.'}
-            icon={BookOpen}
+            icon={<BookOpen size={28} />}
             actionLabel={!searchQuery && selectedCategory === 'Semua' ? 'Upload Materi Pertama' : null}
             onAction={!searchQuery && selectedCategory === 'Semua' ? () => setShowUploadModal(true) : null}
           />

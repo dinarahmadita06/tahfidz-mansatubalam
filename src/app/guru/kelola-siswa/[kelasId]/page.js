@@ -84,7 +84,8 @@ export default function KelolaSiswaByKelas() {
       const term = searchTerm.toLowerCase();
       const result = allSiswa.filter(s => 
         s.user?.name?.toLowerCase().includes(term) ||
-        s.nis?.includes(term)
+        s.nis?.includes(term) ||
+        s.nisn?.includes(term)
       );
       setFilteredSiswa(result);
     } else {
@@ -233,13 +234,13 @@ export default function KelolaSiswaByKelas() {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                  Cari Nama Siswa atau NIS
+                  Cari Nama Siswa, NIS, atau NISN
                 </label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
                   <input
                     type="text"
-                    placeholder="Cari siswa..."
+                    placeholder="Nama, NIS, NISN..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
@@ -262,7 +263,9 @@ export default function KelolaSiswaByKelas() {
                   <tr>
                     <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">No</th>
                     <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Nama Siswa</th>
+                    <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">NISN</th>
                     <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">NIS</th>
+                    <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Kelas</th>
                     <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Status</th>
                     <th className="py-4 px-6 text-left text-xs font-bold text-emerald-900 uppercase tracking-wider">Aksi</th>
                   </tr>
@@ -275,10 +278,15 @@ export default function KelolaSiswaByKelas() {
                       </td>
                       <td className="py-4 px-6">
                         <p className="font-medium text-gray-900">{siswa.user?.name || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">{siswa.user?.email || ''}</p>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="text-sm text-gray-600">{siswa.nisn || '-'}</p>
                       </td>
                       <td className="py-4 px-6">
                         <p className="text-sm text-gray-600">{siswa.nis || '-'}</p>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="text-sm text-gray-600">{siswa.kelas?.nama || '-'}</p>
                       </td>
                       <td className="py-4 px-6">
                         <span className={`px-3 py-1 text-xs font-medium rounded-full ${

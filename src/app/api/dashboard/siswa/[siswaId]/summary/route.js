@@ -174,20 +174,9 @@ export async function GET(req, { params }) {
     });
 
     // ===== 2. JUZ PROGRESS (PER SCHOOL YEAR) =====
-
-    const juzProgress = progressData.uniqueJuzs.map(juz => {
-      // For progress bar visualization, we might still want to count records per juz
-      // but the centralized service currently only gives unique juzs.
-      // To maintain the "10 setoran = 100%" logic, we need to count again.
-      return {
-        label: `Juz ${juz}`,
-        progress: 100, // For dashboard summary, we show achieved juzs as 100% or we can refine
-        juz: juz
-      };
-    });
-
-    const filteredJuzProgress = juzProgress
-      .filter(juz => juz.progress > 0)
+    
+    // Use the granular progress data from the service
+    const filteredJuzProgress = progressData.juzProgress
       .sort((a, b) => a.juz - b.juz);
 
     // ===== 3. TARGET SEKOLAH & PROGRESS =====

@@ -32,7 +32,9 @@ import {
   generateWaliEmail, 
   generatePasswordMixed,
   generateStudentPassword,
-  generateParentPassword
+  generateParentPassword,
+  generateStudentUsername,
+  generateParentUsername
 } from '@/lib/passwordUtils';
 
 export default function StudentCreateModal({ 
@@ -83,7 +85,6 @@ export default function StudentCreateModal({
     kelasAngkatan: '',
     jenisKelamin: 'LAKI_LAKI',
     tanggalLahir: '',
-    noTelepon: '',
     email: '',
   });
 
@@ -105,7 +106,6 @@ export default function StudentCreateModal({
           kelasAngkatan: editingSiswa.kelasAngkatan || '',
           jenisKelamin: editingSiswa.jenisKelamin || 'LAKI_LAKI',
           tanggalLahir: editingSiswa.tanggalLahir ? new Date(editingSiswa.tanggalLahir).toISOString().split('T')[0] : '',
-          noTelepon: editingSiswa.noTelepon || '',
           email: editingSiswa.user?.email || '',
         });
         
@@ -169,7 +169,6 @@ export default function StudentCreateModal({
       kelasAngkatan: '',
       jenisKelamin: 'LAKI_LAKI',
       tanggalLahir: '',
-      noTelepon: '',
       email: '',
     });
     setParentMode('select');
@@ -190,8 +189,8 @@ export default function StudentCreateModal({
 
   // Auto-generate student email (Manual password generation only)
   useEffect(() => {
-    if (!isEditing && formData.name && formData.nis) {
-      const generatedEmail = generateSiswaEmail(formData.name, formData.nis);
+    if (!isEditing && formData.nis) {
+      const generatedEmail = generateSiswaEmail(formData.name || 'Siswa', formData.nis);
       setFormData(prev => ({ 
         ...prev, 
         email: generatedEmail
@@ -275,29 +274,25 @@ export default function StudentCreateModal({
   };
 
   const handleGenerateStudentPassword = () => {
-    if (!formData.nisn || formData.nisn.trim().length !== 10) {
-      toast.error('NISN wajib diisi (10 digit) terlebih dahulu');
+    if (!formData.tanggalLahir) {
+      toast.error('Tanggal lahir wajib diisi terlebih dahulu');
       return;
     }
-    const pwd = generateStudentPassword(formData.nisn);
+    const pwd = generateStudentPassword(formData.tanggalLahir);
     setFormData({ ...formData, password: pwd });
     setIsGeneratedStudentPw(true);
-    toast.success('Password siswa di-generate dari NISN');
+    toast.success('Password siswa di-generate dari tanggal lahir (YYYY-MM-DD)');
   };
 
   const handleGenerateParentPassword = () => {
-    if (!formData.nisn || formData.nisn.trim().length !== 10) {
-      toast.error('NISN wajib diisi (10 digit) terlebih dahulu');
-      return;
-    }
     if (!formData.tanggalLahir) {
       toast.error('Tanggal lahir wajib diisi untuk generate password wali');
       return;
     }
-    const pwd = generateParentPassword(formData.nisn, formData.tanggalLahir);
+    const pwd = generateParentPassword(formData.tanggalLahir);
     setNewParentData({ ...newParentData, password: pwd });
     setIsGeneratedParentPw(true);
-    toast.success('Password wali di-generate (NISN-TahunLahir)');
+    toast.success('Password wali di-generate dari tanggal lahir (DDMMYYYY)');
   };
 
   const handleSubmit = async (e) => {
@@ -308,14 +303,6 @@ export default function StudentCreateModal({
     try {
       const studentEmail = formData.email || generateSiswaEmail(formData.name, formData.nis);
       
-      // Normalize phone number: 08... / 62... / +62... → 628...
-      let normalizedPhone = formData.noTelepon ? formData.noTelepon.replace(/[^0-9]/g, '') : '';
-      if (normalizedPhone.startsWith('08')) {
-        normalizedPhone = '628' + normalizedPhone.slice(2);
-      } else if (normalizedPhone.startsWith('8')) {
-        normalizedPhone = '628' + normalizedPhone.slice(1);
-      }
-      
       let payload;
       let endpoint;
       let method = isEditing ? 'PATCH' : 'POST';
@@ -325,8 +312,8 @@ export default function StudentCreateModal({
         payload = {
           student: {
             ...formData,
-            noTelepon: normalizedPhone,
             email: studentEmail,
+            username: formData.nis, // Use NIS as username
             gender: formData.jenisKelamin, // Guru API uses 'gender'
             birthDate: formData.tanggalLahir, // Guru API uses 'birthDate'
           },
@@ -334,6 +321,7 @@ export default function StudentCreateModal({
           existingParentId: selectedParentId,
           parent: parentMode === 'create' ? {
             ...newParentData,
+            username: formData.nis + '_wali', // Use child's NIS with suffix for parent username
             phone: newParentData.noHP, // Guru API uses 'phone'
             gender: newParentData.jenisKelamin, // Guru API uses 'gender'
             relationType: newParentData.jenisWali // Guru API uses 'relationType'
@@ -343,8 +331,8 @@ export default function StudentCreateModal({
         endpoint = isEditing ? `/api/admin/siswa/${editingSiswa.id}` : '/api/admin/siswa';
         payload = {
           ...formData,
-          noTelepon: normalizedPhone,
           email: studentEmail,
+          username: formData.nis, // Use NIS as username
           parentData: parentMode === 'create' ? newParentData : null,
           existingParentId: parentMode === 'select' ? selectedParentId : null,
         };
@@ -360,7 +348,9 @@ export default function StudentCreateModal({
 
       if (!response.ok) {
         if (result.invalidFields) setFieldErrors(result.invalidFields);
-        throw new Error(result.error || result.message || 'Gagal menyimpan data');
+        // If the error contains NIS-related message, use that, otherwise use general error
+        const errorMessage = result.error || result.message || 'Gagal menyimpan data';
+        throw new Error(errorMessage);
       }
 
       if (isEditing) {
@@ -374,12 +364,12 @@ export default function StudentCreateModal({
       setCreatedAccounts({
         student: {
           name: formData.name,
-          email: studentEmail,
+          username: formData.nis,
           password: formData.password,
         },
         parent: {
           name: parentMode === 'create' ? newParentData.name : (parents.find(p => p.id === selectedParentId)?.user?.name || 'Orang Tua'),
-          email: parentMode === 'create' ? newParentData.email : (parents.find(p => p.id === selectedParentId)?.user?.email || ''),
+          username: formData.nis, // Parent uses same NIS as username
           password: parentMode === 'create' ? newParentData.password : '********',
           isNew: parentMode === 'create',
         },
@@ -401,7 +391,12 @@ export default function StudentCreateModal({
       setShowSuccessModal(true);
       if (onSuccess) onSuccess();
     } catch (error) {
-      alert(`❌ ${error.message}`);
+      // Check if the error message indicates duplicate NIS
+      if (error.message.includes('NIS') && error.message.includes('sudah terdaftar')) {
+        toast.error(error.message);
+      } else {
+        alert(`❌ ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -565,17 +560,7 @@ export default function StudentCreateModal({
                   />
                 </div>
 
-                {/* Row 5: Nomor WhatsApp Siswa (Optional) */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700">Nomor WhatsApp Siswa</label>
-                  <input
-                    type="tel"
-                    value={formData.noTelepon}
-                    onChange={(e) => setFormData({ ...formData, noTelepon: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
-                    placeholder="Contoh: 08123456789"
-                  />
-                </div>
+
               </div>
             </div>
             {!isEditing && (
@@ -587,11 +572,11 @@ export default function StudentCreateModal({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700">Email (Otomatis)</label>
+                    <label className="text-sm font-bold text-gray-700">Username (Otomatis)</label>
                     <input
                       type="text"
                       disabled
-                      value={formData.email || 'Akan otomatis dibuat'}
+                      value={formData.nis || 'Isi NIS untuk membuat username'}
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-50 bg-gray-50 text-gray-500 outline-none italic"
                     />
                   </div>
@@ -606,11 +591,11 @@ export default function StudentCreateModal({
                     required
                     iconOnlyGenerate={true}
                     onGenerateCustom={handleGenerateStudentPassword}
-                    generateDisabled={!formData.nisn || formData.nisn.trim().length !== 10}
+                    generateDisabled={!formData.tanggalLahir}
                     helperText={
-                      isGeneratedStudentPw && formData.password !== generateStudentPassword(formData.nisn)
+                      isGeneratedStudentPw && formData.password !== generateStudentPassword(formData.tanggalLahir)
                         ? "Klik generate ulang untuk memperbarui password."
-                        : "Klik icon generate untuk mengisi password siswa dari NISN."
+                        : formData.tanggalLahir ? "Klik icon generate untuk mengisi password siswa dari tanggal lahir (format: YYYY-MM-DD)." : "Isi tanggal lahir untuk generate password."
                     }
                   />
                 </div>
@@ -776,6 +761,8 @@ export default function StudentCreateModal({
                         <option value="PEREMPUAN">Perempuan</option>
                       </select>
                     </div>
+                    {/* COMMENTED OUT: No Telp Wali field hidden from UI per new policy (for future use) */}
+                    {/*
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-gray-700">No Telp Wali *</label>
                       <input
@@ -787,14 +774,15 @@ export default function StudentCreateModal({
                         placeholder="Contoh: 08123456789"
                       />
                     </div>
+                    */}
 
                     {/* Row 3: Email Akun Wali — Password Akun Wali */}
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-700">Email Wali (Otomatis)</label>
+                      <label className="text-sm font-bold text-gray-700">Username Wali (Otomatis)</label>
                       <input
                         type="text"
                         disabled
-                        value={newParentData.email || 'Akan otomatis dibuat'}
+                        value={formData.nis || 'Isi NIS untuk membuat username'}
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-50 bg-gray-50 text-gray-500 outline-none italic"
                       />
                     </div>
@@ -809,11 +797,11 @@ export default function StudentCreateModal({
                       required={parentMode === 'create'}
                       iconOnlyGenerate={true}
                       onGenerateCustom={handleGenerateParentPassword}
-                      generateDisabled={!formData.nisn || formData.nisn.trim().length !== 10 || !formData.tanggalLahir}
+                      generateDisabled={!formData.tanggalLahir}
                       helperText={
-                        isGeneratedParentPw && newParentData.password !== generateParentPassword(formData.nisn, formData.tanggalLahir)
+                        isGeneratedParentPw && newParentData.password !== generateParentPassword(formData.tanggalLahir)
                           ? "Klik generate ulang untuk memperbarui password."
-                          : "Klik icon generate untuk mengisi password wali (NISN-TahunLahir)."
+                          : formData.tanggalLahir ? "Klik icon generate untuk mengisi password wali (format: DDMMYYYY dari tanggal lahir siswa)." : "Isi tanggal lahir untuk generate password."
                       }
                     />
                   </div>

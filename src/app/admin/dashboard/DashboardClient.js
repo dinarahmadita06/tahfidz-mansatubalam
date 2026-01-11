@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -116,7 +116,26 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
           )}
         </div>
         <div className={`${config.iconBg} p-2.5 lg:p-3 rounded-xl lg:rounded-2xl shadow-sm flex-shrink-0`}>
-          <Icon size={20} className={config.iconColor} strokeWidth={2} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={20} className={config.iconColor} strokeWidth={2} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>

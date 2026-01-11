@@ -123,7 +123,7 @@ export default function ActivityList({ activities = [] }) {
       <EmptyState
         title="Belum ada aktivitas terbaru"
         description="Aktivitas Anda akan muncul di sini setelah melakukan pengisian data."
-        icon={FileText}
+        icon={<FileText size={28} />}
         className="py-6"
       />
     );

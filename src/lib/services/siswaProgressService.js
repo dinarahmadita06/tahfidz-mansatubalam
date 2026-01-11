@@ -1,4 +1,5 @@
-import { surahNameToNumber, getJuzsFromRange, parseSurahRange } from '../quranUtils';
+import { surahNameToNumber, parseSurahRange } from '../quranUtils';
+import { calculateJuzProgress } from '../utils/quranProgress';
 
 /**
  * Service to handle student progress calculation and validation
@@ -48,72 +49,58 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
     }
   });
 
-  const uniqueJuzSet = new Set();
+  // Prepare entries for calculation
+  const entries = [];
   
-  hafalanRecords.forEach(h => {
-    // Primary surah/juz
-    if (h.juz) {
-      uniqueJuzSet.add(h.juz);
-    } else {
-      const sNum = h.surahNumber || surahNameToNumber[h.surah];
-      if (sNum && h.ayatMulai && h.ayatSelesai) {
-        const juzs = getJuzsFromRange(sNum, h.ayatMulai, h.ayatSelesai);
-        juzs.forEach(j => uniqueJuzSet.add(j));
-      }
+  const addEntry = (item) => {
+    let sNum = item.surahNumber;
+    if (!sNum && item.surah) {
+      const parsed = parseSurahRange(item.surah);
+      if (parsed.length > 0) sNum = parsed[0].surahNumber;
+      else sNum = surahNameToNumber[item.surah];
     }
 
-    // Surah Tambahan
+    if (sNum && item.ayatMulai && item.ayatSelesai) {
+      entries.push({
+        surahNumber: sNum,
+        ayatMulai: item.ayatMulai,
+        ayatSelesai: item.ayatSelesai
+      });
+    }
+  };
+
+  hafalanRecords.forEach(h => {
+    // 1. Primary Surah
+    addEntry(h);
+
+    // 2. Surah Tambahan
     let tambahan = [];
     try {
       tambahan = typeof h.surahTambahan === 'string' 
         ? JSON.parse(h.surahTambahan) 
         : (h.surahTambahan || []);
-    } catch (e) {
-      // ignore parse errors
-    }
+    } catch (e) {}
 
     if (Array.isArray(tambahan)) {
-      tambahan.forEach(item => {
-        let sNum = item.surahNumber;
-        if (!sNum && item.surah) {
-           const parsed = parseSurahRange(item.surah);
-           if (parsed.length > 0) sNum = parsed[0].surahNumber;
-           else sNum = surahNameToNumber[item.surah];
-        }
-        
-        if (sNum && item.ayatMulai && item.ayatSelesai) {
-          const juzs = getJuzsFromRange(sNum, item.ayatMulai, item.ayatSelesai);
-          juzs.forEach(j => uniqueJuzSet.add(j));
-        } else if (item.juz) {
-          uniqueJuzSet.add(Number(item.juz));
-        }
-      });
+      tambahan.forEach(item => addEntry(item));
     }
   });
 
-  const totalJuz = uniqueJuzSet.size;
+  // Calculate final progress per Juz using pure utility
+  const result = calculateJuzProgress(entries);
+  const { totalJuz, juzProgress } = result;
 
-  // Sync to Siswa table IF it's a lifetime calculation or if the new count is higher
-  // This helps keep latestJuzAchieved somewhat accurate
-  if (!schoolYearId) {
-    await prisma.siswa.update({
-      where: { id: siswaId },
-      data: { latestJuzAchieved: totalJuz }
-    }).catch(console.error);
-  } else {
-     // If school year calculation, only update if it's higher than what we have (conservative sync)
-     const currentSiswa = await prisma.siswa.findUnique({ where: { id: siswaId }, select: { latestJuzAchieved: true }});
-     if (currentSiswa && totalJuz > currentSiswa.latestJuzAchieved) {
-        await prisma.siswa.update({
-          where: { id: siswaId },
-          data: { latestJuzAchieved: totalJuz }
-        }).catch(console.error);
-     }
-  }
+  // Sync to Siswa table
+  const updateData = { latestJuzAchieved: Math.floor(totalJuz) };
+  await prisma.siswa.update({
+    where: { id: siswaId },
+    data: updateData
+  }).catch(console.error);
 
   return {
     totalJuz,
-    uniqueJuzs: Array.from(uniqueJuzSet).sort((a, b) => a - b),
+    juzProgress,
+    uniqueJuzs: juzProgress.filter(r => r.coveredAyat > 0).map(r => r.juz),
     recordCount: hafalanRecords.length,
     schoolYearId,
     targetJuzMinimal: schoolYear?.targetHafalan || 3

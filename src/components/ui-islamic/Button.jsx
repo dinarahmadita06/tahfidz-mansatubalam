@@ -3,6 +3,7 @@
  * Reusable button component with Islamic design aesthetics
  */
 
+import React from 'react';
 import { designSystem } from '@/styles/design-system';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
@@ -130,9 +131,31 @@ export function Button({
         </div>
       ) : (
         <>
-          {icon && iconPosition === 'left' && <span className="btn-icon">{icon}</span>}
+          {icon && iconPosition === 'left' && (
+            <span className="btn-icon">
+              {(() => {
+                if (React.isValidElement(icon)) return icon;
+                if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && (icon.$$typeof || icon.render))) {
+                  const IconComp = icon;
+                  return <IconComp size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />;
+                }
+                return icon;
+              })()}
+            </span>
+          )}
           {children}
-          {icon && iconPosition === 'right' && <span className="btn-icon">{icon}</span>}
+          {icon && iconPosition === 'right' && (
+            <span className="btn-icon">
+              {(() => {
+                if (React.isValidElement(icon)) return icon;
+                if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && (icon.$$typeof || icon.render))) {
+                  const IconComp = icon;
+                  return <IconComp size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />;
+                }
+                return icon;
+              })()}
+            </span>
+          )}
         </>
       )}
       <style jsx>{`

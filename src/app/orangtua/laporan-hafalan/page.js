@@ -433,16 +433,16 @@ export default function LaporanHafalanPage() {
         </div>
 
         {/* Grafik Perkembangan */}
-        <div className="bg-white shadow-sm border border-emerald-100 rounded-xl p-6">
+        <div className="bg-white shadow-sm border border-emerald-100 rounded-xl p-6 min-w-0">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">
             📈 Grafik Perkembangan Hafalan Bulanan
           </h2>
 
           <div className="space-y-8">
             {/* Line Chart - Progress Over Time */}
-            <div>
+            <div className="w-full h-[280px] md:h-[300px] min-w-0">
               <h3 className="text-sm font-medium text-gray-600 mb-4">Progress Hafalan & Nilai</h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={progressData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="minggu" stroke="#6b7280" />
@@ -485,9 +485,9 @@ export default function LaporanHafalanPage() {
             </div>
 
             {/* Bar Chart - Performance */}
-            <div>
+            <div className="w-full h-[280px] md:h-[300px] min-w-0">
               <h3 className="text-sm font-medium text-gray-600 mb-4">Performa Berdasarkan Kategori</h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={performanceData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="kategori" stroke="#6b7280" />

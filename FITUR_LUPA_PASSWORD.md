@@ -117,7 +117,7 @@ Sistem reset password di SIMTAQ dirancang dengan konsep yang aman dan terpusat:
 **Authorization:** Admin only
 
 **Parameters:**
-- `type`: email | nis | nip | noTelepon
+- `type`: email | nis | nip
 - `query`: nilai pencarian
 
 **Response Success:**

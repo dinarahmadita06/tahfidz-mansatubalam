@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
@@ -23,7 +23,26 @@ function StatCard({ label, value, icon, color }) {
           <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
         <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm text-white`}>
-          {icon}
+          {(() => {
+            if (!icon) return null;
+            if (React.isValidElement(icon)) return icon;
+            
+            const isComponent = 
+              typeof icon === 'function' || 
+              (typeof icon === 'object' && icon !== null && (
+                icon.$$typeof === Symbol.for('react.forward_ref') || 
+                icon.$$typeof === Symbol.for('react.memo') ||
+                icon.render || 
+                icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = icon;
+              return <IconComp size={24} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>

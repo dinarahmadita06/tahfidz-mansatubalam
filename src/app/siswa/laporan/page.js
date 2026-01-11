@@ -1,22 +1,111 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+
 import {
   BarChart3,
   BookOpen,
   Target,
   Award,
   Flame,
+  ChevronRight,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 // ============================================================
-// CHART COMPONENTS
-// ============================================================
-
-// ============================================================
 // SUB-COMPONENTS
 // ============================================================
+
+function ProgressSummary({ juzDistribution, totalJuzSelesai, targetJuzSekolah }) {
+  const activeJuz = useMemo(() => {
+    return [...juzDistribution]
+      .filter(item => item.value > 0)
+      .sort((a, b) => {
+        // Opsi A: Sort by Juz number descending (30, 29... 1)
+        const juzA = parseInt(a.label.replace('Juz ', '')) || 0;
+        const juzB = parseInt(b.label.replace('Juz ', '')) || 0;
+        return juzB - juzA;
+      });
+  }, [juzDistribution]);
+
+  const topJuzByProgress = useMemo(() => {
+    return [...juzDistribution].sort((a, b) => b.value - a.value)[0];
+  }, [juzDistribution]);
+
+  if (activeJuz.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10">
+        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+          <BookOpen className="text-gray-300" size={32} />
+        </div>
+        <p className="text-gray-500 font-medium text-sm">Belum ada progres hafalan</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Ringkasan Header - Hanya Target Sekolah */}
+      <div className="grid grid-cols-1 gap-4">
+        <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">Target Hafalan Sekolah</p>
+            <div className="flex items-center gap-2">
+              <Target size={16} className="text-emerald-600" />
+              <span className="text-lg font-bold text-emerald-900">{targetJuzSekolah} Juz</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1">Status</p>
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+              {activeJuz.length} Juz Aktif
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Indikator Kecil */}
+      <div className="flex flex-wrap gap-4 px-1">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+          <span className="text-xs text-gray-500">Juz Teratas:</span>
+          <span className="text-xs font-bold text-gray-700">
+            {topJuzByProgress ? `${topJuzByProgress.label} — ${topJuzByProgress.value}%` : '-'}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+          <span className="text-xs text-gray-500">Jumlah Juz Berprogres:</span>
+          <span className="text-xs font-bold text-gray-700">{activeJuz.length}</span>
+        </div>
+      </div>
+
+      {/* Bar List - Semua Juz Berprogres */}
+      <div className="space-y-3 pt-2">
+        <div className="space-y-4">
+          {activeJuz.map((item, index) => (
+            <div key={index} className="group">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-sm font-bold text-gray-700">{item.label}</span>
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                  {item.value}%
+                </span>
+              </div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${item.value}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function StatCard({ label, value, icon: Icon, color = 'emerald', subtitle }) {
   const getReportCardVariant = (type) => {
@@ -86,94 +175,27 @@ function StatCard({ label, value, icon: Icon, color = 'emerald', subtitle }) {
           </div>
         </div>
         <div className={`w-12 h-12 ${variant.iconBg} ${variant.iconText} rounded-full flex items-center justify-center shadow-sm flex-shrink-0 border ${variant.border}`}>
-          <Icon size={24} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={24} />;
+            }
+            
+            return null;
+          })()}
         </div>
-      </div>
-    </div>
-  );
-}
-
-// Donut Chart Component
-function DonutChart({ data, size = 200 }) {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-
-  if (total === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center" style={{ width: size, height: size }}>
-        <BookOpen size={48} className="text-gray-300 mb-2" />
-        <p className="text-sm text-gray-500">Belum ada data</p>
-      </div>
-    );
-  }
-
-  // Generate SVG path segments
-  const segments = [];
-  let currentAngle = -90;
-  const outerRadius = 70;
-  const innerRadius = 45;
-  const centerX = 100;
-  const centerY = 100;
-
-  data.forEach((item, itemIndex) => {
-    let sliceAngle = (item.value / total) * 360;
-    
-    // If this is the only item and it's 100%, reduce it slightly to show the donut shape
-    if (data.length === 1 && sliceAngle > 359) {
-      sliceAngle = 359;
-    }
-    
-    const startAngle = (currentAngle * Math.PI) / 180;
-    const endAngle = ((currentAngle + sliceAngle) * Math.PI) / 180;
-    
-    // Outer arc points
-    const x1 = centerX + outerRadius * Math.cos(startAngle);
-    const y1 = centerY + outerRadius * Math.sin(startAngle);
-    const x2 = centerX + outerRadius * Math.cos(endAngle);
-    const y2 = centerY + outerRadius * Math.sin(endAngle);
-    
-    // Inner arc points
-    const x3 = centerX + innerRadius * Math.cos(endAngle);
-    const y3 = centerY + innerRadius * Math.sin(endAngle);
-    const x4 = centerX + innerRadius * Math.cos(startAngle);
-    const y4 = centerY + innerRadius * Math.sin(startAngle);
-    
-    const largeArc = sliceAngle > 180 ? 1 : 0;
-    
-    const pathData = `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
-    
-    segments.push({
-      path: pathData,
-      color: item.color
-    });
-    
-    currentAngle += sliceAngle;
-  });
-
-  return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox="0 0 200 200" className="absolute inset-0" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.2" />
-          </filter>
-        </defs>
-        {segments.map((segment, index) => (
-          <path
-            key={index}
-            d={segment.path}
-            fill={segment.color}
-            filter="url(#shadow)"
-            stroke="white"
-            strokeWidth="1"
-            className="hover:opacity-80 transition-opacity cursor-pointer"
-          />
-        ))}
-      </svg>
-
-      {/* Center text */}
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        <p className="text-3xl font-bold text-gray-900">{total}</p>
-        <p className="text-xs text-gray-600">Setoran</p>
       </div>
     </div>
   );
@@ -229,6 +251,8 @@ export default function LaporanHafalanPage() {
 
   // Data state
   const [juzDistribution, setJuzDistribution] = useState([]);
+  const [totalJuzSelesai, setTotalJuzSelesai] = useState(0);
+  const [targetJuzSekolah, setTargetJuzSekolah] = useState(2);
   const [aspectScores, setAspectScores] = useState([
     { label: 'Tajwid', value: 0, color: 'bg-emerald-500' },
     { label: 'Kelancaran', value: 0, color: 'bg-amber-500' },
@@ -280,6 +304,8 @@ export default function LaporanHafalanPage() {
 
       // Update state dengan data dari API
       setJuzDistribution(data.juzDistribution || []);
+      setTotalJuzSelesai(data.totalJuzSelesai || 0);
+      setTargetJuzSekolah(data.targetJuzSekolah || 2);
       setAspectScores(data.aspectScores || [
         { label: 'Tajwid', value: 0, color: 'bg-emerald-500' },
         { label: 'Kelancaran', value: 0, color: 'bg-amber-500' },
@@ -469,11 +495,11 @@ export default function LaporanHafalanPage() {
                   subtitle="dari 100"
                 />
                 <StatCard
-                  label="Target Tercapai"
-                  value={`${currentStats.targetTercapai || 0}%`}
-                  icon={Target}
+                  label="Progress Capaian Total"
+                  value={`${totalJuzSelesai.toFixed(2)} / ${targetJuzSekolah} Juz`}
+                  icon={TrendingUp}
                   color="purple"
-                  subtitle="progress"
+                  subtitle={`(${targetJuzSekolah > 0 ? Math.round((totalJuzSelesai / targetJuzSekolah) * 100) : 0}%)`}
                 />
                 <StatCard
                   label="Konsistensi"
@@ -486,55 +512,24 @@ export default function LaporanHafalanPage() {
 
               {/* Charts Section - 2 Columns */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Donut Chart - Distribusi Juz */}
-                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
+                {/* Progres per Juz Section - Summary + Top 5 Bar List */}
+                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden min-w-0">
                   <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
-                    <h2 className="text-lg font-bold text-white">Distribusi Juz</h2>
-                    <p className="text-sm text-green-50 mt-1">Setoran per juz</p>
+                    <h2 className="text-lg font-bold text-white">Progres per Juz</h2>
+                    <p className="text-sm text-green-50 mt-1">Ringkasan capaian dan target hafalan</p>
                   </div>
 
                   <div className="p-6">
-                    {juzDistribution.length > 0 ? (
-                      <>
-                        {/* Donut Chart */}
-                        <div className="flex justify-center mb-8">
-                          <DonutChart data={juzDistribution} size={200} />
-                        </div>
-
-                        {/* Legend - Juz Distribution */}
-                        <div className="space-y-2">
-                          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">Sebaran Setoran per Juz</p>
-                          <div className="grid grid-cols-2 gap-3">
-                            {juzDistribution.map((item, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/50 border border-gray-200/50"
-                              >
-                                <div
-                                  className="w-3 h-3 rounded-full flex-shrink-0"
-                                  style={{ backgroundColor: item.color }}
-                                ></div>
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium text-gray-700 truncate">
-                                    {item.label} <span className="font-bold text-emerald-600">— {item.value} setoran</span>
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <BookOpen size={48} className="text-gray-300 mb-2" />
-                        <p className="text-sm text-gray-500 text-center">Belum ada data juz</p>
-                      </div>
-                    )}
+                    <ProgressSummary 
+                      juzDistribution={juzDistribution} 
+                      totalJuzSelesai={totalJuzSelesai}
+                      targetJuzSekolah={targetJuzSekolah}
+                    />
                   </div>
                 </div>
 
                 {/* Bar Chart - Nilai per Aspek */}
-                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden">
+                <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 overflow-hidden min-w-0">
                   <div className="px-6 py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500">
                     <h2 className="text-lg font-bold text-white">Nilai per Aspek</h2>
                     <p className="text-sm text-green-50 mt-1">Rata-rata berdasarkan aspek penilaian</p>

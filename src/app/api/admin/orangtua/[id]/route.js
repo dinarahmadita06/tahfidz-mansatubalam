@@ -122,9 +122,8 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 });
     }
 
-    // Prepare update data - map noHP to noTelepon for Prisma
+    // Prepare update data
     const orangTuaUpdateData = {};
-    if (noHP !== undefined) orangTuaUpdateData.noTelepon = noHP;
     if (pekerjaan !== undefined) orangTuaUpdateData.pekerjaan = pekerjaan || null;
     if (alamat !== undefined) orangTuaUpdateData.alamat = alamat || null;
 
@@ -209,10 +208,11 @@ export async function DELETE(request, { params }) {
       include: {
         user: {
           select: {
+            id: true,
             name: true
           }
         },
-        siswa: true
+        orangTuaSiswa: true
       }
     });
 
@@ -221,20 +221,13 @@ export async function DELETE(request, { params }) {
     }
 
     // Store data for logging
+    const userId = orangTua.user.id;
     const orangTuaName = orangTua.user.name;
-    const orangTuaNoHP = orangTua.noHP;
+    const childrenCount = orangTua.orangTuaSiswa.length;
 
-    // If has children, unlink them (set orangTuaId to null)
-    if (orangTua.siswa.length > 0) {
-      await prisma.siswa.updateMany({
-        where: { orangTuaId: id },
-        data: { orangTuaId: null }
-      });
-    }
-
-    // Delete orang tua (will cascade delete user)
-    await prisma.orangTua.delete({
-      where: { id }
+    // Delete the user (this will cascade delete OrangTua and OrangTuaSiswa)
+    await prisma.user.delete({
+      where: { id: userId }
     });
 
     // Log activity
@@ -244,19 +237,20 @@ export async function DELETE(request, { params }) {
       userRole: session.user.role,
       action: 'DELETE',
       module: 'ORANG_TUA',
-      description: `Menghapus orang tua ${orangTuaName} (No HP: ${orangTuaNoHP})`,
+      description: `Menghapus akun orang tua ${orangTuaName}`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
         deletedOrangTuaId: id,
+        deletedUserId: userId,
         deletedOrangTuaName: orangTuaName,
-        unlinkedChildren: orangTua.siswa.length
+        unlinkedChildren: childrenCount
       }
     });
 
     return NextResponse.json({
-      message: 'Orang tua berhasil dihapus',
-      unlinkedChildren: orangTua.siswa.length
+      message: 'Akun orang tua berhasil dihapus',
+      unlinkedChildren: childrenCount
     });
   } catch (error) {
     console.error('Error deleting orang tua:', error);

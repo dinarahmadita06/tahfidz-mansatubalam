@@ -39,7 +39,7 @@ async function exportSiswaTanpaOrangTua() {
       'Jenis Kelamin': siswa.jenisKelamin === 'LAKI_LAKI' ? 'L' : 'P',
       'Tanggal Lahir': siswa.tanggalLahir ?
         siswa.tanggalLahir.toISOString().split('T')[0] : '',
-      'Alamat': siswa.alamat || '',
+
       'Nama Orang Tua': '', // Kosong - untuk diisi
       'No HP Orang Tua': '' // Kosong - untuk diisi
     }));

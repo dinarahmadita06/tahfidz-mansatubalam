@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
   Star,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import AnnouncementSlider from '@/components/AnnouncementSlider';
+import { getDashboardJuzProgress } from '@/lib/utils/quranProgress';
 
 // ===== CONSTANTS =====
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
@@ -118,7 +119,26 @@ const EmptyState = ({ icon: Icon, title, description }) => {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       <div className="p-4 bg-gray-100 rounded-full mb-4">
-        <Icon className="text-gray-400" size={32} />
+        {(() => {
+          if (!Icon) return null;
+          if (React.isValidElement(Icon)) return Icon;
+          
+          const isComponent = 
+            typeof Icon === 'function' || 
+            (typeof Icon === 'object' && Icon !== null && (
+              Icon.$$typeof === Symbol.for('react.forward_ref') || 
+              Icon.$$typeof === Symbol.for('react.memo') ||
+              Icon.render || 
+              Icon.displayName
+            ));
+
+          if (isComponent) {
+            const IconComp = Icon;
+            return <IconComp className="text-gray-400" size={32} />;
+          }
+          
+          return null;
+        })()}
       </div>
       <h3 className="text-sm font-semibold text-gray-700 mb-1">{title}</h3>
       <p className="text-xs text-gray-500">{description}</p>
@@ -222,6 +242,9 @@ export default function StudentDashboardContent({
       setLoading(false);
     }
   };
+
+  // Filter and limit juz progress for dashboard view
+  const displayJuzs = getDashboardJuzProgress(juzProgress);
 
   // Determine report links based on role context
   const laporan_href = roleContext === 'SISWA' ? '/siswa/laporan' : '/orangtua/laporan-hafalan';
@@ -367,37 +390,44 @@ export default function StudentDashboardContent({
               <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
             ))}
           </div>
-        ) : juzProgress.length === 0 ? (
-          <EmptyState
-            icon={BookOpen}
-            title="Belum ada progress hafalan"
-            description="Mulai setoran hafalan untuk melihat progress per juz"
-          />
         ) : (
           <>
-            <div className="space-y-4">
-              {juzProgress.map((item) => (
-                <div key={item.label} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700">{item.label}</span>
-                    <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
+            {displayJuzs.length === 0 ? (
+              <EmptyState
+                icon={BookOpen}
+                title="Belum ada progres hafalan"
+                description="Mulai setoran hafalan untuk melihat progress per juz"
+              />
+            ) : (
+              <div className="space-y-4">
+                {displayJuzs.map((item) => (
+                  <div key={item.label} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-700">{item.label}</span>
+                      <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(item.progress, 100)}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(item.progress, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            <Link
-              href={laporan_href}
-              className="mt-5 lg:mt-6 inline-flex items-center gap-2 px-5 py-2.5 lg:px-6 lg:py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white text-sm lg:text-base font-semibold rounded-xl transition-all duration-300 shadow-md"
-            >
-              Lihat Laporan Lengkap <ChevronRight className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
-            </Link>
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
+              <Link
+                href={laporan_href}
+                className="inline-flex items-center gap-2 px-5 py-2.5 lg:px-6 lg:py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white text-sm lg:text-base font-semibold rounded-xl transition-all duration-300 shadow-md"
+              >
+                Lihat Laporan Lengkap <ChevronRight className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
+              </Link>
+              <p className="text-[11px] lg:text-xs text-gray-500 italic">
+                * Lihat semua juz di menu laporan
+              </p>
+            </div>
           </>
         )}
       </Card>

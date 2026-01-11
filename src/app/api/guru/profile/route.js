@@ -41,6 +41,7 @@ export async function GET(request) {
             },
           },
         },
+        // Include nip and jenisKelamin fields directly in the main query
       },
     });
 
@@ -66,7 +67,7 @@ export async function GET(request) {
 
 /**
  * PATCH - Update guru profile
- * Updates: name, email, phone, alamat, tanggalLahir
+ * Updates: name, email, tanggalLahir
  */
 export async function PATCH(request) {
   try {
@@ -80,14 +81,13 @@ export async function PATCH(request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, alamat, tanggalLahir } = body;
+    const { name, nip, jenisKelamin, tanggalLahir } = body;
 
     // Update User profile
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        ...(name && { name }),
-        ...(email && { email })
+        ...(name && { name })
       }
     });
 
@@ -106,8 +106,8 @@ export async function PATCH(request) {
     const updatedGuru = await prisma.guru.update({
       where: { id: guru.id },
       data: {
-        ...(phone && { noTelepon: phone }),
-        ...(alamat && { alamat }),
+        ...(nip !== undefined && { nip: nip || null }),
+        ...(jenisKelamin && { jenisKelamin }),
         ...(tanggalLahir && { tanggalLahir: new Date(tanggalLahir) })
       },
       include: {
@@ -132,9 +132,8 @@ export async function PATCH(request) {
       metadata: {
         updatedFields: [
           name && 'nama',
-          email && 'email',
-          phone && 'noTelepon',
-          alamat && 'alamat',
+          nip !== undefined && 'nip',
+          jenisKelamin && 'jenisKelamin',
           tanggalLahir && 'tanggalLahir'
         ].filter(Boolean)
       }

@@ -22,7 +22,30 @@ const EmptyState = ({
       <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-200/60 p-6 sm:p-8 shadow-[0_12px_30px_-18px_rgba(16,185,129,0.35)] flex flex-col items-center text-center max-w-md w-full">
         {/* Icon Bubble */}
         <div className="w-14 h-14 rounded-full bg-emerald-100/70 text-emerald-600 flex items-center justify-center mb-4 ring-4 ring-emerald-50/50">
-          <Icon size={28} strokeWidth={2} />
+          {(() => {
+            if (!Icon) return <Inbox size={28} strokeWidth={2} />;
+            
+            // If it's already a valid React element (like <BookOpen />), render it directly
+            if (React.isValidElement(Icon)) return Icon;
+            
+            // If it's a component (function or forwardRef object), render it as a component
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={28} strokeWidth={2} />;
+            }
+            
+            // Fallback to default icon
+            return <Inbox size={28} strokeWidth={2} />;
+          })()}
         </div>
 
         {/* Text Content */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus, Upload, Search, Users, UserCheck, UserX } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import EmptyState from '@/components/shared/EmptyState';
@@ -81,7 +81,26 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
     <div className={`${config.bg} ${config.border} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all`}>
       <div className="flex items-center gap-4">
         <div className={`${config.iconBg} rounded-full p-4 shadow-md flex-shrink-0`}>
-          <Icon size={24} className={config.iconColor} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={24} className={config.iconColor} />;
+            }
+            
+            return null;
+          })()}
         </div>
         <div className="flex-1">
           <p className={`${config.titleColor} text-xs font-semibold mb-1 tracking-wide`}>
@@ -404,8 +423,9 @@ export default function AdminOrangTuaPage() {
   };
 
   const filteredOrangTua = orangTua.filter(o => {
-    const matchSearch = o.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const searchLower = searchTerm.toLowerCase();
+    const matchSearch = o.user.name.toLowerCase().includes(searchLower) ||
+      (o.siswa && o.siswa.some(s => s.siswa?.nis?.toLowerCase().includes(searchLower))) ||
       (o.noHP && o.noHP.includes(searchTerm));
 
     const childrenCount = o._count?.siswa || 0;
@@ -474,11 +494,16 @@ export default function AdminOrangTuaPage() {
                 <button
                   onClick={() => {
                     const csvContent = [
-                      ['Nama Lengkap', 'Email', 'No HP', 'Pekerjaan', 'Anak Terhubung', 'Status Akun', 'Tanggal Pendaftaran'],
+                      ['Nama Lengkap', 'NIS Anak', 'Pekerjaan', 'Anak Terhubung', 'Status Akun', 'Tanggal Pendaftaran'],
                       ...(Array.isArray(filteredOrangTua) ? filteredOrangTua : []).map(o => [
                         o.user.name,
-                        o.user.email,
-                        o.noHP || '-',
+                        (() => {
+                          const siswa = o.siswa;
+                          if (siswa && siswa.length > 0) {
+                            return siswa.map(s => s.siswa?.nis).filter(Boolean).join('; ') || '-';
+                          }
+                          return '-';
+                        })(),
                         o.pekerjaan || '-',
                         `${o._count?.siswa || 0} anak`,
                         (o._count?.siswa || 0) > 0 ? 'Terhubung' : 'Belum Terhubung',
@@ -561,7 +586,7 @@ export default function AdminOrangTuaPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="text"
-                      placeholder="Cari nama, email, atau no HP..."
+                      placeholder="Cari nama atau NIS anak..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white/50 hover:bg-white/70"
@@ -610,8 +635,7 @@ export default function AdminOrangTuaPage() {
                   <thead>
                     <tr className="bg-emerald-50/50 border-b border-emerald-100/40">
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Nama Lengkap</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">No. HP</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">NIS Anak</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Anak Terhubung</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Status Akun</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Tanggal Pendaftaran</th>
@@ -649,11 +673,36 @@ export default function AdminOrangTuaPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {orangTuaItem.user.email}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {(orangTuaItem.noHP || orangTuaItem.noTelepon || '-')}
+                            <td className="px-6 py-4">
+                              <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                                {(() => {
+                                  const siswaRelations = orangTuaItem.siswa || [];
+                                  if (siswaRelations.length === 0) {
+                                    return <span className="text-sm text-gray-400 font-medium">-</span>;
+                                  }
+
+                                  const displayedSiswa = siswaRelations.slice(0, 2);
+                                  const extraCount = siswaRelations.length - displayedSiswa.length;
+
+                                  return (
+                                    <>
+                                      {displayedSiswa.map((rel, idx) => (
+                                        <span 
+                                          key={rel.id || idx}
+                                          className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold shadow-sm"
+                                        >
+                                          {rel.siswa?.nis || '-'}
+                                        </span>
+                                      ))}
+                                      {extraCount > 0 && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200 text-[10px] font-bold shadow-sm">
+                                          +{extraCount}
+                                        </span>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
                             </td>
                             <td className="px-6 py-4">
                               <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${

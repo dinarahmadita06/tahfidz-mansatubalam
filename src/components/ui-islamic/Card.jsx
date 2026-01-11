@@ -3,6 +3,7 @@
  * Reusable card component with Islamic design aesthetics
  */
 
+import React from 'react';
 import { designSystem } from '@/styles/design-system';
 
 export function Card({
@@ -206,7 +207,15 @@ export function StatsCard({ icon, title, value, trend, className = '' }) {
               justifyContent: 'center',
               color: designSystem.colors.text.inverse,
             }}>
-              {icon}
+              {(() => {
+                if (!icon) return null;
+                if (React.isValidElement(icon)) return icon;
+                if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && (icon.$$typeof || icon.render))) {
+                  const IconComp = icon;
+                  return <IconComp size={24} />;
+                }
+                return null;
+              })()}
             </div>
           )}
         </div>
@@ -233,7 +242,14 @@ export function FeatureCard({ icon, title, description, onClick, className = '' 
               marginBottom: designSystem.spacing[4],
               color: designSystem.colors.text.inverse,
             }}>
-              {icon}
+              {(() => {
+                if (React.isValidElement(icon)) return icon;
+                if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && (icon.$$typeof || icon.render))) {
+                  const IconComp = icon;
+                  return <IconComp size={32} />;
+                }
+                return null;
+              })()}
             </div>
           )}
           <h4 style={{

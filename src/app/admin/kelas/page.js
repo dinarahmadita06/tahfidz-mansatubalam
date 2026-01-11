@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Users, Plus, Edit, Trash2, Shield, ShieldCheck,
@@ -249,7 +249,26 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
           )}
         </div>
         <div className={`${config.iconBg} p-4 rounded-full shadow-md flex-shrink-0`}>
-          <Icon size={28} className={config.iconColor} strokeWidth={2} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={28} className={config.iconColor} strokeWidth={2} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>
@@ -448,7 +467,7 @@ export default function AdminKelasPage() {
         nama: kelasItem.nama,
         tahunAjaranId: tahunAjaranId,
         targetJuz: kelasItem.targetJuz || 1,
-        guruUtamaId: guruUtama ? guruUtama.guruId.toString() : '',
+        guruUtamaId: guruUtama && guruUtama.guruId ? guruUtama.guruId.toString() : '',
       };
       console.log('EDIT KELAS - Form state updated to:', newState);
       return newState;

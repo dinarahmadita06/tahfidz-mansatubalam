@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Eye, CheckCircle, XCircle, Users, Clock, UserCheck, Search, Filter, Plus } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Toast from '@/components/ui/Toast';
@@ -59,7 +59,26 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'mint' }) {
     <div className={`${config.bg} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all ${config.border}`}>
       <div className="flex items-center gap-4">
         <div className={`${config.iconBg} w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
-          <Icon size={24} className={config.iconColor} />
+          {(() => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            
+            const isComponent = 
+              typeof Icon === 'function' || 
+              (typeof Icon === 'object' && Icon !== null && (
+                Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                Icon.$$typeof === Symbol.for('react.memo') ||
+                Icon.render || 
+                Icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = Icon;
+              return <IconComp size={24} className={config.iconColor} />;
+            }
+            
+            return null;
+          })()}
         </div>
         <div className="flex-1">
           <p className={`${config.titleColor} text-xs font-bold mb-1 tracking-wide uppercase`}>
@@ -93,10 +112,7 @@ function InfoFieldCard({ label, value }) {
 function DetailModal({ siswa, onClose, onApprove, onReject }) {
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleCopyPassword = () => {
-    // Password tidak bisa di-copy (security), tapi bisa show UI feedback
-    alert('Password tidak dapat di-copy untuk keamanan akun');
-  };
+  const namaWali = siswa.orangTuaSiswa?.[0]?.orangTua?.user?.name || '-';
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
@@ -110,7 +126,7 @@ function DetailModal({ siswa, onClose, onApprove, onReject }) {
             </div>
             <div className="min-w-0">
               <p className="text-lg font-semibold text-slate-900 truncate">{siswa.user.name}</p>
-              <p className="text-sm text-slate-500 truncate">{siswa.user.email}</p>
+              <p className="text-sm text-slate-500 truncate">NIS: {siswa.nis}</p>
             </div>
           </div>
           <button
@@ -122,70 +138,47 @@ function DetailModal({ siswa, onClose, onApprove, onReject }) {
         </div>
 
         {/* CONTENT - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
-          
-          {/* SECTION 1: Identitas Siswa */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Identitas Siswa</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoFieldCard label="Nama Lengkap" value={siswa.user.name} />
-              <InfoFieldCard label="NIS" value={siswa.nis} />
-              <InfoFieldCard label="NISN" value={siswa.nisn} />
-              <InfoFieldCard label="Email" value={siswa.user.email} />
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Baris 1: Nama Lengkap | NISN */}
+            <InfoFieldCard label="Nama Lengkap" value={siswa.user.name} />
+            <InfoFieldCard label="NISN" value={siswa.nisn || '-'} />
 
-          {/* SECTION 2: Informasi Akun */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Informasi Akun</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                <p className="text-xs font-bold text-slate-600 mb-3 uppercase tracking-wide">Password</p>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-semibold ${showPassword ? 'text-slate-900 font-mono' : 'text-slate-500 italic'}`}>
-                    {showPassword ? '••••••••' : '••••••••'}
-                  </span>
+            {/* Baris 2: NIS | Password */}
+            <InfoFieldCard label="NIS" value={siswa.nis} />
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+              <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Password</p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-slate-500 italic">
+                  ••••••••
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">*Password tidak dapat ditampilkan untuk keamanan</p>
+            </div>
+
+            {/* Baris 3: Kelas | Jenis Kelamin */}
+            <InfoFieldCard label="Kelas" value={siswa.kelas?.nama || '-'} />
+            <InfoFieldCard label="Jenis Kelamin" value={siswa.jenisKelamin === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan'} />
+
+            {/* Baris 4: Tanggal Lahir | Tanggal Pendaftaran */}
+            <InfoFieldCard label="Tanggal Lahir" value={formatTanggal(siswa.tanggalLahir)} />
+            <InfoFieldCard label="Tanggal Pendaftaran" value={formatTanggal(siswa.createdAt)} />
+
+            {/* Baris 5: Nama Wali Terhubung */}
+            <div className="col-span-1 sm:col-span-2">
+              <InfoFieldCard label="Nama Wali Terhubung" value={namaWali} />
+            </div>
+
+            {/* Alamat (Jika ada) */}
+            {siswa.alamat && (
+              <div className="col-span-1 sm:col-span-2">
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                  <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Alamat</p>
+                  <p className="text-sm font-semibold text-slate-900 break-words whitespace-pre-wrap">{siswa.alamat}</p>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">*Password tidak dapat ditampilkan untuk keamanan</p>
               </div>
-            </div>
+            )}
           </div>
-
-          {/* SECTION 3: Data Akademik */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Data Akademik</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoFieldCard label="Kelas" value={siswa.kelas?.nama} />
-              <InfoFieldCard label="Jenis Kelamin" value={siswa.jenisKelamin === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan'} />
-              <InfoFieldCard label="Tanggal Lahir" value={formatTanggal(siswa.tanggalLahir)} />
-              <InfoFieldCard label="Tempat Lahir" value={siswa.tempatLahir} />
-            </div>
-          </div>
-
-          {/* SECTION 4: Tambahan (Optional) */}
-          {(siswa.noTelepon || siswa.alamat) && (
-            <div>
-              <h3 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Tambahan</h3>
-              <div className="space-y-4">
-                {siswa.noTelepon && (
-                  <InfoFieldCard label="Nomor HP" value={siswa.noTelepon} />
-                )}
-                {siswa.alamat && (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                    <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Alamat</p>
-                    <p className="text-sm font-semibold text-slate-900 break-words whitespace-pre-wrap">{siswa.alamat}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* SECTION 5: Tanggal Pendaftaran */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-sm">
-            <p className="text-xs font-bold text-blue-700 mb-2 uppercase tracking-wide">Tanggal Pendaftaran</p>
-            <p className="text-sm font-semibold text-blue-900">{formatTanggal(siswa.createdAt)}</p>
-          </div>
-
         </div>
 
         {/* FOOTER - Sticky */}
@@ -507,7 +500,7 @@ export default function ValidasiSiswaPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="text"
-                      placeholder="Nama, email, atau NIS..."
+                      placeholder="Nama atau NIS/NISN..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white/50 hover:bg-white/70"
@@ -558,7 +551,7 @@ export default function ValidasiSiswaPage() {
                   <thead>
                     <tr className="bg-emerald-50/50 border-b border-emerald-100/40">
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Nama Siswa</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">NISN</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">NIS</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Kelas</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Status</th>
@@ -594,7 +587,7 @@ export default function ValidasiSiswaPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
-                            {s.user.email}
+                            {s.nisn || '-'}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {s.nis}

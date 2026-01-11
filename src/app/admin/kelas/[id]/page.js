@@ -659,7 +659,7 @@ export default function KelolaSiswaPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="text"
-                      placeholder="Nama, email, NIS, NISN..."
+                      placeholder="Nama, NIS, NISN..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-200/60 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white/50 hover:bg-white/70"
@@ -720,9 +720,8 @@ export default function KelolaSiswaPage() {
                   <tr className="bg-emerald-50/50 border-b border-slate-200/60">
                     <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NO</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NAMA SISWA</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">EMAIL</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NISN</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NIS</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">NISN</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">JENIS KELAMIN</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-emerald-700 uppercase tracking-wider">ORANG TUA</th>
                     <th className="px-6 py-3 text-center text-xs font-bold text-emerald-700 uppercase tracking-wider">AKSI</th>
@@ -764,12 +763,9 @@ export default function KelolaSiswaPage() {
                             <div className="font-semibold text-gray-900">{siswa.user.name}</div>
                           </td>
                           <td className="px-6 py-3">
-                            <span className="text-xs text-gray-600">{siswa.user.email}</span>
-                          </td>
-                          <td className="px-6 py-3 text-sm text-gray-700">{siswa.nisn || '-'}</td>
-                          <td className="px-6 py-3">
                             <span className="font-semibold text-emerald-700 text-sm">{siswa.nis}</span>
                           </td>
+                          <td className="px-6 py-3 text-sm text-gray-700">{siswa.nisn || '-'}</td>
                           <td className="px-6 py-3">
                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                               siswa.jenisKelamin === 'LAKI_LAKI'
@@ -842,12 +838,8 @@ export default function KelolaSiswaPage() {
                 <p style={{ fontSize: '16px', fontWeight: '600', color: colors.gray[900] }}>{detailSiswa.user?.name}</p>
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Email</label>
-                <p style={{ fontSize: '14px', color: colors.gray[600] }}>{detailSiswa.user?.email}</p>
-              </div>
-              <div>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>NIS</label>
-                <p style={{ fontSize: '16px', fontWeight: '600', color: colors.gray[900] }}>{detailSiswa.nis}</p>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: colors.emerald[700] }}>{detailSiswa.nis}</p>
               </div>
               <div>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>NISN</label>
@@ -1021,7 +1013,7 @@ function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
                 <th style={{ ...tableHeaderStyle, width: '120px' }}>NISN</th>
                 <th style={{ ...tableHeaderStyle, width: '100px' }}>NIS</th>
                 <th style={{ ...tableHeaderStyle, width: '80px' }}>L/P</th>
-                <th style={tableHeaderStyle}>Email</th>
+                <th style={tableHeaderStyle}>NIS</th>
               </tr>
             </thead>
             <tbody>
@@ -1043,7 +1035,7 @@ function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
                       {siswa.jenisKelamin === 'LAKI_LAKI' ? 'L' : 'P'}
                     </span>
                   </td>
-                  <td style={{ ...tableCellStyle, fontSize: '12px', color: colors.gray[600] }}>{siswa.email}</td>
+                  <td style={{ ...tableCellStyle, fontSize: '12px', color: colors.gray[600], fontWeight: '600', color: colors.emerald[700] }}>{siswa.nis}</td>
                 </tr>
               ))}
             </tbody>

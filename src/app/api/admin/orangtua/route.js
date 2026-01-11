@@ -26,7 +26,15 @@ export async function GET(request) {
       whereClause.OR = [
         { user: { name: { contains: search, mode: 'insensitive' } } },
         { user: { email: { contains: search, mode: 'insensitive' } } },
-        { noHP: { contains: search } }
+        {
+          orangTuaSiswa: {
+            some: {
+              siswa: {
+                nis: { contains: search, mode: 'insensitive' }
+              }
+            }
+          }
+        }
       ];
     }
 
@@ -85,13 +93,13 @@ export async function GET(request) {
       prisma.orangTua.count({ where: whereClause })
     ]);
 
-    // Transform response to include _count
+    // Transform response to include _count and map siswa field for frontend compatibility
     const transformedOrangTua = orangTua.map(ot => ({
       ...ot,
+      siswa: ot.orangTuaSiswa || [],
       _count: {
         siswa: ot.orangTuaSiswa?.length || 0
       }
-      // Keep orangTuaSiswa array with full siswa details
     }));
 
     return NextResponse.json({
@@ -193,7 +201,6 @@ export async function POST(request) {
     const orangTua = await prisma.orangTua.create({
       data: {
         pekerjaan: pekerjaan || null,
-        noTelepon: noHP, // Map noHP to noTelepon in Prisma schema
         alamat: alamat || null,
         jenisKelamin: 'LAKI_LAKI', // Add default gender
         status: 'approved', // Admin-created parents are auto-approved
@@ -231,7 +238,7 @@ export async function POST(request) {
       userRole: session.user.role,
       action: 'CREATE',
       module: 'ORANG_TUA',
-      description: `Menambahkan orang tua baru ${orangTua.user.name} (No HP: ${orangTua.noTelepon})`,
+      description: `Menambahkan orang tua baru ${orangTua.user.name}`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
@@ -243,7 +250,6 @@ export async function POST(request) {
     return NextResponse.json({
       id: orangTua.id,
       user: orangTua.user,
-      noTelepon: orangTua.noTelepon,
       status: orangTua.status,
       jenisKelamin: orangTua.jenisKelamin
     }, { status: 201 });

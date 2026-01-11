@@ -188,8 +188,8 @@ function PenilaianCard({ penilaian, index }) {
     >
       <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-100">
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-bold text-gray-900 mb-1">{penilaian.surah}</h3>
-          <p className="text-sm text-gray-600">Ayat {penilaian.ayat}</p>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 leading-tight">{penilaian.surah}</h3>
+          {penilaian.ayat && <p className="text-sm text-gray-600">Ayat {penilaian.ayat}</p>}
           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-2">
             <div className="flex items-center gap-1">
               <Calendar size={14} />

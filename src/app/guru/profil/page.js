@@ -64,8 +64,8 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
         </h2>
 
         <div className="flex items-center gap-2 text-gray-600 mb-3">
-          <Mail size={14} />
-          <span className="text-sm break-all">{profileData?.email}</span>
+          <Shield size={14} />
+          <span className="text-sm break-all">{profileData?.nip || '-'}</span>
         </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -118,41 +118,26 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
           </div>
         </div>
 
-        {/* Email */}
+
+        {/* NIP */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Mail size={16} className="text-gray-400" />
-            Email
+            <Shield size={16} className="text-gray-400" />
+            NIP
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900 break-all">{formatDisplayValue(profileData?.email)}</p>
+            <p className="font-medium text-gray-900">{profileData?.nip || '-'}</p>
           </div>
         </div>
 
-        {/* Nomor Telepon */}
+        {/* Jenis Kelamin */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Phone size={16} className="text-gray-400" />
-            Nomor WhatsApp
+            <User size={16} className="text-gray-400" />
+            Jenis Kelamin
           </label>
-          <div className={`px-4 py-3 rounded-xl border ${!profileData?.phone ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-gray-50'}`}>
-            {profileData?.phone ? (
-              <p className="font-medium text-gray-900">{profileData.phone}</p>
-            ) : (
-              <div className="flex items-center justify-between">
-                <span className="text-amber-700 text-sm italic">Belum diisi</span>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const editBtn = document.querySelector('button[onClick*="onEditProfile"]');
-                    if (editBtn) editBtn.click();
-                  }}
-                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
-                >
-                  Lengkapi nomor WhatsApp
-                </button>
-              </div>
-            )}
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <p className="font-medium text-gray-900">{profileData?.jenisKelamin === 'LAKI_LAKI' ? 'Laki-laki' : profileData?.jenisKelamin === 'PEREMPUAN' ? 'Perempuan' : formatDisplayValue(profileData?.jenisKelamin)}</p>
           </div>
         </div>
 
@@ -167,11 +152,11 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
           </div>
         </div>
 
-        {/* Kelas yang Diampu */}
+        {/* Kelas Binaan (Pembina) */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <BookOpen size={16} className="text-gray-400" />
-            Kelas yang Diampu
+            Kelas Binaan (Pembina)
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
             {profileData?.kelas?.length > 0 ? (
@@ -183,21 +168,12 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
                 ))}
               </div>
             ) : (
-              <span className="text-amber-700 text-sm italic">Belum diampu</span>
+              <span className="text-amber-700 text-sm italic">Belum ada kelas binaan</span>
             )}
           </div>
         </div>
 
-        {/* Alamat - Full Width */}
-        <div className="md:col-span-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <MapPin size={16} className="text-gray-400" />
-            Alamat
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <div className="font-medium text-gray-900">{formatDisplayValue(profileData?.alamat)}</div>
-          </div>
-        </div>
+
       </div>
     </div>
   );
@@ -351,7 +327,12 @@ export default function ProfilGuruPage() {
   const [profileData, setProfileData] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [editFormData, setEditFormData] = useState({});
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    nip: '',
+    jenisKelamin: '',
+    tanggalLahir: ''
+  });
   const [passwordFormData, setPasswordFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -372,7 +353,7 @@ export default function ProfilGuruPage() {
    */
   const formatDisplayValue = (value) => {
     if (!value || typeof value !== 'string' || !value.trim()) {
-      return <span className="text-amber-700 text-sm italic">Belum diisi</span>;
+      return '-';
     }
     return value.trim();
   };
@@ -411,9 +392,8 @@ export default function ProfilGuruPage() {
         
         setProfileData({
           name: guruData.user?.name || '',
-          email: guruData.user?.email || '',
-          phone: guruData.noTelepon || '',
-          alamat: guruData.alamat || '',
+          nip: guruData.nip || '',
+          jenisKelamin: guruData.jenisKelamin || '',
           tanggalLahir: formatDateForInput(guruData.tanggalLahir),
           kelas: guruData.guruKelas?.map(gk => gk.kelas.nama) || []
         });
@@ -423,9 +403,8 @@ export default function ProfilGuruPage() {
         // Set empty profile data on error
         setProfileData({
           name: '',
-          email: '',
-          phone: '',
-          alamat: '',
+          nip: '',
+          jenisKelamin: '',
           tanggalLahir: '',
           kelas: []
         });
@@ -436,9 +415,8 @@ export default function ProfilGuruPage() {
       // Set empty profile data on error
       setProfileData({
         name: '',
-        email: '',
-        phone: '',
-        alamat: '',
+        nip: '',
+        jenisKelamin: '',
         tanggalLahir: '',
         kelas: []
       });
@@ -469,9 +447,8 @@ export default function ProfilGuruPage() {
   const handleEditProfile = () => {
     setEditFormData({
       name: profileData.name,
-      email: profileData.email,
-      phone: profileData.phone,
-      alamat: profileData.alamat,
+      nip: profileData.nip,
+      jenisKelamin: profileData.jenisKelamin,
       tanggalLahir: profileData.tanggalLahir
     });
     setShowEditModal(true);
@@ -499,7 +476,12 @@ export default function ProfilGuruPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify({
+          name: editFormData.name,
+          nip: editFormData.nip,
+          jenisKelamin: editFormData.jenisKelamin,
+          tanggalLahir: editFormData.tanggalLahir
+        }),
       });
 
       if (response.ok) {
@@ -509,9 +491,8 @@ export default function ProfilGuruPage() {
         // ✅ Update profileData dengan response dari API (bukan hanya editFormData)
         setProfileData({
           name: responseData.data.user.name || '',
-          email: responseData.data.user.email || '',
-          phone: responseData.data.noTelepon || '',
-          alamat: responseData.data.alamat || '',
+          nip: responseData.data.nip || '',
+          jenisKelamin: responseData.data.jenisKelamin || '',
           tanggalLahir: formatDateForInput(responseData.data.tanggalLahir),
           kelas: profileData.kelas // Kelas usually doesn't change from profile update
         });
@@ -729,33 +710,35 @@ export default function ProfilGuruPage() {
                   />
                 </div>
 
-                {/* Email */}
+                {/* NIP */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    NIP
                   </label>
                   <input
-                    type="email"
-                    disabled
-                    value={editFormData.email || ''}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
-                </div>
-
-                {/* Nomor Telepon */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nomor WhatsApp
-                  </label>
-                  <input
-                    type="tel"
-                    value={editFormData.phone || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                    placeholder="Contoh: 08123456789"
+                    type="text"
+                    value={editFormData.nip || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, nip: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
+
+                {/* Jenis Kelamin */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Jenis Kelamin
+                  </label>
+                  <select
+                    value={editFormData.jenisKelamin || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, jenisKelamin: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  >
+                    <option value="">Pilih Jenis Kelamin</option>
+                    <option value="LAKI_LAKI">Laki-laki</option>
+                    <option value="PEREMPUAN">Perempuan</option>
+                  </select>
+                </div>
+
 
                 {/* Tanggal Lahir */}
                 <div>
@@ -771,19 +754,7 @@ export default function ProfilGuruPage() {
                   />
                 </div>
 
-                {/* Alamat */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Alamat
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={editFormData.alamat || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
-                    placeholder="Alamat lengkap..."
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-                  />
-                </div>
+
               </div>
 
               {/* Modal Actions */}

@@ -6,13 +6,13 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Creating admin, guru, siswa, and orangtua users...');
 
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const hashedPassword = await bcrypt.hash('admin.mansatu', 10);
   const guruPassword = await bcrypt.hash('guru123', 10);
   const siswaPassword = await bcrypt.hash('siswa123', 10);
   const orangTuaPassword = await bcrypt.hash('orangtua123', 10);
 
   // Check if users exist
-  const adminExists = await prisma.user.findUnique({ where: { email: 'admin@tahfidz.sch.id' } });
+  const adminExists = await prisma.user.findUnique({ where: { username: 'admin.tahfidz1' } });
   const guruExists = await prisma.user.findUnique({ where: { email: 'guru@tahfidz.sch.id' } });
   const siswaExists = await prisma.user.findUnique({ where: { email: 'siswa@example.com' } });
   const orangTuaExists = await prisma.user.findUnique({ where: { email: 'orangtua@example.com' } });
@@ -22,12 +22,13 @@ async function main() {
     const adminUser = await prisma.user.create({
       data: {
         email: 'admin@tahfidz.sch.id',
+        username: 'admin.tahfidz1',
         password: hashedPassword,
         name: 'Administrator',
         role: 'ADMIN',
       },
     });
-    console.log('✅ Admin user created:', adminUser.email);
+    console.log('✅ Admin user created:', adminUser.username);
   } else {
     console.log('ℹ️ Admin user already exists');
   }
@@ -100,7 +101,7 @@ async function main() {
 
   console.log('\n✅ All users seeded successfully!');
   console.log('\nLogin credentials:');
-  console.log('Admin: admin@tahfidz.sch.id / admin123');
+  console.log('Admin: admin.tahfidz1 / admin.mansatu');
   console.log('Guru: guru@tahfidz.sch.id / guru123');
   console.log('Siswa: siswa@example.com / siswa123');
   console.log('Orang Tua: orangtua@example.com / orangtua123');

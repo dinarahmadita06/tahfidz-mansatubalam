@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { getSurahSetoranText } from '@/lib/helpers/formatSurahSetoran';
 
 /**
  * GET /api/orangtua/penilaian-hafalan
@@ -105,7 +106,8 @@ export async function GET(request) {
               surah: true,
               ayatMulai: true,
               ayatSelesai: true,
-              tanggal: true
+              tanggal: true,
+              surahTambahan: true
             }
           },
           guru: {
@@ -162,52 +164,100 @@ export async function GET(request) {
       counts[stat.status] = stat._count.id;
     });
 
-    // Calculate assessment statistics
-    const totalPenilaian = penilaianList.length;
+    // --- GROUPING LOGIC START ---
+    // Group assessments by date and guru to represent a single "meeting"
+    const groupedMap = new Map();
+
+    penilaianList.forEach((p) => {
+      const assessmentDate = p.hafalan?.tanggal || p.createdAt;
+      const dateKey = assessmentDate instanceof Date ? assessmentDate.toISOString().split('T')[0] : new Date(assessmentDate).toISOString().split('T')[0];
+      const guruId = p.guruId || 'unknown';
+      const groupKey = `${dateKey}_${guruId}`;
+
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, {
+          id: p.id,
+          tanggal: assessmentDate,
+          dateKey: dateKey,
+          guru: p.guru?.user?.name || 'Unknown',
+          guruId: guruId,
+          hafalanItems: [],
+          scores: {
+            tajwid: [],
+            kelancaran: [],
+            makhraj: [],
+            adab: [],
+            nilaiAkhir: []
+          },
+          catatanList: []
+        });
+      }
+
+      const group = groupedMap.get(groupKey);
+      
+      if (p.hafalan) {
+        group.hafalanItems.push(p.hafalan);
+      }
+
+      group.scores.tajwid.push(p.tajwid || 0);
+      group.scores.kelancaran.push(p.kelancaran || 0);
+      group.scores.makhraj.push(p.makhraj || 0);
+      group.scores.adab.push(p.adab || 0);
+      group.scores.nilaiAkhir.push(p.nilaiAkhir || 0);
+
+      if (p.catatan && p.catatan.trim() && p.catatan !== '-') {
+        group.catatanList.push(p.catatan);
+      }
+    });
+
+    // Process grouped data into final penilaianData
+    const avg = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    
+    const penilaianData = Array.from(groupedMap.values()).map((group) => {
+      const avgNilaiAkhir = avg(group.scores.nilaiAkhir);
+      let status = 'belum';
+      if (avgNilaiAkhir >= 75) status = 'lulus';
+      else if (avgNilaiAkhir >= 60) status = 'revisi';
+
+      const attendanceStatus = attendanceMap.get(group.dateKey) || null;
+
+      // Format all surahs
+      const surahTexts = group.hafalanItems.map(h => getSurahSetoranText(h)).filter(Boolean);
+      const combinedSurah = [...new Set(surahTexts)].join(', ');
+
+      return {
+        id: group.id,
+        surah: combinedSurah || '-',
+        ayat: '', // Included in surah text
+        tanggal: group.tanggal,
+        guru: group.guru,
+        tajwid: parseFloat(avg(group.scores.tajwid).toFixed(2)),
+        kelancaran: parseFloat(avg(group.scores.kelancaran).toFixed(2)),
+        makhraj: parseFloat(avg(group.scores.makhraj).toFixed(2)),
+        implementasi: parseFloat(avg(group.scores.adab).toFixed(2)),
+        nilaiAkhir: parseFloat(avgNilaiAkhir.toFixed(2)),
+        rataRata: parseFloat(avgNilaiAkhir.toFixed(2)),
+        catatan: [...new Set(group.catatanList)].join('; ') || '-',
+        status: status,
+        attendanceStatus: attendanceStatus
+      };
+    });
+
+    // Update statistics based on grouped data
+    const totalPenilaian = penilaianData.length;
     let rataRataNilai = 0;
     let lastAssessment = null;
 
     if (totalPenilaian > 0) {
-      const totalNilai = penilaianList.reduce((sum, p) => sum + (p.nilaiAkhir || 0), 0);
-      rataRataNilai = parseFloat((totalNilai / totalPenilaian).toFixed(2));
-      
-      // Last assessment is the first one because of DESC order
-      const last = penilaianList[0];
+      rataRataNilai = parseFloat((penilaianData.reduce((acc, curr) => acc + curr.nilaiAkhir, 0) / totalPenilaian).toFixed(2));
+      const last = penilaianData[0];
       lastAssessment = {
-        tanggal: last.hafalan?.tanggal || last.createdAt,
-        surah: last.hafalan?.surah || '-',
-        nilai: last.nilaiAkhir || 0
+        tanggal: last.tanggal,
+        surah: last.surah,
+        nilai: last.nilaiAkhir
       };
     }
-
-    // Format response
-    const penilaianData = penilaianList.map(p => {
-      const nilaiAkhir = p.nilaiAkhir || 0;
-      let status = 'belum';
-      if (nilaiAkhir >= 75) status = 'lulus';
-      else if (nilaiAkhir >= 60) status = 'revisi';
-
-      const assessmentDate = p.hafalan?.tanggal || p.createdAt;
-      const dateKey = assessmentDate instanceof Date ? assessmentDate.toISOString().split('T')[0] : new Date(assessmentDate).toISOString().split('T')[0];
-      const attendanceStatus = attendanceMap.get(dateKey) || null;
-
-      return {
-        id: p.id,
-        surah: p.hafalan?.surah || '-',
-        ayat: p.hafalan ? `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}` : '-',
-        tanggal: assessmentDate, // Send raw date/ISO string
-        guru: p.guru?.user?.name || 'Unknown',
-        tajwid: p.tajwid || 0,
-        kelancaran: p.kelancaran || 0,
-        makhraj: p.makhraj || 0,
-        implementasi: p.adab || 0,
-        nilaiAkhir: nilaiAkhir,
-        rataRata: nilaiAkhir,
-        catatan: p.catatan || '-',
-        status: status, // Use lowercase keys matching UI (lulus, revisi, belum)
-        attendanceStatus: attendanceStatus // Added for the new UI column
-      };
-    });
+    // --- GROUPING LOGIC END ---
 
     if (penilaianData.length > 0) {
       console.log("[PARENT PENILAIAN] total penilaian:", penilaianData.length);

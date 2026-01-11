@@ -18,8 +18,7 @@ async function fixDemoAccounts() {
         data: {
           userId: guruUser.id,
           jenisKelamin: 'LAKI_LAKI',
-          noTelepon: '081234567890',
-          alamat: 'Jl. Guru Tahfidz No. 1'
+          
         }
       });
       console.log('  ✅ Guru profile created!\n');

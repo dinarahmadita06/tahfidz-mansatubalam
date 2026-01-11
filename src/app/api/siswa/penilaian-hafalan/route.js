@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { calcStatisticAverage, normalizeNilaiAkhir } from '@/lib/helpers/calcAverageScore';
+import { calcStatisticAverage } from '@/lib/helpers/calcAverageScore';
+import { getSurahSetoranText } from '@/lib/helpers/formatSurahSetoran';
 
 export async function GET(request) {
   try {
@@ -56,7 +57,8 @@ export async function GET(request) {
               tanggal: true,
               surah: true,
               ayatMulai: true,
-              ayatSelesai: true
+              ayatSelesai: true,
+              surahTambahan: true
             }
           },
           guru: {
@@ -115,9 +117,95 @@ export async function GET(request) {
       counts[stat.status] = stat._count.id;
     });
 
-    // Calculate statistics
-    const totalPenilaian = penilaianList.length;
+    // --- GROUPING LOGIC START ---
+    // Group assessments by date and guru to represent a single "meeting"
+    const groupedMap = new Map();
 
+    penilaianList.forEach((p) => {
+      const assessmentDate = p.hafalan?.tanggal || p.createdAt;
+      const dateKey = assessmentDate instanceof Date ? assessmentDate.toISOString().split('T')[0] : new Date(assessmentDate).toISOString().split('T')[0];
+      const guruId = p.guruId || 'unknown';
+      const groupKey = `${dateKey}_${guruId}`;
+
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, {
+          id: p.id,
+          tanggal: assessmentDate,
+          dateKey: dateKey,
+          guru: p.guru?.user?.name || 'Unknown',
+          guruId: guruId,
+          hafalanItems: [], // Store all related hafalan records for surah formatting
+          scores: {
+            tajwid: [],
+            kelancaran: [],
+            makhraj: [],
+            adab: [],
+            nilaiAkhir: []
+          },
+          catatanList: []
+        });
+      }
+
+      const group = groupedMap.get(groupKey);
+      
+      // Collect hafalan info for surah list
+      if (p.hafalan) {
+        group.hafalanItems.push(p.hafalan);
+      }
+
+      // Collect scores
+      group.scores.tajwid.push(p.tajwid || 0);
+      group.scores.kelancaran.push(p.kelancaran || 0);
+      group.scores.makhraj.push(p.makhraj || 0);
+      group.scores.adab.push(p.adab || 0);
+      group.scores.nilaiAkhir.push(p.nilaiAkhir || 0);
+
+      if (p.catatan && p.catatan.trim()) {
+        group.catatanList.push(p.catatan);
+      }
+    });
+
+    // Process grouped data into final penilaianData
+    const penilaianData = Array.from(groupedMap.values()).map((group) => {
+      const avg = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+      
+      const avgNilaiAkhir = avg(group.scores.nilaiAkhir);
+      let status = 'belum';
+      if (avgNilaiAkhir >= 75) status = 'lulus';
+      else if (avgNilaiAkhir >= 60) status = 'revisi';
+
+      const attendanceStatus = attendanceMap.get(group.dateKey) || null;
+
+      // Format all surahs from all hafalan items in this meeting
+      const surahTexts = group.hafalanItems.map(h => getSurahSetoranText(h)).filter(Boolean);
+      const combinedSurah = [...new Set(surahTexts)].join(', ');
+
+      // For "ayat", we'll just show the range from the first item if there's only one, 
+      // or "Beragam" or a combined range. But "Surah yang disetorkan" already has ayat in it from getSurahSetoranText.
+      // So we can simplify the "ayat" field for the UI or leave it.
+      // In getSurahSetoranText, it returns "Surah (Ayat-Ayat)".
+      
+      return {
+        id: group.id,
+        surah: combinedSurah || '-',
+        ayat: '', // Already included in surah text now
+        tanggal: group.tanggal,
+        guru: group.guru,
+        nilaiAspek: {
+          tajwid: parseFloat(avg(group.scores.tajwid).toFixed(2)),
+          kelancaran: parseFloat(avg(group.scores.kelancaran).toFixed(2)),
+          makhraj: parseFloat(avg(group.scores.makhraj).toFixed(2)),
+          implementasi: parseFloat(avg(group.scores.adab).toFixed(2))
+        },
+        nilaiTotal: parseFloat(avgNilaiAkhir.toFixed(2)),
+        catatan: [...new Set(group.catatanList)].join('; ') || '',
+        status: status,
+        attendanceStatus: attendanceStatus
+      };
+    });
+
+    // Update statistics based on grouped data for consistency
+    const totalPenilaian = penilaianData.length;
     let rataRataNilai = 0;
     let rataRataTajwid = 0;
     let rataRataKelancaran = 0;
@@ -126,58 +214,27 @@ export async function GET(request) {
     let lastAssessment = null;
 
     if (totalPenilaian > 0) {
-      // ✅ Use shared utility for consistent calculation with 2 decimal rounding
-      rataRataNilai = calcStatisticAverage(penilaianList, 'nilaiAkhir', 2);
-      rataRataTajwid = calcStatisticAverage(penilaianList, 'tajwid', 2);
-      rataRataKelancaran = calcStatisticAverage(penilaianList, 'kelancaran', 2);
-      rataRataMakhraj = calcStatisticAverage(penilaianList, 'makhraj', 2);
-      rataRataImplementasi = calcStatisticAverage(penilaianList, 'adab', 2);
+      rataRataNilai = parseFloat((penilaianData.reduce((acc, curr) => acc + curr.nilaiTotal, 0) / totalPenilaian).toFixed(2));
+      rataRataTajwid = parseFloat((penilaianData.reduce((acc, curr) => acc + curr.nilaiAspek.tajwid, 0) / totalPenilaian).toFixed(2));
+      rataRataKelancaran = parseFloat((penilaianData.reduce((acc, curr) => acc + curr.nilaiAspek.kelancaran, 0) / totalPenilaian).toFixed(2));
+      rataRataMakhraj = parseFloat((penilaianData.reduce((acc, curr) => acc + curr.nilaiAspek.makhraj, 0) / totalPenilaian).toFixed(2));
+      rataRataImplementasi = parseFloat((penilaianData.reduce((acc, curr) => acc + curr.nilaiAspek.implementasi, 0) / totalPenilaian).toFixed(2));
 
-      // Last assessment is the first one because of DESC order
-      const last = penilaianList[0];
+      const last = penilaianData[0];
       lastAssessment = {
-        tanggal: last.hafalan?.tanggal || last.createdAt,
-        surah: last.hafalan?.surah || '-',
-        nilai: last.nilaiAkhir || 0
+        tanggal: last.tanggal,
+        surah: last.surah,
+        nilai: last.nilaiTotal
       };
     }
-
-    // Format penilaian data
-    const penilaianData = penilaianList.map((p) => {
-      const nilaiAkhir = p.nilaiAkhir || 0;
-      let status = 'belum';
-      if (nilaiAkhir >= 75) status = 'lulus';
-      else if (nilaiAkhir >= 60) status = 'revisi';
-
-      const assessmentDate = p.hafalan?.tanggal || p.createdAt;
-      const dateKey = assessmentDate instanceof Date ? assessmentDate.toISOString().split('T')[0] : new Date(assessmentDate).toISOString().split('T')[0];
-      const attendanceStatus = attendanceMap.get(dateKey) || null;
-
-      return {
-        id: p.id,
-        surah: p.hafalan?.surah || '-',
-        ayat: p.hafalan ? `${p.hafalan.ayatMulai}-${p.hafalan.ayatSelesai}` : '-',
-        tanggal: assessmentDate,
-        guru: p.guru?.user?.name || 'Unknown',
-        nilaiAspek: {
-          tajwid: p.tajwid || 0,
-          kelancaran: p.kelancaran || 0,
-          makhraj: p.makhraj || 0,
-          implementasi: p.adab || 0
-        },
-        nilaiTotal: parseFloat(nilaiAkhir.toFixed(2)),  // ✅ Normalize to 2 decimals
-        catatan: p.catatan || '',
-        status: status, // Use lowercase keys matching UI (lulus, revisi, belum)
-        attendanceStatus: attendanceStatus
-      };
-    });
+    // --- GROUPING LOGIC END ---
 
     // Build chart data - group by month from hafalan.tanggal
     const chartDataMap = new Map();
 
-    penilaianList.forEach((p) => {
-      if (p.hafalan?.tanggal) {
-        const date = new Date(p.hafalan.tanggal);
+    penilaianData.forEach((p) => {
+      if (p.tanggal) {
+        const date = new Date(p.tanggal);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const monthLabel = date.toLocaleDateString('id-ID', { month: 'short' });
 
@@ -191,7 +248,7 @@ export async function GET(request) {
         }
 
         const item = chartDataMap.get(monthKey);
-        item.total += p.nilaiAkhir || 0;
+        item.total += p.nilaiTotal || 0;
         item.count += 1;
       }
     });

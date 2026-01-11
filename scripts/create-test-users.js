@@ -18,9 +18,10 @@ async function createTestUsers() {
     const usersToCreate = [
       {
         email: 'admin@tahfidz.sch.id',
+        username: 'admin.tahfidz1',
         name: 'Administrator',
         role: 'ADMIN',
-        password: hashedPassword,
+        password: await bcrypt.hash('admin.mansatu', 10),
       },
       {
         email: 'abdullah.rahman@siswa.tahfidz.sch.id',

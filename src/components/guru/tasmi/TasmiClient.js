@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Award,
@@ -59,7 +59,26 @@ function StatCard({ label, value, icon, color = 'emerald' }) {
           <p className={`${config.text} text-2xl font-bold`}>{value}</p>
         </div>
         <div className={`w-12 h-12 ${config.iconBg} ${config.iconText} rounded-full flex items-center justify-center shadow-sm flex-shrink-0 border ${config.border}`}>
-          {icon}
+          {(() => {
+            if (!icon) return null;
+            if (React.isValidElement(icon)) return icon;
+            
+            const isComponent = 
+              typeof icon === 'function' || 
+              (typeof icon === 'object' && icon !== null && (
+                icon.$$typeof === Symbol.for('react.forward_ref') || 
+                icon.$$typeof === Symbol.for('react.memo') ||
+                icon.render || 
+                icon.displayName
+              ));
+
+            if (isComponent) {
+              const IconComp = icon;
+              return <IconComp size={24} />;
+            }
+            
+            return null;
+          })()}
         </div>
       </div>
     </div>

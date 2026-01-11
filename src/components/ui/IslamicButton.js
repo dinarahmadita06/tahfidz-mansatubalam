@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * IslamicButton - Modern Islamic-themed buttons
  * Berbagai varian button dengan desain modern islami
@@ -36,7 +38,24 @@ export function IslamicButton({
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
-      {Icon && <Icon className="w-5 h-5" strokeWidth={2.5} />}
+      {Icon && (
+        (() => {
+          if (React.isValidElement(Icon)) return Icon;
+          const isComponent = 
+            typeof Icon === 'function' || 
+            (typeof Icon === 'object' && Icon !== null && (
+              Icon.$$typeof === Symbol.for('react.forward_ref') || 
+              Icon.$$typeof === Symbol.for('react.memo') ||
+              Icon.render || 
+              Icon.displayName
+            ));
+          if (isComponent) {
+            const IconComp = Icon;
+            return <IconComp className="w-5 h-5" strokeWidth={2.5} />;
+          }
+          return null;
+        })()
+      )}
       {children}
     </button>
   );
@@ -62,7 +81,22 @@ export function IslamicIconButton({ icon: Icon, tooltip, onClick, variant = "pri
         ${className}
       `}
     >
-      <Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
+      {(() => {
+        if (React.isValidElement(Icon)) return Icon;
+        const isComponent = 
+          typeof Icon === 'function' || 
+          (typeof Icon === 'object' && Icon !== null && (
+            Icon.$$typeof === Symbol.for('react.forward_ref') || 
+            Icon.$$typeof === Symbol.for('react.memo') ||
+            Icon.render || 
+            Icon.displayName
+          ));
+        if (isComponent) {
+          const IconComp = Icon;
+          return <IconComp className="w-5 h-5 text-white" strokeWidth={2.5} />;
+        }
+        return null;
+      })()}
     </button>
   );
 }

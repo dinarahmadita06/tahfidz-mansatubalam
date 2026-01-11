@@ -71,13 +71,13 @@ export default function SiswaClient({ initialKelas = [] }) {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-              Cari Nama Siswa atau NIS
+              Cari Nama Siswa, NIS, atau NISN
             </label>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="text"
-                placeholder="Cari siswa..."
+                placeholder="Nama, NIS, NISN..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full h-11 pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
