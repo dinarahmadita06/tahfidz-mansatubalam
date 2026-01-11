@@ -6,8 +6,11 @@ import { calculateStudentProgress, isEligibleForTasmi } from '@/lib/services/sis
 
 // GET - Fetch siswa's own tasmi history with pagination
 export async function GET(request) {
+  console.time('TASMI_GET_Total');
   try {
+    console.time('TASMI_GET_Auth');
     const session = await auth();
+    console.timeEnd('TASMI_GET_Auth');
 
     if (!session || session.user.role !== 'SISWA') {
       return NextResponse.json(
@@ -23,6 +26,7 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
 
     // Get siswa data with current class info
+    console.time('TASMI_GET_SiswaData');
     const siswa = await prisma.siswa.findUnique({
       where: { userId: session.user.id },
       select: { 
@@ -42,6 +46,7 @@ export async function GET(request) {
         }
       }
     });
+    console.timeEnd('TASMI_GET_SiswaData');
 
     if (!siswa) {
       return NextResponse.json(
@@ -57,6 +62,7 @@ export async function GET(request) {
     } : null;
 
     // Parallel fetch for independent data
+    console.time('TASMI_GET_ParallelQueries');
     const [tasmi, totalCount] = await Promise.all([
       // Fetch tasmi history with pagination
       // NOTE: Explicitly EXCLUDE nilai fields from siswa view (security)
@@ -66,7 +72,6 @@ export async function GET(request) {
         },
         select: {
           id: true,
-          siswaId: true,
           statusPendaftaran: true,
           tanggalTasmi: true,
           jamTasmi: true,
@@ -76,7 +81,7 @@ export async function GET(request) {
           catatan: true,
           // EXCLUDED FOR SECURITY: nilaiAkhir, nilaiKelancaran, nilaiAdab, nilaiTajwid, nilaiIrama, catatanPenguji, predikat, publishedAt, pdfUrl
           siswa: {
-            include: {
+            select: {
               user: {
                 select: {
                   name: true,
@@ -90,7 +95,7 @@ export async function GET(request) {
             },
           },
           guruPengampu: {
-            include: {
+            select: {
               user: {
                 select: {
                   name: true,
@@ -113,17 +118,22 @@ export async function GET(request) {
         },
       }),
     ]);
+    console.timeEnd('TASMI_GET_ParallelQueries');
 
     const totalPages = Math.ceil(totalCount / limit);
 
     // Get school year for active progress calculation
+    console.time('TASMI_GET_SchoolYear');
     const schoolYear = await prisma.tahunAjaran.findFirst({
       where: { isActive: true },
       select: { id: true, targetHafalan: true, nama: true }
     });
+    console.timeEnd('TASMI_GET_SchoolYear');
 
     // Use centralized service for progress calculation (active school year)
+    console.time('TASMI_GET_ProgressCalculation');
     const progressData = await calculateStudentProgress(prisma, siswa.id, schoolYear?.id);
+    console.timeEnd('TASMI_GET_ProgressCalculation');
     const totalJuzHafalan = progressData.totalJuz;
     const targetJuzSekolah = progressData.targetJuzMinimal;
     const isEligible = isEligibleForTasmi(totalJuzHafalan, targetJuzSekolah);
@@ -135,6 +145,7 @@ export async function GET(request) {
     - School Year: ${schoolYear?.nama || 'None'}
     `);
 
+    console.timeEnd('TASMI_GET_Total');
     return NextResponse.json({
       tasmi,
       totalJuzHafalan,
