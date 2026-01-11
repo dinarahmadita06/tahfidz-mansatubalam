@@ -13,14 +13,18 @@ export const dynamic = 'force-dynamic';
 
 // GET - List all siswa (Admin only)
 export async function GET(request) {
+  const startTotal = performance.now();
+  console.log('--- [API ADMIN SISWA] REQUEST START ---');
+  
   try {
+    const startAuth = performance.now();
     const session = await auth();
+    const endAuth = performance.now();
+    console.log(`[API ADMIN SISWA] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
 
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    console.time('GET /api/admin/siswa');
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -29,30 +33,22 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
+    // Optimization: If limit=1 and status=pending, it's likely for the sidebar badge
+    const isBadgeRequest = limit === 1 && status === 'pending' && !search && !kelasId;
+
     // Build cache key
-    const cacheKey = kelasId 
-      ? `siswa-list-kelasId-${kelasId}-page-${page}`
-      : search
-        ? `siswa-list-search-${search}-page-${page}`
-        : `siswa-list-all-page-${page}`;
+    const cacheKey = `siswa-list-${status || 'all'}-${kelasId || 'all'}-${search || 'none'}-p${page}-l${limit}`;
     
     // Check cache
     const cachedData = getCachedData(cacheKey);
     if (cachedData) {
-      console.timeEnd('GET /api/admin/siswa');
+      console.log('[API ADMIN SISWA] Returning cached data');
       return NextResponse.json(cachedData);
     }
 
     let whereClause = {};
-
-    if (status) {
-      whereClause.status = status;
-    }
-
-    if (kelasId) {
-      whereClause.kelasId = kelasId;
-    }
-
+    if (status) whereClause.status = status;
+    if (kelasId) whereClause.kelasId = kelasId;
     if (search) {
       whereClause.OR = [
         { user: { name: { contains: search, mode: 'insensitive' } } },
@@ -61,69 +57,92 @@ export async function GET(request) {
       ];
     }
 
-    // Parallel: count + findMany
-    console.time('siswa-count-query');
-    const totalCount = await prisma.siswa.count({ where: whereClause });
-    console.timeEnd('siswa-count-query');
-    const totalPages = Math.ceil(totalCount / limit);
-
-    console.time('siswa-findMany-query');
-    const siswa = await prisma.siswa.findMany({
-      where: whereClause,
-      skip: (page - 1) * limit,
-      take: limit,
-      select: {
-        id: true,
-        nisn: true,
-        nis: true,
-        jenisKelamin: true,
-        tanggalLahir: true,
-        alamat: true,
-        noTelepon: true,
-        status: true,
-        createdAt: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            isActive: true,
-            createdAt: true
-          }
-        },
-        kelas: {
-          select: {
-            id: true,
-            nama: true,
-          }
-        },
-        orangTuaSiswa: {
-          select: {
-            orangTua: {
-              select: {
-                id: true,
-                noTelepon: true,
-                user: {
-                  select: {
-                    name: true,
-                    email: true
-                  }
+    // Performance: If it's a badge request, we can optimize the select
+    const selectFields = isBadgeRequest ? {
+      id: true,
+      status: true,
+      user: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
+    } : {
+      id: true,
+      nisn: true,
+      nis: true,
+      jenisKelamin: true,
+      tanggalLahir: true,
+      alamat: true,
+      noTelepon: true,
+      status: true,
+      createdAt: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          isActive: true,
+          createdAt: true
+        }
+      },
+      kelas: {
+        select: {
+          id: true,
+          nama: true,
+        }
+      },
+      orangTuaSiswa: {
+        select: {
+          orangTua: {
+            select: {
+              id: true,
+              noTelepon: true,
+              user: {
+                select: {
+                  name: true,
+                  email: true
                 }
               }
             }
           }
-        },
-        _count: {
-          select: {
-            hafalan: true
-          }
         }
       },
-      orderBy: {
-        createdAt: 'desc'
+      _count: {
+        select: {
+          hafalan: true
+        }
       }
-    });
-    console.timeEnd('siswa-findMany-query');
+    };
+
+    const startQueries = performance.now();
+    let totalCount = 0;
+    let siswa = [];
+
+    if (isBadgeRequest) {
+      // Optimization for sidebar badge: count only
+      totalCount = await prisma.siswa.count({ where: whereClause });
+    } else {
+      const results = await Promise.all([
+        prisma.siswa.count({ where: whereClause }),
+        prisma.siswa.findMany({
+          where: whereClause,
+          skip: (page - 1) * limit,
+          take: limit,
+          select: selectFields,
+          orderBy: {
+            createdAt: 'desc'
+          }
+        })
+      ]);
+      totalCount = results[0];
+      siswa = results[1];
+    }
+    const endQueries = performance.now();
+    const prismaDuration = (endQueries - startQueries).toFixed(2);
+    
+    const startTransform = performance.now();
+    const totalPages = Math.ceil(totalCount / limit);
 
     const responseData = {
       data: siswa,
@@ -134,11 +153,21 @@ export async function GET(request) {
         totalPages
       }
     };
+    const endTransform = performance.now();
+    const transformDuration = (endTransform - startTransform).toFixed(2);
 
     // Cache response
-    setCachedData(cacheKey, responseData);
+    setCachedData(cacheKey, responseData, isBadgeRequest ? 60 : 30); // Cache badge request for 60s
 
-    console.timeEnd('GET /api/admin/siswa');
+    const endTotal = performance.now();
+    const totalDuration = (endTotal - startTotal).toFixed(2);
+
+    console.log(`[API SISWA PENDING] total: ${totalDuration} ms`);
+    console.log(`[API SISWA PENDING] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
+    console.log(`[API SISWA PENDING] prisma.queries: ${prismaDuration} ms`);
+    console.log(`[API SISWA PENDING] transform response: ${transformDuration} ms`);
+    console.log('--- [API ADMIN SISWA] REQUEST END ---');
+
     return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching siswa:', error);

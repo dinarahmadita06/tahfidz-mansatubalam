@@ -219,13 +219,13 @@ function TargetSiswaDonutCard({ data, loading, targetHafalan }) {
 // ============================================================================
 // MAIN TARGET STATISTICS SECTION
 // ============================================================================
-export default function TargetStatisticsSection() {
-  const [data, setData] = useState({
+export default function TargetStatisticsSection({ initialData, tahunAjaranAktif: initialTahunAjaran }) {
+  const [data, setData] = useState(initialData || {
     kelasTop5: [],
     siswa: { mencapai: 0, belum: 0, total: 0, persen: 0 },
   });
-  const [tahunAjaranAktif, setTahunAjaranAktif] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [tahunAjaranAktif, setTahunAjaranAktif] = useState(initialTahunAjaran || null);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(null);
 
   const fetchData = async () => {
@@ -233,7 +233,6 @@ export default function TargetStatisticsSection() {
       setLoading(true);
       setError(null);
       
-      // Fetch both active tahun ajaran and statistics in parallel
       const [taRes, statsRes] = await Promise.all([
         fetch('/api/tahun-ajaran/aktif', { cache: 'no-store' }),
         fetch('/api/admin/statistik/target', { cache: 'no-store' })
@@ -263,8 +262,10 @@ export default function TargetStatisticsSection() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!initialData) {
+      fetchData();
+    }
+  }, [initialData]);
 
   // Show placeholder if target not available
   if (!loading && !tahunAjaranAktif?.targetHafalan) {

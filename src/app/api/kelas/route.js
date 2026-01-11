@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { getCachedData, setCachedData } from '@/lib/cache';
 
 export async function GET(request) {
+  const startTotal = performance.now();
+  console.log('--- [API KELAS] REQUEST START ---');
   try {
+    const startAuth = performance.now();
     const session = await auth();
-    console.log('[API /kelas] Session:', { role: session?.user?.role, userId: session?.user?.id });
+    const endAuth = performance.now();
+    console.log(`[API KELAS] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -13,8 +18,24 @@ export async function GET(request) {
 
     // Get query params
     const { searchParams } = new URL(request.url);
-    const showAll = searchParams.get('showAll') === 'true'; // Show all kelas, not just guru's classes
-    console.log('[API /kelas] Params:', { showAll });
+    const showAll = searchParams.get('showAll') === 'true'; 
+    const noCache = searchParams.get('noCache') === 'true';
+
+    // Caching logic
+    const cacheKey = `kelas-list-${session.user.role}-${session.user.guruId}-${showAll}`;
+    if (!noCache) {
+      const cached = getCachedData(cacheKey);
+      if (cached) {
+        console.log('[API KELAS] Returning cached data');
+        const endTotal = performance.now();
+        console.log(`[API KELAS] total (CACHED): ${(endTotal - startTotal).toFixed(2)} ms`);
+        return NextResponse.json(cached, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+          }
+        });
+      }
+    }
 
     let whereClause = {};
 
@@ -31,8 +52,7 @@ export async function GET(request) {
       console.log('[API /kelas] ADMIN role - showing ALL classes');
     }
 
-    console.log('[API /kelas] Where clause:', JSON.stringify(whereClause));
-
+    const startQueries = performance.now();
     const kelas = await prisma.kelas.findMany({
       where: whereClause,
       select: {
@@ -45,9 +65,11 @@ export async function GET(request) {
           where: {
             isActive: true
           },
-          include: {
+          select: {
+            peran: true,
             guru: {
-              include: {
+              select: {
+                id: true,
                 user: {
                   select: { name: true, email: true },
                 },
@@ -76,11 +98,20 @@ export async function GET(request) {
         nama: 'asc',
       },
     });
+    const endQueries = performance.now();
+    console.log(`[API KELAS] prisma.findMany: ${(endQueries - startQueries).toFixed(2)} ms`);
 
-    console.log('[API /kelas] RESULT: Total kelas found:', kelas.length);
-    console.log('[API /kelas] Classes:', kelas.map(k => ({ id: k.id, nama: k.nama, status: k.status })));
+    setCachedData(cacheKey, kelas, 60);
 
-    return NextResponse.json(kelas);
+    const endTotal = performance.now();
+    console.log(`[API KELAS] total: ${(endTotal - startTotal).toFixed(2)} ms`);
+    console.log('--- [API KELAS] REQUEST END ---');
+
+    return NextResponse.json(kelas, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+      }
+    });
   } catch (error) {
     console.error('[API /kelas] ERROR:', error);
     return NextResponse.json(
