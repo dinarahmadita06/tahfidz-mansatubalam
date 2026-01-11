@@ -14,28 +14,27 @@ model User {
   email            String           @unique
   password         String
   role             Role
-  isActive         Boolean          @default(true)
   image            String?
   emailVerified    DateTime?
-  resetToken       String?
-  resetTokenExpiry DateTime?
-  phoneNumber      String?
-  jabatan          String?
-  nip              String?
-  alamat           String?
-  ttdUrl           String?
-  signatureUrl     String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  isActive         Boolean          @default(true)
+  jabatan          String?
+  nip              String?
+  signatureUrl     String?
+  ttdUrl           String?
+  username         String?          @unique
   activityLogs     ActivityLog[]    @relation("ActivityLogActor")
   guru             Guru?
   guruActivity     GuruActivity[]
   kelasMengampu    Kelas[]          @relation("KelasGuruTahfidz")
+  notifications    Notification[]
   orangTua         OrangTua?
   pengumuman       Pengumuman[]
   pengumumanRead   PengumumanRead[] @relation("UserPengumumanRead")
   siswa            Siswa?
-  notifications    Notification[]
 
   @@index([role])
   @@index([name])
@@ -49,14 +48,12 @@ model Guru {
   nip             String?        @unique
   jabatan         String?
   bidangKeahlian  String?
-  alamat          String?
-  noTelepon       String?
   tanggalLahir    DateTime?
   jenisKelamin    JenisKelamin
-  mulaiMengajar   DateTime?
-  tandaTangan     String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  tandaTangan     String?
+  mulaiMengajar   DateTime?
   agenda          Agenda[]
   bukuDigital     BukuDigital[]
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -76,22 +73,21 @@ model Guru {
 model Siswa {
   id                 String          @id @default(cuid())
   userId             String          @unique
-  nisn               String?         @unique
   nis                String          @unique
   kelasId            String?
-  tahunAjaranMasukId String?
-  kelasAngkatan      String?
   alamat             String?
-  noTelepon          String?
-  tempatLahir        String?
   tanggalLahir       DateTime?
   jenisKelamin       JenisKelamin
   status             StatusAkun      @default(pending)
-  statusSiswa        StatusSiswa     @default(AKTIF)
-  tanggalKeluar      DateTime?
-  lulusAt            DateTime?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
+  nisn               String?         @unique
+  tempatLahir        String?
+  statusSiswa        StatusSiswa     @default(AKTIF)
+  tanggalKeluar      DateTime?
+  kelasAngkatan      String?
+  tahunAjaranMasukId String?
+  lulusAt            DateTime?
   latestJuzAchieved  Int             @default(0)
   hafalan            Hafalan[]
   orangTuaSiswa      OrangTuaSiswa[]
@@ -120,7 +116,6 @@ model OrangTua {
   userId        String          @unique
   pekerjaan     String?
   alamat        String?
-  noTelepon     String?
   tanggalLahir  DateTime?
   jenisKelamin  JenisKelamin
   status        StatusAkun      @default(pending)
@@ -151,13 +146,13 @@ model OrangTuaSiswa {
 model TahunAjaran {
   id                String          @id @default(cuid())
   nama              String
-  semester          Int?
   tanggalMulai      DateTime
   tanggalSelesai    DateTime
   isActive          Boolean         @default(false)
-  targetHafalan     Int?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
+  semester          Int?
+  targetHafalan     Int?
   kelas             Kelas[]
   siswaMasuk        Siswa[]         @relation("SiswaTahunAjaranMasuk")
   targetHafalanData TargetHafalan[]
@@ -173,9 +168,9 @@ model Kelas {
   kapasitas     Int?
   targetJuz     Int?
   status        StatusKelas     @default(AKTIF)
-  guruTahfidzId String?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  guruTahfidzId String?
   agenda        Agenda[]
   bukuDigital   BukuDigital[]
   guruKelas     GuruKelas[]
@@ -195,12 +190,12 @@ model GuruKelas {
   id             String    @id @default(cuid())
   guruId         String
   kelasId        String
-  peran          PeranGuru @default(pendamping)
   tanggalMulai   DateTime  @default(now())
   tanggalSelesai DateTime?
   isActive       Boolean   @default(true)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  peran          PeranGuru @default(pendamping)
   guru           Guru      @relation(fields: [guruId], references: [id], onDelete: Cascade)
   kelas          Kelas     @relation(fields: [kelasId], references: [id], onDelete: Cascade)
 
@@ -217,14 +212,14 @@ model TargetHafalan {
   kelasId       String?
   tahunAjaranId String?
   targetJuz     Int
-  bulan         Int
-  tahun         Int
   targetSurah   String?
   targetAyat    String?
   deadline      DateTime?
   keterangan    String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  bulan         Int
+  tahun         Int
   kelas         Kelas?       @relation(fields: [kelasId], references: [id])
   siswa         Siswa?       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
   tahunAjaran   TahunAjaran? @relation(fields: [tahunAjaranId], references: [id])
@@ -241,15 +236,15 @@ model Hafalan {
   tanggal       DateTime    @default(now())
   juz           Int?
   surah         String
-  surahNumber   Int?
   ayatMulai     Int
   ayatSelesai   Int
-  surahTambahan Json        @default("[]")
   keterangan    String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  siswa         Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  surahTambahan Json        @default("[]")
+  surahNumber   Int?
   guru          Guru        @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  siswa         Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
   penilaian     Penilaian[]
 
   @@index([siswaId])
@@ -354,10 +349,10 @@ model Pengumuman {
   isi            String
   tanggalMulai   DateTime         @default(now())
   tanggalSelesai DateTime?
-  lampiran       String?
   isPinned       Boolean          @default(false)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  lampiran       String?
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   pengumumanRead PengumumanRead[]
 
@@ -385,7 +380,6 @@ model PengumumanRead {
 model BukuDigital {
   id            String       @id @default(cuid())
   guruId        String
-  classId       String
   judul         String
   deskripsi     String?
   kategori      KategoriBuku
@@ -395,6 +389,7 @@ model BukuDigital {
   downloadCount Int          @default(0)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  classId       String
   kelas         Kelas        @relation(fields: [classId], references: [id], onDelete: Cascade)
   guru          Guru         @relation(fields: [guruId], references: [id], onDelete: Cascade)
 
@@ -578,8 +573,8 @@ enum KategoriBuku {
   HADITS
   FIQIH
   AKHLAK
-  TAHSIN
   UMUM
+  TAHSIN
 }
 
 enum JenisAktivitas {

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -21,10 +21,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      console.log('🔐 [LOGIN] Attempting login with email:', email);
+      console.log('🔐 [LOGIN] Attempting login with identifier:', identifier);
 
       const result = await signIn('credentials', {
-        email,
+        identifier,
         password,
         redirect: false,
       });
@@ -161,11 +161,11 @@ export default function LoginPage() {
                   <input
                     type="text"
                     id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     required
                     className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-300 focus:border-transparent transition-all"
-                    placeholder="contoh: admin@example.com"
+                    placeholder="contoh: G001, 202512, dll"
                   />
                 </div>
               </div>

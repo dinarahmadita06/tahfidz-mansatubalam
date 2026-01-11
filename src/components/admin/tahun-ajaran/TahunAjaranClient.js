@@ -229,8 +229,12 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
     setTahunAjaranFormData({
       nama: tahunAjaranItem.nama,
       semester: tahunAjaranItem.semester,
-      tanggalMulai: tahunAjaranItem.tanggalMulai.split('T')[0],
-      tanggalSelesai: tahunAjaranItem.tanggalSelesai.split('T')[0],
+      tanggalMulai: typeof tahunAjaranItem.tanggalMulai === 'string' 
+        ? tahunAjaranItem.tanggalMulai.split('T')[0]
+        : new Date(tahunAjaranItem.tanggalMulai).toISOString().split('T')[0],
+      tanggalSelesai: typeof tahunAjaranItem.tanggalSelesai === 'string'
+        ? tahunAjaranItem.tanggalSelesai.split('T')[0]
+        : new Date(tahunAjaranItem.tanggalSelesai).toISOString().split('T')[0],
     });
     setShowTahunAjaranModal(true);
   };
@@ -667,31 +671,31 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
       {/* Modal Aktivasi Periode */}
       {showActivateModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 max-md w-full shadow-xl border border-emerald-200/60 animate-in fade-in zoom-in-95">
-            <div className="text-center mb-6">
+          <div className="bg-white rounded-2xl p-6 max-w-xl w-full shadow-xl border border-emerald-200/60 animate-in fade-in zoom-in-95">
+            <div className="text-center mb-1">
               <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 size={32} className="text-emerald-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Aktifkan Periode Ini?</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Aktifkan Periode Ini?</h2>
               <p className="text-sm text-gray-600">Periode aktif sebelumnya akan dinonaktifkan</p>
             </div>
 
-            <div className="p-4 bg-amber-50 rounded-lg mb-6 border border-amber-200/60">
+            <div className="py-3 px-4 bg-amber-50 rounded-lg mt-4 mb-6 border border-amber-200/60">
               <p className="text-sm font-semibold text-amber-900">
                 {selectedTahunAjaran?.nama} - Semester {selectedTahunAjaran?.semester}
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setShowActivateModal(false)}
-                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all"
+                className="px-4 py-2.5 border border-slate-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all"
               >
                 Batal
               </button>
               <button
                 onClick={confirmActivate}
-                className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-all shadow-sm"
+                className="px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-all shadow-sm"
               >
                 Ya, Aktifkan
               </button>

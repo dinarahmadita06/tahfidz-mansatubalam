@@ -114,7 +114,7 @@ export async function GET(request) {
         const allNilai = [...tajwidValues, ...kelancaranValues, ...makhrajValues, ...adabValues];
         const rataRataNilaiBulanan = allNilai.length > 0 ? allNilai.reduce((a, b) => a + b, 0) / allNilai.length : null;
         
-        // Count total hafalan entries
+        // Count total hafalan entries (Meetings)
         const jumlahSetoran = data.hafalanList.length;
         
         // Get hafalan terakhir

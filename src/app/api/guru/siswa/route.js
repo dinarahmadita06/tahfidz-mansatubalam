@@ -68,7 +68,7 @@ export async function GET(request) {
       whereClause.OR = [
         { user: { name: { contains: search, mode: 'insensitive' } } },
         { nis: { contains: search } },
-        { user: { email: { contains: search, mode: 'insensitive' } } }
+        { nisn: { contains: search } }
       ];
     }
 

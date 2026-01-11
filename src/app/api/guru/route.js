@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
+import { generateNextTeacherUsername } from '@/lib/passwordUtils';
 
 // Constant for active class status
 const STATUS_AKTIF = 'AKTIF';
@@ -50,14 +51,14 @@ export async function GET(request) {
         nip: true,
         jenisKelamin: true,
         tanggalLahir: true,
-        noTelepon: true,
-        alamat: true,
+
         userId: true,
         user: {
           select: {
             id: true,
             name: true,
-            email: true,
+            email: true,  // Keep email for internal purposes but make it optional in creation
+            username: true,  // Add username field for display in admin table
             image: true,
             createdAt: true
           }
@@ -142,16 +143,22 @@ export async function POST(request) {
     const body = await request.json();
     console.log('📝 Request body:', JSON.stringify(body, null, 2));
 
-    const { name, email, password, nip, jenisKelamin, tanggalLahir, noHP, noTelepon, alamat, kelasIds } = body;
+    let { name, email, password, username, nip, jenisKelamin, tanggalLahir, kelasIds } = body;
 
-    // Validasi input - NIP is now optional
-    if (!name || !email || !password || !jenisKelamin) {
-      console.log('❌ Validation failed:', { name, email, hasPassword: !!password, jenisKelamin });
+    // If username is not provided, generate one automatically
+    if (!username) {
+      console.log('🔍 Generating username for new teacher');
+      username = await generateNextTeacherUsername(prisma);
+      console.log('✅ Generated username:', username);
+    }
+
+    // Validasi input - Email is no longer required for teacher creation, only core credentials
+    if (!name || !password || !jenisKelamin) {
+      console.log('❌ Validation failed:', { name, password, jenisKelamin });
       return NextResponse.json({
         error: 'Data tidak lengkap',
         missing: {
           name: !name,
-          email: !email,
           password: !password,
           jenisKelamin: !jenisKelamin
         }
@@ -207,18 +214,41 @@ export async function POST(request) {
 
     console.log('✅ Normalized jenisKelamin:', normalizedJenisKelamin);
 
-    // Cek email sudah ada
+    // Cek email sudah ada jika email disediakan
     console.log('🔍 Checking existing user...');
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    let existingUser = null;
+    if (email) {
+      existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+    }
 
     if (existingUser) {
       console.log('❌ Email already exists:', email);
       return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
     }
 
+    if (!email) {
+      // Generate a temporary email if not provided (for internal purposes)
+      email = `guru.${Date.now()}@internal.tahfidz`;
+    }
+
     console.log('✅ Email available');
+
+    // Check if username already exists
+    try {
+      const existingUserWithUsername = await prisma.user.findUnique({
+        where: { username }
+      });
+
+      if (existingUserWithUsername) {
+        console.log('❌ Username already exists:', username);
+        return NextResponse.json({ error: 'Username sudah terdaftar' }, { status: 400 });
+      }
+    } catch (error) {
+      console.warn('⚠️ Username field not available in database, skipping username uniqueness check');
+      // Continue without username check if field doesn't exist
+    }
 
     // Hash password
     console.log('🔐 Hashing password...');
@@ -230,12 +260,11 @@ export async function POST(request) {
       nip: nip || null,
       jenisKelamin: normalizedJenisKelamin,
       tanggalLahir: tanggalLahir ? new Date(tanggalLahir) : null,
-      noTelepon: noTelepon || noHP || null,
-      alamat: alamat || null,
       user: {
         create: {
           name,
-          email,
+          email, // Use the email (either provided or generated)
+          username, // Add the username (with error handling)
           password: hashedPassword,
           role: 'GURU'
         }
@@ -247,19 +276,53 @@ export async function POST(request) {
       user: { ...createData.user, create: { ...createData.user.create, password: '[HIDDEN]' } }
     }, null, 2));
 
-    // Buat user dan guru
-    const guru = await prisma.guru.create({
-      data: createData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+    // Buat user dan guru dengan retry logic untuk mengatasi race condition
+    let guru;
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    while (attempts < maxAttempts) {
+      try {
+        guru = await prisma.guru.create({
+          data: createData,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        });
+        break; // Success, exit the loop
+      } catch (error) {
+        attempts++;
+        console.log(`Attempt ${attempts} failed:`, error.message);
+        
+        // If it's a unique constraint violation, generate a new username and try again
+        if (error.code === 'P2002' && error.meta?.target?.includes('username')) {
+          console.log('Username conflict detected, generating new username...');
+          username = await generateNextTeacherUsername(prisma);
+          createData.user.create.username = username;
+          console.log('New username generated:', username);
+          
+          if (attempts < maxAttempts) {
+            continue; // Retry with new username
           }
         }
+        
+        // Re-throw if it's not a retryable error or max attempts reached
+        throw error;
       }
-    });
+    }
+    
+    if (!guru) {
+      return NextResponse.json(
+        { error: 'Gagal membuat guru setelah beberapa percobaan' },
+        { status: 500 }
+      );
+    }
 
     console.log('✅ Guru created successfully:', guru.id);
 

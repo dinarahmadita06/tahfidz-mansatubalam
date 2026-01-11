@@ -1,58 +1,62 @@
 import { PrismaClient } from '@prisma/client';
-
 const prisma = new PrismaClient();
 
 async function checkData() {
   try {
-    console.log('🔍 Mengecek data di database...\n');
-
-    // Check Siswa
-    const siswa = await prisma.siswa.findMany({
-      include: {
-        user: { select: { name: true, email: true } },
-        kelas: { select: { nama: true } }
+    console.log('Checking database connection and data...');
+    
+    // Check total user count
+    const userCount = await prisma.user.count();
+    console.log('Total users:', userCount);
+    
+    // Check users without username (which might be causing issues after migration)
+    const usersWithoutUsername = await prisma.user.count({
+      where: {
+        username: null
       }
     });
-    console.log(`📚 Siswa: ${siswa.length} data`);
-    if (siswa.length > 0) {
-      siswa.slice(0, 3).forEach(s => {
-        console.log(`   - ${s.user.name} (${s.nis}) - Kelas: ${s.kelas?.nama || 'Belum ada'}`);
+    console.log('Users without username:', usersWithoutUsername);
+    
+    if (usersWithoutUsername > 0) {
+      console.log('Found users without username. Need to populate username field.');
+      
+      // Sample of users without username
+      const sampleUsers = await prisma.user.findMany({
+        where: {
+          username: null
+        },
+        take: 5,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true
+        }
       });
+      console.log('Sample users without username:', JSON.stringify(sampleUsers, null, 2));
     }
-
-    // Check Hafalan
-    const hafalan = await prisma.hafalan.findMany({
-      include: {
-        siswa: { include: { user: { select: { name: true } } } },
-        guru: { include: { user: { select: { name: true } } } }
-      }
-    });
-    console.log(`\n📖 Hafalan: ${hafalan.length} data`);
-    if (hafalan.length > 0) {
-      hafalan.slice(0, 3).forEach(h => {
-        console.log(`   - ${h.siswa.user.name}: Juz ${h.juz}, Surah ${h.surah}, Ayat ${h.ayatMulai}-${h.ayatSelesai}`);
-      });
+    
+    // Check other tables
+    const guruCount = await prisma.guru.count();
+    const siswaCount = await prisma.siswa.count();
+    const ortuCount = await prisma.orangTua.count();
+    const kelasCount = await prisma.kelas.count();
+    const tahunAjaranCount = await prisma.tahunAjaran.count();
+    const hafalanCount = await prisma.hafalan.count();
+    
+    console.log('Guru:', guruCount);
+    console.log('Siswa:', siswaCount);
+    console.log('Orang Tua:', ortuCount);
+    console.log('Kelas:', kelasCount);
+    console.log('Tahun Ajaran:', tahunAjaranCount);
+    console.log('Hafalan:', hafalanCount);
+    
+    if (userCount === 0) {
+      console.log('Warning: No users found in database. This might explain why data is not showing.');
     }
-
-    // Check Penilaian
-    const penilaian = await prisma.penilaian.count();
-    console.log(`\n⭐ Penilaian: ${penilaian} data`);
-
-    // Check Kelas
-    const kelas = await prisma.kelas.findMany({
-      include: {
-        _count: { select: { siswa: true } }
-      }
-    });
-    console.log(`\n🏫 Kelas: ${kelas.length} data`);
-    if (kelas.length > 0) {
-      kelas.forEach(k => {
-        console.log(`   - ${k.nama}: ${k._count.siswa} siswa`);
-      });
-    }
-
+    
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('Error checking data:', error.message);
   } finally {
     await prisma.$disconnect();
   }

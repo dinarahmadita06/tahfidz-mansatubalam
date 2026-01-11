@@ -196,7 +196,7 @@ export default function AccountSuccessModal({ accounts, onClose }) {
                   letterSpacing: '0.5px',
                 }}
               >
-                Email
+                Username
               </label>
               <div
                 style={{
@@ -217,10 +217,10 @@ export default function AccountSuccessModal({ accounts, onClose }) {
                     color: colors.text.secondary,
                   }}
                 >
-                  {accounts.student.email}
+                  {accounts.student.username}
                 </div>
                 <button
-                  onClick={() => handleCopy(accounts.student.email, 'student-email')}
+                  onClick={() => handleCopy(accounts.student.username, 'student-username')}
                   style={{
                     padding: '10px',
                     background: colors.white,
@@ -228,12 +228,12 @@ export default function AccountSuccessModal({ accounts, onClose }) {
                     borderRadius: '8px',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    color: copiedField === 'student-email' ? colors.emerald[600] : colors.text.tertiary,
+                    color: copiedField === 'student-username' ? colors.emerald[600] : colors.text.tertiary,
                   }}
                   className="copy-btn"
-                  title="Salin email"
+                  title="Salin username"
                 >
-                  {copiedField === 'student-email' ? <Check size={18} /> : <Copy size={18} />}
+                  {copiedField === 'student-username' ? <Check size={18} /> : <Copy size={18} />}
                 </button>
               </div>
             </div>
@@ -394,7 +394,7 @@ export default function AccountSuccessModal({ accounts, onClose }) {
                     letterSpacing: '0.5px',
                   }}
                 >
-                  Email
+                  Username
                 </label>
                 <div
                   style={{
@@ -415,10 +415,10 @@ export default function AccountSuccessModal({ accounts, onClose }) {
                       color: colors.text.secondary,
                     }}
                   >
-                    {accounts.parent.email}
+                    {accounts.parent.username}
                   </div>
                   <button
-                    onClick={() => handleCopy(accounts.parent.email, 'parent-email')}
+                    onClick={() => handleCopy(accounts.parent.username, 'parent-username')}
                     style={{
                       padding: '10px',
                       background: colors.white,
@@ -426,12 +426,12 @@ export default function AccountSuccessModal({ accounts, onClose }) {
                       borderRadius: '8px',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      color: copiedField === 'parent-email' ? colors.emerald[600] : colors.text.tertiary,
+                      color: copiedField === 'parent-username' ? colors.emerald[600] : colors.text.tertiary,
                     }}
                     className="copy-btn"
-                    title="Salin email"
+                    title="Salin username"
                   >
-                    {copiedField === 'parent-email' ? <Check size={18} /> : <Copy size={18} />}
+                    {copiedField === 'parent-username' ? <Check size={18} /> : <Copy size={18} />}
                   </button>
                 </div>
               </div>
@@ -548,7 +548,7 @@ export default function AccountSuccessModal({ accounts, onClose }) {
               }}
             >
               <strong>⚠️ Penting:</strong> Simpan informasi akun ini dengan aman. Password tidak dapat dilihat
-              lagi setelah modal ini ditutup. Anda bisa menyalin email dan password menggunakan tombol copy.
+              lagi setelah modal ini ditutup. Anda bisa menyalin username dan password menggunakan tombol copy.
             </p>
           </div>
         </div>

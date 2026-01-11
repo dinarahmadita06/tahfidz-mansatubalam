@@ -169,13 +169,8 @@ export async function GET(req) {
 
     // ===== 3. JUZ PROGRESS (PER SCHOOL YEAR) =====
 
-    const juzProgress = progressData.uniqueJuzs.map(juz => {
-      return {
-        label: `Juz ${juz}`,
-        progress: 100, // Show achieved juzs as 100% or count records if needed
-        juz: juz
-      };
-    });
+    const juzProgress = progressData.juzProgress
+      .sort((a, b) => a.juz - b.juz);
 
     const stats = {
       hafalanSelesai: totalJuzSelesai, // ✅ Use synchronized value

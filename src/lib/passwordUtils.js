@@ -124,32 +124,58 @@ export function generateWaliEmail(namaWali, nis) {
  * @param {string} nisn - Student NISN (10 digits)
  * @returns {string} Generated student password
  */
-export function generateStudentPassword(nisn) {
-  if (!nisn || nisn.trim().length === 0) return '';
-  return nisn.trim();
-}
-
-/**
- * Generate parent password based on NISN and birth date
- * @param {string} nisn - Student NISN
- * @param {string|Date} birthDate - Student birth date
- * @returns {string} Generated parent password
- */
-export function generateParentPassword(nisn, birthDate) {
-  if (!nisn || nisn.trim().length === 0) return '';
-  
-  const baseNISN = nisn.trim();
-  
-  if (!birthDate) return baseNISN;
+export function generateStudentPassword(birthDate) {
+  if (!birthDate) return '';
   
   try {
     const date = new Date(birthDate);
-    if (isNaN(date.getTime())) return baseNISN;
+    if (isNaN(date.getTime())) return '';
     
+    // Format as YYYY-MM-DD
     const year = date.getFullYear();
-    return `${baseNISN}-${year}`;
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
   } catch (error) {
-    return baseNISN;
+    console.error('Error generating student password:', error);
+    return '';
+  }
+}
+
+/**
+ * Generate parent password based on birth date
+ * @param {string|Date} birthDate - Student birth date
+ * @returns {string} Generated parent password
+ */
+// Generate student username from NIS
+export function generateStudentUsername(nis) {
+  if (!nis) return '';
+  return nis;
+}
+
+// Generate parent username from child's NIS
+export function generateParentUsername(nis) {
+  if (!nis) return '';
+  return nis;
+}
+
+export function generateParentPassword(birthDate) {
+  if (!birthDate) return '';
+  
+  try {
+    const date = new Date(birthDate);
+    if (isNaN(date.getTime())) return '';
+    
+    // Format as DDMMYYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+    const year = date.getFullYear();
+    
+    return `${day}${month}${year}`;
+  } catch (error) {
+    console.error('Error generating parent password:', error);
+    return '';
   }
 }
 
@@ -203,6 +229,50 @@ export function generateGuruPassword(name, birthDate) {
     return `guru.${firstName}-${year}`;
   } catch (error) {
     return `guru.${firstName}`;
+  }
+}
+
+/**
+ * Generate next available teacher username in format G001, G002, etc.
+ * @param {import('@prisma/client').PrismaClient} prisma - Prisma client instance
+ * @returns {string} Next available username
+ */
+export async function generateNextTeacherUsername(prisma) {
+  try {
+    // Fetch the teacher with the highest username that starts with 'G'
+    const latestGuru = await prisma.guru.findFirst({
+      where: {
+        user: {
+          username: {
+            startsWith: 'G'
+          }
+        }
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      },
+      orderBy: {
+        user: {
+          username: 'desc'
+        }
+      }
+    });
+
+    let nextNumber = 1;
+    if (latestGuru && latestGuru.user.username) {
+      const lastUsername = latestGuru.user.username;
+      const lastNumber = parseInt(lastUsername.slice(1));
+      nextNumber = isNaN(lastNumber) ? 1 : lastNumber + 1;
+    }
+    
+    // Format as G + 3-digit padded number
+    return `G${nextNumber.toString().padStart(3, '0')}`;
+  } catch (error) {
+    console.error('Error generating next teacher username:', error);
+    // Fallback to G001 if there's an error
+    return 'G001';
   }
 }
 

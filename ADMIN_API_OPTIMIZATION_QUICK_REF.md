@@ -139,7 +139,7 @@ const siswa = await prisma.siswa.findMany({
         orangTua: {
           select: {
             id: true,
-            noTelepon: true,
+            
             user: { select: { name, email } }
           }
         }

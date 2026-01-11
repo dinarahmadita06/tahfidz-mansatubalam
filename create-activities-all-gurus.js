@@ -45,8 +45,8 @@ async function createActivitiesForAllGurus() {
           actorName: guru.name,
           action: 'GURU_UBAH_PROFIL',
           title: 'Mengubah profil pribadi',
-          description: 'Update nomor telepon dan alamat',
-          metadata: { fields: ['noTelepon', 'alamat'] },
+          description: 'Update tanggal lahir',
+          metadata: { fields: ['tanggalLahir'] },
           createdAt: new Date(now.getTime() - 30 * 60 * 1000),
         },
         {

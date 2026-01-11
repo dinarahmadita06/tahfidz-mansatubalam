@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * IslamicCard - Modern Islamic-themed card component
  * Reusable card dengan desain modern islami
@@ -53,7 +55,22 @@ export function IslamicCardHeader({ icon: Icon, title, subtitle, action }) {
       <div className="flex items-center gap-3">
         {Icon && (
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md">
-            <Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
+            {(() => {
+              if (React.isValidElement(Icon)) return Icon;
+              const isComponent = 
+                typeof Icon === 'function' || 
+                (typeof Icon === 'object' && Icon !== null && (
+                  Icon.$$typeof === Symbol.for('react.forward_ref') || 
+                  Icon.$$typeof === Symbol.for('react.memo') ||
+                  Icon.render || 
+                  Icon.displayName
+                ));
+              if (isComponent) {
+                const IconComp = Icon;
+                return <IconComp className="w-5 h-5 text-white" strokeWidth={2.5} />;
+              }
+              return null;
+            })()}
           </div>
         )}
         <div>

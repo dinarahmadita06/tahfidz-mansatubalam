@@ -3,8 +3,8 @@
  * Reusable input component with Islamic design aesthetics
  */
 
+import React, { useState } from 'react';
 import { designSystem } from '@/styles/design-system';
-import { useState } from 'react';
 
 export function Input({
   label,
@@ -81,9 +81,19 @@ export function Input({
               transform: 'translateY(-50%)',
               color: designSystem.colors.text.tertiary,
               pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            {icon}
+            {(() => {
+              if (React.isValidElement(icon)) return icon;
+              if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && (icon.$$typeof || icon.render))) {
+                const IconComp = icon;
+                return <IconComp size={size === 'sm' ? 14 : size === 'lg' ? 20 : 16} />;
+              }
+              return icon;
+            })()}
           </div>
         )}
         <input
@@ -102,9 +112,19 @@ export function Input({
               transform: 'translateY(-50%)',
               color: designSystem.colors.text.tertiary,
               pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            {icon}
+            {(() => {
+              if (React.isValidElement(icon)) return icon;
+              if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null && (icon.$$typeof || icon.render))) {
+                const IconComp = icon;
+                return <IconComp size={size === 'sm' ? 14 : size === 'lg' ? 20 : 16} />;
+              }
+              return icon;
+            })()}
           </div>
         )}
       </div>

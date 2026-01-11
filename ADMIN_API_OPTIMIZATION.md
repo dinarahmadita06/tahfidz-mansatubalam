@@ -72,7 +72,7 @@ select: {
       orangTua: {
         select: {
           id: true,
-          noTelepon: true,
+          
           user: { select: { name, email } }
         }
       }

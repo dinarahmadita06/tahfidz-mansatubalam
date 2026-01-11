@@ -25,25 +25,33 @@ export const authConfig = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        identifier: { label: "Username/NIS", type: "text" }, // Standardized field name
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const email = credentials?.email?.toLowerCase().trim();
+        let identifier = credentials?.identifier?.trim(); // Standardized field name with proper trimming
         const password = credentials?.password;
 
-        if (!email || !password) {
-          throw new Error("Email dan password harus diisi");
+        // Normalize identifier: uppercase for teacher pattern
+        if (identifier && /^g\d+$/i.test(identifier)) {
+          identifier = identifier.toUpperCase();
+        }
+
+        if (!identifier || !password) {
+          throw new Error("Username/NIS dan password harus diisi");
         }
 
         try {
-// No log for performance
-
-
           // Wrapped user lookup with retry logic
-          const user = await withRetry(() =>
-            prisma.user.findUnique({
-              where: { email },
+          // 1. Try to find user directly (email or username)
+          let potentialUsers = await withRetry(() =>
+            prisma.user.findMany({
+              where: {
+                OR: [
+                  { email: identifier },
+                  { username: identifier }
+                ]
+              },
               include: {
                 siswa: true,
                 guru: true,
@@ -51,12 +59,7 @@ export const authConfig = {
                   include: {
                     orangTuaSiswa: {
                       include: {
-                        siswa: {
-                          select: {
-                            status: true,
-                            statusSiswa: true
-                          }
-                        }
+                        siswa: true
                       }
                     }
                   }
@@ -65,19 +68,104 @@ export const authConfig = {
             })
           );
 
-          if (!user) {
-            console.error('❌ [AUTH] User not found:', email);
+          // 2. If identifier is numeric (NIS), also find via Siswa table
+          if (/^\d+$/.test(identifier)) {
+            const usersByNIS = await withRetry(() =>
+              prisma.user.findMany({
+                where: {
+                  OR: [
+                    {
+                      siswa: {
+                        nis: identifier
+                      }
+                    },
+                    {
+                      orangTua: {
+                        orangTuaSiswa: {
+                          some: {
+                            siswa: {
+                              nis: identifier
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                include: {
+                  siswa: true,
+                  guru: true,
+                  orangTua: {
+                    include: {
+                      orangTuaSiswa: {
+                        include: {
+                          siswa: true
+                        }
+                      }
+                    }
+                  },
+                },
+              })
+            );
+            
+            // Merge unique users
+            const existingIds = new Set(potentialUsers.map(u => u.id));
+            for (const u of usersByNIS) {
+              if (!existingIds.has(u.id)) {
+                potentialUsers.push(u);
+              }
+            }
+          }
+
+          if (potentialUsers.length === 0) {
+            console.error('❌ [AUTH] User not found:', identifier);
             throw new Error("INVALID_CREDENTIALS");
           }
 
-// No log for performance
+          let user = null;
+          let isLegacyMatch = false;
 
+          // 3. Try password against each potential user
+          for (const u of potentialUsers) {
+            let isValid = await bcrypt.compare(String(password), u.password);
+            
+            // Fallback for Parent data inconsistency (Legacy YYYY-MM-DD passwords)
+            if (!isValid && u.role === 'ORANG_TUA' && u.orangTua?.orangTuaSiswa?.[0]?.siswa?.tanggalLahir) {
+              const birthDate = new Date(u.orangTua.orangTuaSiswa[0].siswa.tanggalLahir);
+              const ddmmyyyy = String(birthDate.getDate()).padStart(2, '0') + 
+                               String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                               birthDate.getFullYear();
+              
+              const yyyymmdd = birthDate.getFullYear() + '-' + 
+                               String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                               String(birthDate.getDate()).padStart(2, '0');
 
-          // Password check
-          const isPasswordValid = await bcrypt.compare(String(password), user.password);
-          
-          if (!isPasswordValid) {
-            console.error('❌ [AUTH] Invalid password for:', email);
+              // If input password matches DDMMYYYY and DB hash matches YYYY-MM-DD
+              if (String(password) === ddmmyyyy) {
+                if (await bcrypt.compare(yyyymmdd, u.password)) {
+                  console.warn(`⚠️ [AUTH] Legacy password format (YYYY-MM-DD) detected for Parent: ${u.email}. Auto-migrating to DDMMYYYY.`);
+                  
+                  // Auto-migrate the password
+                  const newHashedPassword = await bcrypt.hash(ddmmyyyy, 10);
+                  await prisma.user.update({
+                    where: { id: u.id },
+                    data: { password: newHashedPassword }
+                  });
+                  
+                  isValid = true;
+                  isLegacyMatch = true;
+                }
+              }
+            }
+
+            if (isValid) {
+              user = u;
+              break;
+            }
+          }
+
+          if (!user) {
+            console.error('❌ [AUTH] Invalid password for:', identifier);
             throw new Error("INVALID_CREDENTIALS");
           }
 
