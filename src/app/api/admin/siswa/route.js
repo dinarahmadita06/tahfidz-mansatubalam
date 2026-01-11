@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
@@ -9,7 +11,6 @@ import { generateSiswaEmail, generateOrangTuaEmail } from '@/lib/siswaUtils';
 // Force Node.js runtime untuk Prisma compatibility
 export const runtime = 'nodejs';
 // Prevent static optimization
-export const dynamic = 'force-dynamic';
 
 // GET - List all siswa (Admin only)
 export async function GET(request) {

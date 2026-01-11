@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { invalidateCache, getCachedData, setCachedData } from '@/lib/cache';
 
-export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {

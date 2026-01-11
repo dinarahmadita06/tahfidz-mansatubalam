@@ -1,8 +1,9 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export const dynamic = 'force-dynamic';
 
 // GET - Fetch all tasmi for admin/coordinator
 export async function GET(request) {

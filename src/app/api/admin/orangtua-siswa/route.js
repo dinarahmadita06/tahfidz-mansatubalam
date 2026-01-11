@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
@@ -5,7 +7,6 @@ import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 
 // Force Node.js runtime untuk Prisma compatibility
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 // POST - Link OrangTua to Siswa
 export async function POST(request) {
