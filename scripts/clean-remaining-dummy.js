@@ -10,10 +10,6 @@ async function cleanRemainingDummy() {
     const pengumumanDeleted = await prisma.pengumuman.deleteMany({});
     console.log(`✅ ${pengumumanDeleted.count} pengumuman deleted`);
 
-    // Delete log activity
-    const logDeleted = await prisma.logActivity.deleteMany({});
-    console.log(`✅ ${logDeleted.count} log activity deleted`);
-
     // Delete demo users (siswa & orang tua) - keep only admin and guru
     const demoUsersDeleted = await prisma.user.deleteMany({
       where: {

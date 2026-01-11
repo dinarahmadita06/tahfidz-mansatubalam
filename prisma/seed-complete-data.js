@@ -18,7 +18,6 @@ async function main() {
   await prisma.kelas.deleteMany();
   await prisma.tahunAjaran.deleteMany();
   await prisma.pengumuman.deleteMany();
-  await prisma.logActivity.deleteMany();
   await prisma.user.deleteMany();
 
   // Hash password
@@ -327,18 +326,6 @@ async function main() {
       },
     });
   }
-
-  // 7. Create Log Activity
-  console.log('📝 Creating Log Activity...');
-  await prisma.logActivity.create({
-    data: {
-      userId: adminUser.id,
-      role: 'ADMIN',
-      aktivitas: 'CREATE',
-      modul: 'Seeder',
-      deskripsi: 'Database seeded with initial data',
-    },
-  });
 
   console.log('✅ Seed completed successfully!');
   console.log('\n📊 Summary:');

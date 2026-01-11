@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SiswaLayout from '@/components/layout/SiswaLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import {
   Megaphone,
@@ -92,16 +91,14 @@ export default function SiswaPengumumanPage() {
 
   if (loading) {
     return (
-      <SiswaLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <LoadingIndicator text="Memuat pengumuman..." />
-        </div>
-      </SiswaLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingIndicator text="Memuat pengumuman..." />
+      </div>
     );
   }
 
   return (
-    <SiswaLayout>
+    <>
       <Toaster position="top-right" />
 
       <div className="space-y-6">
@@ -184,6 +181,6 @@ export default function SiswaPengumumanPage() {
           </>
         )}
       </div>
-    </SiswaLayout>
+    </>
   );
 }

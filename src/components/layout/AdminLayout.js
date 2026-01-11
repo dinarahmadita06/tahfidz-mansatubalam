@@ -68,11 +68,6 @@ const menuItems = [
     href: '/admin/reset-password-user',
   },
   {
-    title: 'Log Activity',
-    icon: Activity,
-    href: '/admin/activity-logs',
-  },
-  {
     title: 'Profil',
     icon: User,
     href: '/admin/profile',

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
-import SiswaLayout from '@/components/layout/SiswaLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 import ErrorState from '@/components/shared/ErrorState';
@@ -254,11 +253,9 @@ export default function PenilaianHafalanPage() {
 
   if (status === 'loading') {
     return (
-      <SiswaLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <LoadingIndicator text="Memuat data penilaian..." size="large" />
-        </div>
-      </SiswaLayout>
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingIndicator text="Memuat data penilaian..." size="large" />
+      </div>
     );
   }
 
@@ -269,14 +266,12 @@ export default function PenilaianHafalanPage() {
 
   if (error) {
     return (
-      <SiswaLayout>
-        <div className={CONTAINER + " py-8"}>
-          <ErrorState 
-            errorMessage={error.message}
-            onRetry={() => mutate()}
-          />
-        </div>
-      </SiswaLayout>
+      <div className={CONTAINER + " py-8"}>
+        <ErrorState 
+          errorMessage={error.message}
+          onRetry={() => mutate()}
+        />
+      </div>
     );
   }
 
@@ -284,8 +279,7 @@ export default function PenilaianHafalanPage() {
   const periodText = formatMonthYear(selectedMonth, selectedYear);
 
   return (
-    <SiswaLayout>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
         <div className={`${CONTAINER} py-6 space-y-6`}>
           {/* Header */}
           <motion.div
@@ -411,6 +405,5 @@ export default function PenilaianHafalanPage() {
           )}
         </div>
       </div>
-    </SiswaLayout>
   );
 }

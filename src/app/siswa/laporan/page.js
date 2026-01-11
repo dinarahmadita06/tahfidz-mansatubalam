@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   BarChart3,
   BookOpen,
@@ -348,8 +347,7 @@ export default function LaporanHafalanPage() {
   };
 
   return (
-    <SiswaLayout>
-      <div className="w-full space-y-6">
+    <div className="w-full space-y-6">
 
           {/* Header - SIMTAQ Green Gradient */}
           <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
@@ -550,6 +548,5 @@ export default function LaporanHafalanPage() {
             </>
           )}
         </div>
-    </SiswaLayout>
   );
 }

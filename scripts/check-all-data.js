@@ -31,7 +31,6 @@ async function checkAllData() {
       surah: await safeCount(prisma.surah, 'Surah'),
       pengumuman: await safeCount(prisma.pengumuman, 'Pengumuman'),
       bukuDigital: await safeCount(prisma.bukuDigital, 'BukuDigital'),
-      logActivity: await safeCount(prisma.logActivity, 'LogActivity'),
     };
 
     console.log('═══════════════════════════════════════');
@@ -64,7 +63,6 @@ async function checkAllData() {
     console.log('\n📢 OTHERS:');
     console.log(`Pengumuman:         ${counts.pengumuman}`);
     console.log(`Buku Digital:       ${counts.bukuDigital}`);
-    console.log(`Log Activity:       ${counts.logActivity}`);
 
     console.log('\n═══════════════════════════════════════');
     const total = Object.values(counts).reduce((a, b) => a + b, 0);

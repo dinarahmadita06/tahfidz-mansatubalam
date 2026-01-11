@@ -1,0 +1,92 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { BookMarked, Target } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import StudentDashboardContent from '@/components/dashboard/StudentDashboardContent';
+import { PageSkeleton } from '@/components/shared/Skeleton';
+
+// Lazy load widget to reduce initial bundle
+const AktivitasTerkiniWidget = dynamic(() => import('@/components/siswa/AktivitasTerkiniWidget'), {
+  loading: () => <div className="h-40 bg-gray-50 animate-pulse rounded-2xl border border-gray-100" />,
+  ssr: false
+});
+
+const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
+
+const getFirstName = (fullName) => {
+  if (!fullName) return 'Siswa';
+  return fullName.split(' ')[0];
+};
+
+export default function SiswaDashboardClient({ initialData, session }) {
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const greeting = useMemo(() => {
+    if (!isHydrated) return '';
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 18) return 'Selamat Sore';
+    return 'Selamat Malam';
+  }, [isHydrated]);
+
+  const currentTime = useMemo(() => {
+    if (!isHydrated) return '';
+    const now = new Date();
+    return now.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }, [isHydrated]);
+
+  const stats = {
+    hafalanSelesai: initialData?.stats?.hafalanSelesai || 0,
+    totalHafalan: initialData?.stats?.totalHafalan || 0,
+  };
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Banner Header */}
+      <div className={`${BANNER_GRADIENT} rounded-2xl shadow-lg p-4 lg:p-6 text-white`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 backdrop-blur-sm p-3 lg:p-4 rounded-2xl flex-shrink-0">
+              <BookMarked className="text-white" size={28} />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold break-words leading-tight" suppressHydrationWarning>
+                {isHydrated ? `${greeting}, ${getFirstName(session?.user?.name)}! 👋` : '👋'}
+              </h1>
+              <p className="text-green-50 text-sm sm:text-base mt-1 whitespace-normal opacity-90" suppressHydrationWarning>
+                {isHydrated ? currentTime : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-3 items-center mt-5">
+          <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
+            <Target className="text-white flex-shrink-0" size={18} />
+            <span className="text-white font-semibold text-sm whitespace-nowrap">
+              {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dashboard Content */}
+      <StudentDashboardContent 
+        targetSiswaId={initialData?.siswaId} 
+        roleContext="SISWA"
+        initialData={initialData}
+        activityWidget={<AktivitasTerkiniWidget initialData={initialData?.activities} />}
+      />
+    </div>
+  );
+}

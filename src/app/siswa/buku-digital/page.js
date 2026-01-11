@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   Book,
   BookOpen,
@@ -160,7 +159,7 @@ export default function SiswaBukuDigitalPage() {
   };
 
   return (
-    <SiswaLayout>
+    <>
       <Toaster position="top-right" />
 
       <div className="space-y-6">
@@ -261,6 +260,6 @@ export default function SiswaBukuDigitalPage() {
           </div>
         )}
       </div>
-    </SiswaLayout>
+    </>
   );
 }
