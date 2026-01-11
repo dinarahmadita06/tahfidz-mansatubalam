@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
   Headphones,
   Mic,
@@ -218,8 +217,7 @@ export default function ModeLatihanPage() {
   };
 
   return (
-    <SiswaLayout>
-      <div className="min-h-screen bg-gradient-latihan animate-fade-in">
+    <div className="min-h-screen bg-gradient-latihan animate-fade-in">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -652,6 +650,5 @@ export default function ModeLatihanPage() {
         }
       `}</style>
       </div>
-    </SiswaLayout>
   );
 }

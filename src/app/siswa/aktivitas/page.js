@@ -5,8 +5,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SiswaLayout from '@/components/layout/SiswaLayout';
-import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { getActivityDisplay, isViewEvent, isSystemEvent, isActionEvent } from '@/lib/helpers/siswaActivityConstants';
 import { Clock, Filter, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -65,8 +63,7 @@ export default function AktivitasPage() {
   }
 
   return (
-    <SiswaLayout>
-      <div className="w-full space-y-6">
+    <div className="w-full space-y-6">
           {/* Header */}
           <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
             <div className="flex items-center gap-4">
@@ -225,6 +222,5 @@ export default function AktivitasPage() {
             </Link>
           </div>
         </div>
-    </SiswaLayout>
   );
 }

@@ -12,14 +12,16 @@ import { Clock, ChevronRight } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 
-export default function AktivitasTerkiniWidget() {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function AktivitasTerkiniWidget({ initialData = null }) {
+  const [activities, setActivities] = useState(initialData || []);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchActivities();
-  }, []);
+    if (!initialData) {
+      fetchActivities();
+    }
+  }, [initialData]);
 
   const fetchActivities = async () => {
     try {
