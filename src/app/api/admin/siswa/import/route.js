@@ -6,6 +6,8 @@ import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
 import { invalidateCache } from '@/lib/cache';
 import { generateSiswaEmail, generateOrangTuaEmail } from '@/lib/siswaUtils';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const session = await auth();
