@@ -13,6 +13,14 @@ export async function POST(request) {
     const body = await request.json();
     const { subscription, userAgent } = body;
 
+    if (!subscription || !subscription.endpoint) {
+      return NextResponse.json({ error: 'Data subscription tidak lengkap' }, { status: 400 });
+    }
+
+    if (!subscription.keys || !subscription.keys.p256dh || !subscription.keys.auth) {
+      return NextResponse.json({ error: 'Kunci enkripsi subscription tidak valid' }, { status: 400 });
+    }
+
     if (!prisma.pushSubscription) {
       console.error('CRITICAL: prisma.pushSubscription is UNDEFINED');
       console.log('Available models:', Object.keys(prisma).filter(k => !k.startsWith('$')));
