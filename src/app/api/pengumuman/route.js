@@ -112,9 +112,6 @@ export async function GET(request) {
 
     console.time('PENGUMUMAN_GET_Response');
     const response = NextResponse.json({ pengumuman });
-    
-    // Add caching headers as requested
-    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
     console.timeEnd('PENGUMUMAN_GET_Response');
     console.timeEnd('PENGUMUMAN_GET_Total');
     

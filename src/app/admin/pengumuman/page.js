@@ -254,13 +254,16 @@ export default function PengumumanPage() {
 
       if (res.ok) {
         const message = editingId ? 'Pengumuman berhasil diperbarui!' : 'Pengumuman berhasil dibuat!';
+        
+        // Immediate updates for better UX
+        setShowModal(false);
+        resetForm();
+        fetchPengumuman();
+        
         setSuccess(message);
         setTimeout(() => {
-          setShowModal(false);
           setSuccess('');
-          resetForm();
-          fetchPengumuman();
-        }, 2000);
+        }, 3000);
       } else {
         setError(data.error || 'Gagal menyimpan pengumuman');
       }
@@ -291,9 +294,14 @@ export default function PengumumanPage() {
       });
 
       if (res.ok) {
+        // Immediate update for better UX
+        setPengumumanList(prev => prev.filter(p => p.id !== id));
+        
         setSuccess('Pengumuman berhasil dihapus');
         setTimeout(() => setSuccess(''), 3000);
-        fetchPengumuman();
+        
+        // No need to full fetch if we already filtered, but can do it in background
+        // fetchPengumuman();
       } else {
         setError('Gagal menghapus pengumuman');
       }

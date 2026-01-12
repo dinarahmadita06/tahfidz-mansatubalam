@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
-import { getCachedData, setCachedData } from '@/lib/cache';
+import { getCachedData, setCachedData, invalidateCacheByPrefix } from '@/lib/cache';
 
 // GET - Mengambil daftar pengumuman
 export async function GET(request) {
@@ -31,9 +31,7 @@ export async function GET(request) {
     const cachedData = getCachedData(cacheKey);
     if (cachedData) {
       console.log('[API ADMIN PENGUMUMAN] Returning cached data');
-      return NextResponse.json(cachedData, {
-        headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' }
-      });
+      return NextResponse.json(cachedData);
     }
 
     const startQueries = performance.now();
@@ -81,9 +79,7 @@ export async function GET(request) {
     console.log(`[API ADMIN PENGUMUMAN] total: ${(endTotal - startTotal).toFixed(2)} ms`);
     console.log('--- [API ADMIN PENGUMUMAN] REQUEST END ---');
 
-    return NextResponse.json(responseData, {
-      headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' }
-    });
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error fetching pengumuman:', error);
     return NextResponse.json(
@@ -201,6 +197,9 @@ export async function POST(request) {
       // Jangan return error jika log activity gagal
     }
 
+    // Invalidate cache
+    invalidateCacheByPrefix('admin-pengumuman');
+
     return NextResponse.json({
       success: true,
       message: 'Pengumuman berhasil dibuat',
@@ -305,6 +304,9 @@ export async function PUT(request) {
       }
     });
 
+    // Invalidate cache
+    invalidateCacheByPrefix('admin-pengumuman');
+
     // Log aktivitas
     try {
       await prisma.activityLog.create({
@@ -367,9 +369,17 @@ export async function DELETE(request) {
       );
     }
 
-    await prisma.pengumuman.delete({
+    // Use deleteMany to avoid error if already deleted
+    const deleteResult = await prisma.pengumuman.deleteMany({
       where: { id }
     });
+
+    if (deleteResult.count === 0) {
+      console.log(`[API ADMIN PENGUMUMAN] ID ${id} not found or already deleted`);
+    }
+
+    // Invalidate cache
+    invalidateCacheByPrefix('admin-pengumuman');
 
     // Log aktivitas
     try {
