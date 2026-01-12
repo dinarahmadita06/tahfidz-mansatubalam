@@ -171,14 +171,16 @@ export async function PUT(request) {
     try {
       await prisma.activityLog.create({
         data: {
-          userId: session.user.id,
-          userName: session.user.name,
-          userRole: session.user.role,
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
           action: 'UPDATE',
-          module: 'USER',
+          title: 'Update Profil',
           description: 'Mengupdate profil admin',
-          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
-          userAgent: request.headers.get('user-agent') || 'Unknown'
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
         }
       });
       console.log('Activity log created');
@@ -278,18 +280,24 @@ export async function PATCH(request) {
     });
 
     // Log aktivitas
-    await prisma.activityLog.create({
-      data: {
-        userId: session.user.id,
-        userName: session.user.name,
-        userRole: session.user.role,
-        action: 'UPDATE',
-        module: 'AUTH',
-        description: 'Mengubah password akun',
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
-        userAgent: request.headers.get('user-agent') || 'Unknown'
-      }
-    });
+    try {
+      await prisma.activityLog.create({
+        data: {
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
+          action: 'UPDATE',
+          title: 'Ganti Password',
+          description: 'Mengubah password akun',
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to create activity log:', logError);
+    }
 
     return NextResponse.json({
       success: true,

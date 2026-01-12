@@ -27,15 +27,17 @@ export async function logActivity({
   try {
     const result = await prisma.activityLog.create({
       data: {
-        userId,
-        userName,
-        userRole,
+        actorId: userId,
+        actorName: userName,
+        actorRole: userRole,
         action,
-        module,
+        title: module, // Using module as title for now
         description,
-        ipAddress,
-        userAgent,
-        metadata: metadata ? JSON.stringify(metadata) : null
+        metadata: {
+          ipAddress,
+          userAgent,
+          ...(metadata || {})
+        }
       }
     });
     console.log(`✅ Activity logged: ${action} ${module} - ${description}`);

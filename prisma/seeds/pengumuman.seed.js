@@ -17,9 +17,9 @@ async function seedPengumuman() {
 
     const pengumumanData = [
       {
-        guruId: guru.id,
+        userId: guru.userId,
         judul: 'Wisuda Tahfidz Angkatan 2025',
-        konten: `Assalamualaikum Warahmatullahi Wabarakatuh,
+        isi: `Assalamualaikum Warahmatullahi Wabarakatuh,
 
 Dengan penuh rasa syukur kepada Allah SWT, kami mengumumkan bahwa Wisuda Tahfidz Angkatan 2025 akan diselenggarakan pada:
 
@@ -36,18 +36,13 @@ Dress code: Busana Muslim/Muslimah yang sopan dan rapi.
 Jazakumullahu khairan atas perhatian dan dukungannya.
 
 Wassalamualaikum Warahmatullahi Wabarakatuh`,
-        kategori: 'wisuda',
-        isPenting: true,
-        isPublished: true,
-        targetRole: ['ORANG_TUA', 'SISWA'],
-        tipePengumuman: 'WISUDA',
-        createdBy: guru.user.name,
-        publishedAt: new Date()
+        isPinned: true,
+        tanggalMulai: new Date()
       },
       {
-        guruId: guru.id,
+        userId: guru.userId,
         judul: 'Jadwal Muroja\'ah Rutin Bulan Maret',
-        konten: `Bismillahirrahmanirrahim,
+        isi: `Bismillahirrahmanirrahim,
 
 Demi menjaga kualitas hafalan santri, kami akan mengadakan program Muroja'ah Rutin dengan jadwal sebagai berikut:
 
@@ -63,18 +58,13 @@ Kegiatan ini bertujuan untuk:
 Kepada orang tua santri, mohon untuk memastikan putra-putri Anda tiba tepat waktu dan membawa Al-Qur'an serta alat tulis.
 
 Barakallahu fiikum.`,
-        kategori: 'kegiatan',
-        isPenting: false,
-        isPublished: true,
-        targetRole: ['ORANG_TUA', 'SISWA'],
-        tipePengumuman: 'KEGIATAN',
-        createdBy: guru.user.name,
-        publishedAt: new Date()
+        isPinned: false,
+        tanggalMulai: new Date()
       },
       {
-        guruId: guru.id,
+        userId: guru.userId,
         judul: 'Ujian Tahsin Semester 2',
-        konten: `Kepada Yth. Orang Tua Santri Tahfidz,
+        isi: `Kepada Yth. Orang Tua Santri Tahfidz,
 
 Dalam rangka evaluasi kemampuan membaca Al-Qur'an, kami akan mengadakan Ujian Tahsin Semester 2 dengan detail:
 
@@ -97,18 +87,13 @@ Hasil ujian akan dikirimkan melalui portal orang tua paling lambat 1 minggu sete
 Mohon dukungan orang tua untuk memotivasi putra-putri dalam persiapan ujian ini.
 
 Syukron jazilan.`,
-        kategori: 'penilaian',
-        isPenting: true,
-        isPublished: true,
-        targetRole: ['ORANG_TUA', 'SISWA', 'GURU'],
-        tipePengumuman: 'UMUM',
-        createdBy: guru.user.name,
-        publishedAt: new Date()
+        isPinned: true,
+        tanggalMulai: new Date()
       },
       {
-        guruId: guru.id,
+        userId: guru.userId,
         judul: 'Libur Hari Raya Idul Fitri 1446 H',
-        konten: `Assalamualaikum Warahmatullahi Wabarakatuh,
+        isi: `Assalamualaikum Warahmatullahi Wabarakatuh,
 
 Selamat menunaikan ibadah puasa Ramadhan 1446 H. Kami informasikan bahwa program Tahfidz akan libur pada:
 
@@ -129,18 +114,13 @@ Kami ucapkan:
 Semoga kita semua menjadi hamba yang kembali fitri.
 
 Wassalamualaikum Warahmatullahi Wabarakatuh`,
-        kategori: 'informasi',
-        isPenting: true,
-        isPublished: true,
-        targetRole: ['ORANG_TUA', 'SISWA', 'GURU', 'ADMIN'],
-        tipePengumuman: 'LIBUR',
-        createdBy: guru.user.name,
-        publishedAt: new Date()
+        isPinned: true,
+        tanggalMulai: new Date()
       },
       {
-        guruId: guru.id,
+        userId: guru.userId,
         judul: 'Perubahan Jadwal Setoran Kelas 6A',
-        konten: `Kepada Orang Tua Santri Kelas 6A,
+        isi: `Kepada Orang Tua Santri Kelas 6A,
 
 Dikarenakan ada penyesuaian jadwal guru, maka jadwal setoran untuk Kelas 6A mengalami perubahan:
 
@@ -157,18 +137,13 @@ Mohon untuk menyesuaikan jadwal penjemputan putra-putri Anda.
 Terima kasih atas pengertiannya.
 
 Barakallahu fiikum.`,
-        kategori: 'informasi',
-        isPenting: false,
-        isPublished: true,
-        targetRole: ['ORANG_TUA'],
-        tipePengumuman: 'UMUM',
-        createdBy: guru.user.name,
-        publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 1 hari lalu
+        isPinned: false,
+        tanggalMulai: new Date(Date.now() - 24 * 60 * 60 * 1000) // 1 hari lalu
       },
       {
-        guruId: guru.id,
+        userId: guru.userId,
         judul: 'Program Tahfidz Intensif Liburan',
-        konten: `Bismillahirrahmanirrahim,
+        isi: `Bismillahirrahmanirrahim,
 
 Alhamdulillah, kami akan mengadakan Program Tahfidz Intensif selama liburan semester dengan detail:
 
@@ -195,13 +170,8 @@ Kesempatan emas untuk anak-anak menambah hafalan dengan intensif!
 Daftarkan segera putra-putri Anda.
 
 Jazakumullahu khairan.`,
-        kategori: 'kegiatan',
-        isPenting: false,
-        isPublished: true,
-        targetRole: ['ORANG_TUA', 'SISWA'],
-        tipePengumuman: 'KEGIATAN',
-        createdBy: guru.user.name,
-        publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 hari lalu
+        isPinned: false,
+        tanggalMulai: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 hari lalu
       }
     ];
 
