@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
 import {
   User,
-  Mail,
   Phone,
   MapPin,
   Calendar,
@@ -51,7 +50,7 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
   const statusBadge = getStatusBadgeConfig(profileData?.statusSiswa || 'AKTIF');
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-white/20 shadow-sm p-6">
       {/* Avatar & Info */}
       <div className="flex flex-col items-center text-center mb-6">
         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg mb-4">
@@ -60,13 +59,12 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
           </span>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-1 break-words">
+        <h2 className="text-xl font-bold text-gray-900 mb-0.5 break-words">
           {profileData?.nama || 'Nama Siswa'}
         </h2>
 
-        <div className="flex items-center gap-2 text-gray-600 mb-3">
-          <Mail size={14} />
-          <span className="text-sm break-all">{profileData?.email || '-'}</span>
+        <div className="text-gray-500 text-sm font-medium mb-4">
+          NIS: {profileData?.nis || '-'}
         </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
@@ -107,7 +105,7 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
 // PersonalInfoCard Component (Read-only view only)
 function PersonalInfoCard({ profileData }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-white/20 shadow-sm p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
         <div className="p-2 rounded-lg bg-emerald-50">
           <User size={20} className="text-emerald-600" />
@@ -115,124 +113,108 @@ function PersonalInfoCard({ profileData }) {
         <h3 className="text-lg font-bold text-gray-900">Informasi Pribadi</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Nama Lengkap */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+        {/* Row 1: Nama Lengkap | Kelas */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <User size={16} className="text-gray-400" />
             Nama Lengkap
           </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
             <p className="font-medium text-gray-900">{profileData?.nama || '-'}</p>
           </div>
         </div>
 
-        {/* Email */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Mail size={16} className="text-gray-400" />
-            Email
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
-          </div>
-        </div>
-
-        {/* Nomor Telepon */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Phone size={16} className="text-gray-400" />
-            Nomor WhatsApp
-          </label>
-          <div className={`px-4 py-3 rounded-xl border ${!profileData?.phone ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-gray-50'}`}>
-            <p className="font-medium text-gray-900">{profileData?.phone ? profileData.phone : <span className="text-amber-700 italic">Belum diisi</span>}</p>
-          </div>
-        </div>
-
-        {/* Jenis Kelamin */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <UserCircle size={16} className="text-gray-400" />
-            Jenis Kelamin
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.jenisKelamin || '-'}</p>
-          </div>
-        </div>
-
-        {/* NISN */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <IdCard size={16} className="text-gray-400" />
-            NISN
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900 font-mono">{profileData?.nisn || '-'}</p>
-          </div>
-        </div>
-
-        {/* NIS */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <IdCard size={16} className="text-gray-400" />
-            NIS
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900 font-mono">{profileData?.nis || '-'}</p>
-          </div>
-        </div>
-
-        {/* Tanggal Lahir */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Calendar size={16} className="text-gray-400" />
-            Tanggal Lahir
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.tanggalLahir || '-'}</p>
-          </div>
-        </div>
-
-        {/* Kelas */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <BookOpen size={16} className="text-gray-400" />
             Kelas
           </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
             <p className="font-medium text-gray-900">{profileData?.kelas || '-'}</p>
           </div>
         </div>
 
-        {/* Alamat (full width) */}
-        <div className="md:col-span-2">
+        {/* Row 2: NISN | NIS */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <IdCard size={16} className="text-gray-400" />
+            NISN
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
+            <p className="font-medium text-gray-900 font-mono">{profileData?.nisn || '-'}</p>
+          </div>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <IdCard size={16} className="text-gray-400" />
+            NIS
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
+            <p className="font-medium text-gray-900 font-mono">{profileData?.nis || '-'}</p>
+          </div>
+        </div>
+
+        {/* Row 3: Jenis Kelamin | Tanggal Lahir */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <UserCircle size={16} className="text-gray-400" />
+            Jenis Kelamin
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
+            <p className="font-medium text-gray-900">{profileData?.jenisKelamin || '-'}</p>
+          </div>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Calendar size={16} className="text-gray-400" />
+            Tanggal Lahir
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
+            <p className="font-medium text-gray-900">{profileData?.tanggalLahir || '-'}</p>
+          </div>
+        </div>
+
+        {/* Row 4: Alamat | Nomor WhatsApp */}
+        <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <MapPin size={16} className="text-gray-400" />
             Alamat
           </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="font-medium text-gray-900">{profileData?.alamat || '-'}</p>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 min-h-[48px]">
+            <p className="font-medium text-gray-900 break-words">{profileData?.alamat || '-'}</p>
           </div>
         </div>
 
-        {/* Nama Wali */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Phone size={16} className="text-gray-400" />
+            Nomor WhatsApp
+          </label>
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
+            <p className="font-medium text-gray-900">{profileData?.phone || '-'}</p>
+          </div>
+        </div>
+
+        {/* Row 5: Nama Wali | Nomor HP Wali */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <User size={16} className="text-gray-400" />
             Nama Wali
           </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
             <p className="font-medium text-gray-900">{profileData?.namaWali || '-'}</p>
           </div>
         </div>
 
-        {/* No HP Wali */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <Phone size={16} className="text-gray-400" />
-            No. HP Wali
+            Nomor HP Wali
           </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
             <p className="font-medium text-gray-900">{profileData?.phoneWali || '-'}</p>
           </div>
         </div>
@@ -420,17 +402,6 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                 placeholder="Contoh: 15 Mei 2010"
               />
-            </div>
-
-            {/* Email - Read-only */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <Mail size={16} className="text-gray-400" />
-                Email <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
-              </label>
-              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
-              </div>
             </div>
 
             {/* NISN - Read-only */}

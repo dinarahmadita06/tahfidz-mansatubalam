@@ -51,7 +51,6 @@ export async function GET(request) {
         user: {
           select: {
             name: true,
-            email: true,
             isActive: true,
           },
         },
@@ -93,7 +92,6 @@ export async function GET(request) {
       id: siswa.id,
       userId: siswa.userId,
       nama: siswa.user?.name || '-',
-      email: siswa.user?.email || '-',
       nis: siswa.nis || '-',
       nisn: siswa.nisn || '-',
       jenisKelamin: formatGender(siswa.jenisKelamin),
@@ -103,8 +101,8 @@ export async function GET(request) {
       kelasId: siswa.kelas?.id || null,
       statusSiswa: siswa.user?.isActive ? 'AKTIF' : 'NONAKTIF',
       namaWali: primaryGuardian?.user?.name || '-',
-      phoneWali: '-', // Field noTelepon was dropped from schema
-      phone: '-',     // Field noTelepon was dropped from schema
+      phoneWali: '-', // field noTelepon dropped
+      phone: '-',     // field noTelepon dropped
     };
 
     return NextResponse.json(profileData, { status: 200 });
@@ -174,7 +172,6 @@ export async function PATCH(request) {
         user: {
           select: {
             name: true,
-            email: true,
             isActive: true,
           },
         },
@@ -223,7 +220,6 @@ export async function PATCH(request) {
       id: updated.id,
       userId: updated.userId,
       nama: updated.user?.name || '-',
-      email: updated.user?.email || '-',
       nis: updated.nis || '-',
       nisn: updated.nisn || '-',
       jenisKelamin: formatGender(updated.jenisKelamin),
