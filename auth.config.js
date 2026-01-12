@@ -32,43 +32,79 @@ export const authConfig = {
         const identifier = credentials?.identifier?.trim();
         const password = credentials?.password;
 
-        // 1. Batasi input login: hanya username admin.tahfidz1
-        if (!identifier || identifier.includes('@') || identifier !== 'admin.tahfidz1') {
-          throw new Error("Username atau password salah");
-        }
-
-        if (!password) {
+        if (!identifier || !password) {
           throw new Error("Username atau password salah");
         }
 
         try {
-          // 2. Lookup user hanya berdasarkan username admin.tahfidz1
+          // 1. Logic khusus Admin
+          if (identifier === 'admin.tahfidz1') {
+            const user = await withRetry(() =>
+              prisma.user.findUnique({
+                where: { username: 'admin.tahfidz1' }
+              })
+            );
+
+            if (!user || !user.password || user.role !== 'ADMIN') {
+              throw new Error("Username atau password salah");
+            }
+
+            const isValid = await bcrypt.compare(String(password), user.password);
+            if (!isValid) throw new Error("Username atau password salah");
+
+            if (!user.isActive) throw new Error("Akun Anda tidak aktif.");
+
+            return { id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive };
+          }
+
+          // 2. Logic untuk Guru, Siswa, dan Orang Tua
+          // Cegah admin login via logic umum
+          if (identifier.includes('@')) throw new Error("Username atau password salah");
+
           const user = await withRetry(() =>
-            prisma.user.findUnique({
-              where: { username: 'admin.tahfidz1' }
+            prisma.user.findFirst({
+              where: { 
+                username: identifier,
+                role: { not: 'ADMIN' } // Pastikan bukan admin
+              },
+              include: {
+                siswa: true,
+                guru: true,
+                orangTua: {
+                  include: {
+                    orangTuaSiswa: {
+                      include: { siswa: true }
+                    }
+                  }
+                },
+              }
             })
           );
 
-          // 3. Pastikan bcrypt compare dan struktur data benar
-          if (!user || !user.password || typeof user.password !== 'string') {
+          if (!user || !user.password) {
             throw new Error("Username atau password salah");
           }
 
-          // Validasi hash bcrypt (prefix $2 dan length 60)
-          if (!user.password.startsWith('$2') || user.password.length !== 60) {
-            console.error('🛑 [AUTH] Invalid password hash format in database');
-            throw new Error("Username atau password salah");
+          let isValid = await bcrypt.compare(String(password), user.password);
+
+          // Fallback untuk Orang Tua (Format DDMMYYYY vs YYYY-MM-DD di DB)
+          if (!isValid && user.role === 'ORANG_TUA' && user.orangTua?.orangTuaSiswa?.[0]?.siswa?.tanggalLahir) {
+            const birthDate = new Date(user.orangTua.orangTuaSiswa[0].siswa.tanggalLahir);
+            const ddmmyyyy = String(birthDate.getDate()).padStart(2, '0') + 
+                             String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                             birthDate.getFullYear();
+            
+            const yyyymmdd = birthDate.getFullYear() + '-' + 
+                             String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                             String(birthDate.getDate()).padStart(2, '0');
+
+            if (String(password) === ddmmyyyy) {
+              isValid = await bcrypt.compare(yyyymmdd, user.password);
+            }
           }
 
-          const isValid = await bcrypt.compare(String(password), user.password);
-
-          if (!isValid) {
-            throw new Error("Username atau password salah");
-          }
-
-          if (!user.isActive) {
-            throw new Error("Akun Anda tidak aktif. Silakan hubungi admin sekolah.");
-          }
+          if (!isValid) throw new Error("Username atau password salah");
+          if (!user.isActive) throw new Error("Akun Anda tidak aktif.");
 
           return {
             id: user.id,
@@ -76,6 +112,9 @@ export const authConfig = {
             name: user.name,
             role: user.role,
             isActive: user.isActive,
+            siswaId: user.siswa?.id,
+            guruId: user.guru?.id,
+            orangTuaId: user.orangTua?.id,
           };
         } catch (error) {
           if (error.message === "Username atau password salah" || error.message.includes("tidak aktif")) {
