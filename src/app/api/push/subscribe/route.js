@@ -12,11 +12,11 @@ export async function POST(request) {
     const userId = session.user.id;
     const userRole = session.user.role;
 
-    // Only allow SISWA and GURU to subscribe
-    if (userRole !== 'SISWA' && userRole !== 'GURU') {
+    // Only allow SISWA, GURU, and ORANG_TUA to subscribe
+    if (userRole !== 'SISWA' && userRole !== 'GURU' && userRole !== 'ORANG_TUA') {
       return NextResponse.json({ 
         error: 'Forbidden', 
-        message: 'Push notifikasi hanya tersedia untuk Siswa dan Guru' 
+        message: 'Push notifikasi hanya tersedia untuk Siswa, Guru, dan Orang Tua' 
       }, { status: 403 });
     }
 

@@ -113,8 +113,8 @@ export async function broadcastAnnouncement(judul, pengumumanId) {
       }
     };
 
-    // Only send to GURU and SISWA as per requirement
-    const roles = ['GURU', 'SISWA'];
+    // Send to GURU, SISWA and ORANG_TUA
+    const roles = ['GURU', 'SISWA', 'ORANG_TUA'];
     const results = await sendPushToRoles(roles, payload);
     
     if (results && results.length > 0) {
