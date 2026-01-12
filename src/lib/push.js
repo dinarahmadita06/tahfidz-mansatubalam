@@ -39,22 +39,26 @@ export async function sendPushNotification(userId, payload) {
           await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
           return { success: true, endpoint: sub.endpoint };
         } catch (error) {
-          console.error(`Error sending push to ${sub.endpoint}:`, error);
-
           // Cleanup invalid subscriptions (410 Gone or 404 Not Found)
           if (error.statusCode === 410 || error.statusCode === 404) {
-            console.log(`Cleaning up invalid subscription: ${sub.endpoint}`);
+            console.log(`[PUSH] Cleaning up invalid subscription for user ${userId}: ${sub.endpoint}`);
             await prisma.pushSubscription.update({
               where: { id: sub.id },
               data: { isActive: false },
             });
+          } else {
+            console.error(`[PUSH] Error sending to ${sub.endpoint}:`, error.message);
           }
           return { success: false, endpoint: sub.endpoint, error: error.message };
         }
       })
     );
 
-    return { success: true, results };
+    const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+    const failCount = results.length - successCount;
+    console.log(`[PUSH] Sent to user ${userId}: ${successCount} success, ${failCount} fail`);
+
+    return { success: true, results, successCount, failCount };
   } catch (error) {
     console.error('Error in sendPushNotification:', error);
     return { success: false, error: error.message };
@@ -91,34 +95,37 @@ export async function sendPushToRoles(roles, payload) {
 }
 
 /**
- * Broadcast announcement to all relevant roles
+ * Broadcast announcement to all relevant roles (GURU & SISWA only)
  */
 export async function broadcastAnnouncement(judul, pengumumanId) {
   try {
-    // 1. Send to Parents
-    await sendPushToRoles(['ORANG_TUA'], {
+    console.log(`[PUSH] Broadcasting announcement: ${judul}`);
+    
+    const payload = {
       title: "Pengumuman Baru",
       body: judul,
-      url: "/orangtua/pengumuman"
-    });
+      url: "/pengumuman", // Target URL for both roles
+      icon: "/logo-man1.png",
+      badge: "/logo-man1.png",
+      data: {
+        id: pengumumanId,
+        url: "/pengumuman"
+      }
+    };
 
-    // 2. Send to Teachers
-    await sendPushToRoles(['GURU'], {
-      title: "Pengumuman Baru",
-      body: judul,
-      url: "/guru/pengumuman"
-    });
-
-    // 3. Send to Students
-    await sendPushToRoles(['SISWA'], {
-      title: "Pengumuman Baru",
-      body: judul,
-      url: "/siswa/pengumuman"
-    });
+    // Only send to GURU and SISWA as per requirement
+    const roles = ['GURU', 'SISWA'];
+    const results = await sendPushToRoles(roles, payload);
+    
+    if (results && results.length > 0) {
+      const totalSuccess = results.reduce((acc, r) => acc + (r.status === 'fulfilled' ? r.value.successCount || 0 : 0), 0);
+      const totalFail = results.reduce((acc, r) => acc + (r.status === 'fulfilled' ? r.value.failCount || 0 : 0), 0);
+      console.log(`[PUSH] Broadcast complete. Total targets: ${results.length} users. Total success: ${totalSuccess} devices, Total fail: ${totalFail} devices.`);
+    }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in broadcastAnnouncement:', error);
+    console.error('[PUSH] Error in broadcastAnnouncement:', error);
     return { success: false, error: error.message };
   }
 }

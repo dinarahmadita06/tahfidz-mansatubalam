@@ -13,23 +13,30 @@ export async function POST(request) {
     const { endpoint } = body;
 
     if (!endpoint) {
-      return NextResponse.json({ error: 'Missing endpoint' }, { status: 400 });
+      return NextResponse.json({ error: 'Endpoint is required' }, { status: 400 });
     }
 
-    // Mark as inactive or delete
+    console.log(`[PUSH] Unsubscribing user ${session.user.id} from endpoint: ${endpoint}`);
+
+    // Option 1: Delete the subscription
+    // Option 2: Set isActive to false (more safe for tracking)
     await prisma.pushSubscription.updateMany({
       where: {
         endpoint: endpoint,
-        userId: session.user.id,
+        userId: session.user.id
       },
       data: {
         isActive: false,
-      },
+        updatedAt: new Date()
+      }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message: 'Successfully unsubscribed' });
   } catch (error) {
-    console.error('Error in /api/push/unsubscribe:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[PUSH] Error in /api/push/unsubscribe:', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      message: error.message 
+    }, { status: 500 });
   }
 }

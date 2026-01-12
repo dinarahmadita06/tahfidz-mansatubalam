@@ -8,8 +8,18 @@ import toast from 'react-hot-toast';
 export default function PushNotificationManager() {
   const [status, setStatus] = useState('loading'); // loading, subscribed, unsubscribed, denied, unsupported
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    // Check for iOS
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    setIsIOS(ios);
+    
+    // Check if added to home screen
+    const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    setIsStandalone(standalone);
+
     checkStatus();
   }, []);
 
@@ -71,7 +81,24 @@ export default function PushNotificationManager() {
     }
   };
 
-  if (status === 'unsupported') return null;
+  if (status === 'unsupported') {
+    if (isIOS && !isStandalone) {
+      return (
+        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4 lg:p-5 mb-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
+            <div>
+              <h3 className="text-sm font-bold text-amber-900">Push Notifikasi di iOS</h3>
+              <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                Untuk mengaktifkan notifikasi di iPhone/iPad, silakan tambahkan aplikasi ini ke <b>Layar Utama (Home Screen)</b> terlebih dahulu melalui menu <b>Bagikan (Share)</b> di browser Safari.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div className="bg-white/70 backdrop-blur rounded-2xl shadow-sm border border-slate-200/60 p-4 lg:p-5 mb-6">
