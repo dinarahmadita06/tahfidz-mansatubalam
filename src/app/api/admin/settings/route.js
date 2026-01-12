@@ -67,18 +67,24 @@ export async function POST(request) {
     const { profile, display, system, notification } = body;
 
     // Log aktivitas
-    await prisma.activityLog.create({
-      data: {
-        userId: session.user.id,
-        userName: session.user.name,
-        userRole: session.user.role,
-        action: 'UPDATE',
-        module: 'SETTINGS',
-        description: 'Mengubah pengaturan sistem',
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
-        userAgent: request.headers.get('user-agent') || 'Unknown'
-      }
-    });
+    try {
+      await prisma.activityLog.create({
+        data: {
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
+          action: 'UPDATE',
+          title: 'Update Pengaturan',
+          description: 'Mengubah pengaturan sistem',
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
+        }
+      });
+    } catch (logError) {
+      console.warn('Warning: Gagal log aktivitas:', logError);
+    }
 
     // Simpan pengaturan ke database
     // Untuk sementara, hanya return success
@@ -119,18 +125,24 @@ export async function PUT(request) {
     // TODO: Implement password update logic
 
     // Log aktivitas
-    await prisma.activityLog.create({
-      data: {
-        userId: session.user.id,
-        userName: session.user.name,
-        userRole: session.user.role,
-        action: 'UPDATE',
-        module: 'AUTH',
-        description: 'Mengubah password akun',
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
-        userAgent: request.headers.get('user-agent') || 'Unknown'
-      }
-    });
+    try {
+      await prisma.activityLog.create({
+        data: {
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
+          action: 'UPDATE',
+          title: 'Ganti Password',
+          description: 'Mengubah password akun',
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
+        }
+      });
+    } catch (logError) {
+      console.warn('Warning: Gagal log aktivitas:', logError);
+    }
 
     return NextResponse.json({
       success: true,

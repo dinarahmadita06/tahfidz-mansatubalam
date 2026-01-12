@@ -175,13 +175,16 @@ export async function POST(request) {
     try {
       await prisma.activityLog.create({
         data: {
-          userId: session.user.id,
-          role: session.user.role,
-          aktivitas: 'CREATE',
-          modul: 'PENGUMUMAN',
-          deskripsi: `Membuat pengumuman: ${judul}`,
-          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
-          device: request.headers.get('user-agent') || 'Unknown'
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
+          action: 'CREATE',
+          title: 'Buat Pengumuman',
+          description: `Membuat pengumuman: ${judul}`,
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
         }
       });
     } catch (logError) {
@@ -297,13 +300,16 @@ export async function PUT(request) {
     try {
       await prisma.activityLog.create({
         data: {
-          userId: session.user.id,
-          role: session.user.role,
-          aktivitas: 'UPDATE',
-          modul: 'PENGUMUMAN',
-          deskripsi: `Mengupdate pengumuman: ${judul}`,
-          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
-          device: request.headers.get('user-agent') || 'Unknown'
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
+          action: 'UPDATE',
+          title: 'Update Pengumuman',
+          description: `Mengupdate pengumuman: ${judul}`,
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
         }
       });
     } catch (logError) {
@@ -357,17 +363,24 @@ export async function DELETE(request) {
     });
 
     // Log aktivitas
-    await prisma.activityLog.create({
-      data: {
-        userId: session.user.id,
-        role: session.user.role,
-        aktivitas: 'DELETE',
-        modul: 'PENGUMUMAN',
-        deskripsi: `Menghapus pengumuman ID: ${id}`,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
-        device: request.headers.get('user-agent') || 'Unknown'
-      }
-    });
+    try {
+      await prisma.activityLog.create({
+        data: {
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
+          action: 'DELETE',
+          title: 'Hapus Pengumuman',
+          description: `Menghapus pengumuman ID: ${id}`,
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
+        }
+      });
+    } catch (logError) {
+      console.warn('Warning: Gagal log aktivitas:', logError);
+    }
 
     return NextResponse.json({
       success: true,

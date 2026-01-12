@@ -75,7 +75,7 @@ export async function GET(request) {
       select: {
         id: true,
         judul: true,
-        konten: true,
+        isi: true,
         tanggalMulai: true,
         tanggalSelesai: true,
         createdAt: true,

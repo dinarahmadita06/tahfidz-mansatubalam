@@ -22,15 +22,30 @@ export async function GET(request) {
 
     // Build filter conditions
     const whereConditions = {
-      isPublished: true,
+      // Logic: Pengumuman yang sedang aktif
+      AND: [
+        {
+          tanggalMulai: {
+            lte: new Date()
+          }
+        },
+        {
+          OR: [
+            { tanggalSelesai: null },
+            { tanggalSelesai: { gte: new Date() } }
+          ]
+        }
+      ]
     };
 
     // Search filter
     if (search) {
-      whereConditions.OR = [
-        { judul: { contains: search, mode: 'insensitive' } },
-        { konten: { contains: search, mode: 'insensitive' } },
-      ];
+      whereConditions.AND.push({
+        OR: [
+          { judul: { contains: search, mode: 'insensitive' } },
+          { isi: { contains: search, mode: 'insensitive' } },
+        ]
+      });
     }
 
     // Category filter
@@ -65,7 +80,7 @@ export async function GET(request) {
     const pengumuman = await prisma.pengumuman.findMany({
       where: whereConditions,
       include: {
-        pengirim: {
+        user: {
           select: {
             name: true,
             role: true,
