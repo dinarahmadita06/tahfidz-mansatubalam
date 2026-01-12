@@ -4,12 +4,22 @@ import { PrismaClient } from "@prisma/client";
 // Prevents connection pool exhaustion by reusing the client instance
 const globalForPrisma = globalThis;
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
+const createPrismaClient = () => {
+  return new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     errorFormat: 'pretty',
   });
+};
+
+// Check if we need to force a refresh (e.g. models missing in dev)
+if (process.env.NODE_ENV === "development" && globalForPrisma.prisma) {
+  if (!globalForPrisma.prisma.pushSubscription) {
+    console.log('🔄 Prisma client missing pushSubscription. Re-initializing...');
+    globalForPrisma.prisma = createPrismaClient();
+  }
+}
+
+export const prisma = globalForPrisma.prisma || createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
