@@ -293,3 +293,73 @@ export async function DELETE(request, { params }) {
     );
   }
 }
+
+// PATCH - Cancel registration (set status to DIBATALKAN)
+export async function PATCH(request, { params }) {
+  try {
+    const session = await auth();
+
+    if (!session || session.user.role !== 'SISWA') {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = params;
+
+    // Get siswa data
+    const siswa = await prisma.siswa.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    if (!siswa) {
+      return NextResponse.json(
+        { message: 'Data siswa tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    // Get existing tasmi
+    const existingTasmi = await prisma.tasmi.findFirst({
+      where: {
+        id,
+        siswaId: siswa.id,
+      },
+    });
+
+    if (!existingTasmi) {
+      return NextResponse.json(
+        { message: 'Data tasmi tidak ditemukan' },
+        { status: 404 }
+      );
+    }
+
+    // Hanya bisa batalkan jika status MENUNGGU
+    if (existingTasmi.statusPendaftaran !== 'MENUNGGU') {
+      return NextResponse.json(
+        { message: 'Pendaftaran tidak dapat dibatalkan (sudah diproses/selesai)' },
+        { status: 400 }
+      );
+    }
+
+    // Update status to DIBATALKAN
+    const updatedTasmi = await prisma.tasmi.update({
+      where: { id },
+      data: {
+        statusPendaftaran: 'DIBATALKAN',
+      },
+    });
+
+    return NextResponse.json({
+      message: 'Pendaftaran Tasmi\' berhasil dibatalkan',
+      tasmi: updatedTasmi,
+    });
+  } catch (error) {
+    console.error('Error canceling tasmi:', error);
+    return NextResponse.json(
+      { message: 'Internal server error', error: error.message },
+      { status: 500 }
+    );
+  }
+}
