@@ -42,10 +42,8 @@ export async function GET(request) {
         name: true,
         email: true,
         role: true,
-        phoneNumber: true,
         nip: true,
         jabatan: true,
-        alamat: true,
         createdAt: true,
         ttdUrl: true,
         signatureUrl: true
@@ -64,10 +62,10 @@ export async function GET(request) {
       nama: admin.name,
       email: admin.email,
       role: 'Administrator',
-      phoneNumber: admin.phoneNumber || '0812-3456-7890',
+      phoneNumber: '0812-3456-7890',
       jabatan: admin.jabatan || 'Koordinator Tahfidz',
       nip: admin.nip || '',
-      alamat: admin.alamat || 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
+      alamat: 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
       tanggalBergabung: admin.createdAt ? new Date(admin.createdAt).toLocaleDateString('id-ID', {
         day: '2-digit',
         month: 'long',
@@ -125,7 +123,7 @@ export async function PUT(request) {
     const body = await request.json();
     console.log('Request body:', body);
 
-    const { nama, email, phoneNumber, jabatan, nip, alamat } = body;
+    const { nama, email, jabatan, nip } = body;
 
     // Validasi data
     if (!nama || !email) {
@@ -162,10 +160,8 @@ export async function PUT(request) {
       data: {
         name: nama,
         email,
-        phoneNumber: phoneNumber || null,
         jabatan: jabatan || null,
-        nip: nip || null,
-        alamat: alamat || null
+        nip: nip || null
       }
     });
 
@@ -198,10 +194,10 @@ export async function PUT(request) {
       profile: {
         nama: updatedAdmin.name,
         email: updatedAdmin.email,
-        phoneNumber: updatedAdmin.phoneNumber,
+        phoneNumber: '0812-3456-7890',
         jabatan: updatedAdmin.jabatan,
         nip: updatedAdmin.nip,
-        alamat: updatedAdmin.alamat
+        alamat: 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12'
       }
     });
   } catch (error) {
