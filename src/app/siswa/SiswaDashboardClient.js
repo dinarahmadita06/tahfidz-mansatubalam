@@ -5,6 +5,7 @@ import { BookMarked, Target } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import StudentDashboardContent from '@/components/dashboard/StudentDashboardContent';
 import { PageSkeleton } from '@/components/shared/Skeleton';
+import PushNotificationManager from '@/components/shared/PushNotificationManager';
 
 // Lazy load widget to reduce initial bundle
 const AktivitasTerkiniWidget = dynamic(() => import('@/components/siswa/AktivitasTerkiniWidget'), {
@@ -79,6 +80,9 @@ export default function SiswaDashboardClient({ initialData, session }) {
           </div>
         </div>
       </div>
+
+      {/* Push Notification Manager */}
+      <PushNotificationManager />
 
       {/* Dashboard Content */}
       <StudentDashboardContent 

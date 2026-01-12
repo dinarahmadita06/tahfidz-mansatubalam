@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
@@ -55,7 +55,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [lastRead, setLastRead] = useState(null);
-  const [targetAyah, setTargetAyah] = useState(null);
+  const [pendingScrollAyat, setPendingScrollAyat] = useState(null);
 
   // Global singleton audio player state
   const [currentPlayingId, setCurrentPlayingId] = useState(null); // Format: "surah-ayah"
@@ -71,6 +71,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
 
   // Ref for verses scroll container
   const versesContainerRef = useRef(null);
+  const mobileVersesContainerRef = useRef(null);
 
   // Ref for auto-scrolling to verses panel
   const versesPanelRef = useRef(null);
@@ -139,23 +140,9 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     }
   };
 
-  // Effect to handle automatic scrolling when verses are loaded
-  useEffect(() => {
-    if (verses.length > 0 && targetAyah) {
-      // Delay to ensure DOM elements are fully rendered
-      const timer = setTimeout(() => {
-        const success = scrollToAyah(targetAyah);
-        if (success) {
-          setTargetAyah(null); // Clear target after successful scroll
-        }
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [verses, targetAyah]);
-
   const fetchSurahData = async (surahNumber, isMobileAccordion = false, initialAyah = null) => {
     setLoading(true);
-    if (initialAyah) setTargetAyah(initialAyah);
+    if (initialAyah) setPendingScrollAyat(initialAyah);
 
     try {
       const response = await fetch(`/api/quran/surah/${surahNumber}`);
@@ -181,27 +168,29 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
       setIsAudioPlaying(false);
       setAudioLoading(false);
 
-      // Auto-scroll for desktop only
-      if (!isMobileAccordion) {
-        setTimeout(() => {
-          if (versesPanelRef.current) {
-            versesPanelRef.current.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
-        }, 100);
-      } else {
-        // For mobile accordion, scroll to the expanded surah card
-        setTimeout(() => {
-          if (expandedSurahRef.current) {
-            expandedSurahRef.current.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start',
-              inline: 'nearest'
-            });
-          }
-        }, 300);
+      // Auto-scroll logic: Only scroll to top if we are NOT jumping to a specific ayah
+      if (!initialAyah) {
+        if (!isMobileAccordion) {
+          setTimeout(() => {
+            if (versesPanelRef.current) {
+              versesPanelRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          }, 100);
+        } else {
+          // For mobile accordion, scroll to the expanded surah card
+          setTimeout(() => {
+            if (expandedSurahRef.current) {
+              expandedSurahRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest'
+              });
+            }
+          }, 300);
+        }
       }
 
     } catch (error) {
@@ -453,7 +442,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     const ayatNo = lastRead.ayatNumber || lastRead.verse;
 
     if (selectedSurah === surahId) {
-      scrollToAyah(ayatNo);
+      setPendingScrollAyat(ayatNo);
     } else {
       // If mobile, expand the accordion first
       if (window.innerWidth < 1024) {
@@ -480,41 +469,81 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     lastTapRef.current = now;
   };
 
-  // Utility function for smooth scroll to ayah - Works on mobile & desktop with nested scroll container
-  const scrollToAyah = (ayahNumber) => {
-    const container = versesContainerRef.current;
-    const target = document.getElementById(`ayat-${ayahNumber}`);
-    
-    if (container && target) {
-      // Calculate position relative to container
-      const topPosition = target.offsetTop - container.offsetTop;
+  // Effect to handle robust scrolling when pendingScrollAyat changes
+  useLayoutEffect(() => {
+    if (!pendingScrollAyat || verses.length === 0 || loading) return;
+
+    let retryCount = 0;
+    const MAX_RETRIES = 10;
+    const RETRY_INTERVAL = 50;
+    let timer;
+
+    const performScroll = () => {
+      // Find the element by ID
+      const target = document.querySelector(`[id="ayat-${pendingScrollAyat}"]`);
       
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        container.scrollTo({
-          top: topPosition - 12,
-          behavior: 'smooth'
-        });
-      });
+      if (target) {
+        // Ensure it's the correct visible one
+        const isVisible = target.offsetWidth > 0 || target.offsetHeight > 0;
+        if (!isVisible) return false;
+
+        const container = target.closest('.overflow-y-auto');
+        if (container) {
+          // Calculation as requested: top = elRect.top - containerRect.top + container.scrollTop - headerOffset
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          const headerOffset = 32; // Offset for padding/header
+          
+          const targetTop = targetRect.top - containerRect.top + container.scrollTop - headerOffset;
+
+          // Execute scroll on container
+          container.scrollTo({
+            top: targetTop,
+            behavior: 'smooth'
+          });
+
+          // Highlight effect (1.5s as requested)
+          const highlightClasses = ['ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500', 'z-10', 'relative'];
+          target.classList.add(...highlightClasses);
+          setTimeout(() => {
+            target.classList.remove(...highlightClasses);
+          }, 1500);
+
+          // Success toast
+          toast.success(`Berhasil pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
+          
+          setPendingScrollAyat(null);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const attempt = () => {
+      if (performScroll()) return;
       
-      // Highlight briefly with ring effect
-      target.classList.add('ring-4', 'ring-emerald-400', 'ring-offset-2');
-      setTimeout(() => {
-        target.classList.remove('ring-4', 'ring-emerald-400', 'ring-offset-2');
-      }, 2000);
-      return true;
-    }
-    return false;
-  };
+      retryCount++;
+      if (retryCount < MAX_RETRIES) {
+        timer = setTimeout(attempt, RETRY_INTERVAL);
+      } else {
+        toast.error('Ayat tidak ditemukan');
+        setPendingScrollAyat(null);
+      }
+    };
+
+    // Use requestAnimationFrame for smoother start
+    requestAnimationFrame(() => {
+      timer = setTimeout(attempt, 50);
+    });
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [pendingScrollAyat, verses, loading]);
 
   // Handle jump to ayah from modal
   const handleJumpToAyah = (ayahNumber) => {
-    const success = scrollToAyah(ayahNumber);
-    if (success) {
-      toast.success(`Pindah ke ayat ${ayahNumber}`, { icon: '📍' });
-    } else {
-      toast.error('Ayat tidak ditemukan');
-    }
+    setPendingScrollAyat(ayahNumber);
   };
 
   const filteredSurahs = surahs.filter(surah =>
@@ -691,8 +720,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                           {isLoading ? (
                             <LoadingIndicator text="Memuat ayat..." />
                           ) : (
-                            /* Verses List */
-                            <div className="p-4 space-y-3 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20 max-h-[600px] overflow-y-auto">
+                            <div ref={mobileVersesContainerRef} className="p-4 space-y-3 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20 max-h-[600px] overflow-y-auto">
                               {verses.map((verse, index) => {
                                 const ayahNo = verse?.numberInSurah ?? (index + 1);
                                 const playingId = `${selectedSurah}-${ayahNo}`;
@@ -701,10 +729,11 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                                 return (
                                   <div
                                     key={verse.number || index}
+                                    id={`ayat-${ayahNo}`}
                                     ref={(el) => (ayahRefs.current[ayahNo] = el)}
                                     onClick={() => handleVerseClick(verse)}
                                     onDoubleClick={() => handleVerseInteraction(verse)}
-                                    className={`p-4 rounded-xl border-2 bg-white/90 backdrop-blur-sm transition-all cursor-pointer select-none ${
+                                    className={`p-4 rounded-xl border-2 bg-white/90 backdrop-blur-sm transition-all cursor-pointer select-none scroll-mt-20 ${
                                       isCurrentAyat && isAudioPlaying
                                         ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_8px_20px_rgba(16,185,129,0.2)]'
                                         : 'border-gray-100 hover:border-emerald-200 shadow-sm'
@@ -948,7 +977,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                             ref={(el) => (ayahRefs.current[ayahNo] = el)}
                             onClick={() => handleVerseClick(verse, ayahNo)}
                             onDoubleClick={() => handleVerseInteraction(verse, ayahNo)}
-                            className={`p-4 xl:p-6 rounded-xl xl:rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative cursor-pointer select-none ${
+                            className={`p-4 xl:p-6 rounded-xl xl:rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative cursor-pointer select-none scroll-mt-32 ${
                               isCurrentAyat && isAudioPlaying
                                 ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_12px_28px_rgba(16,185,129,0.2)]'
                                 : 'border-gray-100 hover:border-emerald-200 shadow-sm hover:shadow-md'
