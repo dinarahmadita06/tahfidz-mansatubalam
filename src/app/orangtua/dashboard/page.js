@@ -272,9 +272,6 @@ export default function OrangtuaDashboardPage() {
 
         {/* Main Content */}
         <div className="space-y-4 lg:space-y-6">
-          {/* Push Notification Toggle */}
-          <PushNotificationManager />
-          
           {loading ? (
           <div className="space-y-6">
             <div className="h-40 bg-gray-200 rounded-2xl animate-pulse" />
