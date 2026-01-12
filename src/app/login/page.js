@@ -77,7 +77,7 @@ export default function LoginPage() {
 
       // Log login activity
       try {
-        await fetch('/api/auth/log-activity', {
+        await fetch('/api/activity-log', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'LOGIN' })

@@ -29,205 +29,60 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        let identifier = credentials?.identifier?.trim(); // Standardized field name with proper trimming
+        const identifier = credentials?.identifier?.trim();
         const password = credentials?.password;
 
-        // Normalize identifier: uppercase for teacher pattern
-        if (identifier && /^g\d+$/i.test(identifier)) {
-          identifier = identifier.toUpperCase();
+        // 1. Batasi input login: hanya username admin.tahfidz1
+        if (!identifier || identifier.includes('@') || identifier !== 'admin.tahfidz1') {
+          throw new Error("Username atau password salah");
         }
 
-        if (!identifier || !password) {
-          throw new Error("Username/NIS dan password harus diisi");
+        if (!password) {
+          throw new Error("Username atau password salah");
         }
 
         try {
-          // Wrapped user lookup with retry logic
-          // 1. Try to find user directly (email or username)
-          let potentialUsers = await withRetry(() =>
-            prisma.user.findMany({
-              where: {
-                OR: [
-                  { email: identifier },
-                  { username: identifier }
-                ]
-              },
-              include: {
-                siswa: true,
-                guru: true,
-                orangTua: {
-                  include: {
-                    orangTuaSiswa: {
-                      include: {
-                        siswa: true
-                      }
-                    }
-                  }
-                },
-              },
+          // 2. Lookup user hanya berdasarkan username admin.tahfidz1
+          const user = await withRetry(() =>
+            prisma.user.findUnique({
+              where: { username: 'admin.tahfidz1' }
             })
           );
 
-          // 2. If identifier is numeric (NIS), also find via Siswa table
-          if (/^\d+$/.test(identifier)) {
-            const usersByNIS = await withRetry(() =>
-              prisma.user.findMany({
-                where: {
-                  OR: [
-                    {
-                      siswa: {
-                        nis: identifier
-                      }
-                    },
-                    {
-                      orangTua: {
-                        orangTuaSiswa: {
-                          some: {
-                            siswa: {
-                              nis: identifier
-                            }
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
-                include: {
-                  siswa: true,
-                  guru: true,
-                  orangTua: {
-                    include: {
-                      orangTuaSiswa: {
-                        include: {
-                          siswa: true
-                        }
-                      }
-                    }
-                  },
-                },
-              })
-            );
-            
-            // Merge unique users
-            const existingIds = new Set(potentialUsers.map(u => u.id));
-            for (const u of usersByNIS) {
-              if (!existingIds.has(u.id)) {
-                potentialUsers.push(u);
-              }
-            }
+          // 3. Pastikan bcrypt compare dan struktur data benar
+          if (!user || !user.password || typeof user.password !== 'string') {
+            throw new Error("Username atau password salah");
           }
 
-          if (potentialUsers.length === 0) {
-            console.error('❌ [AUTH] User not found:', identifier);
-            throw new Error("INVALID_CREDENTIALS");
+          // Validasi hash bcrypt (prefix $2 dan length 60)
+          if (!user.password.startsWith('$2') || user.password.length !== 60) {
+            console.error('🛑 [AUTH] Invalid password hash format in database');
+            throw new Error("Username atau password salah");
           }
 
-          let user = null;
-          let isLegacyMatch = false;
+          const isValid = await bcrypt.compare(String(password), user.password);
 
-          // 3. Try password against each potential user
-          for (const u of potentialUsers) {
-            // Secure debug logging (non-sensitive)
-            const passPrefix = u.password?.substring(0, 7) || 'none';
-            console.log(`🔍 [AUTH] Attempting login for: ${u.username || u.email} (${u.role}) | Hash prefix: ${passPrefix}... | Hash length: ${u.password?.length || 0}`);
-
-            let isValid = await bcrypt.compare(String(password), u.password);
-            
-            // Fallback for Parent data inconsistency (Legacy YYYY-MM-DD passwords)
-            if (!isValid && u.role === 'ORANG_TUA' && u.orangTua?.orangTuaSiswa?.[0]?.siswa?.tanggalLahir) {
-              const birthDate = new Date(u.orangTua.orangTuaSiswa[0].siswa.tanggalLahir);
-              const ddmmyyyy = String(birthDate.getDate()).padStart(2, '0') + 
-                               String(birthDate.getMonth() + 1).padStart(2, '0') + 
-                               birthDate.getFullYear();
-              
-              const yyyymmdd = birthDate.getFullYear() + '-' + 
-                               String(birthDate.getMonth() + 1).padStart(2, '0') + 
-                               String(birthDate.getDate()).padStart(2, '0');
-
-              // If input password matches DDMMYYYY and DB hash matches YYYY-MM-DD
-              if (String(password) === ddmmyyyy) {
-                if (await bcrypt.compare(yyyymmdd, u.password)) {
-                  console.warn(`⚠️ [AUTH] Legacy password format (YYYY-MM-DD) detected for Parent: ${u.email}. Auto-migrating to DDMMYYYY.`);
-                  
-                  // Auto-migrate the password
-                  const newHashedPassword = await bcrypt.hash(ddmmyyyy, 10);
-                  await prisma.user.update({
-                    where: { id: u.id },
-                    data: { password: newHashedPassword }
-                  });
-                  
-                  isValid = true;
-                  isLegacyMatch = true;
-                }
-              }
-            }
-
-            if (isValid) {
-              user = u;
-              break;
-            }
+          if (!isValid) {
+            throw new Error("Username atau password salah");
           }
 
-          if (!user) {
-            console.error('❌ [AUTH] Invalid password for:', identifier);
-            throw new Error("INVALID_CREDENTIALS");
-          }
-
-          // Check if user account is active (applies to all roles)
           if (!user.isActive) {
             throw new Error("Akun Anda tidak aktif. Silakan hubungi admin sekolah.");
           }
-
-          // Role-specific validation
-          if (user.role === 'SISWA') {
-            if (!user.siswa) throw new Error("Profil siswa tidak ditemukan.");
-            if (user.siswa.status !== 'approved') {
-              throw new Error(`Akun Anda sedang dalam status ${user.siswa.status}. Hubungi admin.`);
-            }
-            if (user.siswa.statusSiswa !== 'AKTIF') {
-              throw new Error("Akun Anda sudah nonaktif karena status LULUS.");
-            }
-          }
-
-          if (user.role === 'ORANG_TUA') {
-            if (!user.orangTua) throw new Error("Profil orang tua tidak ditemukan.");
-            if (!user.orangTua.orangTuaSiswa || user.orangTua.orangTuaSiswa.length === 0) {
-              throw new Error("Akun Anda belum terhubung dengan siswa.");
-            }
-            const hasPendingSiswa = user.orangTua.orangTuaSiswa.some(r => r.siswa.status !== 'approved');
-            if (hasPendingSiswa) {
-              throw new Error("Akun anak masih dalam proses validasi.");
-            }
-          }
-
-// No log for performance
-
 
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
-            image: user.image,
             isActive: user.isActive,
-            siswaId: user.siswa?.id,
-            guruId: user.guru?.id,
-            orangTuaId: user.orangTua?.id,
-            statusSiswa: user.siswa?.statusSiswa,
           };
         } catch (error) {
-          console.error('💥 [AUTH] Error in authorize:', error.message);
-          
-          if (error.message === "INVALID_CREDENTIALS") {
-            throw new Error("Username atau password salah");
+          if (error.message === "Username atau password salah" || error.message.includes("tidak aktif")) {
+            throw error;
           }
-
-          // Generic error for database timeouts/connection issues
-          if (error.message.includes('Prisma') || error.message.includes('Can\'t reach database') || error.message.includes('Connection')) {
-             throw new Error("Server sedang sibuk. Coba lagi beberapa saat.");
-          }
-
-          throw error;
+          console.error('💥 [AUTH] authorize error:', error.message);
+          throw new Error("Username atau password salah");
         }
       },
     }),
@@ -291,7 +146,8 @@ export const authConfig = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   cookies: {
     sessionToken: {
       name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}authjs.session-token`,
