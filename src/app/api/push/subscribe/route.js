@@ -13,10 +13,11 @@ export async function POST(request) {
     const userRole = session.user.role;
 
     // Only allow SISWA, GURU, and ORANG_TUA to subscribe
-    if (userRole !== 'SISWA' && userRole !== 'GURU' && userRole !== 'ORANG_TUA') {
+    const ALLOWED_ROLES = ['SISWA', 'GURU', 'ORANG_TUA'];
+    if (!ALLOWED_ROLES.includes(userRole)) {
       return NextResponse.json({ 
         error: 'Forbidden', 
-        message: 'Push notifikasi hanya tersedia untuk Siswa, Guru, dan Orang Tua' 
+        message: `Push notifikasi tidak tersedia untuk role ${userRole}` 
       }, { status: 403 });
     }
 
@@ -41,7 +42,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid subscription data' }, { status: 400 });
     }
 
-    // Save or update subscription
+    // Save or update subscription (Upsert per endpoint)
     const savedSubscription = await prisma.pushSubscription.upsert({
       where: {
         endpoint: subscription.endpoint,
@@ -50,7 +51,7 @@ export async function POST(request) {
         userId: userId,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
-        userAgent: userAgent || null,
+        userAgent: userAgent || request.headers.get('user-agent') || 'unknown',
         isActive: true,
         updatedAt: new Date(),
       },
@@ -59,7 +60,7 @@ export async function POST(request) {
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
-        userAgent: userAgent || null,
+        userAgent: userAgent || request.headers.get('user-agent') || 'unknown',
         isActive: true,
       },
     });
