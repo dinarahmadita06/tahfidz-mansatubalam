@@ -190,14 +190,22 @@ function AdminLayout({ children }) {
   const handleLogout = async () => {
     try {
       // Log logout activity
-      await fetch('/api/auth/log-activity', {
+      await fetch('/api/activity-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'LOGOUT' })
       }).catch(err => console.error('Logout activity log failed:', err));
+    } catch (error) {
+      console.error('Logout pre-processing failed:', error);
     } finally {
-      // Proceed with signOut regardless of logging success
-      await signOut({ callbackUrl: '/login' });
+      // Proceed with signOut
+      // Using redirect: true with callbackUrl is standard, but we'll ensure it's awaited
+      try {
+        await signOut({ callbackUrl: '/login', redirect: true });
+      } catch (error) {
+        console.error('SignOut failed, falling back to manual redirect:', error);
+        window.location.href = '/login';
+      }
     }
   };
 
