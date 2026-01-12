@@ -309,6 +309,7 @@ export async function POST(request) {
             },
             kelas: {
               select: {
+                id: true,
                 nama: true,
               },
             },
@@ -325,6 +326,13 @@ export async function POST(request) {
         },
       },
     });
+
+    console.log(`[DEBUG/TASMI] Success Create Tasmi:
+    - Siswa: ${siswa.id} (${session.user.name})
+    - Guru Pengampu: ${guruId}
+    - Kelas: ${siswa.kelas?.nama || '-'}
+    - Status: ${tasmi.statusPendaftaran}
+    `);
 
     // ✅ Log activity - siswa daftar tasmi
     await logActivity({

@@ -17,8 +17,21 @@ export async function GET(request) {
       );
     }
 
-    // Fetch all tasmi registrations WITH nilai fields (guru only)
+    // Find the Guru profile ID for filtering
+    const guru = await prisma.guru.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true }
+    });
+
+    if (!guru) {
+      return NextResponse.json({ tasmi: [] });
+    }
+
+    // Fetch tasmi registrations where THIS guru is the chosen pengampu
     const tasmiList = await prisma.tasmi.findMany({
+      where: {
+        guruPengampuId: guru.id
+      },
       include: {
         siswa: {
           include: {
@@ -66,6 +79,8 @@ export async function GET(request) {
         tanggalDaftar: 'desc',
       },
     });
+
+    console.log(`[DEBUG/TASMI] API GET Guru ${guru.id}: ${tasmiList.length} records found`);
 
     return NextResponse.json({ tasmi: tasmiList });
   } catch (error) {
