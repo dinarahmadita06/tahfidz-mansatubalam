@@ -255,17 +255,22 @@ export async function POST(request) {
       );
     }
 
-    // Check already has pending tasmi
-    const pendingTasmi = await prisma.tasmi.findFirst({
+    // Check already has active tasmi (MENUNGGU or DISETUJUI)
+    const activeTasmi = await prisma.tasmi.findFirst({
       where: {
         siswaId: siswa.id,
-        statusPendaftaran: 'MENUNGGU',
+        statusPendaftaran: {
+          in: ['MENUNGGU', 'DISETUJUI']
+        },
       },
     });
 
-    if (pendingTasmi) {
+    if (activeTasmi) {
+      const statusText = activeTasmi.statusPendaftaran === 'MENUNGGU' 
+        ? 'menunggu verifikasi' 
+        : 'sudah disetujui/terjadwal';
       return NextResponse.json(
-        { message: 'Anda masih memiliki pendaftaran yang menunggu verifikasi' },
+        { message: `Anda masih memiliki pendaftaran yang ${statusText}. Selesaikan atau batalkan terlebih dahulu.` },
         { status: 400 }
       );
     }

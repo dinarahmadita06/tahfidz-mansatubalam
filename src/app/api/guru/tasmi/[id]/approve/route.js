@@ -18,7 +18,7 @@ export async function POST(request, { params }) {
 
     const { id } = params;
     const body = await request.json();
-    const { tanggalUjian, jamUjian } = body;
+    const { catatan } = body;
 
     // Get guru data
     const guru = await prisma.guru.findUnique({
@@ -59,26 +59,14 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Combine tanggalUjian and jamUjian into a single DateTime
-    let scheduledDateTime;
-    if (tanggalUjian && jamUjian) {
-      // Combine date and time: "2024-01-15" + "08:00" -> "2024-01-15T08:00:00"
-      scheduledDateTime = new Date(`${tanggalUjian}T${jamUjian}:00`);
-    } else if (tanggalUjian) {
-      scheduledDateTime = new Date(tanggalUjian);
-    } else {
-      // Fallback to the originally proposed time
-      scheduledDateTime = tasmi.tanggalTasmi;
-    }
-
     // Update tasmi - approve
     const updatedTasmi = await prisma.tasmi.update({
       where: { id },
       data: {
         statusPendaftaran: 'DISETUJUI',
         guruVerifikasiId: guru.id,
-        tanggalUjian: scheduledDateTime,
-        catatanPenolakan: null,
+        tanggalUjian: tasmi.tanggalTasmi, // Use original proposed date from student
+        catatanPenolakan: catatan || null, // Using this field for general teacher feedback
       },
       include: {
         siswa: {
