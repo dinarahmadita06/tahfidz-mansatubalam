@@ -247,6 +247,16 @@ function TasmiTableRow({ tasmi, onEdit, onDelete }) {
   );
 }
 
+// Helper to format class display
+function formatKelas(kelas) {
+  if (!kelas) return '-';
+  if (kelas.nama) return kelas.nama;
+  
+  // Support broken-down structure if it exists
+  const parts = [kelas.tingkat, kelas.jurusan, kelas.rombel].filter(Boolean);
+  return parts.length > 0 ? parts.join(' ') : '-';
+}
+
 export default function TasmiClient() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -259,6 +269,7 @@ export default function TasmiClient() {
     jamTasmi: '',
     tanggalTasmi: '',
     catatan: '',
+    kelasId: '', // Added kelasId
   });
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -293,16 +304,21 @@ export default function TasmiClient() {
   const { targetJuz, isNotSet } = useTargetHafalan();
 
   const tasmiList = tasmiData?.tasmi || [];
-  const totalJuzHafalan = tasmiData?.totalJuzHafalan || 0;
-  const activeClass = tasmiData?.siswa?.activeClass;
-  const targetJuzSekolah = tasmiData?.targetJuzSekolah || targetJuz || 3;
+  const totalJuzHafalan = Number(tasmiData?.totalJuzHafalan) || 0;
+  const targetJuzSekolah = Number(tasmiData?.targetJuzSekolah || targetJuz || 3);
   const pagination = tasmiData?.pagination || {};
+  const displayKelas = tasmiData?.displayKelas || '-';
 
+  // Auto-sync form data when profile loaded
   useEffect(() => {
-    if (totalJuzHafalan > 0) {
-      setFormData(prev => ({ ...prev, jumlahHafalan: totalJuzHafalan }));
+    if (tasmiData) {
+      setFormData(prev => ({ 
+        ...prev, 
+        jumlahHafalan: totalJuzHafalan,
+        kelasId: tasmiData.kelasId || tasmiData.siswa?.kelas?.id || ''
+      }));
     }
-  }, [totalJuzHafalan]);
+  }, [tasmiData, totalJuzHafalan]);
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
@@ -347,6 +363,7 @@ export default function TasmiClient() {
       jamTasmi: formData.jamTasmi,
       tanggalTasmi: formData.tanggalTasmi,
       catatan: formData.catatan,
+      kelasId: formData.kelasId, // Send kelasId
     });
   };
 
@@ -360,6 +377,7 @@ export default function TasmiClient() {
       jamTasmi: tasmi.jamTasmi,
       tanggalTasmi: tasmi.tanggalTasmi ? new Date(tasmi.tanggalTasmi).toISOString().split('T')[0] : '',
       catatan: tasmi.catatan || '',
+      kelasId: tasmi.siswa?.kelasId || '',
     });
     setShowModal(true);
   };
@@ -397,6 +415,7 @@ export default function TasmiClient() {
       jamTasmi: '',
       tanggalTasmi: '',
       catatan: '',
+      kelasId: tasmiData?.siswa?.kelas?.id || tasmiData?.siswa?.activeClass?.id || '',
     });
     setEditMode(false);
     setEditId(null);
@@ -408,9 +427,12 @@ export default function TasmiClient() {
   };
 
   const minimalHafalan = targetJuzSekolah;
-  const isSiapMendaftar = (tasmiData && typeof tasmiData.isEligible === 'boolean' 
-    ? tasmiData.isEligible 
-    : (totalJuzHafalan >= minimalHafalan)) && !!activeClass;
+  
+  // Final Eligibility check (Super Robust)
+  const isSiapMendaftar = (
+    tasmiData?.isEligible === true || 
+    (totalJuzHafalan > 0 && totalJuzHafalan + 0.0001 >= minimalHafalan)
+  );
 
   const statusPendaftaran = isNotSet
     ? 'Admin belum mengatur target'
@@ -420,10 +442,11 @@ export default function TasmiClient() {
   const statusSubtitle = isNotSet
     ? 'Admin belum mengatur target hafalan'
     : isSiapMendaftar
-    ? `${totalJuzHafalan} dari ${minimalHafalan} juz terpenuhi`
-    : `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${totalJuzHafalan} juz`;
+    ? `${totalJuzHafalan.toFixed(2)} dari ${minimalHafalan} juz terpenuhi`
+    : `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${totalJuzHafalan.toFixed(2)} juz`;
 
   const isInitialLoading = tasmiLoading && !tasmiData;
+  const kelasDisplay = displayKelas;
 
   return (
     <div className="w-full space-y-6">
@@ -459,7 +482,7 @@ export default function TasmiClient() {
             <StatsCard
               icon={Award}
               title="Total Juz Hafalan"
-              value={`${totalJuzHafalan} Juz`}
+              value={`${totalJuzHafalan.toFixed(2)} Juz`}
               subtitle={isNotSet ? 'Admin belum mengatur target' : `Dari ${targetJuzSekolah} juz target`}
               color="emerald"
               delay={0.1}
@@ -605,7 +628,7 @@ export default function TasmiClient() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
-                  <input type="text" value={activeClass?.nama || '-'} readOnly className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" />
+                  <input type="text" value={kelasDisplay} readOnly className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed" />
                 </div>
               </div>
 
@@ -646,7 +669,7 @@ export default function TasmiClient() {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" disabled={(!isSiapMendaftar || !activeClass) && !editMode} className={`flex-1 px-4 py-3 rounded-lg transition-all font-semibold ${(!isSiapMendaftar || !activeClass) && !editMode ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>{editMode ? 'Update Pendaftaran' : 'Daftar Sekarang'}</button>
+                <button type="submit" disabled={!isSiapMendaftar && !editMode} className={`flex-1 px-4 py-3 rounded-lg transition-all font-semibold ${!isSiapMendaftar && !editMode ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>{editMode ? 'Update Pendaftaran' : 'Daftar Sekarang'}</button>
               </div>
             </form>
           </motion.div>

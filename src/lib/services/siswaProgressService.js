@@ -109,11 +109,16 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
 
 /**
  * Check if student is eligible for Tasmi registration
- * @param {number} currentProgress - Current unique Juz count
- * @param {number} targetJuzMinimal - Minimum target set by school
+ * @param {number|string} currentProgress - Current unique Juz count
+ * @param {number|string} targetJuzMinimal - Minimum target set by school
  * @returns {boolean} Eligibility status
  */
 export function isEligibleForTasmi(currentProgress, targetJuzMinimal) {
-  if (!targetJuzMinimal || targetJuzMinimal <= 0) return false;
-  return (currentProgress || 0) >= targetJuzMinimal;
+  const total = Number(currentProgress) || 0;
+  const target = Number(targetJuzMinimal) || 0;
+  
+  if (target <= 0) return false;
+  
+  // Use a small epsilon to handle float precision issues
+  return total + 1e-9 >= target;
 }

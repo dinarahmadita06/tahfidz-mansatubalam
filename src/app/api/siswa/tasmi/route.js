@@ -147,15 +147,25 @@ export async function GET(request) {
     - School Year: ${schoolYear?.nama || 'None'}
     `);
 
+    // Simplified response structure for the frontend
+    const displayKelas = siswa.kelas ? siswa.kelas.nama : '-';
+    const kelasId = siswa.kelas ? siswa.kelas.id : null;
+
     console.timeEnd('TASMI_GET_Total');
     return NextResponse.json({
       tasmi,
       totalJuzHafalan,
       targetJuzSekolah,
       isEligible,
+      displayKelas,
+      kelasId,
       siswa: {
         id: siswa.id,
-        activeClass
+        activeClass,
+        kelas: siswa.kelas ? {
+          id: siswa.kelas.id,
+          nama: siswa.kelas.nama
+        } : null
       },
       pagination: {
         page,
@@ -267,12 +277,12 @@ export async function POST(request) {
     });
 
     const progressData = await calculateStudentProgress(prisma, siswa.id, schoolYear?.id);
-    const currentJuzCount = progressData.totalJuz;
-    const minimalHafalan = progressData.targetJuzMinimal;
+    const currentJuzCount = Number(progressData.totalJuz) || 0;
+    const minimalHafalan = Number(progressData.targetJuzMinimal) || 0;
     
     if (!isEligibleForTasmi(currentJuzCount, minimalHafalan)) {
       return NextResponse.json(
-        { message: `Hafalan belum memenuhi syarat minimal Tasmi (minimal ${minimalHafalan} juz di tahun ajaran ini). Saat ini capaian Anda baru ${currentJuzCount} juz.` },
+        { message: `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${currentJuzCount.toFixed(2)} juz.` },
         { status: 400 }
       );
     }
@@ -281,7 +291,7 @@ export async function POST(request) {
     const tasmi = await prisma.tasmi.create({
       data: {
         siswaId: siswa.id,
-        jumlahHafalan: currentJuzCount, // ✅ Use DB value, ignore body.jumlahHafalan for security
+        jumlahHafalan: Math.floor(currentJuzCount + 1e-9), // ✅ Store as Int (Math.floor handles decimal progress)
         juzYangDitasmi,
         jamTasmi,
         tanggalTasmi: new Date(tanggalTasmi),
