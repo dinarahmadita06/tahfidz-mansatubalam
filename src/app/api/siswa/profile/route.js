@@ -103,8 +103,8 @@ export async function GET(request) {
       kelasId: siswa.kelas?.id || null,
       statusSiswa: siswa.user?.isActive ? 'AKTIF' : 'NONAKTIF',
       namaWali: primaryGuardian?.user?.name || '-',
-      phoneWali: primaryGuardian?.noTelepon || '-',
-      phone: siswa.noTelepon || '-',
+      phoneWali: '-', // Field noTelepon was dropped from schema
+      phone: '-',     // Field noTelepon was dropped from schema
     };
 
     return NextResponse.json(profileData, { status: 200 });
@@ -158,9 +158,7 @@ export async function PATCH(request) {
 
     // Update siswa data
     const updateData = {};
-    if (body.phone !== undefined) {
-      updateData.noTelepon = body.phone;  // Use noTelepon not noHP
-    }
+    // Note: noTelepon was removed from Siswa schema in recent migration
     if (body.alamat !== undefined) {
       updateData.alamat = body.alamat;
     }
@@ -212,7 +210,6 @@ export async function PATCH(request) {
       description: 'Anda memperbarui informasi profil siswa.',
       metadata: {
         fieldsUpdated: [
-          body.phone !== undefined ? 'noTelepon' : null,
           body.alamat !== undefined ? 'alamat' : null
         ].filter(Boolean)
       }
@@ -236,8 +233,8 @@ export async function PATCH(request) {
       kelasId: updated.kelas?.id || null,
       statusSiswa: updated.user?.isActive ? 'AKTIF' : 'NONAKTIF',
       namaWali: primaryGuardian?.user?.name || '-',
-      phoneWali: primaryGuardian?.noTelepon || '-',
-      phone: updated.noTelepon || '-',
+      phoneWali: '-', // noTelepon dropped
+      phone: '-',     // noTelepon dropped
     };
 
     console.log('Updated profile response:', profileData);

@@ -111,9 +111,7 @@ export async function PUT(request, { params }) {
     }
 
     if (kelasAngkatan !== undefined) siswaUpdateData.kelasAngkatan = kelasAngkatan || null;
-    // Support both noHP and noTelepon
-    if (noHP !== undefined) siswaUpdateData.noTelepon = noHP;
-    if (noTelepon !== undefined) siswaUpdateData.noTelepon = noTelepon;
+    // Note: noTelepon/noHP were removed from Siswa schema in recent migration
     if (orangTuaId !== undefined) siswaUpdateData.orangTuaId = orangTuaId || null;
 
     // Add kelas connection if kelasId is provided
