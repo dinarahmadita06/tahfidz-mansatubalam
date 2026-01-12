@@ -85,7 +85,7 @@ export async function POST(request) {
     // Parent account is automatically ACTIVE when student is successfully created
     const orangTua = await prisma.orangTua.create({
       data: {
-        noTelepon: noHP,
+        // noTelepon field was removed from schema in recent migration
         jenisKelamin: 'LAKI_LAKI', // Default value
         status: 'approved', // Parent auto-activated when student is created
         user: {

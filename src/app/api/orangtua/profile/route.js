@@ -99,17 +99,7 @@ export async function PATCH(request) {
     }
 
     const orangTuaUpdateData = {};
-    if (noTelepon !== undefined && noTelepon.trim()) {
-      // Validate phone format
-      const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
-      if (!phoneRegex.test(noTelepon)) {
-        return NextResponse.json(
-          { error: 'Format nomor telepon tidak valid' },
-          { status: 400 }
-        );
-      }
-      orangTuaUpdateData.noTelepon = noTelepon;
-    }
+    // Note: noTelepon was removed from OrangTua schema in recent migration
 
     if (alamat !== undefined) {
       orangTuaUpdateData.alamat = alamat || null;
@@ -141,7 +131,6 @@ export async function PATCH(request) {
       metadata: {
         fieldsUpdated: [
           namaLengkap !== undefined ? 'name' : null,
-          noTelepon !== undefined ? 'noTelepon' : null,
           alamat !== undefined ? 'alamat' : null
         ].filter(Boolean)
       }

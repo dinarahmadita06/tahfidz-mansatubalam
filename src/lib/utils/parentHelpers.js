@@ -170,7 +170,7 @@ export async function getOrangTuaProfile(userId) {
       id: orangTua.id,
       userId: orangTua.userId,
       namaLengkap: orangTua.user.name,
-      noTelepon: orangTua.noTelepon,
+      noTelepon: '-', // noTelepon dropped from schema
       alamat: orangTua.alamat,
       status: 'Aktif', // Parent status now depends on children status
       jenisKelamin: orangTua.jenisKelamin,
