@@ -75,7 +75,7 @@ export async function POST(request) {
       },
     });
 
-    console.log('✅ Password berhasil diubah untuk user:', user.email);
+    console.log('✅ Password berhasil diubah untuk user ID:', user.id);
 
     // Log the activity
     const activityAction = session.user.role === 'ORANG_TUA' || session.user.role === 'ORANGTUA' 

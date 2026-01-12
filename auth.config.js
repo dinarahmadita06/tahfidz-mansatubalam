@@ -54,7 +54,7 @@ export const authConfig = {
 
             if (!user.isActive) throw new Error("Akun Anda tidak aktif.");
 
-            return { id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive };
+            return { id: user.id, email: user.email, username: user.username, name: user.name, role: user.role, isActive: user.isActive };
           }
 
           // 2. Logic untuk Guru, Siswa, dan Orang Tua
@@ -91,6 +91,11 @@ export const authConfig = {
 
           for (const user of potentialUsers) {
             if (!user.password) continue;
+
+            // SECURITY: Orang Tua login tidak menerima email
+            if (user.role === 'ORANG_TUA' && identifier.includes('@')) {
+              continue;
+            }
 
             let isValid = await bcrypt.compare(String(password), user.password);
 
@@ -135,7 +140,8 @@ export const authConfig = {
 
           return {
             id: authenticatedUser.id,
-            email: authenticatedUser.email,
+            email: authenticatedUser.role === 'ORANG_TUA' ? undefined : authenticatedUser.email,
+            username: authenticatedUser.username,
             name: authenticatedUser.name,
             role: authenticatedUser.role,
             isActive: authenticatedUser.isActive,
@@ -160,6 +166,8 @@ export const authConfig = {
 
         token.id = user.id;
         token.role = user.role;
+        token.username = user.username;
+        token.email = user.role === 'ORANG_TUA' ? undefined : user.email;
         token.isActive = user.isActive;
         token.siswaId = user.siswaId;
         token.guruId = user.guruId;
@@ -174,6 +182,8 @@ export const authConfig = {
 
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.username = token.username;
+        session.user.email = token.role === 'ORANG_TUA' ? undefined : token.email;
         session.user.isActive = token.isActive;
         session.user.siswaId = token.siswaId;
         session.user.guruId = token.guruId;
