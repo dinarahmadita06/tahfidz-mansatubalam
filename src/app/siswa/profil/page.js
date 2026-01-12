@@ -29,7 +29,6 @@ async function getProfileData(userId) {
       user: {
         select: {
           name: true,
-          email: true,
           isActive: true,
         },
       },
@@ -63,7 +62,6 @@ async function getProfileData(userId) {
     id: siswa.id,
     userId: siswa.userId,
     nama: siswa.user?.name || '-',
-    email: siswa.user?.email || '-',
     nis: siswa.nis || '-',
     nisn: siswa.nisn || '-',
     jenisKelamin: formatGender(siswa.jenisKelamin),
@@ -73,8 +71,8 @@ async function getProfileData(userId) {
     kelasId: siswa.kelas?.id || null,
     statusSiswa: siswa.user?.isActive ? 'AKTIF' : 'NONAKTIF',
     namaWali: primaryGuardian?.user?.name || '-',
-    phoneWali: primaryGuardian?.noTelepon || '-',
-    phone: siswa.noTelepon || '-',
+    phoneWali: '-',
+    phone: '-',
   };
 }
 
