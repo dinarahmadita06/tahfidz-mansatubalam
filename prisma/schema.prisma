@@ -593,6 +593,7 @@ enum StatusTasmi {
   DISETUJUI
   DITOLAK
   SELESAI
+  DIBATALKAN
 }
 
 enum StatusKelas {

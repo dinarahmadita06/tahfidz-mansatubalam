@@ -18,18 +18,6 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import toast, { Toaster } from 'react-hot-toast';
 import JumpToAyahModal from '@/components/JumpToAyahModal';
 
-// Tajweed parser utility
-const parseTajweedText = (tajweedText) => {
-  if (!tajweedText) return null;
-
-  // Parse [h:number[text] format to HTML
-  const parsed = tajweedText.replace(/\[([a-z_]+):(\d+)\[([^\]]+)\]/g, (match, rule, id, text) => {
-    return `<tajweed class="${rule}" data-id="${id}">${text}</tajweed>`;
-  });
-
-  return parsed;
-};
-
 // Helper to convert API revelation type to Indonesian
 const getRevelationTypeIndonesian = (revelationType) => {
   if (!revelationType) return 'Makkiyah';
@@ -68,7 +56,6 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [lastRead, setLastRead] = useState(null);
   const [targetAyah, setTargetAyah] = useState(null);
-  const [showTajwid, setShowTajwid] = useState(false);
 
   // Global singleton audio player state
   const [currentPlayingId, setCurrentPlayingId] = useState(null); // Format: "surah-ayah"
@@ -543,19 +530,19 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     <Layout>
       <Toaster position="top-right" />
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Container - Full Width SIMTAQ Style */}
-        <div className="w-full space-y-6">
+        <div className="w-full h-full flex flex-col space-y-4 xl:space-y-6">
 
           {/* Header - SIMTAQ Green Gradient */}
-          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-6 sm:p-8 text-white">
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-4 sm:p-6 xl:p-8 text-white flex-shrink-0">
             <div className="flex items-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl flex-shrink-0">
-                <BookOpen size={32} className="text-white" />
+              <div className="bg-white/20 backdrop-blur-sm p-3 xl:p-4 rounded-2xl flex-shrink-0">
+                <BookOpen size={28} className="text-white xl:w-8 xl:h-8" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold break-words">Al-Qur'an Digital</h1>
-                <p className="text-green-50 text-sm sm:text-base mt-1">
+                <h1 className="text-xl sm:text-2xl xl:text-3xl font-bold break-words leading-tight">Al-Qur'an Digital</h1>
+                <p className="text-green-50 text-xs sm:text-sm xl:text-base mt-0.5 opacity-90">
                   Baca, dengarkan, dan pahami ayat suci Al-Qur'an dengan mudah
                 </p>
               </div>
@@ -563,15 +550,15 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
           </div>
 
           {/* Search Bar */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 p-4">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 p-3 xl:p-4 flex-shrink-0">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={20} />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={18} />
               <input
                 type="text"
                 placeholder="Cari surah..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all"
+                className="w-full pl-11 pr-4 py-2 xl:py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all text-sm xl:text-base"
               />
             </div>
           </div>
@@ -685,22 +672,8 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                               </div>
                             </div>
 
-                            {/* 3. Tombol Mode Tajwid & Tandai */}
+                            {/* 3. Tombol Tandai */}
                             <div className="flex gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowTajwid(!showTajwid);
-                                }}
-                                className={`flex-1 px-4 py-2 rounded-xl font-semibold transition-all text-sm shadow-md ${
-                                  showTajwid
-                                    ? 'bg-white text-emerald-600'
-                                    : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
-                                }`}
-                              >
-                                Mode Tajwid
-                              </button>
-
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -713,31 +686,6 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                               </button>
                             </div>
                           </div>
-
-                          {/* Tajweed Legend */}
-                          {showTajwid && (
-                            <div className="px-4 py-3 bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100">
-                              <h3 className="text-xs font-bold text-gray-700 mb-2">Panduan Warna Tajwid:</h3>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#9400A8'}}></span>
-                                  <span>Ikhfa</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#26BFFD'}}></span>
-                                  <span>Iqlab</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169777'}}></span>
-                                  <span>Idgham+</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#DD0008'}}></span>
-                                  <span>Qalqalah</span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
 
                           {/* Loading State */}
                           {isLoading ? (
@@ -812,14 +760,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
 
                                     {/* Arabic Text */}
                                     <div className="text-right mb-3 leading-loose text-2xl text-gray-900 font-arabic">
-                                      {showTajwid && verse.textTajweed ? (
-                                        <div
-                                          className="tajweed-text"
-                                          dangerouslySetInnerHTML={{ __html: parseTajweedText(verse.textTajweed) }}
-                                        />
-                                      ) : (
-                                        verse.text
-                                      )}
+                                      {verse.text}
                                     </div>
 
                                     {/* Translation */}
@@ -851,14 +792,14 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
           </div>
 
           {/* DESKTOP VIEW: Two Column Layout */}
-          <div className="hidden lg:flex gap-6 h-[calc(100vh-200px)]">
+          <div className="hidden lg:flex gap-4 xl:gap-6 h-[calc(100vh-280px)] min-h-0">
 
-            {/* LEFT COLUMN - Surah List (35%) */}
-            <div className="w-[35%] flex flex-col">
+            {/* LEFT COLUMN - Surah List (30% on lg, 25% on xl) */}
+            <div className="lg:w-[30%] xl:w-[25%] flex flex-col min-w-0">
               <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full overflow-hidden">
 
                 {/* Surah List */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto p-3 xl:p-4 space-y-2 xl:space-y-3">
                   {filteredSurahs.length === 0 ? (
                     <div className="text-center py-12">
                       <p className="text-gray-500">
@@ -930,8 +871,8 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
               </div>
             </div>
 
-            {/* RIGHT COLUMN - Surah Detail (65%) */}
-            <div className="w-[65%] flex flex-col">
+            {/* RIGHT COLUMN - Surah Detail (70% on lg, 75% on xl) */}
+            <div className="lg:w-[70%] xl:w-[75%] flex flex-col min-w-0">
               <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full overflow-hidden">
 
                 {loading ? (
@@ -949,32 +890,32 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                 ) : (
                   <>
                     {/* Surah Header - Desktop: Row 1 (Nama) + Row 2 (Meta + Buttons) */}
-                    <div ref={versesPanelRef} className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-8 text-white rounded-t-2xl shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_8px_24px_rgba(16,185,129,0.15)]">
+                    <div ref={versesPanelRef} className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-4 xl:p-8 text-white rounded-t-2xl shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_8px_24px_rgba(16,185,129,0.15)] flex-shrink-0">
 
                       {/* Row 1: Nama Surah (Arab + Latin) - Paling Atas */}
-                      <div className="mb-4">
-                        <h2 className="text-5xl font-bold mb-2 font-arabic leading-tight">
+                      <div className="mb-3 xl:mb-4">
+                        <h2 className="text-3xl xl:text-5xl font-bold mb-1 xl:mb-2 font-arabic leading-tight">
                           {surahData.name}
                         </h2>
-                        <p className="text-2xl font-semibold text-green-50">
+                        <p className="text-lg xl:text-2xl font-semibold text-green-50">
                           {surahData.englishName}
                         </p>
                       </div>
 
                       {/* Row 2: Meta Info (Left) + Buttons (Right) */}
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3 xl:gap-4">
                         {/* Meta Info - WAJIB TAMPIL */}
-                        <div className="flex items-center gap-4 text-sm text-green-50">
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3 xl:gap-4 text-xs xl:text-sm text-green-50">
+                          <div className="flex items-center gap-1.5 xl:gap-2">
                             <span className="font-semibold">Jumlah Ayat:</span>
-                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                            <span className="bg-white/20 backdrop-blur-sm px-2 xl:px-3 py-0.5 xl:py-1 rounded-full">
                               {surahData.numberOfAyahs}
                             </span>
                           </div>
                           <span>•</span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 xl:gap-2">
                             <span className="font-semibold">Kategori:</span>
-                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                            <span className="bg-white/20 backdrop-blur-sm px-2 xl:px-3 py-0.5 xl:py-1 rounded-full">
                               {getRevelationTypeIndonesian(surahData.revelationType)}
                             </span>
                           </div>
@@ -983,73 +924,18 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                         {/* Buttons - Right Aligned */}
                         <div className="flex gap-2 flex-shrink-0">
                           <button
-                            onClick={() => setShowTajwid(!showTajwid)}
-                            className={`px-4 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-md ${
-                              showTajwid
-                                ? 'bg-white text-emerald-600'
-                                : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30'
-                            }`}
-                          >
-                            Mode Tajwid
-                          </button>
-
-                          <button
                             onClick={handleBookmark}
-                            className="px-4 py-2.5 bg-white/30 backdrop-blur-sm hover:bg-white/40 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm shadow-md"
+                            className="px-3 xl:px-4 py-1.5 xl:py-2.5 bg-white/30 backdrop-blur-sm hover:bg-white/40 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-xs xl:text-sm shadow-md"
                           >
-                            <Bookmark size={16} />
+                            <Bookmark size={14} className="xl:w-4 xl:h-4" />
                             Tandai
                           </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Tajweed Legend */}
-                    {showTajwid && (
-                      <div className="px-6 py-4 bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100">
-                        <h3 className="text-sm font-bold text-gray-700 mb-3">Panduan Warna Tajwid:</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#9400A8'}}></span>
-                            <span>Ikhfa (Samar)</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#26BFFD'}}></span>
-                            <span>Iqlab (Penukaran)</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169777'}}></span>
-                            <span>Idgham + Ghunnah</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#169200'}}></span>
-                            <span>Idgham - Ghunnah</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#DD0008'}}></span>
-                            <span>Qalqalah</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#FF7E1E'}}></span>
-                            <span>Ghunnah</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#537FFF'}}></span>
-                            <span>Mad Normal (2)</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{backgroundColor: '#4050FF'}}></span>
-                            <span>Mad Jaiz (2,4,6)</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-2 italic">
-                          Hover pada huruf berwarna untuk melihat highlight
-                        </p>
-                      </div>
-                    )}
-
                     {/* Verses List */}
-                    <div ref={versesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20">
+                    <div ref={versesContainerRef} className="flex-1 overflow-y-auto p-3 xl:p-6 space-y-3 xl:space-y-4 bg-gradient-to-br from-white via-emerald-50/20 to-sky-50/20">
                       {verses.map((verse, index) => {
                         const ayahNo = verse?.numberInSurah ?? (index + 1);
                         const playingId = `${selectedSurah}-${ayahNo}`;
@@ -1062,33 +948,33 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                             ref={(el) => (ayahRefs.current[ayahNo] = el)}
                             onClick={() => handleVerseClick(verse, ayahNo)}
                             onDoubleClick={() => handleVerseInteraction(verse, ayahNo)}
-                            className={`p-6 rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative cursor-pointer select-none ${
+                            className={`p-4 xl:p-6 rounded-xl xl:rounded-2xl border-2 bg-white/90 backdrop-blur-sm transition-all relative cursor-pointer select-none ${
                               isCurrentAyat && isAudioPlaying
                                 ? 'border-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_12px_28px_rgba(16,185,129,0.2)]'
                                 : 'border-gray-100 hover:border-emerald-200 shadow-sm hover:shadow-md'
                             }`}
                           >
                             {/* Ayah Header */}
-                            <div className="flex items-center justify-between mb-5">
-                              <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-between mb-3 xl:mb-5">
+                              <div className="flex items-center gap-2 xl:gap-3">
                                 {/* Circular Number Badge - Like Guru Page */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setShowJumpModal(true);
                                   }}
-                                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                  className="flex items-center gap-1.5 xl:gap-2 hover:opacity-80 transition-opacity"
                                   title="Klik untuk pindah ke ayat"
                                 >
-                                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
-                                    <span className="text-white text-sm font-bold leading-none">{ayahNo}</span>
+                                  <div className="w-8 h-8 xl:w-10 xl:h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform">
+                                    <span className="text-white text-xs xl:text-sm font-bold leading-none">{ayahNo}</span>
                                   </div>
-                                  <ChevronDown size={16} className="text-gray-400" />
+                                  <ChevronDown size={14} className="text-gray-400 xl:w-4 xl:h-4" />
                                 </button>
 
                                 {isCurrentAyat && isAudioPlaying && (
-                                  <div className="flex items-center gap-2 text-emerald-600 text-sm font-semibold">
-                                    <Volume2 size={16} className="animate-pulse" />
+                                  <div className="flex items-center gap-1.5 xl:gap-2 text-emerald-600 text-xs xl:text-sm font-semibold">
+                                    <Volume2 size={14} className="animate-pulse xl:w-4 xl:h-4" />
                                     <span>Sedang diputar</span>
                                   </div>
                                 )}
@@ -1101,7 +987,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                                   playAudio(ayahNo);
                                 }}
                                 disabled={audioLoading}
-                                className={`p-2.5 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
+                                className={`p-2 xl:p-2.5 rounded-xl bg-green-100 hover:bg-green-200 transition-all ${
                                   audioLoading ? 'opacity-50 cursor-not-allowed' : ''
                                 }`}
                                 title={audioLoading ? 'Memuat audio...' : 'Putar audio'}
@@ -1109,29 +995,22 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                                 {audioLoading ? (
                                   <LoadingIndicator text="" size="small" className="!py-0" />
                                 ) : isCurrentAyat && isAudioPlaying ? (
-                                  <Pause size={20} className="text-green-700" />
+                                  <Pause size={16} className="text-green-700 xl:w-5 xl:h-5" />
                                 ) : (
-                                  <Play size={20} className="text-green-700" />
+                                  <Play size={16} className="text-green-700 xl:w-5 xl:h-5" />
                                 )}
                               </button>
                             </div>
 
                             {/* Arabic Text */}
-                            <div className="text-right mb-5 leading-loose text-3xl text-gray-900 font-arabic">
-                              {showTajwid && verse.textTajweed ? (
-                                <div
-                                  className="tajweed-text"
-                                  dangerouslySetInnerHTML={{ __html: parseTajweedText(verse.textTajweed) }}
-                                />
-                              ) : (
-                                verse.text
-                              )}
+                            <div className="text-right mb-4 xl:mb-5 leading-loose text-2xl xl:text-3xl text-gray-900 font-arabic">
+                              {verse.text}
                             </div>
 
                             {/* Translation */}
                             {verse.translation && (
-                              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border border-emerald-100">
-                                <p className="text-gray-700 leading-relaxed text-sm">
+                              <div className="p-3 xl:p-4 rounded-lg xl:rounded-xl bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border border-emerald-100">
+                                <p className="text-gray-700 leading-relaxed text-xs xl:text-sm">
                                   {cleanTranslation(verse.translation)}
                                 </p>
                               </div>
@@ -1187,75 +1066,6 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
 
         .font-arabic {
           font-family: 'Scheherazade New', 'Amiri', serif;
-        }
-
-        /* Tajweed rules colors based on AlQuran.cloud */
-        tajweed.ham_wasl, tajweed.silent, tajweed.laam_shamsiyah {
-          color: #AAAAAA;
-        }
-
-        tajweed.madda_normal {
-          color: #537FFF;
-        }
-
-        tajweed.madda_permissible {
-          color: #4050FF;
-        }
-
-        tajweed.madda_necessary {
-          color: #000EBC;
-        }
-
-        tajweed.madda_obligatory {
-          color: #2144C1;
-        }
-
-        tajweed.qalqalah {
-          color: #DD0008;
-          font-weight: 600;
-        }
-
-        tajweed.ikhafa_shafawi {
-          color: #D500B7;
-        }
-
-        tajweed.ikhafa {
-          color: #9400A8;
-        }
-
-        tajweed.idgham_shafawi {
-          color: #58B800;
-        }
-
-        tajweed.iqlab {
-          color: #26BFFD;
-        }
-
-        tajweed.idgham_ghunnah {
-          color: #169777;
-        }
-
-        tajweed.idgham_wo_ghunnah {
-          color: #169200;
-        }
-
-        tajweed.idgham_mutajanisayn, tajweed.idgham_mutaqaribayn {
-          color: #A1A1A1;
-        }
-
-        tajweed.ghunnah {
-          color: #FF7E1E;
-        }
-
-        .tajweed-text tajweed {
-          padding: 1px 2px;
-          border-radius: 2px;
-          transition: all 0.2s ease;
-        }
-
-        .tajweed-text tajweed:hover {
-          background-color: rgba(16, 185, 129, 0.1);
-          transform: scale(1.05);
         }
       `}</style>
     </Layout>

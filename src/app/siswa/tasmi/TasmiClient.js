@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Award, Plus, Calendar, CheckCircle, XCircle, Clock, AlertCircle, Edit2, Trash2, ChevronLeft, ChevronRight, X, Search } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { useTargetHafalan } from '@/hooks/useTargetHafalan';
@@ -123,9 +123,9 @@ function StatusBadge({ status }) {
       className: 'bg-amber-100 text-amber-700 border-amber-200'
     },
     DISETUJUI: {
-      icon: <CheckCircle size={16} />,
-      text: 'Disetujui',
-      className: 'bg-green-100 text-green-700 border-green-200'
+      icon: <Calendar size={16} />,
+      text: 'Terjadwal',
+      className: 'bg-emerald-100 text-emerald-700 border-emerald-200'
     },
     DITOLAK: {
       icon: <XCircle size={16} />,
@@ -136,6 +136,11 @@ function StatusBadge({ status }) {
       icon: <Award size={16} />,
       text: 'Selesai',
       className: 'bg-purple-100 text-purple-700 border-purple-200'
+    },
+    DIBATALKAN: {
+      icon: <XCircle size={16} />,
+      text: 'Dibatalkan',
+      className: 'bg-gray-100 text-gray-600 border-gray-200'
     }
   };
 
@@ -165,9 +170,9 @@ function EmptyState() {
 }
 
 // Table Row Component
-function TasmiTableRow({ tasmi, onEdit, onDelete }) {
+function TasmiTableRow({ tasmi, onEdit, onDelete, isHighlighted }) {
   return (
-    <tr className="hover:bg-emerald-50/30 transition-colors">
+    <tr id={`tasmi-${tasmi.id}`} className={`transition-all duration-500 ${isHighlighted ? 'bg-amber-50 ring-2 ring-amber-300 ring-inset scale-[1.01] shadow-md z-10' : 'hover:bg-emerald-50/30'}`}>
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -207,6 +212,11 @@ function TasmiTableRow({ tasmi, onEdit, onDelete }) {
         {tasmi.statusPendaftaran === 'DITOLAK' && tasmi.catatanPenolakan ? (
           <div className="max-w-xs">
             <p className="text-red-600 font-semibold text-xs mb-1">Ditolak:</p>
+            <p className="text-gray-700">{tasmi.catatanPenolakan}</p>
+          </div>
+        ) : tasmi.statusPendaftaran === 'DISETUJUI' && tasmi.catatanPenolakan ? (
+          <div className="max-w-xs">
+            <p className="text-emerald-600 font-semibold text-xs mb-1">Catatan Guru:</p>
             <p className="text-gray-700">{tasmi.catatanPenolakan}</p>
           </div>
         ) : tasmi.catatanPenguji ? (
@@ -262,6 +272,8 @@ export default function TasmiClient() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [highlightId, setHighlightId] = useState(null);
   const [formData, setFormData] = useState({
     jumlahHafalan: 0,
     juzYangDitasmi: '',
@@ -308,6 +320,11 @@ export default function TasmiClient() {
   const targetJuzSekolah = Number(tasmiData?.targetJuzSekolah || targetJuz || 3);
   const pagination = tasmiData?.pagination || {};
   const displayKelas = tasmiData?.displayKelas || '-';
+
+  // Find active/pending registration
+  const pendingTasmi = tasmiList.find(t => t.statusPendaftaran === 'MENUNGGU');
+  const approvedTasmi = tasmiList.find(t => t.statusPendaftaran === 'DISETUJUI');
+  const hasActiveTasmi = !!pendingTasmi || !!approvedTasmi;
 
   // Auto-sync form data when profile loaded
   useEffect(() => {
@@ -421,7 +438,66 @@ export default function TasmiClient() {
     setEditId(null);
   };
 
+  const cancelMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await fetch(`/api/siswa/tasmi/${id}`, {
+        method: 'PATCH',
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasmi'] });
+      toast.success('Pendaftaran Tasmi\' berhasil dibatalkan', { icon: '✅' });
+      setShowPendingModal(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Gagal membatalkan pendaftaran');
+    },
+  });
+
+  const handleCancelRegistration = (id) => {
+    if (!confirm('Apakah Anda yakin ingin membatalkan pendaftaran ini?')) return;
+    cancelMutation.mutate(id);
+  };
+
+  const handleViewPending = (id) => {
+    setShowPendingModal(false);
+    setHighlightId(id);
+    
+    // Scroll to table and then to the specific row
+    const element = document.getElementById(`tasmi-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      // If not on current page, maybe inform user? 
+      // But usually pending is on top (sorted by date desc)
+      document.querySelector('table')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Clear highlight after 3 seconds
+    setTimeout(() => setHighlightId(null), 3000);
+  };
+
   const openNewModal = () => {
+    if (pendingTasmi) {
+      setShowPendingModal(true);
+      return;
+    }
+    
+    if (approvedTasmi) {
+      toast('Pendaftaran Anda sudah disetujui/terjadwal. Silakan selesaikan ujian Anda.', { 
+        icon: '📅',
+        style: {
+          borderRadius: '12px',
+          background: '#0ea5e9',
+          color: '#fff',
+        }
+      });
+      return;
+    }
+
     resetForm();
     setShowModal(true);
   };
@@ -434,13 +510,23 @@ export default function TasmiClient() {
     (totalJuzHafalan > 0 && totalJuzHafalan + 0.0001 >= minimalHafalan)
   );
 
+  // Button state logic
+  const canClickDaftar = isSiapMendaftar || pendingTasmi;
+  
   const statusPendaftaran = isNotSet
     ? 'Admin belum mengatur target'
+    : hasActiveTasmi
+    ? 'Pendaftaran Aktif'
     : isSiapMendaftar
     ? 'Siap Mendaftar'
     : 'Belum Siap Mendaftar';
+    
   const statusSubtitle = isNotSet
     ? 'Admin belum mengatur target hafalan'
+    : pendingTasmi
+    ? 'Pendaftaran sedang menunggu verifikasi guru'
+    : hasActiveTasmi
+    ? 'Anda memiliki pendaftaran yang sudah disetujui'
     : isSiapMendaftar
     ? `${totalJuzHafalan.toFixed(2)} dari ${minimalHafalan} juz terpenuhi`
     : `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${totalJuzHafalan.toFixed(2)} juz`;
@@ -514,9 +600,9 @@ export default function TasmiClient() {
       >
         <button
           onClick={openNewModal}
-          disabled={!isSiapMendaftar}
+          disabled={!canClickDaftar}
           className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-            isSiapMendaftar
+            canClickDaftar
               ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white hover:shadow-lg'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
           }`}
@@ -564,6 +650,7 @@ export default function TasmiClient() {
                     tasmi={tasmi}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    isHighlighted={highlightId === tasmi.id}
                   />
                 ))
               )}
@@ -672,6 +759,51 @@ export default function TasmiClient() {
                 <button type="submit" disabled={!isSiapMendaftar && !editMode} className={`flex-1 px-4 py-3 rounded-lg transition-all font-semibold ${!isSiapMendaftar && !editMode ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>{editMode ? 'Update Pendaftaran' : 'Daftar Sekarang'}</button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Info Modal: Pending Registration */}
+      {showPendingModal && pendingTasmi && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+          >
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock size={32} className="text-amber-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Pendaftaran Masih Menunggu Verifikasi</h2>
+              <p className="text-gray-600 mb-6">
+                Anda masih memiliki pendaftaran Tasmi yang belum diverifikasi oleh guru. 
+                Silakan menunggu verifikasi atau kelola pendaftaran Anda di bawah.
+              </p>
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={() => handleViewPending(pendingTasmi.id)}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-all shadow-md"
+                >
+                  <Search size={18} />
+                  <span>Lihat Pendaftaran Pending</span>
+                </button>
+                <button 
+                  onClick={() => handleCancelRegistration(pendingTasmi.id)}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-red-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all"
+                >
+                  <Trash2 size={18} />
+                  <span>Batalkan Pendaftaran</span>
+                </button>
+                <button 
+                  onClick={() => setShowPendingModal(false)}
+                  className="w-full px-6 py-3 text-gray-500 font-medium hover:text-gray-700 transition-all"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
           </motion.div>
         </div>
       )}
