@@ -137,7 +137,6 @@ export async function getOrangTuaProfile(userId) {
           select: {
             id: true,
             name: true,
-            email: true,
             isActive: true,
             createdAt: true
           }
@@ -171,7 +170,6 @@ export async function getOrangTuaProfile(userId) {
       id: orangTua.id,
       userId: orangTua.userId,
       namaLengkap: orangTua.user.name,
-      email: orangTua.user.email,
       noTelepon: orangTua.noTelepon,
       alamat: orangTua.alamat,
       status: 'Aktif', // Parent status now depends on children status

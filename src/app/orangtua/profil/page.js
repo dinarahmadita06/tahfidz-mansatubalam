@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   User,
-  Mail,
   Phone,
   MapPin,
   Shield,
@@ -48,16 +47,6 @@ const PROFILE_FIELDS_CONFIG = [
       const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
       return phoneRegex.test(value) ? null : 'Format nomor telepon tidak valid';
     },
-  },
-  {
-    key: 'email',
-    label: 'Email',
-    icon: Mail,
-    editable: false,
-    required: false,
-    type: 'email',
-    readOnlyNote: '(Tidak dapat diubah)',
-    gridCols: 'md:col-span-1',
   },
   {
     key: 'status',
@@ -118,14 +107,9 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
           </span>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-1 break-words">
+        <h2 className="text-xl font-bold text-gray-900 mb-3 break-words">
           {profileData?.namaLengkap || 'Nama Orang Tua'}
         </h2>
-
-        <div className="flex items-center gap-2 text-gray-600 mb-3">
-          <Mail size={14} />
-          <span className="text-sm break-all">{profileData?.email || '-'}</span>
-        </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-1">
           <Shield size={16} />
@@ -722,7 +706,7 @@ export default function ProfilOrangtuaPage() {
       const data = await response.json();
 
       // SECURITY: Validate response contains expected fields from session parent
-      if (!data.namaLengkap || !data.email) {
+      if (!data.namaLengkap) {
         setError('Data profil tidak valid');
         return;
       }
