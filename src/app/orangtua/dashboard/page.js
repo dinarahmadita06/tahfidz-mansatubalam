@@ -270,6 +270,9 @@ export default function OrangtuaDashboardPage() {
           )}
         </div>
 
+        {/* Push Notification Manager */}
+        <PushNotificationManager />
+
         {/* Main Content */}
         <div className="space-y-4 lg:space-y-6">
           {loading ? (
