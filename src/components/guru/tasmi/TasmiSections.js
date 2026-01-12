@@ -22,18 +22,16 @@ export async function StatsSection() {
   if (!userId) return null;
 
   const guru = await getGuruData(userId);
-  const kelasIds = guru?.guruKelas?.map(gk => gk.kelasId) || [];
+  if (!guru) return <TasmiStats tasmiList={[]} />;
 
+  // Filter based on guruPengampuId (the chosen teacher)
   const tasmiList = await prisma.tasmi.findMany({
     where: {
-      siswa: {
-        kelasId: { in: kelasIds },
-        kelas: {
-          tahunAjaran: { isActive: true }
-        }
-      }
+      guruPengampuId: guru.id
     }
   });
+
+  console.log(`[DEBUG/TASMI] Guru ${guru.id} Stats: ${tasmiList.length} records found`);
 
   return <TasmiStats tasmiList={tasmiList} />;
 }
@@ -44,16 +42,12 @@ export async function TableSection() {
   if (!userId) return null;
 
   const guru = await getGuruData(userId);
-  const kelasIds = guru?.guruKelas?.map(gk => gk.kelasId) || [];
+  if (!guru) return <TasmiTableSection initialTasmi={[]} guruKelas={[]} />;
 
+  // Filter based on guruPengampuId (the chosen teacher)
   const tasmiList = await prisma.tasmi.findMany({
     where: {
-      siswa: {
-        kelasId: { in: kelasIds },
-        kelas: {
-          tahunAjaran: { isActive: true }
-        }
-      }
+      guruPengampuId: guru.id
     },
     include: {
       siswa: {
@@ -67,6 +61,8 @@ export async function TableSection() {
     },
     orderBy: { createdAt: 'desc' }
   });
+
+  console.log(`[DEBUG/TASMI] Guru ${guru.id} Table: ${tasmiList.length} records found`);
 
   const guruKelas = guru?.guruKelas?.map(gk => ({
     id: gk.kelas.id,
