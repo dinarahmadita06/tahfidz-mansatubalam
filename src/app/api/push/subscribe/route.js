@@ -10,6 +10,16 @@ export async function POST(request) {
     }
 
     const userId = session.user.id;
+    const userRole = session.user.role;
+
+    // Only allow SISWA and GURU to subscribe
+    if (userRole !== 'SISWA' && userRole !== 'GURU') {
+      return NextResponse.json({ 
+        error: 'Forbidden', 
+        message: 'Push notifikasi hanya tersedia untuk Siswa dan Guru' 
+      }, { status: 403 });
+    }
+
     const body = await request.json();
     const { subscription, userAgent } = body;
 
@@ -53,6 +63,8 @@ export async function POST(request) {
         isActive: true,
       },
     });
+
+    console.log(`[PUSH] User ${userId} (${userRole}) subscribed successfully. Endpoint: ${subscription.endpoint.substring(0, 30)}...`);
 
     return NextResponse.json({ success: true, data: savedSubscription });
   } catch (error) {
