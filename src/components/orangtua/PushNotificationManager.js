@@ -74,7 +74,7 @@ export default function PushNotificationManager() {
   if (status === 'unsupported') return null;
 
   return (
-    <div className="bg-white/70 backdrop-blur rounded-2xl shadow-sm border border-slate-200/60 p-4 lg:p-5 mb-6">
+    <div className="bg-white/70 backdrop-blur rounded-2xl shadow-sm border border-slate-200/60 p-4 lg:p-5">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-xl ${
@@ -119,8 +119,8 @@ export default function PushNotificationManager() {
       {status === 'unsubscribed' && (
         <div className="mt-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100/50 flex items-start gap-2.5">
           <Info className="text-emerald-600 flex-shrink-0 mt-0.5" size={14} />
-          <div className="text-[10px] lg:text-xs text-amber-800 leading-relaxed">
-            Aktifkan notifikasi untuk mendapatkan info pengumuman terbaru secara real-time.
+          <div className="text-[10px] lg:text-xs text-emerald-800 leading-relaxed">
+            Aktifkan notifikasi untuk mendapatkan info pengumuman dan nilai setoran anak secara real-time.
           </div>
         </div>
       )}
