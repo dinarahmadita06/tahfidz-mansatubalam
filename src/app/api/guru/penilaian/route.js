@@ -165,6 +165,49 @@ export async function POST(request) {
       return penilaian;
     });
 
+    // Kirim Push Notification ke Orang Tua
+    try {
+      const parents = await prisma.orangTua.findMany({
+        where: {
+          orangTuaSiswa: {
+            some: {
+              siswaId: siswaId
+            }
+          }
+        },
+        select: {
+          userId: true
+        }
+      });
+
+      if (parents.length > 0) {
+        const { sendPushNotification } = await import('@/lib/push');
+        const parentUserIds = parents.map(p => p.userId);
+        
+        const surahDisplay = surah; 
+        
+        let pushSuccess = false;
+        for (const parentUserId of parentUserIds) {
+          const pushResult = await sendPushNotification(parentUserId, {
+            title: "Nilai Setoran Hafalan",
+            body: `${result.siswa.user.name} mendapat nilai ${nilaiAkhir.toFixed(1)} untuk setoran ${surahDisplay} (Juz ${juz})`,
+            url: "/orangtua/penilaian-hafalan"
+          });
+          if (pushResult.success) pushSuccess = true;
+        }
+
+        // Update notifiedAt flag if at least one push was successful
+        if (pushSuccess) {
+          await prisma.penilaian.update({
+            where: { id: result.id },
+            data: { notifiedAt: new Date() }
+          });
+        }
+      }
+    } catch (pushError) {
+      console.error('Failed to send push notification to parents:', pushError);
+    }
+
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error('Error creating penilaian:', error);

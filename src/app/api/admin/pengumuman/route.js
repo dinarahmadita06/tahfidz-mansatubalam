@@ -166,6 +166,15 @@ export async function POST(request) {
       }
     });
 
+    // Kirim Push Notification ke semua role terkait (Orang Tua, Guru, Siswa)
+    try {
+      const { broadcastAnnouncement } = await import('@/lib/push');
+      await broadcastAnnouncement(judul.trim(), pengumuman.id);
+      console.log('PUSH NOTIFICATION - Broadcasted to all roles');
+    } catch (pushError) {
+      console.error('PUSH NOTIFICATION - Broadcast Failed:', pushError);
+    }
+
     console.log('CREATE PENGUMUMAN - Success:', {
       id: pengumuman.id,
       judul: pengumuman.judul

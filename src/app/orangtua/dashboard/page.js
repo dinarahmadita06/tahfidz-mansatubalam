@@ -7,6 +7,7 @@ import { BookMarked, ChevronDown, Target, CalendarCheck } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import StudentDashboardContent from '@/components/dashboard/StudentDashboardContent';
 import OrangtuaActivityWidget from '@/components/orangtua/OrangtuaActivityWidget';
+import PushNotificationManager from '@/components/shared/PushNotificationManager';
 
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CONTAINER = 'w-full max-w-none';
@@ -270,7 +271,11 @@ export default function OrangtuaDashboardPage() {
         </div>
 
         {/* Main Content */}
-        {loading ? (
+        <div className="space-y-4 lg:space-y-6">
+          {/* Push Notification Toggle */}
+          <PushNotificationManager />
+          
+          {loading ? (
           <div className="space-y-6">
             <div className="h-40 bg-gray-200 rounded-2xl animate-pulse" />
             <div className="h-64 bg-gray-200 rounded-2xl animate-pulse" />
@@ -292,6 +297,7 @@ export default function OrangtuaDashboardPage() {
             </div>
           </>
         ) : null}
+        </div>
       </div>
     </OrangtuaLayout>
   );
