@@ -13,6 +13,12 @@ export async function POST(request) {
     const body = await request.json();
     const { subscription, userAgent } = body;
 
+    if (!prisma.pushSubscription) {
+      console.error('CRITICAL: prisma.pushSubscription is UNDEFINED');
+      console.log('Available models:', Object.keys(prisma).filter(k => !k.startsWith('$')));
+      return NextResponse.json({ error: 'Prisma client out of sync. Please restart server.' }, { status: 500 });
+    }
+
     if (!subscription || !subscription.endpoint || !subscription.keys) {
       return NextResponse.json({ error: 'Invalid subscription data' }, { status: 400 });
     }
