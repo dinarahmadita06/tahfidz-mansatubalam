@@ -58,14 +58,16 @@ export const authConfig = {
           }
 
           // 2. Logic untuk Guru, Siswa, dan Orang Tua
-          // Cegah admin login via logic umum
-          if (identifier.includes('@')) throw new Error("Username atau password salah");
-
-          const user = await withRetry(() =>
-            prisma.user.findFirst({
+          // Cari semua user yang mungkin cocok (username, email, atau suffix _wali)
+          const potentialUsers = await withRetry(() =>
+            prisma.user.findMany({
               where: { 
-                username: identifier,
-                role: { not: 'ADMIN' } // Pastikan bukan admin
+                OR: [
+                  { username: identifier },
+                  { username: identifier + '_wali' }, // Support login ortu pake NIS anak
+                  { email: identifier.includes('@') ? identifier : undefined }
+                ].filter(Boolean),
+                role: { not: 'ADMIN' }
               },
               include: {
                 siswa: true,
@@ -81,40 +83,65 @@ export const authConfig = {
             })
           );
 
-          if (!user || !user.password) {
+          if (!potentialUsers || potentialUsers.length === 0) {
             throw new Error("Username atau password salah");
           }
 
-          let isValid = await bcrypt.compare(String(password), user.password);
+          let authenticatedUser = null;
 
-          // Fallback untuk Orang Tua (Format DDMMYYYY vs YYYY-MM-DD di DB)
-          if (!isValid && user.role === 'ORANG_TUA' && user.orangTua?.orangTuaSiswa?.[0]?.siswa?.tanggalLahir) {
-            const birthDate = new Date(user.orangTua.orangTuaSiswa[0].siswa.tanggalLahir);
-            const ddmmyyyy = String(birthDate.getDate()).padStart(2, '0') + 
-                             String(birthDate.getMonth() + 1).padStart(2, '0') + 
-                             birthDate.getFullYear();
-            
-            const yyyymmdd = birthDate.getFullYear() + '-' + 
-                             String(birthDate.getMonth() + 1).padStart(2, '0') + 
-                             String(birthDate.getDate()).padStart(2, '0');
+          for (const user of potentialUsers) {
+            if (!user.password) continue;
 
-            if (String(password) === ddmmyyyy) {
-              isValid = await bcrypt.compare(yyyymmdd, user.password);
+            let isValid = await bcrypt.compare(String(password), user.password);
+
+            // Fallback untuk Siswa/Orang Tua jika password format tanggal (YYYY-MM-DD vs DDMMYYYY)
+            if (!isValid && (user.role === 'ORANG_TUA' || user.role === 'SISWA')) {
+              let birthDate;
+              if (user.role === 'SISWA' && user.siswa?.tanggalLahir) {
+                birthDate = new Date(user.siswa.tanggalLahir);
+              } else if (user.role === 'ORANG_TUA' && user.orangTua?.orangTuaSiswa?.[0]?.siswa?.tanggalLahir) {
+                birthDate = new Date(user.orangTua.orangTuaSiswa[0].siswa.tanggalLahir);
+              }
+
+              if (birthDate) {
+                const ddmmyyyy = String(birthDate.getDate()).padStart(2, '0') + 
+                                 String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                                 birthDate.getFullYear();
+                
+                const yyyymmdd = birthDate.getFullYear() + '-' + 
+                                 String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                                 String(birthDate.getDate()).padStart(2, '0');
+
+                if (String(password) === ddmmyyyy || String(password) === yyyymmdd) {
+                  // Verifikasi ulang terhadap hash di database menggunakan format yyyy-mm-dd (default password di seed)
+                  isValid = await bcrypt.compare(yyyymmdd, user.password);
+                }
+              }
+            }
+
+            if (isValid) {
+              authenticatedUser = user;
+              break;
             }
           }
 
-          if (!isValid) throw new Error("Username atau password salah");
-          if (!user.isActive) throw new Error("Akun Anda tidak aktif.");
+          if (!authenticatedUser) {
+            throw new Error("Username atau password salah");
+          }
+
+          if (!authenticatedUser.isActive) {
+            throw new Error("Akun Anda tidak aktif.");
+          }
 
           return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            isActive: user.isActive,
-            siswaId: user.siswa?.id,
-            guruId: user.guru?.id,
-            orangTuaId: user.orangTua?.id,
+            id: authenticatedUser.id,
+            email: authenticatedUser.email,
+            name: authenticatedUser.name,
+            role: authenticatedUser.role,
+            isActive: authenticatedUser.isActive,
+            siswaId: authenticatedUser.siswa?.id,
+            guruId: authenticatedUser.guru?.id,
+            orangTuaId: authenticatedUser.orangTua?.id,
           };
         } catch (error) {
           if (error.message === "Username atau password salah" || error.message.includes("tidak aktif")) {
