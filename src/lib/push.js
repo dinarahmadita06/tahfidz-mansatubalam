@@ -2,11 +2,20 @@ import webpush from 'web-push';
 import { prisma } from '@/lib/db';
 
 // Configure web-push with VAPID keys
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:admin@simtaq.com',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+// Backend uses VAPID_PUBLIC_KEY, if missing we fallback to NEXT_PUBLIC version
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  console.warn('⚠️ [PUSH] VAPID keys are missing. Push notifications will not be sent.');
+} else {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || 'mailto:admin@simtaq.com',
+    VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY
+  );
+  console.log('✅ [PUSH] web-push configured successfully');
+}
 
 /**
  * Send a push notification to a specific user
@@ -41,10 +50,9 @@ export async function sendPushNotification(userId, payload) {
         } catch (error) {
           // Cleanup invalid subscriptions (410 Gone or 404 Not Found)
           if (error.statusCode === 410 || error.statusCode === 404) {
-            console.log(`[PUSH] Cleaning up invalid subscription for user ${userId}: ${sub.endpoint}`);
-            await prisma.pushSubscription.update({
+            console.log(`[PUSH] Deleting invalid subscription for user ${userId}: ${sub.endpoint}`);
+            await prisma.pushSubscription.delete({
               where: { id: sub.id },
-              data: { isActive: false },
             });
           } else {
             console.error(`[PUSH] Error sending to ${sub.endpoint}:`, error.message);
@@ -102,19 +110,19 @@ export async function broadcastAnnouncement(judul, pengumumanId) {
     console.log(`[PUSH] Broadcasting announcement: ${judul}`);
     
     const payload = {
-      title: "Pengumuman Baru",
-      body: judul,
-      url: "/pengumuman", // Target URL for both roles
+      title: "SIMTAQ",
+      body: judul || "Pengumuman baru",
+      url: `/pengumuman?id=${pengumumanId}`,
       icon: "/logo-man1.png",
       badge: "/logo-man1.png",
       data: {
         id: pengumumanId,
-        url: "/pengumuman"
+        url: `/pengumuman?id=${pengumumanId}`
       }
     };
 
-    // Send to GURU, SISWA and ORANG_TUA
-    const roles = ['GURU', 'SISWA', 'ORANG_TUA'];
+    // Send to GURU and SISWA as per rule
+    const roles = ['GURU', 'SISWA'];
     const results = await sendPushToRoles(roles, payload);
     
     if (results && results.length > 0) {
