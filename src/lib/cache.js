@@ -37,3 +37,17 @@ export function clearAllCache() {
   cache.clear();
   console.log('🧹 Cleared all cache');
 }
+
+// Function to invalidate cache by prefix
+export function invalidateCacheByPrefix(prefix) {
+  let count = 0;
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) {
+      cache.delete(key);
+      count++;
+    }
+  }
+  if (count > 0) {
+    console.log(`✨ Invalidated ${count} cache keys starting with: ${prefix}`);
+  }
+}
