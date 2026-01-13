@@ -56,12 +56,12 @@ export default function RegistrasiOrangTuaPage() {
 
     // Validasi password
     if (password.length < 8) {
-      setError('Password minimal 8 karakter');
+      setError('Password minimal 8 karakter.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Password dan konfirmasi password tidak cocok');
+      setError('Konfirmasi password tidak cocok.');
       return;
     }
 
@@ -280,8 +280,10 @@ export default function RegistrasiOrangTuaPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all"
-                      placeholder="••••••••"
+                      className={`w-full pl-12 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all ${
+                        password && password.length < 8 ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
+                      placeholder="Minimal 8 karakter"
                     />
                     <button
                       type="button"
@@ -291,6 +293,9 @@ export default function RegistrasiOrangTuaPage() {
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {password && password.length < 8 && (
+                    <p className="text-xs text-red-500 mt-1">Password minimal 8 karakter.</p>
+                  )}
                 </div>
 
                 {/* Confirm Password */}
@@ -306,8 +311,10 @@ export default function RegistrasiOrangTuaPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all"
-                      placeholder="••••••••"
+                      className={`w-full pl-12 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all ${
+                        confirmPassword && confirmPassword !== password ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
+                      placeholder="Konfirmasi password baru"
                     />
                     <button
                       type="button"
@@ -317,15 +324,34 @@ export default function RegistrasiOrangTuaPage() {
                       {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Minimal 8 karakter, kombinasi huruf dan angka
-                  </p>
+                  {confirmPassword && confirmPassword !== password && (
+                    <p className="text-xs text-red-500 mt-1">Konfirmasi password tidak cocok.</p>
+                  )}
+                  <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                    <p className="text-xs font-medium text-emerald-800 mb-1 flex items-center gap-1">
+                      <Lock size={12} /> Persyaratan Password:
+                    </p>
+                    <ul className="text-[10px] text-emerald-700 space-y-0.5">
+                      <li className={`flex items-center gap-1 ${password.length >= 8 ? 'text-emerald-600' : 'text-gray-500'}`}>
+                        {password.length >= 8 ? '✓' : '•'} Minimal 8 karakter
+                      </li>
+                      <li className={`flex items-center gap-1 ${password && confirmPassword && password === confirmPassword ? 'text-emerald-600' : 'text-gray-500'}`}>
+                        {password && confirmPassword && password === confirmPassword ? '✓' : '•'} Konfirmasi cocok
+                      </li>
+                    </ul>
+                  </div>
                 </div>
 
                 {/* Register Button */}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={
+                    loading || 
+                    !namaLengkap || 
+                    !noHP || 
+                    password.length < 8 || 
+                    password !== confirmPassword
+                  }
                   className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-sm"
                 >
                   {loading ? (

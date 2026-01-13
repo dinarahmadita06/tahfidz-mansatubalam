@@ -120,8 +120,12 @@ export async function PUT(request, { params }) {
     }
 
     // Validate password length if provided
-    if (password && password.length < 6) {
-      return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 });
+    if (password && password.length < 8) {
+      return NextResponse.json({ 
+        success: false, 
+        code: "PASSWORD_TOO_SHORT", 
+        message: "Password minimal 8 karakter." 
+      }, { status: 400 });
     }
 
     // Prepare update data

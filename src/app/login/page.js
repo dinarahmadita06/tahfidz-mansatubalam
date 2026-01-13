@@ -34,7 +34,7 @@ export default function LoginPage() {
       console.log('🔐 [LOGIN] Attempting login with identifier:', identifier);
 
       const result = await signIn('credentials', {
-        identifier,
+        identifier: identifier.trim().toUpperCase(),
         password,
         rememberMe: rememberMe ? 'true' : 'false',
         redirect: false,
@@ -50,13 +50,16 @@ export default function LoginPage() {
       if (result?.error) {
         console.error('❌ [LOGIN] Login failed:', result.error);
 
-        if (result.error === 'CredentialsSignin') {
-          setError('Email atau password salah. Silakan coba lagi.');
+        // Standard NextAuth error codes mapping
+        if (result.error === 'CredentialsSignin' || result.error === 'CallbackRouteError') {
+          setError('Username atau password salah.');
         } else if (result.error === 'Configuration') {
-          setError('Terjadi kesalahan konfigurasi server.');
+          setError('Terjadi kesalahan server. Silakan coba lagi.');
+        } else if (result.error.includes('tidak aktif')) {
+          setError('Akun Anda tidak aktif.');
         } else {
-          // Show the actual error message from authorize() if available
-          setError(result.error);
+          // Default to credentials error for security and clean UI
+          setError('Username atau password salah.');
         }
         setLoading(false);
         return;
@@ -119,7 +122,7 @@ export default function LoginPage() {
       window.location.href = redirectPath;
     } catch (err) {
       console.error('💥 [LOGIN] Login exception:', err);
-      setError('Terjadi kesalahan saat login: ' + err.message);
+      setError('Terjadi kesalahan server. Silakan coba lagi.');
       setLoading(false);
     }
   };

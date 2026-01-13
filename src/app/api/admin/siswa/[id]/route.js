@@ -132,6 +132,13 @@ export async function PUT(request, { params }) {
 
     // Update password if provided
     if (password) {
+      if (password.length < 8) {
+        return NextResponse.json({ 
+          success: false, 
+          code: "PASSWORD_TOO_SHORT", 
+          message: "Password minimal 8 karakter." 
+        }, { status: 400 });
+      }
       userUpdateData.password = await bcrypt.hash(password, 10);
     }
 

@@ -28,10 +28,11 @@ export async function POST(request) {
 
     // Validasi panjang password
     if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: 'Password baru minimal 8 karakter' },
-        { status: 400 }
-      );
+      return NextResponse.json({ 
+        success: false, 
+        code: "PASSWORD_TOO_SHORT", 
+        message: "Password minimal 8 karakter." 
+      }, { status: 400 });
     }
 
     // Ambil data user
