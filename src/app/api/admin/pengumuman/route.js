@@ -36,8 +36,9 @@ export async function GET(request) {
 
     const startQueries = performance.now();
     const [totalCount, pengumuman] = await Promise.all([
-      prisma.pengumuman.count(),
+      prisma.pengumuman.count({ where: { deletedAt: null } }),
       prisma.pengumuman.findMany({
+        where: { deletedAt: null },
         skip,
         take: limit,
         select: {
@@ -61,6 +62,7 @@ export async function GET(request) {
       })
     ]);
     const endQueries = performance.now();
+    console.log(`[API ADMIN PENGUMUMAN] Found ${pengumuman.length} announcements (Total: ${totalCount})`);
     console.log(`[API ADMIN PENGUMUMAN] prisma.findMany: ${(endQueries - startQueries).toFixed(2)} ms`);
 
     const responseData = { 
@@ -105,7 +107,9 @@ export async function POST(request) {
       tanggalBerlaku,
       attachmentUrl,
       attachmentName,
-      attachmentSize
+      attachmentSize,
+      audience = 'ALL',
+      isPublished = true
     } = body;
 
     // Validasi input
@@ -156,7 +160,10 @@ export async function POST(request) {
         isPinned: false,
         attachmentUrl: attachmentUrl || null,
         attachmentName: attachmentName || null,
-        attachmentSize: attachmentSize ? parseInt(attachmentSize) : null
+        attachmentSize: attachmentSize ? parseInt(attachmentSize) : null,
+        audience: audience || 'ALL',
+        isPublished: isPublished ?? true,
+        deletedAt: null
       },
       include: {
         user: {
@@ -277,7 +284,9 @@ export async function PUT(request) {
       kategori = 'UMUM',
       attachmentUrl,
       attachmentName,
-      attachmentSize
+      attachmentSize,
+      audience,
+      isPublished
     } = body;
 
     // Validasi input
@@ -304,7 +313,9 @@ export async function PUT(request) {
         tanggalSelesai: tanggalBerlaku ? new Date(tanggalBerlaku) : null,
         attachmentUrl: attachmentUrl || null,
         attachmentName: attachmentName || null,
-        attachmentSize: attachmentSize ? parseInt(attachmentSize) : null
+        attachmentSize: attachmentSize ? parseInt(attachmentSize) : null,
+        audience: audience !== undefined ? audience : undefined,
+        isPublished: isPublished !== undefined ? isPublished : undefined
       },
       include: {
         user: {
@@ -381,12 +392,15 @@ export async function DELETE(request) {
       );
     }
 
-    // Use deleteMany to avoid error if already deleted
-    const deleteResult = await prisma.pengumuman.deleteMany({
-      where: { id }
+    // Implement soft delete as requested by deletedAt rule
+    const pengumuman = await prisma.pengumuman.updateMany({
+      where: { id },
+      data: {
+        deletedAt: new Date()
+      }
     });
 
-    if (deleteResult.count === 0) {
+    if (pengumuman.count === 0) {
       console.log(`[API ADMIN PENGUMUMAN] ID ${id} not found or already deleted`);
     }
 

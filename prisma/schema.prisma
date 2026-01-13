@@ -358,6 +358,9 @@ model Pengumuman {
   attachmentUrl  String?
   attachmentName String?
   attachmentSize Int?
+  isPublished    Boolean          @default(true)
+  deletedAt      DateTime?
+  audience       String           @default("ALL")
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   pengumumanRead PengumumanRead[]
 
