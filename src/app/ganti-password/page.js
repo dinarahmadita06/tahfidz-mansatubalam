@@ -25,17 +25,17 @@ export default function GantiPasswordPage() {
 
     // Validasi password
     if (newPassword.length < 8) {
-      setError('Password baru minimal 8 karakter');
+      setError('Password minimal 8 karakter.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Password baru dan konfirmasi password tidak cocok');
+      setError('Konfirmasi password tidak cocok.');
       return;
     }
 
     if (oldPassword === newPassword) {
-      setError('Password baru harus berbeda dengan password lama');
+      setError('Password baru harus berbeda dengan password lama.');
       return;
     }
 
@@ -134,7 +134,9 @@ export default function GantiPasswordPage() {
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   required
-                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all"
+                  className={`w-full pl-12 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all ${
+                    !oldPassword && error ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="••••••••"
                 />
                 <button
@@ -160,8 +162,10 @@ export default function GantiPasswordPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all"
-                  placeholder="••••••••"
+                  className={`w-full pl-12 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all ${
+                    newPassword && newPassword.length < 8 ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
+                  placeholder="Minimal 8 karakter"
                 />
                 <button
                   type="button"
@@ -171,6 +175,9 @@ export default function GantiPasswordPage() {
                   {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              {newPassword && newPassword.length < 8 && (
+                <p className="text-xs text-red-500 mt-1">Password minimal 8 karakter.</p>
+              )}
             </div>
 
             {/* Confirm Password Input */}
@@ -186,8 +193,10 @@ export default function GantiPasswordPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all"
-                  placeholder="••••••••"
+                  className={`w-full pl-12 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-transparent transition-all ${
+                    confirmPassword && confirmPassword !== newPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
+                  placeholder="Konfirmasi password baru"
                 />
                 <button
                   type="button"
@@ -197,15 +206,33 @@ export default function GantiPasswordPage() {
                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Minimal 8 karakter, kombinasi huruf dan angka
-              </p>
+              {confirmPassword && confirmPassword !== newPassword && (
+                <p className="text-xs text-red-500 mt-1">Konfirmasi password tidak cocok.</p>
+              )}
+              <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                <p className="text-xs font-medium text-emerald-800 mb-1 flex items-center gap-1">
+                  <Lock size={12} /> Persyaratan Password:
+                </p>
+                <ul className="text-[10px] text-emerald-700 space-y-0.5">
+                  <li className={`flex items-center gap-1 ${newPassword.length >= 8 ? 'text-emerald-600' : 'text-gray-500'}`}>
+                    {newPassword.length >= 8 ? '✓' : '•'} Minimal 8 karakter
+                  </li>
+                  <li className={`flex items-center gap-1 ${newPassword && confirmPassword && newPassword === confirmPassword ? 'text-emerald-600' : 'text-gray-500'}`}>
+                    {newPassword && confirmPassword && newPassword === confirmPassword ? '✓' : '•'} Konfirmasi cocok
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={
+                loading || 
+                !oldPassword || 
+                newPassword.length < 8 || 
+                newPassword !== confirmPassword
+              }
               className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-sm"
             >
               {loading ? (

@@ -871,7 +871,7 @@ export default function AdminOrangTuaPage() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Minimal 6 karakter"
+                    placeholder="Minimal 8 karakter"
                     required={!editingOrangTua}
                     className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   />
@@ -902,7 +902,7 @@ export default function AdminOrangTuaPage() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Minimal 6 karakter"
+                    placeholder="Minimal 8 karakter"
                     className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   />
                 </div>

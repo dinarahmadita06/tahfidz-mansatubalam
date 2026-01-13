@@ -244,7 +244,12 @@ export async function PATCH(request) {
     // Validasi panjang password
     if (newPassword.length < 8) {
       return NextResponse.json(
-        { error: 'Password minimal 8 karakter' },
+        { 
+          success: false, 
+          code: "PASSWORD_TOO_SHORT", 
+          error: 'Password baru minimal 8 karakter',
+          message: 'Password minimal 8 karakter.'
+        },
         { status: 400 }
       );
     }

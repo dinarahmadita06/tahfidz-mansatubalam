@@ -29,8 +29,8 @@ async function testAdminParentCreation() {
     console.log('✅ All required fields present');
 
     // 2. Check password length
-    if (parentPayload.password.length < 6) {
-      console.log('❌ Password too short');
+    if (parentPayload.password.length < 8) {
+      console.log('❌ Password too short (min 8 chars)');
       return;
     }
     console.log('✅ Password length OK');

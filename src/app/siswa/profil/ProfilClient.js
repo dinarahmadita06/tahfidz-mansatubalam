@@ -589,6 +589,11 @@ export default function ProfilClient({ initialData }) {
       return;
     }
 
+    if (passwordFormData.newPassword.length < 8) {
+      setError('Password minimal 8 karakter');
+      return;
+    }
+
     try {
       setSaveLoading(true);
       const payload = {
@@ -714,9 +719,11 @@ export default function ProfilClient({ initialData }) {
                     type={showNewPassword ? 'text' : 'password'}
                     value={passwordFormData.newPassword}
                     onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                    minLength={6}
-                    placeholder="Minimal 6 karakter"
-                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    minLength={8}
+                    placeholder="Minimal 8 karakter"
+                    className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                      passwordFormData.newPassword && passwordFormData.newPassword.length < 8 ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    }`}
                   />
                   <button
                     type="button"
@@ -726,6 +733,9 @@ export default function ProfilClient({ initialData }) {
                     {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                {passwordFormData.newPassword && passwordFormData.newPassword.length < 8 && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">Password minimal 8 karakter.</p>
+                )}
               </div>
 
               <div>
@@ -737,9 +747,11 @@ export default function ProfilClient({ initialData }) {
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={passwordFormData.confirmPassword}
                     onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                    minLength={6}
+                    minLength={8}
                     placeholder="Ketik ulang password baru"
-                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                      passwordFormData.confirmPassword && passwordFormData.confirmPassword !== passwordFormData.newPassword ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    }`}
                   />
                   <button
                     type="button"
@@ -749,7 +761,18 @@ export default function ProfilClient({ initialData }) {
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                {passwordFormData.confirmPassword && passwordFormData.confirmPassword !== passwordFormData.newPassword && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">Konfirmasi password tidak cocok.</p>
+                )}
               </div>
+            </div>
+
+            {/* Password Requirements */}
+            <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-xs font-medium text-amber-900 mb-2">Persyaratan Password:</p>
+              <ul className="text-xs text-amber-800 space-y-1">
+                <li>• Minimal 8 karakter</li>
+              </ul>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -762,8 +785,13 @@ export default function ProfilClient({ initialData }) {
               </button>
               <button
                 onClick={handlePasswordSubmit}
-                disabled={saveLoading}
-                className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                disabled={
+                  saveLoading || 
+                  !passwordFormData.oldPassword || 
+                  passwordFormData.newPassword.length < 8 || 
+                  passwordFormData.newPassword !== passwordFormData.confirmPassword
+                }
+                className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale"
               >
                 {saveLoading ? (
                   <LoadingIndicator size="small" text="Mengubah..." inline className="text-white" />
