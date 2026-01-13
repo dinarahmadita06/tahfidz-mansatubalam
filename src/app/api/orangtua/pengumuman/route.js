@@ -20,19 +20,31 @@ export async function GET(request) {
     const kategori = searchParams.get('kategori') || 'semua';
     const periode = searchParams.get('periode') || 'semua';
 
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
     // Build filter conditions
     const whereConditions = {
       // Logic: Pengumuman yang sedang aktif
       AND: [
         {
           tanggalMulai: {
-            lte: new Date()
+            lte: now
           }
         },
         {
           OR: [
             { tanggalSelesai: null },
-            { tanggalSelesai: { gte: new Date() } }
+            { tanggalSelesai: { gte: todayStart } }
+          ]
+        },
+        { isPublished: true },
+        { deletedAt: null },
+        {
+          OR: [
+            { audience: 'ALL' },
+            { audience: 'ORANG_TUA' }
           ]
         }
       ]
@@ -55,7 +67,6 @@ export async function GET(request) {
 
     // Period filter
     if (periode !== 'semua') {
-      const now = new Date();
       let startDate;
 
       if (periode === 'bulan_ini') {

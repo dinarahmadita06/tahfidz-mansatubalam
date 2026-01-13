@@ -33,6 +33,10 @@ export async function GET() {
 
     const siswaId = siswa.id;
 
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
     // 2. Parallel Queries
     const [
       schoolYear,
@@ -60,12 +64,28 @@ export async function GET() {
         where: { siswaId, catatan: { not: null } }
       }),
       prisma.pengumuman.findMany({
-        take: 3,
-        orderBy: { isPinned: 'desc' },
+        take: 5,
+        orderBy: [
+          { isPinned: 'desc' },
+          { createdAt: 'desc' }
+        ],
         where: {
-          OR: [
-            { tanggalSelesai: null },
-            { tanggalSelesai: { gte: new Date() } }
+          AND: [
+            { tanggalMulai: { lte: now } },
+            {
+              OR: [
+                { tanggalSelesai: null },
+                { tanggalSelesai: { gte: todayStart } }
+              ]
+            },
+            { isPublished: true },
+            { deletedAt: null },
+            { 
+              OR: [
+                { audience: 'ALL' },
+                { audience: 'SISWA' }
+              ]
+            }
           ]
         },
         select: {
