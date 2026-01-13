@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import AnnouncementCard from '@/components/shared/AnnouncementCard';
+import AnnouncementDetailModal from '@/components/shared/AnnouncementDetailModal';
 
 export default function OrangtuaPengumumanPage() {
   const [pengumuman, setPengumuman] = useState([]);
@@ -208,42 +209,11 @@ export default function OrangtuaPengumumanPage() {
       </div>
 
       {/* Modal Detail */}
-      {selectedPengumuman && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 flex items-start justify-between">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  {selectedPengumuman.judul}
-                </h2>
-                <div className="flex items-center gap-3 text-sm text-white/90">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={16} />
-                    <span>{formatDate(selectedPengumuman.createdAt)}</span>
-                  </div>
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">
-                    {selectedPengumuman.kategori}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedPengumuman(null)}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-white" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="prose prose-emerald max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {selectedPengumuman.isi}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnnouncementDetailModal
+        announcement={selectedPengumuman}
+        isOpen={!!selectedPengumuman}
+        onClose={() => setSelectedPengumuman(null)}
+      />
     </OrangtuaLayout>
   );
 }

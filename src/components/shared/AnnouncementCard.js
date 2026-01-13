@@ -1,4 +1,4 @@
-import { Calendar, Bell, BookOpen, Award, Megaphone, ChevronRight } from 'lucide-react';
+import { Calendar, Bell, BookOpen, Award, Megaphone, ChevronRight, FileText } from 'lucide-react';
 
 const CATEGORY_CONFIG = {
   UMUM: { 
@@ -71,6 +71,12 @@ export default function AnnouncementCard({ announcement, onClick }) {
               {isNew && (
                 <span className="px-2 py-0.5 rounded-lg bg-rose-500 text-white text-[10px] font-bold border border-rose-400 shadow-sm animate-pulse">
                   BARU
+                </span>
+              )}
+              {announcement.attachmentUrl && (
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 text-[10px] font-bold border border-emerald-200 flex items-center gap-1 shadow-sm">
+                  <FileText size={10} />
+                  PDF
                 </span>
               )}
             </div>

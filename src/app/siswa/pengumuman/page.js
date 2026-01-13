@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import AnnouncementCard from '@/components/shared/AnnouncementCard';
+import AnnouncementDetailModal from '@/components/shared/AnnouncementDetailModal';
 
 // EmptyState Component (identik dengan Guru)
 function AnnouncementEmptyState() {
@@ -38,6 +39,7 @@ export default function SiswaPengumumanPage() {
   const [filteredPengumuman, setFilteredPengumuman] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
 
   useEffect(() => {
     fetchPengumuman();
@@ -166,7 +168,11 @@ export default function SiswaPengumumanPage() {
             {/* Grid Layout - identik dengan Guru (2 columns pada desktop) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredPengumuman.map((announcement) => (
-                <AnnouncementCard key={announcement.id} announcement={announcement} />
+                <AnnouncementCard 
+                  key={announcement.id} 
+                  announcement={announcement} 
+                  onClick={() => setSelectedAnnouncement(announcement)}
+                />
               ))}
             </div>
 
@@ -181,6 +187,13 @@ export default function SiswaPengumumanPage() {
           </>
         )}
       </div>
+
+      {/* Modal Detail */}
+      <AnnouncementDetailModal
+        announcement={selectedAnnouncement}
+        isOpen={!!selectedAnnouncement}
+        onClose={() => setSelectedAnnouncement(null)}
+      />
     </>
   );
 }

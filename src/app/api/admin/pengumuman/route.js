@@ -17,7 +17,7 @@ export async function GET(request) {
     const endAuth = performance.now();
     console.log(`[API ADMIN PENGUMUMAN] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -94,7 +94,7 @@ export async function POST(request) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -102,7 +102,10 @@ export async function POST(request) {
     const {
       judul,
       isi,
-      tanggalBerlaku
+      tanggalBerlaku,
+      attachmentUrl,
+      attachmentName,
+      attachmentSize
     } = body;
 
     // Validasi input
@@ -150,7 +153,10 @@ export async function POST(request) {
         isi: isi.trim(),
         tanggalMulai: new Date(),
         tanggalSelesai: tanggalBerlaku ? new Date(tanggalBerlaku) : null,
-        isPinned: false
+        isPinned: false,
+        attachmentUrl: attachmentUrl || null,
+        attachmentName: attachmentName || null,
+        attachmentSize: attachmentSize ? parseInt(attachmentSize) : null
       },
       include: {
         user: {
@@ -249,7 +255,7 @@ export async function PUT(request) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -268,7 +274,10 @@ export async function PUT(request) {
       judul,
       isi,
       tanggalBerlaku,
-      kategori = 'UMUM'
+      kategori = 'UMUM',
+      attachmentUrl,
+      attachmentName,
+      attachmentSize
     } = body;
 
     // Validasi input
@@ -292,7 +301,10 @@ export async function PUT(request) {
       data: {
         judul: judul.trim(),
         isi: isi.trim(),
-        tanggalSelesai: tanggalBerlaku ? new Date(tanggalBerlaku) : null
+        tanggalSelesai: tanggalBerlaku ? new Date(tanggalBerlaku) : null,
+        attachmentUrl: attachmentUrl || null,
+        attachmentName: attachmentName || null,
+        attachmentSize: attachmentSize ? parseInt(attachmentSize) : null
       },
       include: {
         user: {
@@ -355,7 +367,7 @@ export async function DELETE(request) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
