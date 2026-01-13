@@ -6,6 +6,7 @@ import SessionProvider from "@/components/providers/SessionProvider";
 import SWRProvider from "@/components/providers/SWRProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import PasswordChangeSuggestion from "@/components/shared/PasswordChangeSuggestion";
+import RecoverySetupTrigger from "@/components/shared/RecoverySetupTrigger";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
             <QueryProvider>
               {children}
               <PasswordChangeSuggestion />
+              <RecoverySetupTrigger />
             </QueryProvider>
           </SWRProvider>
         </SessionProvider>

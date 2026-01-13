@@ -226,6 +226,12 @@ export async function POST(request) {
         throw new Error('Tanggal lahir wajib diisi untuk generate password default');
       }
       studentPassword = tanggalLahir;
+    } else if (studentPassword.length < 8) {
+      return NextResponse.json({ 
+        success: false, 
+        code: "PASSWORD_TOO_SHORT", 
+        message: "Password minimal 8 karakter." 
+      }, { status: 400 });
     }
     // Format as YYYY-MM-DD
     const birthDate = new Date(tanggalLahir);
@@ -289,6 +295,8 @@ export async function POST(request) {
           const month = String(birthDate.getMonth() + 1).padStart(2, '0');
           const year = birthDate.getFullYear();
           pPassword = `${day}${month}${year}`;
+        } else if (pPassword.length < 8) {
+          throw new Error('Password wali minimal 8 karakter.');
         }
         const parentHashedPassword = await bcrypt.hash(pPassword, 10);
 

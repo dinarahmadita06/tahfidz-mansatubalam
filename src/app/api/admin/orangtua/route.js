@@ -150,8 +150,12 @@ export async function POST(request) {
     }
 
     // Validate password length
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 });
+    if (password.length < 8) {
+      return NextResponse.json({ 
+        success: false, 
+        code: "PASSWORD_TOO_SHORT", 
+        message: "Password minimal 8 karakter." 
+      }, { status: 400 });
     }
 
     // Validate Indonesian phone number format

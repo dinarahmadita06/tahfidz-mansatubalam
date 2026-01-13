@@ -481,13 +481,28 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
         return;
       }
 
-      if (formData.newPassword.length < 6) {
-        setError('Password minimal 6 karakter');
+      if (formData.newPassword.length < 8) {
+        setError('Password minimal 8 karakter');
         setSaveLoading(false);
         return;
       }
 
-      await onSave(formData);
+      // Call API to change password
+      const response = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: formData.oldPassword,
+          newPassword: formData.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || 'Gagal mengubah password');
+      }
 
       setSuccess('Password berhasil diubah!');
       setTimeout(() => {
@@ -583,8 +598,11 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
                   value={formData.newPassword}
                   onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                   disabled={saveLoading}
-                  className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
-                  placeholder="Masukkan password baru"
+                  minLength={8}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50 ${
+                    formData.newPassword && formData.newPassword.length < 8 ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                  placeholder="Minimal 8 karakter"
                 />
                 <button
                   type="button"
@@ -594,6 +612,9 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
                   {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              {formData.newPassword && formData.newPassword.length < 8 && (
+                <p className="text-xs text-red-600 mt-1 font-medium">Password minimal 8 karakter.</p>
+              )}
             </div>
 
             <div>
@@ -606,7 +627,10 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   disabled={saveLoading}
-                  className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50"
+                  minLength={8}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm disabled:opacity-50 ${
+                    formData.confirmPassword && formData.confirmPassword !== formData.newPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
                   placeholder="Konfirmasi password baru"
                 />
                 <button
@@ -617,12 +641,15 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              {formData.confirmPassword && formData.confirmPassword !== formData.newPassword && (
+                <p className="text-xs text-red-600 mt-1 font-medium">Konfirmasi password tidak cocok.</p>
+              )}
             </div>
 
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
               <p className="text-xs font-medium text-amber-900 mb-1">Persyaratan Password:</p>
               <ul className="text-xs text-amber-800 space-y-1">
-                <li>• Minimal 6 karakter</li>
+                <li>• Minimal 8 karakter</li>
                 <li>• Gunakan kombinasi huruf dan angka</li>
               </ul>
             </div>
@@ -640,8 +667,13 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={saveLoading}
-            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            disabled={
+              saveLoading || 
+              !formData.oldPassword || 
+              formData.newPassword.length < 8 || 
+              formData.newPassword !== formData.confirmPassword
+            }
+            className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2"
           >
             {saveLoading ? (
               <LoadingIndicator size="small" text="Mengubah..." inline className="text-white" />

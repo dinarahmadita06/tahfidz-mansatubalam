@@ -168,6 +168,14 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
+    if (password.length < 8) {
+      return NextResponse.json({ 
+        success: false, 
+        code: "PASSWORD_TOO_SHORT", 
+        message: "Password minimal 8 karakter." 
+      }, { status: 400 });
+    }
+
     console.log('✅ Validation passed');
 
     // Validate kelasIds if provided - only AKTIF kelas allowed

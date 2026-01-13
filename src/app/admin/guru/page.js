@@ -294,19 +294,6 @@ export default function AdminGuruPage() {
     }
   };
 
-
-
-  const generatePasswordFromDOB = () => {
-    if (!formData.tanggalLahir) {
-      alert('Tanggal lahir wajib diisi untuk generate password dari tanggal lahir');
-      return;
-    }
-    
-    // Format password as YYYY-MM-DD from tanggalLahir
-    const password = formData.tanggalLahir; // Already in YYYY-MM-DD format
-    setFormData({ ...formData, password });
-  };
-
   const handleDownloadTemplate = () => {
     const templateData = [
       {
@@ -749,7 +736,7 @@ export default function AdminGuruPage() {
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Password awal = tanggal lahir (YYYY-MM-DD)
+                    Password awal = simtaq123
                   </p>
                 </div>
               </div>

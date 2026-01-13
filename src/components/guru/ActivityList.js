@@ -103,7 +103,20 @@ function ActivityItem({ activity }) {
 
   // Determine navigation
   const isDashboard = activity.title?.toLowerCase().includes('membuka dashboard');
-  const targetUrl = activity.targetUrl || activity.metadata?.path || (activity.metadata ? JSON.parse(activity.metadata).path : null);
+  
+  // Safe metadata parsing helper
+  const getPathFromMetadata = (metadata) => {
+    if (!metadata) return null;
+    if (typeof metadata === 'object') return metadata.path;
+    try {
+      const parsed = JSON.parse(metadata);
+      return parsed?.path;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const targetUrl = activity.targetUrl || activity.metadata?.path || getPathFromMetadata(activity.metadata);
   const isNavigable = activity.isNavigable === true || (!!targetUrl && !isDashboard);
 
   const content = (

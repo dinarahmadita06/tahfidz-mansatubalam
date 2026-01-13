@@ -30,7 +30,7 @@ export const authConfig = {
         rememberMe: { label: "Remember Me", type: "text" }
       },
       async authorize(credentials) {
-        const identifier = credentials?.identifier?.trim();
+        const identifier = credentials?.identifier?.trim().toUpperCase();
         const password = credentials?.password;
         const rememberMe = credentials?.rememberMe === 'true';
 
@@ -40,7 +40,7 @@ export const authConfig = {
 
         try {
           // 1. Logic khusus Admin
-          if (identifier === 'admin.tahfidz1') {
+          if (identifier === 'ADMIN.TAHFIDZ1') {
             const user = await withRetry(() =>
               prisma.user.findUnique({
                 where: { username: 'admin.tahfidz1' }
@@ -48,11 +48,11 @@ export const authConfig = {
             );
 
             if (!user || !user.password || user.role !== 'ADMIN') {
-              throw new Error("Username atau password salah");
+              return null;
             }
 
             const isValid = await bcrypt.compare(String(password), user.password);
-            if (!isValid) throw new Error("Username atau password salah");
+            if (!isValid) return null;
 
             if (!user.isActive) throw new Error("Akun Anda tidak aktif.");
 
@@ -74,8 +74,8 @@ export const authConfig = {
               where: { 
                 OR: [
                   { username: identifier },
-                  { username: identifier + '_wali' }, // Support login ortu pake NIS anak
-                  { email: identifier.includes('@') ? identifier : undefined }
+                  { username: identifier + '_WALI' }, // Support login ortu pake NIS anak
+                  { email: identifier.includes('@') ? identifier.toLowerCase() : undefined }
                 ].filter(Boolean),
                 role: { not: 'ADMIN' }
               },
@@ -94,7 +94,7 @@ export const authConfig = {
           );
 
           if (!potentialUsers || potentialUsers.length === 0) {
-            throw new Error("Username atau password salah");
+            return null;
           }
 
           let authenticatedUser = null;
@@ -109,31 +109,6 @@ export const authConfig = {
 
             let isValid = await bcrypt.compare(String(password), user.password);
 
-            // Fallback untuk Siswa/Orang Tua jika password format tanggal (YYYY-MM-DD vs DDMMYYYY)
-            if (!isValid && (user.role === 'ORANG_TUA' || user.role === 'SISWA')) {
-              let birthDate;
-              if (user.role === 'SISWA' && user.siswa?.tanggalLahir) {
-                birthDate = new Date(user.siswa.tanggalLahir);
-              } else if (user.role === 'ORANG_TUA' && user.orangTua?.orangTuaSiswa?.[0]?.siswa?.tanggalLahir) {
-                birthDate = new Date(user.orangTua.orangTuaSiswa[0].siswa.tanggalLahir);
-              }
-
-              if (birthDate) {
-                const ddmmyyyy = String(birthDate.getDate()).padStart(2, '0') + 
-                                 String(birthDate.getMonth() + 1).padStart(2, '0') + 
-                                 birthDate.getFullYear();
-                
-                const yyyymmdd = birthDate.getFullYear() + '-' + 
-                                 String(birthDate.getMonth() + 1).padStart(2, '0') + 
-                                 String(birthDate.getDate()).padStart(2, '0');
-
-                if (String(password) === ddmmyyyy || String(password) === yyyymmdd) {
-                  // Verifikasi ulang terhadap hash di database menggunakan format yyyy-mm-dd (default password di seed)
-                  isValid = await bcrypt.compare(yyyymmdd, user.password);
-                }
-              }
-            }
-
             if (isValid) {
               authenticatedUser = user;
               break;
@@ -141,7 +116,7 @@ export const authConfig = {
           }
 
           if (!authenticatedUser) {
-            throw new Error("Username atau password salah");
+            return null;
           }
 
           if (!authenticatedUser.isActive) {
@@ -158,14 +133,15 @@ export const authConfig = {
             siswaId: authenticatedUser.siswa?.id,
             guruId: authenticatedUser.guru?.id,
             orangTuaId: authenticatedUser.orangTua?.id,
-            rememberMe
+            rememberMe,
+            isRecoveryCodeSetup: authenticatedUser.isRecoveryCodeSetup
           };
         } catch (error) {
-          if (error.message === "Username atau password salah" || error.message.includes("tidak aktif")) {
+          if (error.message.includes("tidak aktif")) {
             throw error;
           }
           console.error('💥 [AUTH] authorize error:', error.message);
-          throw new Error("Username atau password salah");
+          return null; // Return null instead of throwing to avoid CallbackRouteError
         }
       },
     }),
@@ -184,6 +160,7 @@ export const authConfig = {
         token.orangTuaId = user.orangTuaId;
         token.statusSiswa = user.statusSiswa;
         token.rememberMe = user.rememberMe;
+        token.isRecoveryCodeSetup = user.isRecoveryCodeSetup;
 
         // Dynamic session length based on rememberMe
         // Default is 30 days if rememberMe is true, else 1 day (or session-only if possible)
@@ -212,6 +189,7 @@ export const authConfig = {
         session.user.guruId = token.guruId;
         session.user.orangTuaId = token.orangTuaId;
         session.user.statusSiswa = token.statusSiswa;
+        session.user.isRecoveryCodeSetup = token.isRecoveryCodeSetup;
       }
       return session;
     },

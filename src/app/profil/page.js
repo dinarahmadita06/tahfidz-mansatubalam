@@ -97,8 +97,8 @@ export default function ProfilPage() {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      alert('Password minimal 6 karakter');
+    if (passwordData.newPassword.length < 8) {
+      alert('Password minimal 8 karakter');
       return;
     }
 
@@ -391,12 +391,17 @@ export default function ProfilPage() {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Minimal 6 karakter"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    passwordData.newPassword && passwordData.newPassword.length < 8 ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                  placeholder="Minimal 8 karakter"
                 />
+                {passwordData.newPassword && passwordData.newPassword.length < 8 && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">Password minimal 8 karakter.</p>
+                )}
               </div>
 
               <div>
@@ -406,12 +411,25 @@ export default function ProfilPage() {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    passwordData.confirmPassword && passwordData.confirmPassword !== passwordData.newPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
                   placeholder="Ketik ulang password baru"
                 />
+                {passwordData.confirmPassword && passwordData.confirmPassword !== passwordData.newPassword && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">Konfirmasi password tidak cocok.</p>
+                )}
+              </div>
+
+              {/* Password Requirements */}
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs font-medium text-blue-900 mb-2">Persyaratan Password:</p>
+                <ul className="text-xs text-blue-800 space-y-1">
+                  <li>• Minimal 8 karakter</li>
+                </ul>
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -431,8 +449,13 @@ export default function ProfilPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  disabled={
+                    loading || 
+                    !passwordData.currentPassword || 
+                    passwordData.newPassword.length < 8 || 
+                    passwordData.newPassword !== passwordData.confirmPassword
+                  }
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:grayscale"
                 >
                   {loading ? (
                     <LoadingIndicator text="Menyimpan..." size="small" inline className="text-white" />

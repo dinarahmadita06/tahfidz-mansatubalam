@@ -521,8 +521,8 @@ export default function ProfilGuruPage() {
       return;
     }
 
-    if (passwordFormData.newPassword.length < 6) {
-      toast.error('Password minimal 6 karakter');
+    if (passwordFormData.newPassword.length < 8) {
+      toast.error('Password minimal 8 karakter');
       return;
     }
 
@@ -837,11 +837,13 @@ export default function ProfilGuruPage() {
                     <input
                       type={showNewPassword ? 'text' : 'password'}
                       required
-                      minLength={6}
-                      placeholder="Minimal 6 karakter"
+                      minLength={8}
+                      placeholder="Minimal 8 karakter"
                       value={passwordFormData.newPassword}
                       onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                      className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                        passwordFormData.newPassword && passwordFormData.newPassword.length < 8 ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                      }`}
                     />
                     <button
                       type="button"
@@ -852,6 +854,9 @@ export default function ProfilGuruPage() {
                       {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {passwordFormData.newPassword && passwordFormData.newPassword.length < 8 && (
+                    <p className="text-xs text-red-600 mt-1 font-medium">Password minimal 8 karakter.</p>
+                  )}
                 </div>
 
                 {/* Konfirmasi Password */}
@@ -863,11 +868,13 @@ export default function ProfilGuruPage() {
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
-                      minLength={6}
+                      minLength={8}
                       placeholder="Ketik ulang password baru"
                       value={passwordFormData.confirmPassword}
                       onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                        passwordFormData.confirmPassword && passwordFormData.confirmPassword !== passwordFormData.newPassword ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                      }`}
                     />
                     <button
                       type="button"
@@ -878,6 +885,9 @@ export default function ProfilGuruPage() {
                       {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {passwordFormData.confirmPassword && passwordFormData.confirmPassword !== passwordFormData.newPassword && (
+                    <p className="text-xs text-red-600 mt-1 font-medium">Konfirmasi password tidak cocok.</p>
+                  )}
                 </div>
               </div>
 
@@ -885,7 +895,7 @@ export default function ProfilGuruPage() {
               <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <p className="text-xs font-medium text-amber-900 mb-2">Persyaratan Password:</p>
                 <ul className="text-xs text-amber-800 space-y-1">
-                  <li>• Minimal 6 karakter</li>
+                  <li>• Minimal 8 karakter</li>
                 </ul>
               </div>
 
@@ -901,8 +911,13 @@ export default function ProfilGuruPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saveLoading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-all duration-200 disabled:opacity-50"
+                  disabled={
+                    saveLoading || 
+                    !passwordFormData.currentPassword || 
+                    passwordFormData.newPassword.length < 8 || 
+                    passwordFormData.newPassword !== passwordFormData.confirmPassword
+                  }
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-all duration-200 disabled:opacity-50 disabled:grayscale"
                 >
                   {saveLoading ? 'Menyimpan...' : 'Ubah Password'}
                 </button>
