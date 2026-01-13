@@ -80,6 +80,9 @@ export async function GET(request) {
         tanggalSelesai: true,
         createdAt: true,
         lampiran: true,
+        attachmentUrl: true,
+        attachmentName: true,
+        attachmentSize: true,
         user: {
           select: {
             name: true,

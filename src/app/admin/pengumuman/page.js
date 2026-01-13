@@ -22,7 +22,11 @@ import {
   Search,
   Bell,
   BookOpen,
-  Award
+  Award,
+  Paperclip,
+  Upload,
+  File,
+  Trash
 } from 'lucide-react';
 
 const colors = {
@@ -184,12 +188,17 @@ export default function PengumumanPage() {
   const [success, setSuccess] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredPengumuman, setFilteredPengumuman] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Form state - simplified
   const [formData, setFormData] = useState({
     judul: '',
     isi: '',
-    tanggalBerlaku: ''
+    tanggalBerlaku: '',
+    attachmentUrl: '',
+    attachmentName: '',
+    attachmentSize: 0
   });
 
   useEffect(() => {
@@ -280,7 +289,10 @@ export default function PengumumanPage() {
     setFormData({
       judul: item.judul,
       isi: item.isi,
-      tanggalBerlaku: item.tanggalSelesai ? new Date(item.tanggalSelesai).toISOString().split('T')[0] : ''
+      tanggalBerlaku: item.tanggalSelesai ? new Date(item.tanggalSelesai).toISOString().split('T')[0] : '',
+      attachmentUrl: item.attachmentUrl || '',
+      attachmentName: item.attachmentName || '',
+      attachmentSize: item.attachmentSize || 0
     });
     setShowModal(true);
   };
@@ -315,9 +327,14 @@ export default function PengumumanPage() {
     setFormData({
       judul: '',
       isi: '',
-      tanggalBerlaku: ''
+      tanggalBerlaku: '',
+      attachmentUrl: '',
+      attachmentName: '',
+      attachmentSize: 0
     });
     setEditingId(null);
+    setUploadProgress(0);
+    setIsUploading(false);
   };
 
   const openCreateModal = () => {
@@ -329,6 +346,68 @@ export default function PengumumanPage() {
     setShowModal(false);
     resetForm();
     setError('');
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validation: PDF only
+    if (file.type !== 'application/pdf') {
+      setError('Hanya file PDF yang diperbolehkan');
+      return;
+    }
+
+    // Validation: Max 10MB
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError('Ukuran file maksimal 10MB');
+      return;
+    }
+
+    try {
+      setError('');
+      setIsUploading(true);
+      setUploadProgress(10);
+
+      const fileData = new FormData();
+      fileData.append('file', file);
+      fileData.append('folder', 'announcements');
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: fileData
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setFormData(prev => ({
+          ...prev,
+          attachmentUrl: data.url,
+          attachmentName: file.name,
+          attachmentSize: file.size
+        }));
+        setUploadProgress(100);
+      } else {
+        setError(data.message || 'Gagal mengunggah file');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError('Terjadi kesalahan saat mengunggah file');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFormData(prev => ({
+      ...prev,
+      attachmentUrl: '',
+      attachmentName: '',
+      attachmentSize: 0
+    }));
+    setUploadProgress(0);
   };
 
   // Helper function untuk format tanggal
@@ -564,6 +643,76 @@ export default function PengumumanPage() {
                 <p className="text-xs text-gray-500 mt-2">Pengumuman akan otomatis tidak ditampilkan setelah tanggal ini</p>
               </div>
 
+              {/* Lampiran PDF */}
+              <div className="pt-2">
+                <label className="block text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Paperclip size={18} className="text-emerald-600" />
+                  Lampiran PDF <span className="text-gray-400 font-normal text-xs">(Opsional)</span>
+                </label>
+
+                {!formData.attachmentUrl ? (
+                  <div 
+                    className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/30 ${isUploading ? 'opacity-50 pointer-events-none' : 'border-gray-200'}`}
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-emerald-400', 'bg-emerald-50/30'); }}
+                    onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-emerald-400', 'bg-emerald-50/30'); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.classList.remove('border-emerald-400', 'bg-emerald-50/30');
+                      const file = e.dataTransfer.files[0];
+                      if (file) handleFileUpload({ target: { files: [file] } });
+                    }}
+                    onClick={() => document.getElementById('file-upload').click()}
+                  >
+                    <input 
+                      id="file-upload" 
+                      type="file" 
+                      accept=".pdf" 
+                      className="hidden" 
+                      onChange={handleFileUpload} 
+                    />
+                    
+                    {isUploading ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader className="w-10 h-10 text-emerald-500 animate-spin" />
+                        <div className="w-48 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-emerald-500 transition-all duration-300" 
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-sm font-medium text-emerald-600 italic">Sedang mengunggah...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
+                          <Upload size={24} className="text-emerald-500" />
+                        </div>
+                        <p className="text-sm font-bold text-gray-700 mb-1">Pilih file atau tarik ke sini</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider">Hanya PDF (Maks. 10MB)</p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl group">
+                    <div className="w-12 h-12 bg-white rounded-lg border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                      <File size={24} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">{formData.attachmentName}</p>
+                      <p className="text-xs text-emerald-600">{(formData.attachmentSize / (1024 * 1024)).toFixed(2)} MB • PDF File</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveFile}
+                      className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      title="Hapus Lampiran"
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
                 <button
@@ -577,7 +726,7 @@ export default function PengumumanPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || isUploading}
                   className="flex-1 px-6 py-4 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{
                     background: `linear-gradient(135deg, ${colors.emerald[500]} 0%, ${colors.emerald[600]} 100%)`

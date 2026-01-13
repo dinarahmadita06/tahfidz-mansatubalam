@@ -170,7 +170,7 @@ function EmptyState() {
 }
 
 // Table Row Component
-function TasmiTableRow({ tasmi, onEdit, onDelete, isHighlighted }) {
+function TasmiTableRow({ tasmi, onEdit, onDelete, isHighlighted, userRole }) {
   return (
     <tr id={`tasmi-${tasmi.id}`} className={`transition-all duration-500 ${isHighlighted ? 'bg-amber-50 ring-2 ring-amber-300 ring-inset scale-[1.01] shadow-md z-10' : 'hover:bg-emerald-50/30'}`}>
       <td className="px-6 py-4">
@@ -239,13 +239,15 @@ function TasmiTableRow({ tasmi, onEdit, onDelete, isHighlighted }) {
               >
                 <Edit2 size={16} />
               </button>
-              <button
-                onClick={() => onDelete(tasmi.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Hapus"
-              >
-                <Trash2 size={16} />
-              </button>
+              {(tasmi.statusPendaftaran !== 'MENUNGGU' || userRole !== 'SISWA') && (
+                <button
+                  onClick={() => onDelete(tasmi.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Hapus"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </>
           )}
           {(tasmi.statusPendaftaran === 'DISETUJUI' || tasmi.statusPendaftaran === 'SELESAI') && (
@@ -651,6 +653,7 @@ export default function TasmiClient() {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     isHighlighted={highlightId === tasmi.id}
+                    userRole={session?.user?.role}
                   />
                 ))
               )}
@@ -789,13 +792,15 @@ export default function TasmiClient() {
                   <Search size={18} />
                   <span>Lihat Pendaftaran Pending</span>
                 </button>
-                <button 
-                  onClick={() => handleCancelRegistration(pendingTasmi.id)}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-red-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all"
-                >
-                  <Trash2 size={18} />
-                  <span>Batalkan Pendaftaran</span>
-                </button>
+                {session?.user?.role !== 'SISWA' && (
+                  <button 
+                    onClick={() => handleCancelRegistration(pendingTasmi.id)}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-red-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all"
+                  >
+                    <Trash2 size={18} />
+                    <span>Batalkan Pendaftaran</span>
+                  </button>
+                )}
                 <button 
                   onClick={() => setShowPendingModal(false)}
                   className="w-full px-6 py-3 text-gray-500 font-medium hover:text-gray-700 transition-all"
