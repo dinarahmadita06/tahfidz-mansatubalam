@@ -134,6 +134,22 @@ export default function PushNotificationManager() {
         </button>
       </div>
 
+      {status === 'subscribed' && (
+        <div className="mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-start gap-2.5">
+          <Info className="text-emerald-600 flex-shrink-0 mt-0.5" size={14} />
+          <div className="text-[10px] lg:text-xs text-emerald-800 leading-relaxed">
+            <p className="font-bold mb-1 text-emerald-900 text-xs">Tips Notifikasi Muncul Pop-up:</p>
+            Jika notifikasi hanya muncul di tray, aktifkan <b>Pop on screen / High priority</b> di pengaturan HP:
+            <ul className="mt-1 list-disc list-inside space-y-0.5 opacity-90">
+              <li>Tap & tahan notifikasi/icon Chrome</li>
+              <li>Pilih Info Aplikasi → Notifikasi</li>
+              <li>Set kategori ke <b>Alerting/High</b></li>
+              <li>Aktifkan <b>Pop on screen</b></li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       {status === 'denied' && (
         <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2.5">
           <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={14} />

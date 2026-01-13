@@ -96,7 +96,6 @@ export async function sendPushToRoles(roles, payload) {
   try {
     console.log(`[PUSH] Searching for active subscriptions for roles: ${roles.join(', ')}`);
     
-    // Safety check for prisma
     if (!prisma.pushSubscription) {
       console.error('[PUSH] CRITICAL: pushSubscription model missing in Prisma client!');
       return { success: false, error: 'Database model missing' };
@@ -117,12 +116,13 @@ export async function sendPushToRoles(roles, payload) {
       }
     });
 
-    if (subscriptions.length === 0) {
+    const totalTarget = subscriptions.length;
+    if (totalTarget === 0) {
       console.log(`[PUSH] Found 0 active subscriptions for target roles.`);
       return { success: true, count: 0 };
     }
 
-    console.log(`[PUSH] STARTING BROADCAST to ${subscriptions.length} devices...`);
+    console.log(`[PUSH] STARTING BROADCAST to ${totalTarget} devices...`);
 
     const results = await Promise.allSettled(
       subscriptions.map(async (sub) => {
@@ -137,7 +137,7 @@ export async function sendPushToRoles(roles, payload) {
 
           const response = await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
           console.log(`[PUSH] SUCCESS | Code: ${response.statusCode} | User: ${sub.user?.username} (${sub.user?.role})`);
-          return { success: true, endpoint: sub.endpoint, statusCode: response.statusCode };
+          return { success: true, statusCode: response.statusCode };
         } catch (error) {
           const statusCode = error.statusCode || 500;
           
@@ -150,15 +150,17 @@ export async function sendPushToRoles(roles, payload) {
             console.error(`[PUSH] ERROR | Code: ${statusCode} | Msg: ${error.message} | User: ${sub.user?.username}`);
           }
           
-          return { success: false, endpoint: sub.endpoint, statusCode };
+          return { success: false, statusCode };
         }
       })
     );
 
     const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-    console.log(`[PUSH] Summary: ${successCount}/${subscriptions.length} successfully sent.`);
+    const failCount = totalTarget - successCount;
     
-    return { success: true, total: subscriptions.length, successCount };
+    console.log(`[PUSH] BROADCAST COMPLETE | Attempted: ${totalTarget} | Success: ${successCount} | Failed: ${failCount}`);
+    
+    return { success: true, total: totalTarget, successCount, failCount };
   } catch (error) {
     console.error('[PUSH] Fatal error in sendPushToRoles:', error);
     return { success: false, error: error.message };
@@ -170,22 +172,18 @@ export async function sendPushToRoles(roles, payload) {
  */
 export async function broadcastAnnouncement(judul, pengumumanId) {
   try {
-    console.log(`[PUSH] Broadcasting announcement: ${judul}`);
+    console.log(`[PUSH] Standardizing payload for announcement: ${judul}`);
     
     const payload = {
-      id: pengumumanId, // Pass ID for SW tag
       title: "SIMTAQ",
       body: judul || "Pengumuman baru",
       url: `/pengumuman?id=${pengumumanId}`,
+      id: pengumumanId,
       icon: "/logo-man1.png",
-      badge: "/logo-man1.png",
-      data: {
-        id: pengumumanId,
-        url: `/pengumuman?id=${pengumumanId}`
-      }
+      badge: "/logo-man1.png"
     };
 
-    // Target all primary users
+    // Target all primary roles
     const roles = ['GURU', 'SISWA', 'ORANG_TUA'];
     return await sendPushToRoles(roles, payload);
   } catch (error) {
