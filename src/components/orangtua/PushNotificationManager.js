@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, BellOff, Info, AlertTriangle } from 'lucide-react';
+import { Bell, BellOff, Info, AlertTriangle, X } from 'lucide-react';
 import { getPushSubscriptionState, subscribeToPush, unsubscribeFromPush } from '@/lib/push-client';
 import toast from 'react-hot-toast';
+import { createPortal } from 'react-dom';
 
 export default function PushNotificationManager() {
   const [status, setStatus] = useState('loading'); // loading, subscribed, unsubscribed, denied, unsupported
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     checkStatus();
   }, []);
 
@@ -54,6 +58,28 @@ export default function PushNotificationManager() {
         await subscribeToPush();
         setStatus('subscribed');
         toast.success('Notifikasi diaktifkan!');
+
+        // 3. Show guide toast if first time
+        const hasSeenGuide = localStorage.getItem('hasSeenPushPopupGuide');
+        if (!hasSeenGuide) {
+          toast((t) => (
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Push aktif. Lihat panduan pop-up?</p>
+              </div>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  setShowGuide(true);
+                  localStorage.setItem('hasSeenPushPopupGuide', 'true');
+                }}
+                className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors"
+              >
+                Lihat
+              </button>
+            </div>
+          ), { duration: 6000, position: 'bottom-center' });
+        }
       }
     } catch (error) {
       console.error('Error toggling push notifications:', error);
@@ -70,6 +96,62 @@ export default function PushNotificationManager() {
       setIsProcessing(false);
     }
   };
+
+  const GuideModal = () => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowGuide(false)}>
+      <div 
+        className="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative animate-in zoom-in-95 duration-300"
+        onClick={e => e.stopPropagation()}
+      >
+        <button 
+          onClick={() => setShowGuide(false)}
+          className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner">
+            <Info size={24} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Panduan Notifikasi</h3>
+            <p className="text-xs text-gray-500">Optimalkan tampilan notifikasi di HP</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
+            <p className="text-sm text-emerald-900 leading-relaxed">
+              Agar notifikasi muncul sebagai <b>Pop-up (Heads-up)</b> dan tidak hanya di tray, ikuti langkah berikut:
+            </p>
+            <ul className="mt-4 space-y-3">
+              {[
+                "Tap & tahan icon Chrome / Aplikasi SIMTAQ",
+                "Pilih 'Info Aplikasi' → 'Notifikasi'",
+                "Cari kategori notifikasi dan set ke 'Alerting/High'",
+                "Aktifkan opsi 'Pop on screen' atau 'Tampilkan sebagai banner'"
+              ].map((step, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm text-emerald-800">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-200 text-emerald-700 flex items-center justify-center text-[10px] font-bold mt-0.5">
+                    {i + 1}
+                  </span>
+                  {step}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <button
+            onClick={() => setShowGuide(false)}
+            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-200/50"
+          >
+            Mengerti
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   if (status === 'unsupported') return null;
 
@@ -91,6 +173,15 @@ export default function PushNotificationManager() {
                   ? 'Status: Diblokir' 
                   : 'Status: Nonaktif'}
             </p>
+            {status === 'subscribed' && (
+              <button 
+                onClick={() => setShowGuide(true)}
+                className="mt-1 flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 font-semibold text-[10px] lg:text-xs transition-colors"
+              >
+                <Info size={12} />
+                Panduan pop-up
+              </button>
+            )}
           </div>
         </div>
 
@@ -106,22 +197,6 @@ export default function PushNotificationManager() {
           {isProcessing ? 'Memproses...' : status === 'subscribed' ? 'Nonaktifkan' : 'Aktifkan Notifikasi'}
         </button>
       </div>
-
-      {status === 'subscribed' && (
-        <div className="mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-start gap-2.5">
-          <Info className="text-emerald-600 flex-shrink-0 mt-0.5" size={14} />
-          <div className="text-[10px] lg:text-xs text-emerald-800 leading-relaxed">
-            <p className="font-bold mb-1 text-emerald-900 text-xs">Tips Notifikasi Muncul Pop-up:</p>
-            Jika notifikasi hanya muncul di tray, aktifkan <b>Pop on screen / High priority</b> di pengaturan HP:
-            <ul className="mt-1 list-disc list-inside space-y-0.5 opacity-90">
-              <li>Tap & tahan notifikasi/icon Chrome</li>
-              <li>Pilih Info Aplikasi → Notifikasi</li>
-              <li>Set kategori ke <b>Alerting/High</b></li>
-              <li>Aktifkan <b>Pop on screen</b></li>
-            </ul>
-          </div>
-        </div>
-      )}
 
       {status === 'denied' && (
         <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2.5">
@@ -140,6 +215,9 @@ export default function PushNotificationManager() {
           </div>
         </div>
       )}
+
+      {/* Guide Modal Portal */}
+      {showGuide && mounted && createPortal(<GuideModal />, document.body)}
     </div>
   );
 }

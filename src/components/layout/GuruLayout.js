@@ -4,6 +4,7 @@ import { memo } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Sidebar from './Sidebar';
 import PageTransition from '@/components/PageTransition';
+import PushNotificationManager from '@/components/shared/PushNotificationManager';
 
 function GuruLayout({ children }) {
   const { data: session } = useSession();
@@ -38,8 +39,8 @@ function GuruLayout({ children }) {
         {/* Top Bar */}
         <header className="bg-white shadow-sm sticky top-0 z-20">
           <div className="px-4 sm:px-6 lg:px-8 py-2.5">
-            <div className="flex justify-end">
-              {/* Logout button removed - moved to sidebar */}
+            <div className="flex justify-end items-center gap-4">
+              <PushNotificationManager type="header" />
             </div>
           </div>
         </header>

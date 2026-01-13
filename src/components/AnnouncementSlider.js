@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react';
+import PushNotificationManager from './shared/PushNotificationManager';
 
 /**
  * Reusable Announcement Slider Component
@@ -134,7 +135,10 @@ export default function AnnouncementSlider({ announcements = [], loading = false
           </div>
           <div>
             <h3 className="text-sm lg:text-base font-bold text-amber-900 leading-tight">{currentConfig.title}</h3>
-            <p className="text-[10px] lg:text-xs text-amber-700 font-medium">{currentConfig.subtitle}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] lg:text-xs text-amber-700 font-medium">{currentConfig.subtitle}</p>
+              <PushNotificationManager type="nudge" />
+            </div>
           </div>
         </div>
         <Link

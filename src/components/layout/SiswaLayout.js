@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import SiswaSidebarClient from './SiswaSidebarClient';
+import PushNotificationManager from '@/components/shared/PushNotificationManager';
 
 export default async function SiswaLayout({ children }) {
   const session = await auth();
@@ -12,8 +13,8 @@ export default async function SiswaLayout({ children }) {
       <div className="lg:ml-[240px] xl:ml-[260px] transition-all duration-300">
         <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20 border-b border-emerald-100/50">
           <div className="px-4 sm:px-6 lg:px-8 py-2.5">
-            <div className="flex justify-end h-8 lg:h-9">
-              {/* Header content if any */}
+            <div className="flex justify-end items-center gap-4 h-8 lg:h-9">
+              <PushNotificationManager type="header" />
             </div>
           </div>
         </header>
