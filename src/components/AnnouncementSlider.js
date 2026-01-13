@@ -7,6 +7,7 @@ import {
   Megaphone,
   ChevronRight,
   ChevronLeft,
+  FileText
 } from 'lucide-react';
 import PushNotificationManager from './shared/PushNotificationManager';
 
@@ -221,11 +222,18 @@ export default function AnnouncementSlider({ announcements = [], loading = false
                 <h4 className="font-bold text-slate-900 text-xs lg:text-sm leading-tight flex-1 line-clamp-2">
                   {currentAnnouncement.judul?.trim() || '(Tanpa Judul)'}
                 </h4>
-                {isNew(currentAnnouncement.createdAt) && (
-                  <span className="px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 text-[10px] font-bold flex-shrink-0">
-                    BARU
-                  </span>
-                )}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {currentAnnouncement.attachmentUrl && (
+                    <span className="p-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100" title="Ada lampiran PDF">
+                      <FileText size={10} />
+                    </span>
+                  )}
+                  {isNew(currentAnnouncement.createdAt) && (
+                    <span className="px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 text-[10px] font-bold">
+                      BARU
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Content Summary */}

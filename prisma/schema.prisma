@@ -355,6 +355,9 @@ model Pengumuman {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   lampiran       String?
+  attachmentUrl  String?
+  attachmentName String?
+  attachmentSize Int?
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   pengumumanRead PengumumanRead[]
 
