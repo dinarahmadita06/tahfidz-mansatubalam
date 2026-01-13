@@ -39,9 +39,19 @@ export async function POST(request) {
       );
     }
 
-    // Get user from database
+    // Get user from database with relations for birthday fallback check
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
+      include: {
+        siswa: true,
+        orangTua: {
+          include: {
+            orangTuaSiswa: {
+              include: { siswa: true }
+            }
+          }
+        }
+      }
     });
 
     if (!user) {
@@ -52,7 +62,34 @@ export async function POST(request) {
     }
 
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(passwordToCheck, user.password);
+    let isPasswordValid = await bcrypt.compare(passwordToCheck, user.password);
+
+    // Fallback for Siswa/Orang Tua if password format is date (YYYY-MM-DD vs DDMMYYYY)
+    // This matches the logic in auth.config.js to allow default password as old password
+    if (!isPasswordValid && (user.role === 'ORANG_TUA' || user.role === 'SISWA')) {
+      let birthDate;
+      if (user.role === 'SISWA' && user.siswa?.tanggalLahir) {
+        birthDate = new Date(user.siswa.tanggalLahir);
+      } else if (user.role === 'ORANG_TUA' && user.orangTua?.orangTuaSiswa?.[0]?.siswa?.tanggalLahir) {
+        birthDate = new Date(user.orangTua.orangTuaSiswa[0].siswa.tanggalLahir);
+      }
+
+      if (birthDate) {
+        const ddmmyyyy = String(birthDate.getDate()).padStart(2, '0') + 
+                         String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                         birthDate.getFullYear();
+        
+        const yyyymmdd = birthDate.getFullYear() + '-' + 
+                         String(birthDate.getMonth() + 1).padStart(2, '0') + 
+                         String(birthDate.getDate()).padStart(2, '0');
+
+        if (String(passwordToCheck) === ddmmyyyy || String(passwordToCheck) === yyyymmdd) {
+          // Re-verify against the database hash using the default format (yyyy-mm-dd)
+          isPasswordValid = await bcrypt.compare(yyyymmdd, user.password);
+        }
+      }
+    }
+
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Password lama tidak sesuai' },
