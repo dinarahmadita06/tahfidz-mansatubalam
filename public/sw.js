@@ -2,7 +2,7 @@
 
 self.addEventListener('push', function (event) {
   event.waitUntil((async () => {
-    // Default fallback supaya push tanpa payload (DevTools) tetap muncul
+    // 1. Default payload
     let data = {
       title: 'SIMTAQ',
       body: 'Notifikasi baru',
@@ -11,30 +11,36 @@ self.addEventListener('push', function (event) {
       badge: '/logo-man1.png',
     };
 
+    // 2. Try to extract data from push event
     if (event.data) {
       try {
+        // Try parsing as JSON first
         const json = event.data.json();
-        data = {
-          ...data,
-          ...json,
-          icon: json.icon || data.icon,
-          badge: json.badge || data.badge,
-          url: json.url || json.data?.url || data.url,
-        };
+        if (json && typeof json === 'object') {
+          data = {
+            ...data,
+            ...json,
+            // Deep merge some important fields
+            url: json.url || json.data?.url || data.url,
+            id: json.id || json.data?.id || null
+          };
+        }
       } catch (e) {
-        // DevTools sering kirim plain text
-        const text = await event.data.text();
-        data = {
-          ...data,
-          body: text || data.body,
-        };
+        // Fallback to text (common for DevTools testing)
+        try {
+          const text = event.data.text();
+          if (text) data.body = text;
+        } catch (textErr) {
+          console.error('Error reading push text:', textErr);
+        }
       }
     }
 
-    const title = data.title || 'SIMTAQ';
+    // 3. Set unique tag to prevent overwriting different notifications
     const notificationTag = data.id ? `pengumuman-${data.id}` : `push-${Date.now()}`;
 
-    await self.registration.showNotification(title, {
+    // 4. Show the notification
+    return self.registration.showNotification(data.title || 'SIMTAQ', {
       body: data.body || 'Notifikasi baru',
       icon: data.icon || '/logo-man1.png',
       badge: data.badge || '/logo-man1.png',
