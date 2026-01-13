@@ -455,6 +455,26 @@ export default function PerkembanganAnakPage() {
     }
   };
 
+  const handleSelectChild = (child) => {
+    setSelectedChild(child);
+    
+    // Log activity: Ganti Anak
+    try {
+      fetch('/api/orangtua/activity/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ORTU_GANTI_ANAK',
+          title: 'Mengganti Anak (Perkembangan)',
+          description: `Anda memilih anak: ${child.nama}`,
+          metadata: { siswaId: child.id, nama: child.nama }
+        })
+      });
+    } catch (err) {
+      console.error('Failed to log ganti anak:', err);
+    }
+  };
+
   return (
     <OrangtuaLayout>
       <div className="min-h-screen bg-gray-50">
@@ -485,7 +505,7 @@ export default function PerkembanganAnakPage() {
                     statusSiswa: c.statusSiswa,
                   }))}
                   selectedChild={selectedChild}
-                  onSelectChild={setSelectedChild}
+                  onSelectChild={handleSelectChild}
                 />
               )}
             </div>

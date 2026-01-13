@@ -7,12 +7,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getActivityDisplay } from '@/lib/helpers/siswaActivityConstants';
 import { Clock, ChevronRight } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 
 export default function AktivitasTerkiniWidget({ initialData = null }) {
+  const router = useRouter();
   const [activities, setActivities] = useState(initialData || []);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(null);
@@ -103,12 +105,14 @@ export default function AktivitasTerkiniWidget({ initialData = null }) {
             {activities.map((activity) => {
               const display = getActivityDisplay(activity.action);
               const cta = getActivityCTA(activity.action);
+              
+              // Determine if item is navigable based on data or title
+              const isDashboard = activity.title?.toLowerCase().includes('membuka dashboard');
+              const isNavigable = activity.isNavigable === true || (!!cta && !isDashboard);
+              const targetUrl = activity.targetUrl || cta?.href;
 
-              return (
-                <div
-                  key={activity.id}
-                  className="flex items-start gap-3 lg:gap-4 p-3 lg:p-4 rounded-lg bg-white/50 border border-gray-100 hover:bg-white/80 transition-colors"
-                >
+              const content = (
+                <>
                   {/* Icon */}
                   <div className="text-2xl flex-shrink-0 pt-1">{display.icon}</div>
 
@@ -118,22 +122,38 @@ export default function AktivitasTerkiniWidget({ initialData = null }) {
                     <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">
                       {activity.description}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{activity.relativeTime}</p>
+                    <p className="text-xs text-gray-500 mt-1" suppressHydrationWarning>
+                      {activity.relativeTime}
+                    </p>
                   </div>
 
-                  {/* CTA */}
-                  {cta ? (
-                    <Link
-                      href={cta.href}
-                      className="flex-shrink-0 px-3 py-2 text-xs font-medium text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors whitespace-nowrap"
-                    >
-                      {cta.text}
-                    </Link>
-                  ) : (
-                    <div className="flex-shrink-0 text-gray-400 pt-1">
-                      <ChevronRight size={16} />
+                  {/* Chevron only for navigable items */}
+                  {isNavigable && (
+                    <div className="flex-shrink-0 text-emerald-500 pt-1">
+                      <ChevronRight size={18} />
                     </div>
                   )}
+                </>
+              );
+
+              if (isNavigable && targetUrl) {
+                return (
+                  <button
+                    key={activity.id}
+                    onClick={() => router.push(targetUrl)}
+                    className="w-full flex items-start text-left gap-3 lg:gap-4 p-3 lg:p-4 rounded-lg bg-white/50 border border-gray-100 hover:bg-white/80 hover:border-emerald-200 hover:shadow-sm transition-all group"
+                  >
+                    {content}
+                  </button>
+                );
+              }
+
+              return (
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-3 lg:gap-4 p-3 lg:p-4 rounded-lg bg-gray-50/50 border border-transparent"
+                >
+                  {content}
                 </div>
               );
             })}

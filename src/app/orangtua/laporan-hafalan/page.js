@@ -268,6 +268,29 @@ export default function LaporanHafalanPage() {
     )
   }
 
+  const handleSelectChild = (childId) => {
+    setSelectedChild(childId);
+    
+    // Log activity: Ganti Anak
+    const child = children.find(c => c.id === childId);
+    if (child) {
+      try {
+        fetch('/api/orangtua/activity/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'ORTU_GANTI_ANAK',
+            title: 'Mengganti Anak (Laporan)',
+            description: `Anda memilih anak: ${child.nama}`,
+            metadata: { siswaId: child.id, nama: child.nama }
+          })
+        });
+      } catch (err) {
+        console.error('Failed to log ganti anak:', err);
+      }
+    }
+  };
+
   return (
     <OrangtuaLayout>
       <div className="w-full space-y-6">
@@ -318,7 +341,7 @@ export default function LaporanHafalanPage() {
               </label>
               <select
                 value={selectedChild}
-                onChange={(e) => setSelectedChild(e.target.value)}
+                onChange={(e) => handleSelectChild(e.target.value)}
                 className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
               >
                 <option value="">Pilih anak...</option>

@@ -262,7 +262,7 @@ export async function ClassManagementSection({ userId }) {
 
 export async function RecentActivitySection({ userId }) {
   console.time(`RecentActivitySection-${userId}`);
-  const activities = await prisma.activityLog.findMany({
+  const rawActivities = await prisma.activityLog.findMany({
     where: { 
         actorId: userId,
         actorRole: 'GURU'
@@ -276,8 +276,25 @@ export async function RecentActivitySection({ userId }) {
       metadata: true,
     },
     orderBy: { createdAt: 'desc' },
-    take: 5
+    take: 20 // Fetch more to allow filtering
   });
+
+  // Filtering: Prioritize non-auth actions and limit login/logout to max 1 total
+  const filteredActivities = [];
+  let authCount = 0;
+  for (const activity of rawActivities) {
+    const isAuth = activity.action?.includes('LOGIN') || activity.action?.includes('LOGOUT');
+    if (isAuth) {
+      if (authCount < 1) {
+        filteredActivities.push(activity);
+        authCount++;
+      }
+    } else {
+      filteredActivities.push(activity);
+    }
+    if (filteredActivities.length >= 5) break;
+  }
+
   console.timeEnd(`RecentActivitySection-${userId}`);
 
   return (
@@ -289,7 +306,7 @@ export async function RecentActivitySection({ userId }) {
         <h3 className="text-lg lg:text-xl font-bold text-blue-800">Aktivitas Terbaru</h3>
       </div>
 
-      <ActivityList activities={activities} />
+      <ActivityList activities={filteredActivities} />
     </div>
   );
 }

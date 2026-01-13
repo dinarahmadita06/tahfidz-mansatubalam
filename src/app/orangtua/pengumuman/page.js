@@ -79,6 +79,26 @@ export default function OrangtuaPengumumanPage() {
     });
   };
 
+  const handleCardClick = (item) => {
+    setSelectedPengumuman(item);
+    
+    // Log activity: Lihat Detail Pengumuman
+    try {
+      fetch('/api/orangtua/activity/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ORTU_LIHAT_DETAIL_PENGUMUMAN',
+          title: 'Melihat Detail Pengumuman',
+          description: `Anda melihat detail pengumuman: ${item.judul}`,
+          metadata: { pengumumanId: item.id, judul: item.judul }
+        })
+      });
+    } catch (err) {
+      console.error('Failed to log activity:', err);
+    }
+  };
+
   return (
     <OrangtuaLayout>
       {/* Background Gradient - SIMTAQ Style */}
@@ -169,7 +189,7 @@ export default function OrangtuaPengumumanPage() {
                   <AnnouncementCard 
                     key={item.id} 
                     announcement={item} 
-                    onClick={() => setSelectedPengumuman(item)}
+                    onClick={() => handleCardClick(item)}
                   />
                 ))}
               </div>

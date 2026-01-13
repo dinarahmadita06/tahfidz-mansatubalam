@@ -13,7 +13,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { action = 'LOGIN' } = body;
+    const { action = 'LOGIN', title, description, metadata } = body;
 
     // Determine role-specific action
     let activityAction;
@@ -45,9 +45,9 @@ export async function POST(request) {
       actorRole: session.user.role,
       actorName: session.user.name,
       action: activityAction,
-      title: action === 'LOGIN' ? 'User login' : 'User logout',
-      description: `${session.user.name} (${session.user.role}) ${action === 'LOGIN' ? 'berhasil login' : 'berhasil logout'}`,
-      metadata: {
+      title: title || (action === 'LOGIN' ? 'User login' : (action === 'LOGOUT' ? 'User logout' : 'Aktivitas User')),
+      description: description || `${session.user.name} (${session.user.role}) ${action === 'LOGIN' ? 'berhasil login' : (action === 'LOGOUT' ? 'berhasil logout' : 'melakukan aktivitas')}`,
+      metadata: metadata || {
         action,
         timestamp: new Date().toISOString(),
       },

@@ -106,6 +106,22 @@ export default function PengumumanClient({ initialPengumuman }) {
   const handleCardClick = (announcement) => {
     setSelectedAnnouncement(announcement);
     setIsDetailOpen(true);
+
+    // Log activity: Lihat Detail Pengumuman
+    try {
+      fetch('/api/activity-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'GURU_BUKA_PENGUMUMAN',
+          title: 'Melihat Detail Pengumuman',
+          description: `Anda melihat detail pengumuman: ${announcement.judul}`,
+          metadata: { pengumumanId: announcement.id, judul: announcement.judul }
+        })
+      });
+    } catch (err) {
+      console.error('Failed to log activity:', err);
+    }
   };
 
   const handleCloseDetail = () => {
