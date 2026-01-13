@@ -1,7 +1,75 @@
 'use client';
 
-import { X, Calendar, Paperclip, FileText, ExternalLink, Download } from 'lucide-react';
+import { X, Calendar, Paperclip, FileText, ExternalLink, Download, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+
+function PDFPreview({ announcement }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  
+  // Use the proxy URL instead of direct blob URL to ensure correct headers
+  const previewUrl = `/api/attachments/${announcement.id}`;
+
+  useEffect(() => {
+    setLoading(true);
+    setError(false);
+    
+    // Safety timeout: if it takes > 10s, show fallback
+    const timer = setTimeout(() => {
+      if (loading) setLoading(false);
+    }, 10000);
+    
+    return () => clearTimeout(timer);
+  }, [announcement.id]);
+
+  return (
+    <div className="mt-6 rounded-2xl border border-emerald-100 overflow-hidden bg-white shadow-inner aspect-[3/4] sm:aspect-[16/10] relative group">
+      {loading && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mb-2" />
+          <p className="text-xs font-medium text-gray-500">Memuat preview...</p>
+        </div>
+      )}
+
+      {error ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+          <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+          <h4 className="text-sm font-bold text-gray-800 mb-1">Preview tidak tersedia</h4>
+          <p className="text-xs text-gray-500 mb-4">
+            Klik tombol "Buka" untuk melihat dokumen PDF secara lengkap.
+          </p>
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm active:scale-95"
+          >
+            Buka PDF
+          </a>
+        </div>
+      ) : (
+        <iframe
+          src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+          className="w-full h-full border-none"
+          title="PDF Preview"
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            setError(true);
+            setLoading(false);
+          }}
+        />
+      )}
+      
+      {/* Overlay info */}
+      {!loading && !error && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          Tampilan Preview
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AnnouncementDetailModal({ announcement, isOpen, onClose }) {
   if (!announcement) return null;
@@ -106,14 +174,7 @@ export default function AnnouncementDetailModal({ announcement, isOpen, onClose 
                     </div>
 
                     {/* PDF Preview Embed */}
-                    <div className="mt-6 rounded-2xl border border-emerald-100 overflow-hidden bg-white shadow-inner aspect-[3/4] sm:aspect-[16/10] relative group">
-                      <iframe
-                        src={`${announcement.attachmentUrl}#toolbar=0`}
-                        className="w-full h-full border-none"
-                        title="PDF Preview"
-                      />
-                      <div className="absolute inset-0 bg-transparent group-hover:bg-black/5 transition-colors pointer-events-none"></div>
-                    </div>
+                    <PDFPreview announcement={announcement} />
                   </div>
                 </div>
               )}
