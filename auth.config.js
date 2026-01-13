@@ -27,10 +27,12 @@ export const authConfig = {
       credentials: {
         identifier: { label: "Username/NIS", type: "text" }, // Standardized field name
         password: { label: "Password", type: "password" },
+        rememberMe: { label: "Remember Me", type: "text" }
       },
       async authorize(credentials) {
         const identifier = credentials?.identifier?.trim();
         const password = credentials?.password;
+        const rememberMe = credentials?.rememberMe === 'true';
 
         if (!identifier || !password) {
           throw new Error("Username atau password salah");
@@ -54,7 +56,15 @@ export const authConfig = {
 
             if (!user.isActive) throw new Error("Akun Anda tidak aktif.");
 
-            return { id: user.id, email: user.email, username: user.username, name: user.name, role: user.role, isActive: user.isActive };
+            return { 
+              id: user.id, 
+              email: user.email, 
+              username: user.username, 
+              name: user.name, 
+              role: user.role, 
+              isActive: user.isActive,
+              rememberMe 
+            };
           }
 
           // 2. Logic untuk Guru, Siswa, dan Orang Tua
@@ -148,6 +158,7 @@ export const authConfig = {
             siswaId: authenticatedUser.siswa?.id,
             guruId: authenticatedUser.guru?.id,
             orangTuaId: authenticatedUser.orangTua?.id,
+            rememberMe
           };
         } catch (error) {
           if (error.message === "Username atau password salah" || error.message.includes("tidak aktif")) {
@@ -163,7 +174,6 @@ export const authConfig = {
     async jwt({ token, user }) {
       if (user) {
 // No log for performance
-
         token.id = user.id;
         token.role = user.role;
         token.username = user.username;
@@ -173,6 +183,19 @@ export const authConfig = {
         token.guruId = user.guruId;
         token.orangTuaId = user.orangTuaId;
         token.statusSiswa = user.statusSiswa;
+        token.rememberMe = user.rememberMe;
+
+        // Dynamic session length based on rememberMe
+        // Default is 30 days if rememberMe is true, else 1 day (or session-only if possible)
+        const ONE_DAY = 24 * 60 * 60;
+        const THIRTY_DAYS = 30 * ONE_DAY;
+        
+        const now = Math.floor(Date.now() / 1000);
+        if (user.rememberMe) {
+          token.exp = now + THIRTY_DAYS;
+        } else {
+          token.exp = now + ONE_DAY; // Faster expiry for privacy
+        }
       }
       return token;
     },

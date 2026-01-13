@@ -1,19 +1,29 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Lock, Eye, EyeOff, BookOpen, Mail } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, BookOpen, Mail, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Load remembered username
+  useEffect(() => {
+    const savedIdentifier = localStorage.getItem('remembered_identifier');
+    if (savedIdentifier) {
+      setIdentifier(savedIdentifier);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +36,7 @@ export default function LoginPage() {
       const result = await signIn('credentials', {
         identifier,
         password,
+        rememberMe: rememberMe ? 'true' : 'false',
         redirect: false,
       });
 
@@ -49,6 +60,13 @@ export default function LoginPage() {
         }
         setLoading(false);
         return;
+      }
+
+      // Handle "Remember Me" locally
+      if (rememberMe) {
+        localStorage.setItem('remembered_identifier', identifier);
+      } else {
+        localStorage.removeItem('remembered_identifier');
       }
 
       // Login successful
@@ -153,19 +171,21 @@ export default function LoginPage() {
 
               {/* Username/Email/HP Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">
                   Username 
                 </label>
                 <div className="relative">
                   <Mail size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600" />
                   <input
                     type="text"
-                    id="email"
+                    id="identifier"
+                    name="username"
+                    autoComplete="username"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     required
                     className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-300 focus:border-transparent transition-all"
-                    placeholder="contoh: G001, 202512, dll"
+                    placeholder="contoh: 202512, 120A dll"
                   />
                 </div>
               </div>
@@ -180,6 +200,8 @@ export default function LoginPage() {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
+                    name="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -194,6 +216,23 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+              </div>
+
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-md transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 group-hover:border-emerald-400"></div>
+                    <CheckCircle2 size={12} className="absolute inset-0 m-auto text-white opacity-0 peer-checked:opacity-100 transition-opacity" strokeWidth={3} />
+                  </div>
+                  <span className="text-sm text-gray-600 group-hover:text-emerald-700 transition-colors">Ingat saya</span>
+                </label>
               </div>
 
               {/* Login Button */}
