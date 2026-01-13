@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Contoh: 202512 atau G001"
+                  placeholder="Contoh: 202512 atau 120A"
                   required
                   className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-300 focus:border-transparent transition-all"
                 />
