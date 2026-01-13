@@ -257,21 +257,6 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
               )}
             </button>
           </div>
-
-          {/* Footer Tips */}
-          {!isCollapsed && (
-            <div className="p-3 border-t border-emerald-100/50 bg-gradient-to-br from-emerald-50 to-amber-50">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-emerald-100/50">
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles size={14} className="text-amber-500" />
-                  <p className="text-xs font-bold text-emerald-900">Tips Hari Ini</p>
-                </div>
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  Setor hafalan secara rutin setiap hari untuk hasil maksimal!
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </aside>
     </>

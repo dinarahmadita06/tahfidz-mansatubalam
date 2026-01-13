@@ -5,7 +5,6 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
 import DashboardHeader from '@/components/guru/dashboard/DashboardHeader';
-import PushNotificationManager from '@/components/shared/PushNotificationManager';
 import { 
   MotivationCard, 
   StatsSection, 
@@ -79,9 +78,6 @@ async function DashboardContent() {
         greeting={greeting} 
         date={formattedDate} 
       />
-
-      {/* Push Notification Manager */}
-      <PushNotificationManager />
 
       {/* Motivation Card - Moved below header */}
       <MotivationCard />
