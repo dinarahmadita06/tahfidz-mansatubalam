@@ -5,9 +5,11 @@ import { useSession, signOut } from 'next-auth/react';
 import Sidebar from './Sidebar';
 import PageTransition from '@/components/PageTransition';
 import PushNotificationManager from '@/components/shared/PushNotificationManager';
+import { useActivityTracking } from '@/hooks/useActivityTracking';
 
 function GuruLayout({ children }) {
   const { data: session } = useSession();
+  useActivityTracking('GURU');
 
   const handleLogout = async () => {
     try {

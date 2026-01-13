@@ -26,7 +26,7 @@ export async function GET(request) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '5'), 20);
 
     // Fetch recent activities for this parent
-    const activities = await prisma.activityLog.findMany({
+    const rawActivities = await prisma.activityLog.findMany({
       where: {
         actorId: session.user.id,
         actorRole: 'ORANG_TUA'
@@ -43,12 +43,32 @@ export async function GET(request) {
       orderBy: {
         createdAt: 'desc'
       },
-      take: limit
+      take: 20 // Fetch more to allow filtering
     });
+
+    // Filtering: Prioritize non-login/logout activities
+    // Limit LOGIN/LOGOUT to max 1 item total
+    const filteredActivities = [];
+    let authCount = 0;
+
+    for (const activity of rawActivities) {
+      const isAuth = activity.action?.includes('LOGIN') || activity.action?.includes('LOGOUT');
+      
+      if (isAuth) {
+        if (authCount < 1) {
+          filteredActivities.push(activity);
+          authCount++;
+        }
+      } else {
+        filteredActivities.push(activity);
+      }
+      
+      if (filteredActivities.length >= limit) break;
+    }
 
     return NextResponse.json(
       {
-        activities: activities || []
+        activities: filteredActivities || []
       },
       {
         headers: {
