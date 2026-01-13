@@ -32,6 +32,7 @@ self.addEventListener('push', function (event) {
     }
 
     const title = data.title || 'SIMTAQ';
+    const notificationTag = data.id ? `pengumuman-${data.id}` : `push-${Date.now()}`;
 
     await self.registration.showNotification(title, {
       body: data.body || 'Notifikasi baru',
@@ -41,7 +42,7 @@ self.addEventListener('push', function (event) {
         url: data.url || '/pengumuman',
       },
       vibrate: [100, 50, 100],
-      tag: 'announcement-notification',
+      tag: notificationTag,
       renotify: true,
     });
   })());

@@ -27,12 +27,19 @@ export async function sendPushNotification(userId, payload) {
         userId,
         isActive: true,
       },
+      include: {
+        user: {
+          select: { username: true, role: true }
+        }
+      }
     });
 
     if (subscriptions.length === 0) {
-      console.log(`No active push subscriptions found for user ${userId}`);
+      console.log(`[PUSH] No active push subscriptions found for user ${userId}`);
       return { success: false, message: 'No subscriptions found' };
     }
+
+    console.log(`[PUSH] Target: ${subscriptions.length} devices for user ${userId}`);
 
     const results = await Promise.allSettled(
       subscriptions.map(async (sub) => {
@@ -45,19 +52,19 @@ export async function sendPushNotification(userId, payload) {
             },
           };
 
-          await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
-          return { success: true, endpoint: sub.endpoint };
+          const response = await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+          console.log(`[PUSH] SUCCESS | Code: ${response.statusCode} | User: ${sub.user?.username} (${sub.user?.role})`);
+          return { success: true, endpoint: sub.endpoint, statusCode: response.statusCode };
         } catch (error) {
-          // Cleanup invalid subscriptions (410 Gone or 404 Not Found)
-          if (error.statusCode === 410 || error.statusCode === 404) {
-            console.log(`[PUSH] Deleting invalid subscription for user ${userId}: ${sub.endpoint}`);
-            await prisma.pushSubscription.delete({
-              where: { id: sub.id },
-            });
+          const statusCode = error.statusCode || 500;
+          
+          if (statusCode === 410 || statusCode === 404) {
+            console.warn(`[PUSH] DEACTIVATE | Code: ${statusCode} | Removing expired subscription for ${sub.user?.username}`);
+            await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
           } else {
-            console.error(`[PUSH] Error sending to ${sub.endpoint}:`, error.message);
+            console.error(`[PUSH] ERROR | Code: ${statusCode} | Msg: ${error.message} | User: ${sub.user?.username}`);
           }
-          return { success: false, endpoint: sub.endpoint, error: error.message };
+          return { success: false, endpoint: sub.endpoint, statusCode };
         }
       })
     );
@@ -87,29 +94,78 @@ export async function sendPushToUsers(userIds, payload) {
  */
 export async function sendPushToRoles(roles, payload) {
   try {
-    const users = await prisma.user.findMany({
+    const subscriptions = await prisma.pushSubscription.findMany({
       where: {
-        role: { in: roles },
         isActive: true,
+        user: {
+          role: { in: roles },
+          isActive: true
+        }
       },
-      select: { id: true },
+      include: {
+        user: {
+          select: { username: true, role: true }
+        }
+      }
     });
 
-    const userIds = users.map((u) => u.id);
-    return sendPushToUsers(userIds, payload);
+    if (subscriptions.length === 0) {
+      console.log(`[PUSH] No active subscriptions found for roles: ${roles.join(', ')}`);
+      return { success: true, count: 0 };
+    }
+
+    console.log(`[PUSH] Target: ${subscriptions.length} devices for roles: ${roles.join(', ')}`);
+
+    const results = await Promise.allSettled(
+      subscriptions.map(async (sub) => {
+        try {
+          const pushSubscription = {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth,
+            },
+          };
+
+          const response = await webpush.sendNotification(pushSubscription, JSON.stringify(payload));
+          console.log(`[PUSH] SUCCESS | Code: ${response.statusCode} | User: ${sub.user?.username} (${sub.user?.role})`);
+          return { success: true, endpoint: sub.endpoint, statusCode: response.statusCode };
+        } catch (error) {
+          const statusCode = error.statusCode || 500;
+          
+          if (statusCode === 410 || statusCode === 404) {
+            console.warn(`[PUSH] DEACTIVATE | Code: ${statusCode} | Removing expired subscription for ${sub.user?.username}`);
+            await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
+          } else if (statusCode === 401 || statusCode === 403) {
+            console.error(`[PUSH] CONFIG ERROR | Code: ${statusCode} | VAPID keys invalid or unauthorized`);
+          } else {
+            console.error(`[PUSH] ERROR | Code: ${statusCode} | Msg: ${error.message} | User: ${sub.user?.username}`);
+          }
+          
+          return { success: false, endpoint: sub.endpoint, statusCode };
+        }
+      })
+    );
+
+    const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+    console.log(`[PUSH] Summary: ${successCount}/${subscriptions.length} successfully sent.`);
+    
+    return { success: true, total: subscriptions.length, successCount };
   } catch (error) {
-    console.error(`Error in sendPushToRoles for roles ${roles}:`, error);
+    console.error('[PUSH] Fatal error in sendPushToRoles:', error);
+    return { success: false, error: error.message };
   }
 }
 
 /**
- * Broadcast announcement to all relevant roles (GURU & SISWA only)
+ * Broadcast announcement to all relevant roles (GURU, SISWA, ORANG_TUA)
  */
 export async function broadcastAnnouncement(judul, pengumumanId) {
   try {
     console.log(`[PUSH] Broadcasting announcement: ${judul}`);
     
     const payload = {
+      id: pengumumanId, // Pass ID for SW tag
       title: "SIMTAQ",
       body: judul || "Pengumuman baru",
       url: `/pengumuman?id=${pengumumanId}`,
@@ -121,17 +177,9 @@ export async function broadcastAnnouncement(judul, pengumumanId) {
       }
     };
 
-    // Send to GURU and SISWA as per rule
-    const roles = ['GURU', 'SISWA'];
-    const results = await sendPushToRoles(roles, payload);
-    
-    if (results && results.length > 0) {
-      const totalSuccess = results.reduce((acc, r) => acc + (r.status === 'fulfilled' ? r.value.successCount || 0 : 0), 0);
-      const totalFail = results.reduce((acc, r) => acc + (r.status === 'fulfilled' ? r.value.failCount || 0 : 0), 0);
-      console.log(`[PUSH] Broadcast complete. Total targets: ${results.length} users. Total success: ${totalSuccess} devices, Total fail: ${totalFail} devices.`);
-    }
-
-    return { success: true };
+    // Target all primary users
+    const roles = ['GURU', 'SISWA', 'ORANG_TUA'];
+    return await sendPushToRoles(roles, payload);
   } catch (error) {
     console.error('[PUSH] Error in broadcastAnnouncement:', error);
     return { success: false, error: error.message };
