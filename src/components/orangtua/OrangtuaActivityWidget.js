@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Clock, ChevronRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatTimeAgo, getActivityIcon } from '@/lib/helpers/activityLoggerV2';
 import EmptyState from '@/components/shared/EmptyState';
@@ -9,6 +10,7 @@ import EmptyState from '@/components/shared/EmptyState';
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 
 export default function OrangtuaActivityWidget() {
+  const router = useRouter();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,21 +64,48 @@ export default function OrangtuaActivityWidget() {
         />
       ) : (
         <div className="space-y-3">
-          {activities.map((activity) => (
-            <div
-              key={activity.id}
-              className="flex items-start gap-3 p-2.5 bg-gray-50 hover:bg-amber-50/50 rounded-lg transition-colors border border-gray-100"
-            >
-              <span className="flex-shrink-0 text-lg mt-0.5">{getActivityIcon(activity.action)}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{activity.title}</p>
-                <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{activity.description}</p>
+          {activities.map((activity) => {
+            const isDashboard = activity.title?.toLowerCase().includes('membuka dashboard');
+            const targetUrl = activity.targetUrl || activity.metadata?.path || (activity.metadata ? JSON.parse(activity.metadata).path : null);
+            const isNavigable = activity.isNavigable === true || (!!targetUrl && !isDashboard);
+
+            const content = (
+              <>
+                <span className="flex-shrink-0 text-lg mt-0.5">{getActivityIcon(activity.action)}</span>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{activity.title}</p>
+                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{activity.description}</p>
+                  <time className="text-[10px] text-gray-400 mt-1 block" suppressHydrationWarning>
+                    {formatTimeAgo(activity.createdAt)}
+                  </time>
+                </div>
+                {isNavigable && (
+                  <ChevronRight size={16} className="text-emerald-500 self-center" />
+                )}
+              </>
+            );
+
+            if (isNavigable && targetUrl) {
+              return (
+                <button
+                  key={activity.id}
+                  onClick={() => router.push(targetUrl)}
+                  className="w-full flex items-start gap-3 p-3 bg-gray-50 hover:bg-emerald-50 hover:border-emerald-200 rounded-xl transition-all border border-transparent shadow-sm group"
+                >
+                  {content}
+                </button>
+              );
+            }
+
+            return (
+              <div
+                key={activity.id}
+                className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-transparent"
+              >
+                {content}
               </div>
-              <time className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap ml-2">
-                {formatTimeAgo(activity.createdAt)}
-              </time>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

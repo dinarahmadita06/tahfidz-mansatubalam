@@ -63,13 +63,25 @@ export const ACTIVITY_ACTIONS = {
   ORTU_BUKA_DASHBOARD: 'ORTU_BUKA_DASHBOARD',
   ORTU_GANTI_ANAK: 'ORTU_GANTI_ANAK',
   ORTU_LIHAT_PENGUMUMAN: 'ORTU_LIHAT_PENGUMUMAN',
+  ORTU_LIHAT_DETAIL_PENGUMUMAN: 'ORTU_LIHAT_DETAIL_PENGUMUMAN',
   ORTU_LIHAT_NILAI_HAFALAN: 'ORTU_LIHAT_NILAI_HAFALAN',
   ORTU_LIHAT_LAPORAN: 'ORTU_LIHAT_LAPORAN',
   ORTU_LIHAT_PRESENSI: 'ORTU_LIHAT_PRESENSI',
+  ORTU_BUKA_PROFIL: 'ORTU_BUKA_PROFIL',
   ORTU_UBAH_PROFIL: 'ORTU_UBAH_PROFIL',
   ORTU_UBAH_PASSWORD: 'ORTU_UBAH_PASSWORD',
   ORTU_LOGIN: 'ORTU_LOGIN',
   ORTU_LOGOUT: 'ORTU_LOGOUT',
+  
+  // GURU Navigation/View Activities
+  GURU_BUKA_KELAS: 'GURU_BUKA_KELAS',
+  GURU_BUKA_DETAIL_SISWA: 'GURU_BUKA_DETAIL_SISWA',
+  GURU_BUKA_TASMI: 'GURU_BUKA_TASMI',
+  GURU_BUKA_TAHSIN: 'GURU_BUKA_TAHSIN',
+  GURU_BUKA_PENGUMUMAN: 'GURU_BUKA_PENGUMUMAN',
+  GURU_BUAT_PENGUMUMAN: 'GURU_BUAT_PENGUMUMAN',
+  GURU_BUKA_LAPORAN: 'GURU_BUKA_LAPORAN',
+  GURU_REFRESH_DATA: 'GURU_REFRESH_DATA',
   
   // ALIASES for consistency as requested
   ORANGTUA_UBAH_PROFIL: 'ORTU_UBAH_PROFIL',
@@ -189,6 +201,22 @@ export function getActivityIcon(action) {
     [ACTIVITY_ACTIONS.ORTU_UBAH_PASSWORD]: '🔑',
     [ACTIVITY_ACTIONS.ORTU_GANTI_ANAK]: '🔄',
     [ACTIVITY_ACTIONS.ORTU_LOGIN]: '🔑',
+    [ACTIVITY_ACTIONS.ORTU_BUKA_DASHBOARD]: '🏠',
+    [ACTIVITY_ACTIONS.ORTU_LIHAT_PENGUMUMAN]: '📢',
+    [ACTIVITY_ACTIONS.ORTU_LIHAT_DETAIL_PENGUMUMAN]: '📄',
+    [ACTIVITY_ACTIONS.ORTU_LIHAT_NILAI_HAFALAN]: '📈',
+    [ACTIVITY_ACTIONS.ORTU_LIHAT_LAPORAN]: '📊',
+    [ACTIVITY_ACTIONS.ORTU_LIHAT_PRESENSI]: '✅',
+    [ACTIVITY_ACTIONS.ORTU_BUKA_PROFIL]: '👤',
+    [ACTIVITY_ACTIONS.GURU_BUKA_KELAS]: '🏫',
+    [ACTIVITY_ACTIONS.GURU_BUKA_DETAIL_SISWA]: '👦',
+    [ACTIVITY_ACTIONS.GURU_BUKA_TASMI]: '📋',
+    [ACTIVITY_ACTIONS.GURU_BUKA_TAHSIN]: '📚',
+    [ACTIVITY_ACTIONS.GURU_BUKA_PENGUMUMAN]: '📢',
+    [ACTIVITY_ACTIONS.GURU_BUAT_PENGUMUMAN]: '➕',
+    [ACTIVITY_ACTIONS.GURU_BUKA_LAPORAN]: '📊',
+    [ACTIVITY_ACTIONS.GURU_REFRESH_DATA]: '🔄',
+    [ACTIVITY_ACTIONS.GURU_BUKA_PROFIL]: '👤',
   };
 
   return iconMap[action] || '📌';
@@ -216,26 +244,36 @@ export function getActivityColor(action) {
 }
 
 /**
- * Convert DateTime to human-readable relative time
- * e.g., "Baru saja", "5 menit lalu", "2 jam lalu"
+ * Convert DateTime to human-readable relative time or fixed format
+ * <= 24h: "X menit/jam lalu"
+ * > 24h: "DD MMM YYYY • HH:mm"
  */
 export function formatTimeAgo(date) {
   const now = new Date();
-  const seconds = Math.floor((now - new Date(date)) / 1000);
+  const activityDate = new Date(date);
+  const diffInSeconds = Math.floor((now - activityDate) / 1000);
 
+  // If more than 24 hours, return fixed format
+  if (diffInSeconds >= 86400) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const d = activityDate.getDate();
+    const m = months[activityDate.getMonth()];
+    const y = activityDate.getFullYear();
+    const h = activityDate.getHours().toString().padStart(2, '0');
+    const min = activityDate.getMinutes().toString().padStart(2, '0');
+    return `${d} ${m} ${y} • ${h}:${min}`;
+  }
+
+  // Relative time for <= 24 hours
   const intervals = {
-    tahun: 31536000,
-    bulan: 2592000,
-    minggu: 604800,
-    hari: 86400,
     jam: 3600,
     menit: 60,
   };
 
   for (const [name, secondsInInterval] of Object.entries(intervals)) {
-    const interval = Math.floor(seconds / secondsInInterval);
+    const interval = Math.floor(diffInSeconds / secondsInInterval);
     if (interval >= 1) {
-      return `${interval} ${name} ${interval === 1 ? 'lalu' : 'lalu'}`;
+      return `${interval} ${name} lalu`;
     }
   }
 

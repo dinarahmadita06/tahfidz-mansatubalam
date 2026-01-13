@@ -11,6 +11,22 @@ export default function DashboardHeader({ name, greeting, date }) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    
+    // Log refresh activity
+    try {
+      fetch('/api/activity-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'GURU_REFRESH_DATA',
+          title: 'Refresh Data Dashboard',
+          description: 'Anda menyegarkan data dashboard'
+        })
+      });
+    } catch (err) {
+      console.error('Failed to log refresh activity:', err);
+    }
+
     router.refresh();
     // Simulate a small delay for better UX feedback
     setTimeout(() => setRefreshing(false), 800);
