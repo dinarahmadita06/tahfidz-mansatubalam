@@ -94,6 +94,14 @@ export async function sendPushToUsers(userIds, payload) {
  */
 export async function sendPushToRoles(roles, payload) {
   try {
+    console.log(`[PUSH] Searching for active subscriptions for roles: ${roles.join(', ')}`);
+    
+    // Safety check for prisma
+    if (!prisma.pushSubscription) {
+      console.error('[PUSH] CRITICAL: pushSubscription model missing in Prisma client!');
+      return { success: false, error: 'Database model missing' };
+    }
+
     const subscriptions = await prisma.pushSubscription.findMany({
       where: {
         isActive: true,
@@ -110,11 +118,11 @@ export async function sendPushToRoles(roles, payload) {
     });
 
     if (subscriptions.length === 0) {
-      console.log(`[PUSH] No active subscriptions found for roles: ${roles.join(', ')}`);
+      console.log(`[PUSH] Found 0 active subscriptions for target roles.`);
       return { success: true, count: 0 };
     }
 
-    console.log(`[PUSH] Target: ${subscriptions.length} devices for roles: ${roles.join(', ')}`);
+    console.log(`[PUSH] STARTING BROADCAST to ${subscriptions.length} devices...`);
 
     const results = await Promise.allSettled(
       subscriptions.map(async (sub) => {
