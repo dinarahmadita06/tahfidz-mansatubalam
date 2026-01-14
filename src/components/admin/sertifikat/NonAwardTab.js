@@ -15,15 +15,19 @@ import {
   GraduationCap,
   Calendar,
   Layers,
-  Inbox
+  Inbox,
+  Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CertificatePreviewModal from './CertificatePreviewModal';
 import EmptyState from '@/components/shared/EmptyState';
+import CertificateSettingsModal from './CertificateSettingsModal';
 
 export default function NonAwardTab() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [certDate, setCertDate] = useState(new Date().toISOString().split('T')[0]);
   const [filters, setFilters] = useState({
     query: '',
     kelasId: '',
@@ -90,7 +94,7 @@ export default function NonAwardTab() {
 
   const handlePreview = async (tasmiId, download = false) => {
     // Membuka PDF Preview di tab baru atau trigger download
-    const url = `/api/admin/certificates/non-award/${tasmiId}/preview${download ? '?download=true' : ''}`;
+    const url = `/api/admin/certificates/non-award/${tasmiId}/preview?date=${certDate}${download ? '&download=true' : ''}`;
     window.open(url, '_blank');
   };
 
@@ -161,21 +165,27 @@ export default function NonAwardTab() {
           {/* Filter Gender & Reset */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
-              Jenis Kelamin
+              Opsi Cetak
             </label>
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-                <select
-                  value={filters.jenisKelamin}
-                  onChange={(e) => setFilters({ ...filters, jenisKelamin: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-50/50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white/50 hover:bg-white/80 text-sm appearance-none cursor-pointer"
-                >
-                  <option value="">Semua</option>
-                  <option value="LAKI_LAKI">Putra</option>
-                  <option value="PEREMPUAN">Putri</option>
-                </select>
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/50 border-2 border-emerald-50 rounded-xl flex-1 shadow-sm">
+                <Calendar size={16} className="text-emerald-600" />
+                <input 
+                  type="date" 
+                  value={certDate}
+                  onChange={(e) => setCertDate(e.target.value)}
+                  className="text-[10px] font-black text-slate-600 outline-none bg-transparent w-full"
+                />
               </div>
+              
+              <button
+                onClick={() => setIsSettingsModalOpen(true)}
+                className="p-2.5 bg-white text-slate-600 rounded-xl hover:bg-slate-50 border-2 border-slate-100 shadow-sm transition-all active:scale-95"
+                title="Pengaturan TTD"
+              >
+                <Settings size={18} />
+              </button>
+
               <button 
                 onClick={fetchResults}
                 disabled={loading}
@@ -312,6 +322,12 @@ export default function NonAwardTab() {
           onClose={() => setPreviewData(null)} 
         />
       )}
+
+      {/* MODAL SETTINGS TTD */}
+      <CertificateSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
     </div>
   );
 }

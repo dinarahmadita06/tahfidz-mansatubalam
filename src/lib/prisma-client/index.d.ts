@@ -29946,12 +29946,20 @@ export namespace Prisma {
   }
 
   export type AdminSignatureAvgAggregateOutputType = {
+    capOpacity: number | null
+    capScale: number | null
+    capOffsetX: number | null
+    capOffsetY: number | null
     fileSize: number | null
     imageWidth: number | null
     imageHeight: number | null
   }
 
   export type AdminSignatureSumAggregateOutputType = {
+    capOpacity: number | null
+    capScale: number | null
+    capOffsetX: number | null
+    capOffsetY: number | null
     fileSize: number | null
     imageWidth: number | null
     imageHeight: number | null
@@ -29960,7 +29968,14 @@ export namespace Prisma {
   export type AdminSignatureMinAggregateOutputType = {
     id: string | null
     type: string | null
+    jabatan: string | null
+    nama: string | null
     signatureData: string | null
+    capData: string | null
+    capOpacity: number | null
+    capScale: number | null
+    capOffsetX: number | null
+    capOffsetY: number | null
     fileName: string | null
     fileSize: number | null
     imageWidth: number | null
@@ -29972,7 +29987,14 @@ export namespace Prisma {
   export type AdminSignatureMaxAggregateOutputType = {
     id: string | null
     type: string | null
+    jabatan: string | null
+    nama: string | null
     signatureData: string | null
+    capData: string | null
+    capOpacity: number | null
+    capScale: number | null
+    capOffsetX: number | null
+    capOffsetY: number | null
     fileName: string | null
     fileSize: number | null
     imageWidth: number | null
@@ -29984,7 +30006,14 @@ export namespace Prisma {
   export type AdminSignatureCountAggregateOutputType = {
     id: number
     type: number
+    jabatan: number
+    nama: number
     signatureData: number
+    capData: number
+    capOpacity: number
+    capScale: number
+    capOffsetX: number
+    capOffsetY: number
     fileName: number
     fileSize: number
     imageWidth: number
@@ -29996,12 +30025,20 @@ export namespace Prisma {
 
 
   export type AdminSignatureAvgAggregateInputType = {
+    capOpacity?: true
+    capScale?: true
+    capOffsetX?: true
+    capOffsetY?: true
     fileSize?: true
     imageWidth?: true
     imageHeight?: true
   }
 
   export type AdminSignatureSumAggregateInputType = {
+    capOpacity?: true
+    capScale?: true
+    capOffsetX?: true
+    capOffsetY?: true
     fileSize?: true
     imageWidth?: true
     imageHeight?: true
@@ -30010,7 +30047,14 @@ export namespace Prisma {
   export type AdminSignatureMinAggregateInputType = {
     id?: true
     type?: true
+    jabatan?: true
+    nama?: true
     signatureData?: true
+    capData?: true
+    capOpacity?: true
+    capScale?: true
+    capOffsetX?: true
+    capOffsetY?: true
     fileName?: true
     fileSize?: true
     imageWidth?: true
@@ -30022,7 +30066,14 @@ export namespace Prisma {
   export type AdminSignatureMaxAggregateInputType = {
     id?: true
     type?: true
+    jabatan?: true
+    nama?: true
     signatureData?: true
+    capData?: true
+    capOpacity?: true
+    capScale?: true
+    capOffsetX?: true
+    capOffsetY?: true
     fileName?: true
     fileSize?: true
     imageWidth?: true
@@ -30034,7 +30085,14 @@ export namespace Prisma {
   export type AdminSignatureCountAggregateInputType = {
     id?: true
     type?: true
+    jabatan?: true
+    nama?: true
     signatureData?: true
+    capData?: true
+    capOpacity?: true
+    capScale?: true
+    capOffsetX?: true
+    capOffsetY?: true
     fileName?: true
     fileSize?: true
     imageWidth?: true
@@ -30133,9 +30191,16 @@ export namespace Prisma {
   export type AdminSignatureGroupByOutputType = {
     id: string
     type: string
-    signatureData: string
-    fileName: string
-    fileSize: number
+    jabatan: string | null
+    nama: string | null
+    signatureData: string | null
+    capData: string | null
+    capOpacity: number | null
+    capScale: number | null
+    capOffsetX: number | null
+    capOffsetY: number | null
+    fileName: string | null
+    fileSize: number | null
     imageWidth: number | null
     imageHeight: number | null
     uploadedAt: Date
@@ -30164,7 +30229,14 @@ export namespace Prisma {
   export type AdminSignatureSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     type?: boolean
+    jabatan?: boolean
+    nama?: boolean
     signatureData?: boolean
+    capData?: boolean
+    capOpacity?: boolean
+    capScale?: boolean
+    capOffsetX?: boolean
+    capOffsetY?: boolean
     fileName?: boolean
     fileSize?: boolean
     imageWidth?: boolean
@@ -30176,7 +30248,14 @@ export namespace Prisma {
   export type AdminSignatureSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     type?: boolean
+    jabatan?: boolean
+    nama?: boolean
     signatureData?: boolean
+    capData?: boolean
+    capOpacity?: boolean
+    capScale?: boolean
+    capOffsetX?: boolean
+    capOffsetY?: boolean
     fileName?: boolean
     fileSize?: boolean
     imageWidth?: boolean
@@ -30188,7 +30267,14 @@ export namespace Prisma {
   export type AdminSignatureSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     type?: boolean
+    jabatan?: boolean
+    nama?: boolean
     signatureData?: boolean
+    capData?: boolean
+    capOpacity?: boolean
+    capScale?: boolean
+    capOffsetX?: boolean
+    capOffsetY?: boolean
     fileName?: boolean
     fileSize?: boolean
     imageWidth?: boolean
@@ -30200,7 +30286,14 @@ export namespace Prisma {
   export type AdminSignatureSelectScalar = {
     id?: boolean
     type?: boolean
+    jabatan?: boolean
+    nama?: boolean
     signatureData?: boolean
+    capData?: boolean
+    capOpacity?: boolean
+    capScale?: boolean
+    capOffsetX?: boolean
+    capOffsetY?: boolean
     fileName?: boolean
     fileSize?: boolean
     imageWidth?: boolean
@@ -30209,7 +30302,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type AdminSignatureOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "signatureData" | "fileName" | "fileSize" | "imageWidth" | "imageHeight" | "uploadedAt" | "updatedAt", ExtArgs["result"]["adminSignature"]>
+  export type AdminSignatureOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "jabatan" | "nama" | "signatureData" | "capData" | "capOpacity" | "capScale" | "capOffsetX" | "capOffsetY" | "fileName" | "fileSize" | "imageWidth" | "imageHeight" | "uploadedAt" | "updatedAt", ExtArgs["result"]["adminSignature"]>
 
   export type $AdminSignaturePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AdminSignature"
@@ -30217,9 +30310,16 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       type: string
-      signatureData: string
-      fileName: string
-      fileSize: number
+      jabatan: string | null
+      nama: string | null
+      signatureData: string | null
+      capData: string | null
+      capOpacity: number | null
+      capScale: number | null
+      capOffsetX: number | null
+      capOffsetY: number | null
+      fileName: string | null
+      fileSize: number | null
       imageWidth: number | null
       imageHeight: number | null
       uploadedAt: Date
@@ -30649,7 +30749,14 @@ export namespace Prisma {
   interface AdminSignatureFieldRefs {
     readonly id: FieldRef<"AdminSignature", 'String'>
     readonly type: FieldRef<"AdminSignature", 'String'>
+    readonly jabatan: FieldRef<"AdminSignature", 'String'>
+    readonly nama: FieldRef<"AdminSignature", 'String'>
     readonly signatureData: FieldRef<"AdminSignature", 'String'>
+    readonly capData: FieldRef<"AdminSignature", 'String'>
+    readonly capOpacity: FieldRef<"AdminSignature", 'Float'>
+    readonly capScale: FieldRef<"AdminSignature", 'Float'>
+    readonly capOffsetX: FieldRef<"AdminSignature", 'Int'>
+    readonly capOffsetY: FieldRef<"AdminSignature", 'Int'>
     readonly fileName: FieldRef<"AdminSignature", 'String'>
     readonly fileSize: FieldRef<"AdminSignature", 'Int'>
     readonly imageWidth: FieldRef<"AdminSignature", 'Int'>
@@ -39287,6 +39394,7 @@ export namespace Prisma {
     categoryName: string | null
     quota: number | null
     reward: string | null
+    isActive: boolean | null
     templateId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -39299,6 +39407,7 @@ export namespace Prisma {
     categoryName: string | null
     quota: number | null
     reward: string | null
+    isActive: boolean | null
     templateId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -39311,6 +39420,7 @@ export namespace Prisma {
     categoryName: number
     quota: number
     reward: number
+    isActive: number
     templateId: number
     createdAt: number
     updatedAt: number
@@ -39333,6 +39443,7 @@ export namespace Prisma {
     categoryName?: true
     quota?: true
     reward?: true
+    isActive?: true
     templateId?: true
     createdAt?: true
     updatedAt?: true
@@ -39345,6 +39456,7 @@ export namespace Prisma {
     categoryName?: true
     quota?: true
     reward?: true
+    isActive?: true
     templateId?: true
     createdAt?: true
     updatedAt?: true
@@ -39357,6 +39469,7 @@ export namespace Prisma {
     categoryName?: true
     quota?: true
     reward?: true
+    isActive?: true
     templateId?: true
     createdAt?: true
     updatedAt?: true
@@ -39451,11 +39564,12 @@ export namespace Prisma {
 
   export type AwardCategoryGroupByOutputType = {
     id: string
-    eventId: string
-    groupName: string
+    eventId: string | null
+    groupName: string | null
     categoryName: string
-    quota: number
+    quota: number | null
     reward: string | null
+    isActive: boolean
     templateId: string | null
     createdAt: Date
     updatedAt: Date
@@ -39487,10 +39601,11 @@ export namespace Prisma {
     categoryName?: boolean
     quota?: boolean
     reward?: boolean
+    isActive?: boolean
     templateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    event?: boolean | WisudaEventDefaultArgs<ExtArgs>
+    event?: boolean | AwardCategory$eventArgs<ExtArgs>
     template?: boolean | AwardCategory$templateArgs<ExtArgs>
     recipients?: boolean | AwardCategory$recipientsArgs<ExtArgs>
     _count?: boolean | AwardCategoryCountOutputTypeDefaultArgs<ExtArgs>
@@ -39503,10 +39618,11 @@ export namespace Prisma {
     categoryName?: boolean
     quota?: boolean
     reward?: boolean
+    isActive?: boolean
     templateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    event?: boolean | WisudaEventDefaultArgs<ExtArgs>
+    event?: boolean | AwardCategory$eventArgs<ExtArgs>
     template?: boolean | AwardCategory$templateArgs<ExtArgs>
   }, ExtArgs["result"]["awardCategory"]>
 
@@ -39517,10 +39633,11 @@ export namespace Prisma {
     categoryName?: boolean
     quota?: boolean
     reward?: boolean
+    isActive?: boolean
     templateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    event?: boolean | WisudaEventDefaultArgs<ExtArgs>
+    event?: boolean | AwardCategory$eventArgs<ExtArgs>
     template?: boolean | AwardCategory$templateArgs<ExtArgs>
   }, ExtArgs["result"]["awardCategory"]>
 
@@ -39531,41 +39648,43 @@ export namespace Prisma {
     categoryName?: boolean
     quota?: boolean
     reward?: boolean
+    isActive?: boolean
     templateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AwardCategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "groupName" | "categoryName" | "quota" | "reward" | "templateId" | "createdAt" | "updatedAt", ExtArgs["result"]["awardCategory"]>
+  export type AwardCategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "groupName" | "categoryName" | "quota" | "reward" | "isActive" | "templateId" | "createdAt" | "updatedAt", ExtArgs["result"]["awardCategory"]>
   export type AwardCategoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    event?: boolean | WisudaEventDefaultArgs<ExtArgs>
+    event?: boolean | AwardCategory$eventArgs<ExtArgs>
     template?: boolean | AwardCategory$templateArgs<ExtArgs>
     recipients?: boolean | AwardCategory$recipientsArgs<ExtArgs>
     _count?: boolean | AwardCategoryCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type AwardCategoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    event?: boolean | WisudaEventDefaultArgs<ExtArgs>
+    event?: boolean | AwardCategory$eventArgs<ExtArgs>
     template?: boolean | AwardCategory$templateArgs<ExtArgs>
   }
   export type AwardCategoryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    event?: boolean | WisudaEventDefaultArgs<ExtArgs>
+    event?: boolean | AwardCategory$eventArgs<ExtArgs>
     template?: boolean | AwardCategory$templateArgs<ExtArgs>
   }
 
   export type $AwardCategoryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AwardCategory"
     objects: {
-      event: Prisma.$WisudaEventPayload<ExtArgs>
+      event: Prisma.$WisudaEventPayload<ExtArgs> | null
       template: Prisma.$CertificateTemplatePayload<ExtArgs> | null
       recipients: Prisma.$AwardRecipientPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      eventId: string
-      groupName: string
+      eventId: string | null
+      groupName: string | null
       categoryName: string
-      quota: number
+      quota: number | null
       reward: string | null
+      isActive: boolean
       templateId: string | null
       createdAt: Date
       updatedAt: Date
@@ -39963,7 +40082,7 @@ export namespace Prisma {
    */
   export interface Prisma__AwardCategoryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    event<T extends WisudaEventDefaultArgs<ExtArgs> = {}>(args?: Subset<T, WisudaEventDefaultArgs<ExtArgs>>): Prisma__WisudaEventClient<$Result.GetResult<Prisma.$WisudaEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    event<T extends AwardCategory$eventArgs<ExtArgs> = {}>(args?: Subset<T, AwardCategory$eventArgs<ExtArgs>>): Prisma__WisudaEventClient<$Result.GetResult<Prisma.$WisudaEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     template<T extends AwardCategory$templateArgs<ExtArgs> = {}>(args?: Subset<T, AwardCategory$templateArgs<ExtArgs>>): Prisma__CertificateTemplateClient<$Result.GetResult<Prisma.$CertificateTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     recipients<T extends AwardCategory$recipientsArgs<ExtArgs> = {}>(args?: Subset<T, AwardCategory$recipientsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AwardRecipientPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -40001,6 +40120,7 @@ export namespace Prisma {
     readonly categoryName: FieldRef<"AwardCategory", 'String'>
     readonly quota: FieldRef<"AwardCategory", 'Int'>
     readonly reward: FieldRef<"AwardCategory", 'String'>
+    readonly isActive: FieldRef<"AwardCategory", 'Boolean'>
     readonly templateId: FieldRef<"AwardCategory", 'String'>
     readonly createdAt: FieldRef<"AwardCategory", 'DateTime'>
     readonly updatedAt: FieldRef<"AwardCategory", 'DateTime'>
@@ -40397,6 +40517,25 @@ export namespace Prisma {
      * Limit how many AwardCategories to delete.
      */
     limit?: number
+  }
+
+  /**
+   * AwardCategory.event
+   */
+  export type AwardCategory$eventArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WisudaEvent
+     */
+    select?: WisudaEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WisudaEvent
+     */
+    omit?: WisudaEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WisudaEventInclude<ExtArgs> | null
+    where?: WisudaEventWhereInput
   }
 
   /**
@@ -41984,7 +42123,14 @@ export namespace Prisma {
   export const AdminSignatureScalarFieldEnum: {
     id: 'id',
     type: 'type',
+    jabatan: 'jabatan',
+    nama: 'nama',
     signatureData: 'signatureData',
+    capData: 'capData',
+    capOpacity: 'capOpacity',
+    capScale: 'capScale',
+    capOffsetX: 'capOffsetX',
+    capOffsetY: 'capOffsetY',
     fileName: 'fileName',
     fileSize: 'fileSize',
     imageWidth: 'imageWidth',
@@ -42122,6 +42268,7 @@ export namespace Prisma {
     categoryName: 'categoryName',
     quota: 'quota',
     reward: 'reward',
+    isActive: 'isActive',
     templateId: 'templateId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -44447,9 +44594,16 @@ export namespace Prisma {
     NOT?: AdminSignatureWhereInput | AdminSignatureWhereInput[]
     id?: StringFilter<"AdminSignature"> | string
     type?: StringFilter<"AdminSignature"> | string
-    signatureData?: StringFilter<"AdminSignature"> | string
-    fileName?: StringFilter<"AdminSignature"> | string
-    fileSize?: IntFilter<"AdminSignature"> | number
+    jabatan?: StringNullableFilter<"AdminSignature"> | string | null
+    nama?: StringNullableFilter<"AdminSignature"> | string | null
+    signatureData?: StringNullableFilter<"AdminSignature"> | string | null
+    capData?: StringNullableFilter<"AdminSignature"> | string | null
+    capOpacity?: FloatNullableFilter<"AdminSignature"> | number | null
+    capScale?: FloatNullableFilter<"AdminSignature"> | number | null
+    capOffsetX?: IntNullableFilter<"AdminSignature"> | number | null
+    capOffsetY?: IntNullableFilter<"AdminSignature"> | number | null
+    fileName?: StringNullableFilter<"AdminSignature"> | string | null
+    fileSize?: IntNullableFilter<"AdminSignature"> | number | null
     imageWidth?: IntNullableFilter<"AdminSignature"> | number | null
     imageHeight?: IntNullableFilter<"AdminSignature"> | number | null
     uploadedAt?: DateTimeFilter<"AdminSignature"> | Date | string
@@ -44459,9 +44613,16 @@ export namespace Prisma {
   export type AdminSignatureOrderByWithRelationInput = {
     id?: SortOrder
     type?: SortOrder
-    signatureData?: SortOrder
-    fileName?: SortOrder
-    fileSize?: SortOrder
+    jabatan?: SortOrderInput | SortOrder
+    nama?: SortOrderInput | SortOrder
+    signatureData?: SortOrderInput | SortOrder
+    capData?: SortOrderInput | SortOrder
+    capOpacity?: SortOrderInput | SortOrder
+    capScale?: SortOrderInput | SortOrder
+    capOffsetX?: SortOrderInput | SortOrder
+    capOffsetY?: SortOrderInput | SortOrder
+    fileName?: SortOrderInput | SortOrder
+    fileSize?: SortOrderInput | SortOrder
     imageWidth?: SortOrderInput | SortOrder
     imageHeight?: SortOrderInput | SortOrder
     uploadedAt?: SortOrder
@@ -44474,9 +44635,16 @@ export namespace Prisma {
     AND?: AdminSignatureWhereInput | AdminSignatureWhereInput[]
     OR?: AdminSignatureWhereInput[]
     NOT?: AdminSignatureWhereInput | AdminSignatureWhereInput[]
-    signatureData?: StringFilter<"AdminSignature"> | string
-    fileName?: StringFilter<"AdminSignature"> | string
-    fileSize?: IntFilter<"AdminSignature"> | number
+    jabatan?: StringNullableFilter<"AdminSignature"> | string | null
+    nama?: StringNullableFilter<"AdminSignature"> | string | null
+    signatureData?: StringNullableFilter<"AdminSignature"> | string | null
+    capData?: StringNullableFilter<"AdminSignature"> | string | null
+    capOpacity?: FloatNullableFilter<"AdminSignature"> | number | null
+    capScale?: FloatNullableFilter<"AdminSignature"> | number | null
+    capOffsetX?: IntNullableFilter<"AdminSignature"> | number | null
+    capOffsetY?: IntNullableFilter<"AdminSignature"> | number | null
+    fileName?: StringNullableFilter<"AdminSignature"> | string | null
+    fileSize?: IntNullableFilter<"AdminSignature"> | number | null
     imageWidth?: IntNullableFilter<"AdminSignature"> | number | null
     imageHeight?: IntNullableFilter<"AdminSignature"> | number | null
     uploadedAt?: DateTimeFilter<"AdminSignature"> | Date | string
@@ -44486,9 +44654,16 @@ export namespace Prisma {
   export type AdminSignatureOrderByWithAggregationInput = {
     id?: SortOrder
     type?: SortOrder
-    signatureData?: SortOrder
-    fileName?: SortOrder
-    fileSize?: SortOrder
+    jabatan?: SortOrderInput | SortOrder
+    nama?: SortOrderInput | SortOrder
+    signatureData?: SortOrderInput | SortOrder
+    capData?: SortOrderInput | SortOrder
+    capOpacity?: SortOrderInput | SortOrder
+    capScale?: SortOrderInput | SortOrder
+    capOffsetX?: SortOrderInput | SortOrder
+    capOffsetY?: SortOrderInput | SortOrder
+    fileName?: SortOrderInput | SortOrder
+    fileSize?: SortOrderInput | SortOrder
     imageWidth?: SortOrderInput | SortOrder
     imageHeight?: SortOrderInput | SortOrder
     uploadedAt?: SortOrder
@@ -44506,9 +44681,16 @@ export namespace Prisma {
     NOT?: AdminSignatureScalarWhereWithAggregatesInput | AdminSignatureScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"AdminSignature"> | string
     type?: StringWithAggregatesFilter<"AdminSignature"> | string
-    signatureData?: StringWithAggregatesFilter<"AdminSignature"> | string
-    fileName?: StringWithAggregatesFilter<"AdminSignature"> | string
-    fileSize?: IntWithAggregatesFilter<"AdminSignature"> | number
+    jabatan?: StringNullableWithAggregatesFilter<"AdminSignature"> | string | null
+    nama?: StringNullableWithAggregatesFilter<"AdminSignature"> | string | null
+    signatureData?: StringNullableWithAggregatesFilter<"AdminSignature"> | string | null
+    capData?: StringNullableWithAggregatesFilter<"AdminSignature"> | string | null
+    capOpacity?: FloatNullableWithAggregatesFilter<"AdminSignature"> | number | null
+    capScale?: FloatNullableWithAggregatesFilter<"AdminSignature"> | number | null
+    capOffsetX?: IntNullableWithAggregatesFilter<"AdminSignature"> | number | null
+    capOffsetY?: IntNullableWithAggregatesFilter<"AdminSignature"> | number | null
+    fileName?: StringNullableWithAggregatesFilter<"AdminSignature"> | string | null
+    fileSize?: IntNullableWithAggregatesFilter<"AdminSignature"> | number | null
     imageWidth?: IntNullableWithAggregatesFilter<"AdminSignature"> | number | null
     imageHeight?: IntNullableWithAggregatesFilter<"AdminSignature"> | number | null
     uploadedAt?: DateTimeWithAggregatesFilter<"AdminSignature"> | Date | string
@@ -45143,26 +45325,28 @@ export namespace Prisma {
     OR?: AwardCategoryWhereInput[]
     NOT?: AwardCategoryWhereInput | AwardCategoryWhereInput[]
     id?: StringFilter<"AwardCategory"> | string
-    eventId?: StringFilter<"AwardCategory"> | string
-    groupName?: StringFilter<"AwardCategory"> | string
+    eventId?: StringNullableFilter<"AwardCategory"> | string | null
+    groupName?: StringNullableFilter<"AwardCategory"> | string | null
     categoryName?: StringFilter<"AwardCategory"> | string
-    quota?: IntFilter<"AwardCategory"> | number
+    quota?: IntNullableFilter<"AwardCategory"> | number | null
     reward?: StringNullableFilter<"AwardCategory"> | string | null
+    isActive?: BoolFilter<"AwardCategory"> | boolean
     templateId?: StringNullableFilter<"AwardCategory"> | string | null
     createdAt?: DateTimeFilter<"AwardCategory"> | Date | string
     updatedAt?: DateTimeFilter<"AwardCategory"> | Date | string
-    event?: XOR<WisudaEventScalarRelationFilter, WisudaEventWhereInput>
+    event?: XOR<WisudaEventNullableScalarRelationFilter, WisudaEventWhereInput> | null
     template?: XOR<CertificateTemplateNullableScalarRelationFilter, CertificateTemplateWhereInput> | null
     recipients?: AwardRecipientListRelationFilter
   }
 
   export type AwardCategoryOrderByWithRelationInput = {
     id?: SortOrder
-    eventId?: SortOrder
-    groupName?: SortOrder
+    eventId?: SortOrderInput | SortOrder
+    groupName?: SortOrderInput | SortOrder
     categoryName?: SortOrder
-    quota?: SortOrder
+    quota?: SortOrderInput | SortOrder
     reward?: SortOrderInput | SortOrder
+    isActive?: SortOrder
     templateId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -45176,26 +45360,28 @@ export namespace Prisma {
     AND?: AwardCategoryWhereInput | AwardCategoryWhereInput[]
     OR?: AwardCategoryWhereInput[]
     NOT?: AwardCategoryWhereInput | AwardCategoryWhereInput[]
-    eventId?: StringFilter<"AwardCategory"> | string
-    groupName?: StringFilter<"AwardCategory"> | string
+    eventId?: StringNullableFilter<"AwardCategory"> | string | null
+    groupName?: StringNullableFilter<"AwardCategory"> | string | null
     categoryName?: StringFilter<"AwardCategory"> | string
-    quota?: IntFilter<"AwardCategory"> | number
+    quota?: IntNullableFilter<"AwardCategory"> | number | null
     reward?: StringNullableFilter<"AwardCategory"> | string | null
+    isActive?: BoolFilter<"AwardCategory"> | boolean
     templateId?: StringNullableFilter<"AwardCategory"> | string | null
     createdAt?: DateTimeFilter<"AwardCategory"> | Date | string
     updatedAt?: DateTimeFilter<"AwardCategory"> | Date | string
-    event?: XOR<WisudaEventScalarRelationFilter, WisudaEventWhereInput>
+    event?: XOR<WisudaEventNullableScalarRelationFilter, WisudaEventWhereInput> | null
     template?: XOR<CertificateTemplateNullableScalarRelationFilter, CertificateTemplateWhereInput> | null
     recipients?: AwardRecipientListRelationFilter
   }, "id">
 
   export type AwardCategoryOrderByWithAggregationInput = {
     id?: SortOrder
-    eventId?: SortOrder
-    groupName?: SortOrder
+    eventId?: SortOrderInput | SortOrder
+    groupName?: SortOrderInput | SortOrder
     categoryName?: SortOrder
-    quota?: SortOrder
+    quota?: SortOrderInput | SortOrder
     reward?: SortOrderInput | SortOrder
+    isActive?: SortOrder
     templateId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -45211,11 +45397,12 @@ export namespace Prisma {
     OR?: AwardCategoryScalarWhereWithAggregatesInput[]
     NOT?: AwardCategoryScalarWhereWithAggregatesInput | AwardCategoryScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"AwardCategory"> | string
-    eventId?: StringWithAggregatesFilter<"AwardCategory"> | string
-    groupName?: StringWithAggregatesFilter<"AwardCategory"> | string
+    eventId?: StringNullableWithAggregatesFilter<"AwardCategory"> | string | null
+    groupName?: StringNullableWithAggregatesFilter<"AwardCategory"> | string | null
     categoryName?: StringWithAggregatesFilter<"AwardCategory"> | string
-    quota?: IntWithAggregatesFilter<"AwardCategory"> | number
+    quota?: IntNullableWithAggregatesFilter<"AwardCategory"> | number | null
     reward?: StringNullableWithAggregatesFilter<"AwardCategory"> | string | null
+    isActive?: BoolWithAggregatesFilter<"AwardCategory"> | boolean
     templateId?: StringNullableWithAggregatesFilter<"AwardCategory"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"AwardCategory"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"AwardCategory"> | Date | string
@@ -47498,9 +47685,16 @@ export namespace Prisma {
   export type AdminSignatureCreateInput = {
     id?: string
     type: string
-    signatureData: string
-    fileName: string
-    fileSize: number
+    jabatan?: string | null
+    nama?: string | null
+    signatureData?: string | null
+    capData?: string | null
+    capOpacity?: number | null
+    capScale?: number | null
+    capOffsetX?: number | null
+    capOffsetY?: number | null
+    fileName?: string | null
+    fileSize?: number | null
     imageWidth?: number | null
     imageHeight?: number | null
     uploadedAt?: Date | string
@@ -47510,9 +47704,16 @@ export namespace Prisma {
   export type AdminSignatureUncheckedCreateInput = {
     id?: string
     type: string
-    signatureData: string
-    fileName: string
-    fileSize: number
+    jabatan?: string | null
+    nama?: string | null
+    signatureData?: string | null
+    capData?: string | null
+    capOpacity?: number | null
+    capScale?: number | null
+    capOffsetX?: number | null
+    capOffsetY?: number | null
+    fileName?: string | null
+    fileSize?: number | null
     imageWidth?: number | null
     imageHeight?: number | null
     uploadedAt?: Date | string
@@ -47522,9 +47723,16 @@ export namespace Prisma {
   export type AdminSignatureUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
-    signatureData?: StringFieldUpdateOperationsInput | string
-    fileName?: StringFieldUpdateOperationsInput | string
-    fileSize?: IntFieldUpdateOperationsInput | number
+    jabatan?: NullableStringFieldUpdateOperationsInput | string | null
+    nama?: NullableStringFieldUpdateOperationsInput | string | null
+    signatureData?: NullableStringFieldUpdateOperationsInput | string | null
+    capData?: NullableStringFieldUpdateOperationsInput | string | null
+    capOpacity?: NullableFloatFieldUpdateOperationsInput | number | null
+    capScale?: NullableFloatFieldUpdateOperationsInput | number | null
+    capOffsetX?: NullableIntFieldUpdateOperationsInput | number | null
+    capOffsetY?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
     imageWidth?: NullableIntFieldUpdateOperationsInput | number | null
     imageHeight?: NullableIntFieldUpdateOperationsInput | number | null
     uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47534,9 +47742,16 @@ export namespace Prisma {
   export type AdminSignatureUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
-    signatureData?: StringFieldUpdateOperationsInput | string
-    fileName?: StringFieldUpdateOperationsInput | string
-    fileSize?: IntFieldUpdateOperationsInput | number
+    jabatan?: NullableStringFieldUpdateOperationsInput | string | null
+    nama?: NullableStringFieldUpdateOperationsInput | string | null
+    signatureData?: NullableStringFieldUpdateOperationsInput | string | null
+    capData?: NullableStringFieldUpdateOperationsInput | string | null
+    capOpacity?: NullableFloatFieldUpdateOperationsInput | number | null
+    capScale?: NullableFloatFieldUpdateOperationsInput | number | null
+    capOffsetX?: NullableIntFieldUpdateOperationsInput | number | null
+    capOffsetY?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
     imageWidth?: NullableIntFieldUpdateOperationsInput | number | null
     imageHeight?: NullableIntFieldUpdateOperationsInput | number | null
     uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47546,9 +47761,16 @@ export namespace Prisma {
   export type AdminSignatureCreateManyInput = {
     id?: string
     type: string
-    signatureData: string
-    fileName: string
-    fileSize: number
+    jabatan?: string | null
+    nama?: string | null
+    signatureData?: string | null
+    capData?: string | null
+    capOpacity?: number | null
+    capScale?: number | null
+    capOffsetX?: number | null
+    capOffsetY?: number | null
+    fileName?: string | null
+    fileSize?: number | null
     imageWidth?: number | null
     imageHeight?: number | null
     uploadedAt?: Date | string
@@ -47558,9 +47780,16 @@ export namespace Prisma {
   export type AdminSignatureUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
-    signatureData?: StringFieldUpdateOperationsInput | string
-    fileName?: StringFieldUpdateOperationsInput | string
-    fileSize?: IntFieldUpdateOperationsInput | number
+    jabatan?: NullableStringFieldUpdateOperationsInput | string | null
+    nama?: NullableStringFieldUpdateOperationsInput | string | null
+    signatureData?: NullableStringFieldUpdateOperationsInput | string | null
+    capData?: NullableStringFieldUpdateOperationsInput | string | null
+    capOpacity?: NullableFloatFieldUpdateOperationsInput | number | null
+    capScale?: NullableFloatFieldUpdateOperationsInput | number | null
+    capOffsetX?: NullableIntFieldUpdateOperationsInput | number | null
+    capOffsetY?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
     imageWidth?: NullableIntFieldUpdateOperationsInput | number | null
     imageHeight?: NullableIntFieldUpdateOperationsInput | number | null
     uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47570,9 +47799,16 @@ export namespace Prisma {
   export type AdminSignatureUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
-    signatureData?: StringFieldUpdateOperationsInput | string
-    fileName?: StringFieldUpdateOperationsInput | string
-    fileSize?: IntFieldUpdateOperationsInput | number
+    jabatan?: NullableStringFieldUpdateOperationsInput | string | null
+    nama?: NullableStringFieldUpdateOperationsInput | string | null
+    signatureData?: NullableStringFieldUpdateOperationsInput | string | null
+    capData?: NullableStringFieldUpdateOperationsInput | string | null
+    capOpacity?: NullableFloatFieldUpdateOperationsInput | number | null
+    capScale?: NullableFloatFieldUpdateOperationsInput | number | null
+    capOffsetX?: NullableIntFieldUpdateOperationsInput | number | null
+    capOffsetY?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
     imageWidth?: NullableIntFieldUpdateOperationsInput | number | null
     imageHeight?: NullableIntFieldUpdateOperationsInput | number | null
     uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48277,24 +48513,26 @@ export namespace Prisma {
 
   export type AwardCategoryCreateInput = {
     id?: string
-    groupName: string
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    event: WisudaEventCreateNestedOneWithoutCategoriesInput
+    event?: WisudaEventCreateNestedOneWithoutCategoriesInput
     template?: CertificateTemplateCreateNestedOneWithoutAwardCategoriesInput
     recipients?: AwardRecipientCreateNestedManyWithoutCategoryInput
   }
 
   export type AwardCategoryUncheckedCreateInput = {
     id?: string
-    eventId: string
-    groupName: string
+    eventId?: string | null
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     templateId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -48303,24 +48541,26 @@ export namespace Prisma {
 
   export type AwardCategoryUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    event?: WisudaEventUpdateOneRequiredWithoutCategoriesNestedInput
+    event?: WisudaEventUpdateOneWithoutCategoriesNestedInput
     template?: CertificateTemplateUpdateOneWithoutAwardCategoriesNestedInput
     recipients?: AwardRecipientUpdateManyWithoutCategoryNestedInput
   }
 
   export type AwardCategoryUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    eventId?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    eventId?: NullableStringFieldUpdateOperationsInput | string | null
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48329,11 +48569,12 @@ export namespace Prisma {
 
   export type AwardCategoryCreateManyInput = {
     id?: string
-    eventId: string
-    groupName: string
+    eventId?: string | null
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     templateId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -48341,21 +48582,23 @@ export namespace Prisma {
 
   export type AwardCategoryUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AwardCategoryUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    eventId?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    eventId?: NullableStringFieldUpdateOperationsInput | string | null
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -50245,10 +50488,28 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type AdminSignatureCountOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
+    jabatan?: SortOrder
+    nama?: SortOrder
     signatureData?: SortOrder
+    capData?: SortOrder
+    capOpacity?: SortOrder
+    capScale?: SortOrder
+    capOffsetX?: SortOrder
+    capOffsetY?: SortOrder
     fileName?: SortOrder
     fileSize?: SortOrder
     imageWidth?: SortOrder
@@ -50258,6 +50519,10 @@ export namespace Prisma {
   }
 
   export type AdminSignatureAvgOrderByAggregateInput = {
+    capOpacity?: SortOrder
+    capScale?: SortOrder
+    capOffsetX?: SortOrder
+    capOffsetY?: SortOrder
     fileSize?: SortOrder
     imageWidth?: SortOrder
     imageHeight?: SortOrder
@@ -50266,7 +50531,14 @@ export namespace Prisma {
   export type AdminSignatureMaxOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
+    jabatan?: SortOrder
+    nama?: SortOrder
     signatureData?: SortOrder
+    capData?: SortOrder
+    capOpacity?: SortOrder
+    capScale?: SortOrder
+    capOffsetX?: SortOrder
+    capOffsetY?: SortOrder
     fileName?: SortOrder
     fileSize?: SortOrder
     imageWidth?: SortOrder
@@ -50278,7 +50550,14 @@ export namespace Prisma {
   export type AdminSignatureMinOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
+    jabatan?: SortOrder
+    nama?: SortOrder
     signatureData?: SortOrder
+    capData?: SortOrder
+    capOpacity?: SortOrder
+    capScale?: SortOrder
+    capOffsetX?: SortOrder
+    capOffsetY?: SortOrder
     fileName?: SortOrder
     fileSize?: SortOrder
     imageWidth?: SortOrder
@@ -50288,19 +50567,16 @@ export namespace Prisma {
   }
 
   export type AdminSignatureSumOrderByAggregateInput = {
+    capOpacity?: SortOrder
+    capScale?: SortOrder
+    capOffsetX?: SortOrder
+    capOffsetY?: SortOrder
     fileSize?: SortOrder
     imageWidth?: SortOrder
     imageHeight?: SortOrder
   }
 
-  export type EnumStatusTasmiFilter<$PrismaModel = never> = {
-    equals?: $Enums.StatusTasmi | EnumStatusTasmiFieldRefInput<$PrismaModel>
-    in?: $Enums.StatusTasmi[] | ListEnumStatusTasmiFieldRefInput<$PrismaModel>
-    notIn?: $Enums.StatusTasmi[] | ListEnumStatusTasmiFieldRefInput<$PrismaModel>
-    not?: NestedEnumStatusTasmiFilter<$PrismaModel> | $Enums.StatusTasmi
-  }
-
-  export type FloatNullableFilter<$PrismaModel = never> = {
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
     notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -50308,7 +50584,19 @@ export namespace Prisma {
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type EnumStatusTasmiFilter<$PrismaModel = never> = {
+    equals?: $Enums.StatusTasmi | EnumStatusTasmiFieldRefInput<$PrismaModel>
+    in?: $Enums.StatusTasmi[] | ListEnumStatusTasmiFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StatusTasmi[] | ListEnumStatusTasmiFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusTasmiFilter<$PrismaModel> | $Enums.StatusTasmi
   }
 
   export type CertificateNullableScalarRelationFilter = {
@@ -50432,22 +50720,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumStatusTasmiFilter<$PrismaModel>
     _max?: NestedEnumStatusTasmiFilter<$PrismaModel>
-  }
-
-  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type NotificationCountOrderByAggregateInput = {
@@ -50719,9 +50991,9 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type WisudaEventScalarRelationFilter = {
-    is?: WisudaEventWhereInput
-    isNot?: WisudaEventWhereInput
+  export type WisudaEventNullableScalarRelationFilter = {
+    is?: WisudaEventWhereInput | null
+    isNot?: WisudaEventWhereInput | null
   }
 
   export type AwardCategoryCountOrderByAggregateInput = {
@@ -50731,6 +51003,7 @@ export namespace Prisma {
     categoryName?: SortOrder
     quota?: SortOrder
     reward?: SortOrder
+    isActive?: SortOrder
     templateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -50747,6 +51020,7 @@ export namespace Prisma {
     categoryName?: SortOrder
     quota?: SortOrder
     reward?: SortOrder
+    isActive?: SortOrder
     templateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -50759,6 +51033,7 @@ export namespace Prisma {
     categoryName?: SortOrder
     quota?: SortOrder
     reward?: SortOrder
+    isActive?: SortOrder
     templateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -50766,6 +51041,11 @@ export namespace Prisma {
 
   export type AwardCategorySumOrderByAggregateInput = {
     quota?: SortOrder
+  }
+
+  export type WisudaEventScalarRelationFilter = {
+    is?: WisudaEventWhereInput
+    isNot?: WisudaEventWhereInput
   }
 
   export type AwardCategoryScalarRelationFilter = {
@@ -53075,6 +53355,14 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutGuruActivityInput, UserUpdateWithoutGuruActivityInput>, UserUncheckedUpdateWithoutGuruActivityInput>
   }
 
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type CertificateCreateNestedOneWithoutTasmiInput = {
     create?: XOR<CertificateCreateWithoutTasmiInput, CertificateUncheckedCreateWithoutTasmiInput>
     connectOrCreate?: CertificateCreateOrConnectWithoutTasmiInput
@@ -53113,14 +53401,6 @@ export namespace Prisma {
 
   export type EnumStatusTasmiFieldUpdateOperationsInput = {
     set?: $Enums.StatusTasmi
-  }
-
-  export type NullableFloatFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type CertificateUpdateOneWithoutTasmiNestedInput = {
@@ -53473,10 +53753,12 @@ export namespace Prisma {
     connect?: AwardRecipientWhereUniqueInput | AwardRecipientWhereUniqueInput[]
   }
 
-  export type WisudaEventUpdateOneRequiredWithoutCategoriesNestedInput = {
+  export type WisudaEventUpdateOneWithoutCategoriesNestedInput = {
     create?: XOR<WisudaEventCreateWithoutCategoriesInput, WisudaEventUncheckedCreateWithoutCategoriesInput>
     connectOrCreate?: WisudaEventCreateOrConnectWithoutCategoriesInput
     upsert?: WisudaEventUpsertWithoutCategoriesInput
+    disconnect?: WisudaEventWhereInput | boolean
+    delete?: WisudaEventWhereInput | boolean
     connect?: WisudaEventWhereUniqueInput
     update?: XOR<XOR<WisudaEventUpdateToOneWithWhereWithoutCategoriesInput, WisudaEventUpdateWithoutCategoriesInput>, WisudaEventUncheckedUpdateWithoutCategoriesInput>
   }
@@ -54060,6 +54342,22 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
   export type NestedEnumStatusTasmiFilter<$PrismaModel = never> = {
     equals?: $Enums.StatusTasmi | EnumStatusTasmiFieldRefInput<$PrismaModel>
     in?: $Enums.StatusTasmi[] | ListEnumStatusTasmiFieldRefInput<$PrismaModel>
@@ -54075,22 +54373,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumStatusTasmiFilter<$PrismaModel>
     _max?: NestedEnumStatusTasmiFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumCertificateTypeFilter<$PrismaModel = never> = {
@@ -61502,23 +61784,25 @@ export namespace Prisma {
 
   export type AwardCategoryCreateWithoutTemplateInput = {
     id?: string
-    groupName: string
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    event: WisudaEventCreateNestedOneWithoutCategoriesInput
+    event?: WisudaEventCreateNestedOneWithoutCategoriesInput
     recipients?: AwardRecipientCreateNestedManyWithoutCategoryInput
   }
 
   export type AwardCategoryUncheckedCreateWithoutTemplateInput = {
     id?: string
-    eventId: string
-    groupName: string
+    eventId?: string | null
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     recipients?: AwardRecipientUncheckedCreateNestedManyWithoutCategoryInput
@@ -61571,11 +61855,12 @@ export namespace Prisma {
     OR?: AwardCategoryScalarWhereInput[]
     NOT?: AwardCategoryScalarWhereInput | AwardCategoryScalarWhereInput[]
     id?: StringFilter<"AwardCategory"> | string
-    eventId?: StringFilter<"AwardCategory"> | string
-    groupName?: StringFilter<"AwardCategory"> | string
+    eventId?: StringNullableFilter<"AwardCategory"> | string | null
+    groupName?: StringNullableFilter<"AwardCategory"> | string | null
     categoryName?: StringFilter<"AwardCategory"> | string
-    quota?: IntFilter<"AwardCategory"> | number
+    quota?: IntNullableFilter<"AwardCategory"> | number | null
     reward?: StringNullableFilter<"AwardCategory"> | string | null
+    isActive?: BoolFilter<"AwardCategory"> | boolean
     templateId?: StringNullableFilter<"AwardCategory"> | string | null
     createdAt?: DateTimeFilter<"AwardCategory"> | Date | string
     updatedAt?: DateTimeFilter<"AwardCategory"> | Date | string
@@ -61991,10 +62276,11 @@ export namespace Prisma {
 
   export type AwardCategoryCreateWithoutEventInput = {
     id?: string
-    groupName: string
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     template?: CertificateTemplateCreateNestedOneWithoutAwardCategoriesInput
@@ -62003,10 +62289,11 @@ export namespace Prisma {
 
   export type AwardCategoryUncheckedCreateWithoutEventInput = {
     id?: string
-    groupName: string
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     templateId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -62292,23 +62579,25 @@ export namespace Prisma {
 
   export type AwardCategoryCreateWithoutRecipientsInput = {
     id?: string
-    groupName: string
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    event: WisudaEventCreateNestedOneWithoutCategoriesInput
+    event?: WisudaEventCreateNestedOneWithoutCategoriesInput
     template?: CertificateTemplateCreateNestedOneWithoutAwardCategoriesInput
   }
 
   export type AwardCategoryUncheckedCreateWithoutRecipientsInput = {
     id?: string
-    eventId: string
-    groupName: string
+    eventId?: string | null
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     templateId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -62459,23 +62748,25 @@ export namespace Prisma {
 
   export type AwardCategoryUpdateWithoutRecipientsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    event?: WisudaEventUpdateOneRequiredWithoutCategoriesNestedInput
+    event?: WisudaEventUpdateOneWithoutCategoriesNestedInput
     template?: CertificateTemplateUpdateOneWithoutAwardCategoriesNestedInput
   }
 
   export type AwardCategoryUncheckedUpdateWithoutRecipientsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    eventId?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    eventId?: NullableStringFieldUpdateOperationsInput | string | null
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -64899,11 +65190,12 @@ export namespace Prisma {
 
   export type AwardCategoryCreateManyTemplateInput = {
     id?: string
-    eventId: string
-    groupName: string
+    eventId?: string | null
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -64952,23 +65244,25 @@ export namespace Prisma {
 
   export type AwardCategoryUpdateWithoutTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    event?: WisudaEventUpdateOneRequiredWithoutCategoriesNestedInput
+    event?: WisudaEventUpdateOneWithoutCategoriesNestedInput
     recipients?: AwardRecipientUpdateManyWithoutCategoryNestedInput
   }
 
   export type AwardCategoryUncheckedUpdateWithoutTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    eventId?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    eventId?: NullableStringFieldUpdateOperationsInput | string | null
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     recipients?: AwardRecipientUncheckedUpdateManyWithoutCategoryNestedInput
@@ -64976,21 +65270,23 @@ export namespace Prisma {
 
   export type AwardCategoryUncheckedUpdateManyWithoutTemplateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    eventId?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    eventId?: NullableStringFieldUpdateOperationsInput | string | null
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AwardCategoryCreateManyEventInput = {
     id?: string
-    groupName: string
+    groupName?: string | null
     categoryName: string
-    quota: number
+    quota?: number | null
     reward?: string | null
+    isActive?: boolean
     templateId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -65009,10 +65305,11 @@ export namespace Prisma {
 
   export type AwardCategoryUpdateWithoutEventInput = {
     id?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     template?: CertificateTemplateUpdateOneWithoutAwardCategoriesNestedInput
@@ -65021,10 +65318,11 @@ export namespace Prisma {
 
   export type AwardCategoryUncheckedUpdateWithoutEventInput = {
     id?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -65033,10 +65331,11 @@ export namespace Prisma {
 
   export type AwardCategoryUncheckedUpdateManyWithoutEventInput = {
     id?: StringFieldUpdateOperationsInput | string
-    groupName?: StringFieldUpdateOperationsInput | string
+    groupName?: NullableStringFieldUpdateOperationsInput | string | null
     categoryName?: StringFieldUpdateOperationsInput | string
-    quota?: IntFieldUpdateOperationsInput | number
+    quota?: NullableIntFieldUpdateOperationsInput | number | null
     reward?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
