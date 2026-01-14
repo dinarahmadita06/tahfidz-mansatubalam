@@ -295,12 +295,12 @@ export async function POST(request) {
     // Create tasmi registration
     const tasmi = await prisma.tasmi.create({
       data: {
-        siswaId: siswa.id,
+        siswa: { connect: { id: siswa.id } },
         jumlahHafalan: Math.floor(currentJuzCount + 1e-9), // ✅ Store as Int (Math.floor handles decimal progress)
         juzYangDitasmi,
         jamTasmi,
         tanggalTasmi: new Date(tanggalTasmi),
-        guruPengampuId: guruId,
+        guruPengampu: { connect: { id: guruId } },
         catatan,
         statusPendaftaran: 'MENUNGGU',
       },

@@ -21,7 +21,8 @@ import {
   Activity,
   User,
   Megaphone,
-  Key
+  Key,
+  Award
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
 import PageTransition from '@/components/PageTransition';
@@ -56,6 +57,11 @@ const menuItems = [
     submenu: [
       { title: 'Laporan Hafalan & Kehadiran', href: '/admin/laporan/kehadiran', icon: BarChart3 },
     ]
+  },
+  {
+    title: 'Sertifikat Tasmi',
+    icon: Award,
+    href: '/admin/sertifikat',
   },
   {
     title: 'Pengumuman',

@@ -53,7 +53,7 @@ export async function POST(request, { params }) {
       where: { id },
       data: {
         statusPendaftaran: approve ? 'DISETUJUI' : 'DITOLAK',
-        guruVerifikasiId: guruId,
+        guruVerifikasi: { connect: { id: guruId } },
       },
       include: {
         siswa: {
