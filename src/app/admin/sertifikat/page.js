@@ -59,17 +59,17 @@ export default function SertifikatPage() {
         </div>
 
         {/* Tabs Navigation - Modern Style */}
-        <div className="bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-emerald-100/60 shadow-sm inline-flex w-full sm:w-auto overflow-x-auto no-scrollbar">
+        <div className="bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-emerald-100 shadow-sm inline-flex w-full sm:w-auto overflow-x-auto no-scrollbar">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                   isActive 
-                    ? `bg-emerald-600 text-white shadow-md transform scale-[1.02]` 
-                    : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/50'
+                    ? `bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow` 
+                    : 'bg-white/60 text-slate-600 hover:bg-white/80'
                 }`}
               >
                 <tab.icon size={18} className={isActive ? 'text-white' : tab.color} />
