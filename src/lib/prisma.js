@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./prisma-client";
 
 // Singleton PrismaClient for Serverless environments (Vercel)
 // Prevents connection pool exhaustion by reusing the client instance
@@ -13,8 +13,14 @@ const createPrismaClient = () => {
 
 // Check if we need to force a refresh (e.g. models missing in dev)
 if (process.env.NODE_ENV === "development" && globalForPrisma.prisma) {
-  if (!globalForPrisma.prisma.pushSubscription) {
-    console.log('🔄 Prisma client missing pushSubscription. Re-initializing...');
+  // Check for presence of newer models and fields to force reload if client is stale
+  const isStale = !globalForPrisma.prisma.pushSubscription || 
+                  !globalForPrisma.prisma.certificateTemplate; 
+  
+  // A better way to check if fields exist in the client is to look at the dMMF or just try a dummy check
+  // But for now, checking for model presence is usually enough for most stale client issues.
+  if (isStale) {
+    console.log('🔄 Prisma client might be stale. Re-initializing...');
     globalForPrisma.prisma = createPrismaClient();
   }
 }

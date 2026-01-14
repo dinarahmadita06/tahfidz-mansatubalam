@@ -1,0 +1,774 @@
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/lib/prisma-client"
+  engineType = "binary"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+model User {
+  id                  String             @id @default(cuid())
+  name                String
+  email               String             @unique
+  password            String
+  role                Role
+  image               String?
+  emailVerified       DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  isActive            Boolean            @default(true)
+  jabatan             String?
+  nip                 String?
+  signatureUrl        String?
+  ttdUrl              String?
+  username            String?            @unique
+  recoveryCodeHash    String?
+  isRecoveryCodeSetup Boolean            @default(false)
+  activityLogs        ActivityLog[]      @relation("ActivityLogActor")
+  guru                Guru?
+  guruActivity        GuruActivity[]
+  kelasMengampu       Kelas[]            @relation("KelasGuruTahfidz")
+  notifications       Notification[]
+  orangTua            OrangTua?
+  pengumuman          Pengumuman[]
+  pengumumanRead      PengumumanRead[]   @relation("UserPengumumanRead")
+  siswa               Siswa?
+  certificates        Certificate[]
+  pushSubscriptions   PushSubscription[]
+
+  @@index([role])
+  @@index([name])
+  @@index([createdAt])
+  @@index([isActive])
+}
+
+model Guru {
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  nip             String?        @unique
+  jabatan         String?
+  bidangKeahlian  String?
+  tanggalLahir    DateTime?
+  jenisKelamin    JenisKelamin
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  tandaTangan     String?
+  mulaiMengajar   DateTime?
+  agenda          Agenda[]
+  bukuDigital     BukuDigital[]
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guruKelas       GuruKelas[]
+  hafalan         Hafalan[]
+  materiTahsin    MateriTahsin[]
+  penilaian       Penilaian[]
+  presensi        Presensi[]
+  tahsin          Tahsin[]
+  tasmiPengampu   Tasmi[]        @relation("GuruPengampu")
+  tasmiPenguji    Tasmi[]        @relation("GuruPenguji")
+  tasmiVerifikasi Tasmi[]        @relation("GuruVerifikasi")
+
+  @@index([createdAt])
+}
+
+model Siswa {
+  id                 String           @id @default(cuid())
+  userId             String           @unique
+  nis                String           @unique
+  kelasId            String?
+  alamat             String?
+  tanggalLahir       DateTime?
+  jenisKelamin       JenisKelamin
+  status             StatusAkun       @default(pending)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  nisn               String?          @unique
+  tempatLahir        String?
+  statusSiswa        StatusSiswa      @default(AKTIF)
+  tanggalKeluar      DateTime?
+  kelasAngkatan      String?
+  tahunAjaranMasukId String?
+  lulusAt            DateTime?
+  latestJuzAchieved  Int              @default(0)
+  hafalan            Hafalan[]
+  orangTuaSiswa      OrangTuaSiswa[]
+  penilaian          Penilaian[]
+  presensi           Presensi[]
+  kelas              Kelas?           @relation(fields: [kelasId], references: [id])
+  tahunAjaranMasuk   TahunAjaran?     @relation("SiswaTahunAjaranMasuk", fields: [tahunAjaranMasukId], references: [id])
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tahsin             Tahsin[]
+  targetHafalan      TargetHafalan[]
+  tasmi              Tasmi[]
+  awardRecipients    AwardRecipient[]
+
+  @@index([status])
+  @@index([statusSiswa])
+  @@index([kelasId])
+  @@index([status, createdAt])
+  @@index([nisn])
+  @@index([nis])
+  @@index([tahunAjaranMasukId])
+  @@index([lulusAt])
+  @@index([createdAt])
+}
+
+model OrangTua {
+  id            String          @id @default(cuid())
+  userId        String          @unique
+  pekerjaan     String?
+  alamat        String?
+  tanggalLahir  DateTime?
+  jenisKelamin  JenisKelamin
+  status        StatusAkun      @default(pending)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orangTuaSiswa OrangTuaSiswa[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrangTuaSiswa {
+  id         String   @id @default(cuid())
+  orangTuaId String
+  siswaId    String
+  hubungan   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  orangTua   OrangTua @relation(fields: [orangTuaId], references: [id], onDelete: Cascade)
+  siswa      Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@unique([orangTuaId, siswaId])
+  @@index([orangTuaId])
+  @@index([siswaId])
+}
+
+model TahunAjaran {
+  id                String          @id @default(cuid())
+  nama              String
+  tanggalMulai      DateTime
+  tanggalSelesai    DateTime
+  isActive          Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  semester          Int?
+  targetHafalan     Int?
+  kelas             Kelas[]
+  siswaMasuk        Siswa[]         @relation("SiswaTahunAjaranMasuk")
+  targetHafalanData TargetHafalan[]
+
+  @@index([isActive])
+  @@index([isActive, tanggalMulai])
+}
+
+model Kelas {
+  id            String          @id @default(cuid())
+  nama          String
+  tahunAjaranId String
+  kapasitas     Int?
+  targetJuz     Int?
+  status        StatusKelas     @default(AKTIF)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  guruTahfidzId String?
+  agenda        Agenda[]
+  bukuDigital   BukuDigital[]
+  guruKelas     GuruKelas[]
+  guruTahfidz   User?           @relation("KelasGuruTahfidz", fields: [guruTahfidzId], references: [id])
+  tahunAjaran   TahunAjaran     @relation(fields: [tahunAjaranId], references: [id], onDelete: Cascade)
+  siswa         Siswa[]
+  targetHafalan TargetHafalan[]
+
+  @@index([status])
+  @@index([nama])
+  @@index([tahunAjaranId])
+  @@index([guruTahfidzId])
+  @@index([createdAt])
+}
+
+model GuruKelas {
+  id             String    @id @default(cuid())
+  guruId         String
+  kelasId        String
+  tanggalMulai   DateTime  @default(now())
+  tanggalSelesai DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  peran          PeranGuru @default(pendamping)
+  guru           Guru      @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  kelas          Kelas     @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+
+  @@unique([guruId, kelasId])
+  @@index([guruId])
+  @@index([kelasId])
+  @@index([isActive])
+  @@index([peran])
+}
+
+model TargetHafalan {
+  id            String       @id @default(cuid())
+  siswaId       String?
+  kelasId       String?
+  tahunAjaranId String?
+  targetJuz     Int
+  targetSurah   String?
+  targetAyat    String?
+  deadline      DateTime?
+  keterangan    String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  bulan         Int
+  tahun         Int
+  kelas         Kelas?       @relation(fields: [kelasId], references: [id])
+  siswa         Siswa?       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  tahunAjaran   TahunAjaran? @relation(fields: [tahunAjaranId], references: [id])
+
+  @@index([siswaId])
+  @@index([kelasId])
+  @@index([deadline])
+}
+
+model Hafalan {
+  id            String      @id @default(cuid())
+  siswaId       String
+  guruId        String
+  tanggal       DateTime    @default(now())
+  juz           Int?
+  surah         String
+  ayatMulai     Int
+  ayatSelesai   Int
+  keterangan    String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  surahTambahan Json        @default("[]")
+  surahNumber   Int?
+  guru          Guru        @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  siswa         Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  penilaian     Penilaian[]
+
+  @@index([siswaId])
+  @@index([tanggal(sort: Desc)])
+  @@index([siswaId, tanggal])
+  @@index([guruId])
+  @@index([juz])
+  @@index([surahNumber])
+  @@index([createdAt])
+}
+
+model Penilaian {
+  id         String    @id @default(cuid())
+  hafalanId  String
+  siswaId    String
+  guruId     String
+  tajwid     Int
+  kelancaran Int
+  makhraj    Int
+  adab       Int
+  nilaiAkhir Float
+  catatan    String?
+  notifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  guru       Guru      @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  hafalan    Hafalan   @relation(fields: [hafalanId], references: [id], onDelete: Cascade)
+  siswa      Siswa     @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@index([siswaId])
+  @@index([guruId])
+  @@index([hafalanId])
+  @@index([createdAt])
+}
+
+model Tahsin {
+  id                 String             @id @default(cuid())
+  siswaId            String
+  guruId             String
+  tanggal            DateTime           @default(now())
+  level              LevelTahsin
+  materiHariIni      String
+  bacaanDipraktikkan String
+  catatan            String?
+  statusPembelajaran StatusPembelajaran
+  surah              String?
+  ayatAwal           Int?
+  ayatAkhir          Int?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  guru               Guru               @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  siswa              Siswa              @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@index([siswaId])
+  @@index([guruId])
+  @@index([tanggal(sort: Desc)])
+  @@index([level])
+  @@index([statusPembelajaran])
+  @@index([createdAt])
+}
+
+model MateriTahsin {
+  id          String      @id @default(cuid())
+  guruId      String
+  kelasId     String?
+  judul       String
+  jenisMateri JenisMateri
+  fileUrl     String?
+  youtubeUrl  String?
+  deskripsi   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  guru        Guru        @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  @@index([guruId])
+  @@index([kelasId])
+  @@index([jenisMateri])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Presensi {
+  id         String         @id @default(cuid())
+  siswaId    String
+  guruId     String
+  tanggal    DateTime       @default(now())
+  status     StatusPresensi
+  keterangan String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  guru       Guru           @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  siswa      Siswa          @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@unique([siswaId, tanggal])
+  @@index([tanggal(sort: Desc)])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Pengumuman {
+  id             String           @id @default(cuid())
+  userId         String
+  judul          String
+  isi            String
+  tanggalMulai   DateTime         @default(now())
+  tanggalSelesai DateTime?
+  isPinned       Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  lampiran       String?
+  attachmentUrl  String?
+  attachmentName String?
+  attachmentSize Int?
+  isPublished    Boolean          @default(true)
+  deletedAt      DateTime?
+  audience       String           @default("ALL")
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pengumumanRead PengumumanRead[]
+
+  @@index([isPinned])
+  @@index([tanggalMulai(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+}
+
+model PengumumanRead {
+  id           String     @id @default(cuid())
+  pengumumanId String
+  userId       String
+  closedAt     DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  pengumuman   Pengumuman @relation(fields: [pengumumanId], references: [id], onDelete: Cascade)
+  user         User       @relation("UserPengumumanRead", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pengumumanId, userId])
+  @@index([userId])
+  @@index([pengumumanId])
+  @@index([closedAt(sort: Desc)])
+  @@index([createdAt])
+}
+
+model BukuDigital {
+  id            String       @id @default(cuid())
+  guruId        String
+  judul         String
+  deskripsi     String?
+  kategori      KategoriBuku
+  fileUrl       String
+  fileName      String
+  fileSize      Int
+  downloadCount Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  classId       String
+  kelas         Kelas        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  guru          Guru         @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  @@unique([guruId, classId, judul])
+  @@index([guruId])
+  @@index([classId])
+  @@index([kategori])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Agenda {
+  id           String   @id @default(cuid())
+  guruId       String
+  kelasId      String?
+  judul        String
+  deskripsi    String?
+  tanggal      DateTime
+  waktuMulai   String
+  waktuSelesai String?
+  status       String   @default("upcoming")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  guru         Guru     @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  kelas        Kelas?   @relation(fields: [kelasId], references: [id])
+
+  @@index([guruId])
+  @@index([kelasId])
+  @@index([tanggal(sort: Desc)])
+}
+
+model ActivityLog {
+  id           String   @id @default(cuid())
+  actorId      String
+  actorRole    Role
+  actorName    String?
+  action       String
+  title        String
+  description  String?
+  targetUserId String?
+  targetRole   Role?
+  targetName   String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  user         User     @relation("ActivityLogActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId])
+  @@index([actorRole])
+  @@index([action])
+  @@index([createdAt(sort: Desc)])
+  @@index([targetUserId])
+}
+
+model GuruActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  subtitle  String?
+  actorId   String
+  actorRole String   @default("GURU")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([actorRole])
+  @@index([createdAt(sort: Desc)])
+  @@index([type])
+}
+
+model Motivasi {
+  id        String   @id @default(cuid())
+  isi       String
+  author    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model AdminSignature {
+  id            String   @id @default(cuid())
+  type          String   @unique
+  signatureData String
+  fileName      String
+  fileSize      Int
+  imageWidth    Int?
+  imageHeight   Int?
+  uploadedAt    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+}
+
+model Tasmi {
+  id                String       @id @default(cuid())
+  siswaId           String
+  jumlahHafalan     Int
+  juzYangDitasmi    String
+  jamTasmi          String?
+  tanggalTasmi      DateTime?
+  guruPengampuId    String?
+  statusPendaftaran StatusTasmi  @default(MENUNGGU)
+  catatanPenolakan  String?
+  catatan           String?
+  tanggalDaftar     DateTime     @default(now())
+  tanggalUjian      DateTime?
+  guruVerifikasiId  String?
+  guruPengujiId     String?
+  nilaiKelancaran   Int?
+  nilaiTajwid       Int?
+  nilaiAdab         Int?
+  nilaiIrama        Int?
+  nilaiAkhir        Float?
+  predikat          String?
+  catatanPenguji    String?
+  pdfUrl            String?
+  publishedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  isPassed          Boolean      @default(false)
+  assessedAt        DateTime?
+  certificate       Certificate?
+  updatedAt         DateTime     @updatedAt
+  guruPengampu      Guru?        @relation("GuruPengampu", fields: [guruPengampuId], references: [id])
+  guruPenguji       Guru?        @relation("GuruPenguji", fields: [guruPengujiId], references: [id])
+  guruVerifikasi    Guru?        @relation("GuruVerifikasi", fields: [guruVerifikasiId], references: [id])
+  siswa             Siswa        @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@index([siswaId])
+  @@index([statusPendaftaran])
+  @@index([tanggalUjian])
+  @@index([tanggalTasmi])
+  @@index([guruPengampuId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([userId, isRead, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model RateLimit {
+  id          String    @id @default(cuid())
+  key         String    @unique // e.g., "reset-password:IP:username"
+  attempts    Int       @default(0)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+enum Role {
+  ADMIN
+  GURU
+  SISWA
+  ORANG_TUA
+}
+
+enum StatusAkun {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum JenisKelamin {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+enum StatusPresensi {
+  HADIR
+  IZIN
+  SAKIT
+  ALFA
+}
+
+enum KategoriBuku {
+  TAJWID
+  TAFSIR
+  HADITS
+  FIQIH
+  AKHLAK
+  UMUM
+  TAHSIN
+}
+
+enum JenisAktivitas {
+  LOGIN
+  LOGOUT
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  EXPORT
+  IMPORT
+}
+
+enum StatusTasmi {
+  MENUNGGU
+  DISETUJUI
+  DITOLAK
+  SELESAI
+  DIBATALKAN
+}
+
+enum StatusKelas {
+  AKTIF
+  NONAKTIF
+}
+
+enum LevelTahsin {
+  DASAR
+  MENENGAH
+  LANJUTAN
+}
+
+enum StatusPembelajaran {
+  LANJUT
+  PERBAIKI
+}
+
+enum JenisMateri {
+  PDF
+  YOUTUBE
+  VIDEO
+}
+
+enum PeranGuru {
+  utama
+  pendamping
+}
+
+enum StatusSiswa {
+  AKTIF
+  LULUS
+  PINDAH
+  KELUAR
+}
+
+enum CertificateType {
+  NON_AWARD
+  AWARD
+}
+
+enum CertificateStatus {
+  GENERATED
+  REVOKED
+}
+
+model CertificateTemplate {
+  id              String          @id @default(cuid())
+  name            String
+  type            CertificateType
+  htmlTemplate    String          @db.Text
+  isDefault       Boolean         @default(false)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  certificates    Certificate[]
+  awardCategories AwardCategory[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model Certificate {
+  id                String            @id @default(cuid())
+  type              CertificateType
+  tasmiId           String?           @unique
+  awardRecipientId  String?           @unique
+  certificateNumber String            @unique
+  generatedAt       DateTime          @default(now())
+  generatedById     String
+  templateId        String?
+  status            CertificateStatus @default(GENERATED)
+  fileUrl           String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  tasmi          Tasmi?               @relation(fields: [tasmiId], references: [id])
+  awardRecipient AwardRecipient?      @relation(fields: [awardRecipientId], references: [id])
+  generatedBy    User                 @relation(fields: [generatedById], references: [id])
+  template       CertificateTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([type])
+  @@index([status])
+}
+
+model WisudaEvent {
+  id         String           @id @default(cuid())
+  name       String
+  date       DateTime
+  period     String
+  isActive   Boolean          @default(true)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  categories AwardCategory[]
+  recipients AwardRecipient[]
+
+  @@index([isActive])
+}
+
+model AwardCategory {
+  id           String               @id @default(cuid())
+  eventId      String
+  groupName    String
+  categoryName String
+  quota        Int
+  reward       String?
+  templateId   String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  event        WisudaEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  template     CertificateTemplate? @relation(fields: [templateId], references: [id])
+  recipients   AwardRecipient[]
+
+  @@index([eventId])
+}
+
+model AwardRecipient {
+  id            String    @id @default(cuid())
+  eventId       String
+  categoryId    String
+  studentId     String
+  sourceTasmiId String?
+  approvedBy    String?
+  approvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  event       WisudaEvent   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category    AwardCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  student     Siswa         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  certificate Certificate?
+
+  @@unique([eventId, categoryId, studentId])
+  @@index([eventId])
+  @@index([categoryId])
+  @@index([studentId])
+}
