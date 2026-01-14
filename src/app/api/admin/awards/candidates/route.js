@@ -17,13 +17,17 @@ export async function GET(request) {
     const periode = searchParams.get('periode');
     const jenisKelamin = searchParams.get('jenisKelamin');
 
+    const hideSelected = searchParams.get('hideSelected') === 'true';
+
     const where = {
       statusPendaftaran: 'SELESAI',
       isPassed: true,
       assessedAt: { not: null },
-      // Siswa is NOT already in award recipients
-      awardRecipient: { none: {} }
     };
+
+    if (hideSelected) {
+      where.awardRecipient = { none: {} };
+    }
 
     if (query) {
       where.siswa = {
