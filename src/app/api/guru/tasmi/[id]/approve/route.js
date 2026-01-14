@@ -64,7 +64,7 @@ export async function POST(request, { params }) {
       where: { id },
       data: {
         statusPendaftaran: 'DISETUJUI',
-        guruVerifikasiId: guru.id,
+        guruVerifikasi: { connect: { id: guru.id } },
         tanggalUjian: tasmi.tanggalTasmi, // Use original proposed date from student
         catatanPenolakan: catatan || null, // Using this field for general teacher feedback
       },

@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  output     = "../src/lib/prisma-client"
+  engineType = "binary"
 }
 
 datasource db {
@@ -37,6 +39,7 @@ model User {
   pengumuman       Pengumuman[]
   pengumumanRead   PengumumanRead[] @relation("UserPengumumanRead")
   siswa            Siswa?
+  certificates     Certificate[]
   pushSubscriptions PushSubscription[]
 
   @@index([role])
@@ -102,6 +105,7 @@ model Siswa {
   tahsin             Tahsin[]
   targetHafalan      TargetHafalan[]
   tasmi              Tasmi[]
+  awardRecipients    AwardRecipient[]
 
   @@index([status])
   @@index([statusSiswa])
@@ -520,6 +524,9 @@ model Tasmi {
   pdfUrl            String?
   publishedAt       DateTime?
   createdAt         DateTime    @default(now())
+  isPassed          Boolean     @default(false)
+  assessedAt        DateTime?
+  certificate       Certificate?
   updatedAt         DateTime    @updatedAt
   guruPengampu      Guru?       @relation("GuruPengampu", fields: [guruPengampuId], references: [id])
   guruPenguji       Guru?       @relation("GuruPenguji", fields: [guruPengujiId], references: [id])
@@ -662,4 +669,106 @@ enum StatusSiswa {
   LULUS
   PINDAH
   KELUAR
+}
+
+enum CertificateType {
+  NON_AWARD
+  AWARD
+}
+
+enum CertificateStatus {
+  GENERATED
+  REVOKED
+}
+
+model CertificateTemplate {
+  id           String          @id @default(cuid())
+  name         String
+  type         CertificateType
+  htmlTemplate String          @db.Text
+  isDefault    Boolean         @default(false)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  certificates Certificate[]
+  awardCategories AwardCategory[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model Certificate {
+  id                String            @id @default(cuid())
+  type              CertificateType
+  tasmiId           String?           @unique
+  awardRecipientId  String?           @unique
+  certificateNumber String            @unique
+  generatedAt       DateTime          @default(now())
+  generatedById     String
+  templateId        String?
+  status            CertificateStatus @default(GENERATED)
+  fileUrl           String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  tasmi             Tasmi?            @relation(fields: [tasmiId], references: [id])
+  awardRecipient    AwardRecipient?   @relation(fields: [awardRecipientId], references: [id])
+  generatedBy       User              @relation(fields: [generatedById], references: [id])
+  template          CertificateTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([type])
+  @@index([status])
+}
+
+model WisudaEvent {
+  id        String          @id @default(cuid())
+  name      String
+  date      DateTime
+  period    String
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  categories AwardCategory[]
+  recipients AwardRecipient[]
+
+  @@index([isActive])
+}
+
+model AwardCategory {
+  id          String           @id @default(cuid())
+  eventId     String
+  groupName   String
+  categoryName String
+  quota       Int
+  reward      String?
+  templateId  String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  event       WisudaEvent      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  template    CertificateTemplate? @relation(fields: [templateId], references: [id])
+  recipients  AwardRecipient[]
+
+  @@index([eventId])
+}
+
+model AwardRecipient {
+  id            String       @id @default(cuid())
+  eventId       String
+  categoryId    String
+  studentId     String
+  sourceTasmiId String?
+  approvedBy    String?
+  approvedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  event         WisudaEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category      AwardCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  student       Siswa        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  certificate   Certificate?
+  
+  @@unique([eventId, categoryId, studentId])
+  @@index([eventId])
+  @@index([categoryId])
+  @@index([studentId])
 }

@@ -133,7 +133,12 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
   // Form states
   const [reviewData, setReviewData] = useState({ catatanGuru: '' });
   const [gradeData, setGradeData] = useState({
-    nilaiMakhrijul: '', nilaiKeindahan: '', nilaiTajwid: '', nilaiKelancaran: '', catatanPenguji: ''
+    nilaiMakhrijul: '', 
+    nilaiKeindahan: '', 
+    nilaiTajwid: '', 
+    nilaiKelancaran: '', 
+    catatanPenguji: '',
+    isPassed: true // Default to true
   });
   const [rekapFilter, setRekapFilter] = useState({ 
     mode: 'range', 
@@ -151,6 +156,31 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
       const data = await res.json();
       setTasmiList(data.tasmi || []);
     }
+  };
+
+  const openGradeModal = (tasmi, isEdit) => {
+    setSelectedTasmi(tasmi);
+    setIsEditMode(isEdit);
+    if (isEdit && tasmi) {
+      setGradeData({
+        nilaiMakhrijul: tasmi.nilaiKelancaran || '',
+        nilaiKeindahan: tasmi.nilaiAdab || '',
+        nilaiTajwid: tasmi.nilaiTajwid || '',
+        nilaiKelancaran: tasmi.nilaiIrama || '',
+        catatanPenguji: tasmi.catatanPenguji || '',
+        isPassed: tasmi.isPassed ?? true
+      });
+    } else {
+      setGradeData({ 
+        nilaiMakhrijul: '', 
+        nilaiKeindahan: '', 
+        nilaiTajwid: '', 
+        nilaiKelancaran: '', 
+        catatanPenguji: '',
+        isPassed: true 
+      });
+    }
+    setShowGradeModal(true);
   };
 
   const calculateNilaiAkhir = (data) => {
@@ -248,6 +278,7 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
           nilaiAkhir: parseFloat(nilaiAkhir),
           predikat: predikat,
           catatanPenguji: gradeData.catatanPenguji,
+          isPassed: gradeData.isPassed,
           publish: false,
         }),
       });
@@ -493,7 +524,7 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
                         </div>
                       ) : tasmi.statusPendaftaran === 'DISETUJUI' ? (
                         <button 
-                          onClick={() => { setSelectedTasmi(tasmi); setIsEditMode(false); setGradeData({ nilaiMakhrijul: '', nilaiKeindahan: '', nilaiTajwid: '', nilaiKelancaran: '', catatanPenguji: '' }); setShowGradeModal(true); }}
+                          onClick={() => openGradeModal(tasmi, false)}
                           className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors"
                         >
                           + Nilai
@@ -510,9 +541,9 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
                             <FileText size={14} /> Review
                           </button>
                         )}
-                        {tasmi.nilaiAkhir && (
+                        {tasmi.statusPendaftaran === 'SELESAI' && tasmi.nilaiAkhir && (
                           <>
-                            <button onClick={() => { setSelectedTasmi(tasmi); setIsEditMode(true); setGradeData({ nilaiMakhrijul: tasmi.nilaiKelancaran, nilaiKeindahan: tasmi.nilaiAdab, nilaiTajwid: tasmi.nilaiTajwid, nilaiKelancaran: tasmi.nilaiIrama, catatanPenguji: tasmi.catatanPenguji }); setShowGradeModal(true); }} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Edit size={16} /></button>
+                            <button onClick={() => openGradeModal(tasmi, true)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Edit size={16} /></button>
                             <button onClick={() => handleDownloadPDF(tasmi.id)} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100"><FileText size={16} /></button>
                           </>
                         )}
@@ -668,6 +699,19 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
                   className="w-full p-4 border border-slate-200 rounded-xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200/40 outline-none transition-all min-h-[120px] resize-none" 
                   placeholder="Masukkan feedback untuk siswa..."
                 />
+              </div>
+
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <input 
+                  type="checkbox" 
+                  id="isPassed" 
+                  checked={gradeData.isPassed}
+                  onChange={e => setGradeData({...gradeData, isPassed: e.target.checked})}
+                  className="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <label htmlFor="isPassed" className="text-sm font-bold text-gray-700 cursor-pointer">
+                  Siswa Lulus Tasmi (Layak Sertifikat)
+                </label>
               </div>
 
               {calculateNilaiAkhir(gradeData) && (

@@ -26,6 +26,7 @@ export async function POST(request, { params }) {
       nilaiAkhir,
       predikat,
       catatanPenguji,
+      isPassed,
       publish, // flag untuk publish hasil
     } = body;
 
@@ -102,7 +103,7 @@ export async function POST(request, { params }) {
 
     // Update with grades and mark as completed
     const updateData = {
-      guruPengujiId: guru.id,
+      guruPenguji: { connect: { id: guru.id } },
       nilaiKelancaran: parseInt(nilaiKelancaran),
       nilaiTajwid: parseInt(nilaiTajwid),
       nilaiAdab: parseInt(nilaiAdab),
@@ -110,6 +111,8 @@ export async function POST(request, { params }) {
       nilaiAkhir: parseFloat(nilaiAkhir),
       predikat,
       catatanPenguji: catatanPenguji || null,
+      isPassed: isPassed === true || isPassed === 'true',
+      assessedAt: new Date(),
       statusPendaftaran: 'SELESAI',
     };
 

@@ -182,7 +182,7 @@ export async function PUT(request, { params }) {
         juzYangDitasmi,
         jamTasmi,
         tanggalTasmi: new Date(tanggalTasmi),
-        guruPengampuId: guruId,
+        guruPengampu: { connect: { id: guruId } },
         catatan,
         statusPendaftaran: 'MENUNGGU', // Reset status ke MENUNGGU saat diedit
         catatanPenolakan: null, // Clear catatan penolakan

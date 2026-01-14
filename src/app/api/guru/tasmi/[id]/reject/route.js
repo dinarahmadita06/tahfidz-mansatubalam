@@ -72,7 +72,7 @@ export async function POST(request, { params }) {
       where: { id },
       data: {
         statusPendaftaran: 'DITOLAK',
-        guruVerifikasiId: guru.id,
+        guruVerifikasi: { connect: { id: guru.id } },
         catatanPenolakan: catatanPenolakan.trim(),
       },
       include: {
