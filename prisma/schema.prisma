@@ -487,10 +487,17 @@ model Motivasi {
 
 model AdminSignature {
   id            String   @id @default(cuid())
-  type          String   @unique
-  signatureData String
-  fileName      String
-  fileSize      Int
+  type          String   @unique // 'SIGNER_1' or 'SIGNER_2'
+  jabatan       String?
+  nama          String?
+  signatureData String?  @db.Text
+  capData       String?  @db.Text
+  capOpacity    Float?   @default(0.4)
+  capScale      Float?   @default(1.0)
+  capOffsetX    Int?     @default(0)
+  capOffsetY    Int?     @default(0)
+  fileName      String?
+  fileSize      Int?
   imageWidth    Int?
   imageHeight   Int?
   uploadedAt    DateTime @default(now())
@@ -736,19 +743,21 @@ model WisudaEvent {
 
 model AwardCategory {
   id          String           @id @default(cuid())
-  eventId     String
-  groupName   String
+  eventId     String?
+  groupName   String?
   categoryName String
-  quota       Int
+  quota       Int?
   reward      String?
+  isActive    Boolean          @default(true)
   templateId  String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
-  event       WisudaEvent      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event       WisudaEvent?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   template    CertificateTemplate? @relation(fields: [templateId], references: [id])
   recipients  AwardRecipient[]
 
   @@index([eventId])
+  @@index([isActive])
 }
 
 model AwardRecipient {

@@ -18,11 +18,15 @@ import {
   Award,
   ChevronRight,
   FileCheck,
-  Printer,
-  Plus
+  Printer, 
+  Plus,
+  Settings,
+  Tag
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import EmptyState from '@/components/shared/EmptyState';
+import AwardCategoryModal from './AwardCategoryModal';
+import CertificateSettingsModal from './CertificateSettingsModal';
 
 export default function AwardTab() {
   const [candidates, setCandidates] = useState([]);
@@ -30,12 +34,16 @@ export default function AwardTab() {
   const [categories, setCategories] = useState([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [loadingSelected, setLoadingSelected] = useState(false);
-  
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [certDate, setCertDate] = useState(new Date().toISOString().split('T')[0]);
+
   const [candidateFilters, setCandidateFilters] = useState({
     query: '',
     kelasId: '',
     periode: '',
-    jenisKelamin: ''
+    jenisKelamin: '',
+    hideSelected: false
   });
 
   const [selectedFilters, setSelectedFilters] = useState({
@@ -54,7 +62,7 @@ export default function AwardTab() {
   // Fetch candidates based on filters
   useEffect(() => {
     fetchCandidates();
-  }, [candidateFilters.kelasId, candidateFilters.periode, candidateFilters.jenisKelamin]);
+  }, [candidateFilters.kelasId, candidateFilters.periode, candidateFilters.jenisKelamin, candidateFilters.hideSelected]);
 
   // Fetch selected based on filters
   useEffect(() => {
@@ -84,7 +92,14 @@ export default function AwardTab() {
   const fetchCandidates = async () => {
     setLoadingCandidates(true);
     try {
-      const params = new URLSearchParams(candidateFilters);
+      // Build params manually to handle boolean correctly
+      const params = new URLSearchParams();
+      if (candidateFilters.query) params.append('query', candidateFilters.query);
+      if (candidateFilters.kelasId) params.append('kelasId', candidateFilters.kelasId);
+      if (candidateFilters.periode) params.append('periode', candidateFilters.periode);
+      if (candidateFilters.jenisKelamin) params.append('jenisKelamin', candidateFilters.jenisKelamin);
+      if (candidateFilters.hideSelected) params.append('hideSelected', 'true');
+
       const res = await fetch(`/api/admin/awards/candidates?${params.toString()}`);
       const data = await res.json();
       if (res.ok) setCandidates(data.candidates || []);
@@ -168,8 +183,9 @@ export default function AwardTab() {
     }
   };
 
-  const handlePreview = (tasmiId, download = false) => {
-    const url = `/api/admin/certificates/non-award/${tasmiId}/preview${download ? '?download=true' : ''}`;
+  const handlePreview = (id, isAward = false, download = false) => {
+    const type = isAward ? 'award' : 'non-award';
+    const url = `/api/admin/certificates/${type}/${id}/preview?date=${certDate}${download ? '&download=true' : ''}`;
     window.open(url, '_blank');
   };
 
@@ -177,13 +193,43 @@ export default function AwardTab() {
     <div className="space-y-10">
       {/* SECTION 1: CANDIDATES */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
-            <Users size={20} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
+              <Users size={20} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-slate-800 tracking-tight">Semua Peserta Tasmi</h3>
+              <p className="text-xs text-slate-500 font-medium italic">Siswa yang sudah lulus ujian dan siap diberikan award</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-black text-slate-800 tracking-tight">Semua Peserta Tasmi</h3>
-            <p className="text-xs text-slate-500 font-medium italic">Siswa yang sudah lulus ujian dan siap diberikan award</p>
+          
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border-2 border-emerald-50 shadow-sm">
+              <Calendar size={16} className="text-emerald-600" />
+              <input 
+                type="date" 
+                value={certDate}
+                onChange={(e) => setCertDate(e.target.value)}
+                className="text-[10px] font-black text-slate-600 outline-none"
+              />
+            </div>
+
+            <button
+              onClick={() => setIsSettingsModalOpen(true)}
+              className="p-2.5 bg-white text-slate-600 rounded-xl hover:bg-slate-50 border-2 border-slate-50 shadow-sm transition-all active:scale-95"
+              title="Pengaturan TTD"
+            >
+              <Settings size={18} />
+            </button>
+
+            <button
+              onClick={() => setIsCategoryModalOpen(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white text-emerald-600 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-emerald-50 border-2 border-emerald-50 shadow-sm transition-all active:scale-95"
+            >
+              <Tag size={16} />
+              Kelola Kategori
+            </button>
           </div>
         </div>
 
@@ -245,6 +291,22 @@ export default function AwardTab() {
                   <option value="PEREMPUAN">Putri</option>
                 </select>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-2 pt-6">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer"
+                  checked={candidateFilters.hideSelected}
+                  onChange={(e) => setCandidateFilters({ ...candidateFilters, hideSelected: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                <span className="ml-3 text-xs font-bold text-slate-600">Sembunyikan yang sudah masuk award</span>
+              </label>
+            </div>
+
+            <div className="flex items-end justify-end">
               <button 
                 onClick={fetchCandidates}
                 className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100"
@@ -446,14 +508,14 @@ export default function AwardTab() {
                       <td className="px-6 py-4">
                         <div className="flex justify-end items-center gap-2">
                           <button
-                            onClick={() => handlePreview(rec.sourceTasmiId)}
+                            onClick={() => handlePreview(rec.id, true)}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all border border-transparent hover:border-emerald-100"
                             title="Preview"
                           >
                             <Eye size={18} />
                           </button>
                           <button
-                            onClick={() => handlePreview(rec.sourceTasmiId, true)}
+                            onClick={() => handlePreview(rec.id, true, true)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100"
                             title="Download"
                           >
@@ -477,6 +539,19 @@ export default function AwardTab() {
           </div>
         </div>
       </section>
+
+      {/* MODAL SETTINGS TTD */}
+      <CertificateSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
+
+      {/* MODAL KATEGORI */}
+      <AwardCategoryModal 
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onUpdate={fetchCategories}
+      />
     </div>
   );
 }

@@ -418,7 +418,14 @@ exports.Prisma.MotivasiScalarFieldEnum = {
 exports.Prisma.AdminSignatureScalarFieldEnum = {
   id: 'id',
   type: 'type',
+  jabatan: 'jabatan',
+  nama: 'nama',
   signatureData: 'signatureData',
+  capData: 'capData',
+  capOpacity: 'capOpacity',
+  capScale: 'capScale',
+  capOffsetX: 'capOffsetX',
+  capOffsetY: 'capOffsetY',
   fileName: 'fileName',
   fileSize: 'fileSize',
   imageWidth: 'imageWidth',
@@ -532,6 +539,7 @@ exports.Prisma.AwardCategoryScalarFieldEnum = {
   categoryName: 'categoryName',
   quota: 'quota',
   reward: 'reward',
+  isActive: 'isActive',
   templateId: 'templateId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
