@@ -11,7 +11,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { eventId: id } = await params;
     const body = await request.json();
     const { name, date, period, isActive } = body;
 
@@ -38,7 +38,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { eventId: id } = await params;
     
     // Check for recipients
     const count = await prisma.awardRecipient.count({ where: { eventId: id } });
