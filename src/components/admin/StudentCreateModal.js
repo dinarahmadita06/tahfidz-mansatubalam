@@ -274,15 +274,25 @@ export default function StudentCreateModal({
   };
 
   const handleGenerateStudentPassword = () => {
-    setFormData({ ...formData, password: 'password123' });
+    if (!formData.tanggalLahir) {
+      toast.error('Isi tanggal lahir siswa terlebih dahulu');
+      return;
+    }
+    const defaultPw = generateStudentPassword(formData.tanggalLahir);
+    setFormData({ ...formData, password: defaultPw });
     setIsGeneratedStudentPw(true);
-    toast.success('Password siswa diset ke default: password123');
+    toast.success(`Password siswa diset ke default (Tgl Lahir): ${defaultPw}`);
   };
 
   const handleGenerateParentPassword = () => {
-    setNewParentData({ ...newParentData, password: 'password123' });
+    if (!formData.tanggalLahir) {
+      toast.error('Isi tanggal lahir siswa terlebih dahulu');
+      return;
+    }
+    const defaultPw = generateParentPassword(formData.tanggalLahir);
+    setNewParentData({ ...newParentData, password: defaultPw });
     setIsGeneratedParentPw(true);
-    toast.success('Password wali diset ke default: password123');
+    toast.success(`Password wali diset ke default (Tgl Lahir): ${defaultPw}`);
   };
 
   const handleSubmit = async (e) => {
@@ -583,9 +593,9 @@ export default function StudentCreateModal({
                     onGenerateCustom={handleGenerateStudentPassword}
                     generateDisabled={!formData.tanggalLahir}
                     helperText={
-                      isGeneratedStudentPw && formData.password !== 'password123'
+                      isGeneratedStudentPw && formData.password !== generateStudentPassword(formData.tanggalLahir)
                         ? "Klik generate ulang untuk memperbarui password."
-                        : "Set password ke default: password123"
+                        : `Set password ke default (YYYY-MM-DD): ${generateStudentPassword(formData.tanggalLahir) || 'Pilih Tgl Lahir'}`
                     }
                   />
                 </div>
@@ -789,9 +799,9 @@ export default function StudentCreateModal({
                       onGenerateCustom={handleGenerateParentPassword}
                       generateDisabled={!formData.tanggalLahir}
                       helperText={
-                        isGeneratedParentPw && newParentData.password !== 'password123'
+                        isGeneratedParentPw && newParentData.password !== generateParentPassword(formData.tanggalLahir)
                           ? "Klik generate ulang untuk memperbarui password."
-                          : "Set password ke default: password123"
+                          : `Set password ke default (DDMMYYYY): ${generateParentPassword(formData.tanggalLahir) || 'Pilih Tgl Lahir'}`
                       }
                     />
                   </div>

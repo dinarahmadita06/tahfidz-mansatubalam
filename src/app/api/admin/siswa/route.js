@@ -225,7 +225,11 @@ export async function POST(request) {
       if (!tanggalLahir) {
         throw new Error('Tanggal lahir wajib diisi untuk generate password default');
       }
-      studentPassword = tanggalLahir;
+      // Format as YYYY-MM-DD for default password
+      const birthDate = new Date(tanggalLahir);
+      studentPassword = birthDate.getFullYear() + '-' + 
+        String(birthDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(birthDate.getDate()).padStart(2, '0');
     } else if (studentPassword.length < 8) {
       return NextResponse.json({ 
         success: false, 
@@ -233,12 +237,8 @@ export async function POST(request) {
         message: "Password minimal 8 karakter." 
       }, { status: 400 });
     }
-    // Format as YYYY-MM-DD
-    const birthDate = new Date(tanggalLahir);
-    const formattedBirthDate = birthDate.getFullYear() + '-' + 
-      String(birthDate.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(birthDate.getDate()).padStart(2, '0');
-    const hashedPassword = await bcrypt.hash(formattedBirthDate, 10);
+    
+    const hashedPassword = await bcrypt.hash(studentPassword, 10);
 
     // ============ ATOMIC TRANSACTION ============
     const siswa = await prisma.$transaction(async (tx) => {
