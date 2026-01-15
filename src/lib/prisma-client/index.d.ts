@@ -301,6 +301,14 @@ export const StatusSiswa: {
 export type StatusSiswa = (typeof StatusSiswa)[keyof typeof StatusSiswa]
 
 
+export const StatusSetoran: {
+  DINILAI: 'DINILAI',
+  MENGULANG: 'MENGULANG'
+};
+
+export type StatusSetoran = (typeof StatusSetoran)[keyof typeof StatusSetoran]
+
+
 export const CertificateType: {
   NON_AWARD: 'NON_AWARD',
   AWARD: 'AWARD'
@@ -369,6 +377,10 @@ export const PeranGuru: typeof $Enums.PeranGuru
 export type StatusSiswa = $Enums.StatusSiswa
 
 export const StatusSiswa: typeof $Enums.StatusSiswa
+
+export type StatusSetoran = $Enums.StatusSetoran
+
+export const StatusSetoran: typeof $Enums.StatusSetoran
 
 export type CertificateType = $Enums.CertificateType
 
@@ -17359,6 +17371,8 @@ export namespace Prisma {
     notifiedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    submissionStatus: $Enums.StatusSetoran | null
+    repeatReason: string | null
   }
 
   export type PenilaianMaxAggregateOutputType = {
@@ -17375,6 +17389,8 @@ export namespace Prisma {
     notifiedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    submissionStatus: $Enums.StatusSetoran | null
+    repeatReason: string | null
   }
 
   export type PenilaianCountAggregateOutputType = {
@@ -17391,6 +17407,8 @@ export namespace Prisma {
     notifiedAt: number
     createdAt: number
     updatedAt: number
+    submissionStatus: number
+    repeatReason: number
     _all: number
   }
 
@@ -17425,6 +17443,8 @@ export namespace Prisma {
     notifiedAt?: true
     createdAt?: true
     updatedAt?: true
+    submissionStatus?: true
+    repeatReason?: true
   }
 
   export type PenilaianMaxAggregateInputType = {
@@ -17441,6 +17461,8 @@ export namespace Prisma {
     notifiedAt?: true
     createdAt?: true
     updatedAt?: true
+    submissionStatus?: true
+    repeatReason?: true
   }
 
   export type PenilaianCountAggregateInputType = {
@@ -17457,6 +17479,8 @@ export namespace Prisma {
     notifiedAt?: true
     createdAt?: true
     updatedAt?: true
+    submissionStatus?: true
+    repeatReason?: true
     _all?: true
   }
 
@@ -17551,15 +17575,17 @@ export namespace Prisma {
     hafalanId: string
     siswaId: string
     guruId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid: number | null
+    kelancaran: number | null
+    makhraj: number | null
+    adab: number | null
+    nilaiAkhir: number | null
     catatan: string | null
     notifiedAt: Date | null
     createdAt: Date
     updatedAt: Date
+    submissionStatus: $Enums.StatusSetoran
+    repeatReason: string | null
     _count: PenilaianCountAggregateOutputType | null
     _avg: PenilaianAvgAggregateOutputType | null
     _sum: PenilaianSumAggregateOutputType | null
@@ -17595,6 +17621,8 @@ export namespace Prisma {
     notifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    submissionStatus?: boolean
+    repeatReason?: boolean
     guru?: boolean | GuruDefaultArgs<ExtArgs>
     hafalan?: boolean | HafalanDefaultArgs<ExtArgs>
     siswa?: boolean | SiswaDefaultArgs<ExtArgs>
@@ -17614,6 +17642,8 @@ export namespace Prisma {
     notifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    submissionStatus?: boolean
+    repeatReason?: boolean
     guru?: boolean | GuruDefaultArgs<ExtArgs>
     hafalan?: boolean | HafalanDefaultArgs<ExtArgs>
     siswa?: boolean | SiswaDefaultArgs<ExtArgs>
@@ -17633,6 +17663,8 @@ export namespace Prisma {
     notifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    submissionStatus?: boolean
+    repeatReason?: boolean
     guru?: boolean | GuruDefaultArgs<ExtArgs>
     hafalan?: boolean | HafalanDefaultArgs<ExtArgs>
     siswa?: boolean | SiswaDefaultArgs<ExtArgs>
@@ -17652,9 +17684,11 @@ export namespace Prisma {
     notifiedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    submissionStatus?: boolean
+    repeatReason?: boolean
   }
 
-  export type PenilaianOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "hafalanId" | "siswaId" | "guruId" | "tajwid" | "kelancaran" | "makhraj" | "adab" | "nilaiAkhir" | "catatan" | "notifiedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["penilaian"]>
+  export type PenilaianOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "hafalanId" | "siswaId" | "guruId" | "tajwid" | "kelancaran" | "makhraj" | "adab" | "nilaiAkhir" | "catatan" | "notifiedAt" | "createdAt" | "updatedAt" | "submissionStatus" | "repeatReason", ExtArgs["result"]["penilaian"]>
   export type PenilaianInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     guru?: boolean | GuruDefaultArgs<ExtArgs>
     hafalan?: boolean | HafalanDefaultArgs<ExtArgs>
@@ -17683,15 +17717,17 @@ export namespace Prisma {
       hafalanId: string
       siswaId: string
       guruId: string
-      tajwid: number
-      kelancaran: number
-      makhraj: number
-      adab: number
-      nilaiAkhir: number
+      tajwid: number | null
+      kelancaran: number | null
+      makhraj: number | null
+      adab: number | null
+      nilaiAkhir: number | null
       catatan: string | null
       notifiedAt: Date | null
       createdAt: Date
       updatedAt: Date
+      submissionStatus: $Enums.StatusSetoran
+      repeatReason: string | null
     }, ExtArgs["result"]["penilaian"]>
     composites: {}
   }
@@ -18131,6 +18167,8 @@ export namespace Prisma {
     readonly notifiedAt: FieldRef<"Penilaian", 'DateTime'>
     readonly createdAt: FieldRef<"Penilaian", 'DateTime'>
     readonly updatedAt: FieldRef<"Penilaian", 'DateTime'>
+    readonly submissionStatus: FieldRef<"Penilaian", 'StatusSetoran'>
+    readonly repeatReason: FieldRef<"Penilaian", 'String'>
   }
     
 
@@ -41952,7 +41990,9 @@ export namespace Prisma {
     catatan: 'catatan',
     notifiedAt: 'notifiedAt',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    submissionStatus: 'submissionStatus',
+    repeatReason: 'repeatReason'
   };
 
   export type PenilaianScalarFieldEnum = (typeof PenilaianScalarFieldEnum)[keyof typeof PenilaianScalarFieldEnum]
@@ -42503,6 +42543,20 @@ export namespace Prisma {
    * Reference to a field of type 'Float[]'
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'StatusSetoran'
+   */
+  export type EnumStatusSetoranFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StatusSetoran'>
+    
+
+
+  /**
+   * Reference to a field of type 'StatusSetoran[]'
+   */
+  export type ListEnumStatusSetoranFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StatusSetoran[]'>
     
 
 
@@ -43659,15 +43713,17 @@ export namespace Prisma {
     hafalanId?: StringFilter<"Penilaian"> | string
     siswaId?: StringFilter<"Penilaian"> | string
     guruId?: StringFilter<"Penilaian"> | string
-    tajwid?: IntFilter<"Penilaian"> | number
-    kelancaran?: IntFilter<"Penilaian"> | number
-    makhraj?: IntFilter<"Penilaian"> | number
-    adab?: IntFilter<"Penilaian"> | number
-    nilaiAkhir?: FloatFilter<"Penilaian"> | number
+    tajwid?: IntNullableFilter<"Penilaian"> | number | null
+    kelancaran?: IntNullableFilter<"Penilaian"> | number | null
+    makhraj?: IntNullableFilter<"Penilaian"> | number | null
+    adab?: IntNullableFilter<"Penilaian"> | number | null
+    nilaiAkhir?: FloatNullableFilter<"Penilaian"> | number | null
     catatan?: StringNullableFilter<"Penilaian"> | string | null
     notifiedAt?: DateTimeNullableFilter<"Penilaian"> | Date | string | null
     createdAt?: DateTimeFilter<"Penilaian"> | Date | string
     updatedAt?: DateTimeFilter<"Penilaian"> | Date | string
+    submissionStatus?: EnumStatusSetoranFilter<"Penilaian"> | $Enums.StatusSetoran
+    repeatReason?: StringNullableFilter<"Penilaian"> | string | null
     guru?: XOR<GuruScalarRelationFilter, GuruWhereInput>
     hafalan?: XOR<HafalanScalarRelationFilter, HafalanWhereInput>
     siswa?: XOR<SiswaScalarRelationFilter, SiswaWhereInput>
@@ -43678,15 +43734,17 @@ export namespace Prisma {
     hafalanId?: SortOrder
     siswaId?: SortOrder
     guruId?: SortOrder
-    tajwid?: SortOrder
-    kelancaran?: SortOrder
-    makhraj?: SortOrder
-    adab?: SortOrder
-    nilaiAkhir?: SortOrder
+    tajwid?: SortOrderInput | SortOrder
+    kelancaran?: SortOrderInput | SortOrder
+    makhraj?: SortOrderInput | SortOrder
+    adab?: SortOrderInput | SortOrder
+    nilaiAkhir?: SortOrderInput | SortOrder
     catatan?: SortOrderInput | SortOrder
     notifiedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    submissionStatus?: SortOrder
+    repeatReason?: SortOrderInput | SortOrder
     guru?: GuruOrderByWithRelationInput
     hafalan?: HafalanOrderByWithRelationInput
     siswa?: SiswaOrderByWithRelationInput
@@ -43700,15 +43758,17 @@ export namespace Prisma {
     hafalanId?: StringFilter<"Penilaian"> | string
     siswaId?: StringFilter<"Penilaian"> | string
     guruId?: StringFilter<"Penilaian"> | string
-    tajwid?: IntFilter<"Penilaian"> | number
-    kelancaran?: IntFilter<"Penilaian"> | number
-    makhraj?: IntFilter<"Penilaian"> | number
-    adab?: IntFilter<"Penilaian"> | number
-    nilaiAkhir?: FloatFilter<"Penilaian"> | number
+    tajwid?: IntNullableFilter<"Penilaian"> | number | null
+    kelancaran?: IntNullableFilter<"Penilaian"> | number | null
+    makhraj?: IntNullableFilter<"Penilaian"> | number | null
+    adab?: IntNullableFilter<"Penilaian"> | number | null
+    nilaiAkhir?: FloatNullableFilter<"Penilaian"> | number | null
     catatan?: StringNullableFilter<"Penilaian"> | string | null
     notifiedAt?: DateTimeNullableFilter<"Penilaian"> | Date | string | null
     createdAt?: DateTimeFilter<"Penilaian"> | Date | string
     updatedAt?: DateTimeFilter<"Penilaian"> | Date | string
+    submissionStatus?: EnumStatusSetoranFilter<"Penilaian"> | $Enums.StatusSetoran
+    repeatReason?: StringNullableFilter<"Penilaian"> | string | null
     guru?: XOR<GuruScalarRelationFilter, GuruWhereInput>
     hafalan?: XOR<HafalanScalarRelationFilter, HafalanWhereInput>
     siswa?: XOR<SiswaScalarRelationFilter, SiswaWhereInput>
@@ -43719,15 +43779,17 @@ export namespace Prisma {
     hafalanId?: SortOrder
     siswaId?: SortOrder
     guruId?: SortOrder
-    tajwid?: SortOrder
-    kelancaran?: SortOrder
-    makhraj?: SortOrder
-    adab?: SortOrder
-    nilaiAkhir?: SortOrder
+    tajwid?: SortOrderInput | SortOrder
+    kelancaran?: SortOrderInput | SortOrder
+    makhraj?: SortOrderInput | SortOrder
+    adab?: SortOrderInput | SortOrder
+    nilaiAkhir?: SortOrderInput | SortOrder
     catatan?: SortOrderInput | SortOrder
     notifiedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    submissionStatus?: SortOrder
+    repeatReason?: SortOrderInput | SortOrder
     _count?: PenilaianCountOrderByAggregateInput
     _avg?: PenilaianAvgOrderByAggregateInput
     _max?: PenilaianMaxOrderByAggregateInput
@@ -43743,15 +43805,17 @@ export namespace Prisma {
     hafalanId?: StringWithAggregatesFilter<"Penilaian"> | string
     siswaId?: StringWithAggregatesFilter<"Penilaian"> | string
     guruId?: StringWithAggregatesFilter<"Penilaian"> | string
-    tajwid?: IntWithAggregatesFilter<"Penilaian"> | number
-    kelancaran?: IntWithAggregatesFilter<"Penilaian"> | number
-    makhraj?: IntWithAggregatesFilter<"Penilaian"> | number
-    adab?: IntWithAggregatesFilter<"Penilaian"> | number
-    nilaiAkhir?: FloatWithAggregatesFilter<"Penilaian"> | number
+    tajwid?: IntNullableWithAggregatesFilter<"Penilaian"> | number | null
+    kelancaran?: IntNullableWithAggregatesFilter<"Penilaian"> | number | null
+    makhraj?: IntNullableWithAggregatesFilter<"Penilaian"> | number | null
+    adab?: IntNullableWithAggregatesFilter<"Penilaian"> | number | null
+    nilaiAkhir?: FloatNullableWithAggregatesFilter<"Penilaian"> | number | null
     catatan?: StringNullableWithAggregatesFilter<"Penilaian"> | string | null
     notifiedAt?: DateTimeNullableWithAggregatesFilter<"Penilaian"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Penilaian"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Penilaian"> | Date | string
+    submissionStatus?: EnumStatusSetoranWithAggregatesFilter<"Penilaian"> | $Enums.StatusSetoran
+    repeatReason?: StringNullableWithAggregatesFilter<"Penilaian"> | string | null
   }
 
   export type TahsinWhereInput = {
@@ -46661,15 +46725,17 @@ export namespace Prisma {
 
   export type PenilaianCreateInput = {
     id?: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
     guru: GuruCreateNestedOneWithoutPenilaianInput
     hafalan: HafalanCreateNestedOneWithoutPenilaianInput
     siswa: SiswaCreateNestedOneWithoutPenilaianInput
@@ -46680,28 +46746,32 @@ export namespace Prisma {
     hafalanId: string
     siswaId: string
     guruId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PenilaianUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
     guru?: GuruUpdateOneRequiredWithoutPenilaianNestedInput
     hafalan?: HafalanUpdateOneRequiredWithoutPenilaianNestedInput
     siswa?: SiswaUpdateOneRequiredWithoutPenilaianNestedInput
@@ -46712,15 +46782,17 @@ export namespace Prisma {
     hafalanId?: StringFieldUpdateOperationsInput | string
     siswaId?: StringFieldUpdateOperationsInput | string
     guruId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PenilaianCreateManyInput = {
@@ -46728,28 +46800,32 @@ export namespace Prisma {
     hafalanId: string
     siswaId: string
     guruId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PenilaianUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PenilaianUncheckedUpdateManyInput = {
@@ -46757,15 +46833,17 @@ export namespace Prisma {
     hafalanId?: StringFieldUpdateOperationsInput | string
     siswaId?: StringFieldUpdateOperationsInput | string
     guruId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TahsinCreateInput = {
@@ -49798,15 +49876,22 @@ export namespace Prisma {
     _max?: NestedJsonFilter<$PrismaModel>
   }
 
-  export type FloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type EnumStatusSetoranFilter<$PrismaModel = never> = {
+    equals?: $Enums.StatusSetoran | EnumStatusSetoranFieldRefInput<$PrismaModel>
+    in?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusSetoranFilter<$PrismaModel> | $Enums.StatusSetoran
   }
 
   export type HafalanScalarRelationFilter = {
@@ -49828,6 +49913,8 @@ export namespace Prisma {
     notifiedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    submissionStatus?: SortOrder
+    repeatReason?: SortOrder
   }
 
   export type PenilaianAvgOrderByAggregateInput = {
@@ -49852,6 +49939,8 @@ export namespace Prisma {
     notifiedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    submissionStatus?: SortOrder
+    repeatReason?: SortOrder
   }
 
   export type PenilaianMinOrderByAggregateInput = {
@@ -49868,6 +49957,8 @@ export namespace Prisma {
     notifiedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    submissionStatus?: SortOrder
+    repeatReason?: SortOrder
   }
 
   export type PenilaianSumOrderByAggregateInput = {
@@ -49878,20 +49969,30 @@ export namespace Prisma {
     nilaiAkhir?: SortOrder
   }
 
-  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type EnumStatusSetoranWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.StatusSetoran | EnumStatusSetoranFieldRefInput<$PrismaModel>
+    in?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusSetoranWithAggregatesFilter<$PrismaModel> | $Enums.StatusSetoran
     _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedFloatFilter<$PrismaModel>
-    _min?: NestedFloatFilter<$PrismaModel>
-    _max?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedEnumStatusSetoranFilter<$PrismaModel>
+    _max?: NestedEnumStatusSetoranFilter<$PrismaModel>
   }
 
   export type EnumLevelTahsinFilter<$PrismaModel = never> = {
@@ -50488,17 +50589,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type FloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
   export type AdminSignatureCountOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
@@ -50574,22 +50664,6 @@ export namespace Prisma {
     fileSize?: SortOrder
     imageWidth?: SortOrder
     imageHeight?: SortOrder
-  }
-
-  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type EnumStatusTasmiFilter<$PrismaModel = never> = {
@@ -53059,12 +53133,16 @@ export namespace Prisma {
     connect?: SiswaWhereUniqueInput
   }
 
-  export type FloatFieldUpdateOperationsInput = {
-    set?: number
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type EnumStatusSetoranFieldUpdateOperationsInput = {
+    set?: $Enums.StatusSetoran
   }
 
   export type GuruUpdateOneRequiredWithoutPenilaianNestedInput = {
@@ -53353,14 +53431,6 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutGuruActivityInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutGuruActivityInput, UserUpdateWithoutGuruActivityInput>, UserUncheckedUpdateWithoutGuruActivityInput>
-  }
-
-  export type NullableFloatFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type CertificateCreateNestedOneWithoutTasmiInput = {
@@ -54201,20 +54271,37 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+  export type NestedEnumStatusSetoranFilter<$PrismaModel = never> = {
+    equals?: $Enums.StatusSetoran | EnumStatusSetoranFieldRefInput<$PrismaModel>
+    in?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusSetoranFilter<$PrismaModel> | $Enums.StatusSetoran
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumStatusSetoranWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.StatusSetoran | EnumStatusSetoranFieldRefInput<$PrismaModel>
+    in?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StatusSetoran[] | ListEnumStatusSetoranFieldRefInput<$PrismaModel>
+    not?: NestedEnumStatusSetoranWithAggregatesFilter<$PrismaModel> | $Enums.StatusSetoran
     _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedFloatFilter<$PrismaModel>
-    _min?: NestedFloatFilter<$PrismaModel>
-    _max?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedEnumStatusSetoranFilter<$PrismaModel>
+    _max?: NestedEnumStatusSetoranFilter<$PrismaModel>
   }
 
   export type NestedEnumLevelTahsinFilter<$PrismaModel = never> = {
@@ -54340,22 +54427,6 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
-
-  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumStatusTasmiFilter<$PrismaModel = never> = {
@@ -55506,15 +55577,17 @@ export namespace Prisma {
 
   export type PenilaianCreateWithoutGuruInput = {
     id?: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
     hafalan: HafalanCreateNestedOneWithoutPenilaianInput
     siswa: SiswaCreateNestedOneWithoutPenilaianInput
   }
@@ -55523,15 +55596,17 @@ export namespace Prisma {
     id?: string
     hafalanId: string
     siswaId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PenilaianCreateOrConnectWithoutGuruInput = {
@@ -56090,15 +56165,17 @@ export namespace Prisma {
     hafalanId?: StringFilter<"Penilaian"> | string
     siswaId?: StringFilter<"Penilaian"> | string
     guruId?: StringFilter<"Penilaian"> | string
-    tajwid?: IntFilter<"Penilaian"> | number
-    kelancaran?: IntFilter<"Penilaian"> | number
-    makhraj?: IntFilter<"Penilaian"> | number
-    adab?: IntFilter<"Penilaian"> | number
-    nilaiAkhir?: FloatFilter<"Penilaian"> | number
+    tajwid?: IntNullableFilter<"Penilaian"> | number | null
+    kelancaran?: IntNullableFilter<"Penilaian"> | number | null
+    makhraj?: IntNullableFilter<"Penilaian"> | number | null
+    adab?: IntNullableFilter<"Penilaian"> | number | null
+    nilaiAkhir?: FloatNullableFilter<"Penilaian"> | number | null
     catatan?: StringNullableFilter<"Penilaian"> | string | null
     notifiedAt?: DateTimeNullableFilter<"Penilaian"> | Date | string | null
     createdAt?: DateTimeFilter<"Penilaian"> | Date | string
     updatedAt?: DateTimeFilter<"Penilaian"> | Date | string
+    submissionStatus?: EnumStatusSetoranFilter<"Penilaian"> | $Enums.StatusSetoran
+    repeatReason?: StringNullableFilter<"Penilaian"> | string | null
   }
 
   export type PresensiUpsertWithWhereUniqueWithoutGuruInput = {
@@ -56318,15 +56395,17 @@ export namespace Prisma {
 
   export type PenilaianCreateWithoutSiswaInput = {
     id?: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
     guru: GuruCreateNestedOneWithoutPenilaianInput
     hafalan: HafalanCreateNestedOneWithoutPenilaianInput
   }
@@ -56335,15 +56414,17 @@ export namespace Prisma {
     id?: string
     hafalanId: string
     guruId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PenilaianCreateOrConnectWithoutSiswaInput = {
@@ -58736,15 +58817,17 @@ export namespace Prisma {
 
   export type PenilaianCreateWithoutHafalanInput = {
     id?: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
     guru: GuruCreateNestedOneWithoutPenilaianInput
     siswa: SiswaCreateNestedOneWithoutPenilaianInput
   }
@@ -58753,15 +58836,17 @@ export namespace Prisma {
     id?: string
     siswaId: string
     guruId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PenilaianCreateOrConnectWithoutHafalanInput = {
@@ -63343,15 +63428,17 @@ export namespace Prisma {
     id?: string
     hafalanId: string
     siswaId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PresensiCreateManyGuruInput = {
@@ -63666,15 +63753,17 @@ export namespace Prisma {
 
   export type PenilaianUpdateWithoutGuruInput = {
     id?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
     hafalan?: HafalanUpdateOneRequiredWithoutPenilaianNestedInput
     siswa?: SiswaUpdateOneRequiredWithoutPenilaianNestedInput
   }
@@ -63683,30 +63772,34 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     hafalanId?: StringFieldUpdateOperationsInput | string
     siswaId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PenilaianUncheckedUpdateManyWithoutGuruInput = {
     id?: StringFieldUpdateOperationsInput | string
     hafalanId?: StringFieldUpdateOperationsInput | string
     siswaId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PresensiUpdateWithoutGuruInput = {
@@ -64081,15 +64174,17 @@ export namespace Prisma {
     id?: string
     hafalanId: string
     guruId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PresensiCreateManySiswaInput = {
@@ -64246,15 +64341,17 @@ export namespace Prisma {
 
   export type PenilaianUpdateWithoutSiswaInput = {
     id?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
     guru?: GuruUpdateOneRequiredWithoutPenilaianNestedInput
     hafalan?: HafalanUpdateOneRequiredWithoutPenilaianNestedInput
   }
@@ -64263,30 +64360,34 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     hafalanId?: StringFieldUpdateOperationsInput | string
     guruId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PenilaianUncheckedUpdateManyWithoutSiswaInput = {
     id?: StringFieldUpdateOperationsInput | string
     hafalanId?: StringFieldUpdateOperationsInput | string
     guruId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PresensiUpdateWithoutSiswaInput = {
@@ -65090,28 +65191,32 @@ export namespace Prisma {
     id?: string
     siswaId: string
     guruId: string
-    tajwid: number
-    kelancaran: number
-    makhraj: number
-    adab: number
-    nilaiAkhir: number
+    tajwid?: number | null
+    kelancaran?: number | null
+    makhraj?: number | null
+    adab?: number | null
+    nilaiAkhir?: number | null
     catatan?: string | null
     notifiedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    submissionStatus?: $Enums.StatusSetoran
+    repeatReason?: string | null
   }
 
   export type PenilaianUpdateWithoutHafalanInput = {
     id?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
     guru?: GuruUpdateOneRequiredWithoutPenilaianNestedInput
     siswa?: SiswaUpdateOneRequiredWithoutPenilaianNestedInput
   }
@@ -65120,30 +65225,34 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     siswaId?: StringFieldUpdateOperationsInput | string
     guruId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PenilaianUncheckedUpdateManyWithoutHafalanInput = {
     id?: StringFieldUpdateOperationsInput | string
     siswaId?: StringFieldUpdateOperationsInput | string
     guruId?: StringFieldUpdateOperationsInput | string
-    tajwid?: IntFieldUpdateOperationsInput | number
-    kelancaran?: IntFieldUpdateOperationsInput | number
-    makhraj?: IntFieldUpdateOperationsInput | number
-    adab?: IntFieldUpdateOperationsInput | number
-    nilaiAkhir?: FloatFieldUpdateOperationsInput | number
+    tajwid?: NullableIntFieldUpdateOperationsInput | number | null
+    kelancaran?: NullableIntFieldUpdateOperationsInput | number | null
+    makhraj?: NullableIntFieldUpdateOperationsInput | number | null
+    adab?: NullableIntFieldUpdateOperationsInput | number | null
+    nilaiAkhir?: NullableFloatFieldUpdateOperationsInput | number | null
     catatan?: NullableStringFieldUpdateOperationsInput | string | null
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    submissionStatus?: EnumStatusSetoranFieldUpdateOperationsInput | $Enums.StatusSetoran
+    repeatReason?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PengumumanReadCreateManyPengumumanInput = {
