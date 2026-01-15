@@ -60,12 +60,21 @@ export const mapAssessmentToRow = (assessment) => {
   if (!assessment) return null;
 
   const avgScore = safeNumber(assessment.nilaiAkhir, 0);
+  
+  // Format Surah/Ayat: "Nama Surah (Ayat X-Y)" atau "-" jika kosong
+  let surahAyatText = '-';
+  if (assessment.surah && assessment.ayat) {
+    surahAyatText = `${assessment.surah} (${assessment.ayat})`;
+  } else if (assessment.surah) {
+    surahAyatText = assessment.surah;
+  }
 
   return {
     id: assessment.id,
     tanggal: assessment.tanggal || '-',
     surah: assessment.surah || '-',
     ayat: assessment.ayat || '-',
+    surahAyatFull: surahAyatText, // Format lengkap untuk display
     tajwid: safeNumber(assessment.tajwid, 0),
     kelancaran: safeNumber(assessment.kelancaran, 0),
     makhraj: safeNumber(assessment.makhraj, 0),

@@ -3,19 +3,30 @@ export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { generateLaporanPDF } from '@/lib/utils/generateLaporanPDF';
-import { format, parseISO } from 'date-fns';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
+import {
+  renderReportHeader,
+  renderReportTitle,
+  renderMetadata,
+  renderTable,
+  renderFooterSignature,
+  imageUrlToBase64,
+} from '@/lib/utils/pdfMasterTemplate';
+import { formatSurahSetoran } from '@/lib/helpers/formatSurahSetoran';
 
 /**
  * GET /api/orangtua/laporan-hafalan/pdf
- * Generate dan return PDF laporan perkembangan hafalan
+ * Generate PDF Laporan Perkembangan Hafalan Siswa (LANDSCAPE A4)
+ * Menggunakan MASTER TEMPLATE yang sama dengan Laporan Tasmi
  * 
  * Query params:
  * - anakId: ID siswa (required)
- * - startDate: ISO date string (required, contoh: 2026-01-01)
- * - endDate: ISO date string (required, contoh: 2026-01-07)
+ * - month: 0-11 (required, bulan 0=Januari)
+ * - year: tahun (required, contoh: 2026)
  * 
- * Response: PDF file download
+ * Response: PDF file download (LANDSCAPE)
  */
 export async function GET(request) {
   try {
@@ -28,27 +39,20 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const anakId = searchParams.get('anakId');
-    const startDateStr = searchParams.get('startDate');
-    const endDateStr = searchParams.get('endDate');
+    const month = parseInt(searchParams.get('month')); // 0-11
+    const year = parseInt(searchParams.get('year'));
 
     // Validasi required params
-    if (!anakId || !startDateStr || !endDateStr) {
+    if (!anakId || isNaN(month) || !year) {
       return NextResponse.json(
-        { error: 'Missing required parameters: anakId, startDate, endDate' },
+        { error: 'Missing required parameters: anakId, month (0-11), year' },
         { status: 400 }
       );
     }
 
-    // Parse dates
-    const startDate = parseISO(startDateStr);
-    const endDate = parseISO(endDateStr);
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return NextResponse.json(
-        { error: 'Invalid date format. Use ISO format: YYYY-MM-DD' },
-        { status: 400 }
-      );
-    }
+    // Calculate date range for the month
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
     // Security: Validasi parent-child relationship
     const siswa = await prisma.siswa.findFirst({
@@ -61,8 +65,15 @@ export async function GET(request) {
         }
       },
       include: {
-        user: { select: { name: true } },
-        kelas: { select: { nama: true } }
+        user: true,
+        kelas: {
+          include: {
+            guruKelas: {
+              where: { peran: 'utama', isActive: true },
+              include: { guru: { include: { user: true } } }
+            }
+          }
+        }
       }
     });
 
@@ -73,131 +84,258 @@ export async function GET(request) {
       );
     }
 
-    // Fetch guru pembina (first guru who created penilaian for this siswa in this period)
-    const firstPenilaian = await prisma.penilaian.findFirst({
+    const guruPembina = siswa.kelas?.guruKelas[0]?.guru?.user?.name || '....................';
+
+    // Fetch Presensi (by tanggal, not createdAt)
+    const presensiList = await prisma.presensi.findMany({
       where: {
         siswaId: anakId,
-        createdAt: {
-          gte: startDate,
-          lte: new Date(endDate.getTime() + 24 * 60 * 60 * 1000) // Include end day
-        }
+        tanggal: { gte: startDate, lte: endDate }
       },
-      include: {
-        guru: { include: { user: { select: { name: true, ttdUrl: true } } } }
-      },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { tanggal: 'asc' }
     });
 
-    const guru = firstPenilaian?.guru
-      ? {
-          id: firstPenilaian.guru.id,
-          nama: firstPenilaian.guru.user.name,
-          signatureUrl: firstPenilaian.guru.signatureUrl || firstPenilaian.guru.user?.ttdUrl || null
-        }
-      : {
-          id: null,
-          nama: 'Guru Pembina',
-          signatureUrl: null
-        };
+    // Group by tanggal for display
+    const presensiMap = {};
+    presensiList.forEach(p => {
+      const dateKey = format(new Date(p.tanggal), 'yyyy-MM-dd');
+      presensiMap[dateKey] = p.status; // HADIR, IZIN, SAKIT, ALFA
+    });
 
-    // Fetch penilaian data for period
+    // Fetch Penilaian (by hafalan.tanggal) - HARUS INCLUDE surahTambahan
     const penilaianList = await prisma.penilaian.findMany({
       where: {
         siswaId: anakId,
-        createdAt: {
-          gte: startDate,
-          lte: new Date(endDate.getTime() + 24 * 60 * 60 * 1000)
-        }
+        hafalan: { tanggal: { gte: startDate, lte: endDate } }
       },
       include: {
-        hafalan: { select: { surah: true, ayatMulai: true, ayatSelesai: true } }
+        hafalan: {
+          select: {
+            surah: true,
+            ayatMulai: true,
+            ayatSelesai: true,
+            tanggal: true,
+            surahTambahan: true  // ✅ WAJIB untuk multi-surah
+          }
+        },
+        guru: { include: { user: true } }
       },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { hafalan: { tanggal: 'asc' } }
     });
 
-    // Format penilaian data
-    const formattedPenilaian = penilaianList.map((p) => ({
-      tanggal: p.createdAt,
-      surah: p.hafalan?.surah || '-',
-      ayat: `${p.hafalan?.ayatMulai || '?'}-${p.hafalan?.ayatSelesai || '?'}`,
-      tajwid: p.tajwid || '-',
-      kelancaran: p.kelancaran || '-',
-      makhraj: p.makhraj || '-',
-      implementasi: p.adab || '-',
-      nilaiAkhir: p.nilaiAkhir || 0,
-      catatan: p.catatan || '',
-      status: p.nilaiAkhir
-        ? p.nilaiAkhir >= 75
-          ? 'Lulus'
-          : p.nilaiAkhir >= 60
-          ? 'Lanjut'
-          : 'Belum Setoran'
-        : 'Belum Setoran'
-    }));
+    const monthName = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(startDate);
 
-    // Calculate statistics
-    const totalPenilaian = formattedPenilaian.length;
-    let rataRataNilai = 0;
-    let hafalanTerakhir = '-';
-    let konsistensi = 0;
+    // ============================================
+    // CREATE PDF - LANDSCAPE A4 (MASTER TEMPLATE)
+    // ============================================
+    const doc = new jsPDF('l', 'mm', 'a4'); // LANDSCAPE
+    const pageWidth = doc.internal.pageSize.getWidth(); // 297mm
+    const pageHeight = doc.internal.pageSize.getHeight(); // 210mm
+    const margin = 20;
+    const contentWidth = pageWidth - 2 * margin;
 
-    if (totalPenilaian > 0) {
-      const totalNilai = formattedPenilaian.reduce((sum, p) => {
-        const nilai = typeof p.nilaiAkhir === 'number' ? p.nilaiAkhir : 0;
-        return sum + nilai;
-      }, 0);
-      rataRataNilai = totalNilai / totalPenilaian;
+    // Load logos (server-side: gunakan placeholder atau skip)
+    // Note: imageUrlToBase64 hanya bisa di client-side, di server akan return null
+    const logoMan1 = null; // await imageUrlToBase64('/logo-man1.png');
+    const logoKemenag = null; // await imageUrlToBase64('/logo-kemenag.png');
 
-      // Last hafalan
-      const lastPenilaian = formattedPenilaian[formattedPenilaian.length - 1];
-      hafalanTerakhir = `${lastPenilaian.surah} ${lastPenilaian.ayat}`;
+    // ============================================
+    // RENDER HEADER/KOP SURAT (SAMA DENGAN TASMI)
+    // ============================================
+    let yPos = renderReportHeader(doc, { pageWidth, margin, logoMan1, logoKemenag });
 
-      // Consistency: count unique dates with penilaian
-      const uniqueDates = new Set(formattedPenilaian.map((p) => format(new Date(p.tanggal), 'yyyy-MM-dd')));
-      konsistensi = uniqueDates.size;
-    }
+    // ============================================
+    // RENDER JUDUL LAPORAN
+    // ============================================
+    yPos = renderReportTitle(doc, 'LAPORAN PERKEMBANGAN HAFALAN SISWA', pageWidth, yPos);
 
-    // Determine period type
-    const dayDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-    const periodType = dayDiff <= 7 ? 'Mingguan' : dayDiff <= 30 ? 'Bulanan' : 'Semesteran';
+    // ============================================
+    // RENDER METADATA (2 KOLOM) - KIRI: Nama/Kelas/Guru | KANAN: Periode/Tanggal
+    // ============================================
+    const metaLeft = [
+      { label: 'Nama Siswa', value: siswa.user.name },
+      { label: 'Kelas', value: siswa.kelas?.nama || '-' },
+      { label: 'Guru Pembina', value: guruPembina },
+    ];
 
-    // Generate PDF
-    const doc = await generateLaporanPDF({
-      siswa: {
-        id: siswa.id,
-        nama: siswa.user.name,
-        kelas: siswa.kelas?.nama || 'Tidak Ada'
-      },
-      guru,
-      penilaianList: formattedPenilaian,
-      statistics: {
-        totalPenilaian,
-        rataRataNilai,
-        hafalanTerakhir,
-        konsistensi
-      },
-      startDate,
-      endDate,
-      periodType
+    const metaRight = [
+      { label: 'Periode', value: `${monthName} ${year}` },
+      { label: 'Tanggal Cetak', value: format(new Date(), 'dd/MM/yyyy') },
+    ];
+
+    yPos = renderMetadata(doc, { pageWidth, margin, metaLeft, metaRight, yPos });
+
+    // ============================================
+    // RENDER TABEL RIWAYAT PENILAIAN
+    // Header: FULL TEXT (tidak disingkat)
+    // Data: GROUP BY tanggal + guru, aggregate surah (SAMA dengan UI)
+    // ============================================
+    
+    // Group penilaian by tanggal + guruId (SAMA dengan UI logic)
+    const penilaianByDateGuru = {};
+    penilaianList.forEach(p => {
+      const tanggal = new Date(p.hafalan.tanggal);
+      const dateKey = format(tanggal, 'yyyy-MM-dd');
+      const guruId = p.guruId || 'unknown';
+      const groupKey = `${dateKey}_${guruId}`;
+      
+      if (!penilaianByDateGuru[groupKey]) {
+        penilaianByDateGuru[groupKey] = {
+          tanggal: tanggal,
+          dateKey: dateKey,
+          guruId: guruId,
+          hafalanItems: [],
+          nilaiTotal: [],
+        };
+      }
+      
+      // Collect hafalan items (untuk format surah dengan surahTambahan)
+      penilaianByDateGuru[groupKey].hafalanItems.push(p.hafalan);
+      
+      // Collect nilai untuk averaging
+      penilaianByDateGuru[groupKey].nilaiTotal.push({
+        tajwid: p.tajwid,
+        kelancaran: p.kelancaran,
+        makhraj: p.makhraj,
+        implementasi: p.adab,
+        nilaiAkhir: p.nilaiAkhir,
+        catatan: p.catatan,
+      });
     });
 
-    // Convert PDF to buffer
-    const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+    // Sort by date ASC
+    const sortedGroupKeys = Object.keys(penilaianByDateGuru).sort((a, b) => {
+      const dateA = penilaianByDateGuru[a].dateKey;
+      const dateB = penilaianByDateGuru[b].dateKey;
+      return dateA.localeCompare(dateB);
+    });
+    
+    // HEADER TABEL - FULL TEXT (TIDAK DISINGKAT)
+    const tableHead = [
+      'Tanggal', 
+      'Kehadiran', 
+      'Surah/Ayat', 
+      'Tajwid', 
+      'Kelancaran', 
+      'Makhraj', 
+      'Implementasi', 
+      'Rata-rata', 
+      'Catatan'
+    ];
 
-    // Return as downloadable file
-    const fileName = `Laporan_Hafalan_${siswa.user.name}_${format(startDate, 'ddMMyyyy')}_${format(endDate, 'ddMMyyyy')}.pdf`;
+    const tableBody = sortedGroupKeys.map(groupKey => {
+      const groupData = penilaianByDateGuru[groupKey];
+      const kehadiran = presensiMap[groupData.dateKey] || '-';
+      
+      // ✅ FORMAT SURAH SAMA DENGAN UI: gunakan formatSurahSetoran untuk setiap hafalan
+      // Ini akan otomatis include main surah + surahTambahan
+      const allSurahTexts = [];
+      groupData.hafalanItems.forEach(hafalan => {
+        const surahArray = formatSurahSetoran(hafalan); // Returns array of formatted strings
+        allSurahTexts.push(...surahArray);
+      });
+      
+      // Dedupe (karena bisa ada duplicate dari multiple penilaian)
+      const uniqueSurahs = [...new Set(allSurahTexts)];
+      
+      // Join dengan line break untuk PDF
+      const surahText = uniqueSurahs.length > 0 ? uniqueSurahs.join('\n') : '-';
+      
+      // Calculate average nilai dari semua penilaian dalam group ini
+      const avgTajwid = Math.round(
+        groupData.nilaiTotal.reduce((sum, n) => sum + n.tajwid, 0) / groupData.nilaiTotal.length
+      );
+      const avgKelancaran = Math.round(
+        groupData.nilaiTotal.reduce((sum, n) => sum + n.kelancaran, 0) / groupData.nilaiTotal.length
+      );
+      const avgMakhraj = Math.round(
+        groupData.nilaiTotal.reduce((sum, n) => sum + n.makhraj, 0) / groupData.nilaiTotal.length
+      );
+      const avgImplementasi = Math.round(
+        groupData.nilaiTotal.reduce((sum, n) => sum + n.implementasi, 0) / groupData.nilaiTotal.length
+      );
+      const avgNilaiAkhir = (
+        groupData.nilaiTotal.reduce((sum, n) => sum + n.nilaiAkhir, 0) / groupData.nilaiTotal.length
+      ).toFixed(2);
+      
+      // Gabungkan catatan jika ada multiple (ambil yang ada isinya atau yang terakhir)
+      const catatanList = groupData.nilaiTotal.map(n => n.catatan).filter(c => c && c !== '-');
+      const catatan = catatanList.length > 0 ? [...new Set(catatanList)].join('; ') : '-';
+      
+      return [
+        format(groupData.tanggal, 'dd/MM/yyyy'),
+        kehadiran,
+        surahText,
+        avgTajwid,
+        avgKelancaran,
+        avgMakhraj,
+        avgImplementasi,
+        avgNilaiAkhir,
+        catatan
+      ];
+    });
+
+    // Column widths untuk landscape (contentWidth = 257mm)
+    const columnStyles = {
+      0: { cellWidth: 24, halign: 'center' },      // Tanggal
+      1: { cellWidth: 22, halign: 'center' },      // Kehadiran
+      2: { cellWidth: 60 },                        // Surah/Ayat (LEBAR untuk multi-line)
+      3: { cellWidth: 18, halign: 'center' },      // Tajwid (FULL)
+      4: { cellWidth: 22, halign: 'center' },      // Kelancaran (FULL)
+      5: { cellWidth: 18, halign: 'center' },      // Makhraj (FULL)
+      6: { cellWidth: 28, halign: 'center' },      // Implementasi (FULL)
+      7: { cellWidth: 20, halign: 'center' },      // Rata-rata (FULL)
+      8: { cellWidth: 45 }                         // Catatan (sisa width)
+    };
+
+    const finalTableY = renderTable(doc, {
+      startY: yPos,
+      margin,
+      head: tableHead,
+      body: tableBody,
+      columnStyles,
+      headerColor: [0, 102, 51], // Hijau SIMTAQ (SAMA dengan Tasmi)
+    });
+
+    let yPosFinal = finalTableY + 12;
+
+    // ============================================
+    // TOTAL DATA (untuk validasi)
+    // ============================================
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Total Data: ${sortedGroupKeys.length} hari penilaian`, margin, yPosFinal);
+    yPosFinal += 8;
+
+    // ============================================
+    // RENDER FOOTER & TANDA TANGAN
+    // ============================================
+    renderFooterSignature(doc, {
+      pageWidth,
+      margin,
+      yPos: yPosFinal,
+      printDate: format(new Date(), 'dd/MM/yyyy'),
+      jabatan: 'Guru Tahfidz / Guru Penguji',
+      guruName: guruPembina,
+    });
+
+    const pdfBuffer = doc.output('arraybuffer');
 
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `attachment; filename="Laporan-Perkembangan-${siswa.user.name.replace(/\s+/g, '_')}-${monthName}-${year}.pdf"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate'
       }
     });
   } catch (error) {
     console.error('❌ Error generating PDF:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
     return NextResponse.json(
-      { error: 'Failed to generate PDF', details: error.message },
+      { error: 'Failed to generate PDF', details: error.message, stack: error.stack },
       { status: 500 }
     );
   }
