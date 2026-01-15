@@ -473,27 +473,42 @@ export default function KelolaSiswaPage() {
   };
 
   const downloadTemplate = () => {
+    // Simplified template with 7 required columns
     const template = [{
-      'Nama Siswa': 'Abdullah Rahman',
+      'Nama Lengkap Siswa': 'Abdullah Rahman',
       'NISN': '0012345678',
       'NIS': '24001',
-      'Jenis Kelamin': 'L',
       'Tanggal Lahir': '2010-05-15',
-      'Diterima di Kelas / Angkatan': '7',
-      'Kelas Saat Ini': kelas?.nama || '7A',
-      'Tahun Ajaran Masuk': '2024/2025',
-      'Alamat': 'Jl. Masjid No. 123, Jakarta',
-      'Nomor WhatsApp Siswa': '081234567890',
-      'Jenis Wali': 'Ayah',
+      'Jenis Kelamin': 'L',
       'Nama Wali': 'Ahmad Rahman',
-      'Jenis Kelamin Wali': 'L',
-      'No HP Wali': '081234567891'
+      'Jenis Kelamin Wali': 'L'
+    },
+    {
+      'Nama Lengkap Siswa': 'Fatimah Azzahra',
+      'NISN': '0012345679',
+      'NIS': '24002',
+      'Tanggal Lahir': '2010-08-22',
+      'Jenis Kelamin': 'P',
+      'Nama Wali': 'Siti Aminah',
+      'Jenis Kelamin Wali': 'P'
     }];
 
     const ws = XLSX.utils.json_to_sheet(template);
+    
+    // Set column widths for better readability
+    ws['!cols'] = [
+      { wch: 25 }, // Nama Lengkap Siswa
+      { wch: 15 }, // NISN
+      { wch: 12 }, // NIS
+      { wch: 15 }, // Tanggal Lahir
+      { wch: 15 }, // Jenis Kelamin
+      { wch: 25 }, // Nama Wali
+      { wch: 15 }  // Jenis Kelamin Wali
+    ];
+    
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template');
-    XLSX.writeFile(wb, `template_siswa_${kelas?.nama || 'kelas'}.xlsx`);
+    XLSX.writeFile(wb, `Template_Import_Siswa_SIMTAQ.xlsx`);
   };
 
   // ============ FILTERING ============

@@ -402,20 +402,22 @@ export default function ImportExportToolbar({
                     }]
                   : kategori === 'siswa'
                   ? [{ 
-                      'Nama Siswa': 'Abdullah Rahman', 
+                      'Nama Lengkap Siswa': 'Abdullah Rahman', 
                       'NISN': '0012345678', 
                       'NIS': '24001', 
+                      'Tanggal Lahir': '2010-05-15',
                       'Jenis Kelamin': 'L', 
-                      'Tanggal Lahir': '2010-05-15', 
-                      'Diterima di Kelas / Angkatan': '7',
-                      'Kelas Saat Ini': '7A',
-                      'Tahun Ajaran Masuk': '2024/2025',
-                      'Alamat': 'Jl. Masjid No. 123, Jakarta',
-                      'Nomor WhatsApp Siswa': '081234567890',
-                      'Jenis Wali': 'Ayah',
                       'Nama Wali': 'Ahmad Rahman',
-                      'Jenis Kelamin Wali': 'L',
-                      'No HP Wali': '081234567891'
+                      'Jenis Kelamin Wali': 'L'
+                    },
+                    { 
+                      'Nama Lengkap Siswa': 'Fatimah Azzahra', 
+                      'NISN': '0012345679', 
+                      'NIS': '24002', 
+                      'Tanggal Lahir': '2010-08-22',
+                      'Jenis Kelamin': 'P', 
+                      'Nama Wali': 'Siti Aminah',
+                      'Jenis Kelamin Wali': 'P'
                     }]
                   : [{ 'Nama Lengkap': 'Contoh Nama', 'Email': 'orangtua@example.com', 'No. Telepon': '08123456789', 'Hubungan': 'Ayah', 'Nama Siswa': 'Nama Anak' }];
 
