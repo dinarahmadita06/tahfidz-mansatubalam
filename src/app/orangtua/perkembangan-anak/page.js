@@ -23,6 +23,7 @@ import {
   X,
   TrendingUp,
   Award,
+  Download,
 } from 'lucide-react';
 import {
   safeNumber,
@@ -349,6 +350,7 @@ export default function PerkembanganAnakPage() {
   const [selectedChild, setSelectedChild] = useState(null);
   const [selectedCatatan, setSelectedCatatan] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Month/Year filter state
   const currentDate = getCurrentMonthYear();
@@ -427,13 +429,25 @@ export default function PerkembanganAnakPage() {
         return {
           ...mapped,
           tanggal: formatTanggal(assessment.tanggal),
+          tanggalRaw: assessment.tanggal,
           attendanceStatus: assessment.attendanceStatus
         };
       })
     : [];
 
+  // Group by date (SAMA dengan PDF) untuk count yang konsisten
+  const penilaianByDate = {};
+  penilaianRows.forEach(row => {
+    const dateKey = new Date(row.tanggalRaw).toISOString().split('T')[0];
+    if (!penilaianByDate[dateKey]) {
+      penilaianByDate[dateKey] = [];
+    }
+    penilaianByDate[dateKey].push(row);
+  });
+
+  const uniqueDatesCount = Object.keys(penilaianByDate).length;
   const periodText = formatMonthYear(selectedMonth, selectedYear);
-  const penilaianCount = penilaianRows.length;
+  const penilaianCount = uniqueDatesCount; // Count HARI (bukan total penilaian)
 
   // Stats calculation
   const stats = {
@@ -472,6 +486,72 @@ export default function PerkembanganAnakPage() {
       });
     } catch (err) {
       console.error('Failed to log ganti anak:', err);
+    }
+  };
+
+  const handleDownloadLaporan = async () => {
+    if (!selectedChild?.id) {
+      alert('Silakan pilih anak terlebih dahulu');
+      return;
+    }
+
+    if (penilaianCount === 0) {
+      alert('Tidak ada data untuk diunduh pada periode ini');
+      return;
+    }
+
+    setIsDownloading(true);
+
+    try {
+      // Use month (0-11) and year instead of ISO date strings
+      const url = `/api/orangtua/laporan-hafalan/pdf?anakId=${selectedChild.id}&month=${selectedMonth}&year=${selectedYear}`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Gagal mengunduh laporan');
+      }
+
+      // Get the PDF blob
+      const blob = await response.blob();
+      
+      // Create download link
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      
+      // Format filename
+      const monthName = new Date(selectedYear, selectedMonth).toLocaleDateString('id-ID', { month: 'long' });
+      a.download = `Laporan-Perkembangan-${selectedChild.nama.replace(/\s+/g, '_')}-${monthName}-${selectedYear}.pdf`;
+      
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+
+      // Log activity
+      try {
+        await fetch('/api/orangtua/activity/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'ORTU_UNDUH_LAPORAN',
+            title: 'Unduh Laporan Hafalan',
+            description: `Mengunduh laporan perkembangan hafalan ${selectedChild.nama} periode ${periodText}`,
+            metadata: { siswaId: selectedChild.id, periode: periodText }
+          })
+        });
+      } catch (err) {
+        console.error('Failed to log download:', err);
+      }
+    } catch (error) {
+      console.error('Error downloading laporan:', error);
+      alert(`Gagal mengunduh laporan: ${error.message}`);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -562,22 +642,39 @@ export default function PerkembanganAnakPage() {
           />
 
           <div className="text-sm text-gray-600 -mt-4 ml-0.5 font-medium">
-            {penilaianCount > 0 
-              ? `Menampilkan ${penilaianCount} penilaian pada ${periodText}`
+            {uniqueDatesCount > 0 
+              ? `Menampilkan ${uniqueDatesCount} hari penilaian (${penilaianRows.length} total setoran) pada ${periodText}`
               : `Tidak ada penilaian hafalan pada periode ${periodText}`
             }
           </div>
 
           {/* Content Table */}
           <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-emerald-50 rounded-xl">
-                <BookOpen className="text-emerald-600" size={24} />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-emerald-50 rounded-xl">
+                  <BookOpen className="text-emerald-600" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Daftar Perkembangan Hafalan</h2>
+                  <p className="text-sm text-gray-600">Riwayat penilaian dari guru</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Daftar Perkembangan Hafalan</h2>
-                <p className="text-sm text-gray-600">Riwayat penilaian dari guru</p>
-              </div>
+
+              {/* Download Button */}
+              <button
+                onClick={handleDownloadLaporan}
+                disabled={penilaianCount === 0 || isDownloading}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                  penilaianCount === 0 || isDownloading
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:shadow-md active:scale-95'
+                }`}
+                title={penilaianCount === 0 ? 'Tidak ada data pada periode ini' : 'Unduh laporan dalam format PDF'}
+              >
+                <Download size={18} className={isDownloading ? 'animate-bounce' : ''} />
+                <span className="hidden sm:inline">{isDownloading ? 'Mengunduh...' : 'Unduh Laporan'}</span>
+              </button>
             </div>
 
             {!penilaianData && !penilaianError && (
@@ -611,10 +708,7 @@ export default function PerkembanganAnakPage() {
                           <AttendanceBadge status={row.attendanceStatus} />
                         </td>
                         <td className="py-4 px-4">
-                          <div>
-                            <p className="font-semibold text-gray-900">{row.surah}</p>
-                            <p className="text-xs text-gray-600">Ayat {row.ayat}</p>
-                          </div>
+                          <p className="font-semibold text-gray-900">{row.surahAyatFull}</p>
                         </td>
                         <td className="py-4 px-4 text-center"><ScoreBadge score={row.tajwid} /></td>
                         <td className="py-4 px-4 text-center"><ScoreBadge score={row.kelancaran} /></td>
@@ -653,8 +747,7 @@ export default function PerkembanganAnakPage() {
                 <div key={row.id} className="bg-white/70 rounded-xl p-4 shadow-sm border border-gray-200">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-bold text-gray-900">{row.surah}</h3>
-                      <p className="text-sm text-gray-600">Ayat {row.ayat}</p>
+                      <h3 className="font-bold text-gray-900">{row.surahAyatFull}</h3>
                       <div className="flex items-center gap-2 mt-1.5">
                         <p className="text-xs text-gray-500">{row.tanggal}</p>
                         <AttendanceBadge status={row.attendanceStatus} />
