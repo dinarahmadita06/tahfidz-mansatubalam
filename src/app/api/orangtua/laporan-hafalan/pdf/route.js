@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import { formatMengulangText } from '@/lib/helpers/formatMengulangText';
 import {
   renderReportHeader,
   renderReportTitle,
@@ -102,13 +103,23 @@ export async function GET(request) {
       presensiMap[dateKey] = p.status; // HADIR, IZIN, SAKIT, ALFA
     });
 
-    // Fetch Penilaian (by hafalan.tanggal) - HARUS INCLUDE surahTambahan
+    // Fetch Penilaian (by hafalan.tanggal) - HARUS INCLUDE surahTambahan + submissionStatus
     const penilaianList = await prisma.penilaian.findMany({
       where: {
         siswaId: anakId,
         hafalan: { tanggal: { gte: startDate, lte: endDate } }
       },
-      include: {
+      select: {
+        id: true,
+        tajwid: true,
+        kelancaran: true,
+        makhraj: true,
+        adab: true,
+        nilaiAkhir: true,
+        catatan: true,
+        submissionStatus: true,
+        repeatReason: true,
+        guruId: true,
         hafalan: {
           select: {
             surah: true,
@@ -118,7 +129,7 @@ export async function GET(request) {
             surahTambahan: true  // ✅ WAJIB untuk multi-surah
           }
         },
-        guru: { include: { user: true } }
+        guru: { select: { user: { select: { name: true } } } }
       },
       orderBy: { hafalan: { tanggal: 'asc' } }
     });
@@ -186,6 +197,8 @@ export async function GET(request) {
           guruId: guruId,
           hafalanItems: [],
           nilaiTotal: [],
+          submissionStatus: p.submissionStatus || 'DINILAI',
+          repeatReason: p.repeatReason || null,
         };
       }
       
@@ -200,6 +213,8 @@ export async function GET(request) {
         implementasi: p.adab,
         nilaiAkhir: p.nilaiAkhir,
         catatan: p.catatan,
+        submissionStatus: p.submissionStatus,
+        repeatReason: p.repeatReason,
       });
     });
 
@@ -241,38 +256,65 @@ export async function GET(request) {
       // Join dengan line break untuk PDF
       const surahText = uniqueSurahs.length > 0 ? uniqueSurahs.join('\n') : '-';
       
-      // Calculate average nilai dari semua penilaian dalam group ini
-      const avgTajwid = Math.round(
-        groupData.nilaiTotal.reduce((sum, n) => sum + n.tajwid, 0) / groupData.nilaiTotal.length
-      );
-      const avgKelancaran = Math.round(
-        groupData.nilaiTotal.reduce((sum, n) => sum + n.kelancaran, 0) / groupData.nilaiTotal.length
-      );
-      const avgMakhraj = Math.round(
-        groupData.nilaiTotal.reduce((sum, n) => sum + n.makhraj, 0) / groupData.nilaiTotal.length
-      );
-      const avgImplementasi = Math.round(
-        groupData.nilaiTotal.reduce((sum, n) => sum + n.implementasi, 0) / groupData.nilaiTotal.length
-      );
-      const avgNilaiAkhir = (
-        groupData.nilaiTotal.reduce((sum, n) => sum + n.nilaiAkhir, 0) / groupData.nilaiTotal.length
-      ).toFixed(2);
+      // Detect if MENGULANG (not graded)
+      const isMengulang = 
+        groupData.submissionStatus === 'MENGULANG' ||
+        groupData.nilaiTotal.every(n => n.tajwid == null && n.kelancaran == null && n.makhraj == null && n.implementasi == null);
       
-      // Gabungkan catatan jika ada multiple (ambil yang ada isinya atau yang terakhir)
-      const catatanList = groupData.nilaiTotal.map(n => n.catatan).filter(c => c && c !== '-');
-      const catatan = catatanList.length > 0 ? [...new Set(catatanList)].join('; ') : '-';
+      // Calculate average nilai - tampilkan "-" jika MENGULANG
+      let avgTajwid, avgKelancaran, avgMakhraj, avgImplementasi, avgNilaiAkhir;
       
-      return [
-        format(groupData.tanggal, 'dd/MM/yyyy'),
-        kehadiran,
-        surahText,
-        avgTajwid,
-        avgKelancaran,
-        avgMakhraj,
-        avgImplementasi,
-        avgNilaiAkhir,
-        catatan
-      ];
+      if (isMengulang) {
+        avgTajwid = '-';
+        avgKelancaran = '-';
+        avgMakhraj = '-';
+        avgImplementasi = '-';
+        avgNilaiAkhir = '-';
+      } else {
+        avgTajwid = Math.round(
+          groupData.nilaiTotal.reduce((sum, n) => sum + (n.tajwid || 0), 0) / groupData.nilaiTotal.length
+        );
+        avgKelancaran = Math.round(
+          groupData.nilaiTotal.reduce((sum, n) => sum + (n.kelancaran || 0), 0) / groupData.nilaiTotal.length
+        );
+        avgMakhraj = Math.round(
+          groupData.nilaiTotal.reduce((sum, n) => sum + (n.makhraj || 0), 0) / groupData.nilaiTotal.length
+        );
+        avgImplementasi = Math.round(
+          groupData.nilaiTotal.reduce((sum, n) => sum + (n.implementasi || 0), 0) / groupData.nilaiTotal.length
+        );
+        avgNilaiAkhir = (
+          groupData.nilaiTotal.reduce((sum, n) => sum + (n.nilaiAkhir || 0), 0) / groupData.nilaiTotal.length
+        ).toFixed(2);
+      }
+      
+      // Format catatan: gunakan formatMengulangText jika MENGULANG
+      let catatan;
+      if (isMengulang && groupData.submissionStatus === 'MENGULANG') {
+        // Use helper untuk format konsisten
+        const catatanList = groupData.nilaiTotal.map(n => n.catatan).filter(c => c && c !== '-');
+        const combinedCatatan = catatanList.length > 0 ? [...new Set(catatanList)].join('; ') : null;
+        catatan = formatMengulangText(groupData.repeatReason, combinedCatatan);
+      } else {
+        // Normal catatan
+        const catatanList = groupData.nilaiTotal.map(n => n.catatan).filter(c => c && c !== '-');
+        catatan = catatanList.length > 0 ? [...new Set(catatanList)].join('; ') : '-';
+      }
+      
+      return {
+        data: [
+          format(groupData.tanggal, 'dd/MM/yyyy'),
+          kehadiran,
+          surahText,
+          avgTajwid,
+          avgKelancaran,
+          avgMakhraj,
+          avgImplementasi,
+          avgNilaiAkhir,
+          catatan
+        ],
+        isMengulang: isMengulang // Flag untuk styling
+      };
     });
 
     // Column widths untuk landscape (contentWidth = 257mm)
@@ -292,9 +334,37 @@ export async function GET(request) {
       startY: yPos,
       margin,
       head: tableHead,
-      body: tableBody,
+      body: tableBody.map(row => row.data), // Extract data array
       columnStyles,
       headerColor: [0, 102, 51], // Hijau SIMTAQ (SAMA dengan Tasmi)
+      didDrawCell: (data) => {
+        // Apply red background to MENGULANG rows
+        if (data.section === 'body' && tableBody[data.row.index]?.isMengulang) {
+          doc.setFillColor(254, 226, 226); // #FEE2E2 (red-50)
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+          
+          // Redraw text
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(9);
+          
+          // Get cell alignment from columnStyles
+          const colStyle = columnStyles[data.column.index];
+          const halign = colStyle?.halign || 'left';
+          
+          // Calculate text position based on alignment
+          let textX = data.cell.x + 2;
+          if (halign === 'center') {
+            textX = data.cell.x + data.cell.width / 2;
+          } else if (halign === 'right') {
+            textX = data.cell.x + data.cell.width - 2;
+          }
+          
+          doc.text(String(data.cell.text), textX, data.cell.y + data.cell.height / 2, {
+            align: halign,
+            baseline: 'middle'
+          });
+        }
+      }
     });
 
     let yPosFinal = finalTableY + 12;

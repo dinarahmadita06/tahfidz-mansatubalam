@@ -280,7 +280,9 @@ exports.Prisma.PenilaianScalarFieldEnum = {
   catatan: 'catatan',
   notifiedAt: 'notifiedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  submissionStatus: 'submissionStatus',
+  repeatReason: 'repeatReason'
 };
 
 exports.Prisma.TahsinScalarFieldEnum = {
@@ -620,6 +622,11 @@ exports.StatusKelas = exports.$Enums.StatusKelas = {
 exports.PeranGuru = exports.$Enums.PeranGuru = {
   utama: 'utama',
   pendamping: 'pendamping'
+};
+
+exports.StatusSetoran = exports.$Enums.StatusSetoran = {
+  DINILAI: 'DINILAI',
+  MENGULANG: 'MENGULANG'
 };
 
 exports.LevelTahsin = exports.$Enums.LevelTahsin = {

@@ -108,6 +108,8 @@ export default function PenilaianHafalanPage() {
     implementasi: '',
     catatan: '',
     surahTambahan: [],
+    submissionStatus: 'DINILAI', // DINILAI or MENGULANG
+    repeatReason: '', // Alasan mengulang (optional)
   });
 
   // Fetch data siswa dan kelas
@@ -271,6 +273,8 @@ export default function PenilaianHafalanPage() {
         implementasi: '',
         catatan: '',
         surahTambahan: [],
+        submissionStatus: 'DINILAI',
+        repeatReason: '',
       });
     }
 
@@ -285,33 +289,65 @@ export default function PenilaianHafalanPage() {
         return;
       }
 
-      if (!popupForm.tajwid || !popupForm.kelancaran || !popupForm.makhraj || !popupForm.implementasi) {
-        toast.error('Semua nilai penilaian harus diisi');
-        return;
+      // Validation based on submission status
+      if (popupForm.submissionStatus === 'MENGULANG') {
+        // For MENGULANG: if repeatReason is empty, catatan is mandatory (min 10 chars)
+        if (!popupForm.repeatReason || popupForm.repeatReason.trim() === '') {
+          if (!popupForm.catatan || popupForm.catatan.trim().length < 10) {
+            toast.error('Catatan wajib diisi minimal 10 karakter jika alasan belum dipilih');
+            return;
+          }
+        }
+        // If repeatReason is filled, catatan is optional
+      } else {
+        // For DINILAI: all scores are mandatory
+        if (!popupForm.tajwid || !popupForm.kelancaran || !popupForm.makhraj || !popupForm.implementasi) {
+          toast.error('Semua nilai penilaian harus diisi');
+          return;
+        }
+      }
+
+      // Build payload based on submission status
+      const payload = {
+        siswaId: selectedSiswa.id,
+        tanggal: selectedDate,
+        surah: popupForm.surah,
+        ayatMulai: parseInt(popupForm.ayatMulai),
+        ayatSelesai: parseInt(popupForm.ayatSelesai),
+        surahTambahan: popupForm.surahTambahan || [],
+        submissionStatus: popupForm.submissionStatus,
+        catatan: popupForm.catatan || null,
+      };
+
+      if (popupForm.submissionStatus === 'DINILAI') {
+        // Add scores only if DINILAI
+        payload.tajwid = parseInt(popupForm.tajwid);
+        payload.kelancaran = parseInt(popupForm.kelancaran);
+        payload.makhraj = parseInt(popupForm.makhraj);
+        payload.implementasi = parseInt(popupForm.implementasi);
+      } else {
+        // For MENGULANG: set scores to null and add repeat reason
+        payload.tajwid = null;
+        payload.kelancaran = null;
+        payload.makhraj = null;
+        payload.implementasi = null;
+        payload.repeatReason = popupForm.repeatReason || null;
       }
 
       const response = await fetch('/api/guru/penilaian-hafalan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          siswaId: selectedSiswa.id,
-          tanggal: selectedDate,
-          surah: popupForm.surah,
-          ayatMulai: parseInt(popupForm.ayatMulai),
-          ayatSelesai: parseInt(popupForm.ayatSelesai),
-          surahTambahan: popupForm.surahTambahan || [],
-          tajwid: parseInt(popupForm.tajwid),
-          kelancaran: parseInt(popupForm.kelancaran),
-          makhraj: parseInt(popupForm.makhraj),
-          implementasi: parseInt(popupForm.implementasi),
-          catatan: popupForm.catatan || null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Penilaian berhasil disimpan');
+        toast.success(
+          popupForm.submissionStatus === 'MENGULANG' 
+            ? 'Status mengulang berhasil disimpan!' 
+            : 'Penilaian berhasil disimpan'
+        );
         setShowPopup(false);
         fetchPenilaianData(); // Refresh data
       } else {
@@ -806,7 +842,39 @@ export default function PenilaianHafalanPage() {
                 </div>
               )}
 
-              {/* Penilaian 4 Aspek */}
+              {/* Status Setoran - Segmented Control */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-3">
+                  Status Setoran <span className="text-red-500">*</span>
+                </label>
+                <div className="flex p-1 bg-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setPopupForm({...popupForm, submissionStatus: 'DINILAI'})}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
+                      popupForm.submissionStatus === 'DINILAI' 
+                      ? 'bg-emerald-600 text-white shadow-md' 
+                      : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                  >
+                    DINILAI (LANJUT)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPopupForm({...popupForm, submissionStatus: 'MENGULANG'})}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
+                      popupForm.submissionStatus === 'MENGULANG' 
+                      ? 'bg-amber-600 text-white shadow-md' 
+                      : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                  >
+                    MENGULANG (BELUM LAYAK DINILAI)
+                  </button>
+                </div>
+              </div>
+
+              {/* Penilaian 4 Aspek or Repeat Reason - Conditional */}
+              {popupForm.submissionStatus === 'DINILAI' ? (
               <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6">
                 <h4 className="font-bold text-slate-900 mb-6 text-lg">Penilaian (0-100)</h4>
 
@@ -886,8 +954,54 @@ export default function PenilaianHafalanPage() {
                   </div>
                 )}
               </div>
+              ) : (
+              <div className="space-y-5">
+                {/* Alasan Mengulang (Optional dropdown) */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Alasan Mengulang (Opsional)
+                  </label>
+                  <select
+                    value={popupForm.repeatReason}
+                    onChange={(e) => setPopupForm({ ...popupForm, repeatReason: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none font-medium bg-white"
+                  >
+                    <option value="">-- Pilih alasan cepat (opsional) --</option>
+                    <option value="Belum lancar">Belum lancar</option>
+                    <option value="Masih banyak kesalahan tajwid">Masih banyak kesalahan tajwid</option>
+                    <option value="Ayat belum hafal">Ayat belum hafal</option>
+                    <option value="Kurang murajaah">Kurang murajaah</option>
+                    <option value="Tidak hadir setoran">Tidak hadir setoran</option>
+                  </select>
+                </div>
 
-              {/* Catatan */}
+                {/* Catatan - Conditional required based on repeatReason */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Catatan {!popupForm.repeatReason || popupForm.repeatReason.trim() === '' ? <span className="text-red-500">* (Wajib jika alasan belum dipilih)</span> : '(Opsional)'}
+                  </label>
+                  <textarea
+                    value={popupForm.catatan || ''}
+                    onChange={(e) => setPopupForm({ ...popupForm, catatan: e.target.value })}
+                    rows="4"
+                    maxLength="500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium resize-none"
+                    placeholder={!popupForm.repeatReason || popupForm.repeatReason.trim() === '' ? "Wajib diisi jika alasan belum dipilih (min 10 karakter)..." : "Opsional. Isi jika perlu detail tambahan untuk orang tua..."}
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    {(popupForm.catatan || '').length}/500 karakter
+                  </p>
+                  <p className="text-xs text-slate-600 mt-2">
+                    {!popupForm.repeatReason || popupForm.repeatReason.trim() === '' 
+                      ? 'Wajib diisi jika alasan belum dipilih (min 10 karakter).' 
+                      : 'Opsional. Isi jika perlu detail tambahan untuk orang tua.'}
+                  </p>
+                </div>
+              </div>
+              )}
+
+              {/* Catatan (Only for DINILAI status) */}
+              {popupForm.submissionStatus === 'DINILAI' && (
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3">
                   Catatan (Opsional)
@@ -904,6 +1018,7 @@ export default function PenilaianHafalanPage() {
                   {(popupForm.catatan || '').length}/500 karakter
                 </p>
               </div>
+              )}
             </div>
 
             {/* Sticky Footer */}

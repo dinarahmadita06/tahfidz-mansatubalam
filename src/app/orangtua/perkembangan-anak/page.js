@@ -10,6 +10,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import ErrorState from '@/components/shared/ErrorState';
 import MonthlyPeriodFilter from '@/components/penilaian/MonthlyPeriodFilter';
 import { calculateMonthRange, getCurrentMonthYear, formatMonthYear } from '@/lib/utils/dateRangeHelpers';
+import { formatMengulangText } from '@/lib/helpers/formatMengulangText';
 import {
   BookOpen,
   Clock,
@@ -115,7 +116,17 @@ const StatCard = ({ icon: Icon, title, value, subtitle, variant = 'emerald' }) =
 };
 
 // Status Badge Component
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status, submissionStatus }) => {
+  // If MENGULANG, override status display
+  if (submissionStatus === 'MENGULANG') {
+    return (
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 border-amber-200 border rounded-lg">
+        <AlertCircle size={16} className="text-amber-600" />
+        <span className="text-sm font-semibold text-amber-600">Mengulang</span>
+      </div>
+    );
+  }
+
   const statusConfig = {
     lulus: {
       icon: CheckCircle,
@@ -299,6 +310,21 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
 const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
   if (!isOpen || !catatan) return null;
 
+  // Determine status display text
+  let statusDisplay = 'Dinilai';
+  let statusColor = 'text-emerald-700';
+  let statusBg = 'bg-emerald-50';
+  
+  if (catatan.submissionStatus === 'MENGULANG') {
+    statusDisplay = 'Mengulang';
+    statusColor = 'text-amber-700';
+    statusBg = 'bg-amber-50';
+  } else if (catatan.isUngraded) {
+    statusDisplay = 'Belum Dinilai';
+    statusColor = 'text-gray-700';
+    statusBg = 'bg-gray-50';
+  }
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -314,8 +340,8 @@ const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
               <MessageSquare className="text-white" size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Catatan Guru</h3>
-              <p className="text-sm text-gray-600 mt-1">Feedback dari guru</p>
+              <h3 className="text-xl font-bold text-gray-900">Catatan Setoran</h3>
+              <p className="text-sm text-gray-600 mt-1">Informasi dari guru</p>
             </div>
           </div>
 
@@ -333,9 +359,15 @@ const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
             <InfoRow label="Tanggal Setor" value={catatan.tanggal} />
           </div>
 
+          <InfoRow label="Status" value={
+            <span className={`inline-flex items-center px-3 py-1 ${statusBg} rounded-lg font-semibold text-sm ${statusColor}`}>
+              {statusDisplay}
+            </span>
+          } />
+
           <div className="border-l-4 border-emerald-500 bg-emerald-50/60 rounded-r-xl p-4">
-            <p className="text-xs font-medium text-emerald-700 mb-2">Catatan Penilaian</p>
-            <p className="text-sm text-gray-900 leading-relaxed">{catatan.text}</p>
+            <p className="text-xs font-medium text-emerald-700 mb-2">Isi Catatan</p>
+            <p className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap">{catatan.text}</p>
           </div>
         </div>
       </div>
@@ -426,11 +458,38 @@ export default function PerkembanganAnakPage() {
   const penilaianRows = penilaianData?.penilaianData
     ? penilaianData.penilaianData.map((assessment) => {
         const mapped = mapAssessmentToRow(assessment);
+        
+        // Determine if catatan is available
+        let hasCatatan = false;
+        let catatanText = '-';
+        
+        if (assessment.submissionStatus === 'MENGULANG') {
+          // For MENGULANG: use formatMengulangText helper
+          catatanText = formatMengulangText(assessment.repeatReason, assessment.catatan);
+          hasCatatan = catatanText !== '-';
+        } else if (assessment.catatan && assessment.catatan !== '-') {
+          // For DINILAI: use regular catatan
+          catatanText = assessment.catatan;
+          hasCatatan = true;
+        }
+        
+        // Detect if row is "MENGULANG" (not yet graded)
+        const isMengulang = 
+          assessment.submissionStatus === 'MENGULANG' ||
+          (assessment.tajwid == null && assessment.kelancaran == null && assessment.makhraj == null && assessment.implementasi == null) ||
+          mapped.rataRata === 0;
+        
         return {
           ...mapped,
           tanggal: formatTanggal(assessment.tanggal),
           tanggalRaw: assessment.tanggal,
-          attendanceStatus: assessment.attendanceStatus
+          attendanceStatus: assessment.attendanceStatus,
+          submissionStatus: assessment.submissionStatus || 'DINILAI',
+          repeatReason: assessment.repeatReason,
+          catatanFormatted: catatanText,
+          hasCatatan: hasCatatan,
+          isUngraded: mapped.rataRata === 0 || mapped.rataRata === '-',
+          isMengulang: isMengulang // Flag for red background
         };
       })
     : [];
@@ -459,11 +518,13 @@ export default function PerkembanganAnakPage() {
   };
 
   const handleOpenCatatan = (row) => {
-    if (row.status !== 'belum' && row.catatan && row.catatan !== '-') {
+    if (row.hasCatatan) {
       setSelectedCatatan({
-        text: row.catatan,
+        text: row.catatanFormatted,
         guru: row.guru,
         tanggal: row.tanggal,
+        submissionStatus: row.submissionStatus,
+        isUngraded: row.isUngraded
       });
       setIsModalOpen(true);
     }
@@ -702,7 +763,16 @@ export default function PerkembanganAnakPage() {
                   </thead>
                   <tbody>
                     {penilaianRows.map((row, index) => (
-                      <tr key={row.id} className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${index % 2 === 0 ? 'bg-white/70' : 'bg-white/40'}`}>
+                      <tr 
+                        key={row.id} 
+                        className={`border-b border-gray-100 transition-colors ${
+                          row.isMengulang 
+                            ? 'bg-red-50/60 hover:bg-red-50/80 border-red-100/60' 
+                            : index % 2 === 0 
+                              ? 'bg-white/70 hover:bg-emerald-50/30' 
+                              : 'bg-white/40 hover:bg-emerald-50/30'
+                        }`}
+                      >
                         <td className="py-4 px-4 text-sm text-gray-700 font-medium">{row.tanggal}</td>
                         <td className="py-4 px-4">
                           <AttendanceBadge status={row.attendanceStatus} />
@@ -719,9 +789,9 @@ export default function PerkembanganAnakPage() {
                             {row.rataRata}
                           </span>
                         </td>
-                        <td className="py-4 px-4"><StatusBadge status={row.status} /></td>
+                        <td className="py-4 px-4"><StatusBadge status={row.status} submissionStatus={row.submissionStatus} /></td>
                         <td className="py-4 px-4">
-                          {row.catatan && row.catatan !== '-' ? (
+                          {row.hasCatatan ? (
                             <button onClick={() => handleOpenCatatan(row)} className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium">
                               <Info size={18} />
                               <span className="text-sm">Lihat</span>
@@ -744,7 +814,14 @@ export default function PerkembanganAnakPage() {
             {/* Mobile View */}
             <div className="md:hidden space-y-4">
               {penilaianRows.map((row) => (
-                <div key={row.id} className="bg-white/70 rounded-xl p-4 shadow-sm border border-gray-200">
+                <div 
+                  key={row.id} 
+                  className={`rounded-xl p-4 shadow-sm border ${
+                    row.isMengulang 
+                      ? 'bg-red-50/70 border-red-200/60' 
+                      : 'bg-white/70 border-gray-200'
+                  }`}
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-bold text-gray-900">{row.surahAyatFull}</h3>
@@ -767,12 +844,12 @@ export default function PerkembanganAnakPage() {
                     ))}
                   </div>
                   <div className="flex items-center justify-between mb-3">
-                    <StatusBadge status={row.status} />
+                    <StatusBadge status={row.status} submissionStatus={row.submissionStatus} />
                   </div>
-                  {row.catatan && row.catatan !== '-' && (
+                  {row.hasCatatan && (
                     <button onClick={() => handleOpenCatatan(row)} className="w-full flex items-center justify-center gap-2 py-2 bg-emerald-50 text-emerald-600 rounded-lg">
                       <Info size={16} />
-                      <span className="text-sm font-medium">Lihat Catatan Guru</span>
+                      <span className="text-sm font-medium">Lihat Catatan</span>
                     </button>
                   )}
                 </div>
