@@ -165,7 +165,7 @@ export default function AdminGuruPage() {
   const [editingGuru, setEditingGuru] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    password: '',
+    password: '', // Kosong secara default
     username: '',
     nip: '',
     jenisKelamin: 'L',
@@ -264,7 +264,7 @@ export default function AdminGuruPage() {
   const resetForm = () => {
     setFormData({
       name: '',
-      password: '',
+      password: '', // Kosong secara default
       username: '',
       nip: '',
       jenisKelamin: 'L',
@@ -292,6 +292,17 @@ export default function AdminGuruPage() {
       console.error('Error generating username:', error);
       alert('Gagal menghasilkan username guru: ' + error.message);
     }
+  };
+
+  const generatePasswordFromDOB = () => {
+    // Generate password from tanggalLahir (YYYY-MM-DD format)
+    if (!formData.tanggalLahir) {
+      alert('Tanggal lahir harus diisi terlebih dahulu');
+      return;
+    }
+    
+    // Format: YYYY-MM-DD (keep dashes)
+    setFormData({ ...formData, password: formData.tanggalLahir });
   };
 
   const handleDownloadTemplate = () => {
@@ -736,7 +747,7 @@ export default function AdminGuruPage() {
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Password awal = simtaq123
+                    Password akan di-generate dari tanggal lahir (YYYY-MM-DD)
                   </p>
                 </div>
               </div>
