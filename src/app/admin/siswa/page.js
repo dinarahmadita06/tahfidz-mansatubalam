@@ -220,29 +220,44 @@ export default function AdminSiswaPage() {
   };
 
   const handleDownloadTemplate = () => {
+    // Simplified template with 7 required columns
     const templateData = [
       {
-        'Nama Siswa': 'Abdullah Rahman',
+        'Nama Lengkap Siswa': 'Abdullah Rahman',
         'NISN': '0012345678',
         'NIS': '24001',
-        'Jenis Kelamin': 'L',
         'Tanggal Lahir': '2010-05-15',
-        'Diterima di Kelas / Angkatan': '7',
-        'Kelas Saat Ini': '7A',
-        'Tahun Ajaran Masuk': '2024/2025',
-        'Alamat': 'Jl. Masjid No. 123, Jakarta',
-        'Nomor WhatsApp Siswa': '081234567890',
-        'Jenis Wali': 'Ayah',
+        'Jenis Kelamin': 'L',
         'Nama Wali': 'Ahmad Rahman',
-        'Jenis Kelamin Wali': 'L',
-        'No HP Wali': '081234567891'
+        'Jenis Kelamin Wali': 'L'
+      },
+      {
+        'Nama Lengkap Siswa': 'Fatimah Azzahra',
+        'NISN': '0012345679',
+        'NIS': '24002',
+        'Tanggal Lahir': '2010-08-22',
+        'Jenis Kelamin': 'P',
+        'Nama Wali': 'Siti Aminah',
+        'Jenis Kelamin Wali': 'P'
       }
     ];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
+    
+    // Set column widths for better readability
+    ws['!cols'] = [
+      { wch: 25 }, // Nama Lengkap Siswa
+      { wch: 15 }, // NISN
+      { wch: 12 }, // NIS
+      { wch: 15 }, // Tanggal Lahir
+      { wch: 15 }, // Jenis Kelamin
+      { wch: 25 }, // Nama Wali
+      { wch: 15 }  // Jenis Kelamin Wali
+    ];
+    
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template Import Siswa');
-    XLSX.writeFile(wb, 'Template_Import_Siswa_Wali.xlsx');
+    XLSX.writeFile(wb, 'Template_Import_Siswa_SIMTAQ.xlsx');
   };
 
   const handleExportData = () => {
@@ -633,7 +648,6 @@ export default function AdminSiswaPage() {
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Kelas</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Validasi</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Status Siswa</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Total Hafalan</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Bergabung</th>
                       <th className="px-6 py-4 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider">Aksi</th>
                     </tr>
@@ -657,8 +671,6 @@ export default function AdminSiswaPage() {
                       </tr>
                     ) : (
                       (Array.isArray(filteredSiswa) ? filteredSiswa : []).map((siswaItem) => {
-                        const totalHafalan = getSiswaHafalan(siswaItem);
-                        const isValidated = siswaItem.status === 'approved';
                         const statusBadge = getStatusBadgeConfig(siswaItem.statusSiswa || 'AKTIF');
 
                         return (
@@ -714,14 +726,6 @@ export default function AdminSiswaPage() {
                               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border ${statusBadge.bgColor} ${statusBadge.textColor} ${statusBadge.borderColor}`}>
                                 {statusBadge.emoji} {statusBadge.label}
                               </span>
-                            </td>
-
-                            {/* Total Hafalan */}
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                <BookOpen size={16} className="text-emerald-600" />
-                                <span className="text-sm font-semibold text-gray-900">{totalHafalan} Juz</span>
-                              </div>
                             </td>
 
                             {/* Tanggal Bergabung */}
