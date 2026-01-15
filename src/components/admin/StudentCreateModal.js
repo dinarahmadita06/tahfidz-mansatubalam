@@ -59,6 +59,7 @@ export default function StudentCreateModal({
   const [parentSearchTerm, setParentSearchTerm] = useState('');
   const [isGeneratedStudentPw, setIsGeneratedStudentPw] = useState(false);
   const [isGeneratedParentPw, setIsGeneratedParentPw] = useState(false);
+  const [dateDisplay, setDateDisplay] = useState('');
 
   const isEditing = !!editingSiswa;
 
@@ -108,6 +109,15 @@ export default function StudentCreateModal({
           tanggalLahir: editingSiswa.tanggalLahir ? new Date(editingSiswa.tanggalLahir).toISOString().split('T')[0] : '',
           email: editingSiswa.user?.email || '',
         });
+        
+        // Set date display for editing
+        if (editingSiswa.tanggalLahir) {
+          const date = new Date(editingSiswa.tanggalLahir);
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const year = date.getFullYear();
+          setDateDisplay(`${day}/${month}/${year}`);
+        }
         
         // Handle parent data for editing
         if (editingSiswa.orangTuaSiswa && editingSiswa.orangTuaSiswa.length > 0) {
@@ -185,6 +195,7 @@ export default function StudentCreateModal({
     setParentSearchTerm('');
     setIsGeneratedStudentPw(false);
     setIsGeneratedParentPw(false);
+    setDateDisplay('');
   };
 
   // Auto-generate student email (Manual password generation only)
@@ -553,9 +564,32 @@ export default function StudentCreateModal({
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">Tanggal Lahir</label>
                   <input
-                    type="date"
-                    value={formData.tanggalLahir}
-                    onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                    type="text"
+                    value={dateDisplay}
+                    onChange={(e) => {
+                      const input = e.target.value;
+                      const nums = input.replace(/\D/g, '');
+                      
+                      let formatted = nums;
+                      if (nums.length >= 3) {
+                        formatted = nums.slice(0, 2) + '/' + nums.slice(2);
+                      }
+                      if (nums.length >= 5) {
+                        formatted = nums.slice(0, 2) + '/' + nums.slice(2, 4) + '/' + nums.slice(4);
+                      }
+                      
+                      setDateDisplay(formatted.slice(0, 10));
+                      
+                      if (nums.length === 8) {
+                        const day = nums.slice(0, 2);
+                        const month = nums.slice(2, 4);
+                        const year = nums.slice(4, 8);
+                        setFormData({ ...formData, tanggalLahir: `${year}-${month}-${day}` });
+                      } else {
+                        setFormData({ ...formData, tanggalLahir: '' });
+                      }
+                    }}
+                    placeholder="dd/mm/yyyy"
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>

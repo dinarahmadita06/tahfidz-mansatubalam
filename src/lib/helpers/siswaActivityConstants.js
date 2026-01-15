@@ -54,8 +54,8 @@ export const SISWA_ACTIVITY_TITLES = {
   },
   [SISWA_ACTIVITY_TYPES.SISWA_VIEW_REFERENSI_QURAN]: {
     icon: '📖',
-    title: 'Membuka Referensi Al-Qur\'an',
-    description: 'Anda membuka referensi Al-Qur\'an.'
+    title: 'Membuka Al-Qur\'an Digital',
+    description: 'Anda membuka Al-Qur\'an digital.'
   },
   [SISWA_ACTIVITY_TYPES.SISWA_VIEW_PRESENSI]: {
     icon: '✅',
