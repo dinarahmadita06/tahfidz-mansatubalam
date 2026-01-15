@@ -264,27 +264,30 @@ model Hafalan {
 }
 
 model Penilaian {
-  id         String   @id @default(cuid())
-  hafalanId  String
-  siswaId    String
-  guruId     String
-  tajwid     Int
-  kelancaran Int
-  makhraj    Int
-  adab       Int
-  nilaiAkhir Float
-  catatan    String?
-  notifiedAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  guru       Guru     @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  hafalan    Hafalan  @relation(fields: [hafalanId], references: [id], onDelete: Cascade)
-  siswa      Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  hafalanId        String
+  siswaId          String
+  guruId           String
+  tajwid           Int?
+  kelancaran       Int?
+  makhraj          Int?
+  adab             Int?
+  nilaiAkhir       Float?
+  catatan          String?
+  notifiedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  submissionStatus StatusSetoran  @default(DINILAI)
+  repeatReason     String?
+  guru             Guru           @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  hafalan          Hafalan        @relation(fields: [hafalanId], references: [id], onDelete: Cascade)
+  siswa            Siswa          @relation(fields: [siswaId], references: [id], onDelete: Cascade)
 
   @@index([siswaId])
   @@index([guruId])
   @@index([hafalanId])
   @@index([createdAt])
+  @@index([submissionStatus])
 }
 
 model Tahsin {
@@ -676,6 +679,11 @@ enum StatusSiswa {
   LULUS
   PINDAH
   KELUAR
+}
+
+enum StatusSetoran {
+  DINILAI
+  MENGULANG
 }
 
 enum CertificateType {

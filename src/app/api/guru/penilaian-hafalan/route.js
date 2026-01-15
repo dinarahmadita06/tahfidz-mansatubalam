@@ -110,6 +110,8 @@ export async function POST(request) {
       ayatMulai,
       ayatSelesai,
       surahTambahan = [],
+      submissionStatus = 'DINILAI', // DINILAI or MENGULANG
+      repeatReason, // Alasan mengulang (optional)
       tajwid,
       kelancaran,
       makhraj,
@@ -125,16 +127,32 @@ export async function POST(request) {
       );
     }
 
-    if (
-      tajwid == null ||
-      kelancaran == null ||
-      makhraj == null ||
-      implementasi == null
-    ) {
-      return NextResponse.json(
-        { error: 'All assessment values are required' },
-        { status: 400 }
-      );
+    // Validation based on submission status
+    if (submissionStatus === 'MENGULANG') {
+      // For MENGULANG: if repeatReason is empty, catatan is mandatory (min 10 chars)
+      if (!repeatReason || repeatReason.trim() === '') {
+        if (!catatan || catatan.trim().length < 10) {
+          return NextResponse.json(
+            { error: 'Catatan wajib diisi minimal 10 karakter jika alasan belum dipilih' },
+            { status: 400 }
+          );
+        }
+      }
+      // If repeatReason is filled, catatan is optional
+      // Scores will be set to null
+    } else {
+      // For DINILAI: all scores are mandatory
+      if (
+        tajwid == null ||
+        kelancaran == null ||
+        makhraj == null ||
+        implementasi == null
+      ) {
+        return NextResponse.json(
+          { error: 'All assessment values are required' },
+          { status: 400 }
+        );
+      }
     }
 
     // ✅ HELPER: Clean and validate surahTambahan
@@ -186,7 +204,10 @@ export async function POST(request) {
     }
 
     // ✅ Calculate nilai akhir with consistent rounding using shared utility
-    const nilaiAkhir = calcAverageScore(tajwid, kelancaran, makhraj, implementasi, 2);
+    // Only calculate if DINILAI status
+    const nilaiAkhir = submissionStatus === 'DINILAI' 
+      ? calcAverageScore(tajwid, kelancaran, makhraj, implementasi, 2) 
+      : null;
 
     // ✅ Resolve Surah Number and Juz
     const resolvedSurahNumber = surahNameToNumber[surah] || null;
@@ -229,10 +250,12 @@ export async function POST(request) {
         await prisma.penilaian.update({
           where: { id: existingHafalan.penilaian[0].id },
           data: {
-            tajwid,
-            kelancaran,
-            makhraj,
-            adab: implementasi,
+            submissionStatus,
+            repeatReason: submissionStatus === 'MENGULANG' ? (repeatReason || null) : null,
+            tajwid: submissionStatus === 'DINILAI' ? tajwid : null,
+            kelancaran: submissionStatus === 'DINILAI' ? kelancaran : null,
+            makhraj: submissionStatus === 'DINILAI' ? makhraj : null,
+            adab: submissionStatus === 'DINILAI' ? implementasi : null,
             nilaiAkhir,
             catatan: catatan || null,
           },
@@ -244,10 +267,12 @@ export async function POST(request) {
             hafalanId: existingHafalan.id,
             siswaId,
             guruId: guru.id,
-            tajwid,
-            kelancaran,
-            makhraj,
-            adab: implementasi,
+            submissionStatus,
+            repeatReason: submissionStatus === 'MENGULANG' ? (repeatReason || null) : null,
+            tajwid: submissionStatus === 'DINILAI' ? tajwid : null,
+            kelancaran: submissionStatus === 'DINILAI' ? kelancaran : null,
+            makhraj: submissionStatus === 'DINILAI' ? makhraj : null,
+            adab: submissionStatus === 'DINILAI' ? implementasi : null,
             nilaiAkhir,
             catatan: catatan || null,
           },
@@ -277,10 +302,12 @@ export async function POST(request) {
           hafalanId: hafalan.id,
           siswaId,
           guruId: guru.id,
-          tajwid,
-          kelancaran,
-          makhraj,
-          adab: implementasi,
+          submissionStatus,
+          repeatReason: submissionStatus === 'MENGULANG' ? (repeatReason || null) : null,
+          tajwid: submissionStatus === 'DINILAI' ? tajwid : null,
+          kelancaran: submissionStatus === 'DINILAI' ? kelancaran : null,
+          makhraj: submissionStatus === 'DINILAI' ? makhraj : null,
+          adab: submissionStatus === 'DINILAI' ? implementasi : null,
           nilaiAkhir,
           catatan: catatan || null,
         },

@@ -264,27 +264,30 @@ model Hafalan {
 }
 
 model Penilaian {
-  id         String    @id @default(cuid())
-  hafalanId  String
-  siswaId    String
-  guruId     String
-  tajwid     Int
-  kelancaran Int
-  makhraj    Int
-  adab       Int
-  nilaiAkhir Float
-  catatan    String?
-  notifiedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  guru       Guru      @relation(fields: [guruId], references: [id], onDelete: Cascade)
-  hafalan    Hafalan   @relation(fields: [hafalanId], references: [id], onDelete: Cascade)
-  siswa      Siswa     @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  id               String        @id @default(cuid())
+  hafalanId        String
+  siswaId          String
+  guruId           String
+  tajwid           Int?
+  kelancaran       Int?
+  makhraj          Int?
+  adab             Int?
+  nilaiAkhir       Float?
+  catatan          String?
+  notifiedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  submissionStatus StatusSetoran @default(DINILAI)
+  repeatReason     String?
+  guru             Guru          @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  hafalan          Hafalan       @relation(fields: [hafalanId], references: [id], onDelete: Cascade)
+  siswa            Siswa         @relation(fields: [siswaId], references: [id], onDelete: Cascade)
 
   @@index([siswaId])
   @@index([guruId])
   @@index([hafalanId])
   @@index([createdAt])
+  @@index([submissionStatus])
 }
 
 model Tahsin {
@@ -487,10 +490,17 @@ model Motivasi {
 
 model AdminSignature {
   id            String   @id @default(cuid())
-  type          String   @unique
-  signatureData String
-  fileName      String
-  fileSize      Int
+  type          String   @unique // 'SIGNER_1' or 'SIGNER_2'
+  jabatan       String?
+  nama          String?
+  signatureData String?  @db.Text
+  capData       String?  @db.Text
+  capOpacity    Float?   @default(0.4)
+  capScale      Float?   @default(1.0)
+  capOffsetX    Int?     @default(0)
+  capOffsetY    Int?     @default(0)
+  fileName      String?
+  fileSize      Int?
   imageWidth    Int?
   imageHeight   Int?
   uploadedAt    DateTime @default(now())
@@ -669,6 +679,11 @@ enum StatusSiswa {
   LULUS
   PINDAH
   KELUAR
+}
+
+enum StatusSetoran {
+  DINILAI
+  MENGULANG
 }
 
 enum CertificateType {

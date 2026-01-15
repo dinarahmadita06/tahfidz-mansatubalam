@@ -102,7 +102,21 @@ export async function GET(request) {
     const [penilaianList, presensiList, presensiStats] = await Promise.all([
       prisma.penilaian.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          hafalanId: true,
+          siswaId: true,
+          guruId: true,
+          tajwid: true,
+          kelancaran: true,
+          makhraj: true,
+          adab: true,
+          nilaiAkhir: true,
+          catatan: true,
+          submissionStatus: true,
+          repeatReason: true,
+          createdAt: true,
+          updatedAt: true,
           hafalan: {
             select: {
               surah: true,
@@ -113,8 +127,12 @@ export async function GET(request) {
             }
           },
           guru: {
-            include: {
-              user: { select: { name: true } }
+            select: {
+              user: {
+                select: {
+                  name: true
+                }
+              }
             }
           }
         },
@@ -191,7 +209,9 @@ export async function GET(request) {
             adab: [],
             nilaiAkhir: []
           },
-          catatanList: []
+          catatanList: [],
+          submissionStatus: p.submissionStatus || 'DINILAI',
+          repeatReason: p.repeatReason || null
         });
       }
 
@@ -241,7 +261,9 @@ export async function GET(request) {
         rataRata: parseFloat(avgNilaiAkhir.toFixed(2)),
         catatan: [...new Set(group.catatanList)].join('; ') || '-',
         status: status,
-        attendanceStatus: attendanceStatus
+        attendanceStatus: attendanceStatus,
+        submissionStatus: group.submissionStatus,
+        repeatReason: group.repeatReason
       };
     });
 
