@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import {
   User,
   Mail,
@@ -49,7 +50,7 @@ function ProfileHeader() {
 }
 
 // ProfileSummaryCard Component
-function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
+function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword, onRegenerateRecoveryCode }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       {/* Avatar & Info */}
@@ -90,6 +91,13 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
         >
           <Lock size={18} />
           Ubah Password
+        </button>
+        <button
+          onClick={onRegenerateRecoveryCode}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Lock size={18} />
+          Regenerasi Kode
         </button>
       </div>
     </div>
@@ -341,6 +349,7 @@ function SecurityCard({ onRegenerateRecoveryCode }) {
 
 export default function ProfilGuruPage() {
   const { data: session, status, update } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -713,6 +722,7 @@ export default function ProfilGuruPage() {
               profileData={profileData}
               onEditProfile={handleEditProfile}
               onChangePassword={handleChangePassword}
+              onRegenerateRecoveryCode={handleRegenerateRecoveryCode}
             />
           </div>
 
