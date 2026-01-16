@@ -20,6 +20,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
+import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function ProfileClient({ initialData }) {
   const [profileData, setProfileData] = useState(initialData);
@@ -46,6 +48,8 @@ export default function ProfileClient({ initialData }) {
     guru: false,
     koordinator: false
   });
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
 
   const fetchProfileData = async () => {
     try {
@@ -71,7 +75,6 @@ export default function ProfileClient({ initialData }) {
   const handleEditProfile = () => {
     setEditFormData({
       nama: profileData.nama,
-      email: profileData.email,
       phoneNumber: profileData.phoneNumber,
       jabatan: profileData.jabatan,
       nip: profileData.nip,
@@ -91,6 +94,39 @@ export default function ProfileClient({ initialData }) {
     setError('');
     setSuccess('');
     setShowPasswordModal(true);
+  };
+
+  const handleRegenerateRecoveryCode = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin mengatur ulang recovery code? Kode lama akan hangus dan kode baru akan dibuat.')) {
+      return;
+    }
+
+    try {
+      setSaveLoading(true);
+      const response = await fetch('/api/user/setup-recovery', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecoveryCode(data.recoveryCode);
+        setShowRecoveryModal(true);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Gagal regenerasi recovery code');
+      }
+    } catch (error) {
+      console.error('Error regenerating recovery code:', error);
+      toast.error('Terjadi kesalahan saat mengatur ulang recovery code');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const handleRecoveryConfirm = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+    toast.success('Recovery code berhasil disimpan!');
   };
 
   const handleSaveProfile = async () => {
@@ -217,6 +253,9 @@ export default function ProfileClient({ initialData }) {
 
   return (
     <div className="w-full space-y-6">
+      {/* Toast Notifications */}
+      <Toaster position="top-right" />
+      
       {/* Header */}
       <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -250,14 +289,9 @@ export default function ProfileClient({ initialData }) {
                 </span>
               </div>
 
-              <h2 className="text-xl font-bold text-gray-900 mb-1 break-words">
+              <h2 className="text-xl font-bold text-gray-900 mb-3 break-words">
                 {profileData?.nama || 'Administrator'}
               </h2>
-
-              <div className="flex items-center gap-2 text-gray-600 mb-3">
-                <Mail size={14} />
-                <span className="text-sm break-all">{profileData?.email}</span>
-              </div>
 
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <Shield size={16} />
@@ -281,6 +315,14 @@ export default function ProfileClient({ initialData }) {
                 <Lock size={18} />
                 Ubah Password
               </button>
+              <button
+                onClick={handleRegenerateRecoveryCode}
+                disabled={saveLoading}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Lock size={18} />
+                Regenerasi Kode
+              </button>
             </div>
           </div>
         </div>
@@ -297,7 +339,7 @@ export default function ProfileClient({ initialData }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Nama Lengkap */}
+              {/* Row 1: Nama Lengkap */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <User size={16} className="text-gray-400" />
@@ -308,18 +350,18 @@ export default function ProfileClient({ initialData }) {
                 </div>
               </div>
 
-              {/* Email */}
+              {/* Row 1: NIP (Optional) */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Mail size={16} className="text-gray-400" />
-                  Email
+                  <IdCard size={16} className="text-gray-400" />
+                  NIP <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                  <p className="font-medium text-gray-900 break-all">{profileData?.email || '-'}</p>
+                  <p className="font-medium text-gray-900">{profileData?.nip || '-'}</p>
                 </div>
               </div>
 
-              {/* Nomor Telepon */}
+              {/* Row 2: Nomor Telepon */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <Phone size={16} className="text-gray-400" />
@@ -330,7 +372,7 @@ export default function ProfileClient({ initialData }) {
                 </div>
               </div>
 
-              {/* Jabatan */}
+              {/* Row 2: Jabatan */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <Briefcase size={16} className="text-gray-400" />
@@ -341,18 +383,7 @@ export default function ProfileClient({ initialData }) {
                 </div>
               </div>
 
-              {/* NIP (Opsional) */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <IdCard size={16} className="text-gray-400" />
-                  NIP (Opsional)
-                </label>
-                <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                  <p className="font-medium text-gray-900">{profileData?.nip || '-'}</p>
-                </div>
-              </div>
-
-              {/* Alamat Kantor - Full Width */}
+              {/* Row 3: Alamat Kantor - Full Width */}
               <div className="md:col-span-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <MapPin size={16} className="text-gray-400" />
@@ -536,62 +567,71 @@ export default function ProfileClient({ initialData }) {
             )}
 
             <div className="space-y-5">
-              {/* Nama Lengkap */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Lengkap <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editFormData.nama || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, nama: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
+              {/* Row 1 - 2 Kolom */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nama Lengkap */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nama Lengkap <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.nama || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, nama: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Masukkan nama lengkap"
+                  />
+                </div>
+
+                {/* NIP */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    NIP <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.nip || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, nip: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Masukkan NIP (opsional)"
+                  />
+                </div>
               </div>
 
-              {/* Jabatan */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Jabatan <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editFormData.jabatan || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, jabatan: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
+              {/* Row 2 - 2 Kolom */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nomor Telepon */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nomor Telepon
+                  </label>
+                  <input
+                    type="tel"
+                    value={editFormData.phoneNumber || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
+                    placeholder="08xx xxxx xxxx"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Jabatan */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Jabatan <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.jabatan || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, jabatan: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Masukkan jabatan"
+                  />
+                </div>
               </div>
 
-              {/* NIP */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  NIP <span className="text-gray-400">(Opsional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={editFormData.nip || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, nip: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Nomor Telepon */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nomor Telepon
-                </label>
-                <input
-                  type="tel"
-                  value={editFormData.phoneNumber || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
-                  placeholder="08xx xxxx xxxx"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Alamat */}
+              {/* Row 3 - Full Width */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Alamat Kantor
@@ -600,23 +640,9 @@ export default function ProfileClient({ initialData }) {
                   rows={3}
                   value={editFormData.alamat || ''}
                   onChange={(e) => setEditFormData({ ...editFormData, alamat: e.target.value })}
-                  placeholder="Alamat lengkap..."
+                  placeholder="Masukkan alamat lengkap kantor..."
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                 />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email (Read-only)
-                </label>
-                <input
-                  type="email"
-                  value={editFormData.email || ''}
-                  disabled
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
-                />
-                <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
               </div>
             </div>
 
@@ -769,6 +795,14 @@ export default function ProfileClient({ initialData }) {
           </div>
         </div>
       )}
+
+      {/* Recovery Code Modal */}
+      <RecoveryCodeModal
+        isOpen={showRecoveryModal}
+        onClose={() => setShowRecoveryModal(false)}
+        recoveryCode={recoveryCode}
+        onConfirm={handleRecoveryConfirm}
+      />
     </div>
   );
 }
