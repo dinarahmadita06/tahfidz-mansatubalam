@@ -45,22 +45,35 @@ export async function POST(request) {
           continue;
         }
 
-        if (!guruData?.email) {
+        if (!guruData?.nip) {
           stats.failed++;
-          errors.push(`Baris ${i + 2}: Email guru harus diisi`);
+          errors.push(`Baris ${i + 2}: NIP guru harus diisi`);
           continue;
         }
 
-        const emailLower = guruData.email.toLowerCase().trim();
+        if (!guruData?.jenisKelamin) {
+          stats.failed++;
+          errors.push(`Baris ${i + 2}: Jenis Kelamin guru harus diisi`);
+          continue;
+        }
 
-        // Check duplicate email
-        const existingUser = await prisma.user.findUnique({
-          where: { email: emailLower }
+        if (!guruData?.tanggalLahir) {
+          stats.failed++;
+          errors.push(`Baris ${i + 2}: Tanggal Lahir guru harus diisi`);
+          continue;
+        }
+
+        // Generate internal email if not provided
+        const internalEmail = `guru.${Date.now()}.${Math.random().toString(36).substring(2, 10)}@internal.tahfidz.edu.id`.toLowerCase();
+
+        // Check duplicate by name
+        const existingUser = await prisma.user.findFirst({
+          where: { name: guruData.nama }
         });
 
         if (existingUser) {
           stats.duplicate++;
-          errors.push(`Baris ${i + 2}: Email ${emailLower} sudah terdaftar`);
+          errors.push(`Baris ${i + 2}: Guru dengan nama ${guruData.nama} sudah terdaftar`);
           continue;
         }
 
@@ -73,22 +86,57 @@ export async function POST(request) {
           }
         }
 
-        // Parse tanggal lahir
+        // Parse tanggal lahir with multiple format support
         let tanggalLahir = null;
         if (guruData.tanggalLahir) {
-          try {
-            const parsed = new Date(guruData.tanggalLahir);
-            if (!isNaN(parsed.getTime())) {
-              tanggalLahir = parsed;
+          // Try different date formats
+          const dateFormats = [
+            () => new Date(guruData.tanggalLahir),
+            () => {
+              // MM/DD/YYYY format
+              const parts = guruData.tanggalLahir.toString().split(/[\/-]/);
+              if (parts.length === 3) {
+                const [month, day, year] = parts;
+                return new Date(year, month - 1, day);
+              }
+              return null;
+            },
+            () => {
+              // DD/MM/YYYY format
+              const parts = guruData.tanggalLahir.toString().split(/[\/-]/);
+              if (parts.length === 3) {
+                const [day, month, year] = parts;
+                return new Date(year, month - 1, day);
+              }
+              return null;
+            },
+            () => {
+              // YYYY-MM-DD format
+              const parts = guruData.tanggalLahir.toString().split('-');
+              if (parts.length === 3) {
+                const [year, month, day] = parts;
+                return new Date(year, month - 1, day);
+              }
+              return null;
             }
-          } catch (e) {
-            console.log(`Invalid date for row ${i + 2}:`, guruData.tanggalLahir);
+          ];
+          
+          for (const formatFunc of dateFormats) {
+            try {
+              const parsed = formatFunc();
+              if (parsed && !isNaN(parsed.getTime())) {
+                tanggalLahir = parsed;
+                break;
+              }
+            } catch (e) {
+              continue;
+            }
           }
         }
 
         if (!tanggalLahir) {
           stats.failed++;
-          errors.push(`Baris ${i + 2}: Tanggal lahir wajib diisi (format YYYY-MM-DD)`);
+          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (format yang didukung: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY)`);
           continue;
         }
 
@@ -117,7 +165,7 @@ export async function POST(request) {
         await prisma.$transaction(async (tx) => {
           const user = await tx.user.create({
             data: {
-              email: emailLower,
+              email: internalEmail,
               name: guruData.nama,
               password: hashedPassword,
               role: 'GURU',
@@ -131,8 +179,6 @@ export async function POST(request) {
               nip: guruData.nip ? String(guruData.nip) : null,
               jenisKelamin: normalizedJK,
               tanggalLahir: tanggalLahir,
-              noTelepon: guruData.noWhatsApp ? String(guruData.noWhatsApp) : null,
-              alamat: guruData.alamat || '',
               // Remove bidangKeahlian and other deprecated fields if schema allows
             }
           });
@@ -153,7 +199,7 @@ export async function POST(request) {
         newAccounts.push({
           nama: guruData.nama,
           role: 'GURU',
-          email: emailLower,
+          email: internalEmail,
           password: rawPassword,
           keterangan: `NIP: ${guruData.nip || '-'}`
         });

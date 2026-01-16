@@ -94,33 +94,68 @@ export const authConfig = {
           );
 
           if (!potentialUsers || potentialUsers.length === 0) {
+            console.log('🔍 No potential users found for identifier:', identifier);
             return null;
           }
 
+          console.log('🔍 Found potential users:', potentialUsers.length);
           let authenticatedUser = null;
 
           for (const user of potentialUsers) {
-            if (!user.password) continue;
+            console.log('🔍 Checking user:', user.id, user.name, user.role, user.isActive);
+            if (!user.password) {
+              console.log('⚠️  User has no password');
+              continue;
+            }
 
             // SECURITY: Orang Tua login tidak menerima email
             if (user.role === 'ORANG_TUA' && identifier.includes('@')) {
+              console.log('⚠️  Parent login with email blocked');
               continue;
             }
 
             let isValid = await bcrypt.compare(String(password), user.password);
+            console.log('🔐 Password validation result:', isValid);
 
             if (isValid) {
               authenticatedUser = user;
+              console.log('✅ Password validated successfully');
               break;
             }
           }
 
           if (!authenticatedUser) {
+            console.log('❌ No authenticated user found after validation');
             return null;
           }
 
+          // Check if user is active, with special handling for parent accounts
           if (!authenticatedUser.isActive) {
-            throw new Error("Akun Anda tidak aktif.");
+            // For parent accounts, check if any of their children are active
+            if (authenticatedUser.role === 'ORANG_TUA') {
+              let hasActiveChild = false;
+              
+              if (authenticatedUser.orangTua && authenticatedUser.orangTua.orangTuaSiswa) {
+                for (const relation of authenticatedUser.orangTua.orangTuaSiswa) {
+                  if (relation.siswa && relation.siswa.statusSiswa === 'AKTIF') {
+                    hasActiveChild = true;
+                    break;
+                  }
+                }
+              }
+              
+              // If parent has active children, allow login despite inactive status
+              if (hasActiveChild) {
+                console.log('✅ Parent account allowed to login (has active children)');
+              } else {
+                console.log('⚠️  Parent account is not active and has no active children:', authenticatedUser.id);
+                throw new Error("Akun Anda tidak aktif.");
+              }
+            } else {
+              // For non-parent accounts, inactive means blocked
+              console.log('⚠️  User account is not active:', authenticatedUser.id);
+              throw new Error("Akun Anda tidak aktif.");
+            }
           }
 
           return {
