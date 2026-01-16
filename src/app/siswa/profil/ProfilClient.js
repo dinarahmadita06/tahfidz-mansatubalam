@@ -19,6 +19,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
 import { getStatusBadgeConfig } from '@/lib/helpers/statusHelpers';
 
 // ProfileHeader Component
@@ -46,7 +47,7 @@ function ProfileHeader() {
 }
 
 // ProfileSummaryCard Component
-function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
+function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword, onRegenerateRecoveryCode }) {
   const statusBadge = getStatusBadgeConfig(profileData?.statusSiswa || 'AKTIF');
 
   return (
@@ -96,6 +97,13 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
         >
           <Lock size={18} />
           Ubah Password
+        </button>
+        <button
+          onClick={onRegenerateRecoveryCode}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Lock size={18} />
+          Regenerasi Kode
         </button>
       </div>
     </div>
@@ -523,6 +531,8 @@ export default function ProfilClient({ initialData }) {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
@@ -628,6 +638,45 @@ export default function ProfilClient({ initialData }) {
     }
   };
 
+  const handleRegenerateRecoveryCode = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin mengatur ulang recovery code? Kode lama akan hangus dan kode baru akan dibuat.')) {
+      return;
+    }
+
+    try {
+      setSaveLoading(true);
+      const response = await fetch('/api/user/setup-recovery', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecoveryCode(data.recoveryCode);
+        setShowRecoveryModal(true);
+      } else {
+        const error = await response.json();
+        setError(error.error || 'Failed to regenerate recovery code');
+      }
+    } catch (error) {
+      console.error('Error regenerating recovery code:', error);
+      setError('Terjadi kesalahan saat mengatur ulang recovery code');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const handleRecoveryConfirm = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+    // Optionally redirect to dashboard or show success message
+    router.push('/siswa/dashboard');
+  };
+
+  const handleCloseRecoveryModal = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+  };
+
   return (
     <div className="w-full space-y-6">
       <ProfileHeader />
@@ -649,6 +698,7 @@ export default function ProfilClient({ initialData }) {
             profileData={profileData}
             onEditProfile={handleEditProfile}
             onChangePassword={handleChangePassword}
+            onRegenerateRecoveryCode={handleRegenerateRecoveryCode}
           />
         </div>
 
@@ -803,6 +853,14 @@ export default function ProfilClient({ initialData }) {
           </div>
         </div>
       )}
+
+      {/* Recovery Code Modal */}
+      <RecoveryCodeModal
+        isOpen={showRecoveryModal}
+        onClose={handleCloseRecoveryModal}
+        recoveryCode={recoveryCode}
+        onConfirm={handleRecoveryConfirm}
+      />
     </div>
   );
 }

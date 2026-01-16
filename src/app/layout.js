@@ -22,6 +22,22 @@ const amiri = Amiri({
 export const metadata = {
   title: "SIMTAQ",
   description: "Sistem Informasi Manajemen Tahfidz Qur'an",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png", 
+    apple: "/apple-touch-icon.png",
+  },
+  themeColor: "#10b981", // emerald-500
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+  formatDetection: {
+    telephone: false,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SIMTAQ",
+  },
 };
 
 export default function RootLayout({ children }) {
