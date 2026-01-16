@@ -115,18 +115,32 @@ export default function RecoveryCodeModal({
           </div>
 
           {/* Recovery Code Display */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="font-mono text-2xl font-bold text-gray-900 tracking-wider">
-                {recoveryCode}
+          <div className="mb-6">
+            <p className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+              Recovery Code (9 Digit)
+            </p>
+            <div className="relative bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300">
+              {/* Grid layout: spacer - code - icon */}
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                {/* Left spacer */}
+                <div></div>
+                
+                {/* Center: Recovery Code */}
+                <div className="font-mono text-2xl sm:text-3xl font-bold text-gray-900 tracking-wider text-center">
+                  {recoveryCode}
+                </div>
+                
+                {/* Right: Copy button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={copyRecoveryCode}
+                    className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+                    title="Salin ke clipboard"
+                  >
+                    <Copy className={`w-5 h-5 ${isCopied ? 'text-green-600' : 'text-gray-600'}`} />
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={copyRecoveryCode}
-                className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
-                title="Salin ke clipboard"
-              >
-                <Copy className={`w-5 h-5 ${isCopied ? 'text-green-600' : 'text-gray-600'}`} />
-              </button>
             </div>
           </div>
 
