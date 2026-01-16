@@ -34,7 +34,7 @@ export default function LoginPage() {
       console.log('🔐 [LOGIN] Attempting login with identifier:', identifier);
 
       const result = await signIn('credentials', {
-        identifier: identifier.trim().toUpperCase(),
+        identifier: identifier.trim(),
         password,
         rememberMe: rememberMe ? 'true' : 'false',
         redirect: false,

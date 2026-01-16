@@ -67,14 +67,59 @@ export const authConfig = {
             };
           }
 
+          // Check if this is an admin login attempt (case-insensitive)
+          const isAdminAttempt = identifier.toLowerCase().startsWith('admin');
+          if (isAdminAttempt) {
+            const adminUser = await withRetry(() =>
+              prisma.user.findFirst({
+                where: {
+                  AND: [
+                    { role: 'ADMIN' },
+                    {
+                      OR: [
+                        { username: { equals: identifier, mode: 'insensitive' }}, // Case insensitive match
+                        { email: identifier.includes('@') ? identifier.toLowerCase() : undefined }
+                      ].filter(Boolean)
+                    }
+                  ]
+                },
+                include: {
+                  admin: true
+                }
+              })
+            );
+
+            if (adminUser) {
+              if (!adminUser.password) return null;
+              
+              const isValid = await bcrypt.compare(String(password), adminUser.password);
+              if (!isValid) return null;
+              
+              if (!adminUser.isActive) throw new Error("Akun Anda tidak aktif.");
+              
+              return { 
+                id: adminUser.id, 
+                email: adminUser.email, 
+                username: adminUser.username, 
+                name: adminUser.name, 
+                role: adminUser.role, 
+                isActive: adminUser.isActive,
+                rememberMe 
+              };
+            }
+          }
+
           // 2. Logic untuk Guru, Siswa, dan Orang Tua
           // Cari semua user yang mungkin cocok (username, email, atau suffix _wali)
+          // Handle case-insensitive matching for usernames
           const potentialUsers = await withRetry(() =>
             prisma.user.findMany({
               where: { 
                 OR: [
                   { username: identifier },
+                  { username: { equals: identifier, mode: 'insensitive' }}, // Case insensitive match
                   { username: identifier + '_WALI' }, // Support login ortu pake NIS anak
+                  { username: { equals: identifier + '_WALI', mode: 'insensitive' }}, // Case insensitive match
                   { email: identifier.includes('@') ? identifier.toLowerCase() : undefined }
                 ].filter(Boolean),
                 role: { not: 'ADMIN' }
@@ -95,6 +140,12 @@ export const authConfig = {
 
           if (!potentialUsers || potentialUsers.length === 0) {
             console.log('🔍 No potential users found for identifier:', identifier);
+            // Log all existing usernames for debugging
+            const allUsers = await prisma.user.findMany({
+              where: { role: { not: 'ADMIN' }},
+              select: { username: true, email: true, role: true, id: true }
+            });
+            console.log('🔍 All non-admin users in DB:', allUsers);
             return null;
           }
 
@@ -102,7 +153,7 @@ export const authConfig = {
           let authenticatedUser = null;
 
           for (const user of potentialUsers) {
-            console.log('🔍 Checking user:', user.id, user.name, user.role, user.isActive);
+            console.log('🔍 Checking user:', user.id, user.name, user.role, user.isActive, 'Username:', user.username, 'vs identifier:', identifier);
             if (!user.password) {
               console.log('⚠️  User has no password');
               continue;
@@ -115,11 +166,11 @@ export const authConfig = {
             }
 
             let isValid = await bcrypt.compare(String(password), user.password);
-            console.log('🔐 Password validation result:', isValid);
+            console.log('🔐 Password validation result for user', user.id, 'with username', user.username, ':', isValid);
 
             if (isValid) {
               authenticatedUser = user;
-              console.log('✅ Password validated successfully');
+              console.log('✅ Password validated successfully for user:', user.id);
               break;
             }
           }

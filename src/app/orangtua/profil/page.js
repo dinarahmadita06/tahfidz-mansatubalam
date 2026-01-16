@@ -650,7 +650,6 @@ function ChangePasswordModal({ isOpen, onClose, onSave }) {
               <p className="text-xs font-medium text-amber-900 mb-1">Persyaratan Password:</p>
               <ul className="text-xs text-amber-800 space-y-1">
                 <li>• Minimal 8 karakter</li>
-                <li>• Gunakan kombinasi huruf dan angka</li>
               </ul>
             </div>
           </div>
