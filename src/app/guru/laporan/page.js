@@ -17,7 +17,7 @@ export default function LaporanGuruPage() {
               <BarChart3 size={40} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold">Laporan Hafalan & Kehadiran</h1>
+              <h1 className="text-3xl md:text-4xl font-bold">Laporan Perkembangan</h1>
               <p className="text-green-50 text-base md:text-lg mt-2">
                 Generate dan unduh laporan hafalan siswa secara terperinci
               </p>

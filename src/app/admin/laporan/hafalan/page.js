@@ -457,7 +457,7 @@ export default function LaporanHafalanPage() {
               
               {/* Header Content */}
               <div className="flex-1 flex flex-col justify-center text-left">
-                <h1 className="text-xl sm:text-4xl font-bold text-white leading-tight mb-1 sm:mb-2">Laporan Hafalan</h1>
+                <h1 className="text-xl sm:text-4xl font-bold text-white leading-tight mb-1 sm:mb-2">Laporan Perkembangan</h1>
                 <p className="text-white/90 text-sm sm:text-base leading-snug">Generate dan unduh laporan hafalan siswa secara terperinci</p>
               </div>
             </div>

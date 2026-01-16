@@ -19,7 +19,7 @@ export default function GuruTasmiPage() {
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl font-bold">Manajemen Tasmi&apos; Al-Qur&apos;an</h1>
+                  <h1 className="text-4xl font-bold">Tasmi&apos; Al-Qur&apos;an</h1>
                 </div>
                 <p className="text-green-50 text-lg">Kelola pendaftaran dan penilaian ujian bacaan Al-Qur&apos;an siswa</p>
               </div>
