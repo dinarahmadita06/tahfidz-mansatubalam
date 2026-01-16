@@ -372,7 +372,7 @@ export default function GuruTasmiPage() {
             <div>
               <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
                 <BookCheck size={40} />
-                Manajemen Tasmi&apos; Al-Qur&apos;an
+                Tasmi&apos; Al-Qur&apos;an
               </h1>
               <p className="text-emerald-50 text-lg">Kelola pendaftaran dan penilaian ujian bacaan Al-Qur&apos;an siswa</p>
             </div>

@@ -359,20 +359,24 @@ export default function SIMTAQLandingPage() {
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-emerald-200/30 rounded-full blur-[120px] -z-10" />
         <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-teal-200/20 rounded-full blur-[100px] -z-10" />
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
+            className="lg:pr-8"
           >
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-full text-xs font-bold mb-4 lg:mb-6 border border-emerald-100">
               <Smartphone size={14} />
               Portal Aplikasi Berbasis PWA
             </div>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] mb-4 lg:mb-6 tracking-tight">
-              SIMTAQ — Sistem <br />
-              <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
-                Monitoring Tahfidz
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-[1.2] mb-4 lg:mb-6 tracking-tight">
+              <span className="block">SIMTAQ — Sistem Informasi</span>
+              <span className="block bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
+                Manajemen Tahfidz
+              </span>
+              <span className="block bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
+                Qur'an
               </span>
             </h1>
             <p className="text-base lg:text-lg text-slate-600 mb-8 lg:mb-10 leading-relaxed max-w-xl font-medium">
@@ -423,7 +427,7 @@ export default function SIMTAQLandingPage() {
             initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="hidden lg:block"
+            className="hidden lg:block lg:pl-4"
           >
             <UIPreviewStack />
           </motion.div>
