@@ -43,44 +43,115 @@ export async function POST(request) {
       const row = data[i];
 
       try {
-        // Validasi required fields
-        const nama = row['Nama Lengkap'] || row['Nama'] || row['nama'];
-        const email = row['Email'] || row['email'];
-        const nip = row['NIP'] || row['nip'] || null;
-        const jenisKelamin = row['Jenis Kelamin'] || row['jenisKelamin'] || row['L/P'];
-        const tanggalLahirStr = row['Tanggal Lahir'] || row['tanggalLahir'];
-        const noWhatsApp = row['Nomor WhatsApp'] || row['No. Telepon'] || row['noTelepon'];
-        const alamat = row['Alamat'] || row['alamat'];
-        const kelasBinaan = row['Kelas Binaan'] || row['kelasBinaan'];
-
-        if (!nama || !email) {
+        // Flexible column mapping based on header names
+        const headers = Object.keys(row);
+        
+        // Find the actual column names for required fields
+        let namaCol = null;
+        let nipCol = null;
+        let jenisKelaminCol = null;
+        let tanggalLahirCol = null;
+        let kelasBinaanCol = null;
+        
+        for (const header of headers) {
+          const normalizedHeader = header.toLowerCase().trim();
+          
+          if (['nama lengkap', 'nama', 'name', 'full name'].includes(normalizedHeader)) {
+            namaCol = header;
+          } else if (['nip', 'nomor induk pegawai', 'pegawai id'].includes(normalizedHeader)) {
+            nipCol = header;
+          } else if (['jenis kelamin', 'gender', 'jenis_kelamin', 'jk', 'l/p'].includes(normalizedHeader)) {
+            jenisKelaminCol = header;
+          } else if (['tanggal lahir', 'tgl lahir', 'birth date', 'dob', 'tanggal_lahir'].includes(normalizedHeader)) {
+            tanggalLahirCol = header;
+          } else if (['kelas binaan', 'kelas', 'pembina kelas', 'kelas_binaan', 'class assignment'].includes(normalizedHeader)) {
+            kelasBinaanCol = header;
+          }
+        }
+        
+        // Extract values using found column names
+        const nama = row[namaCol];
+        const nip = row[nipCol];
+        const jenisKelamin = row[jenisKelaminCol];
+        const tanggalLahirStr = row[tanggalLahirCol];
+        const kelasBinaan = row[kelasBinaanCol];
+        
+        // Check for required fields
+        if (!nama) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Nama Lengkap dan Email harus diisi`);
+          errors.push(`Baris ${i + 2}: Kolom 'Nama Lengkap' tidak ditemukan atau kosong`);
           continue;
         }
-
+        
+        if (!nip) {
+          failedCount++;
+          errors.push(`Baris ${i + 2}: Kolom 'NIP' tidak ditemukan atau kosong`);
+          continue;
+        }
+        
         if (!jenisKelamin) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Jenis Kelamin harus diisi (L/P)`);
+          errors.push(`Baris ${i + 2}: Kolom 'Jenis Kelamin' tidak ditemukan atau kosong`);
+          continue;
+        }
+        
+        if (!tanggalLahirStr) {
+          failedCount++;
+          errors.push(`Baris ${i + 2}: Kolom 'Tanggal Lahir' tidak ditemukan atau kosong`);
           continue;
         }
 
-        // Parse tanggal lahir
+        // Parse tanggal lahir with multiple format support
         let tanggalLahir = null;
         if (tanggalLahirStr) {
-          try {
-            const parsed = new Date(tanggalLahirStr);
-            if (!isNaN(parsed.getTime())) {
-              tanggalLahir = parsed;
+          // Try different date formats
+          const dateFormats = [
+            () => new Date(tanggalLahirStr),
+            () => {
+              // MM/DD/YYYY format
+              const parts = tanggalLahirStr.toString().split(/[\/-]/);
+              if (parts.length === 3) {
+                const [month, day, year] = parts;
+                return new Date(year, month - 1, day);
+              }
+              return null;
+            },
+            () => {
+              // DD/MM/YYYY format
+              const parts = tanggalLahirStr.toString().split(/[\/-]/);
+              if (parts.length === 3) {
+                const [day, month, year] = parts;
+                return new Date(year, month - 1, day);
+              }
+              return null;
+            },
+            () => {
+              // YYYY-MM-DD format
+              const parts = tanggalLahirStr.toString().split('-');
+              if (parts.length === 3) {
+                const [year, month, day] = parts;
+                return new Date(year, month - 1, day);
+              }
+              return null;
             }
-          } catch (e) {
-            console.log(`Invalid date for row ${i + 2}:`, tanggalLahirStr);
+          ];
+          
+          for (const formatFunc of dateFormats) {
+            try {
+              const parsed = formatFunc();
+              if (parsed && !isNaN(parsed.getTime())) {
+                tanggalLahir = parsed;
+                break;
+              }
+            } catch (e) {
+              continue;
+            }
           }
         }
 
         if (!tanggalLahir) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Tanggal lahir wajib diisi (format YYYY-MM-DD)`);
+          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (format yang didukung: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY)`);
           continue;
         }
 
@@ -97,9 +168,17 @@ export async function POST(request) {
           continue;
         }
 
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-          where: { email: email.toLowerCase().trim() }
+        // Generate internal email if not provided
+        const internalEmail = `guru.${Date.now()}.${Math.random().toString(36).substring(2, 10)}@internal.tahfidz.edu.id`.toLowerCase();
+
+        // Check if user already exists by name or NIP
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { name: nama.trim() },
+              { email: internalEmail }
+            ]
+          }
         });
 
         let userId;
@@ -114,7 +193,7 @@ export async function POST(request) {
           // Create user account
           const newUser = await prisma.user.create({
             data: {
-              email: email.toLowerCase().trim(),
+              email: internalEmail,
               name: nama.trim(),
               password: hashedPassword,
               role: 'GURU'
@@ -124,7 +203,7 @@ export async function POST(request) {
           userId = newUser.id;
         } else {
           failedCount++;
-          errors.push(`Baris ${i + 2}: User dengan email ${email} tidak ditemukan`);
+          errors.push(`Baris ${i + 2}: Gagal membuat akun guru karena autoCreateAccount dinonaktifkan`);
           continue;
         }
 
@@ -141,8 +220,6 @@ export async function POST(request) {
               nip: nip ? String(nip) : null,
               jenisKelamin: normalizedJenisKelamin,
               tanggalLahir: tanggalLahir,
-              noTelepon: noWhatsApp ? String(noWhatsApp) : null,
-              alamat: alamat || '',
             }
           });
         } else {
@@ -153,13 +230,11 @@ export async function POST(request) {
               nip: nip ? String(nip) : null,
               jenisKelamin: normalizedJenisKelamin,
               tanggalLahir: tanggalLahir,
-              noTelepon: noWhatsApp ? String(noWhatsApp) : null,
-              alamat: alamat || '',
             }
           });
 
           // Handle Kelas Binaan for new guru
-          if (kelasBinaan) {
+          if (kelasBinaan !== undefined && kelasBinaan !== null && kelasBinaan !== '') {
             const kelasNames = String(kelasBinaan).split(',').map(s => s.trim()).filter(Boolean);
             for (const name of kelasNames) {
               const kelas = await prisma.kelas.findFirst({
