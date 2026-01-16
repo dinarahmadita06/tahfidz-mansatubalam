@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
 
 // Single Source of Truth: Profile Fields Configuration
 // Layout order: Row 1 (Nama | Telepon), Row 2 (Email | Status), Row 3 (Alamat full-width)
@@ -96,7 +97,7 @@ function ProfileHeader() {
 }
 
 // ProfileSummaryCard Component
-function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
+function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword, onRegenerateRecoveryCode }) {
   return (
     <div className="bg-white/70 backdrop-blur rounded-2xl border border-white/20 shadow-lg shadow-green-500/10 p-6">
       {/* Avatar & Info */}
@@ -137,6 +138,13 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword }) {
         >
           <Lock size={18} />
           Ubah Password
+        </button>
+        <button
+          onClick={onRegenerateRecoveryCode}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Lock size={18} />
+          Regenerasi Kode
         </button>
       </div>
     </div>
@@ -693,6 +701,8 @@ export default function ProfilOrangtuaPage() {
   const [profileData, setProfileData] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -800,6 +810,42 @@ export default function ProfilOrangtuaPage() {
     }
   };
 
+  const handleRegenerateRecoveryCode = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin mengatur ulang recovery code? Kode lama akan hangus dan kode baru akan dibuat.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/user/setup-recovery', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecoveryCode(data.recoveryCode);
+        setShowRecoveryModal(true);
+      } else {
+        const error = await response.json();
+        setError(error.error || 'Failed to regenerate recovery code');
+      }
+    } catch (error) {
+      console.error('Error regenerating recovery code:', error);
+      setError('Terjadi kesalahan saat mengatur ulang recovery code');
+    }
+  };
+
+  const handleRecoveryConfirm = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+    // Optionally redirect to dashboard or show success message
+    router.push('/orangtua/dashboard');
+  };
+
+  const handleCloseRecoveryModal = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+  };
+
   const handleChangePassword = () => {
     setError('');
     setSuccess('');
@@ -889,6 +935,7 @@ export default function ProfilOrangtuaPage() {
                 profileData={profileData}
                 onEditProfile={handleEditProfile}
                 onChangePassword={handleChangePassword}
+                onRegenerateRecoveryCode={handleRegenerateRecoveryCode}
               />
             </div>
 
@@ -914,6 +961,14 @@ export default function ProfilOrangtuaPage() {
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
         onSave={handleChangePasswordSubmit}
+      />
+
+      {/* Recovery Code Modal */}
+      <RecoveryCodeModal
+        isOpen={showRecoveryModal}
+        onClose={handleCloseRecoveryModal}
+        recoveryCode={recoveryCode}
+        onConfirm={handleRecoveryConfirm}
       />
     </OrangtuaLayout>
   );

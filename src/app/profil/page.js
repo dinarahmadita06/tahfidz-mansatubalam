@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { UserCircle, Mail, Phone, MapPin, School, Lock, Save, Edit2, X } from 'lucide-react';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
 
 export default function ProfilPage() {
   const { data: session, status, update } = useSession();
@@ -13,6 +14,8 @@ export default function ProfilPage() {
 
   const [editMode, setEditMode] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -134,6 +137,45 @@ export default function ProfilPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRegenerateRecoveryCode = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin mengatur ulang recovery code? Kode lama akan hangus dan kode baru akan dibuat.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch('/api/user/setup-recovery', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecoveryCode(data.recoveryCode);
+        setShowRecoveryModal(true);
+      } else {
+        const error = await response.json();
+        alert('Error: ' + (error.error || 'Failed to regenerate recovery code'));
+      }
+    } catch (error) {
+      console.error('Error regenerating recovery code:', error);
+      alert('Terjadi kesalahan saat mengatur ulang recovery code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecoveryConfirm = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+    // Optionally redirect to dashboard or show success message
+    router.push('/dashboard');
+  };
+
+  const handleCloseRecoveryModal = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
   };
 
   if (status === 'loading') {
@@ -337,6 +379,18 @@ export default function ProfilPage() {
               Ubah Password
             </button>
           </div>
+          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+            <div>
+              <p className="font-medium text-gray-900">Recovery Code</p>
+              <p className="text-sm text-gray-600">Atur ulang kode pemulihan akun Anda</p>
+            </div>
+            <button
+              onClick={handleRegenerateRecoveryCode}
+              className="px-4 py-2 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 transition"
+            >
+              Regenerasi Kode
+            </button>
+          </div>
         </div>
 
         {/* Info Box */}
@@ -468,6 +522,14 @@ export default function ProfilPage() {
           </div>
         </div>
       )}
+
+      {/* Recovery Code Modal */}
+      <RecoveryCodeModal
+        isOpen={showRecoveryModal}
+        onClose={handleCloseRecoveryModal}
+        recoveryCode={recoveryCode}
+        onConfirm={handleRecoveryConfirm}
+      />
     </SiswaLayout>
   );
 }

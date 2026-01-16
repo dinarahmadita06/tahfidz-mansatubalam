@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import GuruLayout from '@/components/layout/GuruLayout';
+import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
 import { toast, Toaster } from 'react-hot-toast';
 
 // ProfileHeader Component
@@ -299,7 +300,7 @@ function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDel
 }
 
 // SecurityCard Component
-function SecurityCard() {
+function SecurityCard({ onRegenerateRecoveryCode }) {
   return (
     <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5">
       <div className="flex items-start gap-4">
@@ -312,9 +313,26 @@ function SecurityCard() {
           <h4 className="font-bold text-sm mb-2 text-emerald-900">
             Informasi Keamanan Akun
           </h4>
-          <p className="text-sm leading-relaxed text-emerald-800">
-            💡 Pastikan informasi profil Anda selalu ter-update. Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm leading-relaxed text-emerald-800">
+              💡 Pastikan informasi profil Anda selalu ter-update. Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
+            </p>
+            
+            <div className="pt-2 border-t border-emerald-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-emerald-900">Recovery Code</p>
+                  <p className="text-xs text-emerald-700">Atur ulang kode pemulihan akun Anda</p>
+                </div>
+                <button
+                  onClick={onRegenerateRecoveryCode}
+                  className="px-3 py-1.5 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 transition text-xs"
+                >
+                  Regenerasi Kode
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -344,6 +362,8 @@ export default function ProfilGuruPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [tandaTanganUrl, setTandaTanganUrl] = useState(null);
   const [uploadingSignature, setUploadingSignature] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
 
   /**
    * Format display value:
@@ -630,6 +650,45 @@ export default function ProfilGuruPage() {
     }
   };
 
+  const handleRegenerateRecoveryCode = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin mengatur ulang recovery code? Kode lama akan hangus dan kode baru akan dibuat.')) {
+      return;
+    }
+
+    try {
+      setSaveLoading(true);
+      const response = await fetch('/api/user/setup-recovery', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecoveryCode(data.recoveryCode);
+        setShowRecoveryModal(true);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to regenerate recovery code');
+      }
+    } catch (error) {
+      console.error('Error regenerating recovery code:', error);
+      toast.error('Terjadi kesalahan saat mengatur ulang recovery code');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const handleRecoveryConfirm = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+    // Optionally redirect to dashboard or show success message
+    router.push('/guru/dashboard');
+  };
+
+  const handleCloseRecoveryModal = () => {
+    setShowRecoveryModal(false);
+    setRecoveryCode('');
+  };
+
   if (loading || status === 'loading') {
     return (
       <GuruLayout>
@@ -668,7 +727,7 @@ export default function ProfilGuruPage() {
               onDelete={handleDeleteSignature}
             />
 
-            <SecurityCard />
+            <SecurityCard onRegenerateRecoveryCode={handleRegenerateRecoveryCode} />
           </div>
         </div>
       </div>
@@ -926,6 +985,14 @@ export default function ProfilGuruPage() {
           </div>
         </div>
       )}
+
+      {/* Recovery Code Modal */}
+      <RecoveryCodeModal
+        isOpen={showRecoveryModal}
+        onClose={handleCloseRecoveryModal}
+        recoveryCode={recoveryCode}
+        onConfirm={handleRecoveryConfirm}
+      />
     </GuruLayout>
   );
 }
