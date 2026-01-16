@@ -55,13 +55,10 @@ const COLUMN_PATTERNS = {
   },
   guru: {
     nama: ['nama lengkap', 'nama guru', 'nama', 'name', 'full name'],
-    email: ['email', 'email address', 'username'],
     nip: ['nip', 'nomor induk pegawai'],
     jenisKelamin: ['jenis kelamin', 'gender', 'l/p', 'jk'],
     tanggalLahir: ['tanggal lahir', 'tgl lahir', 'birth date', 'dob'],
-    noWhatsApp: ['nomor whatsapp', 'wa', 'no hp', 'telepon', 'phone'],
     kelasBinaan: ['kelas binaan', 'kelas', 'pembina kelas'],
-    alamat: ['alamat', 'address'],
   }
 };
 
@@ -514,10 +511,10 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                     <strong>Data Guru:</strong>
                     <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
                       <li>Nama Lengkap (wajib)</li>
-                      <li>Email (wajib)</li>
-                      <li>NIP (opsional)</li>
+                      <li>NIP (wajib)</li>
                       <li>Jenis Kelamin (wajib)</li>
                       <li>Tanggal Lahir (wajib)</li>
+                      <li>Kelas Binaan (opsional)</li>
                     </ul>
                   </div>
                   <div>
