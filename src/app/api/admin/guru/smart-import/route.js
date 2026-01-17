@@ -204,6 +204,8 @@ export async function POST(request) {
         const rawPassword = credentials.passwordPlain; // YYYY-MM-DD
         const hashedPassword = credentials.passwordHash;
 
+        console.log(`📋 [SMART-IMPORT GURU Baris ${i + 2}] Username: ${username}, TanggalLahir: ${tanggalLahirString}, Password: ${rawPassword}`);
+
         // Check duplicate by username (case-insensitive)
         const existingUser = await prisma.user.findFirst({
           where: { 

@@ -297,9 +297,11 @@ export async function buildGuruCredentials({ tanggalLahir, lastUsernameNumber, b
     const month = String(tanggalLahir.getUTCMonth() + 1).padStart(2, '0');
     const day = String(tanggalLahir.getUTCDate()).padStart(2, '0');
     dateString = `${year}-${month}-${day}`;
+    console.log(`🔧 [buildGuruCredentials] Input Date object → Normalized: ${dateString}`);
   } else if (typeof tanggalLahir === 'string') {
     // Already YYYY-MM-DD format
     dateString = tanggalLahir.trim();
+    console.log(`🔧 [buildGuruCredentials] Input string: ${tanggalLahir} → Normalized: ${dateString}`);
   } else {
     throw new Error('Invalid tanggalLahir format');
   }
@@ -314,6 +316,8 @@ export async function buildGuruCredentials({ tanggalLahir, lastUsernameNumber, b
   
   // Hash password for storage
   const passwordHash = await bcrypt.hash(passwordPlain, 10);
+  
+  console.log(`✅ [buildGuruCredentials] Generated → Username: ${username}, Password: ${passwordPlain} (YYYY-MM-DD format)`);
   
   return {
     username,       // e.g., "G008" (UPPERCASE)

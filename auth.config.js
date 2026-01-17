@@ -162,7 +162,13 @@ export const authConfig = {
             }
 
             let isValid = await bcrypt.compare(String(password), user.password);
-            console.log('🔐 Password validation for', user.role, user.username, ':', isValid);
+            
+            // Enhanced logging for GURU login
+            if (user.role === 'GURU') {
+              console.log(`🔐 [GURU LOGIN] Username: ${user.username}, Input Password: ${password}, Valid: ${isValid}`);
+            } else {
+              console.log('🔐 Password validation for', user.role, user.username, ':', isValid);
+            }
 
             if (isValid) {
               authenticatedUser = user;
