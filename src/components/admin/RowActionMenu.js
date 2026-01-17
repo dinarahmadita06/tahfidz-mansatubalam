@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect, memo } from 'react';
-
+import { createPortal } from 'react-dom';
 import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle } from 'lucide-react';
 
 /**
- * RowActionMenu - Reusable dropdown action menu component
+ * RowActionMenu - Reusable dropdown action menu component with Portal
  * Displays a three-dots button that opens a dropdown with action items
+ * Uses Portal to render menu outside table container to prevent overflow clipping
  * 
  * Props:
  * - statusSiswa: current student status (AKTIF, LULUS, PINDAH, KELUAR)
@@ -24,8 +25,29 @@ function RowActionMenu({
 }) {
 
   const [isOpen, setIsOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, openUpward: false });
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+
+  // Calculate menu position when opened
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = 200; // Estimated menu height
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+      
+      // Auto-flip: open upward if not enough space below
+      const openUpward = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+      
+      setMenuPosition({
+        top: openUpward ? buttonRect.top - menuHeight + window.scrollY : buttonRect.bottom + window.scrollY,
+        left: buttonRect.right - 192, // 192px = w-48 menu width, align to right
+        openUpward
+      });
+    }
+  }, [isOpen]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -81,11 +103,15 @@ function RowActionMenu({
         <MoreVertical size={18} />
       </button>
   
-      {/* Dropdown Menu */}
-      {isOpen && (
+      {/* Dropdown Menu - Rendered via Portal */}
+      {isOpen && typeof window !== 'undefined' && createPortal(
         <div
           ref={menuRef}
-          className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-md border border-emerald-100/60 rounded-xl shadow-lg py-2 z-40"
+          className="fixed w-48 bg-white/95 backdrop-blur-md border border-emerald-100/60 rounded-xl shadow-xl py-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200"
+          style={{
+            top: `${menuPosition.top}px`,
+            left: `${menuPosition.left}px`,
+          }}
           role="menu"
         >
           {statusSiswa !== 'AKTIF' && onAktifkan && (
@@ -135,7 +161,8 @@ function RowActionMenu({
               )}
             </>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

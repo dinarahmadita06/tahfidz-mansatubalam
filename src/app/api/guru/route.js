@@ -146,7 +146,7 @@ export async function POST(request) {
     const body = await request.json();
     console.log('📝 Request body:', JSON.stringify(body, null, 2));
 
-    let { name, email, password, username, nip, jenisKelamin, tanggalLahir, kelasIds } = body;
+    let { name, password, username, nip, jenisKelamin, tanggalLahir, kelasIds } = body;
 
     // If username is not provided, generate one automatically
     if (!username) {
@@ -155,7 +155,7 @@ export async function POST(request) {
       console.log('✅ Generated username:', username);
     }
 
-    // Validasi input - Email is no longer required for teacher creation, only core credentials
+    // Validasi input - Only core credentials required (no email)
     if (!name || !password || !jenisKelamin) {
       console.log('❌ Validation failed:', { name, password, jenisKelamin });
       return NextResponse.json({
@@ -225,40 +225,17 @@ export async function POST(request) {
 
     console.log('✅ Normalized jenisKelamin:', normalizedJenisKelamin);
 
-    // Cek email sudah ada jika email disediakan
-    console.log('🔍 Checking existing user...');
-    let existingUser = null;
-    if (email) {
-      existingUser = await prisma.user.findUnique({
-        where: { email }
-      });
-    }
+    // Generate internal email (not exposed to user, for DB compatibility)
+    const email = `guru.${Date.now()}@internal.tahfidz`;
 
-    if (existingUser) {
-      console.log('❌ Email already exists:', email);
-      return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
-    }
+    console.log('🔍 Checking username availability...');
+    const existingUserWithUsername = await prisma.user.findUnique({
+      where: { username }
+    });
 
-    if (!email) {
-      // Generate a temporary email if not provided (for internal purposes)
-      email = `guru.${Date.now()}@internal.tahfidz`;
-    }
-
-    console.log('✅ Email available');
-
-    // Check if username already exists
-    try {
-      const existingUserWithUsername = await prisma.user.findUnique({
-        where: { username }
-      });
-
-      if (existingUserWithUsername) {
-        console.log('❌ Username already exists:', username);
-        return NextResponse.json({ error: 'Username sudah terdaftar' }, { status: 400 });
-      }
-    } catch (error) {
-      console.warn('⚠️ Username field not available in database, skipping username uniqueness check');
-      // Continue without username check if field doesn't exist
+    if (existingUserWithUsername) {
+      console.log('❌ Username already exists:', username);
+      return NextResponse.json({ error: 'Username sudah terdaftar' }, { status: 400 });
     }
 
     // Hash password

@@ -157,19 +157,14 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       const workbook = XLSX.read(data);
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      
-      // Parse with defval to preserve empty cells
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-        defval: "",  // Set empty cells to empty string instead of skipping
-        raw: false    // Convert all values to strings first
-      });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       if (jsonData.length === 0) {
         alert('File Excel kosong');
         return;
       }
 
-      // Get headers from first row
+      // Get headers
       const headers = Object.keys(jsonData[0]);
 
       // Auto-detect columns
@@ -301,29 +296,15 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
 
   return (
     <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999,
-      padding: '20px'
+      background: colors.white,
+      borderRadius: '24px',
+      padding: '32px',
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+      border: `2px solid ${colors.emerald[100]}`,
+      fontFamily: "'Poppins', sans-serif",
+      position: 'relative',
+      overflow: 'hidden'
     }}>
-      <div style={{
-        background: colors.white,
-        borderRadius: '24px',
-        maxWidth: '900px',
-        width: '100%',
-        maxHeight: '90vh',
-        display: 'flex',
-        flexDirection: 'column',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-        border: `2px solid ${colors.emerald[100]}`,
-        fontFamily: "'Poppins', sans-serif",
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
       {/* Ornamen Islami */}
       <div style={{
         position: 'absolute',
@@ -338,7 +319,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       }}></div>
 
       {/* Header */}
-      <div style={{ padding: '32px 32px 0', marginBottom: '24px', position: 'relative', zIndex: 1, flexShrink: 0 }}>
+      <div style={{ marginBottom: '24px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -393,10 +374,8 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        padding: '0 32px 24px',
-        marginBottom: 0,
-        position: 'relative',
-        flexShrink: 0
+        marginBottom: '32px',
+        position: 'relative'
       }}>
         {[
           { num: 1, label: 'Upload File' },
@@ -452,14 +431,6 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
           </div>
         ))}
       </div>
-
-      {/* Scrollable Content */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '0 32px 32px',
-        minHeight: 0
-      }}>
 
       {/* Step 1: Upload File */}
       {step === 1 && (
@@ -624,9 +595,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
               gridTemplateColumns: '1fr 1fr',
               gap: '12px'
             }}>
-              {Object.keys(columnMapping)
-                .filter(key => type === 'guru' ? key.startsWith('guru_') : true)
-                .map(key => (
+              {Object.keys(columnMapping).map(key => (
                 <div key={key} style={{
                   padding: '12px',
                   background: colors.emerald[50],
@@ -680,7 +649,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
               }}>
                 <thead>
                   <tr style={{ background: colors.gray[100] }}>
-                    {Object.keys(parsedData[0] || {}).map(header => (
+                    {Object.keys(previewData[0] || {}).map(header => (
                       <th key={header} style={{
                         padding: '12px',
                         textAlign: 'left',
@@ -698,12 +667,12 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                     <tr key={idx} style={{
                       borderBottom: `1px solid ${colors.gray[100]}`
                     }}>
-                      {Object.keys(parsedData[0] || {}).map((header, cellIdx) => (
+                      {Object.values(row).map((cell, cellIdx) => (
                         <td key={cellIdx} style={{
                           padding: '12px',
                           color: colors.gray[600]
                         }}>
-                          {row[header] || '-'}
+                          {cell || '-'}
                         </td>
                       ))}
                     </tr>
@@ -999,9 +968,12 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
         </div>
       )}
 
-      </div>
-
-    </div>
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
     </div>
   );
 }

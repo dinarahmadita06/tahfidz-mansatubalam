@@ -150,6 +150,21 @@ const StatCard = memo(function StatCard({ icon: Icon, title, value, subtitle, th
   );
 });
 
+// Format date to YYYY-MM-DD without timezone shift
+const formatDateOnly = (dateValue) => {
+  if (!dateValue) return '';
+  
+  const date = new Date(dateValue);
+  if (isNaN(date.getTime())) return '';
+  
+  // Use UTC methods to avoid timezone shift
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function AdminSiswaPage() {
@@ -267,7 +282,7 @@ export default function AdminSiswaPage() {
         'NIS': s.nis || '-',
         'NISN': s.nisn || '-',
         'Nama Lengkap': s.user.name,
-        'Tanggal Lahir': s.tanggalLahir ? new Date(s.tanggalLahir).toISOString().split('T')[0] : '-',
+        'Tanggal Lahir': formatDateOnly(s.tanggalLahir) || '-',
         'Jenis Kelamin': s.jenisKelamin || '-',
         'Tempat Lahir': s.tempatLahir || '-',
         'Alamat': s.alamat || '-',
@@ -695,7 +710,7 @@ export default function AdminSiswaPage() {
 
                             {/* Tanggal Lahir */}
                             <td className="px-6 py-4 text-sm text-gray-700">
-                              {siswaItem.tanggalLahir ? new Date(siswaItem.tanggalLahir).toISOString().split('T')[0] : '-'}
+                              {formatDateOnly(siswaItem.tanggalLahir) || '-'}
                             </td>
 
                             {/* Kelas */}

@@ -6,7 +6,7 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { MultiSelectKelas } from './MultiSelectKelas';
-import { generateGuruEmail, generateGuruPassword } from '@/lib/passwordUtils';
+import { generateGuruPassword } from '@/lib/passwordUtils';
 import * as XLSX from 'xlsx';
 import SmartImport from '@/components/SmartImport';
 
@@ -134,6 +134,21 @@ function SearchFilterBar({ searchTerm, setSearchTerm, filterStatus, setFilterSta
 
 // ===== HELPER FUNCTIONS =====
 
+// Format date to YYYY-MM-DD without timezone shift
+const formatDateOnly = (dateValue) => {
+  if (!dateValue) return '';
+  
+  const date = new Date(dateValue);
+  if (isNaN(date.getTime())) return '';
+  
+  // Use UTC methods to avoid timezone shift
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
 // Get only AKTIF classes from guruKelas array
 const getAktifKelas = (guruKelas) => {
   if (!Array.isArray(guruKelas)) return [];
@@ -184,6 +199,15 @@ export default function AdminGuruPage() {
     }
   };
 
+  // Helper function to safely parse JSON
+  const safeJsonParse = (text) => {
+    try {
+      return text ? JSON.parse(text) : null;
+    } catch (e) {
+      console.error('Failed to parse JSON:', e);
+      return null;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -206,18 +230,45 @@ export default function AdminGuruPage() {
         body: JSON.stringify(payload),
       });
 
+      // Safe response handling - always read text first
+      const responseText = await response.text();
+      const responseData = safeJsonParse(responseText);
+
       if (response.ok) {
-        alert(editingGuru ? 'Guru berhasil diupdate' : 'Guru berhasil ditambahkan');
+        const successMessage = responseData?.message || (editingGuru ? 'Guru berhasil diupdate' : 'Guru berhasil ditambahkan');
+        alert(successMessage);
         setShowModal(false);
         resetForm();
         refetchGuru();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menyimpan data guru');
+        // Enhanced error handling with safe JSON parsing
+        let errorMessage = responseData?.message || 'Gagal menyimpan data guru';
+        
+        if (response.status === 409) {
+          // Conflict - duplicate data
+          errorMessage = `❌ ${errorMessage}\n\nData sudah digunakan oleh guru lain. Silakan gunakan nilai yang berbeda.`;
+        } else if (response.status === 400) {
+          // Validation error
+          errorMessage = `⚠️ ${errorMessage}\n\nPeriksa kembali data yang Anda masukkan.`;
+        } else if (response.status === 404) {
+          // Not found
+          errorMessage = '❌ Data guru tidak ditemukan. Mungkin sudah dihapus.';
+        } else if (response.status >= 500) {
+          // Server error
+          errorMessage = '❌ Terjadi kesalahan server. Silakan coba lagi atau hubungi administrator.';
+        }
+        
+        // Log field yang bermasalah untuk debugging
+        if (responseData?.field) {
+          console.error(`Field yang bermasalah: ${responseData.field}`);
+          errorMessage += `\n\nField: ${responseData.field}`;
+        }
+        
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Error saving guru:', error);
-      alert('Gagal menyimpan data guru');
+      alert('❌ Terjadi kesalahan saat menyimpan data guru.\n\nSilakan coba lagi atau hubungi administrator jika masalah berlanjut.');
     }
   };
 
@@ -233,7 +284,7 @@ export default function AdminGuruPage() {
       username: guruItem.user.username || '',
       nip: guruItem.nip || '',
       jenisKelamin: guruItem.jenisKelamin,
-      tanggalLahir: guruItem.tanggalLahir ? new Date(guruItem.tanggalLahir).toISOString().split('T')[0] : '',
+      tanggalLahir: formatDateOnly(guruItem.tanggalLahir),
       kelasIds: aktivKelasIds
     });
     setSelectedKelas(aktivKelasIds);
@@ -248,16 +299,21 @@ export default function AdminGuruPage() {
         method: 'DELETE',
       });
 
+      // Safe response handling
+      const responseText = await response.text();
+      const responseData = safeJsonParse(responseText);
+
       if (response.ok) {
-        alert('Guru berhasil dihapus');
+        const successMessage = responseData?.message || 'Guru berhasil dihapus';
+        alert(successMessage);
         refetchGuru();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menghapus guru');
+        const errorMessage = responseData?.message || 'Gagal menghapus guru';
+        alert(`❌ ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error deleting guru:', error);
-      alert('Gagal menghapus guru');
+      alert('❌ Terjadi kesalahan saat menghapus guru. Silakan coba lagi.');
     }
   };
 
@@ -338,10 +394,10 @@ export default function AdminGuruPage() {
         'Nama Lengkap': item.user?.name || item.nama || '',
         'NIP': item.nip || '',
         'Jenis Kelamin': item.jenisKelamin === 'LAKI_LAKI' || item.jenisKelamin === 'L' ? 'L' : 'P',
-        'Tanggal Lahir': item.tanggalLahir ? new Date(item.tanggalLahir).toISOString().split('T')[0] : '',
+        'Tanggal Lahir': formatDateOnly(item.tanggalLahir),
         'Kelas Binaan': aktifKelas,
         'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
-        'Tanggal Bergabung': item.user?.createdAt ? new Date(item.user.createdAt).toISOString().split('T')[0] : ''
+        'Tanggal Bergabung': formatDateOnly(item.user?.createdAt)
       };
     });
 
@@ -565,11 +621,12 @@ export default function AdminGuruPage() {
                             </span>
                           </td>
                           <td className="px-4 py-2.5 lg:px-6 lg:py-3 text-xs lg:text-sm text-gray-600">
-                            {new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
+                            {guruItem.user.createdAt ? new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
                               day: 'numeric',
                               month: 'long',
-                              year: 'numeric'
-                            })}
+                              year: 'numeric',
+                              timeZone: 'UTC'
+                            }) : '-'}
                           </td>
                           <td className="px-4 py-2.5 lg:px-6 lg:py-3">
                             <div className="flex items-center justify-center gap-1.5 lg:gap-2">

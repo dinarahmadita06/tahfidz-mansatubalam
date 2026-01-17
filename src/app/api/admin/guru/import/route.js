@@ -5,7 +5,109 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import * as XLSX from 'xlsx';
 import bcrypt from 'bcryptjs';
-import { invalidateCache } from '@/lib/cache';
+import { invalidateCache, invalidateCacheByPrefix } from '@/lib/cache';
+import { buildGuruCredentials } from '@/lib/passwordUtils';
+
+/**
+ * Helper: Generate next guru usernames (G###)
+ * @param {number} lastNumber - Last number from database (e.g., 3 for G003)
+ * @param {number} count - Number of usernames to generate
+ * @returns {string[]} Array of usernames (e.g., ['G004', 'G005'])
+ */
+function generateNextGuruUsernames(lastNumber, count) {
+  const usernames = [];
+  for (let i = 1; i <= count; i++) {
+    const nextNumber = lastNumber + i;
+    const username = `G${String(nextNumber).padStart(3, '0')}`;
+    usernames.push(username);
+  }
+  return usernames;
+}
+
+/**
+ * Helper: Parse Excel date to YYYY-MM-DD format
+ * Handles Excel serial numbers and various string formats
+ * @param {any} value - Excel cell value (number or string)
+ * @returns {string|null} - Date in YYYY-MM-DD format or null if invalid
+ */
+function parseExcelDate(value) {
+  if (!value) return null;
+
+  // Handle Excel serial number (numeric)
+  if (typeof value === 'number') {
+    // Excel date serial: days since 1900-01-01 (with 1900 leap year bug)
+    const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899
+    const date = new Date(excelEpoch.getTime() + value * 86400000);
+    
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return null;
+  }
+
+  // Handle string formats
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    
+    // Already YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-').map(Number);
+      if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        return trimmed;
+      }
+    }
+
+    // Try parsing DD/MM/YYYY, MM/DD/YYYY, D/M/YYYY formats
+    const parts = trimmed.split(/[\/\-]/);
+    if (parts.length === 3) {
+      const [p1, p2, p3] = parts.map(s => parseInt(s, 10));
+      
+      // Determine year position (always the 4-digit or largest number)
+      let year, month, day;
+      
+      if (p3 > 1000 || p3.toString().length === 4) {
+        // Format: ?/?/YYYY
+        year = p3;
+        
+        // Determine month vs day
+        if (p1 > 12) {
+          // p1 must be day (> 12)
+          day = p1;
+          month = p2;
+        } else if (p2 > 12) {
+          // p2 must be day (> 12)
+          day = p2;
+          month = p1;
+        } else {
+          // Ambiguous: both <= 12
+          // Default to DD-MM-YYYY (Indonesian format)
+          day = p1;
+          month = p2;
+        }
+      } else if (p1 > 1000 || p1.toString().length === 4) {
+        // Format: YYYY/?/?
+        year = p1;
+        month = p2;
+        day = p3;
+      } else {
+        return null; // Invalid format
+      }
+
+      // Validate
+      if (year < 1900 || year > 2100) return null;
+      if (month < 1 || month > 12) return null;
+      if (day < 1 || day > 31) return null;
+
+      // Format to YYYY-MM-DD
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+  }
+
+  return null;
+}
 
 
 export async function POST(request) {
@@ -37,8 +139,34 @@ export async function POST(request) {
     let successCount = 0;
     let failedCount = 0;
     const errors = [];
+    const createdGurus = [];
 
-    // Process each row
+    // Get last username number (G###) - ONCE per import batch
+    const lastUser = await prisma.user.findFirst({
+      where: {
+        username: {
+          startsWith: 'G',
+          not: null
+        }
+      },
+      orderBy: {
+        username: 'desc'
+      },
+      select: {
+        username: true
+      }
+    });
+
+    let lastNumber = 0;
+    if (lastUser && lastUser.username) {
+      // Extract number from G### format
+      const match = lastUser.username.match(/^G(\d+)$/);
+      if (match) {
+        lastNumber = parseInt(match[1], 10);
+      }
+    }
+
+    // Process each row with transaction for safety
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
 
@@ -101,59 +229,18 @@ export async function POST(request) {
           continue;
         }
 
-        // Parse tanggal lahir with multiple format support
-        let tanggalLahir = null;
-        if (tanggalLahirStr) {
-          // Try different date formats
-          const dateFormats = [
-            () => new Date(tanggalLahirStr),
-            () => {
-              // MM/DD/YYYY format
-              const parts = tanggalLahirStr.toString().split(/[\/-]/);
-              if (parts.length === 3) {
-                const [month, day, year] = parts;
-                return new Date(year, month - 1, day);
-              }
-              return null;
-            },
-            () => {
-              // DD/MM/YYYY format
-              const parts = tanggalLahirStr.toString().split(/[\/-]/);
-              if (parts.length === 3) {
-                const [day, month, year] = parts;
-                return new Date(year, month - 1, day);
-              }
-              return null;
-            },
-            () => {
-              // YYYY-MM-DD format
-              const parts = tanggalLahirStr.toString().split('-');
-              if (parts.length === 3) {
-                const [year, month, day] = parts;
-                return new Date(year, month - 1, day);
-              }
-              return null;
-            }
-          ];
-          
-          for (const formatFunc of dateFormats) {
-            try {
-              const parsed = formatFunc();
-              if (parsed && !isNaN(parsed.getTime())) {
-                tanggalLahir = parsed;
-                break;
-              }
-            } catch (e) {
-              continue;
-            }
-          }
-        }
-
-        if (!tanggalLahir) {
+        // Parse tanggal lahir using parseExcelDate helper
+        const tanggalLahirString = parseExcelDate(tanggalLahirStr);
+        
+        if (!tanggalLahirString) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (format yang didukung: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY)`);
+          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (input: ${tanggalLahirStr})`);
           continue;
         }
+
+        // Convert YYYY-MM-DD string to Date object at UTC midnight (no timezone shift)
+        const [year, month, day] = tanggalLahirString.split('-').map(Number);
+        const tanggalLahir = new Date(Date.UTC(year, month - 1, day));
 
         // Normalize jenisKelamin
         let normalizedJenisKelamin = 'LAKI_LAKI';
@@ -168,35 +255,48 @@ export async function POST(request) {
           continue;
         }
 
-        // Generate internal email if not provided
-        const internalEmail = `guru.${Date.now()}.${Math.random().toString(36).substring(2, 10)}@internal.tahfidz.edu.id`.toLowerCase();
+        let userId;
+        let rawPassword = null;
 
-        // Check if user already exists by name or NIP
+        // Build credentials using single source of truth
+        const credentials = await buildGuruCredentials({
+          tanggalLahir: tanggalLahirString, // YYYY-MM-DD string
+          lastUsernameNumber: lastNumber + i, // For batch generation
+          bcrypt
+        });
+
+        const username = credentials.username; // G### format (uppercase)
+        rawPassword = credentials.passwordPlain; // YYYY-MM-DD
+
+        // Generate internal email with username
+        const internalEmail = `${username.toLowerCase()}@internal.tahfidz.edu.id`;
+
+        // Check if user already exists by username (case-insensitive)
         const existingUser = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { name: nama.trim() },
-              { email: internalEmail }
-            ]
+          where: { 
+            username: { 
+              equals: username, 
+              mode: 'insensitive' 
+            } 
           }
         });
 
-        let userId;
-
         if (existingUser) {
-          userId = existingUser.id;
-        } else if (autoCreateAccount) {
-          // Generate password
-          const defaultPassword = `guru${Math.random().toString(36).slice(-8)}`;
-          const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+          // Skip if user already exists
+          failedCount++;
+          errors.push(`Baris ${i + 2}: Username ${username} sudah digunakan`);
+          continue;
+        }
 
-          // Create user account
+        if (autoCreateAccount) {
           const newUser = await prisma.user.create({
             data: {
               email: internalEmail,
               name: nama.trim(),
-              password: hashedPassword,
-              role: 'GURU'
+              username: credentials.username, // UPPERCASE G###
+              password: credentials.passwordHash, // bcrypt hash
+              role: 'GURU',
+              isActive: true
             }
           });
 
@@ -207,54 +307,79 @@ export async function POST(request) {
           continue;
         }
 
-        // Check if guru already exists
-        const existingGuru = await prisma.guru.findFirst({
-          where: { userId }
+        // Create new guru (no update for existing)
+        const newGuru = await prisma.guru.create({
+          data: {
+            userId,
+            nip: nip ? String(nip) : null,
+            jenisKelamin: normalizedJenisKelamin,
+            tanggalLahir: tanggalLahir,
+          }
         });
 
-        if (existingGuru) {
-          // Update existing guru
-          await prisma.guru.update({
-            where: { id: existingGuru.id },
-            data: {
-              nip: nip ? String(nip) : null,
-              jenisKelamin: normalizedJenisKelamin,
-              tanggalLahir: tanggalLahir,
-            }
-          });
-        } else {
-          // Create new guru
-          const newGuru = await prisma.guru.create({
-            data: {
-              userId,
-              nip: nip ? String(nip) : null,
-              jenisKelamin: normalizedJenisKelamin,
-              tanggalLahir: tanggalLahir,
-            }
-          });
-
-          // Handle Kelas Binaan for new guru
-          if (kelasBinaan !== undefined && kelasBinaan !== null && kelasBinaan !== '') {
-            const kelasNames = String(kelasBinaan).split(',').map(s => s.trim()).filter(Boolean);
-            for (const name of kelasNames) {
+        // Handle Kelas Binaan assignment
+        const assignedKelas = [];
+        const failedKelas = [];
+        
+        if (kelasBinaan !== undefined && kelasBinaan !== null && kelasBinaan !== '') {
+          const kelasNames = String(kelasBinaan).split(',').map(s => s.trim()).filter(Boolean);
+          
+          for (const kelasName of kelasNames) {
+            try {
               const kelas = await prisma.kelas.findFirst({
                 where: { 
-                  nama: { equals: name, mode: 'insensitive' },
+                  nama: { equals: kelasName, mode: 'insensitive' },
                   status: 'AKTIF'
-                }
+                },
+                select: { id: true, nama: true }
               });
+              
               if (kelas) {
-                await prisma.guruKelas.create({
-                  data: {
+                // Check if already assigned
+                const existing = await prisma.guruKelas.findFirst({
+                  where: {
                     guruId: newGuru.id,
                     kelasId: kelas.id
                   }
                 });
+                
+                if (!existing) {
+                  await prisma.guruKelas.create({
+                    data: {
+                      guruId: newGuru.id,
+                      kelasId: kelas.id,
+                      peran: 'utama'  // Set as pembina utama
+                    }
+                  });
+                  assignedKelas.push(kelas.nama);
+                }
+              } else {
+                failedKelas.push(kelasName);
               }
+            } catch (kelasError) {
+              console.error(`Error assigning kelas ${kelasName}:`, kelasError);
+              failedKelas.push(kelasName);
             }
           }
         }
 
+        // Track created guru info
+        const guruInfo = {
+          nama: nama,
+          username: username,
+          nip: nip,
+          kelasBinaan: assignedKelas.length > 0 ? assignedKelas.join(', ') : '-'
+        };
+        
+        if (rawPassword) {
+          guruInfo.password = rawPassword;
+        }
+        
+        if (failedKelas.length > 0) {
+          guruInfo.warning = `Kelas tidak ditemukan: ${failedKelas.join(', ')}`;
+        }
+        
+        createdGurus.push(guruInfo);
         successCount++;
       } catch (error) {
         console.error(`Error processing row ${i + 2}:`, error);
@@ -266,6 +391,7 @@ export async function POST(request) {
     // Invalidate guru cache if any import succeeded
     if (successCount > 0) {
       invalidateCache('guru-list');
+      invalidateCacheByPrefix('kelas-list');  // Invalidate all kelas cache variants for pembina sync
     }
 
     return NextResponse.json({
@@ -275,7 +401,8 @@ export async function POST(request) {
         failed: failedCount,
         total: data.length
       },
-      errors: errors.slice(0, 10) // Return max 10 errors
+      createdGurus: createdGurus,
+      errors: errors.slice(0, 20) // Return max 20 errors
     });
 
   } catch (error) {

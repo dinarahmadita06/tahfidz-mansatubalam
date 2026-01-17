@@ -4,8 +4,105 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
-import { invalidateCache } from '@/lib/cache';
-import { generateGuruEmail, generateGuruPassword } from '@/lib/passwordUtils';
+import { invalidateCache, invalidateCacheByPrefix } from '@/lib/cache';
+import { generateGuruPassword } from '@/lib/passwordUtils';
+
+/**
+ * Helper: Generate next guru usernames (G###)
+ */
+function generateNextGuruUsernames(lastNumber, count) {
+  const usernames = [];
+  for (let i = 1; i <= count; i++) {
+    const nextNumber = lastNumber + i;
+    const username = `G${String(nextNumber).padStart(3, '0')}`;
+    usernames.push(username);
+  }
+  return usernames;
+}
+
+/**
+ * Helper: Parse Excel date to YYYY-MM-DD format
+ * Handles Excel serial numbers and various string formats
+ * @param {any} value - Excel cell value (number or string)
+ * @returns {string|null} - Date in YYYY-MM-DD format or null if invalid
+ */
+function parseExcelDate(value) {
+  if (!value) return null;
+
+  // Handle Excel serial number (numeric)
+  if (typeof value === 'number') {
+    // Excel date serial: days since 1900-01-01 (with 1900 leap year bug)
+    const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899
+    const date = new Date(excelEpoch.getTime() + value * 86400000);
+    
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return null;
+  }
+
+  // Handle string formats
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    
+    // Already YYYY-MM-DD format
+    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-').map(Number);
+      if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        return trimmed;
+      }
+    }
+
+    // Try parsing DD/MM/YYYY, MM/DD/YYYY, D/M/YYYY formats
+    const parts = trimmed.split(/[/\-]/);
+    if (parts.length === 3) {
+      const [p1, p2, p3] = parts.map(s => parseInt(s, 10));
+      
+      // Determine year position (always the 4-digit or largest number)
+      let year, month, day;
+      
+      if (p3 > 1000 || p3.toString().length === 4) {
+        // Format: ?/?/YYYY
+        year = p3;
+        
+        // Determine month vs day
+        if (p1 > 12) {
+          // p1 must be day (> 12)
+          day = p1;
+          month = p2;
+        } else if (p2 > 12) {
+          // p2 must be day (> 12)
+          day = p2;
+          month = p1;
+        } else {
+          // Ambiguous: both <= 12
+          // Default to DD-MM-YYYY (Indonesian format)
+          day = p1;
+          month = p2;
+        }
+      } else if (p1 > 1000 || p1.toString().length === 4) {
+        // Format: YYYY/?/?\n        year = p1;
+        month = p2;
+        day = p3;
+      } else {
+        return null; // Invalid format
+      }
+
+      // Validate
+      if (year < 1900 || year > 2100) return null;
+      if (month < 1 || month > 12) return null;
+      if (day < 1 || day > 31) return null;
+
+      // Format to YYYY-MM-DD
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+  }
+
+  return null;
+}
 
 
 export async function POST(request) {
@@ -33,10 +130,38 @@ export async function POST(request) {
     const newAccounts = [];
     const errors = [];
 
+    // Get last username number (G###)
+    const lastUser = await prisma.user.findFirst({
+      where: {
+        username: {
+          startsWith: 'G',
+          not: null
+        }
+      },
+      orderBy: {
+        username: 'desc'
+      },
+      select: {
+        username: true
+      }
+    });
+
+    let lastNumber = 0;
+    if (lastUser && lastUser.username) {
+      const match = lastUser.username.match(/^G(\d+)$/);
+      if (match) {
+        lastNumber = parseInt(match[1], 10);
+      }
+    }
+
+    // Generate usernames for all rows
+    const generatedUsernames = generateNextGuruUsernames(lastNumber, data.length);
+
     // Process each row
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
       const { guru: guruData } = row;
+      const username = generatedUsernames[i];
 
       try {
         if (!guruData?.nama) {
@@ -63,17 +188,17 @@ export async function POST(request) {
           continue;
         }
 
-        // Generate internal email if not provided
-        const internalEmail = `guru.${Date.now()}.${Math.random().toString(36).substring(2, 10)}@internal.tahfidz.edu.id`.toLowerCase();
+        // Generate internal email with username
+        const internalEmail = `${username.toLowerCase()}@internal.tahfidz.edu.id`;
 
-        // Check duplicate by name
-        const existingUser = await prisma.user.findFirst({
-          where: { name: guruData.nama }
+        // Check duplicate by username
+        const existingUser = await prisma.user.findUnique({
+          where: { username: username }
         });
 
         if (existingUser) {
           stats.duplicate++;
-          errors.push(`Baris ${i + 2}: Guru dengan nama ${guruData.nama} sudah terdaftar`);
+          errors.push(`Baris ${i + 2}: Username ${username} sudah digunakan`);
           continue;
         }
 
@@ -86,62 +211,21 @@ export async function POST(request) {
           }
         }
 
-        // Parse tanggal lahir with multiple format support
-        let tanggalLahir = null;
-        if (guruData.tanggalLahir) {
-          // Try different date formats
-          const dateFormats = [
-            () => new Date(guruData.tanggalLahir),
-            () => {
-              // MM/DD/YYYY format
-              const parts = guruData.tanggalLahir.toString().split(/[\/-]/);
-              if (parts.length === 3) {
-                const [month, day, year] = parts;
-                return new Date(year, month - 1, day);
-              }
-              return null;
-            },
-            () => {
-              // DD/MM/YYYY format
-              const parts = guruData.tanggalLahir.toString().split(/[\/-]/);
-              if (parts.length === 3) {
-                const [day, month, year] = parts;
-                return new Date(year, month - 1, day);
-              }
-              return null;
-            },
-            () => {
-              // YYYY-MM-DD format
-              const parts = guruData.tanggalLahir.toString().split('-');
-              if (parts.length === 3) {
-                const [year, month, day] = parts;
-                return new Date(year, month - 1, day);
-              }
-              return null;
-            }
-          ];
-          
-          for (const formatFunc of dateFormats) {
-            try {
-              const parsed = formatFunc();
-              if (parsed && !isNaN(parsed.getTime())) {
-                tanggalLahir = parsed;
-                break;
-              }
-            } catch (e) {
-              continue;
-            }
-          }
-        }
-
-        if (!tanggalLahir) {
+        // Parse tanggal lahir using parseExcelDate helper
+        const tanggalLahirString = parseExcelDate(guruData.tanggalLahir);
+        
+        if (!tanggalLahirString) {
           stats.failed++;
-          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (format yang didukung: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY)`);
+          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (input: ${guruData.tanggalLahir})`);
           continue;
         }
 
-        // Generate password if needed
-        const rawPassword = generateGuruPassword(guruData.nama, tanggalLahir);
+        // Convert YYYY-MM-DD string to Date object at UTC midnight (no timezone shift)
+        const [year, month, day] = tanggalLahirString.split('-').map(Number);
+        const tanggalLahir = new Date(Date.UTC(year, month - 1, day));
+
+        // Generate password: YYYY-MM-DD format dari tanggal lahir
+        const rawPassword = tanggalLahirString; // Format: YYYY-MM-DD
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
         // Process Kelas Binaan
@@ -167,6 +251,7 @@ export async function POST(request) {
             data: {
               email: internalEmail,
               name: guruData.nama,
+              username: username,
               password: hashedPassword,
               role: 'GURU',
               isActive: true
@@ -189,7 +274,8 @@ export async function POST(request) {
               tx.guruKelas.create({
                 data: {
                   guruId: guru.id,
-                  kelasId: kelasId
+                  kelasId: kelasId,
+                  peran: 'utama'  // Set as pembina utama
                 }
               })
             ));
@@ -198,10 +284,12 @@ export async function POST(request) {
 
         newAccounts.push({
           nama: guruData.nama,
+          username: username,
           role: 'GURU',
           email: internalEmail,
           password: rawPassword,
-          keterangan: `NIP: ${guruData.nip || '-'}`
+          keterangan: `NIP: ${guruData.nip || '-'}`,
+          kelasBinaan: kelasIds.length > 0 ? `${kelasIds.length} kelas` : '-'
         });
 
         stats.success++;
@@ -220,6 +308,7 @@ export async function POST(request) {
 
     if (stats.success > 0) {
       invalidateCache('guru-list');
+      invalidateCacheByPrefix('kelas-list');  // Invalidate all kelas cache variants for pembina sync
     }
 
     return NextResponse.json({
