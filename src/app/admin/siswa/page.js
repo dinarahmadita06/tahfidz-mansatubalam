@@ -754,7 +754,7 @@ export default function AdminSiswaPage() {
                               {siswaItem.kelas ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-100/50 text-emerald-700">
                                   <GraduationCap size={13} />
-                                  {siswaItem.kelas.namaKelas}
+                                  {siswaItem.kelas.nama}
                                 </span>
                               ) : (
                                 <span className="text-xs text-gray-500">Belum ada kelas</span>
