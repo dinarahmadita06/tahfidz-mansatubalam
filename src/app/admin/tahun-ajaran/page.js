@@ -67,16 +67,26 @@ export default async function AdminTahunAjaranPage() {
           select: { id: true }
         });
 
-        if (!activeTA) return { jumlahKelas: 0, jumlahSiswa: 0 };
-
-        // Optimization: Parallel sub-queries
-        const [kelasCount, siswaCount] = await Promise.all([
-          prisma.kelas.count({ where: { tahunAjaranId: activeTA.id } }),
-          prisma.siswa.count({ where: { kelas: { tahunAjaranId: activeTA.id } } })
+        // Optimization: Parallel queries for siswa stats (all periods)
+        const [kelasCount, totalSiswa, siswaAktif, siswaPending] = await Promise.all([
+          activeTA 
+            ? prisma.kelas.count({ where: { tahunAjaranId: activeTA.id } })
+            : 0,
+          // Total siswa (semua status, semua periode)
+          prisma.siswa.count(),
+          // Siswa aktif = sudah divalidasi (approved)
+          prisma.siswa.count({ where: { status: 'approved' } }),
+          // Siswa pending = belum divalidasi
+          prisma.siswa.count({ where: { status: 'pending' } })
         ]);
         console.timeEnd('Prisma: Summary Aggregate');
 
-        const result = { jumlahKelas: kelasCount, jumlahSiswa: siswaCount };
+        const result = { 
+          jumlahKelas: kelasCount, 
+          jumlahSiswa: totalSiswa,
+          siswaAktif,
+          siswaPending
+        };
         setCachedData(CACHE_KEY_SUMMARY, result, 30); // 30s cache
         return result;
       })()
@@ -94,6 +104,6 @@ export default async function AdminTahunAjaranPage() {
   } catch (error) {
     console.error('Error in AdminTahunAjaranPage Server Render:', error);
     // Return empty state if error happens
-    return <TahunAjaranClient initialData={[]} initialSummary={{ jumlahKelas: 0, jumlahSiswa: 0 }} />;
+    return <TahunAjaranClient initialData={[]} initialSummary={{ jumlahKelas: 0, jumlahSiswa: 0, siswaAktif: 0, siswaPending: 0 }} />;
   }
 }

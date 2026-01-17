@@ -260,7 +260,7 @@ export default function AdminDashboardPage({ initialData }) {
       siswaAktif: 0,
       totalGuru: 0,
       totalHafalan: 0,
-      totalJuz: 0,
+      juzTertinggi: 0,
       rataRataNilai: 0,
       rataRataKehadiran: 0,
     },
@@ -365,9 +365,9 @@ export default function AdminDashboardPage({ initialData }) {
                   />
                   <StatCard
                     icon={BookOpen}
-                    title="Total Hafalan"
-                    value={`${stats.totalJuz || 0} Juz`}
-                    subtitle="Akumulasi"
+                    title="Juz Tertinggi"
+                    value={`${stats.juzTertinggi || 0} Juz`}
+                    subtitle="Capaian hafalan tertinggi siswa aktif"
                     theme="purple"
                   />
                   <StatCard

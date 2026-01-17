@@ -7,14 +7,18 @@ import { auth } from '@/lib/auth';
 /**
  * GET /api/tahun-ajaran/summary
  * 
- * Returns summary statistics for the active tahun ajaran:
+ * Returns summary statistics:
  * - jumlahKelas: count of kelas in active tahun ajaran
- * - jumlahSiswa: count of active siswa in those kelas
+ * - jumlahSiswa: total count of all siswa (all periods, all statuses)
+ * - siswaAktif: count of siswa with status = approved (tervalidasi)
+ * - siswaPending: count of siswa with status = pending (belum divalidasi)
  * 
  * Response:
  * {
  *   "jumlahKelas": 4,
- *   "jumlahSiswa": 180,
+ *   "jumlahSiswa": 8,
+ *   "siswaAktif": 7,
+ *   "siswaPending": 1,
  *   "activeTahunAjaranId": "tahun-ajaran-id"
  * }
  */
@@ -32,11 +36,37 @@ export async function GET(request) {
       select: { id: true }
     });
 
+    // Helper function to get siswa statistics
+    const getSiswaStats = async () => {
+      const [totalSiswa, siswaAktif, siswaPending] = await Promise.all([
+        // Total siswa (semua status, semua periode)
+        prisma.siswa.count(),
+        // Siswa aktif = sudah divalidasi (approved)
+        prisma.siswa.count({
+          where: { status: 'approved' }
+        }),
+        // Siswa pending = belum divalidasi
+        prisma.siswa.count({
+          where: { status: 'pending' }
+        })
+      ]);
+
+      return {
+        totalSiswa,
+        siswaAktif,
+        siswaPending
+      };
+    };
+
     if (!activeTahunAjaran) {
-      // No active tahun ajaran
+      // No active tahun ajaran, but still return siswa stats
+      const siswaStats = await getSiswaStats();
+      
       return NextResponse.json({
         jumlahKelas: 0,
-        jumlahSiswa: 0,
+        jumlahSiswa: siswaStats.totalSiswa,
+        siswaAktif: siswaStats.siswaAktif,
+        siswaPending: siswaStats.siswaPending,
         activeTahunAjaranId: null
       });
     }
@@ -48,18 +78,14 @@ export async function GET(request) {
       }
     });
 
-    // Count siswa in kelas of active tahun ajaran
-    const jumlahSiswa = await prisma.siswa.count({
-      where: {
-        kelas: {
-          tahunAjaranId: activeTahunAjaran.id
-        }
-      }
-    });
+    // Get siswa statistics (all periods)
+    const siswaStats = await getSiswaStats();
 
     return NextResponse.json({
       jumlahKelas,
-      jumlahSiswa,
+      jumlahSiswa: siswaStats.totalSiswa,
+      siswaAktif: siswaStats.siswaAktif,
+      siswaPending: siswaStats.siswaPending,
       activeTahunAjaranId: activeTahunAjaran.id
     });
   } catch (error) {

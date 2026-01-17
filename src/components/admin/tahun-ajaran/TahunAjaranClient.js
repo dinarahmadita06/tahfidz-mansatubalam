@@ -97,7 +97,7 @@ function SuccessCheck({ onComplete }) {
   );
 }
 
-export default function TahunAjaranClient({ initialData = [], initialSummary = { jumlahKelas: 0, jumlahSiswa: 0 } }) {
+export default function TahunAjaranClient({ initialData = [], initialSummary = { jumlahKelas: 0, jumlahSiswa: 0, siswaAktif: 0, siswaPending: 0 } }) {
   const [tahunAjaran, setTahunAjaran] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -126,7 +126,7 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
       setSummary(data);
     } catch (error) {
       console.error('Error fetching summary:', error);
-      setSummary({ jumlahKelas: null, jumlahSiswa: null });
+      setSummary({ jumlahKelas: null, jumlahSiswa: null, siswaAktif: null, siswaPending: null });
     } finally {
       setSummaryLoading(false);
     }
@@ -434,6 +434,11 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
               <>
                 <h3 className="text-3xl font-bold text-emerald-700 ml-16 -mt-12">{summary.jumlahSiswa ?? '−'}</h3>
                 <p className="text-xs text-emerald-600/80 mt-3">Semua periode</p>
+                {(summary.siswaAktif !== undefined || summary.siswaPending !== undefined) && (
+                  <p className="text-xs text-emerald-600/70 mt-1.5 font-medium">
+                    Aktif {summary.siswaAktif ?? 0} • Pending {summary.siswaPending ?? 0}
+                  </p>
+                )}
               </>
             )}
           </div>

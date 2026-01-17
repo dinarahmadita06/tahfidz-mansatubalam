@@ -508,7 +508,7 @@ export default function ProfileClient({ initialData }) {
             {/* Info Note */}
             <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-100">
               <p className="text-xs text-blue-900">
-                💡 Ukuran maksimal 500 KB. PNG transparan disarankan.
+                💡 Ukuran maksimal 500 KB. Disarankan mengupload tanda tangan dengan latar transparan.
               </p>
             </div>
           </div>
@@ -526,7 +526,7 @@ export default function ProfileClient({ initialData }) {
                   Informasi Keamanan Akun
                 </h4>
                 <p className="text-sm leading-relaxed text-emerald-800">
-                  💡 Pastikan informasi profil Anda selalu ter-update. Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
+                  💡 Pastikan informasi profil Anda selalu ter-update.
                 </p>
               </div>
             </div>
