@@ -32,6 +32,42 @@ const colors = {
   },
 };
 
+// Import configuration per type
+const IMPORT_CONFIG = {
+  siswa: {
+    requiredColumns: {
+      siswa_nama: 'Nama Siswa',
+      siswa_nis: 'NIS',
+      siswa_nisn: 'NISN',
+      siswa_jenisKelamin: 'Jenis Kelamin',
+      siswa_tanggalLahir: 'Tanggal Lahir',
+      siswa_kelas: 'Kelas',
+      siswa_kelasAngkatan: 'Kelas Angkatan',
+      siswa_tahunAjaranMasuk: 'Tahun Ajaran Masuk',
+      orangtua_jenisWali: 'Jenis Wali',
+      orangtua_nama: 'Nama Wali',
+      orangtua_jenisKelamin: 'Jenis Kelamin Wali',
+      orangtua_noHP: 'No HP Wali'
+    },
+    optionalColumns: {
+      siswa_tempatLahir: 'Tempat Lahir',
+      siswa_alamat: 'Alamat Siswa',
+      siswa_noWhatsApp: 'No WhatsApp Siswa'
+    }
+  },
+  guru: {
+    requiredColumns: {
+      guru_nama: 'Nama Lengkap',
+      guru_nip: 'NIP',
+      guru_jenisKelamin: 'Jenis Kelamin',
+      guru_tanggalLahir: 'Tanggal Lahir'
+    },
+    optionalColumns: {
+      guru_kelasBinaan: 'Kelas Binaan'
+    }
+  }
+};
+
 // Smart column mapping patterns
 const COLUMN_PATTERNS = {
   siswa: {
@@ -72,9 +108,10 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState(null);
   const [newAccounts, setNewAccounts] = useState([]);
+  const [detectedType, setDetectedType] = useState(type); // Auto-detected type from headers
   const fileInputRef = useRef(null);
 
-  // Smart column detection with improved normalization
+  // Smart column detection - focus on current type
   const detectColumns = (headers) => {
     const mapping = {};
     
@@ -83,40 +120,12 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       return str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
     };
 
-    // Detect siswa columns
-    Object.keys(COLUMN_PATTERNS.siswa).forEach(field => {
-      const patterns = COLUMN_PATTERNS.siswa[field];
-      const matchedIndex = headers.findIndex(header => {
-        const normalizedHeader = normalizeForMatching(header);
-        return patterns.some(pattern => {
-          const normalizedPattern = normalizeForMatching(pattern);
-          return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
-        });
-      });
-      if (matchedIndex !== -1) {
-        mapping[`siswa_${field}`] = headers[matchedIndex];
-      }
-    });
-
-    // Detect orang tua columns
-    Object.keys(COLUMN_PATTERNS.orangtua).forEach(field => {
-      const patterns = COLUMN_PATTERNS.orangtua[field];
-      const matchedIndex = headers.findIndex(header => {
-        const normalizedHeader = normalizeForMatching(header);
-        return patterns.some(pattern => {
-          const normalizedPattern = normalizeForMatching(pattern);
-          return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
-        });
-      });
-      if (matchedIndex !== -1) {
-        mapping[`orangtua_${field}`] = headers[matchedIndex];
-      }
-    });
-
-    // Detect guru columns
-    if (COLUMN_PATTERNS.guru) {
-      Object.keys(COLUMN_PATTERNS.guru).forEach(field => {
-        const patterns = COLUMN_PATTERNS.guru[field];
+    // Detect based on type
+    const patternsToCheck = type === 'guru' ? { guru: COLUMN_PATTERNS.guru } : COLUMN_PATTERNS;
+    
+    Object.keys(patternsToCheck).forEach(category => {
+      Object.keys(patternsToCheck[category]).forEach(field => {
+        const patterns = patternsToCheck[category][field];
         const matchedIndex = headers.findIndex(header => {
           const normalizedHeader = normalizeForMatching(header);
           return patterns.some(pattern => {
@@ -125,10 +134,10 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
           });
         });
         if (matchedIndex !== -1) {
-          mapping[`guru_${field}`] = headers[matchedIndex];
+          mapping[`${category}_${field}`] = headers[matchedIndex];
         }
       });
-    }
+    });
 
     return mapping;
   };
@@ -157,19 +166,14 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       const workbook = XLSX.read(data);
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      
-      // Parse with defval to preserve empty cells
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-        defval: "",  // Set empty cells to empty string instead of skipping
-        raw: false    // Convert all values to strings first
-      });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       if (jsonData.length === 0) {
         alert('File Excel kosong');
         return;
       }
 
-      // Get headers from first row
+      // Get headers
       const headers = Object.keys(jsonData[0]);
 
       // Auto-detect columns
@@ -313,15 +317,15 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       <div style={{
         background: colors.white,
         borderRadius: '24px',
-        maxWidth: '900px',
-        width: '100%',
-        maxHeight: '90vh',
-        display: 'flex',
-        flexDirection: 'column',
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
         border: `2px solid ${colors.emerald[100]}`,
         fontFamily: "'Poppins', sans-serif",
         position: 'relative',
+        width: '100%',
+        maxWidth: '1000px',
+        maxHeight: '90vh',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden'
       }}>
       {/* Ornamen Islami */}
@@ -338,8 +342,9 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       }}></div>
 
       {/* Header */}
-      <div style={{ padding: '32px 32px 0', marginBottom: '24px', position: 'relative', zIndex: 1, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+      <div style={{ padding: '32px 32px 0 32px', position: 'relative', zIndex: 1, flexShrink: 0 }}>
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               padding: '12px',
@@ -393,8 +398,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        padding: '0 32px 24px',
-        marginBottom: 0,
+        padding: '0 32px 24px 32px',
         position: 'relative',
         flexShrink: 0
       }}>
@@ -457,13 +461,12 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '0 32px 32px',
+        padding: '0 32px 32px 32px',
         minHeight: 0
       }}>
-
-      {/* Step 1: Upload File */}
-      {step === 1 && (
-        <div>
+        {/* Step 1: Upload */}
+        {step === 1 && (
+          <div>
           <div style={{
             border: `2px dashed ${colors.emerald[200]}`,
             borderRadius: '16px',
@@ -619,44 +622,124 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
             }}>
               Mapping Kolom Terdeteksi:
             </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px'
-            }}>
-              {Object.keys(columnMapping)
-                .filter(key => type === 'guru' ? key.startsWith('guru_') : true)
-                .map(key => (
-                <div key={key} style={{
-                  padding: '12px',
-                  background: colors.emerald[50],
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.emerald[100]}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <CheckCircle size={16} color={colors.emerald[600]} />
-                  <div>
-                    <p style={{
-                      fontSize: '12px',
-                      color: colors.gray[400],
-                      margin: 0
+            
+            {/* Required Columns */}
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: colors.emerald[700],
+                marginBottom: '8px'
+              }}>
+                ✓ Kolom Wajib:
+              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px'
+              }}>
+                {Object.keys(IMPORT_CONFIG[type].requiredColumns).map(key => {
+                  const found = columnMapping[key];
+                  return (
+                    <div key={key} style={{
+                      padding: '12px',
+                      background: found ? colors.emerald[50] : '#FEF2F2',
+                      borderRadius: '8px',
+                      border: `1px solid ${found ? colors.emerald[100] : '#FECACA'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
                     }}>
-                      {key.replace('siswa_', 'Siswa: ').replace('orangtua_', 'Ortu: ').replace('guru_', 'Guru: ')}
-                    </p>
-                    <p style={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.emerald[700],
-                      margin: 0
-                    }}>
-                      {columnMapping[key]}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                      {found ? (
+                        <CheckCircle size={16} color={colors.emerald[600]} />
+                      ) : (
+                        <AlertCircle size={16} color="#DC2626" />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <p style={{
+                          fontSize: '12px',
+                          color: colors.gray[400],
+                          margin: 0
+                        }}>
+                          {IMPORT_CONFIG[type].requiredColumns[key]}
+                        </p>
+                        <p style={{
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: found ? colors.emerald[700] : '#DC2626',
+                          margin: 0
+                        }}>
+                          {found || 'Tidak terdeteksi'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Optional Columns */}
+            {IMPORT_CONFIG[type].optionalColumns && Object.keys(IMPORT_CONFIG[type].optionalColumns).length > 0 && (
+              <div>
+                <p style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.gray[500],
+                  marginBottom: '8px'
+                }}>
+                  ⓘ Kolom Opsional:
+                </p>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px'
+                }}>
+                  {Object.keys(IMPORT_CONFIG[type].optionalColumns).map(key => {
+                    const found = columnMapping[key];
+                    return (
+                      <div key={key} style={{
+                        padding: '12px',
+                        background: found ? colors.emerald[50] : colors.gray[100],
+                        borderRadius: '8px',
+                        border: `1px solid ${found ? colors.emerald[100] : colors.gray[200]}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        opacity: found ? 1 : 0.6
+                      }}>
+                        {found ? (
+                          <CheckCircle size={16} color={colors.emerald[600]} />
+                        ) : (
+                          <div style={{
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '50%',
+                            border: `2px solid ${colors.gray[400]}`
+                          }} />
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <p style={{
+                            fontSize: '12px',
+                            color: colors.gray[400],
+                            margin: 0
+                          }}>
+                            {IMPORT_CONFIG[type].optionalColumns[key]}
+                          </p>
+                          <p style={{
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: found ? colors.emerald[700] : colors.gray[500],
+                            margin: 0
+                          }}>
+                            {found || 'Tidak ada'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: '24px' }}>
@@ -680,7 +763,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
               }}>
                 <thead>
                   <tr style={{ background: colors.gray[100] }}>
-                    {Object.keys(parsedData[0] || {}).map(header => (
+                    {Object.keys(previewData[0] || {}).map(header => (
                       <th key={header} style={{
                         padding: '12px',
                         textAlign: 'left',
@@ -698,12 +781,12 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                     <tr key={idx} style={{
                       borderBottom: `1px solid ${colors.gray[100]}`
                     }}>
-                      {Object.keys(parsedData[0] || {}).map((header, cellIdx) => (
+                      {Object.values(row).map((cell, cellIdx) => (
                         <td key={cellIdx} style={{
                           padding: '12px',
                           color: colors.gray[600]
                         }}>
-                          {row[header] || '-'}
+                          {cell || '-'}
                         </td>
                       ))}
                     </tr>
@@ -1000,8 +1083,11 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       )}
 
       </div>
+      {/* End Scrollable Content */}
 
+      </div>
+      {/* End Modal Container */}
     </div>
-    </div>
+    {/* End Overlay */}
   );
 }
