@@ -788,6 +788,8 @@ export default function AdminSiswaPage() {
                             <td className="px-6 py-4 text-center">
                               <RowActionMenu
                                 statusSiswa={siswaItem.statusSiswa || 'AKTIF'}
+                                kelasNama={siswaItem.kelas?.nama}
+                                kelasId={siswaItem.kelas?.id}
                                 onAktifkan={() => handleChangeStatus(siswaItem, 'AKTIF')}
                                 onLulus={() => handleChangeStatus(siswaItem, 'LULUS')}
                                 onPindah={() => handleChangeStatus(siswaItem, 'PINDAH')}

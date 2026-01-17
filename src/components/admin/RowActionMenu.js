@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle } from 'lucide-react';
+import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle, ExternalLink } from 'lucide-react';
 
 /**
  * RowActionMenu - Reusable dropdown action menu component with Portal
@@ -11,6 +11,8 @@ import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle } from 'lucide-
  * 
  * Props:
  * - statusSiswa: current student status (AKTIF, LULUS, PINDAH, KELUAR)
+ * - kelasNama: nama kelas siswa (optional)
+ * - kelasId: ID kelas siswa (optional)
  * - onAktifkan: callback for activating student
  * - onLulus: callback for graduating student
  * - onPindah: callback for transferring student
@@ -18,6 +20,8 @@ import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle } from 'lucide-
  */
 function RowActionMenu({
   statusSiswa = 'AKTIF',
+  kelasNama,
+  kelasId,
   onAktifkan,
   onLulus,
   onPindah,
@@ -123,6 +127,28 @@ function RowActionMenu({
               <CheckCircle size={16} />
               <span>Aktifkan</span>
             </button>
+          )}
+  
+          {/* Menu Ke Kelas */}
+          {kelasNama && kelasId ? (
+            <a
+              href={`/admin/kelas#${kelasId}`}
+              className="w-full text-left px-4 py-2.5 text-sm font-medium text-sky-700 hover:bg-sky-50 transition-colors flex items-center gap-2 no-underline"
+              role="menuitem"
+              onClick={() => setIsOpen(false)}
+            >
+              <ExternalLink size={16} />
+              <span>Ke Kelas {kelasNama}</span>
+            </a>
+          ) : (
+            <div
+              className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed flex items-center gap-2"
+              role="menuitem"
+              title="Siswa belum terdaftar di kelas"
+            >
+              <ExternalLink size={16} />
+              <span>Belum terdaftar di kelas</span>
+            </div>
           )}
   
           {isAktif && (
