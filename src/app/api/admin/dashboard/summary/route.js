@@ -49,6 +49,7 @@ export async function GET() {
       tahunAjaranAktif,
       avgNilaiData,
       presensiData,
+      juzTertinggiData,
       siswaJuzData,
       kelasWithSiswa
     ] = await Promise.all([
@@ -59,9 +60,24 @@ export async function GET() {
       prisma.siswa?.count({ where: { status: 'pending' } }) || 0,
       prisma.notification?.count({ where: { userId: session.user.id, isRead: false } }) || 0,
       prisma.pengumuman?.findMany({ 
+        where: { 
+          deletedAt: null,
+          isPublished: true
+        },
         take: 5,
-        orderBy: { isPinned: 'desc' },
-        select: { id: true, judul: true, isi: true, createdAt: true, isPinned: true }
+        orderBy: [
+          { isPinned: 'desc' },
+          { createdAt: 'desc' }
+        ],
+        select: { 
+          id: true, 
+          judul: true, 
+          isi: true, 
+          createdAt: true, 
+          isPinned: true,
+          attachmentUrl: true,
+          attachmentName: true
+        }
       }) || [],
       prisma.tahunAjaran?.findFirst({ 
         where: { isActive: true },
@@ -76,6 +92,13 @@ export async function GET() {
         by: ['status'],
         _count: { _all: true }
       }) || [],
+      prisma.siswa?.aggregate({
+        where: { 
+          status: 'approved',
+          statusSiswa: 'AKTIF'
+        },
+        _max: { latestJuzAchieved: true }
+      }) || { _max: { latestJuzAchieved: 0 } },
       prisma.hafalan?.groupBy({ 
         where: { siswa: { status: 'approved' } },
         by: ['siswaId'],
@@ -96,20 +119,26 @@ export async function GET() {
 
     const endQueries = performance.now();
     console.log(`[DASHBOARD SUMMARY] prisma.queries: ${(endQueries - startQueries).toFixed(2)} ms`);
+    console.log(`[DASHBOARD SUMMARY] siswaAktif: ${siswaAktif}, siswaJuzData count: ${siswaJuzData.length}`);
 
     const startProcessing = performance.now();
 
     const targetJuz = tahunAjaranAktif?.targetHafalan || 3;
 
-    // Process Juz per Siswa
+    // Hitung Juz Tertinggi dari field latestJuzAchieved siswa aktif
+    const maxJuzRaw = juzTertinggiData?._max?.latestJuzAchieved || 0;
+    // Clamp hasil final ke range 0..30
+    const juzTertinggi = Math.max(0, Math.min(30, maxJuzRaw));
+    
+    console.log(`[DASHBOARD SUMMARY] Juz Tertinggi (siswa AKTIF): ${juzTertinggi}`);
+
+    // Process Juz per Siswa untuk statistik target
     const siswaJuzMap = {};
-    let totalJuzAkumulasi = 0;
     let siswaMencapaiTarget = 0;
     
     siswaJuzData.forEach(h => {
       const maxJuz = h._max.juz || 0;
       siswaJuzMap[h.siswaId] = maxJuz;
-      totalJuzAkumulasi += maxJuz;
       if (maxJuz >= targetJuz) {
         siswaMencapaiTarget++;
       }
@@ -162,7 +191,7 @@ export async function GET() {
         siswaAktif,
         totalGuru,
         totalKelas,
-        totalJuz: totalJuzAkumulasi,
+        juzTertinggi,
         rataRataNilai: avgNilaiData._avg.nilaiAkhir ? Math.round(avgNilaiData._avg.nilaiAkhir * 10) / 10 : 0,
         rataRataKehadiran: totalPresensi > 0 ? Math.round((hadirCount / totalPresensi) * 100 * 10) / 10 : 0,
         siswaMencapaiTarget,

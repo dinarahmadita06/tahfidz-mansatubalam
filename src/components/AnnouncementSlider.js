@@ -23,9 +23,9 @@ export default function AnnouncementSlider({ announcements = [], loading = false
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [direction, setDirection] = useState(0);
-  const maxItems = 5;
 
-  const displayedAnnouncements = announcements.slice(0, maxItems);
+  // Gunakan semua data yang diterima tanpa batasan hardcoded
+  const displayedAnnouncements = announcements;
   const hasMultiple = displayedAnnouncements.length > 1;
 
   const handleNext = useCallback(() => {

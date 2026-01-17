@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { requireAdmin, requireAdminOrGuru } from '@/lib/authHelpers';
@@ -210,6 +211,12 @@ export async function POST(request) {
 
     // Invalidate cache
     invalidateCacheByPrefix('admin-pengumuman');
+    
+    // Revalidate dashboard pages untuk refresh widget pengumuman
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/guru/dashboard');
+    revalidatePath('/siswa/dashboard');
+    revalidatePath('/orangtua/dashboard');
 
     return NextResponse.json({
       success: true,
@@ -325,6 +332,12 @@ export async function PUT(request) {
 
     // Invalidate cache
     invalidateCacheByPrefix('admin-pengumuman');
+    
+    // Revalidate dashboard pages untuk refresh widget pengumuman
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/guru/dashboard');
+    revalidatePath('/siswa/dashboard');
+    revalidatePath('/orangtua/dashboard');
 
     // Log aktivitas
     try {
@@ -400,6 +413,12 @@ export async function DELETE(request) {
 
     // Invalidate cache
     invalidateCacheByPrefix('admin-pengumuman');
+    
+    // Revalidate dashboard pages untuk refresh widget pengumuman
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/guru/dashboard');
+    revalidatePath('/siswa/dashboard');
+    revalidatePath('/orangtua/dashboard');
 
     // Log aktivitas
     try {
