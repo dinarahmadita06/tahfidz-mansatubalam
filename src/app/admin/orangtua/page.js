@@ -130,9 +130,9 @@ export default function AdminOrangTuaPage() {
   const [editingOrangTua, setEditingOrangTua] = useState(null);
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [formData, setFormData] = useState({
+    nisSiswa: '',
     name: '',
-    email: '',
-    password: '',
+    jenisKelamin: 'L',
     noHP: '',
     pekerjaan: '',
     alamat: '',
@@ -185,46 +185,42 @@ export default function AdminOrangTuaPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingOrangTua ? `/api/admin/orangtua/${editingOrangTua.id}` : '/api/admin/orangtua';
-      const method = editingOrangTua ? 'PUT' : 'POST';
-      const submitData = { ...formData };
-      if (editingOrangTua && !showPasswordField) {
-        delete submitData.password;
-      }
-
-      const response = await fetch(url, {
-        method,
+      const response = await fetch('/api/admin/orangtua', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        alert(editingOrangTua ? 'Orang tua berhasil diupdate' : 'Orang tua berhasil ditambahkan');
+        // Show success with credentials
+        const credInfo = data.credentials 
+          ? `\n\nKredensial Login Wali:\nUsername: ${data.credentials.username}\nPassword: ${data.credentials.password}\n\n${data.credentials.info}`
+          : '';
+        
+        alert(`Wali berhasil dihubungkan dengan siswa ${data.siswa?.name} (NIS: ${data.siswa?.nis})${credInfo}`);
         setShowModal(false);
         resetForm();
         fetchOrangTua();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menyimpan data orang tua');
+        alert(data.error || 'Gagal menghubungkan wali');
       }
     } catch (error) {
       console.error('Error saving orang tua:', error);
-      alert('Gagal menyimpan data orang tua');
+      alert('Gagal menghubungkan wali');
     }
   };
 
-  const handleEdit = (orangTuaItem) => {
-    setEditingOrangTua(orangTuaItem);
+  const resetForm = () => {
     setFormData({
-      name: orangTuaItem.user.name,
-      email: orangTuaItem.user.email,
-      password: '',
-      noHP: orangTuaItem.noHP || '',
-      pekerjaan: orangTuaItem.pekerjaan || '',
-      alamat: orangTuaItem.alamat || '',
+      nisSiswa: '',
+      name: '',
+      jenisKelamin: 'L',
+      noHP: '',
+      pekerjaan: '',
+      alamat: '',
     });
-    setShowPasswordField(false);
-    setShowModal(true);
   };
 
   const handleViewDetail = (orangTuaItem) => {
@@ -409,19 +405,6 @@ export default function AdminOrangTuaPage() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      noHP: '',
-      pekerjaan: '',
-      alamat: '',
-    });
-    setEditingOrangTua(null);
-    setShowPasswordField(false);
-  };
-
   const filteredOrangTua = orangTua.filter(o => {
     const searchLower = searchTerm.toLowerCase();
     const matchSearch = o.user.name.toLowerCase().includes(searchLower) ||
@@ -489,7 +472,7 @@ export default function AdminOrangTuaPage() {
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-[10px] sm:text-xs lg:text-sm hover:bg-emerald-50 shadow-md hover:shadow-lg transition-all"
                 >
                   <UserPlus size={18} />
-                  <span>Tambah Orang Tua</span>
+                  <span>Tambah / Hubungkan Wali</span>
                 </button>
                 <button
                   onClick={() => {
@@ -817,7 +800,7 @@ export default function AdminOrangTuaPage() {
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl border border-emerald-100">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
-                {editingOrangTua ? 'Edit Data Orang Tua' : 'Tambah Orang Tua Baru'}
+                Tambah / Hubungkan Wali
               </h2>
               <button
                 onClick={() => {
@@ -831,10 +814,34 @@ export default function AdminOrangTuaPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Nama */}
+              {/* Info Helper */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <p className="text-sm text-emerald-800">
+                  <strong>ℹ️ Informasi:</strong> Username wali sama dengan NIS siswa. 
+                  Password otomatis dari tanggal lahir siswa (format: DDMMYYYY).
+                </p>
+              </div>
+
+              {/* NIS Siswa */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nama Lengkap <span className="text-red-500">*</span>
+                  NIS Siswa <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.nisSiswa}
+                  onChange={(e) => setFormData({ ...formData, nisSiswa: e.target.value })}
+                  placeholder="Contoh: 2671"
+                  required
+                  className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                />
+                <p className="text-xs text-gray-500 mt-1">NIS siswa yang akan dihubungkan dengan wali</p>
+              </div>
+
+              {/* Nama Wali */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nama Wali <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -846,72 +853,27 @@ export default function AdminOrangTuaPage() {
                 />
               </div>
 
-              {/* Email */}
+              {/* Jenis Kelamin */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email <span className="text-red-500">*</span>
+                  Jenis Kelamin <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Contoh: ahmad@example.com"
+                <select
+                  value={formData.jenisKelamin}
+                  onChange={(e) => setFormData({ ...formData, jenisKelamin: e.target.value })}
                   required
                   className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                />
+                >
+                  <option value="L">Laki-laki (Ayah)</option>
+                  <option value="P">Perempuan (Ibu)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Jenis wali akan ditentukan otomatis (L = Ayah, P = Ibu)</p>
               </div>
-
-              {/* Password */}
-              {!editingOrangTua && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Password <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Minimal 8 karakter"
-                    required={!editingOrangTua}
-                    className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              )}
-
-              {editingOrangTua && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="changePassword"
-                    checked={showPasswordField}
-                    onChange={(e) => setShowPasswordField(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600"
-                  />
-                  <label htmlFor="changePassword" className="text-sm text-gray-600">
-                    Ubah password
-                  </label>
-                </div>
-              )}
-
-              {editingOrangTua && showPasswordField && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Password Baru <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Minimal 8 karakter"
-                    className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              )}
 
               {/* No HP */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  No. HP
+                  No. HP (opsional)
                 </label>
                 <input
                   type="text"
@@ -925,7 +887,7 @@ export default function AdminOrangTuaPage() {
               {/* Pekerjaan */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Pekerjaan
+                  Pekerjaan (opsional)
                 </label>
                 <input
                   type="text"
@@ -939,7 +901,7 @@ export default function AdminOrangTuaPage() {
               {/* Alamat */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Alamat
+                  Alamat (opsional)
                 </label>
                 <textarea
                   value={formData.alamat}
@@ -966,7 +928,7 @@ export default function AdminOrangTuaPage() {
                   type="submit"
                   className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all"
                 >
-                  {editingOrangTua ? 'Update' : 'Simpan'}
+                  Hubungkan Wali
                 </button>
               </div>
             </form>

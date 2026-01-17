@@ -403,7 +403,7 @@ export async function buildSiswaCredentials({ tanggalLahir, nis, bcrypt }) {
 
 /**
  * Build credentials untuk Orang Tua
- * Username: NIS siswa + suffix _WALI (untuk unique constraint)
+ * Username: NIS siswa (SAMA dengan siswa, dibedakan oleh password format)
  * Password: DDMMYYYY (dari tanggal lahir siswa)
  */
 export async function buildOrtuCredentials({ tanggalLahirSiswa, nisSiswa, bcrypt }) {
@@ -411,7 +411,7 @@ export async function buildOrtuCredentials({ tanggalLahirSiswa, nisSiswa, bcrypt
     throw new Error('NIS siswa is required for orang tua credentials');
   }
 
-  const username = nisSiswa.toString().trim() + '_WALI'; // Username = NIS_WALI
+  const username = nisSiswa.toString().trim(); // Username = NIS (SAMA dengan siswa)
 
   // Normalize tanggal lahir siswa to YYYY-MM-DD format
   let dateString;
