@@ -268,6 +268,8 @@ export async function POST(request) {
         const username = credentials.username; // G### format (uppercase)
         rawPassword = credentials.passwordPlain; // YYYY-MM-DD
 
+        console.log(`📋 [IMPORT GURU Baris ${i + 2}] Username: ${username}, TanggalLahir: ${tanggalLahirString}, Password: ${rawPassword}`);
+
         // Generate internal email with username
         const internalEmail = `${username.toLowerCase()}@internal.tahfidz.edu.id`;
 
