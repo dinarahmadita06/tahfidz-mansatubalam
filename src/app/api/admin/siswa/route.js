@@ -95,12 +95,15 @@ export async function GET(request) {
       },
       orangTuaSiswa: {
         select: {
+          hubungan: true,
           orangTua: {
             select: {
               id: true,
+              jenisKelamin: true,
               user: {
                 select: {
                   name: true,
+                  username: true,
                   email: true
                 }
               }

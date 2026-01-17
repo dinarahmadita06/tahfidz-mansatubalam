@@ -277,42 +277,78 @@ export default function AdminSiswaPage() {
 
   const handleExportData = () => {
     try {
-      // Prepare data for export
-      const exportData = (Array.isArray(filteredSiswa) ? filteredSiswa : []).map(s => ({
-        'NIS': s.nis || '-',
+      // Prepare siswa data for export (ordered columns)
+      const exportDataSiswa = (Array.isArray(filteredSiswa) ? filteredSiswa : []).map(s => ({
+        'Nama Lengkap': s.user?.name || '-',
         'NISN': s.nisn || '-',
-        'Nama Lengkap': s.user.name,
-        'Tanggal Lahir': formatDateOnly(s.tanggalLahir) || '-',
-        'Jenis Kelamin': s.jenisKelamin || '-',
+        'NIS': s.nis || '-',
         'Tempat Lahir': s.tempatLahir || '-',
+        'Tanggal Lahir': formatDateOnly(s.tanggalLahir) || '-',
         'Alamat': s.alamat || '-',
-        'No. HP': s.noTelepon || '-',
+        'No. HP': '-', // TODO: Will be added when User.phone is implemented
         'Kelas': s.kelas?.nama || '-',
-        'Status': s.user.isActive ? 'Aktif' : 'Tidak Aktif',
+        'Status': s.user?.isActive ? 'Aktif' : 'Tidak Aktif',
         'Validasi': s.status === 'approved' ? 'Tervalidasi' : s.status === 'rejected' ? 'Ditolak' : 'Pending'
       }));
 
-      // Create worksheet
-      const ws = XLSX.utils.json_to_sheet(exportData);
+      // Prepare orang tua data for export
+      const exportDataOrangTua = [];
+      (Array.isArray(filteredSiswa) ? filteredSiswa : []).forEach(s => {
+        if (s.orangTuaSiswa && s.orangTuaSiswa.length > 0) {
+          s.orangTuaSiswa.forEach(relation => {
+            const ortu = relation.orangTua;
+            if (ortu && ortu.user) {
+              // Password format: NISN-YYYY (from birth year)
+              const birthYear = s.tanggalLahir ? new Date(s.tanggalLahir).getFullYear() : '';
+              const passwordOrtu = birthYear ? `${s.nisn}-${birthYear}` : s.nisn;
+              
+              exportDataOrangTua.push({
+                'Nama Orang Tua': ortu.user.name || '-',
+                'Username': ortu.user.username || `${s.nis}_WALI`,
+                'Password': passwordOrtu,
+                'Jenis Kelamin': ortu.jenisKelamin || '-',
+                'Hubungan': relation.hubungan || 'Orang Tua',
+                'Nama Siswa': s.user?.name || '-',
+                'NIS Siswa': s.nis || '-'
+              });
+            }
+          });
+        }
+      });
 
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 12 }, // NIS
+      // Create workbook with multiple sheets
+      const wb = XLSX.utils.book_new();
+      
+      // Sheet 1: Data Siswa
+      const wsSiswa = XLSX.utils.json_to_sheet(exportDataSiswa);
+      wsSiswa['!cols'] = [
+        { wch: 25 }, // Nama Lengkap
         { wch: 15 }, // NISN
-        { wch: 25 }, // Nama
-        { wch: 15 }, // Tanggal Lahir
-        { wch: 15 }, // Jenis Kelamin
+        { wch: 12 }, // NIS
         { wch: 20 }, // Tempat Lahir
+        { wch: 15 }, // Tanggal Lahir
         { wch: 35 }, // Alamat
         { wch: 15 }, // No HP
         { wch: 15 }, // Kelas
         { wch: 12 }, // Status
         { wch: 15 }  // Validasi
       ];
+      XLSX.utils.book_append_sheet(wb, wsSiswa, 'Data Siswa');
 
-      // Create workbook
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Data Siswa');
+      // Sheet 2: Data Orang Tua (if any)
+      if (exportDataOrangTua.length > 0) {
+        const wsOrangTua = XLSX.utils.json_to_sheet(exportDataOrangTua);
+        wsOrangTua['!cols'] = [
+          { wch: 25 }, // Nama Orang Tua
+          { wch: 20 }, // Username
+          { wch: 20 }, // Password
+          { wch: 15 }, // Jenis Kelamin
+          { wch: 15 }, // Hubungan
+          { wch: 25 }, // Nama Siswa
+          { wch: 12 }  // NIS Siswa
+        ];
+        XLSX.utils.book_append_sheet(wb, wsOrangTua, 'Data Orang Tua');
+      }
 
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().split('T')[0];

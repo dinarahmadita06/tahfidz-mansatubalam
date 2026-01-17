@@ -110,16 +110,21 @@ export const authConfig = {
           }
 
           // 2. Logic untuk Guru, Siswa, dan Orang Tua
-          // Cari semua user yang mungkin cocok (username, email, atau suffix _wali)
-          // Handle case-insensitive matching for usernames
+          // Username orang tua menggunakan format NIS_WALI
+          // Siswa menggunakan NIS saja
+          // Password format:
+          //   - Siswa: YYYY-MM-DD
+          //   - Orang Tua: DDMMYYYY
+          // Untuk kemudahan user, terima input NIS tanpa suffix,
+          // coba cari sebagai siswa (NIS) atau orang tua (NIS_WALI)
           const potentialUsers = await withRetry(() =>
             prisma.user.findMany({
               where: { 
                 OR: [
-                  { username: identifier },
-                  { username: { equals: identifier, mode: 'insensitive' }}, // Case insensitive match
-                  { username: identifier + '_WALI' }, // Support login ortu pake NIS anak
-                  { username: { equals: identifier + '_WALI', mode: 'insensitive' }}, // Case insensitive match
+                  { username: identifier }, // Exact match (bisa siswa)
+                  { username: identifier + '_WALI' }, // Coba dengan suffix (orang tua)
+                  { username: identifier + '_wali' }, // Legacy lowercase
+                  { username: { equals: identifier, mode: 'insensitive' }}, // Case insensitive
                   { email: identifier.includes('@') ? identifier.toLowerCase() : undefined }
                 ].filter(Boolean),
                 role: { not: 'ADMIN' }
@@ -140,12 +145,6 @@ export const authConfig = {
 
           if (!potentialUsers || potentialUsers.length === 0) {
             console.log('🔍 No potential users found for identifier:', identifier);
-            // Log all existing usernames for debugging
-            const allUsers = await prisma.user.findMany({
-              where: { role: { not: 'ADMIN' }},
-              select: { username: true, email: true, role: true, id: true }
-            });
-            console.log('🔍 All non-admin users in DB:', allUsers);
             return null;
           }
 
@@ -153,7 +152,7 @@ export const authConfig = {
           let authenticatedUser = null;
 
           for (const user of potentialUsers) {
-            console.log('🔍 Checking user:', user.id, user.name, user.role, user.isActive, 'Username:', user.username, 'vs identifier:', identifier);
+            console.log('🔍 Checking user:', user.id, user.name, user.role, user.isActive, 'Username:', user.username);
             if (!user.password) {
               console.log('⚠️  User has no password');
               continue;
@@ -166,11 +165,11 @@ export const authConfig = {
             }
 
             let isValid = await bcrypt.compare(String(password), user.password);
-            console.log('🔐 Password validation result for user', user.id, 'with username', user.username, ':', isValid);
+            console.log('🔐 Password validation for', user.role, user.username, ':', isValid);
 
             if (isValid) {
               authenticatedUser = user;
-              console.log('✅ Password validated successfully for user:', user.id);
+              console.log('✅ Password validated successfully for', user.role, ':', user.id);
               break;
             }
           }
