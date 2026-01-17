@@ -392,6 +392,7 @@ export default function AdminGuruPage() {
 
       return {
         'Nama Lengkap': item.user?.name || item.nama || '',
+        'Username': item.user?.username || '',
         'NIP': item.nip || '',
         'Jenis Kelamin': item.jenisKelamin === 'LAKI_LAKI' || item.jenisKelamin === 'L' ? 'L' : 'P',
         'Tanggal Lahir': formatDateOnly(item.tanggalLahir),

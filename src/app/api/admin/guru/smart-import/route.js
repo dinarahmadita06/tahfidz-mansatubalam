@@ -5,20 +5,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { invalidateCache, invalidateCacheByPrefix } from '@/lib/cache';
-import { generateGuruPassword } from '@/lib/passwordUtils';
-
-/**
- * Helper: Generate next guru usernames (G###)
- */
-function generateNextGuruUsernames(lastNumber, count) {
-  const usernames = [];
-  for (let i = 1; i <= count; i++) {
-    const nextNumber = lastNumber + i;
-    const username = `G${String(nextNumber).padStart(3, '0')}`;
-    usernames.push(username);
-  }
-  return usernames;
-}
+import { buildGuruCredentials } from '@/lib/passwordUtils';
 
 /**
  * Helper: Parse Excel date to YYYY-MM-DD format
@@ -154,14 +141,10 @@ export async function POST(request) {
       }
     }
 
-    // Generate usernames for all rows
-    const generatedUsernames = generateNextGuruUsernames(lastNumber, data.length);
-
     // Process each row
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
       const { guru: guruData } = row;
-      const username = generatedUsernames[i];
 
       try {
         if (!guruData?.nama) {
@@ -188,20 +171,6 @@ export async function POST(request) {
           continue;
         }
 
-        // Generate internal email with username
-        const internalEmail = `${username.toLowerCase()}@internal.tahfidz.edu.id`;
-
-        // Check duplicate by username
-        const existingUser = await prisma.user.findUnique({
-          where: { username: username }
-        });
-
-        if (existingUser) {
-          stats.duplicate++;
-          errors.push(`Baris ${i + 2}: Username ${username} sudah digunakan`);
-          continue;
-        }
-
         // Normalize gender
         let normalizedJK = 'LAKI_LAKI';
         if (guruData.jenisKelamin) {
@@ -224,9 +193,35 @@ export async function POST(request) {
         const [year, month, day] = tanggalLahirString.split('-').map(Number);
         const tanggalLahir = new Date(Date.UTC(year, month - 1, day));
 
-        // Generate password: YYYY-MM-DD format dari tanggal lahir
-        const rawPassword = tanggalLahirString; // Format: YYYY-MM-DD
-        const hashedPassword = await bcrypt.hash(rawPassword, 10);
+        // Build credentials using helper for consistency
+        const credentials = await buildGuruCredentials({
+          tanggalLahir: tanggalLahirString,
+          lastUsernameNumber: lastNumber + i,
+          bcrypt
+        });
+
+        const username = credentials.username; // G### format (uppercase)
+        const rawPassword = credentials.passwordPlain; // YYYY-MM-DD
+        const hashedPassword = credentials.passwordHash;
+
+        // Check duplicate by username (case-insensitive)
+        const existingUser = await prisma.user.findFirst({
+          where: { 
+            username: { 
+              equals: username, 
+              mode: 'insensitive' 
+            } 
+          }
+        });
+
+        if (existingUser) {
+          stats.duplicate++;
+          errors.push(`Baris ${i + 2}: Username ${username} sudah digunakan`);
+          continue;
+        }
+
+        // Generate internal email with username
+        const internalEmail = `${username.toLowerCase()}@internal.tahfidz.edu.id`;
 
         // Process Kelas Binaan
         const kelasIds = [];
@@ -286,7 +281,6 @@ export async function POST(request) {
           nama: guruData.nama,
           username: username,
           role: 'GURU',
-          email: internalEmail,
           password: rawPassword,
           keterangan: `NIP: ${guruData.nip || '-'}`,
           kelasBinaan: kelasIds.length > 0 ? `${kelasIds.length} kelas` : '-'
