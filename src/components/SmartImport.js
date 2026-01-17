@@ -264,7 +264,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       const exportData = newAccounts.map(acc => ({
         'Nama': acc.nama,
         'Role': acc.role,
-        'Email/Username': acc.email,
+        'Username': acc.username,
         'Password': acc.password,
         'Keterangan': acc.keterangan || '-'
       }));
