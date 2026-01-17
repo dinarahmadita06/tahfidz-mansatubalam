@@ -53,7 +53,7 @@ export default function PengumumanClient({ initialPengumuman }) {
     attachmentSize: 0
   });
 
-  const canManage = session?.user?.role === 'GURU' || session?.user?.role === 'ADMIN';
+  const canManage = session?.user?.role === 'ADMIN'; // Only ADMIN can create/edit/delete
 
   const filteredPengumuman = useMemo(() => {
     if (!searchQuery.trim()) return pengumumanList;

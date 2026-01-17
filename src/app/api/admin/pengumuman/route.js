@@ -3,6 +3,7 @@ export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { requireAdmin, requireAdminOrGuru } from '@/lib/authHelpers';
 
 import { getCachedData, setCachedData, invalidateCacheByPrefix } from '@/lib/cache';
 
@@ -17,9 +18,8 @@ export async function GET(request) {
     const endAuth = performance.now();
     console.log(`[API ADMIN PENGUMUMAN] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
 
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = requireAdminOrGuru(session);
+    if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -91,14 +91,12 @@ export async function GET(request) {
   }
 }
 
-// POST - Membuat pengumuman baru
+// POST - Membuat pengumuman baru (ADMIN only)
 export async function POST(request) {
   try {
     const session = await auth();
-
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = requireAdmin(session);
+    if (authError) return authError;
 
     const body = await request.json();
     const {
@@ -257,14 +255,12 @@ export async function POST(request) {
   }
 }
 
-// PUT - Update pengumuman
+// PUT - Update pengumuman (ADMIN only)
 export async function PUT(request) {
   try {
     const session = await auth();
-
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = requireAdmin(session);
+    if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -373,14 +369,12 @@ export async function PUT(request) {
   }
 }
 
-// DELETE - Menghapus pengumuman
+// DELETE - Menghapus pengumuman (ADMIN only)
 export async function DELETE(request) {
   try {
     const session = await auth();
-
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'GURU')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = requireAdmin(session);
+    if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

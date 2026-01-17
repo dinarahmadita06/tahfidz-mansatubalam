@@ -75,7 +75,7 @@ const CATEGORY_CONFIG = {
 };
 
 // AnnouncementCard Component (matching Guru style)
-function AnnouncementCard({ announcement, onEdit, onDelete }) {
+function AnnouncementCard({ announcement, onEdit, onDelete, isAdmin = false }) {
   const categoryData = CATEGORY_CONFIG[announcement.kategori] || CATEGORY_CONFIG.UMUM;
   const CategoryIcon = categoryData.icon;
 
@@ -115,23 +115,25 @@ function AnnouncementCard({ announcement, onEdit, onDelete }) {
               {announcement.kategori}
             </span>
           </div>
-          {/* Action Buttons - Top Right */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={() => onEdit(announcement)}
-              className="h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-              title="Edit"
-            >
-              <Edit size={16} />
-            </button>
-            <button
-              onClick={() => onDelete(announcement.id)}
-              className="h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-rose-100 text-rose-700 hover:bg-rose-200"
-              title="Hapus"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
+          {/* Action Buttons - Top Right (ADMIN only) */}
+          {isAdmin && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => onEdit(announcement)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                title="Edit"
+              >
+                <Edit size={16} />
+              </button>
+              <button
+                onClick={() => onDelete(announcement.id)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200 bg-rose-100 text-rose-700 hover:bg-rose-200"
+                title="Hapus"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -190,6 +192,8 @@ export default function PengumumanPage() {
   const [filteredPengumuman, setFilteredPengumuman] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const isAdmin = session?.user?.role === 'ADMIN';
 
   // Form state - simplified
   const [formData, setFormData] = useState({
@@ -285,6 +289,11 @@ export default function PengumumanPage() {
   };
 
   const handleEdit = (item) => {
+    if (!isAdmin) {
+      setError('Akses ditolak - Hanya ADMIN yang dapat mengedit pengumuman');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     setEditingId(item.id);
     setFormData({
       judul: item.judul,
@@ -298,6 +307,11 @@ export default function PengumumanPage() {
   };
 
   const handleDelete = async (id) => {
+    if (!isAdmin) {
+      setError('Akses ditolak - Hanya ADMIN yang dapat menghapus pengumuman');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     if (!confirm('Yakin ingin menghapus pengumuman ini?')) return;
 
     try {
@@ -338,6 +352,11 @@ export default function PengumumanPage() {
   };
 
   const openCreateModal = () => {
+    if (!isAdmin) {
+      setError('Akses ditolak - Hanya ADMIN yang dapat membuat pengumuman');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     resetForm();
     setShowModal(true);
   };
@@ -468,22 +487,26 @@ export default function PengumumanPage() {
               </div>
               
               {/* Action Button - Mobile Full Width */}
-              <button
-                onClick={openCreateModal}
-                className="sm:hidden w-full flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:bg-white/20 bg-white/15 border border-white/20 whitespace-nowrap mt-2"
-              >
-                <Plus size={18} />
-                <span>Buat</span>
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={openCreateModal}
+                  className="sm:hidden w-full flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:bg-white/20 bg-white/15 border border-white/20 whitespace-nowrap mt-2"
+                >
+                  <Plus size={18} />
+                  <span>Buat</span>
+                </button>
+              )}
               
               {/* Action Button - Desktop */}
-              <button
-                onClick={openCreateModal}
-                className="hidden sm:flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-gradient-to-r from-emerald-600 to-teal-500 whitespace-nowrap flex-shrink-0"
-              >
-                <Plus size={18} />
-                <span>Buat Pengumuman</span>
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={openCreateModal}
+                  className="hidden sm:flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-semibold text-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-gradient-to-r from-emerald-600 to-teal-500 whitespace-nowrap flex-shrink-0"
+                >
+                  <Plus size={18} />
+                  <span>Buat Pengumuman</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -542,6 +565,7 @@ export default function PengumumanPage() {
                     announcement={announcement}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
