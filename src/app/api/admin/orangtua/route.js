@@ -133,110 +133,152 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    console.log(' OrangTua POST body received:', { ...body, password: '***' });
+    console.log('📥 OrangTua POST body received:', body);
     const {
+      nisSiswa,
       name,
-      email,
-      password,
+      jenisKelamin,
       noHP,
       pekerjaan,
-      alamat,
-      image
+      alamat
     } = body;
 
     // Validate required fields
-    if (!name || !email || !password || !noHP) {
-      return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+    if (!nisSiswa || !name || !jenisKelamin) {
+      return NextResponse.json({ error: 'NIS Siswa, Nama Wali, dan Jenis Kelamin wajib diisi' }, { status: 400 });
     }
 
-    // Validate password length
-    if (password.length < 8) {
-      return NextResponse.json({ 
-        success: false, 
-        code: "PASSWORD_TOO_SHORT", 
-        message: "Password minimal 8 karakter." 
-      }, { status: 400 });
-    }
-
-    // Validate Indonesian phone number format
-    const phoneRegex = /^(\+62|62|0)[0-9]{9,12}$/;
-    if (!phoneRegex.test(noHP.replace(/[-\s]/g, ''))) {
-      return NextResponse.json({ error: 'Format nomor HP tidak valid' }, { status: 400 });
-    }
-
-    // ============ UPSERT LOGIC ============
-    // Step 1: Check if parent already exists by email
-    console.log('🔍 Checking if parent exists with email:', email);
-    const existingOrangTua = await prisma.orangTua.findFirst({
-      where: {
+    // Lookup siswa by NIS
+    console.log('🔍 Looking up siswa with NIS:', nisSiswa);
+    const siswa = await prisma.siswa.findFirst({
+      where: { nis: nisSiswa.toString().trim() },
+      select: {
+        id: true,
+        nis: true,
+        tanggalLahir: true,
         user: {
-          email: email.toLowerCase()
+          select: {
+            name: true
+          }
         }
-      },
-      include: {
-        user: true
       }
     });
 
-    if (existingOrangTua) {
-      // Parent already exists → REUSE it (don't update, just return)
-      console.log('✅ Parent already exists by email, reusing:', existingOrangTua.id);
-      return NextResponse.json(
-        {
-          ...existingOrangTua,
-          user: {
-            id: existingOrangTua.user.id,
-            name: existingOrangTua.user.name,
-            email: existingOrangTua.user.email,
-            image: existingOrangTua.user.image,
-            isActive: existingOrangTua.user.isActive,
-            createdAt: existingOrangTua.user.createdAt
-          },
-          message: 'Parent sudah ada, menggunakan data existing'
-        },
-        { status: 200 }
-      );
+    if (!siswa) {
+      return NextResponse.json({ 
+        error: `Siswa dengan NIS ${nisSiswa} tidak ditemukan. Pastikan NIS sudah benar.` 
+      }, { status: 404 });
     }
 
-    // Step 2: Parent doesn't exist → CREATE new
-    console.log('➕ Creating new parent with email:', email);
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('✅ Siswa found:', siswa.user.name);
 
-    // Create user and orang tua
-    const orangTua = await prisma.orangTua.create({
-      data: {
-        pekerjaan: pekerjaan || null,
-        alamat: alamat || null,
-        jenisKelamin: 'LAKI_LAKI', // Add default gender
-        status: 'approved', // Admin-created parents are auto-approved
-        user: {
-          create: {
-            email: email.toLowerCase(),
-            password: hashedPassword,
-            name,
-            role: 'ORANG_TUA',
-            image: image || null,
-            isActive: true
-          }
-        }
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            isActive: true,
-            createdAt: true
-          }
-        }
-      },
+    // Auto-determine jenis wali from gender
+    const normalizedGender = jenisKelamin.toString().toUpperCase().trim();
+    let jenisWali = 'AYAH';
+    if (normalizedGender === 'P' || normalizedGender === 'PEREMPUAN') {
+      jenisWali = 'IBU';
+    }
+
+    console.log('👥 Jenis wali determined:', jenisWali);
+
+    // Generate credentials using helper
+    const { buildOrtuCredentials } = await import('@/lib/passwordUtils');
+    const credentials = await buildOrtuCredentials({
+      tanggalLahirSiswa: siswa.tanggalLahir,
+      nisSiswa: siswa.nis,
+      bcrypt
     });
 
-    console.log('✅ Parent created successfully:', orangTua.id);
+    console.log('🔑 Generated credentials - Username:', credentials.username, 'Password:', credentials.passwordPlain);
+
+    // ============ CHECK EXISTING USER ============
+    // Check if user with this username already exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        username: credentials.username,
+        role: 'ORANG_TUA'
+      },
+      include: {
+        orangTua: {
+          include: {
+            orangTuaSiswa: true
+          }
+        }
+      }
+    });
+
+    let orangTua;
+
+    if (existingUser && existingUser.orangTua) {
+      // User already exists → REUSE
+      console.log('✅ Orang tua with username', credentials.username, 'already exists, reusing');
+      orangTua = existingUser.orangTua;
+    } else {
+      // Create new user and orang tua
+      console.log('➕ Creating new orang tua user');
+      
+      const normalizedJenisKelamin = (normalizedGender === 'P' || normalizedGender === 'PEREMPUAN') 
+        ? 'PEREMPUAN' 
+        : 'LAKI_LAKI';
+
+      // Generate email from NIS (nullable, for future use)
+      const generatedEmail = `wali.${siswa.nis}@ortu.tahfidz.sch.id`;
+
+      orangTua = await prisma.orangTua.create({
+        data: {
+          pekerjaan: pekerjaan || null,
+          alamat: alamat || null,
+          jenisKelamin: normalizedJenisKelamin,
+          status: 'approved',
+          user: {
+            create: {
+              username: credentials.username,
+              email: generatedEmail,
+              password: credentials.passwordHash,
+              name,
+              role: 'ORANG_TUA',
+              isActive: true
+            }
+          }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              email: true,
+              isActive: true,
+              createdAt: true
+            }
+          }
+        }
+      });
+
+      console.log('✅ Orang tua created:', orangTua.id);
+    }
+
+    // ============ CREATE RELATION ============
+    // Check if relation already exists
+    const existingRelation = await prisma.orangTuaSiswa.findFirst({
+      where: {
+        orangTuaId: orangTua.id,
+        siswaId: siswa.id
+      }
+    });
+
+    if (existingRelation) {
+      console.log('ℹ️  Relasi sudah ada, skip create');
+    } else {
+      await prisma.orangTuaSiswa.create({
+        data: {
+          orangTuaId: orangTua.id,
+          siswaId: siswa.id,
+          jenisWali: jenisWali
+        }
+      });
+      console.log('✅ Relasi orangTuaSiswa created');
+    }
 
     // Log activity
     await logActivity({
@@ -245,20 +287,36 @@ export async function POST(request) {
       userRole: session.user.role,
       action: 'CREATE',
       module: 'ORANG_TUA',
-      description: `Menambahkan orang tua baru ${orangTua.user.name}`,
+      description: `Menghubungkan wali ${orangTua.user.name} dengan siswa ${siswa.user.name} (NIS: ${siswa.nis})`,
       ipAddress: getIpAddress(request),
       userAgent: getUserAgent(request),
       metadata: {
-        orangTuaId: orangTua.id
+        orangTuaId: orangTua.id,
+        siswaId: siswa.id,
+        jenisWali
       }
     }).catch((err) => console.error('Log activity error:', err));
 
-    // Return clean response without sensitive fields
+    // Return response with credentials (for display to admin)
     return NextResponse.json({
-      id: orangTua.id,
-      user: orangTua.user,
-      status: orangTua.status,
-      jenisKelamin: orangTua.jenisKelamin
+      success: true,
+      orangTua: {
+        id: orangTua.id,
+        user: orangTua.user,
+        status: orangTua.status,
+        jenisKelamin: orangTua.jenisKelamin
+      },
+      siswa: {
+        id: siswa.id,
+        nis: siswa.nis,
+        name: siswa.user.name
+      },
+      credentials: {
+        username: credentials.username,
+        password: credentials.passwordPlain,
+        info: 'Username = NIS siswa, Password = tanggal lahir siswa (DDMMYYYY)'
+      },
+      jenisWali
     }, { status: 201 });
   } catch (error) {
     console.error('❌ Error creating orang tua:', error);

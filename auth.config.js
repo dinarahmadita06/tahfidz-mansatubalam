@@ -110,20 +110,17 @@ export const authConfig = {
           }
 
           // 2. Logic untuk Guru, Siswa, dan Orang Tua
-          // Username orang tua menggunakan format NIS_WALI
-          // Siswa menggunakan NIS saja
-          // Password format:
-          //   - Siswa: YYYY-MM-DD
-          //   - Orang Tua: DDMMYYYY
-          // Untuk kemudahan user, terima input NIS tanpa suffix,
-          // coba cari sebagai siswa (NIS) atau orang tua (NIS_WALI)
+          // IMPORTANT: Username siswa dan orang tua SAMA (keduanya pakai NIS)
+          // Dibedakan oleh password format:
+          //   - Siswa: YYYY-MM-DD (tanggal lahir)
+          //   - Orang Tua: DDMMYYYY (tanggal lahir siswa, reversed)
+          // Auth akan mencoba semua user dengan username yang match,
+          // dan distinguish berdasarkan password hash
           const potentialUsers = await withRetry(() =>
             prisma.user.findMany({
               where: { 
                 OR: [
-                  { username: identifier }, // Exact match (bisa siswa)
-                  { username: identifier + '_WALI' }, // Coba dengan suffix (orang tua)
-                  { username: identifier + '_wali' }, // Legacy lowercase
+                  { username: identifier }, // Exact match (siswa atau orang tua)
                   { username: { equals: identifier, mode: 'insensitive' }}, // Case insensitive
                   { email: identifier.includes('@') ? identifier.toLowerCase() : undefined }
                 ].filter(Boolean),
