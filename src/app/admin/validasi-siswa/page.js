@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, CheckCircle, XCircle, Users, Clock, UserCheck, Search, Filter, Plus } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Users, Clock, Search, Filter, Plus } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Toast from '@/components/ui/Toast';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
@@ -464,7 +464,7 @@ export default function ValidasiSiswaPage() {
           <div className="space-y-6">
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <StatCard
                 icon={Users}
                 title="Total Pendaftar"
@@ -479,13 +479,16 @@ export default function ValidasiSiswaPage() {
                 subtitle="Perlu tindakan admin"
                 theme="orange"
               />
-              <StatCard
-                icon={UserCheck}
-                title="Sudah Divalidasi"
-                value={stats.divalidasi}
-                subtitle="Akun aktif"
-                theme="sky"
-              />
+            </div>
+
+            {/* Helper Text */}
+            <div className="bg-emerald-50/50 border-l-4 border-emerald-500 rounded-lg p-4">
+              <p className="text-sm text-emerald-700">
+                <span className="font-semibold">💡 Info:</span> Siswa yang sudah divalidasi dapat dilihat di menu{' '}
+                <a href="/admin/siswa" className="font-bold underline hover:text-emerald-800 transition-colors">
+                  Manajemen Siswa
+                </a>
+              </p>
             </div>
 
             {/* Filter Section */}
@@ -520,7 +523,6 @@ export default function ValidasiSiswaPage() {
                   >
                     <option value="all">Semua Status</option>
                     <option value="pending">Menunggu Validasi</option>
-                    <option value="approved">Sudah Divalidasi</option>
                     <option value="rejected">Ditolak</option>
                   </select>
                 </div>
