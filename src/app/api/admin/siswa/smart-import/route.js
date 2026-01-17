@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { invalidateCache } from '@/lib/cache';
 import { generateSiswaEmail, generateOrangTuaEmail } from '@/lib/siswaUtils';
+import { buildSiswaCredentials, buildOrtuCredentials } from '@/lib/passwordUtils';
 
 // Helper untuk generate password random
 function generatePassword(length = 8) {
@@ -37,11 +38,189 @@ export async function POST(request) {
       success: 0,
       failed: 0,
       duplicate: 0,
-      total: data.length
+      total: data.length,
+      // Detailed stats
+      createdSiswa: 0,
+      duplicateSiswa: 0,
+      createdOrtu: 0,
+      duplicateOrtu: 0,
+      createdRelation: 0,
+      duplicateRelation: 0
     };
 
     const newAccounts = [];
     const errors = [];
+    
+    // Helper untuk mark duplicate
+    const markDuplicate = (rowIndex, reason) => {
+      stats.duplicate++;
+      errors.push(`Baris ${rowIndex + 2}: Duplikat - ${reason}`);
+    };
+    
+    // Helper: Get or Create Siswa
+    const getOrCreateSiswa = async ({ siswaData, nisValue, nisnValue, tahunAjaranMasukId, kelasId, tanggalLahir, normalizedJenisKelamin, siswaEmail, hashedPassword }) => {
+      // Cek existing siswa
+      const existingSiswa = await prisma.siswa.findFirst({
+        where: {
+          OR: [
+            { nis: nisValue },
+            { nisn: nisnValue }
+          ]
+        },
+        include: { user: true }
+      });
+
+      if (existingSiswa) {
+        stats.duplicateSiswa++;
+        return { siswa: existingSiswa, isNew: false };
+      }
+
+      // Create new siswa
+      try {
+        const siswa = await prisma.siswa.create({
+          data: {
+            nisn: nisnValue,
+            nis: nisValue,
+            jenisKelamin: normalizedJenisKelamin,
+            tanggalLahir: tanggalLahir,
+            alamat: siswaData.alamat || '',
+            kelasAngkatan: siswaData.kelasAngkatan?.toString() || null,
+            tahunAjaranMasuk: { connect: { id: tahunAjaranMasukId } },
+            status: 'approved',
+            statusSiswa: 'AKTIF',
+            kelas: kelasId ? { connect: { id: kelasId } } : undefined,
+            user: {
+              create: {
+                email: siswaEmail,
+                username: nisValue,
+                password: hashedPassword,
+                name: siswaData.nama,
+                role: 'SISWA'
+              }
+            }
+          }
+        });
+        stats.createdSiswa++;
+        return { siswa, isNew: true };
+      } catch (createError) {
+        if (createError.code === 'P2002') {
+          // Race condition - re-fetch
+          const refetchedSiswa = await prisma.siswa.findFirst({
+            where: { OR: [{ nis: nisValue }, { nisn: nisnValue }] },
+            include: { user: true }
+          });
+          if (refetchedSiswa) {
+            stats.duplicateSiswa++;
+            return { siswa: refetchedSiswa, isNew: false };
+          }
+        }
+        throw createError;
+      }
+    };
+
+    // Helper: Get or Create Orang Tua
+    const getOrCreateOrtu = async ({ orangtuaData, nisValue, nisnValue, normalizedGenderWali, finalEmail, ortuCredentials, siswaData }) => {
+      console.log(`  🔍 getOrCreateOrtu: Checking username="${ortuCredentials.username}" (from NIS=${nisValue})`);
+      
+      // Cek existing orang tua by username
+      const existingOrtuUser = await prisma.user.findFirst({
+        where: {
+          username: ortuCredentials.username,
+          role: 'ORANG_TUA'
+        },
+        include: {
+          orangTua: true
+        }
+      });
+
+      if (existingOrtuUser && existingOrtuUser.orangTua) {
+        console.log(`  ✅ Found existing orang tua: ${existingOrtuUser.name} (username=${existingOrtuUser.username})`);
+        stats.duplicateOrtu++;
+        return { orangTua: existingOrtuUser.orangTua, isNew: false, account: null };
+      }
+
+      // Create new orang tua
+      console.log(`  ➕ Creating new orang tua: ${orangtuaData.nama} (username=${ortuCredentials.username})`);
+      try {
+        const orangTua = await prisma.orangTua.create({
+          data: {
+            jenisKelamin: normalizedGenderWali,
+            status: 'approved',
+            user: {
+              create: {
+                email: finalEmail,
+                username: ortuCredentials.username,
+                password: ortuCredentials.passwordHash,
+                name: orangtuaData.nama,
+                role: 'ORANG_TUA'
+              }
+            }
+          }
+        });
+
+        stats.createdOrtu++;
+        
+        const account = {
+          nama: orangtuaData.nama,
+          username: ortuCredentials.username,
+          role: 'ORANG_TUA',
+          password: ortuCredentials.passwordPlain,
+          keterangan: `Orang tua dari ${siswaData.nama}`
+        };
+
+        return { orangTua, isNew: true, account };
+      } catch (createError) {
+        if (createError.code === 'P2002') {
+          // Race condition - re-fetch
+          const refetchedUser = await prisma.user.findFirst({
+            where: { username: ortuCredentials.username, role: 'ORANG_TUA' },
+            include: { orangTua: true }
+          });
+          if (refetchedUser && refetchedUser.orangTua) {
+            stats.duplicateOrtu++;
+            return { orangTua: refetchedUser.orangTua, isNew: false, account: null };
+          }
+        }
+        // Log error tapi jangan throw - orang tua optional
+        console.error('Error creating orang tua:', createError);
+        return { orangTua: null, isNew: false, account: null };
+      }
+    };
+
+    // Helper: Ensure OrangTuaSiswa Relation
+    const ensureRelation = async ({ orangTuaId, siswaId, jenisWali }) => {
+      // Cek existing relation
+      const existingRelation = await prisma.orangTuaSiswa.findFirst({
+        where: {
+          orangTuaId: orangTuaId,
+          siswaId: siswaId
+        }
+      });
+
+      if (existingRelation) {
+        stats.duplicateRelation++;
+        return { isNew: false };
+      }
+
+      // Create relation
+      try {
+        await prisma.orangTuaSiswa.create({
+          data: {
+            orangTuaId: orangTuaId,
+            siswaId: siswaId,
+            hubungan: jenisWali || 'Orang Tua'
+          }
+        });
+        stats.createdRelation++;
+        return { isNew: true };
+      } catch (createError) {
+        if (createError.code === 'P2002') {
+          stats.duplicateRelation++;
+          return { isNew: false };
+        }
+        throw createError;
+      }
+    };
 
     // Process each row
     for (let i = 0; i < data.length; i++) {
@@ -49,8 +228,11 @@ export async function POST(request) {
       const { siswa: siswaData, orangtua: orangtuaData } = row;
 
       try {
-        // Debug logging
-        console.log(`Processing row ${i + 2}:`, { siswaData, orangtuaData });
+        // Debug logging for first row to check mapping
+        if (i === 0) {
+          console.log('First row siswaData:', JSON.stringify(siswaData, null, 2));
+          console.log('First row orangtuaData:', JSON.stringify(orangtuaData, null, 2));
+        }
 
         // Validasi required fields siswa sesuai form terbaru
         if (!siswaData?.nama) {
@@ -73,28 +255,20 @@ export async function POST(request) {
           errors.push(`Baris ${i + 2}: Jenis Kelamin siswa harus diisi`);
           continue;
         }
-        if (!siswaData?.kelasAngkatan) {
+        // Validate jenis kelamin value (only L or P accepted)
+        const jkValue = siswaData.jenisKelamin.toString().trim().toUpperCase();
+        if (!['L', 'P', 'LAKI_LAKI', 'LAKI-LAKI', 'PEREMPUAN', 'MALE', 'FEMALE'].includes(jkValue)) {
           stats.failed++;
-          errors.push(`Baris ${i + 2}: Diterima di Kelas / Angkatan harus diisi`);
+          errors.push(`Baris ${i + 2}: Jenis Kelamin tidak valid "${siswaData.jenisKelamin}" (harus L atau P). Periksa mapping kolom Excel.`);
           continue;
         }
-        if (!siswaData?.kelas) {
+        if (!siswaData?.tanggalLahir) {
           stats.failed++;
-          errors.push(`Baris ${i + 2}: Kelas Saat Ini harus diisi`);
-          continue;
-        }
-        if (!siswaData?.tahunAjaranMasuk) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: Tahun Ajaran Masuk harus diisi`);
+          errors.push(`Baris ${i + 2}: Tanggal Lahir siswa harus diisi`);
           continue;
         }
 
         // Validasi required fields wali
-        if (!orangtuaData?.jenisWali) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: Jenis Wali harus diisi`);
-          continue;
-        }
         if (!orangtuaData?.nama) {
           stats.failed++;
           errors.push(`Baris ${i + 2}: Nama Wali harus diisi`);
@@ -105,51 +279,68 @@ export async function POST(request) {
           errors.push(`Baris ${i + 2}: Jenis Kelamin Wali harus diisi`);
           continue;
         }
-        if (!orangtuaData?.noHP) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: No HP Wali harus diisi`);
-          continue;
+
+        // Fallback Jenis Wali otomatis berdasarkan jenis kelamin wali
+        let jenisWali = orangtuaData.jenisWali?.toString().trim().toUpperCase();
+        
+        if (!jenisWali || jenisWali === '') {
+          // Jenis Wali kosong → fallback berdasarkan jenis kelamin wali
+          const jkWali = orangtuaData.jenisKelamin.toString().trim().toUpperCase();
+          
+          if (jkWali === 'L' || jkWali === 'LAKI_LAKI' || jkWali === 'LAKI-LAKI') {
+            jenisWali = 'AYAH';
+          } else if (jkWali === 'P' || jkWali === 'PEREMPUAN') {
+            jenisWali = 'IBU';
+          } else {
+            stats.failed++;
+            errors.push(`Baris ${i + 2}: Jenis Kelamin Wali tidak valid "${orangtuaData.jenisKelamin}". Harus L atau P untuk auto-fill Jenis Wali.`);
+            continue;
+          }
+          
+          // Update orangtuaData dengan jenisWali hasil fallback
+          orangtuaData.jenisWali = jenisWali;
         }
 
-        // Check duplicate NIS
         const nisValue = siswaData.nis.toString();
         const nisnValue = siswaData.nisn.toString();
+        
+        // DEBUG: Log NIS untuk setiap row
+        console.log(`📋 Baris ${i + 2}: NIS="${nisValue}", NISN="${nisnValue}", Nama="${siswaData.nama}", NamaWali="${orangtuaData?.nama}"`);
 
-        // Check duplicate NIS
-        const existingSiswa = await prisma.siswa.findFirst({
-          where: {
-            OR: [
-              { nis: nisValue },
-              { nisn: nisnValue }
-            ]
-          }
-        });
-
-        if (existingSiswa) {
-          stats.duplicate++;
-          errors.push(`Baris ${i + 2}: NIS ${nisValue} atau NISN ${nisnValue} sudah terdaftar`);
-          continue;
-        }
-
-        // Find Tahun Ajaran Masuk
+        // Find or default Tahun Ajaran Masuk
         let tahunAjaranMasukId = null;
+        let tahunAjaranMasuk = null;
+        
         if (siswaData.tahunAjaranMasuk) {
           const taInput = siswaData.tahunAjaranMasuk.toString().trim();
-          const ta = await prisma.tahunAjaran.findFirst({
+          tahunAjaranMasuk = await prisma.tahunAjaran.findFirst({
             where: {
               nama: { contains: taInput, mode: 'insensitive' }
             }
           });
-          tahunAjaranMasukId = ta?.id;
+          
+          if (!tahunAjaranMasuk) {
+            stats.failed++;
+            errors.push(`Baris ${i + 2}: Tahun Ajaran "${siswaData.tahunAjaranMasuk}" tidak ditemukan`);
+            continue;
+          }
+          tahunAjaranMasukId = tahunAjaranMasuk.id;
+        } else {
+          // Auto-fill with active Tahun Ajaran
+          tahunAjaranMasuk = await prisma.tahunAjaran.findFirst({
+            where: { isActive: true },
+            orderBy: { tanggalMulai: 'desc' }
+          });
+          
+          if (!tahunAjaranMasuk) {
+            stats.failed++;
+            errors.push(`Baris ${i + 2}: Tidak ada Tahun Ajaran aktif di sistem`);
+            continue;
+          }
+          tahunAjaranMasukId = tahunAjaranMasuk.id;
         }
 
-        if (!tahunAjaranMasukId) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: Tahun Ajaran "${siswaData.tahunAjaranMasuk}" tidak ditemukan`);
-          continue;
-        }
-
-        // Find or create Kelas - REQUIRED field
+        // Find Kelas - OPTIONAL field
         let kelasId = null;
         if (siswaData.kelas) {
           const kelasInput = siswaData.kelas.toString().trim();
@@ -164,142 +355,86 @@ export async function POST(request) {
             }
           });
 
-          kelasId = kelas?.id;
-        }
-
-        if (!kelasId) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: Kelas "${siswaData.kelas}" tidak ditemukan`);
-          continue;
-        }
-
-        // Process Orang Tua
-        let orangTuaId = null;
-        let orangTuaAccount = null;
-
-        if (orangtuaData?.nama && autoCreateAccount) {
-          // Normalize gender wali
-          let normalizedGenderWali = 'LAKI_LAKI';
-          if (orangtuaData.jenisKelamin) {
-            const jkUpper = String(orangtuaData.jenisKelamin).toUpperCase().trim();
-            if (jkUpper === 'PEREMPUAN' || jkUpper === 'P' || jkUpper === 'FEMALE' || jkUpper === 'WANITA') {
-              normalizedGenderWali = 'PEREMPUAN';
-            }
+          if (kelas) {
+            kelasId = kelas.id;
           }
-
-          // Generate email orang tua - SELALU auto-generate berdasarkan data siswa
-          let finalEmail = generateOrangTuaEmail(siswaData.nama, nisValue);
-          
-          // New password format: NISN-YYYY
-          const birthDate = siswaData.tanggalLahir ? new Date(siswaData.tanggalLahir) : null;
-          const birthYear = birthDate && !isNaN(birthDate.getTime()) ? birthDate.getFullYear() : null;
-          const orangTuaPassword = birthYear ? `${nisnValue}-${birthYear}` : nisnValue;
-          
-          const hashedPassword = await bcrypt.hash(orangTuaPassword, 10);
-
-          // Check if email already exists
-          const existingUserEmail = await prisma.user.findUnique({
-            where: { email: finalEmail }
-          });
-
-          if (existingUserEmail) {
-            // Jika email sudah ada, pastikan itu milik orang tua yang sama (by name)
-            if (existingUserEmail.name.toLowerCase() !== orangtuaData.nama.toLowerCase()) {
-              // Jika nama berbeda tapi email sama (kasus langka dengan NIS sama?), tambahkan suffix
-              finalEmail = finalEmail.replace('@ortu.tahfidz.sch.id', `${Math.floor(Math.random() * 100)}@ortu.tahfidz.sch.id`);
-            }
-          }
-
-          const existingOrangTua = await prisma.orangTua.findFirst({
-            where: {
-              user: {
-                email: finalEmail
-              }
-            },
-            include: { user: true }
-          });
-
-          if (existingOrangTua) {
-            orangTuaId = existingOrangTua.id;
-          } else {
-            const orangTua = await prisma.orangTua.create({
-              data: {
-                noTelepon: orangtuaData.noHP ? orangtuaData.noHP.toString() : null,
-                jenisKelamin: normalizedGenderWali,
-                status: 'approved',
-                user: {
-                  create: {
-                    email: finalEmail,
-                    password: hashedPassword,
-                    name: orangtuaData.nama,
-                    role: 'ORANG_TUA'
-                  }
-                }
-              }
-            });
-
-            orangTuaId = orangTua.id;
-
-            orangTuaAccount = {
-              nama: orangtuaData.nama,
-              role: 'ORANG_TUA',
-              email: finalEmail,
-              password: orangTuaPassword,
-              keterangan: `Orang tua dari ${siswaData.nama}`
-            };
-          }
+          // If kelas not found, just set to null (not an error)
         }
 
         // Create Siswa Account
-        let siswaEmail, siswaPassword;
+        let siswaEmail, siswaPassword, tanggalLahirDate;
 
         if (autoCreateAccount) {
           // Auto-generate email using consistent format: firstname.nis@siswa.tahfidz.sch.id
           siswaEmail = generateSiswaEmail(siswaData.nama, siswaData.nis);
           
-          // New password format: always NISN (SIMTAQ standard)
-          const nisnValue = siswaData.nisn || siswaData.nis;
-          siswaPassword = nisnValue.toString();
-
-          // Check if email already exists
-          const existingUserEmail = await prisma.user.findUnique({
-            where: { email: siswaEmail }
-          });
-
-          if (existingUserEmail) {
-            // Skip this student if email already exists (duplicate nama + NIS combination)
-            stats.duplicate++;
-            errors.push(`Baris ${i + 2}: Email ${siswaEmail} sudah terdaftar (kombinasi Nama + NIS sudah ada)`);
-            continue;
-          }
-
-          const hashedPassword = await bcrypt.hash(siswaPassword, 10);
-
-          // Parse tanggal lahir - REQUIRED field
-          let tanggalLahir = new Date('2000-01-01'); // Default fallback
+          // Parse tanggal lahir - convert to Date object first
+          // Support formats: YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY, Excel serial
+          tanggalLahirDate = null;
           if (siswaData.tanggalLahir) {
+            const input = siswaData.tanggalLahir.toString().trim();
+            
             try {
-              const parsed = new Date(siswaData.tanggalLahir);
-              // Check if date is valid
-              if (!isNaN(parsed.getTime())) {
-                tanggalLahir = parsed;
-              } else {
-                // Try parsing DD/MM/YYYY format
-                const parts = siswaData.tanggalLahir.toString().split('/');
-                if (parts.length === 3) {
-                  const day = parseInt(parts[0]);
-                  const month = parseInt(parts[1]) - 1; // Month is 0-indexed
-                  const year = parseInt(parts[2]);
-                  const manualParsed = new Date(year, month, day);
-                  if (!isNaN(manualParsed.getTime())) {
-                    tanggalLahir = manualParsed;
-                  }
-                }
+              // Try Excel serial number (numeric)
+              if (!isNaN(input) && input.length < 8) {
+                const excelEpoch = new Date(1899, 11, 30);
+                tanggalLahirDate = new Date(excelEpoch.getTime() + parseFloat(input) * 86400000);
+              }
+              // Try DD-MM-YYYY or DD/MM/YYYY format
+              else if (input.match(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}$/)) {
+                const parts = input.split(/[-\/]/);
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // 0-indexed
+                const year = parseInt(parts[2], 10);
+                tanggalLahirDate = new Date(year, month, day);
+              }
+              // Try YYYY-MM-DD format
+              else if (input.match(/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/)) {
+                tanggalLahirDate = new Date(input);
+              }
+              // Default fallback
+              else {
+                tanggalLahirDate = new Date(input);
+              }
+              
+              // Validate parsed date
+              if (isNaN(tanggalLahirDate.getTime())) {
+                tanggalLahirDate = null;
               }
             } catch (e) {
-              console.log(`Invalid date for row ${i + 2}, using default:`, siswaData.tanggalLahir);
+              tanggalLahirDate = null;
             }
+            
+            if (!tanggalLahirDate) {
+              stats.failed++;
+              errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid "${siswaData.tanggalLahir}" (format: DD-MM-YYYY atau YYYY-MM-DD)`);
+              continue;
+            }
+          } else {
+            stats.failed++;
+            errors.push(`Baris ${i + 2}: Tanggal lahir wajib diisi`);
+            continue;
           }
+          
+          // Build credentials using helper (same logic as guru)
+          let credentials;
+          try {
+            credentials = await buildSiswaCredentials({
+              tanggalLahir: tanggalLahirDate,
+              nis: nisValue,
+              bcrypt
+            });
+          } catch (error) {
+            stats.failed++;
+            errors.push(`Baris ${i + 2}: ${error.message}`);
+            continue;
+          }
+          
+          siswaPassword = credentials.passwordPlain; // YYYY-MM-DD
+          const hashedPassword = credentials.passwordHash;
+
+          // Parse tanggal lahir - REQUIRED field
+          const tanggalLahir = tanggalLahirDate;
 
           // Normalize jenisKelamin
           let normalizedJenisKelamin = 'LAKI_LAKI';
@@ -312,65 +447,129 @@ export async function POST(request) {
             }
           }
 
-          // Create siswa
-          const siswa = await prisma.siswa.create({
-            data: {
-              nisn: nisnValue,
-              nis: nisValue,
-              jenisKelamin: normalizedJenisKelamin,
-              tanggalLahir: tanggalLahir,
-              alamat: siswaData.alamat || '',
-              noTelepon: siswaData.noWhatsApp || null,
-              kelasAngkatan: siswaData.kelasAngkatan?.toString() || null,
-              tahunAjaranMasuk: { connect: { id: tahunAjaranMasukId } },
-              status: 'approved',
-              statusSiswa: 'AKTIF',
-              kelas: {
-                connect: { id: kelasId }
-              },
-              user: {
-                create: {
-                  email: siswaEmail,
-                  password: hashedPassword,
-                  name: siswaData.nama,
-                  role: 'SISWA'
-                }
-              }
-            }
+          // ========== NEW LOGIC: Get or Create Siswa ==========
+          console.log(`🔍 Baris ${i + 2}: Processing siswa NIS=${nisValue}`);
+          
+          const siswaResult = await getOrCreateSiswa({
+            siswaData,
+            nisValue,
+            nisnValue,
+            tahunAjaranMasukId,
+            kelasId,
+            tanggalLahir,
+            normalizedJenisKelamin,
+            siswaEmail,
+            hashedPassword
           });
 
-          // Create OrangTuaSiswa relation if orangTuaId exists
-          if (orangTuaId) {
-            await prisma.orangTuaSiswa.create({
-              data: {
-                orangTuaId: orangTuaId,
-                siswaId: siswa.id,
-                hubungan: orangtuaData.jenisWali || 'Orang Tua'
-              }
+          const siswa = siswaResult.siswa;
+          const siswaIsNew = siswaResult.isNew;
+
+          // Track siswa account if newly created
+          if (siswaIsNew) {
+            newAccounts.push({
+              nama: siswaData.nama,
+              username: nisValue,
+              role: 'SISWA',
+              password: siswaPassword,
+              keterangan: `Kelas: ${siswaData.kelas || '-'}, TA: ${tahunAjaranMasuk?.nama || '-'}`
             });
           }
 
-          // Save new siswa account
-          newAccounts.push({
-            nama: siswaData.nama,
-            role: 'SISWA',
-            email: siswaEmail,
-            password: siswaPassword,
-            keterangan: `Kelas: ${siswaData.kelas}, TA: ${siswaData.tahunAjaranMasuk}`
-          });
+          // ========== NEW LOGIC: Get or Create Orang Tua ==========
+          let orangTuaResult = { orangTua: null, isNew: false, account: null };
+          
+          if (orangtuaData?.nama && autoCreateAccount) {
+            console.log(`🔍 Baris ${i + 2}: Processing orang tua "${orangtuaData.nama}" untuk siswa NIS=${nisValue}`);
+            // Normalize gender wali
+            let normalizedGenderWali = 'LAKI_LAKI';
+            if (orangtuaData.jenisKelamin) {
+              const jkUpper = String(orangtuaData.jenisKelamin).toUpperCase().trim();
+              if (jkUpper === 'PEREMPUAN' || jkUpper === 'P' || jkUpper === 'FEMALE' || jkUpper === 'WANITA') {
+                normalizedGenderWali = 'PEREMPUAN';
+              }
+            }
 
-          // Add orang tua account if created
-          if (orangTuaAccount) {
-            newAccounts.push(orangTuaAccount);
+            // Generate email orang tua
+            let finalEmail = generateOrangTuaEmail(siswaData.nama, nisValue);
+
+            // Build orang tua credentials
+            let ortuCredentials;
+            try {
+              ortuCredentials = await buildOrtuCredentials({
+                tanggalLahirSiswa: tanggalLahirDate,
+                nisSiswa: nisValue,
+                bcrypt
+              });
+            } catch (error) {
+              console.error(`Failed to build ortu credentials for row ${i + 2}:`, error);
+            }
+
+            if (ortuCredentials) {
+              orangTuaResult = await getOrCreateOrtu({
+                orangtuaData,
+                nisValue,
+                nisnValue,
+                normalizedGenderWali,
+                finalEmail,
+                ortuCredentials,
+                siswaData
+              });
+
+              // Track orang tua account if newly created
+              if (orangTuaResult.isNew && orangTuaResult.account) {
+                newAccounts.push(orangTuaResult.account);
+              }
+            }
           }
 
-          stats.success++;
+          // ========== NEW LOGIC: Ensure Relation ==========
+          let relationResult = { isNew: false };
+          
+          if (orangTuaResult.orangTua) {
+            relationResult = await ensureRelation({
+              orangTuaId: orangTuaResult.orangTua.id,
+              siswaId: siswa.id,
+              jenisWali: jenisWali
+            });
+          }
+
+          // ========== Determine Success/Duplicate ==========
+          const hasAnyNewAction = siswaIsNew || orangTuaResult.isNew || relationResult.isNew;
+          
+          if (hasAnyNewAction) {
+            // Minimal ada 1 aksi (create siswa/ortu/relasi) → SUCCESS
+            stats.success++;
+            
+            // Detail info untuk row ini
+            const details = [];
+            if (siswaIsNew) details.push('Siswa baru dibuat');
+            else details.push('Siswa sudah ada');
+            
+            if (orangTuaResult.isNew) details.push('Wali baru dibuat');
+            else if (orangTuaResult.orangTua) details.push('Wali sudah ada');
+            
+            if (relationResult.isNew) details.push('Relasi dibuat');
+            else if (orangTuaResult.orangTua) details.push('Relasi sudah ada');
+            
+            errors.push(`Baris ${i + 2}: ✅ ${details.join(', ')}`);
+          } else {
+            // Semua sudah ada → DUPLICATE
+            markDuplicate(i, 'Siswa, wali, dan relasi sudah ada sebelumnya');
+          }
         }
 
       } catch (error) {
         console.error(`Error processing row ${i + 2}:`, error);
-        stats.failed++;
-        errors.push(`Baris ${i + 2}: ${error.message}`);
+        
+        // Check if this is a Prisma unique constraint error (fallback)
+        if (error.code === 'P2002') {
+          markDuplicate(i, `Data unik sudah terdaftar (${error.meta?.target || 'unknown field'})`);
+        } else {
+          // Error validasi atau error lainnya
+          stats.failed++;
+          errors.push(`Baris ${i + 2}: ${error.message}`);
+        }
       }
 
       // Small delay to prevent connection pool overflow
@@ -380,7 +579,7 @@ export async function POST(request) {
     }
 
     // Invalidate cache if any siswa was successfully imported
-    if (stats.success > 0) {
+    if (stats.success > 0 || stats.createdSiswa > 0) {
       invalidateCache('siswa-list');
       console.log('✅ Cache invalidated for siswa-list');
     }
@@ -389,7 +588,7 @@ export async function POST(request) {
       message: 'Import selesai',
       stats,
       newAccounts,
-      errors: errors.slice(0, 20) // Return max 20 errors
+      errors: errors.slice(0, 50) // Return max 50 errors/details
     });
 
   } catch (error) {

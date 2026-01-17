@@ -33,32 +33,33 @@ const colors = {
 };
 
 // Smart column mapping patterns
-const COLUMN_PATTERNS = {
+// STRICT column aliases - tidak ada tumpang tindih
+const COLUMN_ALIASES = {
   siswa: {
-    nama: ['nama siswa', 'nama lengkap siswa', 'nama', 'name', 'student name', 'namasw', 'namesiswa'],
-    nis: ['nis', 'nomor induk siswa', 'no induk', 'nisp'],
-    nisn: ['nisn', 'nomor induk siswa nasional'],
-    kelas: ['kelas saat ini', 'kelas', 'class', 'tingkat', 'kelasid'],
-    kelasAngkatan: ['diterima di kelas / angkatan', 'diterima di kelas', 'kelas angkatan', 'angkatan masuk'],
-    tahunAjaranMasuk: ['tahun ajaran masuk', 'ta masuk', 'tahun masuk'],
-    jenisKelamin: ['jenis kelamin', 'gender', 'l/p', 'jk', 'jeniskelamin'],
-    tanggalLahir: ['tanggal lahir', 'tgl lahir', 'birth date', 'dob', 'tanggallahir'],
-    tempatLahir: ['tempat lahir', 'place of birth', 'tempatLahir'],
-    alamat: ['alamat', 'address', 'alamat siswa'],
-    noWhatsApp: ['nomor whatsapp siswa', 'wa siswa', 'whatsapp siswa', 'wa'],
+    nama: ['nama lengkap siswa', 'nama siswa'],
+    nisn: ['nisn'],
+    nis: ['nis'],
+    jenisKelamin: ['jenis kelamin', 'jk'], // Untuk siswa, tanpa kata "wali"
+    tanggalLahir: ['tanggal lahir', 'tgl lahir'],
+    tempatLahir: ['tempat lahir'],
+    alamat: ['alamat'],
+    kelas: ['kelas saat ini', 'kelas'],
+    kelasAngkatan: ['diterima di kelas / angkatan', 'diterima di kelas', 'kelas angkatan'],
+    tahunAjaranMasuk: ['tahun ajaran masuk', 'ta masuk'],
+    noWhatsApp: ['nomor whatsapp siswa', 'wa siswa', 'whatsapp siswa'],
   },
   orangtua: {
-    jenisWali: ['jenis wali', 'hubungan', 'status'],
-    nama: ['nama wali', 'nama orang tua', 'nama ortu', 'nama ayah/ibu', 'parent name', 'namaorang', 'namaaortu'],
-    jenisKelamin: ['jenis kelamin wali', 'jk wali', 'jk orang tua'],
-    noHP: ['no hp wali', 'no hp orang tua', 'no hp ortu', 'telepon', 'phone', 'no hp', 'no telepon', 'nohp', 'nohportu'],
+    jenisWali: ['jenis wali', 'hubungan'],
+    nama: ['nama wali'],
+    jenisKelamin: ['jenis kelamin wali', 'jk wali'], // Harus punya kata "wali"
+    noHP: ['no hp wali', 'no hp orang tua', 'no hp ortu'],
   },
   guru: {
-    nama: ['nama lengkap', 'nama guru', 'nama', 'name', 'full name'],
-    nip: ['nip', 'nomor induk pegawai'],
-    jenisKelamin: ['jenis kelamin', 'gender', 'l/p', 'jk'],
-    tanggalLahir: ['tanggal lahir', 'tgl lahir', 'birth date', 'dob'],
-    kelasBinaan: ['kelas binaan', 'kelas', 'pembina kelas'],
+    nama: ['nama lengkap', 'nama guru', 'nama'],
+    nip: ['nip'],
+    jenisKelamin: ['jenis kelamin', 'jk'],
+    tanggalLahir: ['tanggal lahir', 'tgl lahir'],
+    kelasBinaan: ['kelas binaan'],
   }
 };
 
@@ -66,7 +67,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
   const [step, setStep] = useState(1); // 1: Upload, 2: Preview, 3: Processing, 4: Result
   const [file, setFile] = useState(null);
   const [parsedData, setParsedData] = useState([]);
-  const [columnMapping, setColumnMapping] = useState({});
+  const [headerIndexMap, setHeaderIndexMap] = useState({}); // NEW: strict header mapping
   const [previewData, setPreviewData] = useState([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -74,63 +75,48 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
   const [newAccounts, setNewAccounts] = useState([]);
   const fileInputRef = useRef(null);
 
+  // Normalize header: lowercase, trim, hapus karakter non-alfanumerik kecuali spasi
+  const normalizeHeader = (text) => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ') // Multiple spaces jadi satu
+      .replace(/[^a-z0-9\s]/g, ''); // Hapus non-alfanumerik kecuali spasi
+  };
+
+  // Build header index map dari baris pertama Excel
+  const buildHeaderIndexMap = (headers) => {
+    const map = {};
+    const normalizedHeaders = [];
+    
+    headers.forEach((header, index) => {
+      const normalized = normalizeHeader(header);
+      normalizedHeaders.push(normalized);
+      map[normalized] = index;
+    });
+
+    console.log('📋 Headers Normalized:', normalizedHeaders);
+    console.log('📋 Header Index Map:', map);
+    
+    return map;
+  };
+
+  // Helper untuk ambil cell value berdasarkan aliases
+  const getCellValue = (row, headerMap, aliases) => {
+    for (const alias of aliases) {
+      const normalized = normalizeHeader(alias);
+      const colIndex = headerMap[normalized];
+      if (colIndex !== undefined && row[colIndex] !== undefined && row[colIndex] !== '') {
+        return row[colIndex];
+      }
+    }
+    return undefined;
+  };
+
   // Smart column detection with improved normalization
   const detectColumns = (headers) => {
-    const mapping = {};
-    
-    // Normalize: remove spaces, lowercase, remove special chars
-    const normalizeForMatching = (str) => {
-      return str.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-    };
-
-    // Detect siswa columns
-    Object.keys(COLUMN_PATTERNS.siswa).forEach(field => {
-      const patterns = COLUMN_PATTERNS.siswa[field];
-      const matchedIndex = headers.findIndex(header => {
-        const normalizedHeader = normalizeForMatching(header);
-        return patterns.some(pattern => {
-          const normalizedPattern = normalizeForMatching(pattern);
-          return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
-        });
-      });
-      if (matchedIndex !== -1) {
-        mapping[`siswa_${field}`] = headers[matchedIndex];
-      }
-    });
-
-    // Detect orang tua columns
-    Object.keys(COLUMN_PATTERNS.orangtua).forEach(field => {
-      const patterns = COLUMN_PATTERNS.orangtua[field];
-      const matchedIndex = headers.findIndex(header => {
-        const normalizedHeader = normalizeForMatching(header);
-        return patterns.some(pattern => {
-          const normalizedPattern = normalizeForMatching(pattern);
-          return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
-        });
-      });
-      if (matchedIndex !== -1) {
-        mapping[`orangtua_${field}`] = headers[matchedIndex];
-      }
-    });
-
-    // Detect guru columns
-    if (COLUMN_PATTERNS.guru) {
-      Object.keys(COLUMN_PATTERNS.guru).forEach(field => {
-        const patterns = COLUMN_PATTERNS.guru[field];
-        const matchedIndex = headers.findIndex(header => {
-          const normalizedHeader = normalizeForMatching(header);
-          return patterns.some(pattern => {
-            const normalizedPattern = normalizeForMatching(pattern);
-            return normalizedHeader.includes(normalizedPattern) || normalizedPattern.includes(normalizedHeader);
-          });
-        });
-        if (matchedIndex !== -1) {
-          mapping[`guru_${field}`] = headers[matchedIndex];
-        }
-      });
-    }
-
-    return mapping;
+    // TIDAK DIGUNAKAN LAGI - Sekarang pakai buildHeaderIndexMap + getCellValue
+    return {};
   };
 
   // Handle file upload
@@ -158,26 +144,30 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       
-      // Parse with defval to preserve empty cells
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-        defval: "",  // Set empty cells to empty string instead of skipping
-        raw: false    // Convert all values to strings first
+      // Parse sebagai array of arrays (bukan object) untuk akses berdasarkan index
+      const rawData = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 1, // Parse sebagai array of arrays
+        defval: "", // Empty cells jadi empty string
+        raw: false // Semua nilai jadi string
       });
 
-      if (jsonData.length === 0) {
-        alert('File Excel kosong');
+      if (rawData.length < 2) {
+        alert('File Excel harus memiliki minimal 1 baris header dan 1 baris data');
         return;
       }
 
-      // Get headers from first row
-      const headers = Object.keys(jsonData[0]);
+      // Baris pertama = headers
+      const headers = rawData[0];
+      
+      // Build header index map
+      const headerMap = buildHeaderIndexMap(headers);
+      
+      // Data mulai dari baris kedua
+      const dataRows = rawData.slice(1);
 
-      // Auto-detect columns
-      const mapping = detectColumns(headers);
-
-      setParsedData(jsonData);
-      setColumnMapping(mapping);
-      setPreviewData(jsonData.slice(0, 5)); // Show first 5 rows
+      setParsedData(dataRows);
+      setHeaderIndexMap(headerMap);
+      setPreviewData(dataRows.slice(0, 5)); // Preview 5 baris pertama
       setStep(2);
     } catch (error) {
       console.error('Error parsing file:', error);
@@ -192,30 +182,61 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
     setProgress(0);
 
     try {
-      // Process data
+      // Process data menggunakan strict mapping
       const processedData = parsedData.map((row, index) => {
-        const siswaData = {};
-        const orangtuaData = {};
-        const guruData = {};
-
-        // Map fields
-        Object.keys(columnMapping).forEach(key => {
-          const columnName = columnMapping[key];
-          const value = row[columnName];
-
-          if (key.startsWith('siswa_')) {
-            const field = key.replace('siswa_', '');
-            siswaData[field] = value;
-          } else if (key.startsWith('orangtua_')) {
-            const field = key.replace('orangtua_', '');
-            orangtuaData[field] = value;
-          } else if (key.startsWith('guru_')) {
-            const field = key.replace('guru_', '');
-            guruData[field] = value;
+        if (type === 'guru') {
+          const guruData = {
+            nama: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.nama),
+            nip: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.nip),
+            jenisKelamin: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.jenisKelamin),
+            tanggalLahir: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.tanggalLahir),
+            kelasBinaan: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.kelasBinaan),
+          };
+          
+          // Debug log untuk baris pertama
+          if (index === 0) {
+            console.log('🔍 Guru Row 1 Mapped:', guruData);
           }
-        });
+          
+          return { guru: guruData };
+        }
 
-        if (type === 'guru') return { guru: guruData };
+        // Untuk siswa
+        const siswaData = {
+          nama: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.nama),
+          nisn: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.nisn),
+          nis: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.nis),
+          jenisKelamin: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.jenisKelamin),
+          tanggalLahir: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.tanggalLahir),
+          tempatLahir: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.tempatLahir),
+          alamat: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.alamat),
+          kelas: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.kelas),
+          kelasAngkatan: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.kelasAngkatan),
+          tahunAjaranMasuk: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.tahunAjaranMasuk),
+          noWhatsApp: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.noWhatsApp),
+        };
+
+        const orangtuaData = {
+          jenisWali: getCellValue(row, headerIndexMap, COLUMN_ALIASES.orangtua.jenisWali),
+          nama: getCellValue(row, headerIndexMap, COLUMN_ALIASES.orangtua.nama),
+          jenisKelamin: getCellValue(row, headerIndexMap, COLUMN_ALIASES.orangtua.jenisKelamin),
+          noHP: getCellValue(row, headerIndexMap, COLUMN_ALIASES.orangtua.noHP),
+        };
+
+        // Debug log untuk baris pertama
+        if (index === 0) {
+          console.log('🔍 Siswa Row 1 Mapped:', {
+            nisn: siswaData.nisn,
+            nis: siswaData.nis,
+            jenisKelamin: siswaData.jenisKelamin,
+            tanggalLahir: siswaData.tanggalLahir,
+          });
+          console.log('🔍 Orangtua Row 1 Mapped:', {
+            jenisKelamin: orangtuaData.jenisKelamin,
+            nama: orangtuaData.nama,
+          });
+        }
+
         return { siswa: siswaData, orangtua: orangtuaData };
       });
 
@@ -288,7 +309,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
     setStep(1);
     setFile(null);
     setParsedData([]);
-    setColumnMapping({});
+    setHeaderIndexMap({});
     setPreviewData([]);
     setResult(null);
     setNewAccounts([]);
@@ -617,17 +638,17 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
               color: colors.gray[600],
               marginBottom: '12px'
             }}>
-              Mapping Kolom Terdeteksi:
+              Kolom Terdeteksi:
             </h3>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
+              gridTemplateColumns: '1fr 1fr 1fr',
               gap: '12px'
             }}>
-              {Object.keys(columnMapping)
-                .filter(key => type === 'guru' ? key.startsWith('guru_') : true)
-                .map(key => (
-                <div key={key} style={{
+              {Object.keys(headerIndexMap)
+                .sort((a, b) => headerIndexMap[a] - headerIndexMap[b])
+                .map(header => (
+                <div key={header} style={{
                   padding: '12px',
                   background: colors.emerald[50],
                   borderRadius: '8px',
@@ -643,7 +664,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                       color: colors.gray[400],
                       margin: 0
                     }}>
-                      {key.replace('siswa_', 'Siswa: ').replace('orangtua_', 'Ortu: ').replace('guru_', 'Guru: ')}
+                      Kolom {headerIndexMap[header] + 1}
                     </p>
                     <p style={{
                       fontSize: '14px',
@@ -651,7 +672,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                       color: colors.emerald[700],
                       margin: 0
                     }}>
-                      {columnMapping[key]}
+                      {header}
                     </p>
                   </div>
                 </div>
@@ -680,7 +701,9 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
               }}>
                 <thead>
                   <tr style={{ background: colors.gray[100] }}>
-                    {Object.keys(parsedData[0] || {}).map(header => (
+                    {Object.keys(headerIndexMap)
+                      .sort((a, b) => headerIndexMap[a] - headerIndexMap[b]) // Sort by column index
+                      .map(header => (
                       <th key={header} style={{
                         padding: '12px',
                         textAlign: 'left',
@@ -698,14 +721,19 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                     <tr key={idx} style={{
                       borderBottom: `1px solid ${colors.gray[100]}`
                     }}>
-                      {Object.keys(parsedData[0] || {}).map((header, cellIdx) => (
-                        <td key={cellIdx} style={{
-                          padding: '12px',
-                          color: colors.gray[600]
-                        }}>
-                          {row[header] || '-'}
-                        </td>
-                      ))}
+                      {Object.keys(headerIndexMap)
+                        .sort((a, b) => headerIndexMap[a] - headerIndexMap[b])
+                        .map((header, cellIdx) => {
+                          const colIndex = headerIndexMap[header];
+                          return (
+                            <td key={cellIdx} style={{
+                              padding: '12px',
+                              color: colors.gray[600]
+                            }}>
+                              {row[colIndex] || '-'}
+                            </td>
+                          );
+                        })}
                     </tr>
                   ))}
                 </tbody>

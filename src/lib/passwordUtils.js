@@ -327,6 +327,120 @@ export async function buildGuruCredentials({ tanggalLahir, lastUsernameNumber, b
  * @param {string} text - Text to copy
  * @returns {Promise<boolean>} Success status
  */
+/**
+ * Build credentials for siswa (student) account
+ * Username: NIS (student ID)
+ * Password: Birth date in YYYY-MM-DD format
+ * 
+ * @param {Object} params
+ * @param {string|Date} params.tanggalLahir - Birth date (Date object or YYYY-MM-DD string)
+ * @param {string} params.nis - Student ID number
+ * @param {Object} params.bcrypt - bcryptjs module for hashing
+ * @returns {Promise<{username: string, passwordPlain: string, passwordHash: string}>}
+ */
+/**
+ * Helper: Format password siswa dari tanggal lahir YYYY-MM-DD
+ * Input: YYYY-MM-DD string
+ * Output: YYYY-MM-DD (as-is)
+ */
+export function getPasswordSiswa(ymd) {
+  // ymd should already be in YYYY-MM-DD format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+    throw new Error('Invalid date format for siswa password. Expected YYYY-MM-DD');
+  }
+  return ymd; // Return as-is
+}
+
+/**
+ * Helper: Format password orang tua dari tanggal lahir siswa YYYY-MM-DD → DDMMYYYY
+ * Input: YYYY-MM-DD string
+ * Output: DDMMYYYY (no separator)
+ */
+export function getPasswordOrtu(ymd) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+    throw new Error('Invalid date format for ortu password. Expected YYYY-MM-DD');
+  }
+  const [year, month, day] = ymd.split('-');
+  return `${day}${month}${year}`; // DDMMYYYY
+}
+
+export async function buildSiswaCredentials({ tanggalLahir, nis, bcrypt }) {
+  if (!nis) {
+    throw new Error('NIS is required for siswa credentials');
+  }
+
+  const username = nis.toString().trim();
+
+  // Normalize tanggal lahir to YYYY-MM-DD format
+  let dateString;
+  
+  if (tanggalLahir instanceof Date) {
+    // If Date object, extract UTC components to avoid timezone shifts
+    const year = tanggalLahir.getUTCFullYear();
+    const month = String(tanggalLahir.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(tanggalLahir.getUTCDate()).padStart(2, '0');
+    dateString = `${year}-${month}-${day}`;
+  } else if (typeof tanggalLahir === 'string') {
+    dateString = tanggalLahir.trim();
+    
+    // Validate format YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      throw new Error('Invalid birth date format. Expected YYYY-MM-DD');
+    }
+  } else {
+    throw new Error('Birth date is required and must be Date or YYYY-MM-DD string');
+  }
+
+  const passwordPlain = getPasswordSiswa(dateString); // YYYY-MM-DD
+  const passwordHash = await bcrypt.hash(passwordPlain, 10);
+
+  return {
+    username,
+    passwordPlain,
+    passwordHash
+  };
+}
+
+/**
+ * Build credentials untuk Orang Tua
+ * Username: NIS siswa + suffix _WALI (untuk unique constraint)
+ * Password: DDMMYYYY (dari tanggal lahir siswa)
+ */
+export async function buildOrtuCredentials({ tanggalLahirSiswa, nisSiswa, bcrypt }) {
+  if (!nisSiswa) {
+    throw new Error('NIS siswa is required for orang tua credentials');
+  }
+
+  const username = nisSiswa.toString().trim() + '_WALI'; // Username = NIS_WALI
+
+  // Normalize tanggal lahir siswa to YYYY-MM-DD format
+  let dateString;
+  
+  if (tanggalLahirSiswa instanceof Date) {
+    const year = tanggalLahirSiswa.getUTCFullYear();
+    const month = String(tanggalLahirSiswa.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(tanggalLahirSiswa.getUTCDate()).padStart(2, '0');
+    dateString = `${year}-${month}-${day}`;
+  } else if (typeof tanggalLahirSiswa === 'string') {
+    dateString = tanggalLahirSiswa.trim();
+    
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      throw new Error('Invalid birth date format. Expected YYYY-MM-DD');
+    }
+  } else {
+    throw new Error('Birth date is required and must be Date or YYYY-MM-DD string');
+  }
+
+  const passwordPlain = getPasswordOrtu(dateString); // DDMMYYYY
+  const passwordHash = await bcrypt.hash(passwordPlain, 10);
+
+  return {
+    username,
+    passwordPlain,
+    passwordHash
+  };
+}
+
 export async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
