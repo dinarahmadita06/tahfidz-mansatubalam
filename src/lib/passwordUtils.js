@@ -267,13 +267,59 @@ export async function generateNextTeacherUsername(prisma) {
       nextNumber = isNaN(lastNumber) ? 1 : lastNumber + 1;
     }
     
-    // Format as G + 3-digit padded number
+    // Format as G + 3-digit padded number (ALWAYS UPPERCASE)
     return `G${nextNumber.toString().padStart(3, '0')}`;
   } catch (error) {
     console.error('Error generating next teacher username:', error);
     // Fallback to G001 if there's an error
     return 'G001';
   }
+}
+
+/**
+ * Build guru credentials (username + password)
+ * Single source of truth for credential generation
+ * 
+ * @param {Object} params
+ * @param {string|Date} params.tanggalLahir - Birth date (Date object or YYYY-MM-DD string)
+ * @param {number} params.lastUsernameNumber - Last username number for batch generation
+ * @param {import('bcryptjs')} params.bcrypt - bcrypt instance for hashing
+ * @returns {Promise<{username: string, passwordPlain: string, passwordHash: string}>}
+ */
+export async function buildGuruCredentials({ tanggalLahir, lastUsernameNumber, bcrypt }) {
+  // Generate username: G + 3-digit padded number (ALWAYS UPPERCASE)
+  const username = `G${(lastUsernameNumber + 1).toString().padStart(3, '0')}`;
+  
+  // Normalize tanggal lahir to YYYY-MM-DD format (date-only, no timezone)
+  let dateString;
+  if (tanggalLahir instanceof Date) {
+    const year = tanggalLahir.getUTCFullYear();
+    const month = String(tanggalLahir.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(tanggalLahir.getUTCDate()).padStart(2, '0');
+    dateString = `${year}-${month}-${day}`;
+  } else if (typeof tanggalLahir === 'string') {
+    // Already YYYY-MM-DD format
+    dateString = tanggalLahir.trim();
+  } else {
+    throw new Error('Invalid tanggalLahir format');
+  }
+  
+  // Validate YYYY-MM-DD format
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    throw new Error(`Invalid date format: ${dateString}. Expected YYYY-MM-DD`);
+  }
+  
+  // Password plain text = YYYY-MM-DD (date-only)
+  const passwordPlain = dateString;
+  
+  // Hash password for storage
+  const passwordHash = await bcrypt.hash(passwordPlain, 10);
+  
+  return {
+    username,       // e.g., "G008" (UPPERCASE)
+    passwordPlain,  // e.g., "1997-06-17" (YYYY-MM-DD)
+    passwordHash    // bcrypt hash
+  };
 }
 
 /**

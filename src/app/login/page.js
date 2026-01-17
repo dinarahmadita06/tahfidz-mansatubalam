@@ -157,7 +157,7 @@ export default function LoginPage() {
               SIMTAQ
             </h1>
             <p className="text-gray-600 text-base">
-              Sistem Informasi Manajemen Tahfidz Qur'an
+              Sistem Informasi Manajemen Tahfidz Qur&#39;an
             </p>
           </div>
 
@@ -219,6 +219,7 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+
               </div>
 
               {/* Remember Me Checkbox */}

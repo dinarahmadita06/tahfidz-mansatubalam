@@ -115,8 +115,29 @@ export async function POST(request) {
 
         if (namaWali) {
           // Default password according to SIMTAQ standard: NISN-YYYY
-          const bDate = new Date(tanggalLahir);
-          const bYear = !isNaN(bDate.getTime()) ? bDate.getFullYear() : null;
+          // Parse tanggalLahir safely to avoid timezone shift
+          let bYear = null;
+          try {
+            const dateStr = String(tanggalLahir).trim();
+            let parsedDate = null;
+            
+            // Try different date formats
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+              // YYYY-MM-DD format
+              const [y, m, d] = dateStr.split('-').map(Number);
+              parsedDate = new Date(Date.UTC(y, m - 1, d));
+            } else {
+              // Let JavaScript try to parse it
+              parsedDate = new Date(tanggalLahir);
+            }
+            
+            if (!isNaN(parsedDate.getTime())) {
+              bYear = parsedDate.getUTCFullYear();
+            }
+          } catch (e) {
+            console.error('Error parsing tanggalLahir for password:', e);
+          }
+          
           const passwordOrtu = bYear ? `${nisn}-${bYear}` : nisn;
           const hashedPasswordOrtu = await bcrypt.hash(passwordOrtu, 10);
 
@@ -182,13 +203,44 @@ export async function POST(request) {
         // Default password is NISN
         const hashedPasswordSiswa = await bcrypt.hash(nisn, 10);
 
+        // Parse tanggalLahir to Date object at UTC midnight (no timezone shift)
+        let tanggalLahirDate = null;
+        try {
+          const dateStr = String(tanggalLahir).trim();
+          
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            // YYYY-MM-DD format - create at UTC midnight
+            const [y, m, d] = dateStr.split('-').map(Number);
+            tanggalLahirDate = new Date(Date.UTC(y, m - 1, d));
+          } else {
+            // Other formats - try to parse then convert to UTC midnight
+            const tempDate = new Date(tanggalLahir);
+            if (!isNaN(tempDate.getTime())) {
+              const y = tempDate.getFullYear();
+              const m = tempDate.getMonth();
+              const d = tempDate.getDate();
+              tanggalLahirDate = new Date(Date.UTC(y, m, d));
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing tanggalLahir:', e);
+        }
+
+        if (!tanggalLahirDate) {
+          results.failed.push({
+            data,
+            error: `Tanggal lahir tidak valid: ${tanggalLahir}`
+          });
+          continue;
+        }
+
         // Create siswa
         const siswa = await prisma.siswa.create({
           data: {
             nisn,
             nis,
             jenisKelamin: normGkSiswa,
-            tanggalLahir: new Date(tanggalLahir),
+            tanggalLahir: tanggalLahirDate,
             alamat: alamat || '',
             noTelepon: noWhatsApp ? String(noWhatsApp) : null,
             kelasAngkatan: kelasAngkatan ? String(kelasAngkatan) : null,
