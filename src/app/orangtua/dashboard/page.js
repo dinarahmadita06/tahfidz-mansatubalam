@@ -104,22 +104,38 @@ export default function OrangtuaDashboardPage() {
   useEffect(() => {
     setIsHydrated(true);
 
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Selamat Pagi');
-    else if (hour < 15) setGreeting('Selamat Siang');
-    else if (hour < 18) setGreeting('Selamat Sore');
-    else setGreeting('Selamat Malam');
-
-    const updateTime = () => {
-      const now = new Date();
-      const options = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      };
-      setCurrentTime(now.toLocaleDateString('id-ID', options));
+    const updateTime = async () => {
+      try {
+        const res = await fetch('/api/time');
+        const data = await res.json();
+        setGreeting(data.greeting);
+        setCurrentTime(data.date);
+      } catch (error) {
+        console.error('Failed to fetch time:', error);
+        // Fallback ke client-side dengan explicit WIB timezone
+        const now = new Date();
+        const hour = parseInt(new Intl.DateTimeFormat('id-ID', {
+          hour: 'numeric',
+          timeZone: 'Asia/Jakarta',
+          hour12: false
+        }).format(now));
+        
+        if (hour < 12) setGreeting('Selamat Pagi');
+        else if (hour < 15) setGreeting('Selamat Siang');
+        else if (hour < 18) setGreeting('Selamat Sore');
+        else setGreeting('Selamat Malam');
+        
+        const dateString = new Intl.DateTimeFormat('id-ID', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'Asia/Jakarta'
+        }).format(now);
+        setCurrentTime(dateString);
+      }
     };
+    
     updateTime();
   }, []);
 

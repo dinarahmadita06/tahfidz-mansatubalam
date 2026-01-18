@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { BookOpen, Award, Target, TrendingUp, Calendar, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
+import { formatDateWIB } from '@/lib/dateUtils';
 
 // Dynamically import layout to reduce initial bundle size
 const SiswaLayout = dynamic(() => import('@/components/layout/SiswaLayout'), {
@@ -219,7 +220,7 @@ export default function SiswaDashboard() {
                     return (
                       <tr key={item.id} className="hover:bg-gray-50">
                         <td className="px-3 py-2 text-gray-900">
-                          {new Date(item.tanggal).toLocaleDateString('id-ID')}
+                          {formatDateWIB(item.tanggal, { day: 'numeric', month: 'short', year: 'numeric' })}
                         </td>
                         <td className="px-3 py-2 text-gray-900 truncate max-w-[100px]">
                           {item.surah.namaLatin}

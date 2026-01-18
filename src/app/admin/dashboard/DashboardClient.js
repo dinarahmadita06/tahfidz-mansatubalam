@@ -170,15 +170,40 @@ function DashboardHeader({ userName }) {
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
-    // Logic that depends on browser/time runs only on client
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Selamat Pagi');
-    else if (hour < 15) setGreeting('Selamat Siang');
-    else if (hour < 18) setGreeting('Selamat Sore');
-    else setGreeting('Selamat Malam');
-
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    setCurrentDate(new Date().toLocaleDateString('id-ID', options));
+    // Fetch time dari API untuk konsistensi timezone WIB
+    const fetchTime = async () => {
+      try {
+        const res = await fetch('/api/time');
+        const data = await res.json();
+        setGreeting(data.greeting);
+        setCurrentDate(data.date);
+      } catch (error) {
+        console.error('Failed to fetch time:', error);
+        // Fallback ke client-side dengan explicit WIB timezone
+        const now = new Date();
+        const hour = parseInt(new Intl.DateTimeFormat('id-ID', {
+          hour: 'numeric',
+          timeZone: 'Asia/Jakarta',
+          hour12: false
+        }).format(now));
+        
+        if (hour < 12) setGreeting('Selamat Pagi');
+        else if (hour < 15) setGreeting('Selamat Siang');
+        else if (hour < 18) setGreeting('Selamat Sore');
+        else setGreeting('Selamat Malam');
+        
+        const dateString = new Intl.DateTimeFormat('id-ID', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'Asia/Jakarta'
+        }).format(now);
+        setCurrentDate(dateString);
+      }
+    };
+    
+    fetchTime();
   }, []);
 
   const getFirstName = (fullName) => {
