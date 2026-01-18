@@ -28,10 +28,19 @@ export default function SertifikatPage() {
 
   if (!mounted) return null;
 
+  // Helper function untuk styling tab yang konsisten
+  const getTabClass = (isActive) => {
+    const base = 'h-10 px-4 gap-2 inline-flex items-center rounded-xl text-sm font-semibold transition duration-200';
+    if (isActive) {
+      return `${base} bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 text-white border border-transparent shadow-sm`;
+    }
+    return `${base} bg-white text-slate-700 border border-slate-200/70 hover:bg-emerald-50/60 hover:text-emerald-700 hover:border-emerald-200/70`;
+  };
+
   const tabs = [
-    { id: 'non-award', label: 'Non-Award (Lulus Tasmi)', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { id: 'award', label: 'Award Wisuda', icon: Trophy, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { id: 'templates', label: 'Template Sertifikat', icon: Layout, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { id: 'non-award', label: 'Non-Award (Lulus Tasmi)', icon: FileText },
+    { id: 'award', label: 'Award Wisuda', icon: Trophy },
+    { id: 'templates', label: 'Template Sertifikat', icon: Layout },
   ];
 
   return (
@@ -58,21 +67,18 @@ export default function SertifikatPage() {
           </div>
         </div>
 
-        {/* Tabs Navigation - Modern Style */}
-        <div className="bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-emerald-100 shadow-sm inline-flex w-full sm:w-auto overflow-x-auto no-scrollbar">
+        {/* Tabs Navigation */}
+        <div className="bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-emerald-100 shadow-sm inline-flex w-full sm:w-auto overflow-x-auto no-scrollbar gap-1">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-                  isActive 
-                    ? `bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow` 
-                    : 'bg-white/60 text-slate-600 hover:bg-white/80'
-                }`}
+                className={getTabClass(isActive)}
               >
-                <tab.icon size={18} className={isActive ? 'text-white' : tab.color} />
+                <Icon size={18} />
                 {tab.label}
               </button>
             );

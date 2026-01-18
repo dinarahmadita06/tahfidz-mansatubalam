@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, 
   Filter, 
@@ -16,12 +16,43 @@ import {
   Calendar,
   Layers,
   Inbox,
-  Settings
+  Settings,
+  CheckSquare,
+  Square,
+  FileArchive
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CertificatePreviewModal from './CertificatePreviewModal';
 import EmptyState from '@/components/shared/EmptyState';
 import CertificateSettingsModal from './CertificateSettingsModal';
+
+// Helper functions untuk badge styling
+const getPredikatBadgeClass = (predikat) => {
+  const mapping = {
+    'MUMTAZ': 'bg-emerald-100/60 text-emerald-700 border-emerald-200/60',
+    'JAYYID_JIDDAN': 'bg-sky-100/60 text-sky-700 border-sky-200/60',
+    'JAYYID': 'bg-indigo-100/60 text-indigo-700 border-indigo-200/60',
+    'MAQBUL': 'bg-amber-100/60 text-amber-800 border-amber-200/60'
+  };
+  return mapping[predikat] || 'bg-slate-100/60 text-slate-700 border-slate-200/60';
+};
+
+const getStatusBadgeClass = (hasPublished) => {
+  return hasPublished 
+    ? 'bg-emerald-100/60 text-emerald-700 border-emerald-200/60'
+    : 'bg-slate-100/60 text-slate-700 border-slate-200/60';
+};
+
+const actionBtnClass = (variant) => {
+  const base = 'h-9 w-9 rounded-xl flex items-center justify-center transition border';
+  const variants = {
+    preview: 'bg-sky-50 text-sky-700 border-sky-200/70 hover:bg-sky-100',
+    download: 'bg-emerald-50 text-emerald-700 border-emerald-200/70 hover:bg-emerald-100',
+    print: 'bg-emerald-50 text-emerald-700 border-emerald-200/70 hover:bg-emerald-100',
+    delete: 'bg-rose-50 text-rose-700 border-rose-200/70 hover:bg-rose-100'
+  };
+  return `${base} ${variants[variant] || 'bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100'}`;
+};
 
 export default function NonAwardTab() {
   const [results, setResults] = useState([]);
@@ -30,6 +61,7 @@ export default function NonAwardTab() {
   const [certDate, setCertDate] = useState(new Date().toISOString().split('T')[0]);
   const [filters, setFilters] = useState({
     query: '',
+    jenjang: '', // Filter jenjang
     kelasId: '',
     isPassed: 'true',
     assessed: 'true',
@@ -38,11 +70,57 @@ export default function NonAwardTab() {
   });
   const [kelas, setKelas] = useState([]);
   const [previewData, setPreviewData] = useState(null);
+  
+  // Bulk generate states
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [skipPublished, setSkipPublished] = useState(true);
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, success: 0, failed: 0, skipped: 0 });
+  const [bulkErrors, setBulkErrors] = useState([]);
+  const [bulkSummary, setBulkSummary] = useState(null);
+
+  // Filter kelas berdasarkan jenjang
+  const filteredKelasByJenjang = React.useMemo(() => {
+    // Jika "Semua Jenjang" dipilih, tampilkan semua kelas
+    if (!filters.jenjang || filters.jenjang === '') return kelas;
+    
+    // Jika jenjang spesifik dipilih, filter sesuai jenjang
+    const filtered = kelas.filter(k => k.nama?.startsWith(filters.jenjang));
+    console.log(`🔍 Filter Jenjang "${filters.jenjang}":`, filtered.length, 'kelas');
+    return filtered;
+  }, [kelas, filters.jenjang]);
+
+  // Reset kelasId ketika jenjang berubah (opsional)
+  React.useEffect(() => {
+    // Hanya reset jika bukan "Semua Jenjang"
+    if (filters.jenjang && filters.jenjang !== '') {
+      setFilters(prev => ({ ...prev, kelasId: '' }));
+    }
+  }, [filters.jenjang]);
 
   const fetchResults = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams(filters);
+      // Build params - JANGAN kirim kelasId jika "Semua Kelas" dipilih
+      const params = new URLSearchParams();
+      
+      if (filters.query) params.append('query', filters.query);
+      if (filters.isPassed) params.append('isPassed', filters.isPassed);
+      if (filters.assessed) params.append('assessed', filters.assessed);
+      if (filters.periode) params.append('periode', filters.periode);
+      if (filters.jenisKelamin) params.append('jenisKelamin', filters.jenisKelamin);
+      
+      // Filter berdasarkan jenjang (jika dipilih)
+      if (filters.jenjang) {
+        params.append('jenjang', filters.jenjang);
+      }
+      
+      // Hanya kirim kelasId jika ada dan bukan "Semua Kelas" (empty string)
+      if (filters.kelasId && filters.kelasId !== '') {
+        params.append('kelasId', filters.kelasId);
+      }
+
       const res = await fetch(`/api/admin/tasmi/results?${params.toString()}`);
       const data = await res.json();
       if (res.ok) {
@@ -57,19 +135,25 @@ export default function NonAwardTab() {
 
   const fetchKelas = async () => {
     try {
-      const res = await fetch('/api/admin/kelas');
+      // Ambil dari master kelas, bukan dari tasmi
+      const res = await fetch('/api/kelas');
       const data = await res.json();
+      
       if (res.ok) {
-        setKelas(data.kelas || []);
+        // Handle berbagai format response
+        const kelasList = data.kelas || data.data || data || [];
+        console.log('📚 Master Kelas loaded:', kelasList.length, 'kelas');
+        setKelas(Array.isArray(kelasList) ? kelasList : []);
       }
     } catch (error) {
-      console.error('Error fetching kelas:', error);
+      console.error('❌ Error fetching kelas:', error);
+      toast.error('Gagal memuat data kelas');
     }
   };
 
   useEffect(() => {
     fetchResults();
-  }, [filters.isPassed, filters.assessed, filters.kelasId, filters.periode, filters.jenisKelamin]);
+  }, [filters.isPassed, filters.assessed, filters.kelasId, filters.jenjang, filters.periode, filters.jenisKelamin]);
 
   useEffect(() => {
     fetchKelas();
@@ -98,211 +182,290 @@ export default function NonAwardTab() {
     window.open(url, '_blank');
   };
 
+  // Bulk generate functions
+  const handleSelectAll = () => {
+    if (selectedIds.length === results.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(results.map(r => r.id));
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(sid => sid !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const handleBulkGenerate = async () => {
+    setBulkGenerating(true);
+    setBulkProgress({ current: 0, total: 0 });
+    setBulkErrors([]);
+    setBulkSummary(null);
+
+    try {
+      const payload = {
+        filters: {
+          query: filters.query,
+          jenjang: filters.jenjang,
+          kelasId: filters.kelasId,
+          isPassed: filters.isPassed,
+          assessed: filters.assessed,
+          periode: filters.periode,
+          jenisKelamin: filters.jenisKelamin
+        },
+        skipPublished,
+        selectedIds: selectedIds.length > 0 ? selectedIds : undefined,
+        printDate: certDate,
+      };
+
+      const res = await fetch('/api/admin/certificates/tasmi/bulk-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Gagal generate sertifikat');
+      }
+
+      // Get summary from headers
+      const successCount = parseInt(res.headers.get('X-Success-Count') || '0');
+      const failedCount = parseInt(res.headers.get('X-Failed-Count') || '0');
+      const skippedCount = parseInt(res.headers.get('X-Skipped-Count') || '0');
+      const totalCount = parseInt(res.headers.get('X-Total-Count') || '0');
+
+      setBulkSummary({
+        success: successCount,
+        failed: failedCount,
+        skipped: skippedCount,
+        total: totalCount,
+      });
+
+      // Check if response is JSON (all skipped) or ZIP file
+      const contentType = res.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        toast.info(data.message || 'Semua sertifikat sudah terbit');
+        setShowBulkModal(false);
+        return;
+      }
+
+      // Download ZIP file
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Get filename from header or use default
+      const disposition = res.headers.get('Content-Disposition');
+      let filename = 'sertifikat-tasmi.zip';
+      if (disposition && disposition.includes('filename=')) {
+        filename = disposition.split('filename=')[1].replace(/"/g, '');
+      }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(
+        `Generate selesai! Berhasil: ${successCount}, Gagal: ${failedCount}, Dilewati: ${skippedCount}`
+      );
+      setShowBulkModal(false);
+      setSelectedIds([]);
+      fetchResults();
+
+    } catch (error) {
+      console.error('Bulk generate error:', error);
+      toast.error(error.message || 'Gagal generate sertifikat');
+    } finally {
+      setBulkGenerating(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Filters Card - Modern Glass Effect */}
-      <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 p-6 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Search Input */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
-              Cari Siswa
-            </label>
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-              <input
-                type="text"
-                placeholder="Cari nama atau NISN..."
-                value={filters.query}
-                onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-                onKeyDown={(e) => e.key === 'Enter' && fetchResults()}
-                className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-50/50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white/50 hover:bg-white/80 text-sm"
-              />
-            </div>
+    <div className="space-y-4">
+      {/* Quick Filter Bar */}
+      <div className="bg-white rounded-lg border border-gray-200 p-3">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Cari nama atau NIS..."
+              value={filters.query}
+              onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && fetchResults()}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+            />
           </div>
           
-          {/* Filter Kelas */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
-              Kelas
-            </label>
-            <div className="relative">
-              <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-              <select
-                value={filters.kelasId}
-                onChange={(e) => setFilters({ ...filters, kelasId: e.target.value })}
-                className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-50/50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white/50 hover:bg-white/80 text-sm appearance-none cursor-pointer"
-              >
-                <option value="">Semua Kelas</option>
-                {kelas.map((k) => (
-                  <option key={k.id} value={k.id}>{k.nama}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <select
+            value={filters.jenjang}
+            onChange={(e) => setFilters({ ...filters, jenjang: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+          >
+            <option value="">Jenjang</option>
+            <option value="X">X</option>
+            <option value="XI">XI</option>
+            <option value="XII">XII</option>
+          </select>
 
-          {/* Filter Tahun */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
-              Tahun Ujian
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-              <select
-                value={filters.periode}
-                onChange={(e) => setFilters({ ...filters, periode: e.target.value })}
-                className="w-full pl-10 pr-4 py-2.5 border-2 border-emerald-50/50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white/50 hover:bg-white/80 text-sm appearance-none cursor-pointer"
-              >
-                <option value="">Semua Tahun</option>
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const year = new Date().getFullYear() - i;
-                  return <option key={year} value={year}>{year}</option>;
-                })}
-              </select>
-            </div>
-          </div>
+          <select
+            value={filters.kelasId}
+            onChange={(e) => setFilters({ ...filters, kelasId: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+          >
+            <option value="">Kelas</option>
+            {filteredKelasByJenjang.map((k) => (
+              <option key={k.id} value={k.id}>{k.nama}</option>
+            ))}
+          </select>
 
-          {/* Filter Gender & Reset */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
-              Opsi Cetak
-            </label>
-            <div className="flex gap-2">
-              <div className="flex items-center gap-2 px-3 py-2 bg-white/50 border-2 border-emerald-50 rounded-xl flex-1 shadow-sm">
-                <Calendar size={16} className="text-emerald-600" />
-                <input 
-                  type="date" 
-                  value={certDate}
-                  onChange={(e) => setCertDate(e.target.value)}
-                  className="text-[10px] font-black text-slate-600 outline-none bg-transparent w-full"
-                />
-              </div>
-              
-              <button
-                onClick={() => setIsSettingsModalOpen(true)}
-                className="p-2.5 bg-white text-slate-600 rounded-xl hover:bg-slate-50 border-2 border-slate-100 shadow-sm transition-all active:scale-95"
-                title="Pengaturan TTD"
-              >
-                <Settings size={18} />
-              </button>
+          <select
+            value={filters.periode}
+            onChange={(e) => setFilters({ ...filters, periode: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+          >
+            <option value="">Tahun</option>
+            {Array.from({ length: 5 }).map((_, i) => {
+              const year = new Date().getFullYear() - i;
+              return <option key={year} value={year}>{year}</option>;
+            })}
+          </select>
 
-              <button 
-                onClick={fetchResults}
-                disabled={loading}
-                className="p-2.5 bg-emerald-50 text-emerald-600 border-2 border-emerald-100 rounded-xl hover:bg-emerald-100 hover:border-emerald-200 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-                title="Refresh Data"
-              >
-                <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-              </button>
-            </div>
-          </div>
+          <input 
+            type="date" 
+            value={certDate}
+            onChange={(e) => setCertDate(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+          />
+
+          <button
+            onClick={() => setIsSettingsModalOpen(true)}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all"
+            title="Pengaturan"
+          >
+            <Settings size={18} />
+          </button>
+
+          <button 
+            onClick={fetchResults}
+            disabled={loading}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all"
+            title="Refresh"
+          >
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          </button>
         </div>
       </div>
 
-      {/* Table Card - Glass Effect */}
-      <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-emerald-100/60 overflow-hidden shadow-sm">
+
+
+      {/* Tabel Data */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="bg-emerald-50/50 border-b border-emerald-100/40">
-                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Siswa</th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider">Kelas</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-800 uppercase tracking-wider">Juz Ditasmi</th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider">Tanggal Ujian</th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider">Nilai / Predikat</th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-emerald-800 uppercase tracking-wider">Aksi</th>
+              <tr className="bg-emerald-50/70 border-b border-emerald-100/70">
+                <th className="px-3 py-2 text-center w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === results.length && results.length > 0}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                    title="Pilih Semua"
+                  />
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-slate-700 uppercase tracking-wide">Siswa</th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Kelas</th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Juz</th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Tanggal</th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Nilai</th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Status</th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-emerald-100/30">
+            <tbody className="divide-y divide-gray-100">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan="7" className="px-6 py-6 bg-gray-50/30"></td>
+                    <td colSpan="8" className="px-6 py-4 bg-gray-50"></td>
                   </tr>
                 ))
               ) : results.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12">
-                    <EmptyState
-                      title="Tidak ada data hasil tasmi"
-                      description="Tidak ditemukan data siswa yang lulus tasmi sesuai dengan filter saat ini."
-                      icon={Inbox}
-                      actionLabel="Reset Filter"
-                      onAction={() => setFilters({ query: '', kelasId: '', isPassed: 'true', assessed: 'true', periode: '', jenisKelamin: '' })}
-                    />
-                  </td>
+                  <td colSpan="8" className="px-6 py-8 text-center text-gray-400 text-sm">Tidak ada data</td>
                 </tr>
               ) : (
-                results.map((tasmi, index) => (
-                  <tr key={tasmi.id} className={`hover:bg-emerald-50/50 transition-colors group ${index % 2 === 0 ? 'bg-white/40' : 'bg-emerald-50/10'}`}>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold shadow-sm">
-                          {(tasmi.siswa?.user?.name || 'S').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm">{tasmi.siswa?.user?.name || '-'}</p>
-                          <p className="text-xs text-gray-500 font-medium">{tasmi.siswa?.nisn || '-'}</p>
-                        </div>
-                      </div>
+                results.map((tasmi, idx) => (
+                  <tr key={tasmi.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'} hover:bg-emerald-50/40 border-b border-slate-100`}>
+                    <td className="px-3 py-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(tasmi.id)}
+                        onChange={() => handleSelectOne(tasmi.id)}
+                        className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                      />
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100/50 text-emerald-700 text-xs font-bold border border-emerald-100/50">
-                        <GraduationCap size={14} />
+                    <td className="px-4 py-2 text-gray-900">{tasmi.siswa?.user?.name || '-'}</td>
+                    <td className="px-4 py-2 text-center">
+                      <span className="inline-block px-2 py-1 rounded-full bg-emerald-100/60 text-emerald-700 border border-emerald-200/60 text-xs font-medium">
                         {tasmi.siswa?.kelas?.nama || '-'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                        Juz {tasmi.juzYangDitasmi}
-                      </span>
+                    <td className="px-4 py-2 text-center text-gray-700">Juz {tasmi.juzYangDitasmi}</td>
+                    <td className="px-4 py-2 text-center text-gray-600 text-xs">
+                      {tasmi.tanggalUjian ? new Date(tasmi.tanggalUjian).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
                     </td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600 font-medium">
-                      {tasmi.tanggalUjian ? new Date(tasmi.tanggalUjian).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="inline-flex flex-col items-center min-w-[80px]">
-                        <span className="text-lg font-black text-emerald-600 leading-none">{tasmi.nilaiAkhir || '-'}</span>
-                        <span className="text-[10px] font-black uppercase text-slate-400 mt-1 tracking-tighter">{tasmi.predikat || '-'}</span>
+                    <td className="px-4 py-2 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="font-semibold text-gray-900">{tasmi.nilaiAkhir || '-'}</span>
+                        {tasmi.predikat && (
+                          <span className={`inline-block px-2 py-0.5 rounded-full border text-xs ${getPredikatBadgeClass(tasmi.predikat)}`}>
+                            {tasmi.predikat.replace('_', ' ')}
+                          </span>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      {tasmi.certificate ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-100/80 text-blue-700 text-[10px] font-bold uppercase tracking-wider border border-blue-200 shadow-sm">
-                          <FileCheck size={12} strokeWidth={3} /> Terbit
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider border border-slate-200">
-                          Draft
-                        </span>
-                      )}
+                    <td className="px-4 py-2 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium ${getStatusBadgeClass(tasmi.certificate)}`}>
+                        {tasmi.certificate ? (
+                          <><FileCheck size={10} /> TERBIT</>
+                        ) : (
+                          'DRAFT'
+                        )}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-4 py-2 text-center">
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => handlePreview(tasmi.id)}
-                          className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all shadow-sm hover:shadow-md bg-emerald-50/50 border border-emerald-100 active:scale-90"
-                          title="Preview Sertifikat"
+                          className={actionBtnClass('preview')}
+                          title="Preview"
                         >
-                          <Eye size={18} />
+                          <Eye size={14} />
                         </button>
-                        
                         {!tasmi.certificate ? (
                           <button
                             onClick={() => handleGenerate(tasmi.id)}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-md hover:shadow-emerald-200 active:scale-95 group"
+                            className="px-2 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded transition-all"
                           >
-                            <FileCheck size={14} className="group-hover:rotate-12 transition-transform" />
                             Generate
                           </button>
                         ) : (
                           <button
                             onClick={() => handlePreview(tasmi.id, true)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-xl transition-all shadow-sm hover:shadow-md bg-blue-50/50 border border-blue-100 active:scale-90"
-                            title="Download/Cetak"
+                            className={actionBtnClass('print')}
+                            title="Download"
                           >
-                            <Printer size={18} />
+                            <Printer size={14} />
                           </button>
                         )}
                       </div>
@@ -313,6 +476,24 @@ export default function NonAwardTab() {
             </tbody>
           </table>
         </div>
+
+        {/* Footer Toolbar */}
+        {results.length > 0 && (
+          <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
+            {selectedIds.length > 0 && (
+              <span className="text-sm text-gray-600 mr-auto">
+                <span className="font-medium text-orange-600">{selectedIds.length}</span> dipilih
+              </span>
+            )}
+            <button
+              onClick={() => setShowBulkModal(true)}
+              disabled={results.length === 0}
+              className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-all disabled:opacity-50"
+            >
+              Generate Semua
+            </button>
+          </div>
+        )}
       </div>
 
       {previewData && (
@@ -321,6 +502,118 @@ export default function NonAwardTab() {
           htmlTemplate={previewData.htmlTemplate} 
           onClose={() => setPreviewData(null)} 
         />
+      )}
+
+      {/* Bulk Generate Confirmation Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border-2 border-orange-100">
+            <div className="p-6 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-orange-100/50">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg">
+                  <FileArchive className="text-white" size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Generate Sertifikat Bulk</h3>
+                  <p className="text-sm text-gray-600">Konfirmasi pembuatan sertifikat massal</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {bulkGenerating ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-200 border-t-orange-600"></div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-gray-900">Sedang generate sertifikat...</p>
+                    {bulkSummary && bulkSummary.total > 0 && (
+                      <div className="mt-3 space-y-1">
+                        <p className="text-xs text-gray-600">Total: {bulkSummary.total}</p>
+                        <p className="text-xs text-green-600">✓ Berhasil: {bulkSummary.success}</p>
+                        <p className="text-xs text-red-600">✗ Gagal: {bulkSummary.failed}</p>
+                        <p className="text-xs text-yellow-600">⊘ Dilewati: {bulkSummary.skipped}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 transition-all duration-300"
+                      style={{ width: '100%' }}
+                    ></div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                    <p className="text-sm text-gray-700">
+                      {selectedIds.length > 0 ? (
+                        <>
+                          Akan generate <span className="font-bold text-orange-700">{selectedIds.length} sertifikat</span> yang dipilih
+                        </>
+                      ) : (
+                        <>
+                          Akan generate <span className="font-bold text-orange-700">semua sertifikat</span> sesuai filter saat ini
+                        </>
+                      )}
+                    </p>
+                  </div>
+
+                  <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={skipPublished}
+                      onChange={(e) => setSkipPublished(e.target.checked)}
+                      className="w-5 h-5 text-orange-600 bg-white border-2 border-orange-300 rounded focus:ring-2 focus:ring-orange-500"
+                    />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Lewati yang sudah TERBIT</p>
+                      <p className="text-xs text-gray-600">Hanya generate sertifikat yang belum diterbitkan</p>
+                    </div>
+                  </label>
+
+                  {bulkErrors.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                      <p className="text-sm font-bold text-red-900 mb-2">Error pada {bulkErrors.length} sertifikat:</p>
+                      <ul className="text-xs text-red-700 space-y-1 max-h-32 overflow-y-auto">
+                        {bulkErrors.slice(0, 10).map((err, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-red-500">•</span>
+                            <span>{err.siswa}: {err.error}</span>
+                          </li>
+                        ))}
+                        {bulkErrors.length > 10 && (
+                          <li className="text-red-600 font-bold">+ {bulkErrors.length - 10} error lainnya</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {!bulkGenerating && (
+              <div className="p-6 border-t border-gray-200 flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowBulkModal(false);
+                    setBulkErrors([]);
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-bold transition-all active:scale-95"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleBulkGenerate}
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 font-bold shadow-lg transition-all active:scale-95"
+                >
+                  Generate Sekarang
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* MODAL SETTINGS TTD */}

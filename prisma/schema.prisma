@@ -27,7 +27,7 @@ model User {
   nip              String?
   signatureUrl     String?
   ttdUrl           String?
-  username         String?          @unique
+  username         String?
   recoveryCodeHash String?
   isRecoveryCodeSetup Boolean       @default(false)
   activityLogs     ActivityLog[]    @relation("ActivityLogActor")
