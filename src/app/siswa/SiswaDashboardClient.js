@@ -70,14 +70,6 @@ export default function SiswaDashboardClient({ initialData, session }) {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3 items-center mt-5">
-          <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-            <Target className="text-white flex-shrink-0" size={18} />
-            <span className="text-white font-semibold text-sm whitespace-nowrap">
-              {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Dashboard Content */}
