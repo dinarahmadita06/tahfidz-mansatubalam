@@ -42,7 +42,7 @@ export const authConfig = {
           // 1. Logic khusus Admin
           if (identifier === 'ADMIN.TAHFIDZ1') {
             const user = await withRetry(() =>
-              prisma.user.findUnique({
+              prisma.user.findFirst({
                 where: { username: 'admin.tahfidz1' }
               })
             );
