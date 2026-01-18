@@ -58,10 +58,13 @@ function ProgressSummary({ juzDistribution, totalJuzSelesai, targetJuzSekolah })
             </div>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1">Status</p>
+            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1">Status Hafalan</p>
             <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
-              {activeJuz.length} Juz Aktif
+              {activeJuz.length} Juz Dalam Progres
             </span>
+            <p className="text-[9px] text-gray-500 mt-1 leading-tight">
+              Jumlah juz yang sedang dipelajari dan memiliki progres hafalan
+            </p>
           </div>
         </div>
       </div>
@@ -203,8 +206,6 @@ function StatCard({ label, value, icon: Icon, color = 'emerald', subtitle }) {
 
 // Bar Chart Component
 function HorizontalBarChart({ data }) {
-  const maxValue = Math.max(...data.map(d => d.value), 1);
-
   if (data.every(d => d.value === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -225,7 +226,7 @@ function HorizontalBarChart({ data }) {
           <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
             <div
               className={`h-full ${item.color} rounded-full transition-all duration-500`}
-              style={{ width: `${(item.value / maxValue) * 100}%` }}
+              style={{ width: `${item.value}%` }}
             />
           </div>
         </div>
@@ -496,10 +497,14 @@ export default function LaporanHafalanPage() {
                 />
                 <StatCard
                   label="Progress Capaian Total"
-                  value={`${totalJuzSelesai.toFixed(2)} / ${targetJuzSekolah} Juz`}
+                  value={`${totalJuzSelesai.toFixed(2)} Juz Tercapai`}
                   icon={TrendingUp}
                   color="purple"
-                  subtitle={`(${targetJuzSekolah > 0 ? Math.round((totalJuzSelesai / targetJuzSekolah) * 100) : 0}%)`}
+                  subtitle={
+                    totalJuzSelesai >= targetJuzSekolah 
+                      ? `Target ${targetJuzSekolah} Juz sudah tercapai ✓`
+                      : `dari target ${targetJuzSekolah} Juz (${Math.round((totalJuzSelesai / targetJuzSekolah) * 100)}%)`
+                  }
                 />
                 <StatCard
                   label="Konsistensi"
