@@ -42747,7 +42747,6 @@ export namespace Prisma {
   export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     email?: string
-    username?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
@@ -42765,6 +42764,7 @@ export namespace Prisma {
     nip?: StringNullableFilter<"User"> | string | null
     signatureUrl?: StringNullableFilter<"User"> | string | null
     ttdUrl?: StringNullableFilter<"User"> | string | null
+    username?: StringNullableFilter<"User"> | string | null
     recoveryCodeHash?: StringNullableFilter<"User"> | string | null
     isRecoveryCodeSetup?: BoolFilter<"User"> | boolean
     activityLogs?: ActivityLogListRelationFilter
@@ -42778,7 +42778,7 @@ export namespace Prisma {
     siswa?: XOR<SiswaNullableScalarRelationFilter, SiswaWhereInput> | null
     certificates?: CertificateListRelationFilter
     pushSubscriptions?: PushSubscriptionListRelationFilter
-  }, "id" | "email" | "username">
+  }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
