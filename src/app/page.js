@@ -376,11 +376,11 @@ export default function SIMTAQLandingPage() {
                 Manajemen Tahfidz
               </span>
               <span className="block bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
-                Qur'an
+                Qur&#39;an
               </span>
             </h1>
             <p className="text-base lg:text-lg text-slate-600 mb-8 lg:mb-10 leading-relaxed max-w-xl font-medium">
-              Pantau hafalan, penilaian, dan perkembangan siswa secara realtime untuk guru, siswa, dan orang tua dalam satu portal aplikasi yang ringan dan cepat.
+              Pantau hafalan, penilaian, dan perkembangan siswa secara realtime untuk guru, siswa, dan orang tua dalam satu portal aplikasi.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
@@ -590,7 +590,7 @@ export default function SIMTAQLandingPage() {
               <span className="text-2xl font-black tracking-tight uppercase">SIMTAQ</span>
             </div>
             <p className="text-slate-400 leading-relaxed mb-8 font-medium">
-              Membentuk generasi Qur'ani dengan dukungan teknologi monitoring yang handal, transparan, dan mudah diakses.
+              Membentuk generasi Qur&#39;ani dengan dukungan teknologi monitoring yang handal, transparan, dan mudah diakses.
             </p>
             <div className="flex gap-4">
               {[Smartphone, Mail, Phone].map((Icon, i) => (
@@ -698,7 +698,7 @@ export default function SIMTAQLandingPage() {
                 </div>
                 <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex gap-4 items-start">
                   <div className="w-7 h-7 bg-slate-900 text-white rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0">2</div>
-                  <p className="text-sm text-slate-700 font-bold leading-relaxed">Pilih 'Tambahkan ke Layar Utama' atau 'Install Aplikasi'.</p>
+                  <p className="text-sm text-slate-700 font-bold leading-relaxed">Pilih &#39;Tambahkan ke Layar Utama&#39; atau &#39;Install Aplikasi&#39;.</p>
                 </div>
               </div>
 

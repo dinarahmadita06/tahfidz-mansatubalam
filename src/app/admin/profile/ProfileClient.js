@@ -22,6 +22,7 @@ import {
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
 import { toast, Toaster } from 'react-hot-toast';
+import Image from 'next/image';
 
 export default function ProfileClient({ initialData }) {
   const [profileData, setProfileData] = useState(initialData);
@@ -421,18 +422,21 @@ export default function ProfileClient({ initialData }) {
                     </p>
                     <div className="bg-white p-3 rounded-lg border border-gray-200 inline-block">
                       {!signatureLoadErrors.koordinator ? (
-                        <img
+                        <Image
                           src={signaturePreviews.koordinator}
                           alt="Tanda Tangan"
                           className="max-h-24 mx-auto"
-                          style={{ maxWidth: '200px' }}
+                          style={{ maxWidth: '200px', height: 'auto', width: 'auto' }}
+                          width={200}
+                          height={96}
                           onError={() => {
                             setSignatureLoadErrors(prev => ({ ...prev, koordinator: true }));
                             console.log('Failed to load signature image:', signaturePreviews.koordinator);
                           }}
-                          onLoad={() => {
+                          onLoadingComplete={() => {
                             setSignatureLoadErrors(prev => ({ ...prev, koordinator: false }));
                           }}
+                          unoptimized
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center p-4 text-center">
