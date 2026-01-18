@@ -52,7 +52,7 @@ const menuItems = [
     ]
   },
   {
-    title: 'Monitoring & Laporan',
+    title: 'Laporan',
     icon: BarChart3,
     submenu: [
       { title: 'Laporan Hafalan & Kehadiran', href: '/admin/laporan/kehadiran', icon: BarChart3 },
