@@ -345,7 +345,7 @@ export default function LaporanHafalanPage() {
                 className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
               >
                 <option value="">Pilih anak...</option>
-                {children.map(child => (
+                {Array.isArray(children) && children.map(child => (
                   <option key={child.id} value={child.id}>
                     {child.nama}
                   </option>
