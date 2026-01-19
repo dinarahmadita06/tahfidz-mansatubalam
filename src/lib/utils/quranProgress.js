@@ -95,16 +95,36 @@ export function calculateJuzProgress(records) {
 }
 
 /**
- * Get the highest juz number that has been fully or substantially completed
- * A juz is considered "achieved" if it has >80% coverage
+ * Get the highest juz number that has been completed
+ * 
+ * APPROACH 1 (OLD): Percentage-based - juz achieved if >=80% coverage (too strict)
+ * APPROACH 2 (NEW): Direct juz number - use juz value already input by guru
+ * 
  * @param {Array} juzProgress - Array of juz progress objects
+ * @param {Array} hafalanRecords - (Optional) Raw hafalan records with direct juz assignment
  * @returns {number} Highest juz achieved (1-30), or 0 if none
  */
-export function getHighestJuzAchieved(juzProgress) {
+export function getHighestJuzAchieved(juzProgress, hafalanRecords = null) {
   if (!juzProgress || !Array.isArray(juzProgress)) return 0;
 
+  // APPROACH 2: If hafalanRecords provided with direct juz assignments, use them
+  if (hafalanRecords && Array.isArray(hafalanRecords)) {
+    const juzNumbers = hafalanRecords
+      .filter(h => h.juz && typeof h.juz === 'number' && h.juz > 0)
+      .map(h => h.juz);
+    
+    if (juzNumbers.length > 0) {
+      const maxJuz = Math.max(...juzNumbers);
+      if (maxJuz > 0 && maxJuz <= 30) {
+        return maxJuz;
+      }
+    }
+  }
+
+  // FALLBACK: Use percentage-based if no direct juz numbers
+  // Threshold 30% is realistic for incremental hafalan submissions
   const achievedJuzs = juzProgress
-    .filter(item => item.progress >= 80) // >80% considered complete
+    .filter(item => item.progress >= 30)
     .map(item => item.juz)
     .sort((a, b) => b - a);
 
