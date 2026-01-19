@@ -417,11 +417,25 @@ export default function StudentDashboardContent({
               </div>
             )}
 
-            <div className="mt-6">
-              <p className="text-[11px] lg:text-xs text-gray-600">
-                <span className="font-semibold text-gray-700">💡 Catatan:</span> Data progress bar berasal dari setoran hafalan anak yang telah divalidasi guru, menunjukkan jumlah juz selesai dibandingkan dengan target sekolah.
-              </p>
-            </div>
+            {roleContext === 'SISWA' ? (
+              <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
+                <Link
+                  href="/siswa/laporan"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 lg:px-6 lg:py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:shadow-lg hover:opacity-95 text-white text-sm lg:text-base font-semibold rounded-xl transition-all duration-300 shadow-md"
+                >
+                  Lihat Laporan Lengkap <ChevronRight className="w-[18px] h-[18px] lg:w-5 lg:h-5" />
+                </Link>
+                <p className="text-[11px] lg:text-xs text-gray-500 italic">
+                  * Lihat semua juz di menu laporan
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6">
+                <p className="text-[11px] lg:text-xs text-gray-600">
+                  <span className="font-semibold text-gray-700">💡 Catatan:</span> Data progress bar berasal dari setoran hafalan anak yang telah divalidasi guru, menunjukkan jumlah juz selesai dibandingkan dengan target sekolah.
+                </p>
+              </div>
+            )}
           </>
         )}
       </Card>
