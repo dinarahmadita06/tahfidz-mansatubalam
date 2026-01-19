@@ -722,8 +722,20 @@ export default function TasmiClient() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Jumlah Hafalan <span className="text-red-500">*</span></label>
-                  <input type="number" value={formData.jumlahHafalan} onChange={(e) => setFormData({ ...formData, jumlahHafalan: parseInt(e.target.value) || 0 })} disabled={!isSiapMendaftar || editMode} min="2" max="30" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Jumlah Hafalan <span className="text-red-500">*</span>
+                    <span className="text-xs text-gray-500 ml-1">(Otomatis)</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    value={formData.jumlahHafalan} 
+                    disabled={true}
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed" 
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Total juz hafalan Anda ({highestJuzAchieved} Juz)
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Juz yang Ditasmi' <span className="text-red-500">*</span></label>
