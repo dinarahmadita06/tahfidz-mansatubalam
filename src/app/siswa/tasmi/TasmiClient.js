@@ -319,7 +319,10 @@ export default function TasmiClient() {
 
   const tasmiList = tasmiData?.tasmi || [];
   const totalJuzHafalan = Number(tasmiData?.totalJuzHafalan) || 0;
+  const highestJuzAchieved = Number(tasmiData?.highestJuzAchieved) || 0;
   const targetJuzSekolah = Number(tasmiData?.targetJuzSekolah || targetJuz || 3);
+  const remainingJuz = Number(tasmiData?.remainingJuz) || 0;
+  const eligibilityMessage = tasmiData?.eligibilityMessage || '';
   const pagination = tasmiData?.pagination || {};
   const displayKelas = tasmiData?.displayKelas || '-';
 
@@ -333,11 +336,11 @@ export default function TasmiClient() {
     if (tasmiData) {
       setFormData(prev => ({ 
         ...prev, 
-        jumlahHafalan: totalJuzHafalan,
+        jumlahHafalan: highestJuzAchieved, // Use highest juz achieved, not total float
         kelasId: tasmiData.kelasId || tasmiData.siswa?.kelas?.id || ''
       }));
     }
-  }, [tasmiData, totalJuzHafalan]);
+  }, [tasmiData, highestJuzAchieved]);
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
@@ -428,7 +431,7 @@ export default function TasmiClient() {
 
   const resetForm = () => {
     setFormData({
-      jumlahHafalan: totalJuzHafalan,
+      jumlahHafalan: highestJuzAchieved, // Use highest juz achieved
       juzYangDitasmi: '',
       guruId: '',
       jamTasmi: '',
@@ -506,11 +509,8 @@ export default function TasmiClient() {
 
   const minimalHafalan = targetJuzSekolah;
   
-  // Final Eligibility check (Super Robust)
-  const isSiapMendaftar = (
-    tasmiData?.isEligible === true || 
-    (totalJuzHafalan > 0 && totalJuzHafalan + 0.0001 >= minimalHafalan)
-  );
+  // Final Eligibility check - use new highestJuzAchieved integer
+  const isSiapMendaftar = tasmiData?.isEligible === true;
 
   // Button state logic
   const canClickDaftar = isSiapMendaftar || pendingTasmi;
@@ -529,9 +529,7 @@ export default function TasmiClient() {
     ? 'Pendaftaran sedang menunggu verifikasi guru'
     : hasActiveTasmi
     ? 'Anda memiliki pendaftaran yang sudah disetujui'
-    : isSiapMendaftar
-    ? `${totalJuzHafalan.toFixed(2)} dari ${minimalHafalan} juz terpenuhi`
-    : `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${totalJuzHafalan.toFixed(2)} juz`;
+    : eligibilityMessage || `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${highestJuzAchieved} juz`;
 
   const isInitialLoading = tasmiLoading && !tasmiData;
   const kelasDisplay = displayKelas;
@@ -569,9 +567,9 @@ export default function TasmiClient() {
           <>
             <StatsCard
               icon={Award}
-              title="Total Juz Hafalan"
-              value={`${totalJuzHafalan.toFixed(2)} Juz`}
-              subtitle={isNotSet ? 'Admin belum mengatur target' : `Dari ${targetJuzSekolah} juz target`}
+              title="Juz Tertinggi Dicapai"
+              value={`${highestJuzAchieved} Juz`}
+              subtitle={`Syarat minimal: ${targetJuzSekolah} Juz`}
               color="emerald"
               delay={0.1}
             />

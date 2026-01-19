@@ -137,13 +137,16 @@ export async function GET(request) {
     const progressData = await calculateStudentProgress(prisma, siswa.id, schoolYear?.id);
     console.timeEnd('TASMI_GET_ProgressCalculation');
     const totalJuzHafalan = progressData.totalJuz;
+    const highestJuzAchieved = progressData.highestJuzAchieved;
     const targetJuzSekolah = progressData.targetJuzMinimal;
-    const isEligible = isEligibleForTasmi(totalJuzHafalan, targetJuzSekolah);
+    const eligibilityResult = isEligibleForTasmi(highestJuzAchieved, targetJuzSekolah);
 
     console.log(`[DEBUG/TASMI] Student ${siswa.id} GET:
     - Target Juz: ${targetJuzSekolah}
-    - Progress Juz (Active Year): ${totalJuzHafalan}
-    - Eligible: ${isEligible}
+    - Highest Juz Achieved: ${highestJuzAchieved}
+    - Total Juz (float): ${totalJuzHafalan}
+    - Eligible: ${eligibilityResult.isEligible}
+    - Remaining: ${eligibilityResult.remainingJuz}
     - School Year: ${schoolYear?.nama || 'None'}
     `);
 
@@ -155,8 +158,11 @@ export async function GET(request) {
     return NextResponse.json({
       tasmi,
       totalJuzHafalan,
+      highestJuzAchieved,
       targetJuzSekolah,
-      isEligible,
+      isEligible: eligibilityResult.isEligible,
+      eligibilityMessage: eligibilityResult.message,
+      remainingJuz: eligibilityResult.remainingJuz,
       displayKelas,
       kelasId,
       siswa: {
@@ -282,12 +288,20 @@ export async function POST(request) {
     });
 
     const progressData = await calculateStudentProgress(prisma, siswa.id, schoolYear?.id);
-    const currentJuzCount = Number(progressData.totalJuz) || 0;
+    const highestJuzAchieved = progressData.highestJuzAchieved;
     const minimalHafalan = Number(progressData.targetJuzMinimal) || 0;
+    const eligibilityResult = isEligibleForTasmi(highestJuzAchieved, minimalHafalan);
     
-    if (!isEligibleForTasmi(currentJuzCount, minimalHafalan)) {
+    if (!eligibilityResult.isEligible) {
       return NextResponse.json(
-        { message: `Minimal ${minimalHafalan} juz diperlukan. Saat ini ${currentJuzCount.toFixed(2)} juz.` },
+        { 
+          message: eligibilityResult.message,
+          details: {
+            highestJuzAchieved,
+            targetJuzMinimal: minimalHafalan,
+            remainingJuz: eligibilityResult.remainingJuz
+          }
+        },
         { status: 400 }
       );
     }
@@ -296,7 +310,7 @@ export async function POST(request) {
     const tasmi = await prisma.tasmi.create({
       data: {
         siswa: { connect: { id: siswa.id } },
-        jumlahHafalan: Math.floor(currentJuzCount + 1e-9), // ✅ Store as Int (Math.floor handles decimal progress)
+        jumlahHafalan: highestJuzAchieved, // ✅ Store actual juz achieved
         juzYangDitasmi,
         jamTasmi,
         tanggalTasmi: new Date(tanggalTasmi),
