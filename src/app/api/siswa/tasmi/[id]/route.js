@@ -104,9 +104,17 @@ export async function PUT(request, { params }) {
       );
     }
 
-    if (jumlahHafalan < 2) {
+    // Get active school year to check dynamic target
+    const schoolYear = await prisma.tahunAjaran.findFirst({
+      where: { isActive: true },
+      select: { id: true, targetHafalan: true }
+    });
+    
+    const minimalHafalan = Number(schoolYear?.targetHafalan) || 3;
+
+    if (jumlahHafalan < minimalHafalan) {
       return NextResponse.json(
-        { message: 'Minimal hafalan 2 juz untuk mendaftar Tasmi\'' },
+        { message: `Minimal hafalan ${minimalHafalan} juz untuk mendaftar Tasmi'` },
         { status: 400 }
       );
     }
