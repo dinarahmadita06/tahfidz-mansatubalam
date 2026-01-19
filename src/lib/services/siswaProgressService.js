@@ -90,8 +90,8 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
   const result = calculateJuzProgress(entries);
   const { totalJuz, juzProgress } = result;
 
-  // Get the highest juz that has been substantially completed (>80%)
-  const highestJuzAchieved = getHighestJuzAchieved(juzProgress);
+  // Get the highest juz achieved - use direct juz assignments from hafalan records first
+  const highestJuzAchieved = getHighestJuzAchieved(juzProgress, hafalanRecords);
 
   // Sync to Siswa table - use highest juz achieved (not float total)
   const updateData = { latestJuzAchieved: highestJuzAchieved };
@@ -102,7 +102,7 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
 
   return {
     totalJuz,
-    highestJuzAchieved, // NEW: Integer juz number (1-30 or 0)
+    highestJuzAchieved, // NEW: Integer juz number (1-30 or 0) - from direct juz assignments
     juzProgress,
     uniqueJuzs: juzProgress.filter(r => r.coveredAyat > 0).map(r => r.juz),
     recordCount: hafalanRecords.length,
