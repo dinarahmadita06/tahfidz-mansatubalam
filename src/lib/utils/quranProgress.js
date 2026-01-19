@@ -95,6 +95,23 @@ export function calculateJuzProgress(records) {
 }
 
 /**
+ * Get the highest juz number that has been fully or substantially completed
+ * A juz is considered "achieved" if it has >80% coverage
+ * @param {Array} juzProgress - Array of juz progress objects
+ * @returns {number} Highest juz achieved (1-30), or 0 if none
+ */
+export function getHighestJuzAchieved(juzProgress) {
+  if (!juzProgress || !Array.isArray(juzProgress)) return 0;
+
+  const achievedJuzs = juzProgress
+    .filter(item => item.progress >= 80) // >80% considered complete
+    .map(item => item.juz)
+    .sort((a, b) => b - a);
+
+  return achievedJuzs.length > 0 ? achievedJuzs[0] : 0;
+}
+
+/**
  * Filter and sort juz progress for dashboard view
  * @param {Array} juzProgress - Array of juz progress objects
  * @param {number} limit - Maximum number of juz to show
