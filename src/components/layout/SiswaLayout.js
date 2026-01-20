@@ -6,7 +6,7 @@ export default async function SiswaLayout({ children }) {
   const session = await auth();
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50/50 via-cream-50 to-amber-50/30">
+    <div className="min-h-screen bg-white">
       <SiswaSidebarClient userName={session?.user?.name || "Siswa"} />
 
       {/* Main Content Area */}

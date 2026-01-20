@@ -257,7 +257,7 @@ function OrangtuaLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-cream-50/30 to-amber-50/20">
+    <div className="min-h-screen bg-white">
       <OrangtuaSidebar userName={session?.user?.name || "Orang Tua"} onLogout={handleLogout} />
 
       {/* Main Content Area */}
