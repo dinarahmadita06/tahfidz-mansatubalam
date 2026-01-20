@@ -95,40 +95,90 @@ export function calculateJuzProgress(records) {
 }
 
 /**
+ * Find which juz contains the given surah and ayah
+ * @param {number} surahNumber - Surah number (1-114)
+ * @param {number} ayahNumber - Ayah number in the surah
+ * @returns {number} Juz number (1-30) or 0 if not found
+ */
+export function findJuzByPosition(surahNumber, ayahNumber) {
+  if (!surahNumber || ayahNumber === undefined || ayahNumber === null) return 0;
+
+  for (let juz = 1; juz <= 30; juz++) {
+    const mappings = JUZ_MAPPING[juz];
+    for (const mapping of mappings) {
+      if (mapping.surah === surahNumber && 
+          ayahNumber >= mapping.from && 
+          ayahNumber <= mapping.to) {
+        return juz;
+      }
+    }
+  }
+  return 0;
+}
+
+/**
  * Get the highest juz number that has been completed
  * 
- * APPROACH 1 (OLD): Percentage-based - juz achieved if >=80% coverage (too strict)
- * APPROACH 2 (NEW): Direct juz number - use juz value already input by guru
+ * NEW APPROACH: Determines juz based on highest surah+ayah position achieved
+ * - Find the maximum (surah, ayah) position across all hafalan records
+ * - Map that position to determine which juz it belongs to
+ * - Only count a juz as "achieved" if the highest ayah reaches the END of that juz
  * 
- * @param {Array} juzProgress - Array of juz progress objects
- * @param {Array} hafalanRecords - (Optional) Raw hafalan records with direct juz assignment
+ * @param {Array} juzProgress - Array of juz progress objects (for compatibility)
+ * @param {Array} hafalanRecords - Raw hafalan records with surah/ayah info
  * @returns {number} Highest juz achieved (1-30), or 0 if none
  */
 export function getHighestJuzAchieved(juzProgress, hafalanRecords = null) {
-  if (!juzProgress || !Array.isArray(juzProgress)) return 0;
+  // Must have hafalan records to determine accurate position
+  if (!hafalanRecords || !Array.isArray(hafalanRecords) || hafalanRecords.length === 0) {
+    return 0;
+  }
 
-  // APPROACH 2: If hafalanRecords provided with direct juz assignments, use them
-  if (hafalanRecords && Array.isArray(hafalanRecords)) {
-    const juzNumbers = hafalanRecords
-      .filter(h => h.juz && typeof h.juz === 'number' && h.juz > 0)
-      .map(h => h.juz);
-    
-    if (juzNumbers.length > 0) {
-      const maxJuz = Math.max(...juzNumbers);
-      if (maxJuz > 0 && maxJuz <= 30) {
-        return maxJuz;
+  // Find the highest (surah, ayah) position
+  let highestSurah = 0;
+  let highestAyah = 0;
+
+  hafalanRecords.forEach(record => {
+    const surah = Number(record.surahNumber);
+    const ayahEnd = Number(record.ayatSelesai);
+
+    // Compare position: higher surah number is always higher
+    // If same surah, compare ayah number
+    if (surah > highestSurah || (surah === highestSurah && ayahEnd > highestAyah)) {
+      highestSurah = surah;
+      highestAyah = ayahEnd;
+    }
+  });
+
+  if (highestSurah === 0) return 0;
+
+  // Find which juz this position belongs to
+  const juzAtPosition = findJuzByPosition(highestSurah, highestAyah);
+  
+  // Now check if this juz is FULLY COMPLETED
+  // Juz is achieved only if position >= last ayah of the juz
+  if (juzAtPosition > 0) {
+    const juzMappings = JUZ_MAPPING[juzAtPosition];
+    if (juzMappings && juzMappings.length > 0) {
+      const lastMapping = juzMappings[juzMappings.length - 1];
+      const juzEndSurah = lastMapping.surah;
+      const juzEndAyah = lastMapping.to;
+
+      // Position must reach or exceed the end of the juz to count as achieved
+      if (highestSurah > juzEndSurah || 
+          (highestSurah === juzEndSurah && highestAyah >= juzEndAyah)) {
+        return juzAtPosition;
+      } else if (juzAtPosition > 1) {
+        // If not at end of this juz, return the previous juz as highest achieved
+        return juzAtPosition - 1;
+      } else {
+        // In first juz but not completed
+        return 0;
       }
     }
   }
 
-  // FALLBACK: Use percentage-based if no direct juz numbers
-  // Threshold 30% is realistic for incremental hafalan submissions
-  const achievedJuzs = juzProgress
-    .filter(item => item.progress >= 30)
-    .map(item => item.juz)
-    .sort((a, b) => b - a);
-
-  return achievedJuzs.length > 0 ? achievedJuzs[0] : 0;
+  return 0;
 }
 
 /**
