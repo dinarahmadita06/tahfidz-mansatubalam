@@ -33,7 +33,7 @@ function GuruLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Sidebar userName={session?.user?.name} onLogout={handleLogout} />
 
       {/* Main Content with margin for sidebar */}
