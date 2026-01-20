@@ -114,23 +114,24 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
 
 /**
  * Check if student is eligible for Tasmi registration
- * UPDATED: Uses highestJuzAchieved (integer) instead of float totalJuz
- * @param {number} highestJuzAchieved - Highest juz achieved (1-30 or 0)
- * @param {number} targetJuzMinimal - Minimum target set by school (1, 2, 3, etc)
+ * CORRECTED: Using juz in progress (juz yang tersentuh/memiliki hafalan)
+ * 
+ * @param {number} highestJuzAchieved - Jumlah juz dalam progress (tidak "tertinggi" tapi COUNT juz yang ada hafalannya)
+ * @param {number} targetJuzMinimal - Target minimal dari sekolah (e.g., 1, 2, 3 juz)
  * @returns {object} { isEligible: boolean, remainingJuz: number, message: string }
  */
 export function isEligibleForTasmi(highestJuzAchieved, targetJuzMinimal) {
-  const highest = Number(highestJuzAchieved) || 0;
+  const juzInProgress = Number(highestJuzAchieved) || 0;
   const target = Number(targetJuzMinimal) || 0;
   
   if (target <= 0) return { isEligible: false, remainingJuz: target, message: 'Konfigurasi target tidak valid' };
   
-  const isEligible = highest >= target;
-  const remainingJuz = Math.max(0, target - highest);
+  const isEligible = juzInProgress >= target;
+  const remainingJuz = Math.max(0, target - juzInProgress);
   
   let message = '';
   if (isEligible) {
-    message = `Siap Mendaftar (Sudah mencapai ${highest} Juz)`;
+    message = `Siap Mendaftar (Sudah ${juzInProgress} Juz dalam progress)`;
   } else {
     message = `Belum Siap. Butuh ${remainingJuz} Juz lagi (Target: ${target} Juz)`;
   }

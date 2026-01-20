@@ -112,7 +112,7 @@ function Sidebar({ userName = 'Guru', onLogout }) {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          className="lg:hidden fixed inset-0 bg-black/20 md:bg-black/40 z-30 transition-opacity duration-200 pointer-events-auto"
           onClick={toggleSidebar}
         />
       )}

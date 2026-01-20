@@ -117,68 +117,29 @@ export function findJuzByPosition(surahNumber, ayahNumber) {
 }
 
 /**
- * Get the highest juz number that has been completed
+ * Count how many juz are in progress (memiliki hafalan)
+ * CORRECTED: Menggunakan JUZ_MAPPING sebagai acuan untuk hitung juz yang "tersentuh"
  * 
- * NEW APPROACH: Determines juz based on highest surah+ayah position achieved
- * - Find the maximum (surah, ayah) position across all hafalan records
- * - Map that position to determine which juz it belongs to
- * - Only count a juz as "achieved" if the highest ayah reaches the END of that juz
+ * Logika:
+ * - Untuk setiap Juz (1-30), cek apakah ada hafalan yang "menyentuh" juz tersebut
+ * - Gunakan JUZ_MAPPING untuk akurat menentukan mapping surah/ayah ke juz
+ * - Count semua juz yang punya hafalan >= 0.1% (minimal tersentuh)
  * 
- * @param {Array} juzProgress - Array of juz progress objects (for compatibility)
- * @param {Array} hafalanRecords - Raw hafalan records with surah/ayah info
- * @returns {number} Highest juz achieved (1-30), or 0 if none
+ * @param {Array} juzProgress - Array dari calculateJuzProgress() dengan progress per juz
+ * @returns {number} Jumlah juz dalam progress (0-30)
  */
 export function getHighestJuzAchieved(juzProgress, hafalanRecords = null) {
-  // Must have hafalan records to determine accurate position
-  if (!hafalanRecords || !Array.isArray(hafalanRecords) || hafalanRecords.length === 0) {
+  // juzProgress adalah array dari calculateJuzProgress
+  // Setiap item punya: { juz, label, progress, coveredAyat, totalAyat }
+  
+  if (!juzProgress || !Array.isArray(juzProgress)) {
     return 0;
   }
 
-  // Find the highest (surah, ayah) position
-  let highestSurah = 0;
-  let highestAyah = 0;
-
-  hafalanRecords.forEach(record => {
-    const surah = Number(record.surahNumber);
-    const ayahEnd = Number(record.ayatSelesai);
-
-    // Compare position: higher surah number is always higher
-    // If same surah, compare ayah number
-    if (surah > highestSurah || (surah === highestSurah && ayahEnd > highestAyah)) {
-      highestSurah = surah;
-      highestAyah = ayahEnd;
-    }
-  });
-
-  if (highestSurah === 0) return 0;
-
-  // Find which juz this position belongs to
-  const juzAtPosition = findJuzByPosition(highestSurah, highestAyah);
+  // Hitung juz yang dalam progress (progress > 0%)
+  const juzInProgress = juzProgress.filter(item => item.progress > 0).length;
   
-  // Now check if this juz is FULLY COMPLETED
-  // Juz is achieved only if position >= last ayah of the juz
-  if (juzAtPosition > 0) {
-    const juzMappings = JUZ_MAPPING[juzAtPosition];
-    if (juzMappings && juzMappings.length > 0) {
-      const lastMapping = juzMappings[juzMappings.length - 1];
-      const juzEndSurah = lastMapping.surah;
-      const juzEndAyah = lastMapping.to;
-
-      // Position must reach or exceed the end of the juz to count as achieved
-      if (highestSurah > juzEndSurah || 
-          (highestSurah === juzEndSurah && highestAyah >= juzEndAyah)) {
-        return juzAtPosition;
-      } else if (juzAtPosition > 1) {
-        // If not at end of this juz, return the previous juz as highest achieved
-        return juzAtPosition - 1;
-      } else {
-        // In first juz but not completed
-        return 0;
-      }
-    }
-  }
-
-  return 0;
+  return juzInProgress;
 }
 
 /**

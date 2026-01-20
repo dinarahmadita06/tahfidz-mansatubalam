@@ -567,7 +567,7 @@ export default function TasmiClient() {
           <>
             <StatsCard
               icon={Award}
-              title="Juz Tertinggi Dicapai"
+              title="Juz Dalam Progress"
               value={`${highestJuzAchieved} Juz`}
               subtitle={`Syarat minimal: ${targetJuzSekolah} Juz`}
               color="emerald"
@@ -734,16 +734,14 @@ export default function TasmiClient() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed" 
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Total juz hafalan Anda ({highestJuzAchieved} Juz)
+                    Total juz yang Anda pelajari ({highestJuzAchieved} Juz dalam progress)
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Juz yang Ditasmi' <span className="text-red-500">*</span></label>
                   <input type="text" value={formData.juzYangDitasmi} onChange={(e) => setFormData({ ...formData, juzYangDitasmi: e.target.value })} disabled={!isSiapMendaftar || editMode} placeholder="Contoh: Juz 1, 2, 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
                 </div>
-              </div>
-
-              <div>
+              </div>              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Guru Pengampu <span className="text-red-500">*</span></label>
                 <select value={formData.guruId} onChange={(e) => setFormData({ ...formData, guruId: e.target.value })} disabled={!isSiapMendaftar || editMode} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
                   <option value="">Pilih guru pengampu</option>
