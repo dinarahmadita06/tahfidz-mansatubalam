@@ -80,6 +80,9 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
   // Ref map for ayahs (for jump functionality)
   const ayahRefs = useRef({});
 
+  // Search input ref - PREVENT REMOUNTING
+  const searchInputRef = useRef(null);
+
   // Initialize singleton audio player on mount
   useEffect(() => {
     // Create audio element once
@@ -116,6 +119,23 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
       }
     }
   }, [role]);
+
+  // MOBILE FOCUS MANAGEMENT: Preserve focus on search input during list updates
+  // This prevents keyboard from closing when typing search term on mobile
+  useEffect(() => {
+    // Only apply on mobile and when there's an active search
+    if (searchTerm && searchInputRef.current) {
+      // Check if input is not already focused (to avoid unnecessary focus)
+      if (document.activeElement !== searchInputRef.current) {
+        // Use setTimeout to ensure DOM has settled after search filter
+        setTimeout(() => {
+          if (searchInputRef.current && searchTerm) {
+            searchInputRef.current.focus();
+          }
+        }, 0);
+      }
+    }
+  }, [searchTerm]);
 
   const fetchSurahs = async () => {
     try {
@@ -213,6 +233,15 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
       setExpandedSurahMobile(surahNumber);
       fetchSurahData(surahNumber, true);
     }
+    
+    // CRITICAL FIX: Restore focus to search input on mobile
+    // This prevents keyboard from closing after tapping a surah item
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    });
   };
 
   const playAudio = async (ayahNo) => {
@@ -583,10 +612,15 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={18} />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Cari surah..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                inputMode="search"
+                enterKeyHint="search"
+                autoComplete="off"
+                spellCheck={false}
                 className="w-full pl-11 pr-4 py-2 xl:py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all text-sm xl:text-base"
               />
             </div>
@@ -618,7 +652,12 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
                   >
                     {/* Surah Card Header - Clickable */}
                     <button
-                      onClick={() => handleMobileSurahClick(surah.number)}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleMobileSurahClick(surah.number);
+                      }}
                       className="w-full p-4 text-left transition-all"
                     >
                       <div className="flex items-center gap-4">

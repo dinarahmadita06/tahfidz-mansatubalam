@@ -90,8 +90,9 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
   const result = calculateJuzProgress(entries);
   const { totalJuz, juzProgress } = result;
 
-  // Get the highest juz achieved - use direct juz assignments from hafalan records first
-  const highestJuzAchieved = getHighestJuzAchieved(juzProgress, hafalanRecords);
+  // Get the highest juz achieved based on highest surah+ayah position
+  // Pass the processed entries (not raw hafalanRecords) to get accurate position-based determination
+  const highestJuzAchieved = getHighestJuzAchieved(juzProgress, entries);
 
   // Sync to Siswa table - use highest juz achieved (not float total)
   const updateData = { latestJuzAchieved: highestJuzAchieved };
