@@ -139,22 +139,9 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     }
   }, [role]);
 
-  // MOBILE FOCUS MANAGEMENT: Preserve focus on search input during list updates
-  // This prevents keyboard from closing when typing search term on mobile
-  useEffect(() => {
-    // Only apply on mobile and when there's an active search
-    if (searchTerm && searchInputRef.current) {
-      // Check if input is not already focused (to avoid unnecessary focus)
-      if (document.activeElement !== searchInputRef.current) {
-        // Use setTimeout to ensure DOM has settled after search filter
-        setTimeout(() => {
-          if (searchInputRef.current && searchTerm) {
-            searchInputRef.current.focus();
-          }
-        }, 0);
-      }
-    }
-  }, [searchTerm]);
+  // NOTE: Removed auto-focus on searchTerm change to prevent keyboard from appearing on mobile
+  // when user is typing search. User can manually tap search bar to focus if needed.
+  // This prevents UX issue where keyboard would flash/appear unexpectedly during search filtering.
 
   const fetchSurahs = async () => {
     try {
@@ -253,14 +240,12 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
       fetchSurahData(surahNumber, true);
     }
     
-    // CRITICAL FIX: Restore focus to search input on mobile
-    // This prevents keyboard from closing after tapping a surah item
-    // Use requestAnimationFrame to ensure DOM has updated
-    requestAnimationFrame(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    });
+    // IMPORTANT: Blur search input to close keyboard on mobile
+    // User tapped a surah card, so keyboard should NOT appear
+    // This prevents the keyboard from unexpectedly appearing after card tap
+    if (searchInputRef.current) {
+      searchInputRef.current.blur();
+    }
   };
 
   const playAudio = async (ayahNo) => {
