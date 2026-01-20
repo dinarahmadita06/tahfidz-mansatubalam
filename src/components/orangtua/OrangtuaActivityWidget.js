@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatTimeAgo, getActivityIcon } from '@/lib/helpers/activityLoggerV2';
 import EmptyState from '@/components/shared/EmptyState';
+import IconHint from '@/components/shared/IconHint';
 
 const CARD_BASE = 'bg-white rounded-2xl shadow-sm border border-slate-200/60';
 
@@ -71,7 +72,7 @@ export default function OrangtuaActivityWidget() {
 
             const content = (
               <>
-                <span className="flex-shrink-0 text-lg mt-0.5">{getActivityIcon(activity.action)}</span>
+                <span className="flex-shrink-0 text-lg mt-0.5" aria-hidden="true">{getActivityIcon(activity.action)}</span>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-semibold text-gray-900 truncate">{activity.title}</p>
                   <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{activity.description}</p>
@@ -80,7 +81,9 @@ export default function OrangtuaActivityWidget() {
                   </time>
                 </div>
                 {isNavigable && (
-                  <ChevronRight size={16} className="text-emerald-500 self-center" />
+                  <IconHint label="Buka" placement="left" showLabel={false}>
+                    <ChevronRight size={16} className="text-emerald-500 self-center" aria-hidden="true" />
+                  </IconHint>
                 )}
               </>
             );
@@ -91,6 +94,7 @@ export default function OrangtuaActivityWidget() {
                   key={activity.id}
                   onClick={() => router.push(targetUrl)}
                   className="w-full flex items-start gap-3 p-3 bg-gray-50 hover:bg-emerald-50 hover:border-emerald-200 rounded-xl transition-all border border-transparent shadow-sm group"
+                  aria-label={`${activity.title} - ${activity.description}`}
                 >
                   {content}
                 </button>

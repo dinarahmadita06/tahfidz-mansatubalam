@@ -7,6 +7,7 @@ import { BookMarked, ChevronDown, Target, CalendarCheck } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import StudentDashboardContent from '@/components/dashboard/StudentDashboardContent';
 import OrangtuaActivityWidget from '@/components/orangtua/OrangtuaActivityWidget';
+import IconHint from '@/components/shared/IconHint';
 
 const BANNER_GRADIENT = 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500';
 const CONTAINER = 'w-full max-w-none';
@@ -24,6 +25,9 @@ function ChildSelector({ children, selectedChild, onSelectChild }) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2.5 lg:gap-3 px-3.5 py-2 lg:px-5 lg:py-2.5 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300"
+        aria-label={`${isOpen ? 'Tutup' : 'Buka'} pemilih anak - ${selectedChild?.namaLengkap || 'Tidak dipilih'}`}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
       >
         <div className="w-8 h-8 lg:w-9 lg:h-9 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-xs lg:text-sm shadow-sm">
           {selectedChild?.namaLengkap?.[0] || '?'}
@@ -32,9 +36,12 @@ function ChildSelector({ children, selectedChild, onSelectChild }) {
           <p className="text-[10px] lg:text-xs text-gray-500 leading-tight">Pilih Anak</p>
           <p className="text-xs lg:text-sm font-bold text-gray-900 leading-tight">{selectedChild?.namaLengkap || 'Tidak dipilih'}</p>
         </div>
-        <ChevronDown
-          className={`text-gray-600 transition-transform duration-300 w-4 h-4 lg:w-[18px] lg:h-[18px] ${isOpen ? 'rotate-180' : ''}`}
-        />
+        <IconHint label="Buka daftar anak" placement="bottom">
+          <ChevronDown
+            className={`text-gray-600 transition-transform duration-300 w-4 h-4 lg:w-[18px] lg:h-[18px] ${isOpen ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          />
+        </IconHint>
       </button>
 
       {isOpen && (
@@ -270,14 +277,18 @@ export default function OrangtuaDashboardPage() {
           {selectedChild && (
             <div className="flex flex-wrap gap-3 items-center mt-5">
               <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-                <Target className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-semibold text-sm whitespace-nowrap">
+                <IconHint label="Target hafalan" placement="bottom" showLabel={false}>
+                  <Target className="text-white flex-shrink-0" size={18} aria-hidden="true" />
+                </IconHint>
+                <span className="text-white font-semibold text-sm whitespace-nowrap" role="status">
                   {stats.hafalanSelesai} / {stats.totalHafalan > 0 ? stats.totalHafalan : '-'} Hafalan
                 </span>
               </div>
               <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm border border-white/40 px-4 py-2 rounded-full">
-                <CalendarCheck className="text-white flex-shrink-0" size={18} />
-                <span className="text-white font-semibold text-sm whitespace-nowrap">
+                <IconHint label="Kehadiran anak" placement="bottom" showLabel={false}>
+                  <CalendarCheck className="text-white flex-shrink-0" size={18} aria-hidden="true" />
+                </IconHint>
+                <span className="text-white font-semibold text-sm whitespace-nowrap" role="status">
                   Kehadiran {stats.kehadiran}/{stats.totalHari > 0 ? stats.totalHari : '-'}
                 </span>
               </div>
