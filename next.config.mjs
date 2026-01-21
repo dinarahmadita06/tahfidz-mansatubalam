@@ -31,6 +31,15 @@ const nextConfig = {
   // Optimize page loading
   swcMinify: true,
 
+  // Webpack config to handle permission issues
+  webpack: (config, { isServer }) => {
+    config.watchOptions = {
+      ignored: ['**/node_modules', '**/.next', '**/C:/Users/**', '**/.git', '**/dist'],
+    };
+    
+    return config;
+  },
+
   // Security headers including CSP
   async headers() {
     return [
