@@ -149,8 +149,8 @@ export default function KehadiranClient({ initialKelasList = [] }) {
       const pageHeight = doc.internal.pageSize.getHeight();
 
       // Header with logos
-      const logoSize = 15;
-      const logoY = 8;
+      const logoSize = 28;
+      const logoY = 5;
       
       // Left logo (MAN 1)
       if (logoMan1Data) {
