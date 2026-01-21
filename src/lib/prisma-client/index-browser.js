@@ -408,15 +408,6 @@ exports.Prisma.GuruActivityScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.MotivasiScalarFieldEnum = {
-  id: 'id',
-  isi: 'isi',
-  author: 'author',
-  isActive: 'isActive',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.AdminSignatureScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -702,7 +693,6 @@ exports.Prisma.ModelName = {
   Agenda: 'Agenda',
   ActivityLog: 'ActivityLog',
   GuruActivity: 'GuruActivity',
-  Motivasi: 'Motivasi',
   AdminSignature: 'AdminSignature',
   Tasmi: 'Tasmi',
   Notification: 'Notification',
