@@ -49,25 +49,25 @@ export function renderReportHeader(doc, options) {
   let yPos = margin;
 
   // ===== LOGO KIRI & KANAN =====
-  const logoY = yPos + 5;
-  const logoWidth = 25;
-  const logoHeight = 25;
+  const logoY = yPos + 8;
+  const logoWidth = 20;
+  const logoHeight = 20;
 
   // Logo kiri
   if (logoMan1) {
-    doc.addImage(logoMan1, 'PNG', margin, logoY, logoWidth, logoHeight);
+    doc.addImage(logoMan1, 'PNG', margin + 5, logoY, logoWidth, logoHeight);
   }
 
   // Logo kanan
   if (logoKemenag) {
-    doc.addImage(logoKemenag, 'PNG', pageWidth - margin - logoWidth, logoY, logoWidth, logoHeight);
+    doc.addImage(logoKemenag, 'PNG', pageWidth - margin - logoWidth - 5, logoY, logoWidth, logoHeight);
   }
 
   // ===== TEKS KOP (CENTER) =====
   const kopCenterX = pageWidth / 2;
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
-  doc.text('MADRASAH TAHFIDZ AL-QUR\'AN', kopCenterX, yPos + 10, { align: 'center' });
+  doc.text('MAN 1 BANDAR LAMPUNG', kopCenterX, yPos + 10, { align: 'center' });
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');

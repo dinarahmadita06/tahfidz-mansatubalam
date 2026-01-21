@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextResponse } from 'next/server';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { jsPDF } from 'jspdf';
@@ -145,10 +147,23 @@ export async function GET(request) {
     const margin = 20;
     const contentWidth = pageWidth - 2 * margin;
 
-    // Load logos (server-side: gunakan placeholder atau skip)
-    // Note: imageUrlToBase64 hanya bisa di client-side, di server akan return null
-    const logoMan1 = null; // await imageUrlToBase64('/logo-man1.png');
-    const logoKemenag = null; // await imageUrlToBase64('/logo-kemenag.png');
+    // Load logos (server-side: read from public folder)
+    let logoMan1 = null;
+    let logoKemenag = null;
+    try {
+      const publicDir = join(process.cwd(), 'public');
+      const logoMan1Path = join(publicDir, 'logo-man1.png');
+      const logoKemenagPath = join(publicDir, 'logo-kemenag.png');
+      
+      const logoMan1Buffer = readFileSync(logoMan1Path);
+      const logoKemenagBuffer = readFileSync(logoKemenagPath);
+      
+      logoMan1 = 'data:image/png;base64,' + logoMan1Buffer.toString('base64');
+      logoKemenag = 'data:image/png;base64,' + logoKemenagBuffer.toString('base64');
+    } catch (err) {
+      console.warn('Failed to load logo images:', err.message);
+      // Continue without logos if not found
+    }
 
     // ============================================
     // RENDER HEADER/KOP SURAT (SAMA DENGAN TASMI)
