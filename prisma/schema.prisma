@@ -477,17 +477,6 @@ model GuruActivity {
   @@index([type])
 }
 
-model Motivasi {
-  id        String   @id @default(cuid())
-  isi       String
-  author    String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([isActive])
-}
-
 model AdminSignature {
   id            String   @id @default(cuid())
   type          String   @unique // 'SIGNER_1' or 'SIGNER_2'
