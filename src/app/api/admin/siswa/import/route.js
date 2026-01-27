@@ -47,13 +47,28 @@ export async function POST(request) {
         const jenisWali = data['Jenis Wali'] || data.hubungan || 'Orang Tua';
         const namaWali = data['Nama Wali'] || data.namaOrtu;
         const jkWali = data['Jenis Kelamin Wali'] || 'LAKI_LAKI';
-        const noHPWali = data['No HP Wali'] || data.noHPOrtu;
+        const noHPWali = data['No HP Wali'] || data.noHPOrtu || '';
 
-        // Validate required fields
-        if (!name || !nisn || !nis || !kelasInput || !jenisKelamin || !tanggalLahir || !tahunAjaranMasuk || !namaWali || !noHPWali) {
+        // Log each row untuk debugging
+        console.log(`📋 [IMPORT ROW] ${name} | NIS: ${nis} | NISN: ${nisn} | TahunAjaran: ${tahunAjaranMasuk} | Wali: ${namaWali}`);
+
+        // Validate required fields (noHPWali bisa kosong)
+        if (!name || !nisn || !nis || !kelasInput || !jenisKelamin || !tanggalLahir || !tahunAjaranMasuk || !namaWali) {
+          const missingFields = [];
+          if (!name) missingFields.push('Nama Siswa');
+          if (!nisn) missingFields.push('NISN');
+          if (!nis) missingFields.push('NIS');
+          if (!kelasInput) missingFields.push('Kelas');
+          if (!jenisKelamin) missingFields.push('JK');
+          if (!tanggalLahir) missingFields.push('Tgl Lahir');
+          if (!tahunAjaranMasuk) missingFields.push('Tahun Ajaran');
+          if (!namaWali) missingFields.push('Nama Wali');
+          
+          console.error(`❌ [IMPORT ERROR] Missing fields: ${missingFields.join(', ')}`);
+          
           results.failed.push({
             data,
-            error: 'Data tidak lengkap. Pastikan Nama Siswa, NISN, NIS, JK, Tgl Lahir, Kelas, Angkatan, Tahun Ajaran Masuk, Nama Wali, dan No HP Wali diisi.'
+            error: `Data tidak lengkap: ${missingFields.join(', ')}`
           });
           continue;
         }
@@ -159,7 +174,6 @@ export async function POST(request) {
 
               orangTua = await prisma.orangTua.create({
                 data: {
-                  noTelepon: noHPWali ? String(noHPWali) : null,
                   jenisKelamin: normGkWali,
                   status: 'approved',
                   user: {
@@ -242,7 +256,6 @@ export async function POST(request) {
             jenisKelamin: normGkSiswa,
             tanggalLahir: tanggalLahirDate,
             alamat: alamat || '',
-            noTelepon: noWhatsApp ? String(noWhatsApp) : null,
             kelasAngkatan: kelasAngkatan ? String(kelasAngkatan) : null,
             tahunAjaranMasuk: { connect: { id: ta.id } },
             status: 'approved',
@@ -276,15 +289,26 @@ export async function POST(request) {
           });
         }
 
+        console.log(`✅ [IMPORT SUCCESS] ${name} (NIS: ${nis}) created with ID: ${siswa.id}`);
         results.success.push(siswa);
       } catch (error) {
-        console.error('Error importing siswa:', error);
+        console.error(`❌ [IMPORT CATCH ERROR] ${data['Nama Siswa']}: ${error.message}`);
         results.failed.push({
           data,
           error: error.message || 'Gagal mengimport data'
         });
       }
     }
+
+    console.log(`📊 [IMPORT FINAL] Success: ${results.success.length} | Failed: ${results.failed.length}`);
+    
+    // Return results
+    return NextResponse.json({
+      success: results.success.length,
+      failed: results.failed.length,
+      errors: results.failed.map(f => `${f.data?.['Nama Siswa'] || 'Unknown'}: ${f.error}`),
+      details: results
+    });
 
     // Log activity
     await logActivity({
@@ -309,14 +333,23 @@ export async function POST(request) {
     }
 
     return NextResponse.json({
-      message: `Import selesai. Berhasil: ${results.success.length}, Gagal: ${results.failed.length}`,
-      results
+      success: results.success.length,
+      failed: results.failed.length,
+      errors: results.failed.map(f => `${f.data?.['Nama Siswa'] || 'Unknown'}: ${f.error}`),
+      details: results
     });
   } catch (error) {
-    console.error('Error importing siswa:', error);
+    console.error('❌ [IMPORT FATAL ERROR]:', error);
     return NextResponse.json(
-      { error: 'Gagal mengimport data siswa' },
+      { 
+        error: 'Gagal mengimport data siswa',
+        message: error.message,
+        success: 0,
+        failed: 0,
+        errors: [error.message]
+      },
       { status: 500 }
     );
   }
 }
+
