@@ -347,7 +347,7 @@ export default function KelolaSiswaPage() {
       }
       
       console.log('🔄 Fetching siswa for kelasId:', kelasId);
-      const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}&t=${Date.now()}`);
+      const response = await fetch(`/api/admin/siswa?kelasId=${kelasId}&limit=1000&nocache=${Date.now()}`);
       const result = await response.json();
       
       console.log('📦 API response:', result);
@@ -412,26 +412,194 @@ export default function KelolaSiswaPage() {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(ws);
 
-        const transformedData = data.map(row => {
-          const name = row['Nama Siswa'] || row['Nama'] || row['name'] || '';
-          const nisn = String(row['NISN'] || row['nisn'] || '').trim();
-          const nis = String(row['NIS'] || row['nis'] || '').trim();
-          const rawGender = row['Jenis Kelamin'] || row['L/P'] || row['jenisKelamin'] || row['jenisKelamir'] || 'L';
+        // Helper untuk normalize header keys
+        const normalizeRow = (row) => {
+          const normalized = {};
+          for (const [key, value] of Object.entries(row)) {
+            const normalizedKey = key.toLowerCase().trim().replace(/\s+/g, ' ');
+            normalized[normalizedKey] = value;
+          }
+          return normalized;
+        };
+
+        // Helper: Convert DD-MM-YYYY or various formats to YYYY-MM-DD
+        const normalizeDateFormat = (dateStr) => {
+          if (!dateStr) return '';
+          dateStr = String(dateStr).trim();
+          
+          // Try DD-MM-YYYY format (most common in Excel)
+          const ddmmyyRegex = /^(\d{1,2})-(\d{1,2})-(\d{4})$/;
+          const ddmmyyMatch = dateStr.match(ddmmyyRegex);
+          if (ddmmyyMatch) {
+            const [, day, month, year] = ddmmyyMatch;
+            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          }
+          
+          // Already YYYY-MM-DD format
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return dateStr;
+          }
+          
+          // Try parsing as date object
+          try {
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+              const y = date.getFullYear();
+              const m = String(date.getMonth() + 1).padStart(2, '0');
+              const d = String(date.getDate()).padStart(2, '0');
+              return `${y}-${m}-${d}`;
+            }
+          } catch (e) {
+            // Ignore
+          }
+          
+          return dateStr; // Return as-is if can't parse
+        };
+
+        const transformedData = data.map((row, rowIdx) => {
+          const normalized = normalizeRow(row);
+          
+          // Debug: log semua keys di row pertama
+          if (rowIdx === 0) {
+            console.log('🔍 Excel headers (normalized):', Object.keys(normalized));
+            console.log('📝 First row raw:', row);
+          }
+          
+          // Extract nama siswa
+          const name = normalized['nama lengkap siswa'] || 
+                      normalized['nama siswa'] || 
+                      normalized['nama'] || 
+                      normalized['full name'] || 
+                      normalized['name'] || '';
+          
+          // Extract NIS
+          let nis = normalized['nis'] || 
+                   normalized['nis lokal'] || 
+                   normalized['nis sekolah'] ||
+                   normalized['no induk sekolah'] || '';
+          
+          if (!nis) {
+            for (const key of Object.keys(normalized)) {
+              if (key.includes('nis') && !key.includes('nisn')) {
+                nis = normalized[key];
+                break;
+              }
+            }
+          }
+          
+          // Extract NISN
+          const nisn = String(normalized['nisn'] || '').trim();
+          
+          // Extract Jenis Kelamin
+          const rawGender = normalized['jenis kelamin'] || 
+                          normalized['l/p'] || 
+                          normalized['gender'] || 'L';
+
+          // Extract Tanggal Lahir - PENTING!
+          // PENTING: Ambil TANGGAL LAHIR, BUKAN TEMPAT LAHIR!
+          let tanggalLahir = normalized['tanggal lahir'] || 
+                            normalized['tgl lahir'] || 
+                            normalized['tanggal lahir siswa'] ||
+                            normalized['birth date'] ||
+                            normalized['dob'] || '';
+          
+          // Cari header TANGGAL LAHIR - tapi SKIP jika key mengandung "tempat"
+          if (!tanggalLahir) {
+            for (const key of Object.keys(normalized)) {
+              // Pastikan key adalah TANGGAL LAHIR bukan TEMPAT LAHIR
+              if (!key.includes('tempat') && (key.includes('tgl') || (key.includes('lahir') && key.includes('tanggal')) || key.includes('birth') || key.includes('dob'))) {
+                tanggalLahir = normalized[key];
+                break;
+              }
+            }
+          }
+
+          // Extract Nama Ayah - PENTING!
+          let namaAyah = normalized['nama ayah'] || 
+                        normalized['nama bapak'] || 
+                        normalized['ayah'] || '';
+          
+          // Extract Nama Ibu - PENTING!
+          let namaIbu = normalized['nama ibu'] || 
+                       normalized['nama ibunda'] || 
+                       normalized['ibu'] || '';
+          
+          // Jika masih kosong, cari header yang hanya mengandung "ibu"
+          if (!namaIbu) {
+            for (const key of Object.keys(normalized)) {
+              if (key.includes('ibu') && !key.includes('ayah')) {
+                namaIbu = normalized[key];
+                break;
+              }
+            }
+          }
+
+          // Extract No HP (untuk wali)
+          let noHPWali = normalized['no hp orang tua'] || 
+                        normalized['no hp wali'] ||
+                        normalized['no hp'] || 
+                        normalized['nomor telepon'] ||
+                        normalized['nomor whatsapp'] || '';
+
+          // Tentukan jenis wali (AYAH atau IBU) dan nama wali
+          let jenisWali = 'LAKI_LAKI';  // Default
+          let namaWali = '';
+          
+          if (namaAyah && namaAyah.trim() && namaAyah !== '-') {
+            // Jika ada nama ayah, gunakan sebagai wali utama
+            namaWali = namaAyah;
+            jenisWali = 'LAKI_LAKI';
+          } else if (namaIbu && namaIbu.trim() && namaIbu !== '-') {
+            // Kalau tidak ada ayah, gunakan ibu
+            namaWali = namaIbu;
+            jenisWali = 'PEREMPUAN';
+          }
+
+          // Extract tahun ajaran masuk (untuk tahun akademik saat ini)
+          // Bisa dari Excel atau gunakan tahun ajaran yang sedang aktif
+          let tahunAjaranMasuk = normalized['tahun ajaran masuk'] || 
+                                normalized['tahun ajaran'] || 
+                                normalized['ta'] || '';
+
+          if (rowIdx === 0) {
+            console.log('🔍 Extracted first row:', { 
+              name, nisn, nis, rawGender, tanggalLahir, namaAyah, namaIbu, noHPWali, jenisWali, namaWali 
+            });
+          }
 
           return {
-            name,
-            nisn,
-            nis,
-            email: generateSiswaEmail(name, nis),
+            // FIELD UNTUK DISPLAY PREVIEW
+            name: name.trim(),
+            nisn: nisn.trim(),
+            nis: String(nis).trim(),
             jenisKelamin: normalizeGender(rawGender),
-            tanggalLahir: row['Tanggal Lahir'] || row['tanggalLahir'] || '',
-            alamat: row['Alamat'] || row['alamat'] || '',
+            tanggalLahir: String(tanggalLahir).trim(),
+            namaAyah: String(namaAyah).trim(),
+            namaIbu: String(namaIbu).trim(),
+            
+            // FIELD UNTUK BACKEND API (sesuai format yang diharapkan)
+            'Nama Siswa': name.trim(),
+            'NISN': nisn.trim(),
+            'NIS': String(nis).trim(),
+            'Kelas Saat Ini': kelasId,
+            'Jenis Kelamin': normalizeGender(rawGender),
+            'Tanggal Lahir': normalizeDateFormat(tanggalLahir),  // Normalize tanggal ke YYYY-MM-DD
+            'Jenis Wali': jenisWali,
+            'Nama Wali': namaWali,
+            'Jenis Kelamin Wali': jenisWali,
+            'No HP Wali': noHPWali.trim(),  // Kosong jika tidak ada di Excel
+            'Tahun Ajaran Masuk': tahunAjaranMasuk || '2025/2026',  // Default ke tahun terbaru
+            
+            // FIELD TAMBAHAN (untuk backward compatibility)
+            email: generateSiswaEmail(name, nis),
+            alamat: normalized['alamat'] || '',
             kelasId,
-            namaOrtu: row['Nama Orang Tua'] || row['namaOrtu'] || '',
-            noHPOrtu: row['No HP Orang Tua'] || row['noHPOrtu'] || ''
+            namaOrtu: namaWali,
+            noHPOrtu: noHPWali.trim()
           };
         });
 
+        console.log('📊 Transformed data:', transformedData);
         setPreviewData(transformedData);
         setShowPreviewModal(true);
       } catch (error) {
@@ -449,6 +617,9 @@ export default function KelolaSiswaPage() {
       return;
     }
 
+    console.log('📤 [IMPORT START] Mengirim', previewData.length, 'siswa');
+    console.log('📦 [IMPORT DATA SAMPLE]', previewData[0]); // Show first siswa structure
+
     setIsImporting(true);
 
     try {
@@ -459,6 +630,8 @@ export default function KelolaSiswaPage() {
       });
 
       const result = await response.json();
+      console.log('📥 [IMPORT RESPONSE]', result);
+      
       setShowPreviewModal(false);
       setImportResults(result);
       setShowImportModal(true);
@@ -1019,16 +1192,18 @@ function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', marginBottom: '24px', border: `1px solid ${colors.gray[200]}`, borderRadius: '12px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', marginBottom: '24px', border: `1px solid ${colors.gray[200]}`, borderRadius: '12px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
             <thead style={{ background: colors.emerald[50], position: 'sticky', top: 0, zIndex: 1 }}>
               <tr>
                 <th style={{ ...tableHeaderStyle, width: '40px' }}>No</th>
                 <th style={tableHeaderStyle}>Nama Siswa</th>
                 <th style={{ ...tableHeaderStyle, width: '120px' }}>NISN</th>
-                <th style={{ ...tableHeaderStyle, width: '100px' }}>NIS</th>
-                <th style={{ ...tableHeaderStyle, width: '80px' }}>L/P</th>
-                <th style={tableHeaderStyle}>NIS</th>
+                <th style={{ ...tableHeaderStyle, width: '120px' }}>NIS</th>
+                <th style={{ ...tableHeaderStyle, width: '100px' }}>JK</th>
+                <th style={{ ...tableHeaderStyle, width: '120px' }}>Tgl Lahir</th>
+                <th style={tableHeaderStyle}>Nama Ayah</th>
+                <th style={tableHeaderStyle}>Nama Ibu</th>
               </tr>
             </thead>
             <tbody>
@@ -1050,7 +1225,9 @@ function ModalPreviewExcel({ data, onImport, onClose, isImporting }) {
                       {siswa.jenisKelamin === 'LAKI_LAKI' ? 'L' : 'P'}
                     </span>
                   </td>
-                  <td style={{ ...tableCellStyle, fontSize: '12px', color: colors.gray[600], fontWeight: '600', color: colors.emerald[700] }}>{siswa.nis}</td>
+                  <td style={tableCellStyle}>{siswa.tanggalLahir || '-'}</td>
+                  <td style={tableCellStyle}>{siswa.namaAyah || '-'}</td>
+                  <td style={tableCellStyle}>{siswa.namaIbu || '-'}</td>
                 </tr>
               ))}
             </tbody>

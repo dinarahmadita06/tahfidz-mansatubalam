@@ -134,7 +134,7 @@ export async function GET(request) {
           take: limit,
           select: selectFields,
           orderBy: {
-            createdAt: 'desc'
+            createdAt: 'asc'
           }
         })
       ]);
