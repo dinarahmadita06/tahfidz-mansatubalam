@@ -7,37 +7,55 @@ import prisma from '@/lib/prisma';
 import { put } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 
-// For local development fallback
-let fs, path;
-if (process.env.NODE_ENV === 'development') {
-  fs = (await import('fs/promises')).default;
-  path = (await import('path')).default;
+/**
+ * Get fs and path modules dynamically (only in Node environment)
+ */
+async function getNodeModules() {
+  if (typeof window !== 'undefined') return { fs: null, path: null };
+  
+  try {
+    const fs = (await import('fs/promises')).default;
+    const path = (await import('path')).default;
+    return { fs, path };
+  } catch (error) {
+    console.warn('[NODE_MODULES] Not available:', error.message);
+    return { fs: null, path: null };
+  }
 }
 
-const TEMPLATE_STORAGE_PATH = process.env.NODE_ENV === 'development' 
-  ? (await import('path')).default.join(process.cwd(), 'public', 'uploads', 'templates')
-  : null;
+/**
+ * Get template storage path
+ */
+function getStoragePath() {
+  if (typeof window !== 'undefined') return null;
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) return null;
+  
+  // Use require for synchronous path resolution in Node
+  try {
+    const path = require('path');
+    return path.join(process.cwd(), 'public', 'uploads', 'templates');
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Initialize storage directory (local dev only)
  */
 async function ensureStorageExists() {
-  if (process.env.NODE_ENV === 'development' && fs && path) {
-    try {
-      await fs.mkdir(TEMPLATE_STORAGE_PATH, { recursive: true });
-    } catch (error) {
-      console.error('Failed to create template storage:', error);
-    }
+  const storagePath = getStoragePath();
+  if (!storagePath) return;
+  
+  const { fs } = await getNodeModules();
+  if (!fs) return;
+  
+  try {
+    await fs.mkdir(storagePath, { recursive: true });
+  } catch (error) {
+    console.error('[STORAGE] Failed to create directory:', error);
   }
 }
 
-/**
- * Upload new template and set as active
- * @param {Buffer} fileBuffer - Template image buffer
- * @param {string} originalFilename - Original filename
- * @param {string} uploadedBy - User ID who uploaded
- * @returns {Promise<Object>} Template record
- */
 /**
  * Upload new template and set as active
  * @param {Buffer} fileBuffer - Template image buffer
@@ -62,7 +80,7 @@ export async function uploadTemplate(fileBuffer, originalFilename, uploadedBy) {
         contentType: ext === 'png' ? 'image/png' : 'image/jpeg'
       });
       fileUrl = blob.url;
-      filepath = blob.url; // Store blob URL as filepath
+      filepath = blob.url;
       console.log('[UPLOAD] Blob uploaded:', fileUrl);
     } catch (error) {
       console.error('[UPLOAD] Vercel Blob upload failed:', error);
@@ -71,10 +89,14 @@ export async function uploadTemplate(fileBuffer, originalFilename, uploadedBy) {
   } else {
     // Local development: use filesystem
     await ensureStorageExists();
-    const path = (await import('path')).default;
-    const fs = (await import('fs/promises')).default;
+    const { fs, path } = await getNodeModules();
     
-    const localPath = path.join(TEMPLATE_STORAGE_PATH, filename);
+    if (!fs || !path) {
+      throw new Error('Filesystem modules not available');
+    }
+    
+    const storagePath = getStoragePath();
+    const localPath = path.join(storagePath, filename);
     await fs.writeFile(localPath, fileBuffer);
     fileUrl = `/uploads/templates/${filename}`;
     filepath = `/uploads/templates/${filename}`;
@@ -155,8 +177,11 @@ export async function getActiveTemplateBuffer() {
   }
   
   // Local development: read from filesystem
-  const path = (await import('path')).default;
-  const fs = (await import('fs/promises')).default;
+  const { fs, path } = await getNodeModules();
+  if (!fs || !path) {
+    throw new Error('Cannot read template: filesystem modules not available');
+  }
+  
   const fullPath = path.join(process.cwd(), 'public', template.filepath);
   console.log('[TEMPLATE] Reading from local filesystem:', fullPath);
   const buffer = await fs.readFile(fullPath);
@@ -227,14 +252,16 @@ export async function deleteTemplate(templateId) {
     }
   } else {
     // Delete from local filesystem
-    try {
-      const path = (await import('path')).default;
-      const fs = (await import('fs/promises')).default;
-      const fullPath = path.join(process.cwd(), 'public', template.filepath);
-      await fs.unlink(fullPath);
-      console.log('[DELETE] Deleted from local filesystem:', fullPath);
-    } catch (error) {
-      console.warn('[DELETE] Could not delete template file:', error);
+    const { fs, path } = await getNodeModules();
+    
+    if (fs && path) {
+      try {
+        const fullPath = path.join(process.cwd(), 'public', template.filepath);
+        await fs.unlink(fullPath);
+        console.log('[DELETE] Deleted from local filesystem:', fullPath);
+      } catch (error) {
+        console.warn('[DELETE] Could not delete template file:', error);
+      }
     }
   }
   
