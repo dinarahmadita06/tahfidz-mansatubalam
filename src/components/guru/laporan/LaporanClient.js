@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { BarChart3, FileText, AlertTriangle } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
-import TabelHarian from '@/components/laporan/TabelHarian';
 import TabelBulanan from '@/components/laporan/TabelBulanan';
 import TabelSemesteran from '@/components/laporan/TabelSemesteran';
-import PopupPenilaian from '@/components/laporan/PopupPenilaian';
 import { fetchLaporan, handleExportPDF as exportPDF } from '@/lib/reportService';
 
 export default function LaporanClient({ initialKelas = [] }) {
@@ -19,23 +17,9 @@ export default function LaporanClient({ initialKelas = [] }) {
   // Filters
   const [filters, setFilters] = useState({
     kelasId: '',
-    periode: 'bulanan',
+    periode: 'semester2',
     tanggalMulai: '',
     tanggalSelesai: '',
-    tanggal: new Date().toISOString().split('T')[0], // for harian mode
-  });
-
-  // State for editable harian mode
-  const [showPenilaianPopup, setShowPenilaianPopup] = useState(false);
-  const [selectedSiswa, setSelectedSiswa] = useState(null);
-  const [penilaianForm, setPenilaianForm] = useState({
-    surah: '',
-    ayatMulai: '',
-    ayatSelesai: '',
-    tajwid: '',
-    kelancaran: '',
-    makhraj: '',
-    implementasi: '',
   });
 
   const handleGenerateLaporan = async () => {
@@ -74,12 +58,7 @@ export default function LaporanClient({ initialKelas = [] }) {
     setExporting(true);
     try {
       const selectedKelas = initialKelas.find((k) => k.id === filters.kelasId);
-      const viewMode =
-        filters.periode === 'harian'
-          ? 'harian'
-          : filters.periode === 'mingguan' || filters.periode === 'bulanan'
-          ? 'bulanan'
-          : 'semesteran';
+      const viewMode = filters.periode === 'bulanan' ? 'bulanan' : 'semesteran';
 
       const result = await exportPDF({
         viewMode,
@@ -102,92 +81,8 @@ export default function LaporanClient({ initialKelas = [] }) {
     }
   };
 
-  const handleStatusChange = async (siswaId, status) => {
-    try {
-      const response = await fetch('/api/guru/laporan/presensi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          siswaId,
-          tanggal: filters.tanggal,
-          status,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        toast.success('Status kehadiran disimpan');
-        handleGenerateLaporan();
-      } else {
-        toast.error('Gagal menyimpan status kehadiran');
-      }
-    } catch (error) {
-      console.error('Error saving status:', error);
-      toast.error('Terjadi kesalahan');
-    }
-  };
-
-  const handlePenilaianClick = (siswa) => {
-    setSelectedSiswa(siswa);
-    if (siswa.pertemuan) {
-      setPenilaianForm({
-        surah: siswa.pertemuan.surah || '',
-        ayatMulai: siswa.pertemuan.ayatMulai || '',
-        ayatSelesai: siswa.pertemuan.ayatSelesai || '',
-        tajwid: siswa.pertemuan.nilaiTajwid || '',
-        kelancaran: siswa.pertemuan.nilaiKelancaran || '',
-        makhraj: siswa.pertemuan.nilaiMakhraj || '',
-        implementasi: siswa.pertemuan.nilaiImplementasi || '',
-      });
-    } else {
-      setPenilaianForm({
-        surah: '', ayatMulai: '', ayatSelesai: '',
-        tajwid: '', kelancaran: '', makhraj: '', implementasi: '',
-      });
-    }
-    setShowPenilaianPopup(true);
-  };
-
-  const handleSavePenilaian = async () => {
-    try {
-      if (!penilaianForm.surah || !penilaianForm.ayatMulai || !penilaianForm.ayatSelesai) {
-        toast.error('Surah dan ayat harus diisi');
-        return;
-      }
-      
-      const response = await fetch('/api/guru/laporan/penilaian', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          siswaId: selectedSiswa.siswaId,
-          tanggal: filters.tanggal,
-          surah: penilaianForm.surah,
-          ayatMulai: parseInt(penilaianForm.ayatMulai),
-          ayatSelesai: parseInt(penilaianForm.ayatSelesai),
-          tajwid: parseInt(penilaianForm.tajwid),
-          kelancaran: parseInt(penilaianForm.kelancaran),
-          makhraj: parseInt(penilaianForm.makhraj),
-          implementasi: parseInt(penilaianForm.implementasi),
-        }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        toast.success('Penilaian berhasil disimpan');
-        setShowPenilaianPopup(false);
-        handleGenerateLaporan();
-      } else {
-        toast.error('Gagal menyimpan penilaian');
-      }
-    } catch (error) {
-      console.error('Error saving penilaian:', error);
-      toast.error('Terjadi kesalahan');
-    }
-  };
-
   const getViewMode = () => {
-    if (filters.periode === 'harian') return 'harian';
-    if (filters.periode === 'mingguan' || filters.periode === 'bulanan') return 'bulanan';
+    if (filters.periode === 'bulanan') return 'bulanan';
     return 'semesteran';
   };
 
@@ -223,26 +118,12 @@ export default function LaporanClient({ initialKelas = [] }) {
               onChange={(e) => setFilters({ ...filters, periode: e.target.value })}
               className="w-full px-4 py-2.5 border-2 border-emerald-50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
             >
-              <option value="harian">Harian</option>
-              <option value="mingguan">Mingguan</option>
               <option value="bulanan">Bulanan</option>
               <option value="semester1">Semester 1</option>
               <option value="semester2">Semester 2</option>
               <option value="custom">Custom</option>
             </select>
           </div>
-
-          {filters.periode === 'harian' && (
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Tanggal</label>
-              <input
-                type="date"
-                value={filters.tanggal}
-                onChange={(e) => setFilters({ ...filters, tanggal: e.target.value })}
-                className="w-full px-4 py-2.5 border-2 border-emerald-50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              />
-            </div>
-          )}
 
           {filters.periode === 'custom' && (
             <>
@@ -301,13 +182,7 @@ export default function LaporanClient({ initialKelas = [] }) {
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6 overflow-x-auto">
-            {getViewMode() === 'harian' ? (
-              <TabelHarian
-                data={laporanData}
-                onStatusChange={handleStatusChange}
-                onPenilaianClick={handlePenilaianClick}
-              />
-            ) : getViewMode() === 'bulanan' ? (
+            {getViewMode() === 'bulanan' ? (
               <TabelBulanan data={laporanData} />
             ) : (
               <TabelSemesteran data={laporanData} />
@@ -321,16 +196,6 @@ export default function LaporanClient({ initialKelas = [] }) {
           <p className="text-emerald-600/70 text-sm">Pilih kelas dan klik tampilkan untuk melihat data</p>
         </div>
       )}
-
-      {/* Popup Penilaian */}
-      <PopupPenilaian
-        show={showPenilaianPopup}
-        onClose={() => setShowPenilaianPopup(false)}
-        siswa={selectedSiswa}
-        form={penilaianForm}
-        onFormChange={setPenilaianForm}
-        onSave={handleSavePenilaian}
-      />
     </>
   );
 }
