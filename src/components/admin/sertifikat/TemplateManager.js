@@ -38,29 +38,68 @@ export default function TemplateManager() {
     }
   };
   
+  // Validate image dimensions (landscape orientation)
+  const validateImageDimensions = (file) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const isLandscape = img.width > img.height;
+        resolve({
+          valid: isLandscape,
+          width: img.width,
+          height: img.height
+        });
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({ valid: false, width: 0, height: 0 });
+      };
+      
+      img.src = url;
+    });
+  };
+  
   // Upload new template
   const handleUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
     
-    // Validate file type
-    if (!file.type.match(/^image\/(png|jpeg|jpg)$/)) {
+    // 1. Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
       toast.error('Format file harus PNG atau JPG');
+      event.target.value = '';
       return;
     }
     
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // 2. Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
       toast.error('Ukuran file maksimal 5MB');
+      event.target.value = '';
+      return;
+    }
+    
+    // 3. Validate image dimensions (landscape)
+    const dimensions = await validateImageDimensions(file);
+    if (!dimensions.valid) {
+      toast.error('Template harus landscape (horizontal). Lebar harus lebih besar dari tinggi.');
+      event.target.value = '';
       return;
     }
     
     try {
       setUploading(true);
       
+      // Create FormData with correct field name
       const formData = new FormData();
       formData.append('template', file);
       
+      // Don't set Content-Type header - let browser set it with boundary
       const response = await fetch('/api/admin/templates/upload', {
         method: 'POST',
         body: formData
@@ -68,15 +107,19 @@ export default function TemplateManager() {
       
       const data = await response.json();
       
-      if (data.success) {
-        toast.success('Template berhasil diupload dan diaktifkan');
-        loadTemplates();
+      if (response.ok && data.success) {
+        toast.success(`Template berhasil diupload (${dimensions.width}×${dimensions.height}px)`);
+        await loadTemplates(); // Auto refresh template list
       } else {
-        toast.error(data.error || 'Gagal upload template');
+        // Show specific error from backend
+        const errorMessage = data.error || data.message || 'Gagal upload template';
+        toast.error(errorMessage);
+        console.error('Upload error:', data);
       }
     } catch (error) {
-      toast.error('Gagal upload template');
-      console.error(error);
+      // Network or unexpected errors
+      toast.error('Gagal upload template. Pastikan format PNG/JPG dan ukuran maksimal 5MB.');
+      console.error('Upload exception:', error);
     } finally {
       setUploading(false);
       event.target.value = ''; // Reset input
@@ -94,15 +137,17 @@ export default function TemplateManager() {
       
       const data = await response.json();
       
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Template berhasil diaktifkan');
-        loadTemplates();
+        await loadTemplates(); // Auto refresh
       } else {
-        toast.error(data.error || 'Gagal mengaktifkan template');
+        const errorMessage = data.error || data.message || 'Gagal mengaktifkan template';
+        toast.error(errorMessage);
+        console.error('Activate error:', data);
       }
     } catch (error) {
       toast.error('Gagal mengaktifkan template');
-      console.error(error);
+      console.error('Activate exception:', error);
     }
   };
   
@@ -119,15 +164,17 @@ export default function TemplateManager() {
       
       const data = await response.json();
       
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Template berhasil dihapus');
-        loadTemplates();
+        await loadTemplates(); // Auto refresh
       } else {
-        toast.error(data.error || 'Gagal menghapus template');
+        const errorMessage = data.error || data.message || 'Gagal menghapus template';
+        toast.error(errorMessage);
+        console.error('Delete error:', data);
       }
     } catch (error) {
       toast.error('Gagal menghapus template');
-      console.error(error);
+      console.error('Delete exception:', error);
     }
   };
   
