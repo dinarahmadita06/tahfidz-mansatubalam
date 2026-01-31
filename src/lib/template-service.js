@@ -45,12 +45,13 @@ export async function uploadTemplate(fileBuffer, originalFilename, uploadedBy) {
   let height = 661;
   
   try {
-    const sharp = require('sharp');
-    const metadata = await sharp(fileBuffer).metadata();
+    const sharp = await import('sharp');
+    const sharpInstance = sharp.default;
+    const metadata = await sharpInstance(fileBuffer).metadata();
     width = metadata.width;
     height = metadata.height;
   } catch (error) {
-    console.warn('Could not get image dimensions, using defaults:', error);
+    console.warn('[UPLOAD] Could not get image dimensions, using defaults:', error.message);
   }
   
   // Deactivate all existing templates
@@ -191,7 +192,46 @@ export async function getTemplateById(templateId) {
  */
 export async function validateTemplate(fileBuffer) {
   try {
-    const sharp = require('sharp');
+    // Try to use sharp for validation
+    let sharp;
+    try {
+      sharp = await import('sharp');
+      sharp = sharp.default;
+    } catch (importError) {
+      console.warn('[VALIDATE] Sharp not available, using basic validation:', importError.message);
+      
+      // Fallback: Basic validation without sharp
+      // Check if buffer starts with valid image signatures
+      const isPNG = fileBuffer[0] === 0x89 && fileBuffer[1] === 0x50 && fileBuffer[2] === 0x4E && fileBuffer[3] === 0x47;
+      const isJPEG = fileBuffer[0] === 0xFF && fileBuffer[1] === 0xD8 && fileBuffer[2] === 0xFF;
+      
+      if (!isPNG && !isJPEG) {
+        return {
+          valid: false,
+          error: 'Invalid file format. Please upload PNG or JPG file.'
+        };
+      }
+      
+      // Basic size check (at least 100KB for a decent template)
+      if (fileBuffer.length < 100000) {
+        return {
+          valid: false,
+          error: 'File too small. Please upload a valid template image.'
+        };
+      }
+      
+      // Return valid with basic metadata
+      return {
+        valid: true,
+        metadata: {
+          format: isPNG ? 'png' : 'jpeg',
+          size: fileBuffer.length,
+          note: 'Basic validation (Sharp not available in serverless)'
+        }
+      };
+    }
+    
+    // Sharp is available, do full validation
     const metadata = await sharp(fileBuffer).metadata();
     
     // Check format
@@ -230,6 +270,7 @@ export async function validateTemplate(fileBuffer) {
       }
     };
   } catch (error) {
+    console.error('[VALIDATE] Validation error:', error);
     return {
       valid: false,
       error: `Failed to validate image: ${error.message}`
