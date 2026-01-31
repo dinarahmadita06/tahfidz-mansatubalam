@@ -17,6 +17,12 @@ export async function GET(request) {
       );
     }
 
+    // Get query parameters for filtering
+    const { searchParams } = new URL(request.url);
+    const kelasId = searchParams.get('kelasId');
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+
     // Find the Guru profile ID for filtering
     const guru = await prisma.guru.findUnique({
       where: { userId: session.user.id },
@@ -27,11 +33,39 @@ export async function GET(request) {
       return NextResponse.json({ tasmi: [] });
     }
 
+    // Build where clause with filters
+    const whereClause = {
+      guruPengampuId: guru.id
+    };
+
+    // Filter by kelas (WAJIB untuk isolasi data per kelas)
+    if (kelasId) {
+      whereClause.siswa = {
+        kelasId: kelasId
+      };
+    }
+
+    // Filter by status
+    if (status && status !== 'ALL') {
+      whereClause.statusPendaftaran = status;
+    }
+
+    // Search by siswa name
+    if (search) {
+      if (!whereClause.siswa) {
+        whereClause.siswa = {};
+      }
+      whereClause.siswa.user = {
+        name: {
+          contains: search,
+          mode: 'insensitive'
+        }
+      };
+    }
+
     // Fetch tasmi registrations where THIS guru is the chosen pengampu
     const tasmiList = await prisma.tasmi.findMany({
-      where: {
-        guruPengampuId: guru.id
-      },
+      where: whereClause,
       include: {
         siswa: {
           include: {
