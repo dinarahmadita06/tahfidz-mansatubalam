@@ -3,7 +3,7 @@ export const revalidate = 0;
 import { Suspense } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import { Medal } from 'lucide-react';
-import { StatsSection, TableSection } from '@/components/guru/tasmi/TasmiSections';
+import { StatsSection, KelasSelectionAndTableSection } from '@/components/guru/tasmi/TasmiSections';
 import { TasmiStatsSkeleton, TasmiTableSkeleton } from '@/components/guru/tasmi/TasmiSkeletons';
 
 export default function GuruTasmiPage() {
@@ -32,9 +32,9 @@ export default function GuruTasmiPage() {
           <StatsSection />
         </Suspense>
 
-        {/* Main Table & Filters */}
+        {/* Kelas Selection + Table */}
         <Suspense fallback={<TasmiTableSkeleton />}>
-          <TableSection />
+          <KelasSelectionAndTableSection />
         </Suspense>
       </div>
     </GuruLayout>

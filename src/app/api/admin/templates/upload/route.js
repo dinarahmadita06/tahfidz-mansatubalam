@@ -84,8 +84,6 @@ export async function POST(request) {
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};
+// Next.js 13+ App Router config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';

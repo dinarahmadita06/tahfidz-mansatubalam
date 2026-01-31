@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Award,
@@ -16,9 +16,11 @@ import {
   Search,
   BookCheck,
   Plus,
+  ArrowLeft,
 } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { generateTasmiRecapPDF } from '@/lib/tasmiPdfGenerator';
+import { KelasSelectionSection } from './KelasSelection';
 
 // StatCard Component
 function StatCard({ label, value, icon, color = 'emerald' }) {
@@ -116,12 +118,112 @@ export function TasmiStats({ tasmiList }) {
   );
 }
 
-export function TasmiTableSection({ initialTasmi, guruKelas }) {
+/**
+ * TasmiWrapper - Main container that shows:
+ * 1. KelasSelectionSection (cards)
+ * 2. TasmiTableSection (only after kelas selected)
+ */
+export function TasmiWrapper({ guruKelas, guruId, summary }) {
+  const [selectedKelas, setSelectedKelas] = useState(null);
+  const [tasmiList, setTasmiList] = useState([]);
+  const [isLoadingTasmi, setIsLoadingTasmi] = useState(false);
+
+  const handleSelectKelas = async (kelas) => {
+    setSelectedKelas(kelas);
+    setIsLoadingTasmi(true);
+    
+    try {
+      const res = await fetch(`/api/guru/tasmi?kelasId=${kelas.kelasId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTasmiList(data.tasmi || []);
+      } else {
+        toast.error('Gagal memuat data tasmi');
+      }
+    } catch (e) {
+      toast.error('Terjadi kesalahan');
+    } finally {
+      setIsLoadingTasmi(false);
+    }
+  };
+
+  const handleBackToKelas = () => {
+    setSelectedKelas(null);
+    setTasmiList([]);
+  };
+
+  return (
+    <div className="space-y-8">
+      <Toaster position="top-right" />
+      
+      {/* Kelas Selection Section - Always visible */}
+      {!selectedKelas && (
+        <KelasSelectionSection
+          summary={summary}
+          activeKelasId={selectedKelas?.kelasId}
+          onSelectKelas={handleSelectKelas}
+        />
+      )}
+
+      {/* Table Section - Only visible after kelas selected */}
+      {selectedKelas && (
+        <>
+          {/* Active Kelas Indicator */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                {selectedKelas.kelasNama.substring(0, 1)}
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Kelas Aktif</p>
+                <p className="text-lg font-bold text-blue-900">Kelas {selectedKelas.kelasNama}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleBackToKelas}
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-all font-semibold"
+            >
+              <ArrowLeft size={18} />
+              Ganti Kelas
+            </button>
+          </div>
+
+          {/* Loading State */}
+          {isLoadingTasmi ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+              <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-gray-600">Memuat data tasmi...</p>
+            </div>
+          ) : (
+            <TasmiTableSection 
+              initialTasmi={tasmiList} 
+              guruKelas={guruKelas}
+              selectedKelasId={selectedKelas.kelasId}
+              selectedKelasNama={selectedKelas.kelasNama}
+            />
+          )}
+        </>
+      )}
+
+      {/* Empty State - Before any kelas selected */}
+      {!selectedKelas && summary.length === 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookCheck size={32} className="text-gray-400" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-2">Belum Ada Kelas</h3>
+          <p className="text-gray-600">Anda belum mengampu kelas apapun</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function TasmiTableSection({ initialTasmi, guruKelas, selectedKelasId, selectedKelasNama }) {
   const router = useRouter();
   const [tasmiList, setTasmiList] = useState(initialTasmi);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [kelasFilter, setKelasFilter] = useState('');
 
   // Modals
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -146,12 +248,12 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
     endDate: '', 
     month: new Date().getMonth() + 1, 
     year: new Date().getFullYear(),
-    kelasId: '' 
+    kelasId: selectedKelasId || '' 
   });
   const [isDownloadingRekap, setIsDownloadingRekap] = useState(false);
 
   const refreshData = async () => {
-    const res = await fetch('/api/guru/tasmi');
+    const res = await fetch(`/api/guru/tasmi?kelasId=${selectedKelasId}`);
     if (res.ok) {
       const data = await res.json();
       setTasmiList(data.tasmi || []);
@@ -204,10 +306,9 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
       const matchesSearch = t.siswa.user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (t.siswa.nisn && t.siswa.nisn.includes(searchQuery));
       const matchesStatus = !statusFilter || t.statusPendaftaran === statusFilter;
-      const matchesKelas = !kelasFilter || t.siswa.kelasId === kelasFilter;
-      return matchesSearch && matchesStatus && matchesKelas;
+      return matchesSearch && matchesStatus;
     });
-  }, [tasmiList, searchQuery, statusFilter, kelasFilter]);
+  }, [tasmiList, searchQuery, statusFilter]);
 
   const handleApprove = async () => {
     try {
@@ -401,11 +502,9 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
-      
       {/* Filter Bar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Cari Siswa</label>
             <div className="relative">
@@ -432,17 +531,6 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
               <option value="SELESAI">Selesai</option>
               <option value="DITOLAK">Ditolak</option>
               <option value="DIBATALKAN">Dibatalkan</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Filter Kelas</label>
-            <select 
-              value={kelasFilter}
-              onChange={(e) => setKelasFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
-              <option value="">Semua Kelas</option>
-              {guruKelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
             </select>
           </div>
           <div className="flex items-end">
@@ -837,10 +925,11 @@ export function TasmiTableSection({ initialTasmi, guruKelas }) {
                   value={rekapFilter.kelasId} 
                   onChange={e => setRekapFilter({...rekapFilter, kelasId: e.target.value})} 
                   className="w-full h-11 px-4 border border-slate-200 bg-white/70 rounded-xl focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200/40 outline-none transition-all"
+                  disabled
                 >
-                  <option value="">Semua Kelas</option>
-                  {guruKelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                  <option value={selectedKelasId}>Kelas {selectedKelasNama}</option>
                 </select>
+                <p className="text-[10px] text-gray-500 mt-1 italic">Rekap akan diunduh untuk kelas yang sedang aktif</p>
               </div>
             </div>
 
