@@ -38,8 +38,8 @@ export default function SertifikatPage() {
   };
 
   const tabs = [
-    { id: 'non-award', label: 'Non-Award (Lulus Tasmi)', icon: FileText },
-    { id: 'award', label: 'Award Wisuda', icon: Trophy },
+    { id: 'non-award', label: 'Data Sertifikat', icon: FileText },
+    { id: 'award', label: 'Award Wisuda', icon: Trophy, hidden: true },
     { id: 'templates', label: 'Template Sertifikat', icon: Layout },
   ];
 
@@ -69,7 +69,7 @@ export default function SertifikatPage() {
 
         {/* Tabs Navigation */}
         <div className="bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-emerald-100 shadow-sm inline-flex w-full sm:w-auto overflow-x-auto no-scrollbar gap-1">
-          {tabs.map((tab) => {
+          {tabs.filter(tab => !tab.hidden).map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
             return (
