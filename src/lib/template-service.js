@@ -4,21 +4,30 @@
  */
 
 import prisma from '@/lib/prisma';
-import fs from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 
-// Storage path for templates
-const TEMPLATE_STORAGE_PATH = path.join(process.cwd(), 'public', 'uploads', 'templates');
+// For local development fallback
+let fs, path;
+if (process.env.NODE_ENV === 'development') {
+  fs = (await import('fs/promises')).default;
+  path = (await import('path')).default;
+}
+
+const TEMPLATE_STORAGE_PATH = process.env.NODE_ENV === 'development' 
+  ? (await import('path')).default.join(process.cwd(), 'public', 'uploads', 'templates')
+  : null;
 
 /**
- * Initialize storage directory
+ * Initialize storage directory (local dev only)
  */
 async function ensureStorageExists() {
-  try {
-    await fs.mkdir(TEMPLATE_STORAGE_PATH, { recursive: true });
-  } catch (error) {
-    console.error('Failed to create template storage:', error);
+  if (process.env.NODE_ENV === 'development' && fs && path) {
+    try {
+      await fs.mkdir(TEMPLATE_STORAGE_PATH, { recursive: true });
+    } catch (error) {
+      console.error('Failed to create template storage:', error);
+    }
   }
 }
 
@@ -29,18 +38,50 @@ async function ensureStorageExists() {
  * @param {string} uploadedBy - User ID who uploaded
  * @returns {Promise<Object>} Template record
  */
+/**
+ * Upload new template and set as active
+ * @param {Buffer} fileBuffer - Template image buffer
+ * @param {string} originalFilename - Original filename
+ * @param {string} uploadedBy - User ID who uploaded
+ * @returns {Promise<Object>} Template record
+ */
 export async function uploadTemplate(fileBuffer, originalFilename, uploadedBy) {
-  await ensureStorageExists();
+  const ext = originalFilename.split('.').pop();
+  const filename = `template_${uuidv4()}.${ext}`;
   
-  // Generate unique filename
-  const ext = path.extname(originalFilename);
-  const filename = `template_${uuidv4()}${ext}`;
-  const filepath = path.join(TEMPLATE_STORAGE_PATH, filename);
+  let fileUrl;
+  let filepath;
   
-  // Save file to storage
-  await fs.writeFile(filepath, fileBuffer);
+  // Use Vercel Blob in production, filesystem in development
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    try {
+      console.log('[UPLOAD] Using Vercel Blob Storage');
+      const blob = await put(filename, fileBuffer, {
+        access: 'public',
+        addRandomSuffix: false,
+        contentType: ext === 'png' ? 'image/png' : 'image/jpeg'
+      });
+      fileUrl = blob.url;
+      filepath = blob.url; // Store blob URL as filepath
+      console.log('[UPLOAD] Blob uploaded:', fileUrl);
+    } catch (error) {
+      console.error('[UPLOAD] Vercel Blob upload failed:', error);
+      throw new Error(`Failed to upload to blob storage: ${error.message}`);
+    }
+  } else {
+    // Local development: use filesystem
+    await ensureStorageExists();
+    const path = (await import('path')).default;
+    const fs = (await import('fs/promises')).default;
+    
+    const localPath = path.join(TEMPLATE_STORAGE_PATH, filename);
+    await fs.writeFile(localPath, fileBuffer);
+    fileUrl = `/uploads/templates/${filename}`;
+    filepath = `/uploads/templates/${filename}`;
+    console.log('[UPLOAD] File saved locally:', filepath);
+  }
   
-  // Get image dimensions (optional, for validation)
+  // Get image dimensions (optional, for metadata)
   let width = 932;
   let height = 661;
   
@@ -65,8 +106,8 @@ export async function uploadTemplate(fileBuffer, originalFilename, uploadedBy) {
     data: {
       nama: originalFilename,
       filename: filename,
-      filepath: `/uploads/templates/${filename}`,
-      fileUrl: `/uploads/templates/${filename}`,
+      filepath: filepath,
+      fileUrl: fileUrl,
       width: width,
       height: height,
       isActive: true,
@@ -74,6 +115,7 @@ export async function uploadTemplate(fileBuffer, originalFilename, uploadedBy) {
     }
   });
   
+  console.log('[UPLOAD] Template record created:', template.id);
   return template;
 }
 
@@ -101,7 +143,22 @@ export async function getActiveTemplateBuffer() {
     throw new Error('No active template found. Please upload a template first.');
   }
   
+  // Check if it's a blob URL (starts with https://)
+  if (template.fileUrl.startsWith('https://')) {
+    console.log('[TEMPLATE] Fetching from Blob Storage:', template.fileUrl);
+    const response = await fetch(template.fileUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch template from blob storage: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  }
+  
+  // Local development: read from filesystem
+  const path = (await import('path')).default;
+  const fs = (await import('fs/promises')).default;
   const fullPath = path.join(process.cwd(), 'public', template.filepath);
+  console.log('[TEMPLATE] Reading from local filesystem:', fullPath);
   const buffer = await fs.readFile(fullPath);
   
   return buffer;
@@ -159,11 +216,26 @@ export async function deleteTemplate(templateId) {
   }
   
   // Delete file from storage
-  const fullPath = path.join(process.cwd(), 'public', template.filepath);
-  try {
-    await fs.unlink(fullPath);
-  } catch (error) {
-    console.warn('Could not delete template file:', error);
+  if (template.fileUrl.startsWith('https://')) {
+    // Delete from Vercel Blob
+    try {
+      const { del } = await import('@vercel/blob');
+      await del(template.fileUrl);
+      console.log('[DELETE] Deleted from Blob Storage:', template.fileUrl);
+    } catch (error) {
+      console.warn('[DELETE] Could not delete from blob storage:', error);
+    }
+  } else {
+    // Delete from local filesystem
+    try {
+      const path = (await import('path')).default;
+      const fs = (await import('fs/promises')).default;
+      const fullPath = path.join(process.cwd(), 'public', template.filepath);
+      await fs.unlink(fullPath);
+      console.log('[DELETE] Deleted from local filesystem:', fullPath);
+    } catch (error) {
+      console.warn('[DELETE] Could not delete template file:', error);
+    }
   }
   
   // Delete from database
