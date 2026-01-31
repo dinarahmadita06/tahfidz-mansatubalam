@@ -4,20 +4,32 @@ import { colors } from './constants';
 
 export default function TabelSemesteran({ data, onCatatanChange }) {
   const formatNilai = (nilai) => {
-    if (nilai == null || nilai === 0) return '-';
-    const rounded = Math.round(nilai);
-    if (Math.abs(nilai - rounded) < 0.01) {
+    if (nilai == null || nilai === '' || nilai === 0) return '-';
+    
+    // Ensure nilai is a number
+    const numValue = typeof nilai === 'number' ? nilai : parseFloat(nilai);
+    
+    // Check if conversion resulted in valid number
+    if (isNaN(numValue)) return '-';
+    
+    const rounded = Math.round(numValue);
+    if (Math.abs(numValue - rounded) < 0.01) {
       return rounded.toString();
     }
-    return nilai.toFixed(1);
+    return numValue.toFixed(1);
   };
 
   const getNilaiColor = (nilai) => {
-    if (nilai == null || nilai === 0) return colors.text.tertiary;
-    if (nilai >= 90) return colors.emerald[600];
-    if (nilai >= 85) return colors.emerald[500];
-    if (nilai >= 80) return colors.amber[500];
-    if (nilai >= 75) return colors.amber[600];
+    if (nilai == null || nilai === '' || nilai === 0) return colors.text.tertiary;
+    
+    // Ensure nilai is a number for comparison
+    const numValue = typeof nilai === 'number' ? nilai : parseFloat(nilai);
+    if (isNaN(numValue)) return colors.text.tertiary;
+    
+    if (numValue >= 90) return colors.emerald[600];
+    if (numValue >= 85) return colors.emerald[500];
+    if (numValue >= 80) return colors.amber[500];
+    if (numValue >= 75) return colors.amber[600];
     return colors.red[500];
   };
 
