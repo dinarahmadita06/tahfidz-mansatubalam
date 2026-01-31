@@ -43,6 +43,26 @@ const getStatusBadgeClass = (hasPublished) => {
     : 'bg-slate-100/60 text-slate-700 border-slate-200/60';
 };
 
+// Format JUZ display - avoid duplicate "Juz" prefix
+const formatJuzDisplay = (juzValue) => {
+  if (!juzValue) return '-';
+  const trimmed = juzValue.toString().trim();
+  
+  // Check if already contains "juz" (case-insensitive)
+  const containsJuz = /juz/i.test(trimmed);
+  
+  if (containsJuz) {
+    // Remove duplicate "juz" at the beginning (case-insensitive)
+    // e.g., "Juz juz 4" → "Juz 4", "juz juz 4" → "juz 4"
+    const cleaned = trimmed.replace(/^juz\s+juz\s+/i, 'Juz ');
+    // Capitalize first letter if starts with lowercase "juz"
+    return cleaned.replace(/^juz\s+/, 'Juz ');
+  }
+  
+  // If doesn't contain "juz", add prefix
+  return `Juz ${trimmed}`;
+};
+
 const actionBtnClass = (variant) => {
   const base = 'h-9 w-9 rounded-xl flex items-center justify-center transition border';
   const variants = {
@@ -250,7 +270,7 @@ export default function NonAwardTab() {
       
       if (contentType && contentType.includes('application/json')) {
         const data = await res.json();
-        toast.info(data.message || 'Semua sertifikat sudah terbit');
+        toast(data.message || 'Semua sertifikat sudah terbit', { icon: 'ℹ️' });
         setShowBulkModal(false);
         return;
       }
@@ -420,7 +440,7 @@ export default function NonAwardTab() {
                         {tasmi.siswa?.kelas?.nama || '-'}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-center text-gray-700">Juz {tasmi.juzYangDitasmi}</td>
+                    <td className="px-4 py-2 text-center text-gray-700">{formatJuzDisplay(tasmi.juzYangDitasmi)}</td>
                     <td className="px-4 py-2 text-center text-gray-600 text-xs">
                       {tasmi.tanggalUjian ? new Date(tasmi.tanggalUjian).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
                     </td>
