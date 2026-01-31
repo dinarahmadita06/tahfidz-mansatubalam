@@ -5,7 +5,8 @@ export const maxDuration = 300; // 5 minutes for bulk operations
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { generateCertificate } from '@/lib/certificate-generator';
+import { getActiveTemplateBuffer } from '@/lib/template-service';
 import archiver from 'archiver';
 import { Readable } from 'stream';
 
@@ -27,174 +28,53 @@ async function generateCertNumber(type) {
   return `CERT/${prefix}/${dateStr}/${seq}`;
 }
 
-// Helper to generate single certificate PDF
-async function generateCertificatePDF(tasmi, signers, customDate = null) {
-  const pdfDoc = await PDFDocument.create();
-  const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-  const timesRomanItalicFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
+// Helper to generate single certificate PDF using certificate-generator
+async function generateCertificatePDF(tasmi, templateBuffer, signers, customDate = null) {
+  try {
+    const certDate = customDate ? new Date(customDate) : new Date();
+    const dateStr = certDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    
+    const s1 = signers.find(s => s.type === 'SIGNER_1');
+    const s2 = signers.find(s => s.type === 'SIGNER_2');
+    
+    console.log('[generateCertificatePDF] Template buffer available:', !!templateBuffer);
+    console.log('[generateCertificatePDF] Template buffer size:', templateBuffer ? `${templateBuffer.length} bytes` : 'null');
+    console.log('[generateCertificatePDF] Siswa:', tasmi.siswa?.user?.name);
+    console.log('[generateCertificatePDF] JUZ:', tasmi.juzYangDitasmi);
+    
+    // Prepare data for certificate generator
+    const certificateData = {
+      nama_siswa: tasmi.siswa?.user?.name || 'N/A',
+      juz: tasmi.juzYangDitasmi || '',
+      tanggal_cetak: dateStr,
+      tempat: 'Bandar Lampung',
+      jabatan_kiri: s1?.jabatan || 'Kepala MAN 1 Bandar Lampung',
+      nama_pejabat_kiri: s1?.nama || 'Luqman Hakim, S.Pd., M.M.',
+      ttd_kepala_man: s1?.signatureData || null,
+      cap_kepala_man: s1?.capData || null,
+      cap_kepala_man_scale: s1?.capScale || 1.0,
+      cap_kepala_man_offsetX: s1?.capOffsetX || 0,
+      cap_kepala_man_offsetY: s1?.capOffsetY || 0,
+      cap_kepala_man_opacity: s1?.capOpacity || 0.4,
+      jabatan_kanan: s2?.jabatan || 'Ketua Asrama Luqman El-Hakim',
+      nama_pejabat_kanan: s2?.nama || 'Siti Rowiyah, M.P.dI',
+      ttd_ketua_asrama: s2?.signatureData || null,
+      cap_ketua_asrama: s2?.capData || null,
+      cap_ketua_asrama_scale: s2?.capScale || 1.0,
+      cap_ketua_asrama_offsetX: s2?.capOffsetX || 0,
+      cap_ketua_asrama_offsetY: s2?.capOffsetY || 0,
+      cap_ketua_asrama_opacity: s2?.capOpacity || 0.4,
+    };
 
-  const width = 842;
-  const height = 595;
-  const page = pdfDoc.addPage([width, height]);
-
-  // Border
-  page.drawRectangle({
-    x: 20, y: 20, width: width - 40, height: height - 40,
-    borderColor: rgb(0, 0.5, 0.2), borderWidth: 2,
-  });
-  page.drawRectangle({
-    x: 25, y: 25, width: width - 50, height: height - 50,
-    borderColor: rgb(0, 0.5, 0.2), borderWidth: 1,
-  });
-
-  let yPos = height - 60;
-
-  // Header
-  const headerLine1 = 'KEMENTERIAN AGAMA';
-  page.drawText(headerLine1, {
-    x: (width - helveticaBoldFont.widthOfTextAtSize(headerLine1, 12)) / 2,
-    y: yPos, size: 12, font: helveticaBoldFont,
-  });
-  yPos -= 16;
-
-  const headerLine2 = 'KANTOR KEMENTERIAN AGAMA KOTA BANDAR LAMPUNG';
-  page.drawText(headerLine2, {
-    x: (width - helveticaFont.widthOfTextAtSize(headerLine2, 10)) / 2,
-    y: yPos, size: 10, font: helveticaFont,
-  });
-  yPos -= 16;
-
-  const headerLine3 = 'MADRASAH ALIYAH NEGERI MAN 1 BANDAR LAMPUNG';
-  page.drawText(headerLine3, {
-    x: (width - helveticaBoldFont.widthOfTextAtSize(headerLine3, 11)) / 2,
-    y: yPos, size: 11, font: helveticaBoldFont,
-  });
-  yPos -= 35;
-
-  // Title
-  const title = 'SERTIFIKAT';
-  page.drawText(title, {
-    x: (width - helveticaBoldFont.widthOfTextAtSize(title, 28)) / 2,
-    y: yPos, size: 28, font: helveticaBoldFont, color: rgb(0, 0.4, 0.2),
-  });
-  yPos -= 24;
-
-  const subtitle = 'Wisuda Tahfidzul Qur\'an';
-  page.drawText(subtitle, {
-    x: (width - timesRomanItalicFont.widthOfTextAtSize(subtitle, 18)) / 2,
-    y: yPos, size: 18, font: timesRomanItalicFont,
-  });
-  yPos -= 35;
-
-  // Diberikan Kepada
-  const givenTo = 'Diberikan Kepada';
-  page.drawText(givenTo, {
-    x: (width - helveticaFont.widthOfTextAtSize(givenTo, 14)) / 2,
-    y: yPos, size: 14, font: helveticaFont,
-  });
-  yPos -= 28;
-
-  // Student Name
-  const studentName = tasmi.siswa?.user?.name || 'N/A';
-  page.drawText(studentName, {
-    x: (width - helveticaBoldFont.widthOfTextAtSize(studentName, 20)) / 2,
-    y: yPos, size: 20, font: helveticaBoldFont, color: rgb(0, 0.3, 0.1),
-  });
-  yPos -= 32;
-
-  // Completion Text
-  const completionText = `Telah Menyelesaikan Tahfidzul Qur\'an JUZ ${tasmi.juzYangDitasmi}`;
-  page.drawText(completionText, {
-    x: (width - helveticaBoldFont.widthOfTextAtSize(completionText, 14)) / 2,
-    y: yPos, size: 14, font: helveticaBoldFont,
-  });
-  yPos -= 28;
-
-  // Appreciation text
-  const lines = [
-    'Kepadanya kami berikan penghargaan setinggi-tingginya',
-    'Semoga tanda penghargaan ini menjadi motivasi untuk senantiasa',
-    'meningkatkan amal ibadahnya sesuai ketentuan Allah SWT dan Rosul-Nya'
-  ];
-  for (const line of lines) {
-    page.drawText(line, {
-      x: (width - helveticaFont.widthOfTextAtSize(line, 11)) / 2,
-      y: yPos, size: 11, font: helveticaFont,
-    });
-    yPos -= 16;
+    // Use the certificate generator with correct parameter order
+    // generateCertificate(templateSource, paperSize, data)
+    const pdfBytes = await generateCertificate(templateBuffer, 'A4', certificateData);
+    console.log('[generateCertificatePDF] PDF generated, size:', pdfBytes.length, 'bytes');
+    return pdfBytes;
+  } catch (error) {
+    console.error('[generateCertificatePDF] Error:', error);
+    throw error;
   }
-  yPos -= 19;
-
-  // Signatures
-  const sigY = yPos;
-  const leftX = 80;
-  const rightX = width - 280;
-  const s1 = signers.find(s => s.type === 'SIGNER_1');
-  const s2 = signers.find(s => s.type === 'SIGNER_2');
-
-  // TTD 1 (Left)
-  if (s1) {
-    page.drawText(s1.jabatan || '', { x: leftX, y: sigY, size: 11, font: helveticaFont });
-    if (s1.signatureData) {
-      try {
-        const imgBase64 = s1.signatureData.split(',')[1] || s1.signatureData;
-        const imgBytes = Buffer.from(imgBase64, 'base64');
-        const ttdImg = await pdfDoc.embedPng(imgBytes).catch(() => pdfDoc.embedJpg(imgBytes));
-        page.drawImage(ttdImg, { x: leftX, y: sigY - 65, width: 100, height: 50 });
-        
-        if (s1.capData) {
-          const capBase64 = s1.capData.split(',')[1] || s1.capData;
-          const capBytes = Buffer.from(capBase64, 'base64');
-          const capImg = await pdfDoc.embedPng(capBytes).catch(() => pdfDoc.embedJpg(capBytes));
-          const capScale = s1.capScale || 1.0;
-          const capWidth = 80 * capScale;
-          const capHeight = 80 * capScale;
-          page.drawImage(capImg, {
-            x: leftX + (100 - capWidth) / 2 + (s1.capOffsetX || 0),
-            y: sigY - 65 + (50 - capHeight) / 2 + (s1.capOffsetY || 0),
-            width: capWidth, height: capHeight, opacity: s1.capOpacity || 0.4
-          });
-        }
-      } catch (e) { console.error('TTD1 Error:', e); }
-    }
-    page.drawText(s1.nama || '', { x: leftX, y: sigY - 80, size: 11, font: helveticaBoldFont });
-  }
-
-  // TTD 2 (Right)
-  const certDate = customDate ? new Date(customDate) : new Date();
-  const dateStr = certDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-  page.drawText(`Bandar Lampung, ${dateStr}`, { x: rightX, y: sigY + 20, size: 10, font: helveticaFont });
-  
-  if (s2) {
-    page.drawText(s2.jabatan || '', { x: rightX, y: sigY, size: 11, font: helveticaFont });
-    if (s2.signatureData) {
-      try {
-        const imgBase64 = s2.signatureData.split(',')[1] || s2.signatureData;
-        const imgBytes = Buffer.from(imgBase64, 'base64');
-        const ttdImg = await pdfDoc.embedPng(imgBytes).catch(() => pdfDoc.embedJpg(imgBytes));
-        page.drawImage(ttdImg, { x: rightX, y: sigY - 65, width: 100, height: 50 });
-        
-        if (s2.capData) {
-          const capBase64 = s2.capData.split(',')[1] || s2.capData;
-          const capBytes = Buffer.from(capBase64, 'base64');
-          const capImg = await pdfDoc.embedPng(capBytes).catch(() => pdfDoc.embedJpg(capBytes));
-          const capScale = s2.capScale || 1.0;
-          const capWidth = 80 * capScale;
-          const capHeight = 80 * capScale;
-          page.drawImage(capImg, {
-            x: rightX + (100 - capWidth) / 2 + (s2.capOffsetX || 0),
-            y: sigY - 65 + (50 - capHeight) / 2 + (s2.capOffsetY || 0),
-            width: capWidth, height: capHeight, opacity: s2.capOpacity || 0.4
-          });
-        }
-      } catch (e) { console.error('TTD2 Error:', e); }
-    }
-    page.drawText(s2.nama || '', { x: rightX, y: sigY - 80, size: 11, font: helveticaBoldFont });
-  }
-
-  return await pdfDoc.save();
 }
 
 export async function POST(request) {
@@ -262,7 +142,7 @@ export async function POST(request) {
           select: {
             nisn: true,
             user: { select: { name: true } },
-            kelas: { select: { nama: true, jenjang: true } },
+            kelas: { select: { nama: true } },
           },
         },
         certificate: true,
@@ -278,24 +158,160 @@ export async function POST(request) {
     let successCount = 0;
     let failedCount = 0;
 
-    // Filter based on skipPublished
-    const tasmiResults = skipPublished 
-      ? allTasmiResults.filter(t => {
-          if (t.certificate) {
-            skippedCount++;
-            return false;
-          }
-          return true;
-        })
-      : allTasmiResults;
+    // Log untuk debugging
+    console.log(`[BULK GENERATE] Total tasmi found: ${totalCount}`);
+    console.log(`[BULK GENERATE] skipPublished: ${skipPublished}`);
+    allTasmiResults.forEach((t, idx) => {
+      console.log(`[BULK GENERATE] Tasmi ${idx + 1}:`, {
+        id: t.id,
+        siswa: t.siswa?.user?.name,
+        hasCertificate: !!t.certificate,
+        certificateId: t.certificate?.id
+      });
+    });
 
-    if (tasmiResults.length === 0) {
+    // Separate into new and existing certificates
+    const tasmiToGenerate = [];
+    const tasmiWithCertificates = [];
+    
+    for (const tasmi of allTasmiResults) {
+      if (tasmi.certificate) {
+        tasmiWithCertificates.push(tasmi);
+        if (!skipPublished) {
+          // Jika tidak skip published, regenerate ulang
+          tasmiToGenerate.push(tasmi);
+        } else {
+          skippedCount++;
+        }
+      } else {
+        tasmiToGenerate.push(tasmi);
+      }
+    }
+
+    console.log(`[BULK GENERATE] To generate: ${tasmiToGenerate.length}, With existing cert: ${tasmiWithCertificates.length}, Skipped: ${skippedCount}`);
+
+    // Jika semua sudah punya certificate dan skipPublished=true, download yang sudah ada
+    if (tasmiToGenerate.length === 0 && tasmiWithCertificates.length > 0 && skipPublished) {
+      console.log('[BULK GENERATE] All have certificates, downloading existing ones');
+      // Download existing certificates instead of returning error
+      const tasmiResults = tasmiWithCertificates;
+      
+      // Generate PDFs from existing certificates
+      const pdfs = [];
+      const signers = await prisma.adminSignature.findMany({
+        where: { type: { in: ['SIGNER_1', 'SIGNER_2'] } }
+      });
+
+      // Get active template buffer
+      let templateBuffer;
+      try {
+        templateBuffer = await getActiveTemplateBuffer();
+        console.log('[BULK GENERATE] Template loaded successfully:', templateBuffer.length, 'bytes');
+      } catch (error) {
+        console.error('[BULK GENERATE] Template load error:', error.message);
+        return NextResponse.json(
+          { error: 'No active template found', message: 'Please upload and activate a certificate template first' },
+          { status: 400 }
+        );
+      }
+
+      for (const tasmi of tasmiResults) {
+        try {
+          const pdfBytes = await generateCertificatePDF(tasmi, templateBuffer, signers, printDate);
+          
+          const name = (tasmi.siswa?.user?.name || 'NoName').replace(/\s+/g, '_');
+          const nisn = tasmi.siswa?.nisn || 'NoNIS';
+          const kelas = (tasmi.siswa?.kelas?.nama || 'NoKelas').replace(/\s+/g, '_');
+          const tanggalUjian = tasmi.tanggalUjian 
+            ? new Date(tasmi.tanggalUjian).toISOString().slice(0, 10).replace(/-/g, '')
+            : 'NoDate';
+          const filename = `Sertifikat_Tasmi_${name}_${nisn}_${kelas}_${tanggalUjian}.pdf`;
+
+          pdfs.push({ filename, data: pdfBytes });
+          successCount++;
+        } catch (error) {
+          console.error(`Error generating cert for ${tasmi.siswa?.user?.name}:`, error);
+          failedCount++;
+        }
+      }
+
+      // Return ZIP with existing certificates
+      if (pdfs.length === 1) {
+        return new NextResponse(Buffer.from(pdfs[0].data), {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="${pdfs[0].filename}"`,
+            'X-Total-Count': totalCount.toString(),
+            'X-Success-Count': successCount.toString(),
+            'X-Failed-Count': failedCount.toString(),
+            'X-Skipped-Count': '0',
+          },
+        });
+      }
+
+      // Create ZIP for multiple
+      console.log(`[BULK GENERATE] Creating ZIP with ${pdfs.length} PDFs`);
+      
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      const chunks = [];
+      
+      // Wrap archiver in Promise
+      const zipPromise = new Promise((resolve, reject) => {
+        archive.on('data', (chunk) => {
+          console.log(`[BULK GENERATE] Received chunk: ${chunk.length} bytes`);
+          chunks.push(chunk);
+        });
+        
+        archive.on('end', () => {
+          console.log('[BULK GENERATE] Archive end event');
+          const buffer = Buffer.concat(chunks);
+          console.log(`[BULK GENERATE] Total ZIP size: ${buffer.length} bytes`);
+          resolve(buffer);
+        });
+        
+        archive.on('error', (err) => {
+          console.error('[BULK GENERATE] Archive error:', err);
+          reject(err);
+        });
+      });
+
+      // Add PDFs to archive
+      for (const pdf of pdfs) {
+        console.log(`[BULK GENERATE] Adding ${pdf.filename} (${pdf.data.length} bytes)`);
+        archive.append(Buffer.from(pdf.data), { name: pdf.filename });
+      }
+      
+      // Finalize and wait for completion
+      archive.finalize();
+      const zipBuffer = await zipPromise;
+
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      const zipFilename = `Sertifikat_Tasmi_Bulk_${dateStr}.zip`;
+
+      return new NextResponse(zipBuffer, {
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': `attachment; filename="${zipFilename}"`,
+          'X-Total-Count': totalCount.toString(),
+          'X-Success-Count': successCount.toString(),
+          'X-Failed-Count': failedCount.toString(),
+          'X-Skipped-Count': '0',
+        },
+      });
+    }
+
+    // If nothing to process
+    if (tasmiToGenerate.length === 0) {
       return NextResponse.json(
         {
-          message: skipPublished 
-            ? 'Semua sertifikat sudah terbit' 
-            : 'Tidak ada sertifikat yang perlu di-generate',
+          message: 'Tidak ada sertifikat yang perlu di-generate',
           count: 0,
+          details: {
+            total: totalCount,
+            skipped: skippedCount,
+            toGenerate: 0
+          }
         },
         { 
           headers: {
@@ -308,15 +324,25 @@ export async function POST(request) {
       );
     }
 
+    const tasmiResults = tasmiToGenerate;
+
     // Fetch signers
     const signers = await prisma.adminSignature.findMany({
       where: { type: { in: ['SIGNER_1', 'SIGNER_2'] } }
     });
 
-    // Find template
-    const template = await prisma.certificateTemplate.findFirst({
-      where: { type: 'NON_AWARD', isDefault: true, isActive: true },
-    });
+    // Get active template buffer
+    let templateBuffer;
+    try {
+      templateBuffer = await getActiveTemplateBuffer();
+      console.log('[BULK GENERATE] Template loaded successfully:', templateBuffer.length, 'bytes');
+    } catch (error) {
+      console.error('[BULK GENERATE] Template load error:', error.message);
+      return NextResponse.json(
+        { error: 'No active template found', message: 'Please upload and activate a certificate template first' },
+        { status: 400 }
+      );
+    }
 
     // Generate certificates
     const pdfs = [];
@@ -338,7 +364,7 @@ export async function POST(request) {
         }
 
         // Generate PDF with custom date if provided
-        const pdfBytes = await generateCertificatePDF(tasmi, signers, printDate);
+        const pdfBytes = await generateCertificatePDF(tasmi, templateBuffer, signers, printDate);
         
         // Filename: Sertifikat_Tasmi_{Nama}_{NIS}_{Kelas}_{TanggalUjian}.pdf
         const name = (tasmi.siswa?.user?.name || 'NoName').replace(/\s+/g, '_');
@@ -390,15 +416,40 @@ export async function POST(request) {
     }
 
     // Create ZIP file for multiple PDFs
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    console.log(`[BULK GENERATE] Creating ZIP with ${pdfs.length} PDFs`);
     
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    const chunks = [];
+    
+    // Wrap archiver in Promise
+    const zipPromise = new Promise((resolve, reject) => {
+      archive.on('data', (chunk) => {
+        console.log(`[BULK GENERATE] Received chunk: ${chunk.length} bytes`);
+        chunks.push(chunk);
+      });
+      
+      archive.on('end', () => {
+        console.log('[BULK GENERATE] Archive end event');
+        const buffer = Buffer.concat(chunks);
+        console.log(`[BULK GENERATE] Total ZIP size: ${buffer.length} bytes`);
+        resolve(buffer);
+      });
+      
+      archive.on('error', (err) => {
+        console.error('[BULK GENERATE] Archive error:', err);
+        reject(err);
+      });
+    });
+
     // Add PDFs to archive
     for (const pdf of pdfs) {
+      console.log(`[BULK GENERATE] Adding ${pdf.filename} (${pdf.data.length} bytes)`);
       archive.append(Buffer.from(pdf.data), { name: pdf.filename });
     }
 
-    // Finalize archive
+    // Finalize and wait for completion
     archive.finalize();
+    const zipBuffer = await zipPromise;
 
     // Generate ZIP filename: Sertifikat_Tasmi_Bulk_{Jenjang}_{KelasOrAll}_{YYYYMMDD}.zip
     const now = new Date();
@@ -419,13 +470,6 @@ export async function POST(request) {
     }
     
     const zipFilename = `Sertifikat_Tasmi_Bulk_${filterDesc}_${dateStr}.zip`;
-
-    // Convert stream to buffer
-    const chunks = [];
-    for await (const chunk of archive) {
-      chunks.push(chunk);
-    }
-    const zipBuffer = Buffer.concat(chunks);
 
     return new NextResponse(zipBuffer, {
       headers: {
