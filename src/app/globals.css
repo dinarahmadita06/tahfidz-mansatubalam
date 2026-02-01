@@ -1,6 +1,13 @@
 /* Font import moved to layout.js */
 @import "tailwindcss";
 
+/* Global Background Guard - Prevent gray background bug */
+html,
+body {
+  background-color: #ffffff !important;
+  min-height: 100vh;
+}
+
 :root {
   color-scheme: light;
   --background: #ffffff;

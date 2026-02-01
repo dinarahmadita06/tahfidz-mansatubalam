@@ -34,6 +34,20 @@ export default function RecoverySetupTrigger() {
     }
   }, [session, status, showModal, recoveryCode, pathname]);
 
+  // Cleanup: Reset body overflow when modal closes or component unmounts
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal]);
+
   const generateCode = async () => {
     setLoading(true);
     try {

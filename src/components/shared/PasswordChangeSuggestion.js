@@ -60,6 +60,19 @@ export default function PasswordChangeSuggestion() {
     router.push(targetPath);
   };
 
+  // Cleanup: Reset body overflow when modal closes or component unmounts
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal]);
+
   if (!showModal) return null;
 
   return (
