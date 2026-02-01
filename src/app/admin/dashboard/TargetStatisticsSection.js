@@ -264,6 +264,11 @@ export default function TargetStatisticsSection({ initialData, tahunAjaranAktif:
   useEffect(() => {
     if (!initialData) {
       fetchData();
+    } else {
+      // If initialData exists but tahunAjaranAktif is null/undefined, fetch TA separately
+      if (!initialTahunAjaran || initialTahunAjaran.targetHafalan === undefined) {
+        fetchData();
+      }
     }
     
     // Refetch when tab becomes visible (user comes back from Tahun Ajaran page)
@@ -278,11 +283,20 @@ export default function TargetStatisticsSection({ initialData, tahunAjaranAktif:
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [initialData]);
+  }, [initialData, initialTahunAjaran]);
 
   // Show placeholder if target not available
   // CRITICAL FIX: Check for null/undefined only, not 0 (0 is valid target)
   const hasValidTarget = tahunAjaranAktif && (tahunAjaranAktif.targetHafalan !== null && tahunAjaranAktif.targetHafalan !== undefined);
+  
+  // DEBUG: Log untuk track issue
+  console.log('[TargetStatisticsSection] Debug:', {
+    loading,
+    tahunAjaranAktif,
+    targetHafalan: tahunAjaranAktif?.targetHafalan,
+    hasValidTarget,
+    willShowPlaceholder: !loading && !hasValidTarget
+  });
   
   if (!loading && !hasValidTarget) {
     return (
