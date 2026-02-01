@@ -5,6 +5,7 @@ import { useState, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, BookOpen, Mail, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export default function LoginPage() {
@@ -150,8 +151,15 @@ export default function LoginPage() {
         <div className="w-full max-w-md relative z-10">
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-full mb-3 shadow-md">
-              <BookOpen size={28} className="text-white" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-3 shadow-lg p-2">
+              <Image 
+                src="/logo-man1.png" 
+                alt="Logo MAN 1 Bandar Lampung" 
+                width={80} 
+                height={80}
+                className="object-contain"
+                priority
+              />
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent mb-1">
               SIMTAQ
