@@ -500,6 +500,20 @@ exports.Prisma.CertificateTemplateScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.TemplateSertifikatScalarFieldEnum = {
+  id: 'id',
+  nama: 'nama',
+  filename: 'filename',
+  filepath: 'filepath',
+  fileUrl: 'fileUrl',
+  width: 'width',
+  height: 'height',
+  isActive: 'isActive',
+  uploadedBy: 'uploadedBy',
+  uploadedAt: 'uploadedAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.CertificateScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -699,6 +713,7 @@ exports.Prisma.ModelName = {
   PushSubscription: 'PushSubscription',
   RateLimit: 'RateLimit',
   CertificateTemplate: 'CertificateTemplate',
+  TemplateSertifikat: 'TemplateSertifikat',
   Certificate: 'Certificate',
   WisudaEvent: 'WisudaEvent',
   AwardCategory: 'AwardCategory',
