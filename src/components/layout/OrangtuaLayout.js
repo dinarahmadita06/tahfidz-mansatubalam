@@ -246,12 +246,17 @@ function OrangtuaLayout({ children }) {
     } catch (error) {
       console.error('Logout pre-processing failed:', error);
     } finally {
-      // Proceed with signOut
+      // Clear session storage on logout
+      if (typeof window !== 'undefined') {
+        sessionStorage.clear();
+      }
+      
+      // Proceed with signOut - redirect to landing page
       try {
-        await signOut({ callbackUrl: '/login', redirect: true });
+        await signOut({ callbackUrl: '/', redirect: true });
       } catch (error) {
         console.error('SignOut failed, falling back to manual redirect:', error);
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
   };

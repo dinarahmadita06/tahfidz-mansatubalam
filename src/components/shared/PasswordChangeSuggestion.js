@@ -11,18 +11,31 @@ export default function PasswordChangeSuggestion() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // Only show for authenticated users
-    if (status === 'authenticated' && session?.user) {
-      // Check if already dismissed in this session
-      const isDismissed = sessionStorage.getItem('password-suggestion-dismissed');
-      
-      if (!isDismissed) {
-        // Show after a short delay for better UX
-        const timer = setTimeout(() => {
-          setShowModal(true);
-        }, 1500);
-        return () => clearTimeout(timer);
+    // Guard: Only show for authenticated users with valid session
+    if (status !== 'authenticated' || !session?.user?.id) {
+      // Reset modal state if user is not authenticated
+      setShowModal(false);
+      return;
+    }
+
+    // Additional guard: don't show on public/login pages
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const publicPages = ['/', '/login', '/lupa-password'];
+      if (publicPages.includes(pathname)) {
+        return;
       }
+    }
+
+    // Check if already dismissed in this session
+    const isDismissed = sessionStorage.getItem('password-suggestion-dismissed');
+    
+    if (!isDismissed) {
+      // Show after a short delay for better UX
+      const timer = setTimeout(() => {
+        setShowModal(true);
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [status, session]);
 
