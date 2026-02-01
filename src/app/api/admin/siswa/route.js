@@ -29,26 +29,21 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const statusSiswa = searchParams.get('statusSiswa');
     const kelasId = searchParams.get('kelasId');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '20');
 
     // Optimization: If limit=1 and status=pending, it's likely for the sidebar badge
     const isBadgeRequest = limit === 1 && status === 'pending' && !search && !kelasId;
 
-    // Build cache key
-    const cacheKey = `siswa-list-${status || 'all'}-${kelasId || 'all'}-${search || 'none'}-p${page}-l${limit}`;
-    
-    // Check cache
-    const cachedData = getCachedData(cacheKey);
-    if (cachedData) {
-      console.log('[API ADMIN SISWA] Returning cached data');
-      return NextResponse.json(cachedData);
-    }
+    // Build cache key (removed caching for now for dynamic data)
+    // const cacheKey = `siswa-list-${status || 'all'}-${kelasId || 'all'}-${search || 'none'}-p${page}-l${limit}`;
 
     let whereClause = {};
     if (status) whereClause.status = status;
+    if (statusSiswa) whereClause.statusSiswa = statusSiswa;
     if (kelasId) whereClause.kelasId = kelasId;
     if (search) {
       whereClause.OR = [
@@ -121,13 +116,23 @@ export async function GET(request) {
     const startQueries = performance.now();
     let totalCount = 0;
     let siswa = [];
+    let statistics = null;
 
     if (isBadgeRequest) {
       // Optimization for sidebar badge: count only
       totalCount = await prisma.siswa.count({ where: whereClause });
     } else {
-      const results = await Promise.all([
+      // Calculate statistics separately (always count all)
+      const [totalCountResult, activeCount, unvalidatedCount, statusCounts, fetchedSiswa] = await Promise.all([
         prisma.siswa.count({ where: whereClause }),
+        prisma.siswa.count({ where: { ...whereClause, status: 'approved' } }),
+        prisma.siswa.count({ where: { ...whereClause, status: { not: 'approved' } } }),
+        Promise.all([
+          prisma.siswa.count({ where: { ...whereClause, statusSiswa: 'AKTIF' } }),
+          prisma.siswa.count({ where: { ...whereClause, statusSiswa: 'LULUS' } }),
+          prisma.siswa.count({ where: { ...whereClause, statusSiswa: 'PINDAH' } }),
+          prisma.siswa.count({ where: { ...whereClause, statusSiswa: 'KELUAR' } })
+        ]),
         prisma.siswa.findMany({
           where: whereClause,
           skip: (page - 1) * limit,
@@ -138,8 +143,20 @@ export async function GET(request) {
           }
         })
       ]);
-      totalCount = results[0];
-      siswa = results[1];
+      
+      totalCount = totalCountResult;
+      siswa = fetchedSiswa;
+      statistics = {
+        total: totalCountResult,
+        active: activeCount,
+        unvalidated: unvalidatedCount,
+        statusCounts: {
+          AKTIF: statusCounts[0],
+          LULUS: statusCounts[1],
+          PINDAH: statusCounts[2],
+          KELUAR: statusCounts[3]
+        }
+      };
     }
     const endQueries = performance.now();
     const prismaDuration = (endQueries - startQueries).toFixed(2);
@@ -148,27 +165,25 @@ export async function GET(request) {
     const totalPages = Math.ceil(totalCount / limit);
 
     const responseData = {
+      statistics,
       data: siswa,
       pagination: {
         page,
         limit,
-        totalCount,
+        totalItems: totalCount,
         totalPages
       }
     };
     const endTransform = performance.now();
     const transformDuration = (endTransform - startTransform).toFixed(2);
 
-    // Cache response
-    setCachedData(cacheKey, responseData, isBadgeRequest ? 60 : 30); // Cache badge request for 60s
-
     const endTotal = performance.now();
     const totalDuration = (endTotal - startTotal).toFixed(2);
 
-    console.log(`[API SISWA PENDING] total: ${totalDuration} ms`);
-    console.log(`[API SISWA PENDING] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
-    console.log(`[API SISWA PENDING] prisma.queries: ${prismaDuration} ms`);
-    console.log(`[API SISWA PENDING] transform response: ${transformDuration} ms`);
+    console.log(`[API SISWA] total: ${totalDuration} ms`);
+    console.log(`[API SISWA] session/auth: ${(endAuth - startAuth).toFixed(2)} ms`);
+    console.log(`[API SISWA] prisma.queries: ${prismaDuration} ms`);
+    console.log(`[API SISWA] transform response: ${transformDuration} ms`);
     console.log('--- [API ADMIN SISWA] REQUEST END ---');
 
     return NextResponse.json(responseData);
