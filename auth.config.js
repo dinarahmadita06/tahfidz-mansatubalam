@@ -149,7 +149,15 @@ export const authConfig = {
           let authenticatedUser = null;
 
           for (const user of potentialUsers) {
-            console.log('🔍 Checking user:', user.id, user.name, user.role, user.isActive, 'Username:', user.username);
+            console.log('🔍 [AUTH] Checking user:', {
+              id: user.id,
+              name: user.name,
+              username: user.username,
+              role: user.role,
+              isActive: user.isActive,
+              hasPassword: !!user.password
+            });
+            
             if (!user.password) {
               console.log('⚠️  User has no password');
               continue;
@@ -163,12 +171,8 @@ export const authConfig = {
 
             let isValid = await bcrypt.compare(String(password), user.password);
             
-            // Enhanced logging for GURU login
-            if (user.role === 'GURU') {
-              console.log(`🔐 [GURU LOGIN] Username: ${user.username}, Input Password: ${password}, Valid: ${isValid}`);
-            } else {
-              console.log('🔐 Password validation for', user.role, user.username, ':', isValid);
-            }
+            // Enhanced logging for all roles
+            console.log(`🔐 [${user.role} LOGIN] Username: ${user.username}, Password Valid: ${isValid}${user.role === 'SISWA' && user.siswa?.tanggalLahir ? `, Expected format: YYYY-MM-DD (tanggalLahir: ${user.siswa.tanggalLahir.toISOString().split('T')[0]})` : ''}`);
 
             if (isValid) {
               authenticatedUser = user;
