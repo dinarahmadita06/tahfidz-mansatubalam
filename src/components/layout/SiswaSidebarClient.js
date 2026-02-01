@@ -107,10 +107,13 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
       }
       
       try {
-        await signOut({ callbackUrl: '/', redirect: true });
-      } catch (error) {
-        console.error('SignOut failed, falling back to manual redirect:', error);
+        await signOut({ callbackUrl: '/', redirect: false });
+        // Force redirect to prevent old domain cache
         window.location.href = '/';
+      } catch (error) {
+        console.error('SignOut failed, forcing manual redirect:', error);
+        // Emergency fallback: force to root
+        window.location.replace('/');
       }
     }
   };
