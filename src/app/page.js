@@ -297,7 +297,7 @@ export default function SIMTAQLandingPage() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
-            {['Beranda', 'Fitur', 'Cara Install', 'Kontak'].map((item) => (
+            {['Beranda', 'Fitur', 'Cara Install'].map((item) => (
               <a 
                 key={item} 
                 href={`#${item.toLowerCase().replace(' ', '-')}`} 
@@ -580,78 +580,46 @@ export default function SIMTAQLandingPage() {
       </Section>
 
       {/* 6. Kontak & Footer */}
-      <footer id="kontak" className="bg-slate-900 text-white pt-20 pb-10 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-16 mb-20">
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                <GraduationCap size={24} />
+      <footer id="kontak" className="bg-slate-900 text-white pt-20 pb-10 px-6 md:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-20">
+            {/* Logo & Deskripsi - 5 kolom */}
+            <div className="lg:col-span-5">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                  <GraduationCap size={24} />
+                </div>
+                <span className="text-2xl font-black tracking-tight uppercase">SIMTAQ</span>
               </div>
-              <span className="text-2xl font-black tracking-tight uppercase">SIMTAQ</span>
+              <p className="text-slate-400 leading-relaxed mb-8 font-medium max-w-sm">
+                Membentuk generasi Qur&#39;ani dengan dukungan teknologi monitoring yang handal, transparan, dan mudah diakses.
+              </p>
             </div>
-            <p className="text-slate-400 leading-relaxed mb-8 font-medium">
-              Membentuk generasi Qur&#39;ani dengan dukungan teknologi monitoring yang handal, transparan, dan mudah diakses.
-            </p>
-            <div className="flex gap-4">
-              {[Smartphone, Mail, Phone].map((Icon, i) => (
-                <div key={i} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center hover:bg-emerald-400 hover:text-slate-900 transition-all cursor-pointer border border-white/5">
-                  <Icon size={20} />
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <h4 className="font-bold text-lg mb-6 text-emerald-400">Navigasi</h4>
-              <ul className="space-y-4 text-slate-400 text-sm font-bold">
-                <li><a href="#beranda" className="hover:text-emerald-400 transition-colors">Beranda</a></li>
-                <li><a href="#fitur" className="hover:text-emerald-400 transition-colors">Fitur</a></li>
-                <li><a href="#cara-install" className="hover:text-emerald-400 transition-colors">Cara Install</a></li>
-                <li><Link href="/login" className="hover:text-emerald-400 transition-colors">Login Portal</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-6 text-emerald-400">Legalitas</h4>
-              <ul className="space-y-4 text-slate-400 text-sm font-bold">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Kebijakan Privasi</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Syarat Ketentuan</a></li>
-                <li><a href="https://man1bandarlampung.sch.id" className="hover:text-emerald-400 transition-colors">Website Sekolah</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-lg mb-6 text-emerald-400">Hubungi Admin</h4>
-            <div className="space-y-6">
-              <div className="flex gap-4 group">
-                <div className="w-12 h-12 bg-white/5 text-emerald-400 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-400 group-hover:text-slate-900 transition-all border border-white/5">
-                  <Phone size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">WhatsApp</p>
-                  <p className="font-bold text-slate-200">+62 812 3456 7890</p>
-                </div>
+            {/* Menu - 7 kolom dibagi 2 */}
+            <div className="lg:col-span-7 grid grid-cols-2 gap-8 lg:gap-12">
+              <div>
+                <h4 className="font-bold text-lg mb-6 text-emerald-400">Navigasi</h4>
+                <ul className="space-y-4 text-slate-400 text-sm font-bold">
+                  <li><a href="#beranda" className="hover:text-emerald-400 transition-colors">Beranda</a></li>
+                  <li><a href="#fitur" className="hover:text-emerald-400 transition-colors">Fitur</a></li>
+                  <li><a href="#cara-install" className="hover:text-emerald-400 transition-colors">Cara Install</a></li>
+                  <li><Link href="/login" className="hover:text-emerald-400 transition-colors">Login Portal</Link></li>
+                </ul>
               </div>
-              <div className="flex gap-4 group">
-                <div className="w-12 h-12 bg-white/5 text-emerald-400 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-400 group-hover:text-slate-900 transition-all border border-white/5">
-                  <Mail size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Email</p>
-                  <p className="font-bold text-slate-200">admin.tahfidz@man1.sch.id</p>
-                </div>
+              <div>
+                <h4 className="font-bold text-lg mb-6 text-emerald-400">Legalitas</h4>
+                <ul className="space-y-4 text-slate-400 text-sm font-bold">
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Kebijakan Privasi</a></li>
+                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Syarat Ketentuan</a></li>
+                  <li><a href="https://man1bandarlampung.sch.id" className="hover:text-emerald-400 transition-colors">Website Sekolah</a></li>
+                </ul>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="max-w-7xl mx-auto pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-slate-500 text-sm">
-          <p>© 2026 SIMTAQ — MAN 1 Bandar Lampung. All rights reserved.</p>
-          <div className="flex items-center gap-2 font-bold">
-            <span>Dibuat dengan</span>
-            <Heart size={14} className="text-emerald-400 fill-emerald-400" />
-            <span>untuk Pendidikan</span>
+          <div className="pt-10 border-t border-white/5 text-center">
+            <p className="text-slate-500 text-sm">© 2026 SIMTAQ — MAN 1 Bandar Lampung. All rights reserved.</p>
           </div>
         </div>
       </footer>
