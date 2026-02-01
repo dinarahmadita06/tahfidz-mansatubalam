@@ -283,7 +283,7 @@ export default function AdminKelasPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGuru, setFilterGuru] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, active, inactive
+  const [filter, setFilter] = useState('all'); // all, grade_x, grade_xi, grade_xii, status_active, status_inactive
   const [showInactiveKelas, setShowInactiveKelas] = useState(false); // Toggle untuk tampil kelas nonaktif
   const [showKelasModal, setShowKelasModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -619,6 +619,21 @@ export default function AdminKelasPage() {
     setEditingKelas(null);
   };
 
+  // Helper function untuk match tingkat kelas
+  const matchGrade = (nama, grade) => {
+    // CRITICAL: Match harus di awal nama, bukan contains
+    // X harus match "X " bukan "XI" atau "XII"
+    const namaUpper = nama.toUpperCase().trim();
+    if (grade === 'X') {
+      return namaUpper.startsWith('X '); // X + spasi
+    } else if (grade === 'XI') {
+      return namaUpper.startsWith('XI '); // XI + spasi atau XI F
+    } else if (grade === 'XII') {
+      return namaUpper.startsWith('XII '); // XII + spasi atau XII F
+    }
+    return true;
+  };
+
   // Filter data - pisahkan aktif dan nonaktif
   const activeKelas = Array.isArray(kelas) ? kelas.filter(k => {
     const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
@@ -626,8 +641,15 @@ export default function AdminKelasPage() {
     const hasGuru = k.guruKelas && k.guruKelas.length > 0;
     const matchGuru = filterGuru === 'all' ||
       (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
+    
+    // Apply grade filter
+    let matchFilter = true;
+    if (filter === 'grade_x') matchFilter = matchGrade(k.nama, 'X');
+    else if (filter === 'grade_xi') matchFilter = matchGrade(k.nama, 'XI');
+    else if (filter === 'grade_xii') matchFilter = matchGrade(k.nama, 'XII');
+    else if (filter === 'status_inactive') matchFilter = false; // Hide active when filter is inactive
 
-    return matchSearch && matchGuru && matchStatus;
+    return matchSearch && matchGuru && matchStatus && matchFilter;
   }) : [];
 
   const inactiveKelas = Array.isArray(kelas) ? kelas.filter(k => {
@@ -636,13 +658,20 @@ export default function AdminKelasPage() {
     const hasGuru = k.guruKelas && k.guruKelas.length > 0;
     const matchGuru = filterGuru === 'all' ||
       (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
+    
+    // Apply grade filter
+    let matchFilter = true;
+    if (filter === 'grade_x') matchFilter = matchGrade(k.nama, 'X');
+    else if (filter === 'grade_xi') matchFilter = matchGrade(k.nama, 'XI');
+    else if (filter === 'grade_xii') matchFilter = matchGrade(k.nama, 'XII');
+    else if (filter === 'status_active') matchFilter = false; // Hide inactive when filter is active
 
-    return matchSearch && matchGuru && matchStatus;
+    return matchSearch && matchGuru && matchStatus && matchFilter;
   }) : [];
 
   // Untuk backward compatibility dengan display
-  const filteredKelas = filterStatus === 'all' ? [...activeKelas, ...inactiveKelas] :
-    filterStatus === 'active' ? activeKelas : inactiveKelas;
+  const filteredKelas = filter === 'all' || filter.startsWith('grade_') ? [...activeKelas, ...inactiveKelas] :
+    filter === 'status_active' ? activeKelas : inactiveKelas;
 
   // Statistics - updated untuk gunakan real status field
   const stats = {
@@ -761,11 +790,11 @@ export default function AdminKelasPage() {
 
               <div className="min-w-0">
                 <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">
-                  Filter Status
+                  Filter
                 </label>
                 <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
                   className="w-full h-11 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer text-sm appearance-none bg-white"
                   style={{
                     backgroundImage: 'url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath fill=%27none%27 stroke=%27%23333%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M2 5l6 6 6-6%27/%3E%3C/svg%3E")',
@@ -775,9 +804,12 @@ export default function AdminKelasPage() {
                     paddingRight: '2.5rem',
                   }}
                 >
-                  <option value="all">Semua Status</option>
-                  <option value="active">Aktif</option>
-                  <option value="inactive">Tidak Aktif</option>
+                  <option value="all">Semua</option>
+                  <option value="grade_x">X</option>
+                  <option value="grade_xi">XI</option>
+                  <option value="grade_xii">XII</option>
+                  <option value="status_active">Aktif</option>
+                  <option value="status_inactive">Tidak Aktif</option>
                 </select>
               </div>
             </div>
