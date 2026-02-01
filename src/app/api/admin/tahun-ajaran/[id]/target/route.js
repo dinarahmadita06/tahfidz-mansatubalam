@@ -61,8 +61,10 @@ export async function PATCH(request, { params }) {
       }
     });
 
-    // Invalidate cache
+    // Invalidate all related caches so dashboard shows updated target immediately
     invalidateCache('admin-tahun-ajaran-list');
+    invalidateCache('admin-tahun-ajaran-summary');
+    invalidateCache('admin-dashboard-summary'); // Dashboard cache
 
     return NextResponse.json({
       success: true,

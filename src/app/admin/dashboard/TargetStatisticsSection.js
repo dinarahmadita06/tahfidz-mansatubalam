@@ -265,10 +265,26 @@ export default function TargetStatisticsSection({ initialData, tahunAjaranAktif:
     if (!initialData) {
       fetchData();
     }
+    
+    // Refetch when tab becomes visible (user comes back from Tahun Ajaran page)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchData();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [initialData]);
 
   // Show placeholder if target not available
-  if (!loading && !tahunAjaranAktif?.targetHafalan) {
+  // CRITICAL FIX: Check for null/undefined only, not 0 (0 is valid target)
+  const hasValidTarget = tahunAjaranAktif && (tahunAjaranAktif.targetHafalan !== null && tahunAjaranAktif.targetHafalan !== undefined);
+  
+  if (!loading && !hasValidTarget) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <EmptyState
@@ -287,7 +303,7 @@ export default function TargetStatisticsSection({ initialData, tahunAjaranAktif:
     );
   }
 
-  const targetHafalan = tahunAjaranAktif?.targetHafalan || 3;
+  const targetHafalan = tahunAjaranAktif?.targetHafalan ?? 3;
 
   if (error) {
     return (
