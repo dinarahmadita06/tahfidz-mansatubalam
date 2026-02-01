@@ -43,6 +43,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="id" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/logo-man1.png" type="image/png" />
+        <link rel="shortcut icon" href="/logo-man1.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo-man1.png" />
+      </head>
       <body className={`${poppins.className} ${poppins.variable} ${amiri.variable} antialiased bg-white`} suppressHydrationWarning>
         <SessionProvider>
           <SWRProvider>
