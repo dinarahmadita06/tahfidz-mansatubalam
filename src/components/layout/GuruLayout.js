@@ -27,7 +27,7 @@ function GuruLayout({ children }) {
         await signOut({ callbackUrl: '/login', redirect: true });
       } catch (error) {
         console.error('SignOut failed, falling back to manual redirect:', error);
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
   };

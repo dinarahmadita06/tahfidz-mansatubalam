@@ -101,11 +101,16 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
     } catch (error) {
       console.error('Logout pre-processing failed:', error);
     } finally {
+      // Clear session storage on logout
+      if (typeof window !== 'undefined') {
+        sessionStorage.clear();
+      }
+      
       try {
-        await signOut({ callbackUrl: '/login', redirect: true });
+        await signOut({ callbackUrl: '/', redirect: true });
       } catch (error) {
         console.error('SignOut failed, falling back to manual redirect:', error);
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
   };
