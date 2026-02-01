@@ -310,11 +310,12 @@ export default function NonAwardTab() {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Quick Filter Bar */}
+    <div className="space-y-4 overflow-x-hidden">
+      {/* Quick Filter Bar - Mobile Responsive */}
       <div className="bg-white rounded-lg border border-gray-200 p-3">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+          {/* Search - Full width di mobile, 2 kolom di desktop */}
+          <div className="relative sm:col-span-2 lg:col-span-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
@@ -326,10 +327,11 @@ export default function NonAwardTab() {
             />
           </div>
           
+          {/* Jenjang */}
           <select
             value={filters.jenjang}
             onChange={(e) => setFilters({ ...filters, jenjang: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
           >
             <option value="">Jenjang</option>
             <option value="X">X</option>
@@ -337,10 +339,11 @@ export default function NonAwardTab() {
             <option value="XII">XII</option>
           </select>
 
+          {/* Kelas */}
           <select
             value={filters.kelasId}
             onChange={(e) => setFilters({ ...filters, kelasId: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
           >
             <option value="">Kelas</option>
             {filteredKelasByJenjang.map((k) => (
@@ -348,10 +351,11 @@ export default function NonAwardTab() {
             ))}
           </select>
 
+          {/* Tahun */}
           <select
             value={filters.periode}
             onChange={(e) => setFilters({ ...filters, periode: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
           >
             <option value="">Tahun</option>
             {Array.from({ length: 5 }).map((_, i) => {
@@ -360,13 +364,17 @@ export default function NonAwardTab() {
             })}
           </select>
 
+          {/* Tanggal */}
           <input 
             type="date" 
             value={certDate}
             onChange={(e) => setCertDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
           />
-
+        </div>
+        
+        {/* Action Buttons Row - Separate for better mobile UX */}
+        <div className="flex items-center justify-end gap-2 mt-2">
           <button
             onClick={() => setIsSettingsModalOpen(true)}
             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all"
@@ -388,8 +396,107 @@ export default function NonAwardTab() {
 
 
 
-      {/* Tabel Data */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Desktop: Tabel, Mobile: Card List */}
+      
+      {/* Mobile Card List - Visible only on mobile */}
+      <div className="lg:hidden space-y-3">
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))
+        ) : results.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <Inbox size={48} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-400 text-sm">Tidak ada data</p>
+          </div>
+        ) : (
+          results.map((tasmi) => (
+            <div key={tasmi.id} className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+              {/* Checkbox & Nama */}
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(tasmi.id)}
+                  onChange={() => handleSelectOne(tasmi.id)}
+                  className="mt-1 w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 cursor-pointer flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 truncate">{tasmi.siswa?.user?.name || '-'}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100/60 text-emerald-700 border border-emerald-200/60 text-xs font-medium">
+                      {tasmi.siswa?.kelas?.nama || '-'}
+                    </span>
+                    {tasmi.certificate && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium bg-emerald-100/60 text-emerald-700 border-emerald-200/60">
+                        <FileCheck size={10} /> TERBIT
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Juz</p>
+                  <p className="font-medium text-gray-900">{formatJuzDisplay(tasmi.juzYangDitasmi)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Tanggal</p>
+                  <p className="font-medium text-gray-900 text-xs">
+                    {tasmi.tanggalUjian ? new Date(tasmi.tanggalUjian).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Nilai</p>
+                  <p className="font-semibold text-gray-900">{tasmi.nilaiAkhir || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Predikat</p>
+                  {tasmi.predikat && (
+                    <span className={`inline-block px-2 py-0.5 rounded-full border text-xs ${getPredikatBadgeClass(tasmi.predikat)}`}>
+                      {tasmi.predikat.replace('_', ' ')}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                <button
+                  onClick={() => handlePreview(tasmi.id)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-sky-50 text-sky-700 border border-sky-200/70 rounded-lg hover:bg-sky-100 transition text-sm font-medium"
+                >
+                  <Eye size={14} />
+                  Preview
+                </button>
+                {!tasmi.certificate ? (
+                  <button
+                    onClick={() => handleGenerate(tasmi.id)}
+                    className="flex-1 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition"
+                  >
+                    Generate
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handlePreview(tasmi.id, true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200/70 rounded-lg hover:bg-emerald-100 transition text-sm font-medium"
+                  >
+                    <Printer size={14} />
+                    Download
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table - Hidden on mobile */}
+      <div className="hidden lg:block bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -499,22 +606,43 @@ export default function NonAwardTab() {
 
         {/* Footer Toolbar */}
         {results.length > 0 && (
-          <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
+          <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-end gap-2">
             {selectedIds.length > 0 && (
-              <span className="text-sm text-gray-600 mr-auto">
+              <span className="text-sm text-gray-600 sm:mr-auto">
                 <span className="font-medium text-orange-600">{selectedIds.length}</span> dipilih
               </span>
             )}
             <button
               onClick={() => setShowBulkModal(true)}
               disabled={results.length === 0}
-              className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-all disabled:opacity-50"
+              className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
             >
               Generate Semua
             </button>
           </div>
         )}
       </div>
+
+      {/* Mobile Generate Button - Sticky di bawah */}
+      {results.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg z-30">
+          {selectedIds.length > 0 && (
+            <p className="text-xs text-gray-600 mb-2 text-center">
+              <span className="font-medium text-orange-600">{selectedIds.length}</span> sertifikat dipilih
+            </p>
+          )}
+          <button
+            onClick={() => setShowBulkModal(true)}
+            disabled={results.length === 0}
+            className="w-full px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg"
+          >
+            Generate Semua Sertifikat
+          </button>
+        </div>
+      )}
+      
+      {/* Spacer untuk sticky button di mobile */}
+      <div className="lg:hidden h-20"></div>
 
       {previewData && (
         <CertificatePreviewModal 

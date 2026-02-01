@@ -68,7 +68,7 @@ export default function SertifikatPage() {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-emerald-100 shadow-sm inline-flex w-full sm:w-auto overflow-x-auto no-scrollbar gap-1">
+        <div className="bg-white/70 backdrop-blur-md p-1.5 rounded-2xl border border-emerald-100 shadow-sm flex overflow-x-auto no-scrollbar gap-1">
           {tabs.filter(tab => !tab.hidden).map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
@@ -78,8 +78,8 @@ export default function SertifikatPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={getTabClass(isActive)}
               >
-                <Icon size={18} />
-                {tab.label}
+                <Icon size={18} className="flex-shrink-0" />
+                <span className="whitespace-nowrap">{tab.label}</span>
               </button>
             );
           })}
