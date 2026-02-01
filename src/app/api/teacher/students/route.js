@@ -71,12 +71,21 @@ export async function POST(request) {
         if (!student.birthDate) {
           throw new Error('Tanggal lahir wajib diisi untuk generate password default');
         }
-        // Format as YYYY-MM-DD
-        const birthDate = new Date(student.birthDate);
-        const formattedBirthDate = birthDate.getFullYear() + '-' + 
-          String(birthDate.getMonth() + 1).padStart(2, '0') + '-' + 
-          String(birthDate.getDate()).padStart(2, '0');
-        studentPassword = formattedBirthDate;
+        // Format as YYYY-MM-DD - parse dengan UTC untuk hindari timezone shift
+        const dateStr = String(student.birthDate).trim();
+        let year, month, day;
+        
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          [year, month, day] = dateStr.split('-');
+        } else {
+          const birthDate = new Date(student.birthDate);
+          year = birthDate.getUTCFullYear();
+          month = String(birthDate.getUTCMonth() + 1).padStart(2, '0');
+          day = String(birthDate.getUTCDate()).padStart(2, '0');
+        }
+        
+        studentPassword = `${year}-${month}-${day}`;
+        console.log(`🔑 [TEACHER CREATE SISWA] Generated password: ${studentPassword}`);
       }
 
       // b. Create Student User
@@ -124,12 +133,21 @@ export async function POST(request) {
           if (!student.birthDate) {
             throw new Error('Tanggal lahir wajib diisi untuk generate password wali');
           }
-          // Format as DDMMYYYY
-          const birthDate = new Date(student.birthDate);
-          const day = String(birthDate.getDate()).padStart(2, '0');
-          const month = String(birthDate.getMonth() + 1).padStart(2, '0');
-          const year = birthDate.getFullYear();
+          // Format as DDMMYYYY - parse dengan UTC untuk hindari timezone shift
+          const dateStr = String(student.birthDate).trim();
+          let year, month, day;
+          
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            [year, month, day] = dateStr.split('-');
+          } else {
+            const birthDate = new Date(student.birthDate);
+            year = birthDate.getUTCFullYear();
+            month = String(birthDate.getUTCMonth() + 1).padStart(2, '0');
+            day = String(birthDate.getUTCDate()).padStart(2, '0');
+          }
+          
           parentPassword = `${day}${month}${year}`;
+          console.log(`🔑 [TEACHER CREATE PARENT] Generated password: ${parentPassword}`);
         }
         finalParentPassword = parentPassword;
 

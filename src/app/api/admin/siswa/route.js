@@ -229,10 +229,23 @@ export async function POST(request) {
         throw new Error('Tanggal lahir wajib diisi untuk generate password default');
       }
       // Format as YYYY-MM-DD for default password
-      const birthDate = new Date(tanggalLahir);
-      studentPassword = birthDate.getFullYear() + '-' + 
-        String(birthDate.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(birthDate.getDate()).padStart(2, '0');
+      // Parse tanggal lahir dengan UTC untuk hindari timezone shift
+      const dateStr = String(tanggalLahir).trim();
+      let year, month, day;
+      
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        // Already in YYYY-MM-DD format
+        [year, month, day] = dateStr.split('-');
+      } else {
+        // Parse from Date object using UTC
+        const birthDate = new Date(tanggalLahir);
+        year = birthDate.getUTCFullYear();
+        month = String(birthDate.getUTCMonth() + 1).padStart(2, '0');
+        day = String(birthDate.getUTCDate()).padStart(2, '0');
+      }
+      
+      studentPassword = `${year}-${month}-${day}`;
+      console.log(`🔑 [CREATE SISWA] Generated password for NIS ${nis}: ${studentPassword}`);
     } else if (studentPassword.length < 8) {
       return NextResponse.json({ 
         success: false, 
@@ -292,12 +305,23 @@ export async function POST(request) {
           if (!tanggalLahir) {
             throw new Error('Tanggal lahir wajib diisi untuk generate password wali');
           }
-          // Format as DDMMYYYY
-          const birthDate = new Date(tanggalLahir);
-          const day = String(birthDate.getDate()).padStart(2, '0');
-          const month = String(birthDate.getMonth() + 1).padStart(2, '0');
-          const year = birthDate.getFullYear();
+          // Format as DDMMYYYY - parse dengan UTC untuk hindari timezone shift
+          const dateStr = String(tanggalLahir).trim();
+          let year, month, day;
+          
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            // Parse dari YYYY-MM-DD
+            [year, month, day] = dateStr.split('-');
+          } else {
+            // Parse from Date object using UTC
+            const birthDate = new Date(tanggalLahir);
+            year = birthDate.getUTCFullYear();
+            month = String(birthDate.getUTCMonth() + 1).padStart(2, '0');
+            day = String(birthDate.getUTCDate()).padStart(2, '0');
+          }
+          
           pPassword = `${day}${month}${year}`;
+          console.log(`🔑 [CREATE PARENT] Generated password for ${parentData.name}: ${pPassword}`);
         } else if (pPassword.length < 8) {
           throw new Error('Password wali minimal 8 karakter.');
         }
