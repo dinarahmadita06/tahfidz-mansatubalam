@@ -81,7 +81,15 @@ export async function GET() {
       }) || [],
       prisma.tahunAjaran?.findFirst({ 
         where: { isActive: true },
-        select: { id: true, nama: true, targetHafalan: true }
+        select: { 
+          id: true, 
+          nama: true, 
+          semester: true,
+          targetHafalan: true,
+          tanggalMulai: true,
+          tanggalSelesai: true,
+          isActive: true
+        }
       }) || null,
       prisma.penilaian?.aggregate({ 
         where: { siswa: { status: 'approved' } },
