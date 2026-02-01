@@ -284,8 +284,8 @@ export default function StudentDashboardContent({
             <div className="flex-shrink-0 w-9 h-9 lg:w-11 lg:h-11 bg-blue-100 rounded-xl flex items-center justify-center">
               <Lightbulb className="text-blue-600 w-5 h-5 lg:w-[22px] lg:h-[22px]" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm lg:text-base italic leading-relaxed text-slate-700 mb-1.5 lg:mb-2 font-medium break-words">
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <p className="text-sm lg:text-base italic leading-relaxed text-slate-700 mb-1.5 lg:mb-2 font-medium break-words hyphens-auto">
                 &quot;{safeQuote}&quot;
               </p>
               <p className="text-[11px] lg:text-sm text-slate-600 font-semibold">
@@ -356,22 +356,22 @@ export default function StudentDashboardContent({
             {/* Subtle decorative background pattern */}
             <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl pointer-events-none" />
             
-            <div className="flex justify-between items-center text-[11px] lg:text-sm relative z-10">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 text-[11px] lg:text-sm relative z-10">
               <span className="text-slate-700 font-bold flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                Target Hafalan Sekolah {tahunAjaranAktif?.nama ? `(${tahunAjaranAktif.nama})` : 'Tahun Ini'}
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                <span className="break-words">Target Hafalan Sekolah {tahunAjaranAktif?.nama ? `(${tahunAjaranAktif.nama})` : 'Tahun Ini'}</span>
               </span>
-              <span className="font-extrabold text-slate-900 bg-white/60 px-2.5 py-0.5 rounded-lg border border-amber-100 whitespace-nowrap">
+              <span className="font-extrabold text-slate-900 bg-white/60 px-2.5 py-0.5 rounded-lg border border-amber-100 whitespace-nowrap ml-auto sm:ml-0">
                 {targetJuzSekolah && !isNaN(targetJuzSekolah) ? `${targetJuzSekolah} Juz` : 'Belum ditentukan'}
               </span>
             </div>
             
-            <div className="flex justify-between items-center text-[11px] lg:text-sm relative z-10">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 text-[11px] lg:text-sm relative z-10">
               <span className="text-slate-700 font-bold flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-                Progress Capaian
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0" />
+                <span>Progress Capaian</span>
               </span>
-              <span className="font-extrabold text-amber-700 text-right bg-amber-100/50 px-3 py-1 rounded-full border border-amber-200/50 whitespace-nowrap">
+              <span className="font-extrabold text-amber-700 text-left sm:text-right bg-amber-100/50 px-3 py-1 rounded-full border border-amber-200/50 whitespace-nowrap break-all sm:break-normal ml-auto sm:ml-0">
                 {totalJuzSelesai === 0 ? (
                   'Belum mulai setoran'
                 ) : targetJuzSekolah ? (
