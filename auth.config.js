@@ -298,14 +298,21 @@ export const authConfig = {
         return url;
       }
 
-      // Fallback to login page using baseUrl (which is auto-detected from X-Forwarded-Proto/X-Forwarded-Host)
-      const loginUrl = `${baseUrl}/login`;
-      console.log('🔄 [REDIRECT CALLBACK] Redirecting to login:', loginUrl);
-      return loginUrl;
+      // CRITICAL FIX: If URL contains old domain (deleted project), force to landing page
+      if (url.includes('new-tahfidz-mansatubalam')) {
+        console.warn('⚠️ [REDIRECT CALLBACK] Blocked old domain redirect, forcing to landing page');
+        return `${baseUrl}/`;
+      }
+
+      // Fallback to landing page (not login) to prevent redirect to old domain
+      const fallbackUrl = `${baseUrl}/`;
+      console.log('🔄 [REDIRECT CALLBACK] Fallback redirect:', fallbackUrl);
+      return fallbackUrl;
     },
   },
   pages: {
     signIn: "/login",
+    signOut: "/", // Force signOut to always go to landing page
   },
   session: {
     strategy: "jwt",
