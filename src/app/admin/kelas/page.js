@@ -634,6 +634,76 @@ export default function AdminKelasPage() {
     return true;
   };
 
+  // Parse nama kelas untuk extract tingkat, grup, dan nomor
+  const parseClassName = (nama) => {
+    const namaUpper = nama.toUpperCase().trim();
+    
+    // Detect tingkat (X, XI, XII)
+    let tingkat = 0;
+    let remaining = namaUpper;
+    
+    if (namaUpper.startsWith('XII ')) {
+      tingkat = 12;
+      remaining = namaUpper.substring(4); // Skip "XII "
+    } else if (namaUpper.startsWith('XI ')) {
+      tingkat = 11;
+      remaining = namaUpper.substring(3); // Skip "XI "
+    } else if (namaUpper.startsWith('X ')) {
+      tingkat = 10;
+      remaining = namaUpper.substring(2); // Skip "X "
+    }
+    
+    // Parse grup dan nomor (mis. F1.3 atau F2.10 atau langsung nomor)
+    let grup = '';
+    let nomor = 0;
+    
+    // Check format: F1.3, F2.10, dll
+    const grupMatch = remaining.match(/^F(\d+)\.(\d+)/);
+    if (grupMatch) {
+      grup = `F${grupMatch[1]}`; // F1, F2, F3, F4
+      nomor = parseInt(grupMatch[2], 10); // 3, 10, etc
+    } else {
+      // Check format: hanya nomor (mis. "10", "5")
+      const nomorMatch = remaining.match(/^(\d+)/);
+      if (nomorMatch) {
+        nomor = parseInt(nomorMatch[1], 10);
+      }
+    }
+    
+    return { tingkat, grup, nomor, originalName: nama };
+  };
+
+  // Fungsi sorting kelas
+  const sortKelas = (kelasArray) => {
+    if (!Array.isArray(kelasArray)) return [];
+    
+    return [...kelasArray].sort((a, b) => {
+      const parsedA = parseClassName(a.nama);
+      const parsedB = parseClassName(b.nama);
+      
+      // 1. Sort by tingkat (X < XI < XII)
+      if (parsedA.tingkat !== parsedB.tingkat) {
+        return parsedA.tingkat - parsedB.tingkat;
+      }
+      
+      // 2. Sort by grup (F1 < F2 < F3 < F4)
+      if (parsedA.grup !== parsedB.grup) {
+        // Kelas tanpa grup di awal (sebelum yang punya grup)
+        if (!parsedA.grup) return -1;
+        if (!parsedB.grup) return 1;
+        return parsedA.grup.localeCompare(parsedB.grup);
+      }
+      
+      // 3. Sort by nomor
+      if (parsedA.nomor !== parsedB.nomor) {
+        return parsedA.nomor - parsedB.nomor;
+      }
+      
+      // 4. Fallback: alphabetical
+      return parsedA.originalName.localeCompare(parsedB.originalName);
+    });
+  };
+
   // Filter data - pisahkan aktif dan nonaktif
   const activeKelas = Array.isArray(kelas) ? kelas.filter(k => {
     const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
@@ -672,6 +742,10 @@ export default function AdminKelasPage() {
   // Untuk backward compatibility dengan display
   const filteredKelas = filter === 'all' || filter.startsWith('grade_') ? [...activeKelas, ...inactiveKelas] :
     filter === 'status_active' ? activeKelas : inactiveKelas;
+
+  // Apply sorting ke kelas (X < XI < XII, grup naik, nomor naik)
+  const sortedActiveKelas = sortKelas(activeKelas);
+  const sortedInactiveKelas = sortKelas(inactiveKelas);
 
   // Statistics - updated untuk gunakan real status field
   const stats = {
@@ -827,7 +901,7 @@ export default function AdminKelasPage() {
               ✅ Kelas Aktif
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {(Array.isArray(activeKelas) && activeKelas.length === 0) ? (
+              {(Array.isArray(sortedActiveKelas) && sortedActiveKelas.length === 0) ? (
                 <div className="col-span-full">
                   <EmptyState
                     title="Tidak ada kelas aktif"
@@ -836,7 +910,7 @@ export default function AdminKelasPage() {
                   />
                 </div>
               ) : (
-                (Array.isArray(activeKelas) ? activeKelas : []).map((kelasItem, index) => {
+                (Array.isArray(sortedActiveKelas) ? sortedActiveKelas : []).map((kelasItem, index) => {
                   const isActive = true; // Selalu true untuk active section
                   const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
                   const jumlahSiswa = kelasItem._count?.siswa || 0;
@@ -1089,7 +1163,7 @@ export default function AdminKelasPage() {
             >
               <span>{showInactiveKelas ? '⬇️' : '⬆️'}</span>
               <span>
-                Kelas Nonaktif ({inactiveKelas.length})
+                Kelas Nonaktif ({sortedInactiveKelas.length})
               </span>
             </button>
 
@@ -1108,7 +1182,7 @@ export default function AdminKelasPage() {
                   ⏸️ Kelas Nonaktif
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {(Array.isArray(inactiveKelas) && inactiveKelas.length === 0) ? (
+                  {(Array.isArray(sortedInactiveKelas) && sortedInactiveKelas.length === 0) ? (
                     <div className="col-span-full">
                       <EmptyState
                         title="Tidak ada kelas nonaktif"
@@ -1117,7 +1191,7 @@ export default function AdminKelasPage() {
                       />
                     </div>
                   ) : (
-                    (Array.isArray(inactiveKelas) ? inactiveKelas : []).map((kelasItem, index) => {
+                    (Array.isArray(sortedInactiveKelas) ? sortedInactiveKelas : []).map((kelasItem, index) => {
                       const isActive = false; // Selalu false untuk inactive section
                       const guruUtama = kelasItem.guruKelas?.find(kg => kg.peran === 'utama');
                       const jumlahSiswa = kelasItem._count?.siswa || 0;
