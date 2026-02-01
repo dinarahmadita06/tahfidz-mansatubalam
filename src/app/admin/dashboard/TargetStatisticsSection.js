@@ -37,8 +37,8 @@ function TargetKelasChartCard({ data, loading, targetHafalan }) {
         </div>
       ) : !hasData ? (
         <EmptyState
-          title="Belum ada data kelas"
-          description="Data akan muncul setelah siswa menyelesaikan hafalan"
+          title="Belum ada kelas aktif"
+          description="Tidak ada kelas aktif atau belum ada siswa yang menyelesaikan hafalan"
           icon={TrendingUp}
           className="py-6"
         />
@@ -288,15 +288,6 @@ export default function TargetStatisticsSection({ initialData, tahunAjaranAktif:
   // Show placeholder if target not available
   // CRITICAL FIX: Check for null/undefined only, not 0 (0 is valid target)
   const hasValidTarget = tahunAjaranAktif && (tahunAjaranAktif.targetHafalan !== null && tahunAjaranAktif.targetHafalan !== undefined);
-  
-  // DEBUG: Log untuk track issue
-  console.log('[TargetStatisticsSection] Debug:', {
-    loading,
-    tahunAjaranAktif,
-    targetHafalan: tahunAjaranAktif?.targetHafalan,
-    hasValidTarget,
-    willShowPlaceholder: !loading && !hasValidTarget
-  });
   
   if (!loading && !hasValidTarget) {
     return (
