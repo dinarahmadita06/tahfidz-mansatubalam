@@ -3,23 +3,36 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Copy, Download, CheckCircle2, ShieldAlert, Loader2 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function RecoverySetupTrigger() {
-  const { data: session, update } = useSession();
+  const { data: session, status, update } = useSession();
+  const pathname = usePathname();
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [hasBeenDismissed, setHasBeenDismissed] = useState(false);
 
   useEffect(() => {
-    // Show modal if logged in but recovery code not setup
-    if (session?.user && session.user.isRecoveryCodeSetup === false && !showModal && !recoveryCode && !hasBeenDismissed) {
+    // GUARD: Only show for authenticated users with valid session
+    if (status !== 'authenticated' || !session?.user?.id) {
+      setShowModal(false);
+      return;
+    }
+
+    // GUARD: Don't show on public/login pages
+    const publicPages = ['/', '/login', '/lupa-password', '/reset-password'];
+    if (publicPages.includes(pathname)) {
+      return;
+    }
+
+    // TRIGGER: Show modal if recovery code not setup yet
+    if (session.user.isRecoveryCodeSetup === false && !showModal && !recoveryCode) {
       setShowModal(true);
       generateCode();
     }
-  }, [session, showModal, recoveryCode, hasBeenDismissed]);
+  }, [session, status, showModal, recoveryCode, pathname]);
 
   const generateCode = async () => {
     setLoading(true);
@@ -64,12 +77,19 @@ KODE INI ADALAH SATU-SATUNYA CARA UNTUK MERESET PASSWORD ANDA JIKA LUPA.`;
 
   const handleConfirm = async () => {
     setLoading(true);
-    // Mark as dismissed immediately to prevent loop
-    setHasBeenDismissed(true);
-    setShowModal(false);
 
     try {
-      // Update local session state so the flag stays true
+      // Send acknowledgement to backend
+      const res = await fetch('/api/user/recovery-ack', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to acknowledge recovery code');
+      }
+
+      // Update local session state
       await update({
         ...session,
         user: {
@@ -77,8 +97,12 @@ KODE INI ADALAH SATU-SATUNYA CARA UNTUK MERESET PASSWORD ANDA JIKA LUPA.`;
           isRecoveryCodeSetup: true
         }
       });
+
+      // Close modal after successful acknowledgement
+      setShowModal(false);
     } catch (err) {
-      console.error('Failed to update session');
+      console.error('Failed to confirm recovery setup:', err);
+      alert('Gagal menyimpan konfirmasi. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -87,9 +111,10 @@ KODE INI ADALAH SATU-SATUNYA CARA UNTUK MERESET PASSWORD ANDA JIKA LUPA.`;
   if (!showModal) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
-        <div className="bg-emerald-600 p-6 text-white text-center relative">
+        {/* Hard Gate Modal - No close button, must acknowledge */}
+        <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-6 text-white text-center relative">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/30">
             <ShieldAlert size={32} className="text-white" />
           </div>
