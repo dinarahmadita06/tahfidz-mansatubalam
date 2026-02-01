@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -88,6 +88,28 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
   // Track activity when menu is accessed
   useSiswaActivityTracking();
 
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isOpen && typeof window !== 'undefined') {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      // Lock body scroll on mobile
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      
+      return () => {
+        // Restore scroll position
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
+
   const toggleSidebar = () => setIsOpen(!isOpen);
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
@@ -162,8 +184,9 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/20 md:bg-black/40 z-30 transition-opacity duration-200 pointer-events-auto"
+          className="lg:hidden fixed inset-0 bg-black/20 md:bg-black/40 z-30 transition-opacity duration-200"
           onClick={toggleSidebar}
+          aria-hidden="true"
         />
       )}
 
