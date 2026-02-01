@@ -144,6 +144,11 @@ export type RateLimit = $Result.DefaultSelection<Prisma.$RateLimitPayload>
  */
 export type CertificateTemplate = $Result.DefaultSelection<Prisma.$CertificateTemplatePayload>
 /**
+ * Model TemplateSertifikat
+ * 
+ */
+export type TemplateSertifikat = $Result.DefaultSelection<Prisma.$TemplateSertifikatPayload>
+/**
  * Model Certificate
  * 
  */
@@ -764,6 +769,16 @@ export class PrismaClient<
   get certificateTemplate(): Prisma.CertificateTemplateDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.templateSertifikat`: Exposes CRUD operations for the **TemplateSertifikat** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TemplateSertifikats
+    * const templateSertifikats = await prisma.templateSertifikat.findMany()
+    * ```
+    */
+  get templateSertifikat(): Prisma.TemplateSertifikatDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.certificate`: Exposes CRUD operations for the **Certificate** model.
     * Example usage:
     * ```ts
@@ -1269,6 +1284,7 @@ export namespace Prisma {
     PushSubscription: 'PushSubscription',
     RateLimit: 'RateLimit',
     CertificateTemplate: 'CertificateTemplate',
+    TemplateSertifikat: 'TemplateSertifikat',
     Certificate: 'Certificate',
     WisudaEvent: 'WisudaEvent',
     AwardCategory: 'AwardCategory',
@@ -1291,7 +1307,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "guru" | "siswa" | "orangTua" | "orangTuaSiswa" | "tahunAjaran" | "kelas" | "guruKelas" | "targetHafalan" | "hafalan" | "penilaian" | "tahsin" | "materiTahsin" | "presensi" | "pengumuman" | "pengumumanRead" | "bukuDigital" | "agenda" | "activityLog" | "guruActivity" | "adminSignature" | "tasmi" | "notification" | "pushSubscription" | "rateLimit" | "certificateTemplate" | "certificate" | "wisudaEvent" | "awardCategory" | "awardRecipient"
+      modelProps: "user" | "guru" | "siswa" | "orangTua" | "orangTuaSiswa" | "tahunAjaran" | "kelas" | "guruKelas" | "targetHafalan" | "hafalan" | "penilaian" | "tahsin" | "materiTahsin" | "presensi" | "pengumuman" | "pengumumanRead" | "bukuDigital" | "agenda" | "activityLog" | "guruActivity" | "adminSignature" | "tasmi" | "notification" | "pushSubscription" | "rateLimit" | "certificateTemplate" | "templateSertifikat" | "certificate" | "wisudaEvent" | "awardCategory" | "awardRecipient"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3219,6 +3235,80 @@ export namespace Prisma {
           }
         }
       }
+      TemplateSertifikat: {
+        payload: Prisma.$TemplateSertifikatPayload<ExtArgs>
+        fields: Prisma.TemplateSertifikatFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TemplateSertifikatFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TemplateSertifikatFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>
+          }
+          findFirst: {
+            args: Prisma.TemplateSertifikatFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TemplateSertifikatFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>
+          }
+          findMany: {
+            args: Prisma.TemplateSertifikatFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>[]
+          }
+          create: {
+            args: Prisma.TemplateSertifikatCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>
+          }
+          createMany: {
+            args: Prisma.TemplateSertifikatCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TemplateSertifikatCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>[]
+          }
+          delete: {
+            args: Prisma.TemplateSertifikatDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>
+          }
+          update: {
+            args: Prisma.TemplateSertifikatUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>
+          }
+          deleteMany: {
+            args: Prisma.TemplateSertifikatDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TemplateSertifikatUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TemplateSertifikatUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>[]
+          }
+          upsert: {
+            args: Prisma.TemplateSertifikatUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TemplateSertifikatPayload>
+          }
+          aggregate: {
+            args: Prisma.TemplateSertifikatAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTemplateSertifikat>
+          }
+          groupBy: {
+            args: Prisma.TemplateSertifikatGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TemplateSertifikatGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TemplateSertifikatCountArgs<ExtArgs>
+            result: $Utils.Optional<TemplateSertifikatCountAggregateOutputType> | number
+          }
+        }
+      }
       Certificate: {
         payload: Prisma.$CertificatePayload<ExtArgs>
         fields: Prisma.CertificateFieldRefs
@@ -3633,6 +3723,7 @@ export namespace Prisma {
     pushSubscription?: PushSubscriptionOmit
     rateLimit?: RateLimitOmit
     certificateTemplate?: CertificateTemplateOmit
+    templateSertifikat?: TemplateSertifikatOmit
     certificate?: CertificateOmit
     wisudaEvent?: WisudaEventOmit
     awardCategory?: AwardCategoryOmit
@@ -35953,6 +36044,1117 @@ export namespace Prisma {
 
 
   /**
+   * Model TemplateSertifikat
+   */
+
+  export type AggregateTemplateSertifikat = {
+    _count: TemplateSertifikatCountAggregateOutputType | null
+    _avg: TemplateSertifikatAvgAggregateOutputType | null
+    _sum: TemplateSertifikatSumAggregateOutputType | null
+    _min: TemplateSertifikatMinAggregateOutputType | null
+    _max: TemplateSertifikatMaxAggregateOutputType | null
+  }
+
+  export type TemplateSertifikatAvgAggregateOutputType = {
+    width: number | null
+    height: number | null
+  }
+
+  export type TemplateSertifikatSumAggregateOutputType = {
+    width: number | null
+    height: number | null
+  }
+
+  export type TemplateSertifikatMinAggregateOutputType = {
+    id: string | null
+    nama: string | null
+    filename: string | null
+    filepath: string | null
+    fileUrl: string | null
+    width: number | null
+    height: number | null
+    isActive: boolean | null
+    uploadedBy: string | null
+    uploadedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TemplateSertifikatMaxAggregateOutputType = {
+    id: string | null
+    nama: string | null
+    filename: string | null
+    filepath: string | null
+    fileUrl: string | null
+    width: number | null
+    height: number | null
+    isActive: boolean | null
+    uploadedBy: string | null
+    uploadedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TemplateSertifikatCountAggregateOutputType = {
+    id: number
+    nama: number
+    filename: number
+    filepath: number
+    fileUrl: number
+    width: number
+    height: number
+    isActive: number
+    uploadedBy: number
+    uploadedAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TemplateSertifikatAvgAggregateInputType = {
+    width?: true
+    height?: true
+  }
+
+  export type TemplateSertifikatSumAggregateInputType = {
+    width?: true
+    height?: true
+  }
+
+  export type TemplateSertifikatMinAggregateInputType = {
+    id?: true
+    nama?: true
+    filename?: true
+    filepath?: true
+    fileUrl?: true
+    width?: true
+    height?: true
+    isActive?: true
+    uploadedBy?: true
+    uploadedAt?: true
+    updatedAt?: true
+  }
+
+  export type TemplateSertifikatMaxAggregateInputType = {
+    id?: true
+    nama?: true
+    filename?: true
+    filepath?: true
+    fileUrl?: true
+    width?: true
+    height?: true
+    isActive?: true
+    uploadedBy?: true
+    uploadedAt?: true
+    updatedAt?: true
+  }
+
+  export type TemplateSertifikatCountAggregateInputType = {
+    id?: true
+    nama?: true
+    filename?: true
+    filepath?: true
+    fileUrl?: true
+    width?: true
+    height?: true
+    isActive?: true
+    uploadedBy?: true
+    uploadedAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TemplateSertifikatAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TemplateSertifikat to aggregate.
+     */
+    where?: TemplateSertifikatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TemplateSertifikats to fetch.
+     */
+    orderBy?: TemplateSertifikatOrderByWithRelationInput | TemplateSertifikatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TemplateSertifikatWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TemplateSertifikats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TemplateSertifikats.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TemplateSertifikats
+    **/
+    _count?: true | TemplateSertifikatCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TemplateSertifikatAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TemplateSertifikatSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TemplateSertifikatMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TemplateSertifikatMaxAggregateInputType
+  }
+
+  export type GetTemplateSertifikatAggregateType<T extends TemplateSertifikatAggregateArgs> = {
+        [P in keyof T & keyof AggregateTemplateSertifikat]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTemplateSertifikat[P]>
+      : GetScalarType<T[P], AggregateTemplateSertifikat[P]>
+  }
+
+
+
+
+  export type TemplateSertifikatGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TemplateSertifikatWhereInput
+    orderBy?: TemplateSertifikatOrderByWithAggregationInput | TemplateSertifikatOrderByWithAggregationInput[]
+    by: TemplateSertifikatScalarFieldEnum[] | TemplateSertifikatScalarFieldEnum
+    having?: TemplateSertifikatScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TemplateSertifikatCountAggregateInputType | true
+    _avg?: TemplateSertifikatAvgAggregateInputType
+    _sum?: TemplateSertifikatSumAggregateInputType
+    _min?: TemplateSertifikatMinAggregateInputType
+    _max?: TemplateSertifikatMaxAggregateInputType
+  }
+
+  export type TemplateSertifikatGroupByOutputType = {
+    id: string
+    nama: string
+    filename: string
+    filepath: string
+    fileUrl: string
+    width: number
+    height: number
+    isActive: boolean
+    uploadedBy: string | null
+    uploadedAt: Date
+    updatedAt: Date
+    _count: TemplateSertifikatCountAggregateOutputType | null
+    _avg: TemplateSertifikatAvgAggregateOutputType | null
+    _sum: TemplateSertifikatSumAggregateOutputType | null
+    _min: TemplateSertifikatMinAggregateOutputType | null
+    _max: TemplateSertifikatMaxAggregateOutputType | null
+  }
+
+  type GetTemplateSertifikatGroupByPayload<T extends TemplateSertifikatGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TemplateSertifikatGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TemplateSertifikatGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TemplateSertifikatGroupByOutputType[P]>
+            : GetScalarType<T[P], TemplateSertifikatGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TemplateSertifikatSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nama?: boolean
+    filename?: boolean
+    filepath?: boolean
+    fileUrl?: boolean
+    width?: boolean
+    height?: boolean
+    isActive?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["templateSertifikat"]>
+
+  export type TemplateSertifikatSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nama?: boolean
+    filename?: boolean
+    filepath?: boolean
+    fileUrl?: boolean
+    width?: boolean
+    height?: boolean
+    isActive?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["templateSertifikat"]>
+
+  export type TemplateSertifikatSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nama?: boolean
+    filename?: boolean
+    filepath?: boolean
+    fileUrl?: boolean
+    width?: boolean
+    height?: boolean
+    isActive?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["templateSertifikat"]>
+
+  export type TemplateSertifikatSelectScalar = {
+    id?: boolean
+    nama?: boolean
+    filename?: boolean
+    filepath?: boolean
+    fileUrl?: boolean
+    width?: boolean
+    height?: boolean
+    isActive?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TemplateSertifikatOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nama" | "filename" | "filepath" | "fileUrl" | "width" | "height" | "isActive" | "uploadedBy" | "uploadedAt" | "updatedAt", ExtArgs["result"]["templateSertifikat"]>
+
+  export type $TemplateSertifikatPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TemplateSertifikat"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      nama: string
+      filename: string
+      filepath: string
+      fileUrl: string
+      width: number
+      height: number
+      isActive: boolean
+      uploadedBy: string | null
+      uploadedAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["templateSertifikat"]>
+    composites: {}
+  }
+
+  type TemplateSertifikatGetPayload<S extends boolean | null | undefined | TemplateSertifikatDefaultArgs> = $Result.GetResult<Prisma.$TemplateSertifikatPayload, S>
+
+  type TemplateSertifikatCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TemplateSertifikatFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TemplateSertifikatCountAggregateInputType | true
+    }
+
+  export interface TemplateSertifikatDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TemplateSertifikat'], meta: { name: 'TemplateSertifikat' } }
+    /**
+     * Find zero or one TemplateSertifikat that matches the filter.
+     * @param {TemplateSertifikatFindUniqueArgs} args - Arguments to find a TemplateSertifikat
+     * @example
+     * // Get one TemplateSertifikat
+     * const templateSertifikat = await prisma.templateSertifikat.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TemplateSertifikatFindUniqueArgs>(args: SelectSubset<T, TemplateSertifikatFindUniqueArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TemplateSertifikat that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TemplateSertifikatFindUniqueOrThrowArgs} args - Arguments to find a TemplateSertifikat
+     * @example
+     * // Get one TemplateSertifikat
+     * const templateSertifikat = await prisma.templateSertifikat.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TemplateSertifikatFindUniqueOrThrowArgs>(args: SelectSubset<T, TemplateSertifikatFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TemplateSertifikat that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TemplateSertifikatFindFirstArgs} args - Arguments to find a TemplateSertifikat
+     * @example
+     * // Get one TemplateSertifikat
+     * const templateSertifikat = await prisma.templateSertifikat.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TemplateSertifikatFindFirstArgs>(args?: SelectSubset<T, TemplateSertifikatFindFirstArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TemplateSertifikat that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TemplateSertifikatFindFirstOrThrowArgs} args - Arguments to find a TemplateSertifikat
+     * @example
+     * // Get one TemplateSertifikat
+     * const templateSertifikat = await prisma.templateSertifikat.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TemplateSertifikatFindFirstOrThrowArgs>(args?: SelectSubset<T, TemplateSertifikatFindFirstOrThrowArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TemplateSertifikats that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TemplateSertifikatFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TemplateSertifikats
+     * const templateSertifikats = await prisma.templateSertifikat.findMany()
+     * 
+     * // Get first 10 TemplateSertifikats
+     * const templateSertifikats = await prisma.templateSertifikat.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const templateSertifikatWithIdOnly = await prisma.templateSertifikat.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TemplateSertifikatFindManyArgs>(args?: SelectSubset<T, TemplateSertifikatFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TemplateSertifikat.
+     * @param {TemplateSertifikatCreateArgs} args - Arguments to create a TemplateSertifikat.
+     * @example
+     * // Create one TemplateSertifikat
+     * const TemplateSertifikat = await prisma.templateSertifikat.create({
+     *   data: {
+     *     // ... data to create a TemplateSertifikat
+     *   }
+     * })
+     * 
+     */
+    create<T extends TemplateSertifikatCreateArgs>(args: SelectSubset<T, TemplateSertifikatCreateArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TemplateSertifikats.
+     * @param {TemplateSertifikatCreateManyArgs} args - Arguments to create many TemplateSertifikats.
+     * @example
+     * // Create many TemplateSertifikats
+     * const templateSertifikat = await prisma.templateSertifikat.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TemplateSertifikatCreateManyArgs>(args?: SelectSubset<T, TemplateSertifikatCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TemplateSertifikats and returns the data saved in the database.
+     * @param {TemplateSertifikatCreateManyAndReturnArgs} args - Arguments to create many TemplateSertifikats.
+     * @example
+     * // Create many TemplateSertifikats
+     * const templateSertifikat = await prisma.templateSertifikat.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TemplateSertifikats and only return the `id`
+     * const templateSertifikatWithIdOnly = await prisma.templateSertifikat.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TemplateSertifikatCreateManyAndReturnArgs>(args?: SelectSubset<T, TemplateSertifikatCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TemplateSertifikat.
+     * @param {TemplateSertifikatDeleteArgs} args - Arguments to delete one TemplateSertifikat.
+     * @example
+     * // Delete one TemplateSertifikat
+     * const TemplateSertifikat = await prisma.templateSertifikat.delete({
+     *   where: {
+     *     // ... filter to delete one TemplateSertifikat
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TemplateSertifikatDeleteArgs>(args: SelectSubset<T, TemplateSertifikatDeleteArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TemplateSertifikat.
+     * @param {TemplateSertifikatUpdateArgs} args - Arguments to update one TemplateSertifikat.
+     * @example
+     * // Update one TemplateSertifikat
+     * const templateSertifikat = await prisma.templateSertifikat.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TemplateSertifikatUpdateArgs>(args: SelectSubset<T, TemplateSertifikatUpdateArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TemplateSertifikats.
+     * @param {TemplateSertifikatDeleteManyArgs} args - Arguments to filter TemplateSertifikats to delete.
+     * @example
+     * // Delete a few TemplateSertifikats
+     * const { count } = await prisma.templateSertifikat.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TemplateSertifikatDeleteManyArgs>(args?: SelectSubset<T, TemplateSertifikatDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TemplateSertifikats.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TemplateSertifikatUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TemplateSertifikats
+     * const templateSertifikat = await prisma.templateSertifikat.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TemplateSertifikatUpdateManyArgs>(args: SelectSubset<T, TemplateSertifikatUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TemplateSertifikats and returns the data updated in the database.
+     * @param {TemplateSertifikatUpdateManyAndReturnArgs} args - Arguments to update many TemplateSertifikats.
+     * @example
+     * // Update many TemplateSertifikats
+     * const templateSertifikat = await prisma.templateSertifikat.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TemplateSertifikats and only return the `id`
+     * const templateSertifikatWithIdOnly = await prisma.templateSertifikat.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TemplateSertifikatUpdateManyAndReturnArgs>(args: SelectSubset<T, TemplateSertifikatUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TemplateSertifikat.
+     * @param {TemplateSertifikatUpsertArgs} args - Arguments to update or create a TemplateSertifikat.
+     * @example
+     * // Update or create a TemplateSertifikat
+     * const templateSertifikat = await prisma.templateSertifikat.upsert({
+     *   create: {
+     *     // ... data to create a TemplateSertifikat
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TemplateSertifikat we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TemplateSertifikatUpsertArgs>(args: SelectSubset<T, TemplateSertifikatUpsertArgs<ExtArgs>>): Prisma__TemplateSertifikatClient<$Result.GetResult<Prisma.$TemplateSertifikatPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TemplateSertifikats.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TemplateSertifikatCountArgs} args - Arguments to filter TemplateSertifikats to count.
+     * @example
+     * // Count the number of TemplateSertifikats
+     * const count = await prisma.templateSertifikat.count({
+     *   where: {
+     *     // ... the filter for the TemplateSertifikats we want to count
+     *   }
+     * })
+    **/
+    count<T extends TemplateSertifikatCountArgs>(
+      args?: Subset<T, TemplateSertifikatCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TemplateSertifikatCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TemplateSertifikat.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TemplateSertifikatAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TemplateSertifikatAggregateArgs>(args: Subset<T, TemplateSertifikatAggregateArgs>): Prisma.PrismaPromise<GetTemplateSertifikatAggregateType<T>>
+
+    /**
+     * Group by TemplateSertifikat.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TemplateSertifikatGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TemplateSertifikatGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TemplateSertifikatGroupByArgs['orderBy'] }
+        : { orderBy?: TemplateSertifikatGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TemplateSertifikatGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTemplateSertifikatGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TemplateSertifikat model
+   */
+  readonly fields: TemplateSertifikatFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TemplateSertifikat.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TemplateSertifikatClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TemplateSertifikat model
+   */
+  interface TemplateSertifikatFieldRefs {
+    readonly id: FieldRef<"TemplateSertifikat", 'String'>
+    readonly nama: FieldRef<"TemplateSertifikat", 'String'>
+    readonly filename: FieldRef<"TemplateSertifikat", 'String'>
+    readonly filepath: FieldRef<"TemplateSertifikat", 'String'>
+    readonly fileUrl: FieldRef<"TemplateSertifikat", 'String'>
+    readonly width: FieldRef<"TemplateSertifikat", 'Int'>
+    readonly height: FieldRef<"TemplateSertifikat", 'Int'>
+    readonly isActive: FieldRef<"TemplateSertifikat", 'Boolean'>
+    readonly uploadedBy: FieldRef<"TemplateSertifikat", 'String'>
+    readonly uploadedAt: FieldRef<"TemplateSertifikat", 'DateTime'>
+    readonly updatedAt: FieldRef<"TemplateSertifikat", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TemplateSertifikat findUnique
+   */
+  export type TemplateSertifikatFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * Filter, which TemplateSertifikat to fetch.
+     */
+    where: TemplateSertifikatWhereUniqueInput
+  }
+
+  /**
+   * TemplateSertifikat findUniqueOrThrow
+   */
+  export type TemplateSertifikatFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * Filter, which TemplateSertifikat to fetch.
+     */
+    where: TemplateSertifikatWhereUniqueInput
+  }
+
+  /**
+   * TemplateSertifikat findFirst
+   */
+  export type TemplateSertifikatFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * Filter, which TemplateSertifikat to fetch.
+     */
+    where?: TemplateSertifikatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TemplateSertifikats to fetch.
+     */
+    orderBy?: TemplateSertifikatOrderByWithRelationInput | TemplateSertifikatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TemplateSertifikats.
+     */
+    cursor?: TemplateSertifikatWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TemplateSertifikats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TemplateSertifikats.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TemplateSertifikats.
+     */
+    distinct?: TemplateSertifikatScalarFieldEnum | TemplateSertifikatScalarFieldEnum[]
+  }
+
+  /**
+   * TemplateSertifikat findFirstOrThrow
+   */
+  export type TemplateSertifikatFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * Filter, which TemplateSertifikat to fetch.
+     */
+    where?: TemplateSertifikatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TemplateSertifikats to fetch.
+     */
+    orderBy?: TemplateSertifikatOrderByWithRelationInput | TemplateSertifikatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TemplateSertifikats.
+     */
+    cursor?: TemplateSertifikatWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TemplateSertifikats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TemplateSertifikats.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TemplateSertifikats.
+     */
+    distinct?: TemplateSertifikatScalarFieldEnum | TemplateSertifikatScalarFieldEnum[]
+  }
+
+  /**
+   * TemplateSertifikat findMany
+   */
+  export type TemplateSertifikatFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * Filter, which TemplateSertifikats to fetch.
+     */
+    where?: TemplateSertifikatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TemplateSertifikats to fetch.
+     */
+    orderBy?: TemplateSertifikatOrderByWithRelationInput | TemplateSertifikatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TemplateSertifikats.
+     */
+    cursor?: TemplateSertifikatWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TemplateSertifikats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TemplateSertifikats.
+     */
+    skip?: number
+    distinct?: TemplateSertifikatScalarFieldEnum | TemplateSertifikatScalarFieldEnum[]
+  }
+
+  /**
+   * TemplateSertifikat create
+   */
+  export type TemplateSertifikatCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * The data needed to create a TemplateSertifikat.
+     */
+    data: XOR<TemplateSertifikatCreateInput, TemplateSertifikatUncheckedCreateInput>
+  }
+
+  /**
+   * TemplateSertifikat createMany
+   */
+  export type TemplateSertifikatCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TemplateSertifikats.
+     */
+    data: TemplateSertifikatCreateManyInput | TemplateSertifikatCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TemplateSertifikat createManyAndReturn
+   */
+  export type TemplateSertifikatCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * The data used to create many TemplateSertifikats.
+     */
+    data: TemplateSertifikatCreateManyInput | TemplateSertifikatCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TemplateSertifikat update
+   */
+  export type TemplateSertifikatUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * The data needed to update a TemplateSertifikat.
+     */
+    data: XOR<TemplateSertifikatUpdateInput, TemplateSertifikatUncheckedUpdateInput>
+    /**
+     * Choose, which TemplateSertifikat to update.
+     */
+    where: TemplateSertifikatWhereUniqueInput
+  }
+
+  /**
+   * TemplateSertifikat updateMany
+   */
+  export type TemplateSertifikatUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TemplateSertifikats.
+     */
+    data: XOR<TemplateSertifikatUpdateManyMutationInput, TemplateSertifikatUncheckedUpdateManyInput>
+    /**
+     * Filter which TemplateSertifikats to update
+     */
+    where?: TemplateSertifikatWhereInput
+    /**
+     * Limit how many TemplateSertifikats to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TemplateSertifikat updateManyAndReturn
+   */
+  export type TemplateSertifikatUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * The data used to update TemplateSertifikats.
+     */
+    data: XOR<TemplateSertifikatUpdateManyMutationInput, TemplateSertifikatUncheckedUpdateManyInput>
+    /**
+     * Filter which TemplateSertifikats to update
+     */
+    where?: TemplateSertifikatWhereInput
+    /**
+     * Limit how many TemplateSertifikats to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TemplateSertifikat upsert
+   */
+  export type TemplateSertifikatUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * The filter to search for the TemplateSertifikat to update in case it exists.
+     */
+    where: TemplateSertifikatWhereUniqueInput
+    /**
+     * In case the TemplateSertifikat found by the `where` argument doesn't exist, create a new TemplateSertifikat with this data.
+     */
+    create: XOR<TemplateSertifikatCreateInput, TemplateSertifikatUncheckedCreateInput>
+    /**
+     * In case the TemplateSertifikat was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TemplateSertifikatUpdateInput, TemplateSertifikatUncheckedUpdateInput>
+  }
+
+  /**
+   * TemplateSertifikat delete
+   */
+  export type TemplateSertifikatDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+    /**
+     * Filter which TemplateSertifikat to delete.
+     */
+    where: TemplateSertifikatWhereUniqueInput
+  }
+
+  /**
+   * TemplateSertifikat deleteMany
+   */
+  export type TemplateSertifikatDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TemplateSertifikats to delete
+     */
+    where?: TemplateSertifikatWhereInput
+    /**
+     * Limit how many TemplateSertifikats to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TemplateSertifikat without action
+   */
+  export type TemplateSertifikatDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TemplateSertifikat
+     */
+    select?: TemplateSertifikatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TemplateSertifikat
+     */
+    omit?: TemplateSertifikatOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model Certificate
    */
 
@@ -41159,6 +42361,23 @@ export namespace Prisma {
   export type CertificateTemplateScalarFieldEnum = (typeof CertificateTemplateScalarFieldEnum)[keyof typeof CertificateTemplateScalarFieldEnum]
 
 
+  export const TemplateSertifikatScalarFieldEnum: {
+    id: 'id',
+    nama: 'nama',
+    filename: 'filename',
+    filepath: 'filepath',
+    fileUrl: 'fileUrl',
+    width: 'width',
+    height: 'height',
+    isActive: 'isActive',
+    uploadedBy: 'uploadedBy',
+    uploadedAt: 'uploadedAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TemplateSertifikatScalarFieldEnum = (typeof TemplateSertifikatScalarFieldEnum)[keyof typeof TemplateSertifikatScalarFieldEnum]
+
+
   export const CertificateScalarFieldEnum: {
     id: 'id',
     type: 'type',
@@ -44047,6 +45266,90 @@ export namespace Prisma {
     isActive?: BoolWithAggregatesFilter<"CertificateTemplate"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"CertificateTemplate"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CertificateTemplate"> | Date | string
+  }
+
+  export type TemplateSertifikatWhereInput = {
+    AND?: TemplateSertifikatWhereInput | TemplateSertifikatWhereInput[]
+    OR?: TemplateSertifikatWhereInput[]
+    NOT?: TemplateSertifikatWhereInput | TemplateSertifikatWhereInput[]
+    id?: StringFilter<"TemplateSertifikat"> | string
+    nama?: StringFilter<"TemplateSertifikat"> | string
+    filename?: StringFilter<"TemplateSertifikat"> | string
+    filepath?: StringFilter<"TemplateSertifikat"> | string
+    fileUrl?: StringFilter<"TemplateSertifikat"> | string
+    width?: IntFilter<"TemplateSertifikat"> | number
+    height?: IntFilter<"TemplateSertifikat"> | number
+    isActive?: BoolFilter<"TemplateSertifikat"> | boolean
+    uploadedBy?: StringNullableFilter<"TemplateSertifikat"> | string | null
+    uploadedAt?: DateTimeFilter<"TemplateSertifikat"> | Date | string
+    updatedAt?: DateTimeFilter<"TemplateSertifikat"> | Date | string
+  }
+
+  export type TemplateSertifikatOrderByWithRelationInput = {
+    id?: SortOrder
+    nama?: SortOrder
+    filename?: SortOrder
+    filepath?: SortOrder
+    fileUrl?: SortOrder
+    width?: SortOrder
+    height?: SortOrder
+    isActive?: SortOrder
+    uploadedBy?: SortOrderInput | SortOrder
+    uploadedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TemplateSertifikatWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: TemplateSertifikatWhereInput | TemplateSertifikatWhereInput[]
+    OR?: TemplateSertifikatWhereInput[]
+    NOT?: TemplateSertifikatWhereInput | TemplateSertifikatWhereInput[]
+    nama?: StringFilter<"TemplateSertifikat"> | string
+    filename?: StringFilter<"TemplateSertifikat"> | string
+    filepath?: StringFilter<"TemplateSertifikat"> | string
+    fileUrl?: StringFilter<"TemplateSertifikat"> | string
+    width?: IntFilter<"TemplateSertifikat"> | number
+    height?: IntFilter<"TemplateSertifikat"> | number
+    isActive?: BoolFilter<"TemplateSertifikat"> | boolean
+    uploadedBy?: StringNullableFilter<"TemplateSertifikat"> | string | null
+    uploadedAt?: DateTimeFilter<"TemplateSertifikat"> | Date | string
+    updatedAt?: DateTimeFilter<"TemplateSertifikat"> | Date | string
+  }, "id">
+
+  export type TemplateSertifikatOrderByWithAggregationInput = {
+    id?: SortOrder
+    nama?: SortOrder
+    filename?: SortOrder
+    filepath?: SortOrder
+    fileUrl?: SortOrder
+    width?: SortOrder
+    height?: SortOrder
+    isActive?: SortOrder
+    uploadedBy?: SortOrderInput | SortOrder
+    uploadedAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TemplateSertifikatCountOrderByAggregateInput
+    _avg?: TemplateSertifikatAvgOrderByAggregateInput
+    _max?: TemplateSertifikatMaxOrderByAggregateInput
+    _min?: TemplateSertifikatMinOrderByAggregateInput
+    _sum?: TemplateSertifikatSumOrderByAggregateInput
+  }
+
+  export type TemplateSertifikatScalarWhereWithAggregatesInput = {
+    AND?: TemplateSertifikatScalarWhereWithAggregatesInput | TemplateSertifikatScalarWhereWithAggregatesInput[]
+    OR?: TemplateSertifikatScalarWhereWithAggregatesInput[]
+    NOT?: TemplateSertifikatScalarWhereWithAggregatesInput | TemplateSertifikatScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TemplateSertifikat"> | string
+    nama?: StringWithAggregatesFilter<"TemplateSertifikat"> | string
+    filename?: StringWithAggregatesFilter<"TemplateSertifikat"> | string
+    filepath?: StringWithAggregatesFilter<"TemplateSertifikat"> | string
+    fileUrl?: StringWithAggregatesFilter<"TemplateSertifikat"> | string
+    width?: IntWithAggregatesFilter<"TemplateSertifikat"> | number
+    height?: IntWithAggregatesFilter<"TemplateSertifikat"> | number
+    isActive?: BoolWithAggregatesFilter<"TemplateSertifikat"> | boolean
+    uploadedBy?: StringNullableWithAggregatesFilter<"TemplateSertifikat"> | string | null
+    uploadedAt?: DateTimeWithAggregatesFilter<"TemplateSertifikat"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TemplateSertifikat"> | Date | string
   }
 
   export type CertificateWhereInput = {
@@ -47179,6 +48482,104 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TemplateSertifikatCreateInput = {
+    id?: string
+    nama: string
+    filename: string
+    filepath: string
+    fileUrl: string
+    width?: number
+    height?: number
+    isActive?: boolean
+    uploadedBy?: string | null
+    uploadedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TemplateSertifikatUncheckedCreateInput = {
+    id?: string
+    nama: string
+    filename: string
+    filepath: string
+    fileUrl: string
+    width?: number
+    height?: number
+    isActive?: boolean
+    uploadedBy?: string | null
+    uploadedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TemplateSertifikatUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nama?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    filepath?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    width?: IntFieldUpdateOperationsInput | number
+    height?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TemplateSertifikatUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nama?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    filepath?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    width?: IntFieldUpdateOperationsInput | number
+    height?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TemplateSertifikatCreateManyInput = {
+    id?: string
+    nama: string
+    filename: string
+    filepath: string
+    fileUrl: string
+    width?: number
+    height?: number
+    isActive?: boolean
+    uploadedBy?: string | null
+    uploadedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TemplateSertifikatUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nama?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    filepath?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    width?: IntFieldUpdateOperationsInput | number
+    height?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TemplateSertifikatUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nama?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    filepath?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    width?: IntFieldUpdateOperationsInput | number
+    height?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type CertificateCreateInput = {
     id?: string
     type: $Enums.CertificateType
@@ -49698,6 +51099,58 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumCertificateTypeFilter<$PrismaModel>
     _max?: NestedEnumCertificateTypeFilter<$PrismaModel>
+  }
+
+  export type TemplateSertifikatCountOrderByAggregateInput = {
+    id?: SortOrder
+    nama?: SortOrder
+    filename?: SortOrder
+    filepath?: SortOrder
+    fileUrl?: SortOrder
+    width?: SortOrder
+    height?: SortOrder
+    isActive?: SortOrder
+    uploadedBy?: SortOrder
+    uploadedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TemplateSertifikatAvgOrderByAggregateInput = {
+    width?: SortOrder
+    height?: SortOrder
+  }
+
+  export type TemplateSertifikatMaxOrderByAggregateInput = {
+    id?: SortOrder
+    nama?: SortOrder
+    filename?: SortOrder
+    filepath?: SortOrder
+    fileUrl?: SortOrder
+    width?: SortOrder
+    height?: SortOrder
+    isActive?: SortOrder
+    uploadedBy?: SortOrder
+    uploadedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TemplateSertifikatMinOrderByAggregateInput = {
+    id?: SortOrder
+    nama?: SortOrder
+    filename?: SortOrder
+    filepath?: SortOrder
+    fileUrl?: SortOrder
+    width?: SortOrder
+    height?: SortOrder
+    isActive?: SortOrder
+    uploadedBy?: SortOrder
+    uploadedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TemplateSertifikatSumOrderByAggregateInput = {
+    width?: SortOrder
+    height?: SortOrder
   }
 
   export type EnumCertificateStatusFilter<$PrismaModel = never> = {
