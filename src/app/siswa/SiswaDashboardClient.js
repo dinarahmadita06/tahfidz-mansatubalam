@@ -22,6 +22,19 @@ const getFirstName = (fullName) => {
 export default function SiswaDashboardClient({ initialData, session }) {
   const [isHydrated, setIsHydrated] = useState(false);
 
+  // Debug log
+  useEffect(() => {
+    console.log('SiswaDashboardClient initialData:', {
+      hasInitialData: !!initialData,
+      siswaId: initialData?.siswaId,
+      hasStats: !!initialData?.stats,
+      hasQuote: !!initialData?.quote,
+      hasPengumuman: !!initialData?.pengumuman,
+      hasJuzProgress: !!initialData?.juzProgress,
+      quote: initialData?.quote?.substring(0, 50)
+    });
+  }, [initialData]);
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);

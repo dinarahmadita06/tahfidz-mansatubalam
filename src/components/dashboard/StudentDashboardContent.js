@@ -171,14 +171,14 @@ export default function StudentDashboardContent({
     catatanGuru: 0,
   });
   const [pengumuman, setPengumuman] = useState(initialData?.pengumuman || []);
-  const [pengumumanLoading, setPengumumanLoading] = useState(!initialData);
+  const [pengumumanLoading, setPengumumanLoading] = useState(false);
   const [juzProgress, setJuzProgress] = useState(initialData?.juzProgress || []);
   const [tahunAjaranAktif, setTahunAjaranAktif] = useState(initialData?.tahunAjaranAktif || null);
   const [targetJuzSekolah, setTargetJuzSekolah] = useState(initialData?.targetJuzSekolah || null);
   const [totalJuzSelesai, setTotalJuzSelesai] = useState(initialData?.totalJuzSelesai || 0);
   const [progressPercent, setProgressPercent] = useState(initialData?.progressPercent ?? null);
-  const [quote, setQuote] = useState(initialData?.quote || '');
-  const [loading, setLoading] = useState(!initialData);
+  const [quote, setQuote] = useState(initialData?.quote || DEFAULT_QUOTE);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Fetch data if not provided
@@ -186,16 +186,23 @@ export default function StudentDashboardContent({
     if (!initialData && targetSiswaId) {
       fetchDashboardData();
       fetchPengumuman();
+    } else if (initialData) {
+      // If initialData is provided, still fetch fresh pengumuman
+      fetchPengumuman();
     }
   }, [targetSiswaId, initialData]);
 
   const fetchPengumuman = async () => {
     try {
       setPengumumanLoading(true);
+      console.log('Fetching pengumuman...');
       const res = await fetch('/api/pengumuman?limit=3');
       if (res.ok) {
         const data = await res.json();
+        console.log('Pengumuman fetched:', data.pengumuman?.length || 0);
         setPengumuman(data.pengumuman || []);
+      } else {
+        console.error('Pengumuman fetch failed:', res.status);
       }
     } catch (error) {
       console.error('Failed to fetch pengumuman', error);
@@ -253,6 +260,18 @@ export default function StudentDashboardContent({
   // Determine safe quote with fallback
   const safeQuote = typeof quote === 'object' ? (quote?.text || quote?.content || DEFAULT_QUOTE) : (quote || DEFAULT_QUOTE);
   
+  // Debug log for troubleshooting
+  if (typeof window !== 'undefined') {
+    console.log('Dashboard Debug:', { 
+      loading, 
+      pengumumanLoading,
+      hasQuote: !!safeQuote, 
+      hasPengumuman: pengumuman.length,
+      hasJuzProgress: displayJuzs.length,
+      quote: safeQuote?.substring(0, 50)
+    });
+  }
+  
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center space-y-4">
@@ -284,8 +303,8 @@ export default function StudentDashboardContent({
             <div className="flex-shrink-0 w-9 h-9 lg:w-11 lg:h-11 bg-blue-100 rounded-xl flex items-center justify-center">
               <Lightbulb className="text-blue-600 w-5 h-5 lg:w-[22px] lg:h-[22px]" />
             </div>
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="text-sm lg:text-base italic leading-relaxed text-slate-700 mb-1.5 lg:mb-2 font-medium break-words hyphens-auto">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm lg:text-base italic leading-relaxed text-slate-700 mb-1.5 lg:mb-2 font-medium break-words">
                 &quot;{safeQuote}&quot;
               </p>
               <p className="text-[11px] lg:text-sm text-slate-600 font-semibold">
@@ -352,7 +371,7 @@ export default function StudentDashboardContent({
 
         {/* Highlight Target & Progress Sekolah */}
         {!loading && (
-          <div className="mb-4 lg:mb-6 bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl px-4 py-3.5 lg:px-5 lg:py-4 border border-amber-200/60 shadow-sm shadow-amber-100/50 space-y-2 lg:space-y-3 relative overflow-hidden">
+          <div className="mb-4 lg:mb-6 bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl px-4 py-3.5 lg:px-5 lg:py-4 border border-amber-200/60 shadow-sm shadow-amber-100/50 space-y-2 lg:space-y-3 relative">
             {/* Subtle decorative background pattern */}
             <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl pointer-events-none" />
             
