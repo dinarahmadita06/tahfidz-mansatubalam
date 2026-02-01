@@ -23,7 +23,10 @@ export async function GET() {
     // Fetch active tahun ajaran to get dynamic target
     const tahunAjaranAktif = await prisma.tahunAjaran.findFirst({
       where: { isActive: true },
-      select: { targetHafalan: true }
+      select: { 
+        id: true,
+        targetHafalan: true 
+      }
     });
 
     // Use dynamic target from tahun ajaran, fallback to 3
@@ -39,10 +42,18 @@ export async function GET() {
     }
 
     // ========================================
-    // 1. AMBIL DATA SEMUA SISWA AKTIF
+    // 1. AMBIL DATA SEMUA SISWA AKTIF DARI KELAS AKTIF
     // ========================================
+    // CRITICAL FIX: Only count siswa from ACTIVE classes in ACTIVE tahun ajaran
     const allSiswa = await prisma.siswa.findMany({
-      where: { status: 'approved' },
+      where: { 
+        status: 'approved',
+        statusSiswa: 'AKTIF', // Only active students
+        kelas: {
+          status: 'AKTIF', // Only from active classes
+          tahunAjaranId: tahunAjaranAktif?.id // Only from active tahun ajaran
+        }
+      },
       select: {
         id: true,
         kelasId: true,
@@ -50,6 +61,7 @@ export async function GET() {
           select: {
             id: true,
             nama: true,
+            status: true
           },
         },
       },
