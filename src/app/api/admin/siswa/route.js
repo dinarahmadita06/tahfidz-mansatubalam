@@ -317,18 +317,23 @@ export async function POST(request) {
 
         if (!orangTuaId) {
           // For parent, create a separate user with a unique username
-          const parentUsername = `${nis}_wali`; // Create a unique username for parent
+          const parentUsername = nis; // Use NIS as username (same as student)
           
-          // Check if this parent username already exists
-          const existingParentUser = await tx.user.findUnique({ where: { username: parentUsername } });
+          // Check if parent account with this email already exists
+          const existingParentUser = await tx.user.findFirst({ 
+            where: { 
+              email: finalEmailWali,
+              role: 'ORANG_TUA'
+            } 
+          });
           if (existingParentUser) {
-            throw new Error(`Akun wali untuk NIS ${nis} sudah terdaftar. Siswa dan wali tidak bisa menggunakan akun yang sama.`);
+            throw new Error(`Akun wali dengan email ${finalEmailWali} sudah terdaftar.`);
           }
           
           const parentUser = await tx.user.create({
             data: {
               email: finalEmailWali,
-              username: parentUsername,
+              username: nis, // Use NIS (same as student)
               password: parentHashedPassword,
               name: parentData.name,
               role: 'ORANG_TUA'
@@ -375,13 +380,46 @@ export async function POST(request) {
     return NextResponse.json(siswa, { status: 201 });
   } catch (error) {
     console.error('Error creating siswa:', error);
+    
+    // Check for duplicate username error (parent account)
+    if (error.message && error.message.includes('Akun wali untuk NIS') && error.message.includes('sudah terdaftar')) {
+      return NextResponse.json({ 
+        error: error.message,
+        invalidFields: { nis: error.message }
+      }, { status: 409 }); // 409 Conflict for duplicate username
+    }
+    
+    // Check for Prisma unique constraint violation
+    if (error.code === 'P2002') {
+      const target = error.meta?.target;
+      if (target?.includes('username')) {
+        return NextResponse.json({ 
+          error: 'Username sudah digunakan',
+          invalidFields: { username: 'Username sudah digunakan' }
+        }, { status: 409 });
+      }
+      if (target?.includes('email')) {
+        return NextResponse.json({ 
+          error: 'Email sudah digunakan',
+          invalidFields: { email: 'Email sudah digunakan' }
+        }, { status: 409 });
+      }
+      if (target?.includes('nis')) {
+        return NextResponse.json({ 
+          error: 'NIS sudah terdaftar',
+          invalidFields: { nis: 'NIS sudah terdaftar' }
+        }, { status: 409 });
+      }
+    }
+    
     // Check if this is a unique constraint error related to NIS
     if (error.message && (error.message.includes('NIS') && error.message.includes('sudah terdaftar'))) {
       return NextResponse.json({ 
         error: error.message,
         invalidFields: { nis: error.message }
-      }, { status: 400 });
+      }, { status: 409 });
     }
+    
     return NextResponse.json({ error: error.message || 'Gagal menambahkan siswa' }, { status: 500 });
   }
 }

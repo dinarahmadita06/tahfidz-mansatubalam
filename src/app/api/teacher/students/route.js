@@ -133,14 +133,19 @@ export async function POST(request) {
         }
         finalParentPassword = parentPassword;
 
-        // Create New Parent User with unique username
+        // Create New Parent User with same username as student (NIS)
         const hashedParentPassword = await bcrypt.hash(parentPassword, 10);
-        const parentUsername = `${student.username}_wali`; // Create a unique username for parent
+        const parentUsername = student.username; // Use NIS (same as student)
         
-        // Check if this parent username already exists
-        const existingParentUser = await tx.user.findUnique({ where: { username: parentUsername } });
+        // Check if parent account with this email already exists
+        const existingParentUser = await tx.user.findFirst({ 
+          where: { 
+            email: parent.email,
+            role: 'ORANG_TUA'
+          } 
+        });
         if (existingParentUser) {
-          throw new Error(`Akun wali untuk NIS ${student.username} sudah terdaftar. Siswa dan wali tidak bisa menggunakan akun yang sama.`);
+          throw new Error(`Akun wali dengan email ${parent.email} sudah terdaftar.`);
         }
         
         const parentUser = await tx.user.create({
