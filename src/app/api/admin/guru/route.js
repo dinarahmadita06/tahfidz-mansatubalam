@@ -21,82 +21,80 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
+    const status = searchParams.get('status'); // 'active' or 'inactive'
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
-
-    // Build cache key
-    const cacheKey = search ? `guru-list-search-${search}` : 'guru-list-all';
-
-    // Check cache
-    const cachedData = getCachedData(cacheKey);
-    if (cachedData) {
-      console.timeEnd('GET /api/admin/guru');
-      return NextResponse.json(cachedData);
-    }
+    const limit = parseInt(searchParams.get('limit') || '20');
 
     // Build where clause
     let whereClause = {};
     if (search) {
-      whereClause = {
-        OR: [
-          { user: { name: { contains: search, mode: 'insensitive' } } },
-          { user: { email: { contains: search, mode: 'insensitive' } } },
-          { nip: { contains: search } }
-        ]
-      };
+      whereClause.OR = [
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+        { nip: { contains: search } }
+      ];
+    }
+    if (status === 'active') {
+      whereClause.user = { ...whereClause.user, isActive: true };
+    } else if (status === 'inactive') {
+      whereClause.user = { ...whereClause.user, isActive: false };
     }
 
-    // Parallel queries: count + findMany
-    console.time('guru-count-query');
-    const totalCount = await prisma.guru.count({ where: whereClause });
-    console.timeEnd('guru-count-query');
-
-    console.time('guru-findMany-query');
-    const guru = await prisma.guru.findMany({
-      where: whereClause,
-      skip: (page - 1) * limit,
-      take: limit,
-      select: {
-        id: true,
-        nip: true,
-        tanggalLahir: true,
-        jenisKelamin: true,
-        jabatan: true,
-        createdAt: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            isActive: true
+    // Parallel queries: count + findMany + statistics
+    console.time('guru-queries');
+    const [totalCount, activeCount, inactiveCount, guru] = await Promise.all([
+      prisma.guru.count({ where: whereClause }),
+      prisma.guru.count({ where: { ...whereClause, user: { isActive: true } } }),
+      prisma.guru.count({ where: { ...whereClause, user: { isActive: false } } }),
+      prisma.guru.findMany({
+        where: whereClause,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          nip: true,
+          tanggalLahir: true,
+          jenisKelamin: true,
+          jabatan: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              isActive: true,
+              username: true
+            }
+          },
+          _count: {
+            select: {
+              guruKelas: true
+            }
           }
         },
-        _count: {
-          select: {
-            guruKelas: true
-          }
+        orderBy: {
+          createdAt: 'desc'
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-    console.timeEnd('guru-findMany-query');
+      })
+    ]);
+    console.timeEnd('guru-queries');
 
     const totalPages = Math.ceil(totalCount / limit);
 
     const responseData = {
+      statistics: {
+        total: totalCount,
+        active: activeCount,
+        inactive: inactiveCount
+      },
       data: guru,
       pagination: {
         page,
         limit,
-        totalCount,
+        totalItems: totalCount,
         totalPages
       }
     };
-
-    // Cache response
-    setCachedData(cacheKey, responseData);
 
     console.timeEnd('GET /api/admin/guru');
     return NextResponse.json(responseData);

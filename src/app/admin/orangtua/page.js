@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { UserPlus, Upload, Search, Users, UserCheck, UserX } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import EmptyState from '@/components/shared/EmptyState';
+import Pagination from '@/components/shared/Pagination';
 import ParentActionMenu from '@/components/admin/ParentActionMenu';
 import ParentDetailModal from '@/components/admin/ParentDetailModal';
 import ResetPasswordModal from '@/components/admin/ResetPasswordModal';
@@ -14,6 +16,8 @@ import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal';
 import Toast from '@/components/ui/Toast';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import { calculateParentDisplayStatus, getParentStatusDisplay, getParentStatusContext } from '@/lib/helpers/parentStatusHelper';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 /**
  * Format tanggal ke format Indonesia (dd Bulan yyyy)
@@ -121,11 +125,33 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'indigo' }) {
 }
 
 export default function AdminOrangTuaPage() {
-  const [orangTua, setOrangTua] = useState([]);
-  const [siswa, setSiswa] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterConnectionStatus, setFilterConnectionStatus] = useState('all');
+  const [filterAccountStatus, setFilterAccountStatus] = useState('all');
+  
+  // Build query params
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString()
+  });
+  if (searchTerm) queryParams.append('search', searchTerm);
+  if (filterStatus !== 'all') queryParams.append('status', filterStatus);
+  if (filterConnectionStatus !== 'all') queryParams.append('keterhubungan', filterConnectionStatus === 'connected' ? 'connected' : 'not-connected');
+  
+  const { data: orangTuaData, error: orangTuaError, mutate: refetchOrangTua } = useSWR(`/api/admin/orangtua?${queryParams.toString()}`, fetcher);
+  const { data: siswaData, error: siswaError } = useSWR('/api/admin/siswa?page=1&limit=10000', fetcher);
+
+  const orangTua = orangTuaData?.data || [];
+  const stats = orangTuaData?.statistics || { total: 0, active: 0, inactive: 0, connected: 0, notConnected: 0 };
+  const paginationMeta = orangTuaData?.pagination || { page: 1, limit: 20, totalItems: 0, totalPages: 0 };
+  const siswa = siswaData?.data || [];
+  
+  const loading = !orangTuaData && !orangTuaError;
+  
   const [showModal, setShowModal] = useState(false);
   const [editingOrangTua, setEditingOrangTua] = useState(null);
   const [showPasswordField, setShowPasswordField] = useState(false);
@@ -148,39 +174,15 @@ export default function AdminOrangTuaPage() {
     deleteConfirmModal: null,
   });
 
-  // Additional state for filters
-  const [filterConnectionStatus, setFilterConnectionStatus] = useState('all'); // all, connected, disconnected
-  const [filterAccountStatus, setFilterAccountStatus] = useState('all'); // all, active, inactive
+  // Additional state for filters already defined above in pagination setup
 
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Reset page when filters change
   useEffect(() => {
-    fetchOrangTua();
-    fetchSiswa();
-  }, []);
-
-  const fetchOrangTua = async () => {
-    try {
-      const response = await fetch('/api/admin/orangtua?page=1&limit=1000');
-      const result = await response.json();
-      setOrangTua(result.data || []);
-    } catch (error) {
-      console.error('Error fetching orang tua:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSiswa = async () => {
-    try {
-      const response = await fetch('/api/admin/siswa?page=1&limit=10000');
-      const result = await response.json();
-      setSiswa(result.data || []);
-    } catch (error) {
-      console.error('Error fetching siswa:', error);
-    }
-  };
+    setPage(1);
+  }, [searchTerm, filterStatus, filterConnectionStatus]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -202,7 +204,7 @@ export default function AdminOrangTuaPage() {
         alert(`Wali berhasil dihubungkan dengan siswa ${data.siswa?.name} (NIS: ${data.siswa?.nis})${credInfo}`);
         setShowModal(false);
         resetForm();
-        fetchOrangTua();
+        refetchOrangTua();
       } else {
         alert(data.error || 'Gagal menghubungkan wali');
       }
@@ -252,7 +254,7 @@ export default function AdminOrangTuaPage() {
         const result = await response.json();
         setToast({ type: 'success', message: 'Password berhasil di-reset' });
         setModalState(prev => ({ ...prev, resetPasswordModal: null }));
-        fetchOrangTua();
+        refetchOrangTua();
       } else {
         const error = await response.json();
         setToast({ type: 'error', message: error.error || 'Gagal mereset password' });
@@ -288,7 +290,7 @@ export default function AdminOrangTuaPage() {
       if (response.ok) {
         setToast({ type: 'success', message: '✓ Siswa berhasil dihubungkan' });
         setModalState(prev => ({ ...prev, linkStudentModal: null }));
-        fetchOrangTua();
+        refetchOrangTua();
       } else {
         const error = await response.json();
         setToast({ type: 'error', message: error.error || 'Gagal menghubungkan siswa' });
@@ -330,7 +332,7 @@ export default function AdminOrangTuaPage() {
       if (response.ok) {
         setToast({ type: 'success', message: '✓ Hubungan anak berhasil diputus' });
         setModalState(prev => ({ ...prev, unlinkStudentModal: null }));
-        fetchOrangTua();
+        refetchOrangTua();
       } else {
         const error = await response.json();
         setToast({ type: 'error', message: error.error || 'Gagal memutus hubungan anak' });
@@ -362,7 +364,7 @@ export default function AdminOrangTuaPage() {
       if (response.ok) {
         setToast({ type: 'success', message: `✓ Akun berhasil di${newStatus ? 'aktifkan' : 'nonaktifkan'}` });
         setModalState(prev => ({ ...prev, toggleStatusModal: null }));
-        fetchOrangTua();
+        refetchOrangTua();
       } else {
         const error = await response.json();
         setToast({ type: 'error', message: error.error || 'Gagal mengubah status akun' });
@@ -392,7 +394,7 @@ export default function AdminOrangTuaPage() {
       if (response.ok) {
         setToast({ type: 'success', message: '✓ Akun berhasil dihapus' });
         setModalState(prev => ({ ...prev, deleteConfirmModal: null }));
-        fetchOrangTua();
+        refetchOrangTua();
       } else {
         const error = await response.json();
         setToast({ type: 'error', message: error.error || 'Gagal menghapus akun' });
@@ -405,39 +407,7 @@ export default function AdminOrangTuaPage() {
     }
   };
 
-  const filteredOrangTua = orangTua.filter(o => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchSearch = o.user.name.toLowerCase().includes(searchLower) ||
-      (o.siswa && o.siswa.some(s => s.siswa?.nis?.toLowerCase().includes(searchLower))) ||
-      (o.noHP && o.noHP.includes(searchTerm));
-
-    const childrenCount = o._count?.siswa || 0;
-    const matchConnection = filterConnectionStatus === 'all' ||
-      (filterConnectionStatus === 'connected' && childrenCount > 0) ||
-      (filterConnectionStatus === 'disconnected' && childrenCount === 0);
-
-    const matchAccount = filterAccountStatus === 'all' ||
-      (filterAccountStatus === 'active' && o.user.isActive) ||
-      (filterAccountStatus === 'inactive' && !o.user.isActive);
-
-    return matchSearch && matchConnection && matchAccount;
-  });
-
-  const stats = {
-    total: orangTua.length,
-    connected: orangTua.filter(o => (o._count?.siswa || 0) > 0).length,
-    disconnected: orangTua.filter(o => (o._count?.siswa || 0) === 0).length,
-    active: orangTua.filter(o => o.user.isActive).length,
-    inactive: orangTua.filter(o => !o.user.isActive).length,
-  };
-
-  if (loading) {
-    return (
-      <AdminLayout>
-        <LoadingIndicator text="Memuat data orang tua..." className="py-20" />
-      </AdminLayout>
-    );
-  }
+  // No client-side filtering - all handled server-side
 
   return (
     <AdminLayout>
@@ -478,7 +448,7 @@ export default function AdminOrangTuaPage() {
                   onClick={() => {
                     const csvContent = [
                       ['Nama Lengkap', 'NIS Anak', 'Pekerjaan', 'Anak Terhubung', 'Status Akun', 'Tanggal Pendaftaran'],
-                      ...(Array.isArray(filteredOrangTua) ? filteredOrangTua : []).map(o => [
+                      ...(Array.isArray(orangTua) ? orangTua : []).map(o => [
                         o.user.name,
                         (() => {
                           const siswa = o.siswa;
@@ -626,7 +596,13 @@ export default function AdminOrangTuaPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(!Array.isArray(filteredOrangTua) || filteredOrangTua.length === 0) ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-12 text-center">
+                          <LoadingIndicator text="Memuat data..." />
+                        </td>
+                      </tr>
+                    ) : (!Array.isArray(orangTua) || orangTua.length === 0) ? (
                       <tr>
                         <td colSpan="7" className="px-6 py-12 text-center">
                           <EmptyState
@@ -638,7 +614,7 @@ export default function AdminOrangTuaPage() {
                         </td>
                       </tr>
                     ) : (
-                      (Array.isArray(filteredOrangTua) ? filteredOrangTua : []).map((orangTuaItem, index) => {
+                      (Array.isArray(orangTua) ? orangTua : []).map((orangTuaItem, index) => {
                         const childrenCount = orangTuaItem._count?.siswa || 0;
                         const isConnected = childrenCount > 0;
 
@@ -735,6 +711,21 @@ export default function AdminOrangTuaPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Component */}
+              {!loading && orangTua.length > 0 && (
+                <Pagination
+                  currentPage={paginationMeta.page}
+                  totalPages={paginationMeta.totalPages}
+                  totalItems={paginationMeta.totalItems}
+                  limit={paginationMeta.limit}
+                  onPageChange={(newPage) => setPage(newPage)}
+                  onLimitChange={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1);
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>

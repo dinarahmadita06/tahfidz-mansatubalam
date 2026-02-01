@@ -3,6 +3,7 @@
 import React, { useState, useEffect, memo } from 'react';
 import useSWR from 'swr';
 import Skeleton, { TableRowSkeleton, StatCardSkeleton } from '@/components/shared/Skeleton';
+import Pagination from '@/components/shared/Pagination';
 
 import { UserPlus, Upload, Download, Search, Edit, Trash2, Users, UserCheck, AlertCircle, GraduationCap, BookOpen, CheckCircle, XCircle, ArrowUpRight, Award } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
@@ -168,13 +169,10 @@ const formatDateOnly = (dateValue) => {
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function AdminSiswaPage() {
-  const { data: siswaData, error: siswaError, mutate: refetchSiswa } = useSWR('/api/admin/siswa', fetcher);
-  const { data: kelasData, error: kelasError } = useSWR('/api/kelas', fetcher);
-
-  const siswa = siswaData?.data || (Array.isArray(siswaData) ? siswaData : []);
-  const kelas = Array.isArray(kelasData) ? kelasData : (kelasData?.data || []);
-  const loading = !siswaData && !siswaError;
-
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  
   const [searching, setSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTimeoutId, setSearchTimeoutId] = useState(null);
@@ -182,6 +180,26 @@ export default function AdminSiswaPage() {
   const [filterKelas, setFilterKelas] = useState('all'); // Filter kelas spesifik
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterStatusSiswa, setFilterStatusSiswa] = useState('all');
+  
+  // Build query params for API
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString()
+  });
+  if (searchTerm) queryParams.append('search', searchTerm);
+  if (filterStatus !== 'all') queryParams.append('status', filterStatus === 'active' ? 'approved' : 'pending');
+  if (filterStatusSiswa !== 'all') queryParams.append('statusSiswa', filterStatusSiswa);
+  
+  const { data: siswaData, error: siswaError, mutate: refetchSiswa } = useSWR(`/api/admin/siswa?${queryParams.toString()}`, fetcher);
+  const { data: kelasData, error: kelasError } = useSWR('/api/kelas', fetcher);
+  
+  // Extract data from API response
+  const siswa = siswaData?.data || [];
+  const stats = siswaData?.statistics || { total: 0, active: 0, unvalidated: 0, statusCounts: { AKTIF: 0, LULUS: 0, PINDAH: 0, KELUAR: 0 } };
+  const paginationMeta = siswaData?.pagination || { page: 1, limit: 20, totalItems: 0, totalPages: 0 };
+  const kelas = Array.isArray(kelasData) ? kelasData : (kelasData?.data || []);
+  const loading = !siswaData && !siswaError;
+  
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -191,6 +209,10 @@ export default function AdminSiswaPage() {
 
   const fetchError = siswaError?.message || kelasError?.message;
 
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filterStatus, filterStatusSiswa]);
 
   // Debounced search effect
   useEffect(() => {
@@ -206,16 +228,15 @@ export default function AdminSiswaPage() {
 
     setSearching(true);
     const timeoutId = setTimeout(() => {
-      // Search is done client-side via filteredSiswa below
       setSearching(false);
-    }, 300);
+    }, 400);
 
     setSearchTimeoutId(timeoutId);
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [searchTerm, searchTimeoutId]);
+  }, [searchTerm]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -436,37 +457,9 @@ export default function AdminSiswaPage() {
     setFilterKelas('all');
   }, [filterJenjang]);
 
-  // Filter data siswa
-  const filteredSiswa = siswa.filter(s => {
-    const matchSearch = s.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.nis && s.nis.includes(searchTerm)) ||
-      (s.nisn && s.nisn.includes(searchTerm));
-
-    // Filter berdasarkan jenjang dan kelas
-    let matchKelas = true;
-    if (filterJenjang !== 'all') {
-      // Jika jenjang dipilih, cek apakah kelas siswa sesuai jenjang
-      const kelasNama = kelas.find(k => k.id === s.kelasId)?.nama || '';
-      matchKelas = kelasNama.startsWith(filterJenjang);
-      
-      // Jika kelas spesifik juga dipilih, filter lebih lanjut
-      if (filterKelas !== 'all') {
-        matchKelas = matchKelas && s.kelasId?.toString() === filterKelas;
-      }
-    } else if (filterKelas !== 'all') {
-      // Jika hanya kelas yang dipilih (tanpa jenjang)
-      matchKelas = s.kelasId?.toString() === filterKelas;
-    }
-
-    const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'active' && s.status === 'approved') ||
-      (filterStatus === 'unvalidated' && s.status !== 'approved');
-
-    const matchStatusSiswa = filterStatusSiswa === 'all' ||
-      s.statusSiswa === filterStatusSiswa;
-
-    return matchSearch && matchKelas && matchStatus && matchStatusSiswa;
-  });
+  // Note: Filtering now done server-side, no need for client-side filteredSiswa
+  // Use siswa directly from API which is already filtered
+  const filteredSiswa = siswa;
 
   // Calculate total hafalan for each siswa
   const getSiswaHafalan = (siswaItem) => {
@@ -481,20 +474,8 @@ export default function AdminSiswaPage() {
     return uniqueJuz.size;
   };
 
-  // Statistics
-  const stats = {
-    total: siswa.length,
-    active: siswa.filter(s => s.status === 'approved').length,
-    unvalidated: siswa.filter(s => s.status !== 'approved').length,
-    statusCounts: {
-      AKTIF: siswa.filter(s => s.statusSiswa === 'AKTIF').length,
-      LULUS: siswa.filter(s => s.statusSiswa === 'LULUS').length,
-      PINDAH: siswa.filter(s => s.statusSiswa === 'PINDAH').length,
-      KELUAR: siswa.filter(s => s.statusSiswa === 'KELUAR').length,
-    },
-  };
-
-  // No full page loading, use skeletons instead
+  // Statistics now from backend (stats variable already defined above)
+  // No need to recalculate
 
 
   return (
@@ -851,6 +832,22 @@ export default function AdminSiswaPage() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Pagination */}
+              {!loading && siswa.length > 0 && (
+                <Pagination
+                  page={paginationMeta.page}
+                  totalPages={paginationMeta.totalPages}
+                  totalItems={paginationMeta.totalItems}
+                  limit={limit}
+                  onPageChange={(newPage) => setPage(newPage)}
+                  onLimitChange={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1); // Reset to page 1 when limit changes
+                  }}
+                  loading={loading}
+                />
+              )}
             </div>
           </div>
           )}

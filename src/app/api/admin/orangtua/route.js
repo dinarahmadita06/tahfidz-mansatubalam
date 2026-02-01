@@ -19,8 +19,9 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const status = searchParams.get('status');
+    const keterhubungan = searchParams.get('keterhubungan');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
 
     let whereClause = {};
@@ -41,14 +42,29 @@ export async function GET(request) {
       ];
     }
 
-    if (status !== null && status !== undefined && status !== '') {
+    // Status filter
+    if (status && status !== 'all') {
       whereClause.user = {
         ...whereClause.user,
         isActive: status === 'active'
       };
     }
 
-    const [orangTua, total] = await Promise.all([
+    // Keterhubungan filter (connected/not connected to siswa)
+    if (keterhubungan && keterhubungan !== 'all') {
+      if (keterhubungan === 'connected') {
+        whereClause.orangTuaSiswa = {
+          some: {}
+        };
+      } else if (keterhubungan === 'not-connected') {
+        whereClause.orangTuaSiswa = {
+          none: {}
+        };
+      }
+    }
+
+    // Execute parallel queries for data and statistics
+    const [orangTua, totalCount, activeCount, inactiveCount, connectedCount, notConnectedCount] = await Promise.all([
       prisma.orangTua.findMany({
         where: whereClause,
         include: {
@@ -93,7 +109,16 @@ export async function GET(request) {
         skip,
         take: limit
       }),
-      prisma.orangTua.count({ where: whereClause })
+      // Total count
+      prisma.orangTua.count(),
+      // Active count
+      prisma.orangTua.count({ where: { user: { isActive: true } } }),
+      // Inactive count
+      prisma.orangTua.count({ where: { user: { isActive: false } } }),
+      // Connected to siswa count
+      prisma.orangTua.count({ where: { orangTuaSiswa: { some: {} } } }),
+      // Not connected to siswa count
+      prisma.orangTua.count({ where: { orangTuaSiswa: { none: {} } } })
     ]);
 
     // Transform response to include _count and map siswa field for frontend compatibility
@@ -105,14 +130,28 @@ export async function GET(request) {
       }
     }));
 
+    // Statistics
+    const statistics = {
+      total: totalCount,
+      active: activeCount,
+      inactive: inactiveCount,
+      connected: connectedCount,
+      notConnected: notConnectedCount
+    };
+
+    // Pagination metadata
+    const totalItems = await prisma.orangTua.count({ where: whereClause });
+    const pagination = {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit)
+    };
+
     return NextResponse.json({
+      statistics,
       data: transformedOrangTua,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-      }
+      pagination
     });
   } catch (error) {
     console.error('Error fetching orang tua:', error);

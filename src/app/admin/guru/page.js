@@ -159,22 +159,37 @@ const getAktifKelas = (guruKelas) => {
 
 import useSWR from 'swr';
 import Skeleton, { TableRowSkeleton, StatCardSkeleton } from '@/components/shared/Skeleton';
+import Pagination from '@/components/shared/Pagination';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function AdminGuruPage() {
-  const { data: guruData, error: guruError, mutate: refetchGuru } = useSWR('/api/guru', fetcher);
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  
+  // Build query params
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString()
+  });
+  if (searchTerm) queryParams.append('search', searchTerm);
+  if (filterStatus !== 'all') queryParams.append('status', filterStatus);
+  
+  const { data: guruData, error: guruError, mutate: refetchGuru } = useSWR(`/api/admin/guru?${queryParams.toString()}`, fetcher);
   const { data: kelasData, error: kelasError } = useSWR('/api/kelas?showAll=true', fetcher);
 
-  const guru = Array.isArray(guruData) ? guruData : [];
+  const guru = guruData?.data || [];
+  const stats = guruData?.statistics || { total: 0, active: 0, inactive: 0 };
+  const paginationMeta = guruData?.pagination || { page: 1, limit: 20, totalItems: 0, totalPages: 0 };
   const allKelas = Array.isArray(kelasData) ? kelasData : (kelasData?.data || []);
   const aktivKelasList = allKelas.filter(k => k.status === STATUS_AKTIF);
   
   const loading = !guruData && !guruError;
   const loadingKelas = !kelasData && !kelasError;
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingGuru, setEditingGuru] = useState(null);
@@ -379,12 +394,12 @@ export default function AdminGuruPage() {
   };
 
   const handleExportData = () => {
-    if (filteredGuru.length === 0) {
+    if (guru.length === 0) {
       alert('Tidak ada data untuk di-export');
       return;
     }
 
-    const exportData = filteredGuru.map(item => {
+    const exportData = guru.map(item => {
       const aktifKelas = (item.guruKelas || [])
         .filter(gk => gk.kelas && gk.kelas.status === 'AKTIF')
         .map(gk => gk.kelas.nama)
@@ -408,22 +423,10 @@ export default function AdminGuruPage() {
     XLSX.writeFile(wb, `Data_Guru_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  // Filter guru data
-  const filteredGuru = Array.isArray(guru) ? guru.filter(g => {
-    const matchSearch = g.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (g.nip && g.nip.includes(searchTerm));
-
-    const matchFilter = filterStatus === 'all' || filterStatus === 'active';
-
-    return matchSearch && matchFilter;
-  }) : [];
-
-  // Statistics
-  const stats = {
-    total: Array.isArray(guru) ? guru.length : 0,
-    active: Array.isArray(guru) ? guru.length : 0,
-    inactive: 0,
-  };
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filterStatus]);
 
   // No full page loading, use skeletons instead
 
@@ -560,7 +563,7 @@ export default function AdminGuruPage() {
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRowSkeleton key={i} columns={6} />
                     ))
-                  ) : (!Array.isArray(filteredGuru) || filteredGuru.length === 0) ? (
+                  ) : (!Array.isArray(guru) || guru.length === 0) ? (
                     <tr>
                       <td colSpan="6" className="px-6 py-12 text-center">
                         <EmptyState
@@ -572,7 +575,7 @@ export default function AdminGuruPage() {
                       </td>
                     </tr>
                   ) : (
-                    (Array.isArray(filteredGuru) ? filteredGuru : []).map((guruItem) => {
+                    (Array.isArray(guru) ? guru : []).map((guruItem) => {
                       const aktivKelas = getAktifKelas(guruItem.guruKelas);
                       return (
                         <tr
@@ -652,6 +655,21 @@ export default function AdminGuruPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Component */}
+            {!loading && guru.length > 0 && (
+              <Pagination
+                currentPage={paginationMeta.page}
+                totalPages={paginationMeta.totalPages}
+                totalItems={paginationMeta.totalItems}
+                limit={paginationMeta.limit}
+                onPageChange={(newPage) => setPage(newPage)}
+                onLimitChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
+              />
+            )}
           </div>
       </div>
 
