@@ -24,9 +24,9 @@ export const metadata = {
   description: "Sistem Informasi Manajemen Tahfidz Qur'an",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png", 
-    apple: "/apple-touch-icon.png",
+    icon: "/logo-man1.png",
+    shortcut: "/logo-man1.png", 
+    apple: "/logo-man1.png",
   },
   themeColor: "#10b981", // emerald-500
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
