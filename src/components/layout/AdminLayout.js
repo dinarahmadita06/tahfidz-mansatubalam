@@ -111,16 +111,20 @@ function AdminLayout({ children }) {
 
   // Cleanup: Close sidebar on route change (mobile only) and reset body overflow
   useEffect(() => {
-    if (isMobile) {
+    // Only auto-close on mobile when route actually changes
+    if (isMobile && sidebarOpen) {
       setSidebarOpen(false);
     }
-    // Reset body overflow when sidebar closes
+  }, [pathname, isMobile]); // Remove sidebarOpen from deps to prevent loop
+
+  // Separate effect for body overflow management
+  useEffect(() => {
     document.body.style.overflow = sidebarOpen && isMobile ? 'hidden' : 'unset';
     
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [pathname, isMobile, sidebarOpen]);
+  }, [sidebarOpen, isMobile]);
 
   // Fetch pending siswa count
   useEffect(() => {
@@ -290,11 +294,16 @@ function AdminLayout({ children }) {
       `}</style>
 
       <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #FAFFF8 0%, #FFFBE9 100%)' }} suppressHydrationWarning>
-        {/* Mobile Overlay */}
+        {/* Mobile Overlay - with pointer-events protection */}
         {isMounted && isMobile && sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/20 md:bg-black/50 z-40 lg:hidden transition-opacity duration-200 pointer-events-auto"
-            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 bg-black/20 md:bg-black/50 z-40 lg:hidden transition-opacity duration-200"
+            onClick={(e) => {
+              // Only close if clicking backdrop, not if event came from toggle button
+              e.stopPropagation();
+              setSidebarOpen(false);
+            }}
+            style={{ pointerEvents: 'auto' }}
           />
         )}
 
@@ -311,6 +320,7 @@ function AdminLayout({ children }) {
           } ${
             isMobile ? 'fixed left-0 top-0 bottom-0 w-[240px] z-50' : 'relative'
           } transition-all duration-300 flex flex-col islamic-pattern`}
+          onClick={(e) => e.stopPropagation()}
           style={{
             background: 'linear-gradient(180deg, #E8FFF3 0%, #FFF9E7 100%)',
             boxShadow: '4px 0px 12px rgba(0, 0, 0, 0.06)'
@@ -488,9 +498,18 @@ function AdminLayout({ children }) {
           {/* Mobile Header with Hamburger */}
           <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
             <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setSidebarOpen(!sidebarOpen);
+              }}
+              onPointerDown={(e) => {
+                // Prevent double trigger on touch devices
+                e.stopPropagation();
+              }}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative z-50"
               aria-label="Toggle menu"
+              type="button"
             >
               <Menu size={24} className="text-gray-700" />
             </button>
