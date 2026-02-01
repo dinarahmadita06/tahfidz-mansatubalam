@@ -109,6 +109,19 @@ function AdminLayout({ children }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, [isMounted]);
 
+  // Cleanup: Close sidebar on route change (mobile only) and reset body overflow
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+    // Reset body overflow when sidebar closes
+    document.body.style.overflow = sidebarOpen && isMobile ? 'hidden' : 'unset';
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [pathname, isMobile, sidebarOpen]);
+
   // Fetch pending siswa count
   useEffect(() => {
     const fetchPendingCount = async () => {
