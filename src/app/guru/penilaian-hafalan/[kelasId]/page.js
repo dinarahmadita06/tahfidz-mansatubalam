@@ -426,7 +426,7 @@ export default function PenilaianHafalanPage() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-50 rounded-full blur-2xl -ml-12 -mb-12 opacity-50"></div>
             
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-blue-100/80 flex items-center justify-center shrink-0 shadow-sm border border-blue-200">
                   <Calendar className="w-6 h-6 text-blue-600" />
@@ -437,7 +437,51 @@ export default function PenilaianHafalanPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 bg-blue-50/40 p-2 rounded-2xl border border-blue-100 shadow-inner flex-wrap justify-center backdrop-blur-sm">
+              {/* Mobile: Compact Layout */}
+              <div className="flex md:hidden flex-col gap-2 w-full">
+                {/* Row 1: Prev + Date + Next */}
+                <div className="flex items-center gap-2 w-full">
+                  {/* Previous Button */}
+                  <button
+                    onClick={handlePrevDate}
+                    className="flex items-center justify-center w-11 h-11 bg-white hover:bg-blue-50 text-blue-600 rounded-xl border border-slate-200 hover:border-blue-300 transition-all duration-200 shadow-sm active:scale-95 flex-shrink-0"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+
+                  {/* Date Picker */}
+                  <div className="relative flex-1 min-w-0">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 z-10 pointer-events-none">
+                      <Calendar size={16} />
+                    </div>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 text-sm bg-white border-2 border-blue-200 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl outline-none font-semibold text-slate-800 transition-all"
+                    />
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={handleNextDate}
+                    className="flex items-center justify-center w-11 h-11 bg-white hover:bg-blue-50 text-blue-600 rounded-xl border border-slate-200 hover:border-blue-300 transition-all duration-200 shadow-sm active:scale-95 flex-shrink-0"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Row 2: Today Button (Smaller) */}
+                <button
+                  onClick={handleTodayDate}
+                  className="px-4 py-2 bg-blue-100/50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 rounded-xl border-2 border-blue-200 hover:border-blue-300 transition-all duration-200 font-bold text-xs uppercase tracking-wide shadow-sm active:scale-95 self-start"
+                >
+                  Hari Ini
+                </button>
+              </div>
+
+              {/* Desktop: Original Layout */}
+              <div className="hidden md:flex items-center gap-2 bg-blue-50/40 p-2 rounded-2xl border border-blue-100 shadow-inner flex-wrap justify-center backdrop-blur-sm">
                 {/* Previous Button */}
                 <button
                   onClick={handlePrevDate}
