@@ -675,7 +675,7 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
 
       {/* Modal Aktivasi Periode */}
       {showActivateModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 max-w-xl w-full shadow-xl border border-emerald-200/60 animate-in fade-in zoom-in-95">
             <div className="text-center mb-1">
               <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">

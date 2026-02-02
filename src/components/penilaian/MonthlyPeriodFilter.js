@@ -99,26 +99,26 @@ export default function MonthlyPeriodFilter({
           </div>
 
           {/* Right: Navigation Controls */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex flex-row items-center gap-2">
             {/* Prev Button */}
             <button
               onClick={handlePrevMonth}
               disabled={isPrevDisabled()}
-              className={`p-2 rounded-lg transition-all duration-200 ${
+              className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200 flex-shrink-0 ${
                 isPrevDisabled()
                   ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
                   : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 cursor-pointer'
               }`}
               title="Bulan sebelumnya"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
 
             {/* Month Dropdown */}
             <select
               value={selectedMonth}
               onChange={(e) => onMonthYearChange(parseInt(e.target.value), selectedYear)}
-              className="px-4 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium hover:border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+              className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium hover:border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors min-w-0"
             >
               {MONTH_NAMES.map((month, idx) => (
                 <option key={idx} value={idx}>
@@ -131,7 +131,7 @@ export default function MonthlyPeriodFilter({
             <select
               value={selectedYear}
               onChange={(e) => onMonthYearChange(selectedMonth, parseInt(e.target.value))}
-              className="px-4 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium hover:border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+              className="w-24 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium hover:border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors flex-shrink-0"
             >
               {yearOptions.map((year) => (
                 <option key={year} value={year}>
@@ -144,14 +144,14 @@ export default function MonthlyPeriodFilter({
             <button
               onClick={handleNextMonth}
               disabled={isNextDisabled()}
-              className={`p-2 rounded-lg transition-all duration-200 ${
+              className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200 flex-shrink-0 ${
                 isNextDisabled()
                   ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
                   : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 cursor-pointer'
               }`}
               title="Bulan berikutnya"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>

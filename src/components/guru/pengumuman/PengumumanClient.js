@@ -335,7 +335,7 @@ export default function PengumumanClient({ initialPengumuman }) {
 
       {/* Management Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full my-auto animate-in fade-in zoom-in duration-200 overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 text-white p-6 flex items-center justify-between">
