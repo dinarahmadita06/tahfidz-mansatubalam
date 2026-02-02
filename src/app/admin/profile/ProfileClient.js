@@ -17,7 +17,10 @@ import {
   IdCard,
   FileText,
   Upload,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  X,
+  RefreshCw
 } from 'lucide-react';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
@@ -51,6 +54,8 @@ export default function ProfileClient({ initialData }) {
   });
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
+  const [showRegenerateConfirmModal, setShowRegenerateConfirmModal] = useState(false);
+  const [regenerateLoading, setRegenerateLoading] = useState(false);
 
   const fetchProfileData = async () => {
     try {
@@ -98,12 +103,12 @@ export default function ProfileClient({ initialData }) {
   };
 
   const handleRegenerateRecoveryCode = async () => {
-    if (!window.confirm('Apakah Anda yakin ingin mengatur ulang recovery code? Kode lama akan hangus dan kode baru akan dibuat.')) {
-      return;
-    }
+    setShowRegenerateConfirmModal(true);
+  };
 
+  const handleConfirmRegenerate = async () => {
     try {
-      setSaveLoading(true);
+      setRegenerateLoading(true);
       const response = await fetch('/api/user/setup-recovery', {
         method: 'POST',
       });
@@ -111,6 +116,7 @@ export default function ProfileClient({ initialData }) {
       if (response.ok) {
         const data = await response.json();
         setRecoveryCode(data.recoveryCode);
+        setShowRegenerateConfirmModal(false);
         setShowRecoveryModal(true);
       } else {
         const error = await response.json();
@@ -120,7 +126,7 @@ export default function ProfileClient({ initialData }) {
       console.error('Error regenerating recovery code:', error);
       toast.error('Terjadi kesalahan saat mengatur ulang recovery code');
     } finally {
-      setSaveLoading(false);
+      setRegenerateLoading(false);
     }
   };
 
@@ -795,6 +801,92 @@ export default function ProfileClient({ initialData }) {
               >
                 {saveLoading ? <LoadingIndicator inline text="Menyimpan..." size="small" /> : 'Ubah Password'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Regenerate Confirmation Modal */}
+      {showRegenerateConfirmModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && !regenerateLoading) {
+              setShowRegenerateConfirmModal(false);
+            }
+          }}
+          tabIndex={-1}
+        >
+          <div className="absolute inset-0" aria-hidden="true" />
+          
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="regenerate-modal-title"
+            aria-describedby="regenerate-modal-description"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle size={24} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 id="regenerate-modal-title" className="text-lg font-bold text-white">
+                      Reset Recovery Code?
+                    </h3>
+                    <p className="text-emerald-50 text-sm mt-1">
+                      Kode lama akan hangus dan kode baru akan dibuat
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => !regenerateLoading && setShowRegenerateConfirmModal(false)}
+                  disabled={regenerateLoading}
+                  className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  aria-label="Tutup modal"
+                >
+                  <X size={20} className="text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <div id="regenerate-modal-description" className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  Setelah reset, Recovery Code lama Anda <b>tidak bisa digunakan lagi</b>. 
+                  Pastikan Anda menyimpan kode baru setelah reset.
+                </p>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowRegenerateConfirmModal(false)}
+                  disabled={regenerateLoading}
+                  autoFocus
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleConfirmRegenerate}
+                  disabled={regenerateLoading}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center gap-2"
+                >
+                  {regenerateLoading ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" />
+                      Memproses...
+                    </>
+                  ) : (
+                    'Ya, Reset'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

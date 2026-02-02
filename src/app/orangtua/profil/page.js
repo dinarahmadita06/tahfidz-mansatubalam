@@ -17,6 +17,8 @@ import {
   Users,
   Eye,
   EyeOff,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 import OrangtuaLayout from '@/components/layout/OrangtuaLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
@@ -703,6 +705,8 @@ export default function ProfilOrangtuaPage() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
+  const [showRegenerateConfirmModal, setShowRegenerateConfirmModal] = useState(false);
+  const [regenerateLoading, setRegenerateLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -811,11 +815,12 @@ export default function ProfilOrangtuaPage() {
   };
 
   const handleRegenerateRecoveryCode = async () => {
-    if (!window.confirm('Apakah Anda yakin ingin mengatur ulang recovery code? Kode lama akan hangus dan kode baru akan dibuat.')) {
-      return;
-    }
+    setShowRegenerateConfirmModal(true);
+  };
 
+  const handleConfirmRegenerate = async () => {
     try {
+      setRegenerateLoading(true);
       const response = await fetch('/api/user/setup-recovery', {
         method: 'POST',
       });
@@ -823,14 +828,17 @@ export default function ProfilOrangtuaPage() {
       if (response.ok) {
         const data = await response.json();
         setRecoveryCode(data.recoveryCode);
+        setShowRegenerateConfirmModal(false);
         setShowRecoveryModal(true);
       } else {
         const error = await response.json();
-        setError(error.error || 'Failed to regenerate recovery code');
+        setError(error.error || 'Gagal regenerasi recovery code');
       }
     } catch (error) {
       console.error('Error regenerating recovery code:', error);
       setError('Terjadi kesalahan saat mengatur ulang recovery code');
+    } finally {
+      setRegenerateLoading(false);
     }
   };
 
@@ -962,6 +970,87 @@ export default function ProfilOrangtuaPage() {
         onClose={() => setShowPasswordModal(false)}
         onSave={handleChangePasswordSubmit}
       />
+
+      {/* Regenerate Confirmation Modal */}
+      {showRegenerateConfirmModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && !regenerateLoading) {
+              setShowRegenerateConfirmModal(false);
+            }
+          }}
+          tabIndex={-1}
+        >
+          <div className="absolute inset-0" aria-hidden="true" />
+          
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle size={24} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      Reset Recovery Code?
+                    </h3>
+                    <p className="text-emerald-50 text-sm mt-1">
+                      Kode lama akan hangus dan kode baru akan dibuat
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => !regenerateLoading && setShowRegenerateConfirmModal(false)}
+                  disabled={regenerateLoading}
+                  className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                  <X size={20} className="text-white" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  Setelah reset, Recovery Code lama Anda <b>tidak bisa digunakan lagi</b>. 
+                  Pastikan Anda menyimpan kode baru setelah reset.
+                </p>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowRegenerateConfirmModal(false)}
+                  disabled={regenerateLoading}
+                  autoFocus
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleConfirmRegenerate}
+                  disabled={regenerateLoading}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {regenerateLoading ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" />
+                      Memproses...
+                    </>
+                  ) : (
+                    'Ya, Reset'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recovery Code Modal */}
       <RecoveryCodeModal

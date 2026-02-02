@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck, ShieldAlert, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, RefreshCw, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { toast } from 'react-hot-toast';
 
 export default function RecoveryCodeSection() {
   const { data: session, update } = useSession();
@@ -13,6 +14,54 @@ export default function RecoveryCodeSection() {
 
   const handleRegenerate = () => {
     setShowRegenerateModal(true);
+  };
+
+  const handleConfirmRegenerate = async () => {
+    setLoading(true);
+    try {
+      // Reset isRecoveryCodeSetup to trigger modal again
+      const res = await fetch('/api/user/regenerate-recovery', { 
+        method: 'POST' 
+      });
+      
+      if (res.ok) {
+        await update({
+          ...session,
+          user: {
+            ...session.user,
+            isRecoveryCodeSetup: false
+          }
+        });
+        
+        setShowRegenerateModal(false);
+        toast.success('Recovery Code akan diregenerasi. Modal akan muncul dengan kode baru.', {
+          duration: 3000,
+          position: 'top-center'
+        });
+        window.location.reload();
+      } else {
+        throw new Error('Failed to regenerate');
+      }
+    } catch (error) {
+      toast.error('Gagal regenerate Recovery Code. Silakan coba lagi.', {
+        duration: 3000,
+        position: 'top-center'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    if (!loading) {
+      setShowRegenerateModal(false);
+    }
+  };
+
+  const handleEscKey = (e) => {
+    if (e.key === 'Escape' && !loading) {
+      handleCloseModal();
+    }
   };
 
   return (
@@ -95,67 +144,88 @@ export default function RecoveryCodeSection() {
 
       {/* Regenerate Modal */}
       {showRegenerateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
-                <AlertTriangle size={24} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Regenerate Recovery Code?</h3>
-                <p className="text-sm text-gray-600">Kode lama akan tidak valid</p>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+          onKeyDown={handleEscKey}
+          tabIndex={-1}
+        >
+          {/* Backdrop - tidak menutup modal saat diklik karena tindakan sensitif */}
+          <div 
+            className="absolute inset-0"
+            aria-hidden="true"
+          />
+          
+          {/* Modal Content */}
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+          >
+            {/* Header dengan gradient merah untuk danger action */}
+            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 id="modal-title" className="text-lg font-bold text-white">
+                      Reset Recovery Code?
+                    </h3>
+                    <p className="text-red-100 text-sm mt-1">
+                      Kode lama akan hangus dan kode baru akan dibuat
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleCloseModal}
+                  disabled={loading}
+                  className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  aria-label="Tutup modal"
+                >
+                  <X size={20} className="text-white" />
+                </button>
               </div>
             </div>
 
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
-              <p className="text-sm text-amber-800 leading-relaxed">
-                Setelah regenerate, Recovery Code lama Anda <b>tidak bisa digunakan lagi</b>. 
-                Anda akan mendapatkan kode baru yang harus disimpan dengan aman.
-              </p>
-            </div>
+            {/* Body */}
+            <div className="p-6">
+              {/* Warning Message */}
+              <div id="modal-description" className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  Setelah reset, Recovery Code lama Anda <b>tidak bisa digunakan lagi</b>. 
+                  Pastikan Anda menyimpan kode baru setelah reset.
+                </p>
+              </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowRegenerateModal(false)}
-                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all"
-              >
-                Batal
-              </button>
-              <button
-                onClick={async () => {
-                  setLoading(true);
-                  try {
-                    // Reset isRecoveryCodeSetup to trigger modal again
-                    const res = await fetch('/api/user/regenerate-recovery', { 
-                      method: 'POST' 
-                    });
-                    
-                    if (res.ok) {
-                      await update({
-                        ...session,
-                        user: {
-                          ...session.user,
-                          isRecoveryCodeSetup: false
-                        }
-                      });
-                      
-                      setShowRegenerateModal(false);
-                      alert('Recovery Code akan diregenerasi. Modal akan muncul dengan kode baru.');
-                      window.location.reload();
-                    } else {
-                      throw new Error('Failed to regenerate');
-                    }
-                  } catch (error) {
-                    alert('Gagal regenerate Recovery Code. Silakan coba lagi.');
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={loading}
-                className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
-              >
-                {loading ? 'Memproses...' : 'Ya, Regenerate'}
-              </button>
+              {/* Action Buttons */}
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                <button
+                  onClick={handleCloseModal}
+                  disabled={loading}
+                  autoFocus
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleConfirmRegenerate}
+                  disabled={loading}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" />
+                      Memproses...
+                    </>
+                  ) : (
+                    'Ya, Reset'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
