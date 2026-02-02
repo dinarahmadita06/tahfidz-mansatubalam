@@ -125,7 +125,7 @@ KODE INI ADALAH SATU-SATUNYA CARA UNTUK MERESET PASSWORD ANDA JIKA LUPA.`;
   if (!showModal) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
         {/* Hard Gate Modal - No close button, must acknowledge */}
         <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-6 text-white text-center relative">
