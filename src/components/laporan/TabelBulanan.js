@@ -26,26 +26,26 @@ export default function TabelBulanan({ data, onCatatanChange }) {
       <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse', border: `1px solid ${colors.gray[200]}`, borderRadius: '8px', overflow: 'hidden' }}>
         <thead>
           {/* Group Header Row */}
-          <tr style={{ background: colors.emerald[50] }}>
-            <th colSpan="2" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: colors.emerald[800], textTransform: 'none', letterSpacing: '0.05em', borderBottom: `1px solid ${colors.emerald[200]}` }}>Informasi Siswa</th>
-            <th colSpan="4" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: colors.emerald[800], textTransform: 'none', letterSpacing: '0.05em', borderBottom: `1px solid ${colors.emerald[200]}`, borderLeft: `1px solid ${colors.emerald[100]}`, borderRight: `1px solid ${colors.emerald[100]}` }}>Rekap Kehadiran</th>
-            <th colSpan="8" style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: colors.emerald[800], textTransform: 'none', letterSpacing: '0.05em', borderBottom: `1px solid ${colors.emerald[200]}` }}>Capaian Hafalan & Nilai</th>
+          <tr style={{ background: 'linear-gradient(to right, #10b981, #059669)' }}>
+            <th colSpan="2" style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#ffffff', textTransform: 'none', letterSpacing: '0.05em', borderBottom: `2px solid ${colors.emerald[300]}` }}>Informasi Siswa</th>
+            <th colSpan="4" style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#ffffff', textTransform: 'none', letterSpacing: '0.05em', borderBottom: `2px solid ${colors.emerald[300]}`, borderLeft: `2px solid ${colors.emerald[400]}`, borderRight: `2px solid ${colors.emerald[400]}` }}>Rekap Kehadiran</th>
+            <th colSpan="8" style={{ padding: '14px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#ffffff', textTransform: 'none', letterSpacing: '0.05em', borderBottom: `2px solid ${colors.emerald[300]}` }}>Capaian Hafalan & Nilai</th>
           </tr>
-          <tr style={{ background: 'white', borderBottom: `2px solid ${colors.emerald[200]}` }}>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>No</th>
-            <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '150px' }}>Nama Lengkap</th>
-            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', borderLeft: `1px solid ${colors.gray[100]}` }}>H</th>
-            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>I</th>
-            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>S</th>
-            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', borderRight: `1px solid ${colors.gray[100]}` }}>A</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '70px' }}>Setoran</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '120px' }}>Hafalan Terakhir</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Tajwid</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Lancar</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Makhraj</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Impl.</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', background: colors.emerald[50], minWidth: '100px' }}>Rata-rata Nilai</th>
-            <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Status</th>
+          <tr style={{ background: colors.emerald[50], borderBottom: `2px solid ${colors.emerald[200]}` }}>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif' }}>No</th>
+            <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '150px' }}>Nama Lengkap</th>
+            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', borderLeft: `1px solid ${colors.gray[200]}` }}>H</th>
+            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif' }}>I</th>
+            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif' }}>S</th>
+            <th style={{ padding: '12px', minWidth: '50px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', borderRight: `1px solid ${colors.gray[200]}` }}>A</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '70px' }}>Setoran</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '120px' }}>Hafalan Terakhir</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Tajwid</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Lancar</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Makhraj</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Avg Impl.</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', background: colors.emerald[100], minWidth: '100px' }}>Rata-rata Nilai</th>
+            <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.gray[800], fontFamily: 'Poppins, system-ui, sans-serif', minWidth: '80px' }}>Status</th>
           </tr>
         </thead>
         <tbody>
