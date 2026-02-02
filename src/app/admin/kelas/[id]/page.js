@@ -1010,9 +1010,9 @@ export default function KelolaSiswaPage() {
       {/* Detail Siswa Modal */}
       {showDetailModal && detailSiswa && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: colors.white, borderRadius: '24px', padding: '32px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)' }}>
+          <div style={{ background: colors.white, borderRadius: '24px', padding: '24px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', color: colors.gray[900] }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.gray[900] }}>
                 Detail Siswa
               </h2>
               <button onClick={() => setShowDetailModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
@@ -1020,26 +1020,26 @@ export default function KelolaSiswaPage() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '24px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Nama Siswa</label>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: colors.gray[600], marginBottom: '6px', display: 'block' }}>Nama Siswa</label>
                 <p style={{ fontSize: '16px', fontWeight: '600', color: colors.gray[900] }}>{detailSiswa.user?.name}</p>
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>NIS</label>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: colors.emerald[700] }}>{detailSiswa.nis}</p>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: colors.gray[600], marginBottom: '6px', display: 'block' }}>NIS</label>
+                <p style={{ fontSize: '15px', fontWeight: '600', color: colors.emerald[700] }}>{detailSiswa.nis}</p>
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>NISN</label>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: colors.gray[600], marginBottom: '6px', display: 'block' }}>NISN</label>
                 <p style={{ fontSize: '16px', fontWeight: '600', color: colors.gray[900] }}>{detailSiswa.nisn || '-'}</p>
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Jenis Kelamin</label>
-                <p style={{ fontSize: '14px', color: colors.gray[600] }}>{formatGender(detailSiswa.jenisKelamin)}</p>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: colors.gray[600], marginBottom: '6px', display: 'block' }}>Jenis Kelamin</label>
+                <p style={{ fontSize: '15px', fontWeight: '600', color: colors.gray[900] }}>{formatGender(detailSiswa.jenisKelamin)}</p>
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: colors.gray[500], textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Orang Tua</label>
-                <p style={{ fontSize: '14px', color: colors.gray[600] }}>{detailSiswa.orangTuaSiswa?.[0]?.orangTua?.user?.name || 'Belum terhubung'}</p>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: colors.gray[600], marginBottom: '6px', display: 'block' }}>Orang Tua</label>
+                <p style={{ fontSize: '15px', fontWeight: '600', color: colors.gray[900] }}>{detailSiswa.orangTuaSiswa?.[0]?.orangTua?.user?.name || 'Belum terhubung'}</p>
               </div>
             </div>
 
