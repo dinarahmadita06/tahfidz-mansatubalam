@@ -62,7 +62,6 @@ export async function GET(request) {
       nama: admin.name,
       email: admin.email,
       role: 'Administrator',
-      phoneNumber: '0812-3456-7890',
       jabatan: admin.jabatan || 'Koordinator Tahfidz',
       nip: admin.nip || '',
       alamat: 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
@@ -123,33 +122,15 @@ export async function PUT(request) {
     const body = await request.json();
     console.log('Request body:', body);
 
-    const { nama, email, jabatan, nip } = body;
+    const { nama, jabatan, nip, alamat } = body;
 
     // Validasi data
-    if (!nama || !email) {
-      console.log('Validation failed: nama or email missing');
+    if (!nama) {
+      console.log('Validation failed: nama missing');
       return NextResponse.json(
-        { error: 'Nama dan email harus diisi' },
+        { error: 'Nama harus diisi' },
         { status: 400 }
       );
-    }
-
-    // Cek apakah email sudah digunakan oleh user lain
-    if (email !== session.user.email) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          email,
-          id: { not: session.user.id }
-        }
-      });
-
-      if (existingUser) {
-        console.log('Email already exists:', email);
-        return NextResponse.json(
-          { error: 'Email sudah digunakan oleh user lain' },
-          { status: 400 }
-        );
-      }
     }
 
     console.log('Updating user with ID:', session.user.id);
@@ -159,7 +140,6 @@ export async function PUT(request) {
       where: { id: session.user.id },
       data: {
         name: nama,
-        email,
         jabatan: jabatan || null,
         nip: nip || null
       }
@@ -195,8 +175,6 @@ export async function PUT(request) {
       message: 'Profil berhasil diperbarui',
       profile: {
         nama: updatedAdmin.name,
-        email: updatedAdmin.email,
-        phoneNumber: '0812-3456-7890',
         jabatan: updatedAdmin.jabatan,
         nip: updatedAdmin.nip,
         alamat: 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12'

@@ -310,45 +310,7 @@ function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDel
   );
 }
 
-// SecurityCard Component
-function SecurityCard({ onRegenerateRecoveryCode }) {
-  return (
-    <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5">
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center shadow-sm">
-            <Shield size={20} className="text-white" />
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="font-bold text-sm mb-2 text-emerald-900">
-            Informasi Keamanan Akun
-          </h4>
-          <div className="space-y-3">
-            <p className="text-sm leading-relaxed text-emerald-800">
-              💡 Pastikan informasi profil Anda selalu ter-update. Informasi ini akan ditampilkan kepada siswa dan orang tua siswa.
-            </p>
-            
-            <div className="pt-2 border-t border-emerald-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-emerald-900">Recovery Code</p>
-                  <p className="text-xs text-emerald-700">Atur ulang kode pemulihan akun Anda</p>
-                </div>
-                <button
-                  onClick={onRegenerateRecoveryCode}
-                  className="px-3 py-1.5 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 transition text-xs"
-                >
-                  Regenerasi Kode
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 export default function ProfilGuruPage() {
   const { data: session, status, update } = useSession();
@@ -732,7 +694,7 @@ export default function ProfilGuruPage() {
             />
           </div>
 
-          {/* Right Column: Info + Signature + Security */}
+          {/* Right Column: Info + Signature */}
           <div className="lg:col-span-2 space-y-6">
             <PersonalInfoForm profileData={profileData} formatDisplayValue={formatDisplayValue} />
 
@@ -742,8 +704,6 @@ export default function ProfilGuruPage() {
               onUpload={handleUploadSignature}
               onDelete={handleDeleteSignature}
             />
-
-            <SecurityCard onRegenerateRecoveryCode={handleRegenerateRecoveryCode} />
           </div>
         </div>
       </div>

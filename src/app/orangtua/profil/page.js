@@ -25,7 +25,7 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
 
 // Single Source of Truth: Profile Fields Configuration
-// Layout order: Row 1 (Nama | Telepon), Row 2 (Email | Status), Row 3 (Alamat full-width)
+// Layout order: Row 1 (Nama | Status), Row 2 (Alamat full-width)
 const PROFILE_FIELDS_CONFIG = [
   {
     key: 'namaLengkap',
@@ -35,21 +35,7 @@ const PROFILE_FIELDS_CONFIG = [
     required: true,
     type: 'text',
     placeholder: 'Masukkan nama lengkap',
-    gridCols: 'md:col-span-1', // Changed from md:col-span-2 for balanced layout
-  },
-  {
-    key: 'noTelepon',
-    label: 'Nomor Telepon',
-    icon: Phone,
-    editable: true,
-    required: true,
-    type: 'tel',
-    placeholder: 'Contoh: 0812-3456-7890',
     gridCols: 'md:col-span-1',
-    validate: (value) => {
-      const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
-      return phoneRegex.test(value) ? null : 'Format nomor telepon tidak valid';
-    },
   },
   {
     key: 'status',
