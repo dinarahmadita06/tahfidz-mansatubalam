@@ -195,8 +195,8 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
         className={`
           fixed top-0 left-0 h-full bg-gradient-to-b from-white via-emerald-50/30 to-amber-50/30 shadow-xl z-40 transition-all duration-300 border-r border-emerald-100/50
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${isCollapsed ? 'lg:w-20' : 'lg:w-[240px] xl:w-[260px]'}
-          w-[240px]
+          ${isCollapsed ? 'lg:w-20' : 'lg:w-[200px] xl:w-[220px]'}
+          w-[200px]
         `}
       >
         <div className="flex flex-col h-full">
