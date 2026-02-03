@@ -21,13 +21,22 @@ import toast, { Toaster } from 'react-hot-toast';
 import JumpToAyahModal from '@/components/JumpToAyahModal';
 
 // SearchBar Component - Memoized to prevent re-render
-const SearchBar = memo(({ onSearch }) => {
+const SearchBar = memo(({ onSearch, initialValue = '' }) => {
   const inputRef = useRef(null);
-  const [localValue, setLocalValue] = useState('');
+  const [localValue, setLocalValue] = useState(initialValue);
   const debounceTimer = useRef(null);
+  const isTypingRef = useRef(false);
+
+  // Sync with parent ONLY if not currently typing
+  useEffect(() => {
+    if (!isTypingRef.current && initialValue !== localValue) {
+      setLocalValue(initialValue);
+    }
+  }, [initialValue]);
 
   const handleChange = (e) => {
     const value = e.target.value;
+    isTypingRef.current = true;
     setLocalValue(value);
     
     // Debounce search to prevent too many re-renders
@@ -36,6 +45,7 @@ const SearchBar = memo(({ onSearch }) => {
     }
     debounceTimer.current = setTimeout(() => {
       onSearch(value);
+      isTypingRef.current = false;
     }, 300);
   };
 
@@ -741,80 +751,101 @@ const handleDismissLastRead = (e) => {
     }
 
     let attempts = 0;
-    const maxAttempts = 15;
+    const maxAttempts = 20;
     let timerId;
 
     const tryScroll = () => {
       attempts++;
       
-      // Find element with multiple selectors
-      const element = document.querySelector(`[data-ayah="${pendingScrollAyat}"]`) || 
-                     document.getElementById(`ayat-${pendingScrollAyat}`);
+      // Find element with multiple selectors - try ALL possible combinations
+      const selectors = [
+        `[data-ayah="${pendingScrollAyat}"]`,
+        `#ayat-${pendingScrollAyat}`,
+        `[id*="ayat-${pendingScrollAyat}"]`,
+        `.ayat-${pendingScrollAyat}`
+      ];
+      
+      let element = null;
+      for (const selector of selectors) {
+        element = document.querySelector(selector);
+        if (element) {
+          console.log(`✅ Found element with selector: ${selector}`);
+          break;
+        }
+      }
       
       if (element && element.offsetHeight > 0) {
-        // Element found and rendered
+        console.log(`🎯 Scrolling to ayat ${pendingScrollAyat}, attempt ${attempts}`);
         
-        // Method 1: Try scrollIntoView first (most reliable)
-        try {
+        // Method 1: Find scrollable container
+        const scrollableContainer = element.closest('.overflow-y-auto') || 
+                                   element.closest('.overflow-auto') || 
+                                   document.querySelector('.overflow-y-auto');
+        
+        if (scrollableContainer) {
+          console.log('📦 Using scrollable container');
+          
+          // Calculate position relative to container
+          const containerRect = scrollableContainer.getBoundingClientRect();
+          const elementRect = element.getBoundingClientRect();
+          const relativeTop = elementRect.top - containerRect.top + scrollableContainer.scrollTop;
+          const targetScroll = relativeTop - (containerRect.height / 3);
+          
+          scrollableContainer.scrollTo({
+            top: Math.max(0, targetScroll),
+            behavior: 'smooth'
+          });
+        } else {
+          console.log('🌐 Using scrollIntoView fallback');
+          // Fallback to scrollIntoView
           element.scrollIntoView({
             behavior: 'smooth',
             block: 'center',
             inline: 'nearest'
           });
-          
-          // Add highlight effect
-          element.style.transition = 'all 0.3s ease';
-          element.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.4)';
-          element.style.transform = 'scale(1.02)';
-          
+        }
+        
+        // Add highlight effect with background color
+        const originalBg = element.style.backgroundColor;
+        const originalTransition = element.style.transition;
+        
+        element.style.transition = 'all 0.4s ease';
+        element.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+        element.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.5)';
+        element.style.borderRadius = '12px';
+        
+        setTimeout(() => {
+          element.style.backgroundColor = originalBg;
+          element.style.boxShadow = '';
           setTimeout(() => {
-            element.style.boxShadow = '';
-            element.style.transform = '';
-          }, 2000);
-          
-          toast.success(`Berhasil pindah ke ayat ${pendingScrollAyat}`, { 
-            icon: '📍',
-            duration: 2000 
-          });
-          
-          setPendingScrollAyat(null);
-          return true;
-        } catch (err) {
-          console.error('ScrollIntoView failed:', err);
-        }
+            element.style.transition = originalTransition;
+          }, 400);
+        }, 2000);
         
-        // Method 2: Manual scroll to container (fallback)
-        const container = element.closest('.overflow-y-auto, .overflow-auto');
-        if (container) {
-          const elementTop = element.offsetTop;
-          const containerHeight = container.clientHeight;
-          const scrollTo = elementTop - (containerHeight / 3);
-          
-          container.scrollTo({
-            top: Math.max(0, scrollTo),
-            behavior: 'smooth'
-          });
-          
-          toast.success(`Pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
-          setPendingScrollAyat(null);
-          return true;
-        }
+        toast.success(`✅ Berhasil pindah ke ayat ${pendingScrollAyat}`, { 
+          duration: 2000 
+        });
         
-        return false;
+        setPendingScrollAyat(null);
+        return true;
       }
       
       // Element not found or not rendered yet, retry
       if (attempts < maxAttempts) {
-        timerId = setTimeout(tryScroll, 200);
+        const delay = attempts < 5 ? 100 : 250; // Fast retry first 5 attempts
+        console.log(`⏳ Retry ${attempts}/${maxAttempts} in ${delay}ms...`);
+        timerId = setTimeout(tryScroll, delay);
       } else {
-        console.warn('Could not scroll to ayat after', maxAttempts, 'attempts');
-        toast.error(`Tidak dapat menemukan ayat ${pendingScrollAyat}`);
+        console.error(`❌ Could not find ayat ${pendingScrollAyat} after ${maxAttempts} attempts`);
+        console.log('Available elements:', document.querySelectorAll('[data-ayah]').length);
+        toast.error(`Ayat ${pendingScrollAyat} tidak ditemukan`, { duration: 3000 });
         setPendingScrollAyat(null);
       }
     };
 
     // Start with initial delay to ensure DOM is ready
-    timerId = setTimeout(tryScroll, 300);
+    console.log(`🚀 Starting scroll to ayat ${pendingScrollAyat}`);
+    timerId = setTimeout(tryScroll, 200);
 
     return () => {
       if (timerId) clearTimeout(timerId);
@@ -867,7 +898,7 @@ const handleDismissLastRead = (e) => {
           </div>
 
           {/* Search Bar - Extracted Component */}
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} initialValue={searchTerm} />
 
           {/* MOBILE VIEW: Accordion Style */}
           <div className="lg:hidden space-y-3">
