@@ -187,7 +187,7 @@ function PersonalInfoCard({ profileData }) {
           </div>
         </div>
 
-        {/* Row 4: Alamat | Nomor WhatsApp */}
+        {/* Row 4: Alamat | Nama Wali */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <MapPin size={16} className="text-gray-400" />
@@ -200,32 +200,11 @@ function PersonalInfoCard({ profileData }) {
 
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Phone size={16} className="text-gray-400" />
-            Nomor WhatsApp
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
-            <p className="font-medium text-gray-900">{profileData?.phone || '-'}</p>
-          </div>
-        </div>
-
-        {/* Row 5: Nama Wali | Nomor HP Wali */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <User size={16} className="text-gray-400" />
             Nama Wali
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
             <p className="font-medium text-gray-900">{profileData?.namaWali || '-'}</p>
-          </div>
-        </div>
-
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Phone size={16} className="text-gray-400" />
-            Nomor HP Wali
-          </label>
-          <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
-            <p className="font-medium text-gray-900">{profileData?.phoneWali || '-'}</p>
           </div>
         </div>
       </div>
@@ -245,12 +224,10 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
     if (isOpen && profileData) {
       setFormData({
         nama: profileData.nama || '',
-        phone: profileData.phone || '',
         jenisKelamin: profileData.jenisKelamin || '',
         tanggalLahir: profileData.tanggalLahir || '',
         alamat: profileData.alamat || '',
         namaWali: profileData.namaWali || '',
-        phoneWali: profileData.phoneWali || '',
       });
       setError('');
       setSuccess('');
@@ -274,22 +251,8 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
       setError('');
 
       // Validasi required fields
-      if (!formData.nama || !formData.phone) {
-        setError('Nama dan nomor telepon wajib diisi');
-        setSaveLoading(false);
-        return;
-      }
-
-      // Validasi format nomor
-      const phoneRegex = /^[0-9\-\+\(\)\s]+$/;
-      if (!phoneRegex.test(formData.phone)) {
-        setError('Format nomor telepon tidak valid');
-        setSaveLoading(false);
-        return;
-      }
-
-      if (formData.phoneWali && !phoneRegex.test(formData.phoneWali)) {
-        setError('Format nomor HP wali tidak valid');
+      if (!formData.nama) {
+        setError('Nama wajib diisi');
         setSaveLoading(false);
         return;
       }
@@ -364,21 +327,6 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
                 onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                 placeholder="Masukkan nama lengkap"
-              />
-            </div>
-
-            {/* Nomor Telepon - Editable */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <Phone size={16} className="text-gray-400" />
-                Nomor Telepon <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="tel"
-                value={formData.phone || ''}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                placeholder="Contoh: 0812-3456-7890"
               />
             </div>
 
@@ -474,21 +422,6 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
                 onChange={(e) => setFormData({ ...formData, namaWali: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                 placeholder="Masukkan nama wali"
-              />
-            </div>
-
-            {/* No HP Wali - Editable */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <Phone size={16} className="text-gray-400" />
-                No. HP Wali
-              </label>
-              <input
-                type="tel"
-                value={formData.phoneWali || ''}
-                onChange={(e) => setFormData({ ...formData, phoneWali: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                placeholder="Contoh: 0813-9876-5432"
               />
             </div>
           </div>

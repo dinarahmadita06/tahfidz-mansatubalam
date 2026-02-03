@@ -81,7 +81,6 @@ export default function ProfileClient({ initialData }) {
   const handleEditProfile = () => {
     setEditFormData({
       nama: profileData.nama,
-      phoneNumber: profileData.phoneNumber,
       jabatan: profileData.jabatan,
       nip: profileData.nip,
       alamat: profileData.alamat
@@ -368,17 +367,6 @@ export default function ProfileClient({ initialData }) {
                 </div>
               </div>
 
-              {/* Row 2: Nomor Telepon */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Phone size={16} className="text-gray-400" />
-                  Nomor Telepon
-                </label>
-                <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                  <p className="font-medium text-gray-900">{profileData?.phoneNumber || '-'}</p>
-                </div>
-              </div>
-
               {/* Row 2: Jabatan */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -609,36 +597,19 @@ export default function ProfileClient({ initialData }) {
                 </div>
               </div>
 
-              {/* Row 2 - 2 Kolom */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Nomor Telepon */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nomor Telepon
-                  </label>
-                  <input
-                    type="tel"
-                    value={editFormData.phoneNumber || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
-                    placeholder="08xx xxxx xxxx"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Jabatan */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jabatan <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.jabatan || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, jabatan: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    placeholder="Masukkan jabatan"
-                  />
-                </div>
+              {/* Row 2 - Jabatan */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Jabatan <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.jabatan || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, jabatan: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="Masukkan jabatan"
+                />
               </div>
 
               {/* Row 3 - Full Width */}
