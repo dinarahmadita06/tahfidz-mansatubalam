@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
@@ -166,7 +166,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     }
   };
 
-  const fetchSurahData = async (surahNumber, isMobileAccordion = false, initialAyah = null) => {
+  const fetchSurahData = useCallback(async (surahNumber, isMobileAccordion = false, initialAyah = null) => {
     setLoading(true);
     if (initialAyah) setPendingScrollAyat(initialAyah);
 
@@ -225,10 +225,10 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Handle mobile accordion toggle
-  const handleMobileSurahClick = (surahNumber) => {
+  // Handle mobile accordion toggle - useCallback to prevent re-creation
+  const handleMobileSurahClick = useCallback((surahNumber) => {
     if (expandedSurahMobile === surahNumber) {
       // Collapse if already expanded
       setExpandedSurahMobile(null);
@@ -239,12 +239,7 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
       setExpandedSurahMobile(surahNumber);
       fetchSurahData(surahNumber, true);
     }
-    
-    // Only blur if user is NOT currently typing in search
-    if (searchInputRef.current && !searchInputRef.current.hasAttribute('data-focused')) {
-      searchInputRef.current.blur();
-    }
-  };
+  }, [expandedSurahMobile]);
 
   const playAudio = async (ayahNo) => {
     try {
@@ -697,19 +692,21 @@ const handleDismissLastRead = (e) => {
 
   // Effect to handle robust scrolling when pendingScrollAyat changes
   useLayoutEffect(() => {
-    if (!pendingScrollAyat || verses.length === 0 || loading) return;
+    if (!pendingScrollAyat || verses.length === 0 || loading) {
+      return;
+    }
 
     let retryCount = 0;
-    const MAX_RETRIES = 15;
-    const RETRY_INTERVAL = 100;
+    const MAX_RETRIES = 20;
+    const RETRY_INTERVAL = 150;
     let timer;
 
     const performScroll = () => {
       // Try multiple selectors for reliability
       const selectors = [
+        `[data-ayah="${pendingScrollAyat}"]`,
         `#ayat-${pendingScrollAyat}`,
-        `[id="ayat-${pendingScrollAyat}"]`,
-        `[data-ayah="${pendingScrollAyat}"]`
+        `[id="ayat-${pendingScrollAyat}"]`
       ];
       
       let target = null;
@@ -721,41 +718,34 @@ const handleDismissLastRead = (e) => {
         }
       }
       
-      if (target) {
-        // Find scrollable container
-        const container = target.closest('.overflow-y-auto, .overflow-auto, [class*="overflow"]') || 
-                         target.closest('.space-y-4, .space-y-3') || 
-                         document.querySelector('.overflow-y-auto');
-        
-        if (container) {
-          // Calculate position
-          const containerRect = container.getBoundingClientRect();
-          const targetRect = target.getBoundingClientRect();
-          const headerOffset = 80; // Increased offset for better visibility
-          
-          const targetTop = targetRect.top - containerRect.top + container.scrollTop - headerOffset;
-
-          // Execute scroll
-          container.scrollTo({
-            top: Math.max(0, targetTop),
-            behavior: 'smooth'
-          });
-
-          // Highlight effect
-          const highlightClasses = ['ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500', 'z-10', 'relative'];
-          target.classList.add(...highlightClasses);
-          setTimeout(() => {
-            target.classList.remove(...highlightClasses);
-          }, 1500);
-
-          // Success toast
-          toast.success(`Berhasil pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
-          
-          setPendingScrollAyat(null);
-          return true;
-        }
+      if (!target) {
+        return false;
       }
-      return false;
+      
+      // Use scrollIntoView which is more reliable
+      try {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+
+        // Highlight effect
+        const highlightClasses = ['ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500', 'z-10', 'relative'];
+        target.classList.add(...highlightClasses);
+        setTimeout(() => {
+          target.classList.remove(...highlightClasses);
+        }, 1500);
+
+        // Success toast
+        toast.success(`Berhasil pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
+        
+        setPendingScrollAyat(null);
+        return true;
+      } catch (err) {
+        console.error('Scroll error:', err);
+        return false;
+      }
     };
 
     const attempt = () => {
@@ -765,14 +755,13 @@ const handleDismissLastRead = (e) => {
       if (retryCount < MAX_RETRIES) {
         timer = setTimeout(attempt, RETRY_INTERVAL);
       } else {
-        console.error('Failed to scroll to ayat after', MAX_RETRIES, 'attempts');
         toast.error(`Gagal scroll ke ayat ${pendingScrollAyat}`);
         setPendingScrollAyat(null);
       }
     };
 
     // Delay initial attempt to ensure DOM is ready
-    timer = setTimeout(attempt, 200);
+    timer = setTimeout(attempt, 300);
 
     return () => {
       if (timer) clearTimeout(timer);
@@ -784,11 +773,19 @@ const handleDismissLastRead = (e) => {
     setPendingScrollAyat(ayahNumber);
   };
 
-  const filteredSurahs = surahs.filter(surah =>
-    surah.transliteration?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    surah.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    surah.number.toString().includes(searchTerm)
-  );
+  // Memoize search handler to prevent re-render
+  const handleSearchChange = useCallback((value) => {
+    setSearchTerm(value);
+  }, []);
+
+  // Memoize filtered surahs to prevent unnecessary re-renders
+  const filteredSurahs = useMemo(() => {
+    return surahs.filter(surah =>
+      surah.transliteration?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      surah.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      surah.number.toString().includes(searchTerm)
+    );
+  }, [surahs, searchTerm]);
 
   // Determine layout based on role
   const Layout = noLayout ? ({ children }) => <>{children}</> : (role === 'guru' ? GuruLayout : SiswaLayout);
@@ -825,17 +822,7 @@ const handleDismissLastRead = (e) => {
                 type="text"
                 placeholder="Cari surah..."
                 value={searchTerm}
-                onChange={(e) => {
-                  e.preventDefault();
-                  setSearchTerm(e.target.value);
-                }}
-                onFocus={(e) => {
-                  // Prevent blur on focus
-                  e.target.setAttribute('data-focused', 'true');
-                }}
-                onBlur={(e) => {
-                  e.target.removeAttribute('data-focused');
-                }}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 inputMode="search"
                 enterKeyHint="search"
                 autoComplete="off"
@@ -1037,6 +1024,7 @@ const handleDismissLastRead = (e) => {
                                   <div
                                     key={verse.number || index}
                                     id={`ayat-${ayahNo}`}
+                                    data-ayah={ayahNo}
                                     ref={(el) => (ayahRefs.current[ayahNo] = el)}
                                     onClick={() => handleVerseClick(verse)}
                                     onDoubleClick={() => handleVerseInteraction(verse)}
@@ -1347,6 +1335,7 @@ const handleDismissLastRead = (e) => {
                           <div
                             key={verse.number || index}
                             id={`ayat-${ayahNo}`}
+                            data-ayah={ayahNo}
                             ref={(el) => (ayahRefs.current[ayahNo] = el)}
                             onClick={() => handleVerseClick(verse, ayahNo)}
                             onDoubleClick={() => handleVerseInteraction(verse, ayahNo)}
