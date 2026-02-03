@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, memo } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
-import SiswaLayout from '@/components/layout/SiswaLayout';
+import SiswaLayoutClient from '@/components/layout/SiswaLayoutClient';
 import {
   BookOpen,
   Play,
@@ -45,7 +45,7 @@ const SurahSearchInput = memo(function SurahSearchInput({ onChange }) {
   };
 
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 p-3 xl:p-4 flex-shrink-0">
+    <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200/60 p-2 xl:p-3 flex-shrink-0">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={18} />
         <input
@@ -947,7 +947,7 @@ const handleDismissLastRead = (e) => {
   }, [surahs, searchTerm]);
 
   // Determine layout based on role
-  const Layout = noLayout ? ({ children }) => <>{children}</> : (role === 'guru' ? GuruLayout : SiswaLayout);
+  const Layout = noLayout ? ({ children }) => <>{children}</> : (role === 'guru' ? GuruLayout : SiswaLayoutClient);
 
   return (
     <Layout>
@@ -955,10 +955,10 @@ const handleDismissLastRead = (e) => {
 
       <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Container - Full Width SIMTAQ Style */}
-        <div className="w-full h-full flex flex-col space-y-4 xl:space-y-6">
+        <div className="w-full h-full flex flex-col space-y-2 xl:space-y-3 px-1 sm:px-2 lg:px-2">
 
           {/* Header - SIMTAQ Green Gradient */}
-          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl shadow-lg p-4 sm:p-6 xl:p-8 text-white flex-shrink-0">
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-xl shadow-lg p-3 sm:p-4 xl:p-5 text-white flex-shrink-0">
             <div className="flex items-center gap-4">
               <div className="bg-white/20 backdrop-blur-sm p-3 xl:p-4 rounded-2xl flex-shrink-0">
                 <BookOpen size={28} className="text-white xl:w-8 xl:h-8" />
@@ -1257,10 +1257,10 @@ const handleDismissLastRead = (e) => {
           </div>
 
           {/* DESKTOP VIEW: Two Column Layout */}
-          <div className="hidden lg:flex gap-4 xl:gap-6 h-[calc(100vh-280px)] min-h-0">
+          <div className="hidden lg:flex gap-3 xl:gap-4 h-[calc(100vh-240px)] min-h-0">
 
-            {/* LEFT COLUMN - Surah List (30% on lg, 25% on xl) */}
-            <div className="lg:w-[30%] xl:w-[25%] flex flex-col min-w-0">
+            {/* LEFT COLUMN - Surah List (28% on lg, 22% on xl) */}
+            <div className="lg:w-[28%] xl:w-[22%] flex flex-col min-w-0">
               <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full overflow-hidden">
 
                 {/* Surah List */}
@@ -1336,8 +1336,8 @@ const handleDismissLastRead = (e) => {
               </div>
             </div>
 
-            {/* RIGHT COLUMN - Surah Detail (70% on lg, 75% on xl) */}
-            <div className="lg:w-[70%] xl:w-[75%] flex flex-col min-w-0">
+            {/* RIGHT COLUMN - Surah Detail (72% on lg, 78% on xl) */}
+            <div className="lg:w-[72%] xl:w-[78%] flex flex-col min-w-0">
               <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 flex flex-col h-full overflow-hidden">
 
                 {loading ? (
