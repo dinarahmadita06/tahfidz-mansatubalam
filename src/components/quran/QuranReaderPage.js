@@ -20,6 +20,50 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import toast, { Toaster } from 'react-hot-toast';
 import JumpToAyahModal from '@/components/JumpToAyahModal';
 
+// SearchBar Component - Memoized to prevent re-render
+const SearchBar = memo(({ onSearch }) => {
+  const inputRef = useRef(null);
+  const [localValue, setLocalValue] = useState('');
+  const debounceTimer = useRef(null);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setLocalValue(value);
+    
+    // Debounce search to prevent too many re-renders
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    debounceTimer.current = setTimeout(() => {
+      onSearch(value);
+    }, 300);
+  };
+
+  return (
+    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 p-3 xl:p-4 flex-shrink-0">
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={18} />
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Cari surah..."
+          value={localValue}
+          onChange={handleChange}
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          className="w-full pl-11 pr-4 py-2 xl:py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all text-sm xl:text-base"
+        />
+      </div>
+    </div>
+  );
+});
+
+SearchBar.displayName = 'SearchBar';
+
 // Helper to convert API revelation type to Indonesian
 const getRevelationTypeIndonesian = (revelationType) => {
   if (!revelationType) return 'Makkiyah';
@@ -696,67 +740,84 @@ const handleDismissLastRead = (e) => {
       return;
     }
 
-    let observer;
-    let timeoutId;
+    let attempts = 0;
+    const maxAttempts = 15;
+    let timerId;
 
-    const scrollToElement = (element) => {
-      if (!element) return;
-
-      // Scroll to element
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest'
-      });
-
-      // Add highlight
-      element.classList.add('ring-4', 'ring-emerald-400/60', 'ring-offset-2');
-      setTimeout(() => {
-        element.classList.remove('ring-4', 'ring-emerald-400/60', 'ring-offset-2');
-      }, 2000);
-
-      toast.success(`Pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
-      setPendingScrollAyat(null);
-    };
-
-    const attemptScroll = () => {
-      const element = document.querySelector(`[data-ayah="${pendingScrollAyat}"]`);
+    const tryScroll = () => {
+      attempts++;
       
-      if (element && element.offsetParent !== null) {
-        scrollToElement(element);
-        return true;
+      // Find element with multiple selectors
+      const element = document.querySelector(`[data-ayah="${pendingScrollAyat}"]`) || 
+                     document.getElementById(`ayat-${pendingScrollAyat}`);
+      
+      if (element && element.offsetHeight > 0) {
+        // Element found and rendered
+        
+        // Method 1: Try scrollIntoView first (most reliable)
+        try {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+          
+          // Add highlight effect
+          element.style.transition = 'all 0.3s ease';
+          element.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.4)';
+          element.style.transform = 'scale(1.02)';
+          
+          setTimeout(() => {
+            element.style.boxShadow = '';
+            element.style.transform = '';
+          }, 2000);
+          
+          toast.success(`Berhasil pindah ke ayat ${pendingScrollAyat}`, { 
+            icon: '📍',
+            duration: 2000 
+          });
+          
+          setPendingScrollAyat(null);
+          return true;
+        } catch (err) {
+          console.error('ScrollIntoView failed:', err);
+        }
+        
+        // Method 2: Manual scroll to container (fallback)
+        const container = element.closest('.overflow-y-auto, .overflow-auto');
+        if (container) {
+          const elementTop = element.offsetTop;
+          const containerHeight = container.clientHeight;
+          const scrollTo = elementTop - (containerHeight / 3);
+          
+          container.scrollTo({
+            top: Math.max(0, scrollTo),
+            behavior: 'smooth'
+          });
+          
+          toast.success(`Pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
+          setPendingScrollAyat(null);
+          return true;
+        }
+        
+        return false;
       }
-      return false;
+      
+      // Element not found or not rendered yet, retry
+      if (attempts < maxAttempts) {
+        timerId = setTimeout(tryScroll, 200);
+      } else {
+        console.warn('Could not scroll to ayat after', maxAttempts, 'attempts');
+        toast.error(`Tidak dapat menemukan ayat ${pendingScrollAyat}`);
+        setPendingScrollAyat(null);
+      }
     };
 
-    // Try immediate scroll first
-    if (attemptScroll()) {
-      return;
-    }
-
-    // If not found, use MutationObserver to wait for element
-    observer = new MutationObserver(() => {
-      if (attemptScroll()) {
-        observer.disconnect();
-      }
-    });
-
-    // Observe body for changes
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
-    // Timeout after 5 seconds
-    timeoutId = setTimeout(() => {
-      observer.disconnect();
-      toast.error('Ayat tidak ditemukan');
-      setPendingScrollAyat(null);
-    }, 5000);
+    // Start with initial delay to ensure DOM is ready
+    timerId = setTimeout(tryScroll, 300);
 
     return () => {
-      if (observer) observer.disconnect();
-      if (timeoutId) clearTimeout(timeoutId);
+      if (timerId) clearTimeout(timerId);
     };
   }, [pendingScrollAyat, verses.length, loading]);
 
@@ -765,15 +826,9 @@ const handleDismissLastRead = (e) => {
     setPendingScrollAyat(ayahNumber);
   };
 
-  // Debounced search handler to prevent re-render on every keystroke
-  const handleSearchChange = useCallback((value) => {
-    // Don't trigger state update immediately - debounce it
-    if (window.searchDebounceTimer) {
-      clearTimeout(window.searchDebounceTimer);
-    }
-    window.searchDebounceTimer = setTimeout(() => {
-      setSearchTerm(value);
-    }, 100); // Only update state after user stops typing for 100ms
+  // Search handler from SearchBar component
+  const handleSearch = useCallback((value) => {
+    setSearchTerm(value);
   }, []);
 
   // Memoize filtered surahs to prevent unnecessary re-renders
@@ -811,27 +866,8 @@ const handleDismissLastRead = (e) => {
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 p-3 xl:p-4 flex-shrink-0">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={18} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Cari surah..."
-                onInput={(e) => {
-                  handleSearchChange(e.target.value);
-                }}
-                inputMode="search"
-                enterKeyHint="search"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                className="w-full pl-11 pr-4 py-2 xl:py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all text-sm xl:text-base"
-              />
-            </div>
-          </div>
+          {/* Search Bar - Extracted Component */}
+          <SearchBar onSearch={handleSearch} />
 
           {/* MOBILE VIEW: Accordion Style */}
           <div className="lg:hidden space-y-3">
