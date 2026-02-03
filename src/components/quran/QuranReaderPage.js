@@ -20,32 +20,27 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import toast, { Toaster } from 'react-hot-toast';
 import JumpToAyahModal from '@/components/JumpToAyahModal';
 
-// SearchBar Component - Memoized to prevent re-render
-const SearchBar = memo(({ onSearch, initialValue = '' }) => {
+// ========== BUG FIX A: LOCAL STATE - NO PARENT RERENDER ==========
+const SurahSearchInput = memo(function SurahSearchInput({ onChange }) {
+  const [localValue, setLocalValue] = useState('');
+  const debounceTimerRef = useRef(null);
   const inputRef = useRef(null);
-  const [localValue, setLocalValue] = useState(initialValue);
-  const debounceTimer = useRef(null);
-  const isTypingRef = useRef(false);
-
-  // Sync with parent ONLY if not currently typing
-  useEffect(() => {
-    if (!isTypingRef.current && initialValue !== localValue) {
-      setLocalValue(initialValue);
-    }
-  }, [initialValue]);
 
   const handleChange = (e) => {
     const value = e.target.value;
-    isTypingRef.current = true;
-    setLocalValue(value);
+    setLocalValue(value); // Update LOCAL state (tidak trigger parent rerender)
     
-    // Debounce search to prevent too many re-renders
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
+    console.log('🔤 Local state updated:', value, '| Focus:', document.activeElement === inputRef.current);
+    
+    // Clear previous debounce
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
-    debounceTimer.current = setTimeout(() => {
-      onSearch(value);
-      isTypingRef.current = false;
+    
+    // Debounce parent callback
+    debounceTimerRef.current = setTimeout(() => {
+      console.log('⏰ Debounce: Notify parent with:', value);
+      onChange(value);
     }, 300);
   };
 
@@ -56,15 +51,12 @@ const SearchBar = memo(({ onSearch, initialValue = '' }) => {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Cari surah..."
           value={localValue}
           onChange={handleChange}
+          placeholder="Cari surah..."
+          autoComplete="off"
           inputMode="search"
           enterKeyHint="search"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
           className="w-full pl-11 pr-4 py-2 xl:py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all text-sm xl:text-base"
         />
       </div>
@@ -72,7 +64,7 @@ const SearchBar = memo(({ onSearch, initialValue = '' }) => {
   );
 });
 
-SearchBar.displayName = 'SearchBar';
+SurahSearchInput.displayName = 'SurahSearchInput';
 
 // Helper to convert API revelation type to Indonesian
 const getRevelationTypeIndonesian = (revelationType) => {
@@ -85,6 +77,26 @@ const getRevelationTypeIndonesian = (revelationType) => {
 
 // Helper to pad numbers to 3 digits for audio URLs
 const pad3 = (n) => String(n).padStart(3, '0');
+
+// ========== BUG FIX 2: FIND ACTUAL SCROLL PARENT ==========
+// Function to find the actual scrollable parent container
+function findScrollParent(el) {
+  let parent = el?.parentElement;
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    const overflowY = style.overflowY;
+    const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') &&
+      parent.scrollHeight > parent.clientHeight;
+    
+    if (isScrollable) {
+      console.log('✅ Found scrollable parent:', parent.className);
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+  console.log('⚠️ No scrollable parent found, using document');
+  return document.scrollingElement || document.documentElement;
+}
 
 // Helper to clean translation text from footnotes and embedded numbers
 const cleanTranslation = (text) => {
@@ -745,122 +757,185 @@ const handleDismissLastRead = (e) => {
   };
 
   // Effect to handle robust scrolling when pendingScrollAyat changes
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!pendingScrollAyat || verses.length === 0 || loading) {
       return;
     }
 
-    let attempts = 0;
-    const maxAttempts = 20;
-    let timerId;
+    console.log('🚀 ===== SCROLL START =====', pendingScrollAyat);
 
-    const tryScroll = () => {
-      attempts++;
-      
-      // Find element with multiple selectors - try ALL possible combinations
+    const timeoutId = setTimeout(() => {
+      // 1. FIND ELEMENT - Check BOTH mobile and desktop
       const selectors = [
-        `[data-ayah="${pendingScrollAyat}"]`,
-        `#ayat-${pendingScrollAyat}`,
-        `[id*="ayat-${pendingScrollAyat}"]`,
-        `.ayat-${pendingScrollAyat}`
+        `[data-ayah="${pendingScrollAyat}"]`, // Will match both mobile and desktop
       ];
       
-      let element = null;
-      for (const selector of selectors) {
-        element = document.querySelector(selector);
-        if (element) {
-          console.log(`✅ Found element with selector: ${selector}`);
-          break;
-        }
+      // Get ALL matching elements (mobile + desktop)
+      const allElements = document.querySelectorAll(selectors[0]);
+      console.log(`📍 Found ${allElements.length} elements with data-ayah="${pendingScrollAyat}"`);
+      
+      if (allElements.length === 0) {
+        console.error('❌ No elements found');
+        toast.error(`Ayat ${pendingScrollAyat} tidak ditemukan`);
+        setPendingScrollAyat(null);
+        return;
       }
       
-      if (element && element.offsetHeight > 0) {
-        console.log(`🎯 Scrolling to ayat ${pendingScrollAyat}, attempt ${attempts}`);
+      // 2. FIND THE VISIBLE ONE
+      let element = null;
+      let scrollContainer = null;
+      
+      for (const el of allElements) {
+        // Check if element is visible
+        const rect = el.getBoundingClientRect();
+        const isVisible = rect.width > 0 && rect.height > 0;
         
-        // Method 1: Find scrollable container
-        const scrollableContainer = element.closest('.overflow-y-auto') || 
-                                   element.closest('.overflow-auto') || 
-                                   document.querySelector('.overflow-y-auto');
-        
-        if (scrollableContainer) {
-          console.log('📦 Using scrollable container');
-          
-          // Calculate position relative to container
-          const containerRect = scrollableContainer.getBoundingClientRect();
-          const elementRect = element.getBoundingClientRect();
-          const relativeTop = elementRect.top - containerRect.top + scrollableContainer.scrollTop;
-          const targetScroll = relativeTop - (containerRect.height / 3);
-          
-          scrollableContainer.scrollTo({
-            top: Math.max(0, targetScroll),
-            behavior: 'smooth'
-          });
-        } else {
-          console.log('🌐 Using scrollIntoView fallback');
-          // Fallback to scrollIntoView
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
+        if (!isVisible) {
+          console.log('⏭️ Skipping invisible element');
+          continue;
         }
         
-        // Add highlight effect with background color
-        const originalBg = element.style.backgroundColor;
-        const originalTransition = element.style.transition;
+        // Find scrollable parent
+        let parent = el.parentElement;
+        while (parent && parent !== document.body) {
+          const style = window.getComputedStyle(parent);
+          const overflowY = style.overflowY;
+          const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') &&
+                              parent.scrollHeight > parent.clientHeight &&
+                              parent.contains(el);
+          
+          if (isScrollable) {
+            element = el;
+            scrollContainer = parent;
+            console.log('✅ FOUND visible element + container:', {
+              elementRect: { width: rect.width, height: rect.height },
+              containerTag: parent.tagName,
+              containerClass: parent.className.substring(0, 60)
+            });
+            break;
+          }
+          parent = parent.parentElement;
+        }
         
-        element.style.transition = 'all 0.4s ease';
+        if (element && scrollContainer) break;
+      }
+      
+      if (!element || !scrollContainer) {
+        console.error('❌ No scrollable container found for visible element');
+        toast.error('Tidak dapat scroll ke ayat');
+        setPendingScrollAyat(null);
+        return;
+      }
+
+      // 3. VALIDATE CONTAINER
+      console.log('✅ VALIDATE container:', {
+        contains: scrollContainer.contains(element),
+        scrollHeight: scrollContainer.scrollHeight,
+        clientHeight: scrollContainer.clientHeight,
+        currentScrollTop: scrollContainer.scrollTop
+      });
+
+      // 4. CALCULATE POSITION
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const currentScroll = scrollContainer.scrollTop;
+      const offset = elementRect.top - containerRect.top;
+      const targetScroll = Math.max(0, Math.round(currentScroll + offset - 100)); // 100px from top
+      
+      console.log('📐 CALCULATE:', {
+        containerTop: containerRect.top,
+        elementTop: elementRect.top,
+        offset,
+        currentScroll,
+        targetScroll
+      });
+
+      // 5. FORCE SCROLL CONTAINER - MULTIPLE ATTEMPTS
+      const beforeScroll = scrollContainer.scrollTop;
+      
+      // Attempt 1: Direct assignment
+      scrollContainer.scrollTop = targetScroll;
+      
+      // Attempt 2: scrollTo method
+      if (scrollContainer.scrollTo) {
+        scrollContainer.scrollTo({ top: targetScroll, behavior: 'auto' });
+      }
+      
+      // Attempt 3: Force reflow
+      scrollContainer.offsetHeight; // Force reflow
+      scrollContainer.scrollTop = targetScroll;
+      
+      const afterScroll = scrollContainer.scrollTop;
+      
+      console.log('🚀 SCROLL EXECUTED:', {
+        before: beforeScroll,
+        target: targetScroll,
+        after: afterScroll,
+        actuallyMoved: afterScroll !== beforeScroll,
+        containerVisible: scrollContainer.offsetParent !== null,
+        containerDisplay: window.getComputedStyle(scrollContainer).display
+      });
+
+      // 6. VERIFY & FALLBACK - PREVENT RESET
+      setTimeout(() => {
+        const actualScroll = scrollContainer.scrollTop;
+        const scrollDiff = Math.abs(actualScroll - targetScroll);
+        const success = scrollDiff < 50;
+        
+        console.log('🔍 VERIFY:', {
+          expected: targetScroll,
+          actual: actualScroll,
+          diff: scrollDiff,
+          success,
+          wasReset: actualScroll === 0 && targetScroll > 0
+        });
+
+        // Check if scroll was reset to 0
+        if (actualScroll === 0 && targetScroll > 0) {
+          console.error('❌ SCROLL WAS RESET! Force again...');
+          scrollContainer.scrollTop = targetScroll;
+          
+          // Wait and check again
+          setTimeout(() => {
+            const finalCheck = scrollContainer.scrollTop;
+            console.log('🔍 After force:', finalCheck);
+            if (finalCheck > 100) {
+              toast.success(`✅ Pindah ke ayat ${pendingScrollAyat}`);
+            } else {
+              // Last resort: scrollIntoView
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              toast.success(`✅ Pindah ke ayat ${pendingScrollAyat}`);
+            }
+          }, 100);
+        } else if (!success) {
+          console.warn('⚠️ FALLBACK: scrollIntoView');
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          toast.success(`✅ Pindah ke ayat ${pendingScrollAyat}`);
+        } else {
+          toast.success(`✅ Pindah ke ayat ${pendingScrollAyat}`);
+        }
+
+        // 7. HIGHLIGHT
+        element.style.transition = 'all 0.3s ease';
         element.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
-        element.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.5)';
-        element.style.borderRadius = '12px';
+        element.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.4)';
         
         setTimeout(() => {
-          element.style.backgroundColor = originalBg;
+          element.style.backgroundColor = '';
           element.style.boxShadow = '';
-          setTimeout(() => {
-            element.style.transition = originalTransition;
-          }, 400);
-        }, 2000);
-        
-        toast.success(`✅ Berhasil pindah ke ayat ${pendingScrollAyat}`, { 
-          duration: 2000 
-        });
+        }, 1500);
         
         setPendingScrollAyat(null);
-        return true;
-      }
-      
-      // Element not found or not rendered yet, retry
-      if (attempts < maxAttempts) {
-        const delay = attempts < 5 ? 100 : 250; // Fast retry first 5 attempts
-        console.log(`⏳ Retry ${attempts}/${maxAttempts} in ${delay}ms...`);
-        timerId = setTimeout(tryScroll, delay);
-      } else {
-        console.error(`❌ Could not find ayat ${pendingScrollAyat} after ${maxAttempts} attempts`);
-        console.log('Available elements:', document.querySelectorAll('[data-ayah]').length);
-        toast.error(`Ayat ${pendingScrollAyat} tidak ditemukan`, { duration: 3000 });
-        setPendingScrollAyat(null);
-      }
-    };
+      }, 200);
+    }, 500);
 
-    // Start with initial delay to ensure DOM is ready
-    console.log(`🚀 Starting scroll to ayat ${pendingScrollAyat}`);
-    timerId = setTimeout(tryScroll, 200);
-
-    return () => {
-      if (timerId) clearTimeout(timerId);
-    };
+    return () => clearTimeout(timeoutId);
   }, [pendingScrollAyat, verses.length, loading]);
 
   // Handle jump to ayah from modal
   const handleJumpToAyah = (ayahNumber) => {
     setPendingScrollAyat(ayahNumber);
   };
-
-  // Search handler from SearchBar component
-  const handleSearch = useCallback((value) => {
-    setSearchTerm(value);
-  }, []);
 
   // Memoize filtered surahs to prevent unnecessary re-renders
   const filteredSurahs = useMemo(() => {
@@ -897,8 +972,8 @@ const handleDismissLastRead = (e) => {
             </div>
           </div>
 
-          {/* Search Bar - Extracted Component */}
-          <SearchBar onSearch={handleSearch} initialValue={searchTerm} />
+          {/* Search Bar - Pure Uncontrolled Input */}
+          <SurahSearchInput onChange={setSearchTerm} />
 
           {/* MOBILE VIEW: Accordion Style */}
           <div className="lg:hidden space-y-3">
