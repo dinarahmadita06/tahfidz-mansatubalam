@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, memo } from 'react';
 import GuruLayout from '@/components/layout/GuruLayout';
 import SiswaLayout from '@/components/layout/SiswaLayout';
 import {
@@ -696,77 +696,57 @@ const handleDismissLastRead = (e) => {
       return;
     }
 
-    let retryCount = 0;
-    const MAX_RETRIES = 20;
-    const RETRY_INTERVAL = 150;
-    let timer;
+    let attempts = 0;
+    const maxAttempts = 30;
+    let animationFrameId;
 
     const performScroll = () => {
-      // Try multiple selectors for reliability
-      const selectors = [
-        `[data-ayah="${pendingScrollAyat}"]`,
-        `#ayat-${pendingScrollAyat}`,
-        `[id="ayat-${pendingScrollAyat}"]`
-      ];
+      attempts++;
       
-      let target = null;
-      for (const selector of selectors) {
-        const elem = document.querySelector(selector);
-        if (elem && (elem.offsetWidth > 0 || elem.offsetHeight > 0)) {
-          target = elem;
-          break;
-        }
-      }
+      // Find element
+      const element = document.querySelector(`[data-ayah="${pendingScrollAyat}"]`) || 
+                     document.getElementById(`ayat-${pendingScrollAyat}`);
       
-      if (!target) {
-        return false;
-      }
-      
-      // Use scrollIntoView which is more reliable
-      try {
-        target.scrollIntoView({
+      if (element && element.offsetParent !== null) {
+        // Element found and visible, scroll to it
+        element.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
           inline: 'nearest'
         });
 
-        // Highlight effect
-        const highlightClasses = ['ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500', 'z-10', 'relative'];
-        target.classList.add(...highlightClasses);
+        // Add highlight effect
+        element.classList.add('ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500');
         setTimeout(() => {
-          target.classList.remove(...highlightClasses);
-        }, 1500);
+          element.classList.remove('ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500');
+        }, 2000);
 
-        // Success toast
-        toast.success(`Berhasil pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
-        
+        toast.success(`Pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
         setPendingScrollAyat(null);
-        return true;
-      } catch (err) {
-        console.error('Scroll error:', err);
-        return false;
+        return;
       }
-    };
 
-    const attempt = () => {
-      if (performScroll()) return;
-      
-      retryCount++;
-      if (retryCount < MAX_RETRIES) {
-        timer = setTimeout(attempt, RETRY_INTERVAL);
+      // Retry if not found
+      if (attempts < maxAttempts) {
+        animationFrameId = requestAnimationFrame(performScroll);
       } else {
-        toast.error(`Gagal scroll ke ayat ${pendingScrollAyat}`);
+        toast.error('Ayat tidak ditemukan');
         setPendingScrollAyat(null);
       }
     };
 
-    // Delay initial attempt to ensure DOM is ready
-    timer = setTimeout(attempt, 300);
+    // Start scrolling with delay
+    const timeoutId = setTimeout(() => {
+      animationFrameId = requestAnimationFrame(performScroll);
+    }, 500);
 
     return () => {
-      if (timer) clearTimeout(timer);
+      clearTimeout(timeoutId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
-  }, [pendingScrollAyat, verses, loading]);
+  }, [pendingScrollAyat, verses.length, loading]);
 
   // Handle jump to ayah from modal
   const handleJumpToAyah = (ayahNumber) => {
@@ -818,11 +798,15 @@ const handleDismissLastRead = (e) => {
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={18} />
               <input
+                key="search-input-stable"
                 ref={searchInputRef}
                 type="text"
                 placeholder="Cari surah..."
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
+                defaultValue={searchTerm}
+                onInput={(e) => {
+                  e.stopPropagation();
+                  handleSearchChange(e.target.value);
+                }}
                 inputMode="search"
                 enterKeyHint="search"
                 autoComplete="off"
