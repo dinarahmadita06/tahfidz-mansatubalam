@@ -696,55 +696,67 @@ const handleDismissLastRead = (e) => {
       return;
     }
 
-    let attempts = 0;
-    const maxAttempts = 30;
-    let animationFrameId;
+    let observer;
+    let timeoutId;
 
-    const performScroll = () => {
-      attempts++;
-      
-      // Find element
-      const element = document.querySelector(`[data-ayah="${pendingScrollAyat}"]`) || 
-                     document.getElementById(`ayat-${pendingScrollAyat}`);
-      
-      if (element && element.offsetParent !== null) {
-        // Element found and visible, scroll to it
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest'
-        });
+    const scrollToElement = (element) => {
+      if (!element) return;
 
-        // Add highlight effect
-        element.classList.add('ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500');
-        setTimeout(() => {
-          element.classList.remove('ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500');
-        }, 2000);
+      // Scroll to element
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
 
-        toast.success(`Pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
-        setPendingScrollAyat(null);
-        return;
-      }
+      // Add highlight
+      element.classList.add('ring-4', 'ring-emerald-400/60', 'ring-offset-2');
+      setTimeout(() => {
+        element.classList.remove('ring-4', 'ring-emerald-400/60', 'ring-offset-2');
+      }, 2000);
 
-      // Retry if not found
-      if (attempts < maxAttempts) {
-        animationFrameId = requestAnimationFrame(performScroll);
-      } else {
-        toast.error('Ayat tidak ditemukan');
-        setPendingScrollAyat(null);
-      }
+      toast.success(`Pindah ke ayat ${pendingScrollAyat}`, { icon: '📍' });
+      setPendingScrollAyat(null);
     };
 
-    // Start scrolling with delay
-    const timeoutId = setTimeout(() => {
-      animationFrameId = requestAnimationFrame(performScroll);
-    }, 500);
+    const attemptScroll = () => {
+      const element = document.querySelector(`[data-ayah="${pendingScrollAyat}"]`);
+      
+      if (element && element.offsetParent !== null) {
+        scrollToElement(element);
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediate scroll first
+    if (attemptScroll()) {
+      return;
+    }
+
+    // If not found, use MutationObserver to wait for element
+    observer = new MutationObserver(() => {
+      if (attemptScroll()) {
+        observer.disconnect();
+      }
+    });
+
+    // Observe body for changes
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Timeout after 5 seconds
+    timeoutId = setTimeout(() => {
+      observer.disconnect();
+      toast.error('Ayat tidak ditemukan');
+      setPendingScrollAyat(null);
+    }, 5000);
 
     return () => {
-      clearTimeout(timeoutId);
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
+      if (observer) observer.disconnect();
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [pendingScrollAyat, verses.length, loading]);
 
@@ -753,9 +765,15 @@ const handleDismissLastRead = (e) => {
     setPendingScrollAyat(ayahNumber);
   };
 
-  // Memoize search handler to prevent re-render
+  // Debounced search handler to prevent re-render on every keystroke
   const handleSearchChange = useCallback((value) => {
-    setSearchTerm(value);
+    // Don't trigger state update immediately - debounce it
+    if (window.searchDebounceTimer) {
+      clearTimeout(window.searchDebounceTimer);
+    }
+    window.searchDebounceTimer = setTimeout(() => {
+      setSearchTerm(value);
+    }, 100); // Only update state after user stops typing for 100ms
   }, []);
 
   // Memoize filtered surahs to prevent unnecessary re-renders
@@ -798,13 +816,10 @@ const handleDismissLastRead = (e) => {
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={18} />
               <input
-                key="search-input-stable"
                 ref={searchInputRef}
                 type="text"
                 placeholder="Cari surah..."
-                defaultValue={searchTerm}
                 onInput={(e) => {
-                  e.stopPropagation();
                   handleSearchChange(e.target.value);
                 }}
                 inputMode="search"
