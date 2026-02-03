@@ -240,10 +240,8 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
       fetchSurahData(surahNumber, true);
     }
     
-    // IMPORTANT: Blur search input to close keyboard on mobile
-    // User tapped a surah card, so keyboard should NOT appear
-    // This prevents the keyboard from unexpectedly appearing after card tap
-    if (searchInputRef.current) {
+    // Only blur if user is NOT currently typing in search
+    if (searchInputRef.current && !searchInputRef.current.hasAttribute('data-focused')) {
       searchInputRef.current.blur();
     }
   };
@@ -702,35 +700,48 @@ const handleDismissLastRead = (e) => {
     if (!pendingScrollAyat || verses.length === 0 || loading) return;
 
     let retryCount = 0;
-    const MAX_RETRIES = 10;
-    const RETRY_INTERVAL = 50;
+    const MAX_RETRIES = 15;
+    const RETRY_INTERVAL = 100;
     let timer;
 
     const performScroll = () => {
-      // Find the element by ID
-      const target = document.querySelector(`[id="ayat-${pendingScrollAyat}"]`);
+      // Try multiple selectors for reliability
+      const selectors = [
+        `#ayat-${pendingScrollAyat}`,
+        `[id="ayat-${pendingScrollAyat}"]`,
+        `[data-ayah="${pendingScrollAyat}"]`
+      ];
+      
+      let target = null;
+      for (const selector of selectors) {
+        const elem = document.querySelector(selector);
+        if (elem && (elem.offsetWidth > 0 || elem.offsetHeight > 0)) {
+          target = elem;
+          break;
+        }
+      }
       
       if (target) {
-        // Ensure it's the correct visible one
-        const isVisible = target.offsetWidth > 0 || target.offsetHeight > 0;
-        if (!isVisible) return false;
-
-        const container = target.closest('.overflow-y-auto');
+        // Find scrollable container
+        const container = target.closest('.overflow-y-auto, .overflow-auto, [class*="overflow"]') || 
+                         target.closest('.space-y-4, .space-y-3') || 
+                         document.querySelector('.overflow-y-auto');
+        
         if (container) {
-          // Calculation as requested: top = elRect.top - containerRect.top + container.scrollTop - headerOffset
+          // Calculate position
           const containerRect = container.getBoundingClientRect();
           const targetRect = target.getBoundingClientRect();
-          const headerOffset = 32; // Offset for padding/header
+          const headerOffset = 80; // Increased offset for better visibility
           
           const targetTop = targetRect.top - containerRect.top + container.scrollTop - headerOffset;
 
-          // Execute scroll on container
+          // Execute scroll
           container.scrollTo({
-            top: targetTop,
+            top: Math.max(0, targetTop),
             behavior: 'smooth'
           });
 
-          // Highlight effect (1.5s as requested)
+          // Highlight effect
           const highlightClasses = ['ring-4', 'ring-emerald-400/60', 'ring-offset-2', 'transition-all', 'duration-500', 'z-10', 'relative'];
           target.classList.add(...highlightClasses);
           setTimeout(() => {
@@ -754,15 +765,14 @@ const handleDismissLastRead = (e) => {
       if (retryCount < MAX_RETRIES) {
         timer = setTimeout(attempt, RETRY_INTERVAL);
       } else {
-        toast.error('Ayat tidak ditemukan');
+        console.error('Failed to scroll to ayat after', MAX_RETRIES, 'attempts');
+        toast.error(`Gagal scroll ke ayat ${pendingScrollAyat}`);
         setPendingScrollAyat(null);
       }
     };
 
-    // Use requestAnimationFrame for smoother start
-    requestAnimationFrame(() => {
-      timer = setTimeout(attempt, 50);
-    });
+    // Delay initial attempt to ensure DOM is ready
+    timer = setTimeout(attempt, 200);
 
     return () => {
       if (timer) clearTimeout(timer);
@@ -815,10 +825,22 @@ const handleDismissLastRead = (e) => {
                 type="text"
                 placeholder="Cari surah..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  e.preventDefault();
+                  setSearchTerm(e.target.value);
+                }}
+                onFocus={(e) => {
+                  // Prevent blur on focus
+                  e.target.setAttribute('data-focused', 'true');
+                }}
+                onBlur={(e) => {
+                  e.target.removeAttribute('data-focused');
+                }}
                 inputMode="search"
                 enterKeyHint="search"
                 autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
                 spellCheck={false}
                 className="w-full pl-11 pr-4 py-2 xl:py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white shadow-sm transition-all text-sm xl:text-base"
               />
