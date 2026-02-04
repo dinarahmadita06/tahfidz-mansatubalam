@@ -195,7 +195,7 @@ export default function AdminGuruPage() {
   const [editingGuru, setEditingGuru] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    password: '', // Kosong secara default
+    password: 'MAN1', // Password default untuk semua guru
     username: '',
     nip: '',
     jenisKelamin: 'L',
@@ -295,11 +295,11 @@ export default function AdminGuruPage() {
     setEditingGuru(guruItem);
     setFormData({
       name: guruItem.user.name,
-      password: '',
+      password: 'MAN1', // Password default
       username: guruItem.user.username || '',
       nip: guruItem.nip || '',
       jenisKelamin: guruItem.jenisKelamin,
-      tanggalLahir: formatDateOnly(guruItem.tanggalLahir),
+      tanggalLahir: formatDateOnly(guruItem.tanggalLahir) || '',
       kelasIds: aktivKelasIds
     });
     setSelectedKelas(aktivKelasIds);
@@ -335,7 +335,7 @@ export default function AdminGuruPage() {
   const resetForm = () => {
     setFormData({
       name: '',
-      password: '', // Kosong secara default
+      password: 'MAN1', // Password default untuk semua guru
       username: '',
       nip: '',
       jenisKelamin: 'L',
@@ -348,48 +348,49 @@ export default function AdminGuruPage() {
 
 
 
-  const generateNextUsername = async () => {
-    try {
-      // Call the new API endpoint to generate the next available username
-      const response = await fetch('/api/guru/generate-username');
-      
-      if (!response.ok) {
-        throw new Error('Gagal mengambil username guru');
-      }
-      
-      const data = await response.json();
-      setFormData({ ...formData, username: data.username });
-    } catch (error) {
-      console.error('Error generating username:', error);
-      alert('Gagal menghasilkan username guru: ' + error.message);
-    }
-  };
-
-  const generatePasswordFromDOB = () => {
-    // Generate password from tanggalLahir (YYYY-MM-DD format)
-    if (!formData.tanggalLahir) {
-      alert('Tanggal lahir harus diisi terlebih dahulu');
-      return;
-    }
-    
-    // Format: YYYY-MM-DD (keep dashes)
-    setFormData({ ...formData, password: formData.tanggalLahir });
-  };
+  // Username manual - no auto-generation needed
+  // Password default MAN1 - no DOB generation needed
 
   const handleDownloadTemplate = () => {
     const templateData = [
       {
+        'Kode Guru / Username': '01',
         'Nama Lengkap': 'Ahmad Fauzi',
         'NIP': '198501012010011001',
         'Jenis Kelamin': 'L',
         'Tanggal Lahir': '1985-05-20',
-        'Kelas Binaan': '7A, 7B'
+        'Kelas Binaan': 'XA, XB'
+      },
+      {
+        'Kode Guru / Username': '02',
+        'Nama Lengkap': 'Siti Aminah',
+        'NIP': '199003152015012002',
+        'Jenis Kelamin': 'P',
+        'Tanggal Lahir': '',
+        'Kelas Binaan': 'XI A'
       }
     ];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template Import Guru');
+    
+    // Add notes/instructions
+    const notes = [
+      '',
+      'PETUNJUK PENGISIAN:',
+      '1. Kode Guru/Username: Wajib diisi dengan angka (contoh: 94, 111, 112)',
+      '2. Nama Lengkap: Wajib diisi',
+      '3. NIP: Boleh dikosongkan',
+      '4. Jenis Kelamin: Wajib diisi dengan L (Laki-laki) atau P (Perempuan)',
+      '5. Tanggal Lahir: Boleh dikosongkan (format: YYYY-MM-DD atau DD/MM/YYYY)',
+      '6. Kelas Binaan: Boleh dikosongkan atau diisi multiple (pisahkan dengan koma)',
+      '7. Password default: MAN1 (otomatis, tidak perlu diisi di Excel)'
+    ];
+    
+    const wsNotes = XLSX.utils.aoa_to_sheet(notes.map(n => [n]));
+    XLSX.utils.book_append_sheet(wb, wsNotes, 'Petunjuk');
+    
     XLSX.writeFile(wb, 'Template_Import_Guru.xlsx');
   };
 
@@ -456,20 +457,9 @@ export default function AdminGuruPage() {
 
               <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-end gap-3 w-full md:w-auto">
                   <button
-                  onClick={async () => {
+                  onClick={() => {
                     resetForm();
                     setShowModal(true);
-                    
-                    // Generate next username when creating a new teacher
-                    try {
-                      const response = await fetch('/api/guru/generate-username');
-                      if (response.ok) {
-                        const data = await response.json();
-                        setFormData(prev => ({ ...prev, username: data.username }));
-                      }
-                    } catch (error) {
-                      console.error('Error auto-generating username:', error);
-                    }
                   }}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-emerald-600 rounded-xl font-semibold text-sm md:text-xs lg:text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 whitespace-nowrap"
                 >
@@ -755,21 +745,17 @@ export default function AdminGuruPage() {
 
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Tanggal Lahir *
+                    Tanggal Lahir (Opsional)
                   </label>
                   <input
                     type="date"
-                    required
                     value={formData.tanggalLahir}
-                    onChange={(e) => {
-                      setFormData({ ...formData, tanggalLahir: e.target.value });
-                      // Auto-update password when date of birth changes
-                      if (e.target.value) {
-                        setFormData(prev => ({ ...prev, password: e.target.value }));
-                      }
-                    }}
+                    onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
                     className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   />
+                  <p className="text-[10px] text-slate-500 mt-1 italic">
+                    Boleh dikosongkan
+                  </p>
                 </div>
               </div>
 
@@ -777,53 +763,35 @@ export default function AdminGuruPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Username Guru (Otomatis) *
+                    Username Guru (Kode Guru) *
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required={!editingGuru}
-                      readOnly
-                      value={formData.username}
-                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-slate-50 text-gray-500 text-sm focus:outline-none cursor-not-allowed"
-                    />
-                    <button
-                      type="button"
-                      onClick={generateNextUsername}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
-                      title="Generate username otomatis"
-                      disabled={editingGuru} // Disable for edit mode
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    placeholder="Masukkan kode guru (contoh: 94, 111, 112)"
+                    pattern="[0-9]+"
+                    title="Username harus berupa angka (kode guru)"
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  />
                   <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Username dibuat otomatis (G001, G002, ...)
+                    Masukkan kode guru (hanya angka)
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Password (Otomatis) *
+                    Password (Default) *
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      readOnly
-                      value={formData.password}
-                      className="w-full px-4 py-2 lg:py-2.5 pr-11 border border-slate-300 rounded-xl bg-slate-50 text-gray-500 text-sm focus:outline-none cursor-not-allowed"
-                    />
-                    <button
-                      type="button"
-                      onClick={generatePasswordFromDOB}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-all"
-                      title="Reset ke DOB (YYYY-MM-DD)"
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    readOnly
+                    value={formData.password}
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-slate-50 text-gray-700 font-semibold text-sm focus:outline-none cursor-not-allowed"
+                  />
                   <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Password akan di-generate dari tanggal lahir (YYYY-MM-DD)
+                    Password default: <strong>MAN1</strong> (Guru dapat mengubahnya setelah login)
                   </p>
                 </div>
               </div>

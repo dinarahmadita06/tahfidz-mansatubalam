@@ -500,7 +500,7 @@ export default function StudentCreateModal({
                     value={formData.nisn}
                     onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all"
-                    placeholder="10 digit NISN"
+                    placeholder="NISN"
                   />
                 </div>
                 <div className="space-y-2">

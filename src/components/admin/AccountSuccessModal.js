@@ -528,29 +528,6 @@ export default function AccountSuccessModal({ accounts, onClose }) {
               )}
             </div>
           )}
-
-          {/* Important Notice */}
-          <div
-            style={{
-              padding: '16px',
-              background: '#FEF3C7',
-              border: '2px solid #FCD34D',
-              borderRadius: '12px',
-              marginBottom: '20px',
-            }}
-          >
-            <p
-              style={{
-                fontSize: '13px',
-                color: '#92400E',
-                fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                lineHeight: '1.5',
-              }}
-            >
-              <strong>⚠️ Penting:</strong> Simpan informasi akun ini dengan aman. Password tidak dapat dilihat
-              lagi setelah modal ini ditutup. Anda bisa menyalin username dan password menggunakan tombol copy.
-            </p>
-          </div>
         </div>
 
         {/* Footer */}

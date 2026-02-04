@@ -160,22 +160,36 @@ export function generateParentUsername(nis) {
   return nis;
 }
 
-export function generateParentPassword(birthDate) {
-  if (!birthDate) return '';
+/**
+ * Generate password for Orang Tua based on NISN and birth year
+ * Format: NISN-TahunLahir
+ * Example: 1234567890-2009
+ * 
+ * @param {string} nisn - NISN of linked student
+ * @param {string|Date} birthDate - Birth date of linked student
+ * @returns {string} Generated parent password in format NISN-YYYY
+ */
+export function generateParentPassword(nisn, birthDate) {
+  if (!nisn) return '';
   
   try {
-    const date = new Date(birthDate);
-    if (isNaN(date.getTime())) return '';
+    // If no birthDate, return only NISN
+    if (!birthDate) {
+      return nisn;
+    }
     
-    // Format as DDMMYYYY
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+    const date = new Date(birthDate);
+    if (isNaN(date.getTime())) {
+      return nisn; // Fallback to NISN only if date invalid
+    }
+    
+    // Format as NISN-YYYY
     const year = date.getFullYear();
     
-    return `${day}${month}${year}`;
+    return `${nisn}-${year}`;
   } catch (error) {
     console.error('Error generating parent password:', error);
-    return '';
+    return nisn; // Fallback to NISN only
   }
 }
 

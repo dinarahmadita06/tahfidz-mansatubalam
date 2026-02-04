@@ -17,18 +17,29 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
 
   useEffect(() => {
     const firstSiswa = orangTuaItem.orangTuaSiswa?.[0]?.siswa;
-    if (firstSiswa && firstSiswa.nisn) {
-      if (!firstSiswa.tanggalLahir) {
-        toast.error('Tanggal lahir tidak tersedia, password wali di-reset ke NISN', {
-          duration: 4000,
-          icon: '⚠️',
-        });
-      }
-      setNewPassword(generateParentPassword(firstSiswa.nisn, firstSiswa.tanggalLahir));
-    } else {
-      // Fallback for parents without linked students
-      setNewPassword(generatePasswordMixed());
+    
+    // Validasi NISN wajib ada
+    if (!firstSiswa || !firstSiswa.nisn) {
+      toast.error('Reset password gagal: NISN siswa belum diisi.', {
+        duration: 5000,
+        icon: '❌',
+      });
+      setNewPassword('');
+      return;
     }
+    
+    // Validasi tanggal lahir wajib ada
+    if (!firstSiswa.tanggalLahir) {
+      toast.error('Reset password gagal: Tanggal lahir siswa belum diisi.', {
+        duration: 5000,
+        icon: '❌',
+      });
+      setNewPassword('');
+      return;
+    }
+    
+    // Generate password dengan format NISN-TahunLahir
+    setNewPassword(generateParentPassword(firstSiswa.nisn, firstSiswa.tanggalLahir));
   }, [orangTuaItem]);
 
   const handleCopyPassword = async () => {
@@ -51,7 +62,30 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
   };
 
   const handleGenerateNew = () => {
-    setNewPassword(generatePasswordMixed());
+    const firstSiswa = orangTuaItem.orangTuaSiswa?.[0]?.siswa;
+    
+    if (!firstSiswa || !firstSiswa.nisn) {
+      toast.error('Tidak dapat generate password: NISN siswa belum diisi.', {
+        duration: 4000,
+        icon: '❌',
+      });
+      return;
+    }
+    
+    if (!firstSiswa.tanggalLahir) {
+      toast.error('Tidak dapat generate password: Tanggal lahir siswa belum diisi.', {
+        duration: 4000,
+        icon: '❌',
+      });
+      return;
+    }
+    
+    // Generate ulang dengan format yang sama: NISN-TahunLahir
+    setNewPassword(generateParentPassword(firstSiswa.nisn, firstSiswa.tanggalLahir));
+    toast.success('Password di-generate ulang dengan format NISN-TahunLahir', {
+      duration: 3000,
+      icon: '✅',
+    });
   };
 
   return (
@@ -90,9 +124,7 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Format: {orangTuaItem.orangTuaSiswa?.[0]?.siswa?.nisn 
-              ? (orangTuaItem.orangTuaSiswa?.[0]?.siswa?.tanggalLahir ? 'NISN-TahunLahir' : 'NISN') 
-              : 'Random (8 karakter)'}
+            Format: NISN-TahunLahir (contoh: 1234567890-2009)
           </p>
         </div>
 
@@ -131,7 +163,7 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
           </button>
           <button
             onClick={handleConfirm}
-            disabled={isSubmitting || isLoading}
+            disabled={isSubmitting || isLoading || !newPassword}
             className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting || isLoading ? 'Menyimpan...' : 'Konfirmasi'}

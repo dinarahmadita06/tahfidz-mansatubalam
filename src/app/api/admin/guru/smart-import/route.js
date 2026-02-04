@@ -5,7 +5,6 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { invalidateCache, invalidateCacheByPrefix } from '@/lib/cache';
-import { buildGuruCredentials } from '@/lib/passwordUtils';
 
 /**
  * Helper: Parse Excel date to YYYY-MM-DD format
@@ -36,7 +35,7 @@ function parseExcelDate(value) {
     const trimmed = value.trim();
     
     // Already YYYY-MM-DD format
-    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(trimmed)) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
       const [y, m, d] = trimmed.split('-').map(Number);
       if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
         return trimmed;
@@ -117,57 +116,37 @@ export async function POST(request) {
     const newAccounts = [];
     const errors = [];
 
-    // Get last username number (G###)
-    const lastUser = await prisma.user.findFirst({
-      where: {
-        username: {
-          startsWith: 'G',
-          not: null
-        }
-      },
-      orderBy: {
-        username: 'desc'
-      },
-      select: {
-        username: true
-      }
-    });
-
-    let lastNumber = 0;
-    if (lastUser && lastUser.username) {
-      const match = lastUser.username.match(/^G(\d+)$/);
-      if (match) {
-        lastNumber = parseInt(match[1], 10);
-      }
-    }
-
     // Process each row
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
       const { guru: guruData } = row;
 
       try {
+        // Validasi kode guru/username (WAJIB)
+        if (!guruData?.kodeGuru) {
+          stats.failed++;
+          errors.push(`Baris ${i + 2}: Kode Guru/Username harus diisi`);
+          continue;
+        }
+
+        const username = String(guruData.kodeGuru).trim();
+        
+        // Validate username harus angka
+        if (!/^[0-9]+$/.test(username)) {
+          stats.failed++;
+          errors.push(`Baris ${i + 2}: Kode Guru/Username harus berupa angka (Anda menulis: ${guruData.kodeGuru})`);
+          continue;
+        }
+
         if (!guruData?.nama) {
           stats.failed++;
           errors.push(`Baris ${i + 2}: Nama guru harus diisi`);
           continue;
         }
 
-        if (!guruData?.nip) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: NIP guru harus diisi`);
-          continue;
-        }
-
         if (!guruData?.jenisKelamin) {
           stats.failed++;
           errors.push(`Baris ${i + 2}: Jenis Kelamin guru harus diisi`);
-          continue;
-        }
-
-        if (!guruData?.tanggalLahir) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: Tanggal Lahir guru harus diisi`);
           continue;
         }
 
@@ -180,31 +159,36 @@ export async function POST(request) {
           }
         }
 
-        // Parse tanggal lahir using parseExcelDate helper
-        const tanggalLahirString = parseExcelDate(guruData.tanggalLahir);
+        // Parse tanggal lahir (OPTIONAL)
+        let tanggalLahir = null;
+        let tanggalLahirString = null;
         
-        if (!tanggalLahirString) {
-          stats.failed++;
-          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (input: ${guruData.tanggalLahir})`);
-          continue;
+        if (guruData.tanggalLahir && String(guruData.tanggalLahir).trim() !== '') {
+          tanggalLahirString = parseExcelDate(guruData.tanggalLahir);
+          
+          if (!tanggalLahirString) {
+            stats.failed++;
+            errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (input: ${guruData.tanggalLahir})`);
+            continue;
+          }
+          
+          // Convert YYYY-MM-DD string to Date object at UTC midnight
+          const [year, month, day] = tanggalLahirString.split('-').map(Number);
+          tanggalLahir = new Date(Date.UTC(year, month - 1, day));
+          
+          // Validate Date object is valid
+          if (isNaN(tanggalLahir.getTime())) {
+            stats.failed++;
+            errors.push(`Baris ${i + 2}: Tanggal lahir tidak dapat diproses (input: ${guruData.tanggalLahir}, parsed: ${tanggalLahirString})`);
+            continue;
+          }
         }
 
-        // Convert YYYY-MM-DD string to Date object at UTC midnight (no timezone shift)
-        const [year, month, day] = tanggalLahirString.split('-').map(Number);
-        const tanggalLahir = new Date(Date.UTC(year, month - 1, day));
+        // Password default: MAN1 untuk semua guru
+        const rawPassword = 'MAN1';
+        const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-        // Build credentials using helper for consistency
-        const credentials = await buildGuruCredentials({
-          tanggalLahir: tanggalLahirString,
-          lastUsernameNumber: lastNumber + i,
-          bcrypt
-        });
-
-        const username = credentials.username; // G### format (uppercase)
-        const rawPassword = credentials.passwordPlain; // YYYY-MM-DD
-        const hashedPassword = credentials.passwordHash;
-
-        console.log(`📋 [SMART-IMPORT GURU Baris ${i + 2}] Username: ${username}, TanggalLahir: ${tanggalLahirString}, Password: ${rawPassword}`);
+        console.log(`📋 [SMART-IMPORT GURU Baris ${i + 2}] Username: ${username}, Password: MAN1`);
 
         // Check duplicate by username (case-insensitive)
         const existingUser = await prisma.user.findFirst({
@@ -222,8 +206,8 @@ export async function POST(request) {
           continue;
         }
 
-        // Generate internal email with username
-        const internalEmail = `${username.toLowerCase()}@internal.tahfidz.edu.id`;
+        // Generate internal email with username (kode guru)
+        const internalEmail = `guru.${username}@internal.tahfidz.edu.id`;
 
         // Process Kelas Binaan
         const kelasIds = [];
@@ -260,8 +244,7 @@ export async function POST(request) {
               userId: user.id,
               nip: guruData.nip ? String(guruData.nip) : null,
               jenisKelamin: normalizedJK,
-              tanggalLahir: tanggalLahir,
-              // Remove bidangKeahlian and other deprecated fields if schema allows
+              tanggalLahir: tanggalLahir, // Could be null
             }
           });
 

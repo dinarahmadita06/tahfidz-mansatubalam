@@ -430,18 +430,61 @@ export async function DELETE(request, { params }) {
       }, { status: 404 });
     }
 
-    // Cek apakah guru masih mengampu kelas
-    const guruKelas = await prisma.guruKelas.count({
-      where: {
-        guruId: id,
-        isActive: true
+    // Audit: Cek kelas yang terkait dengan guru (pisahkan aktif vs nonaktif)
+    const kelasRelations = await prisma.guruKelas.findMany({
+      where: { guruId: id },
+      include: {
+        kelas: {
+          select: {
+            id: true,
+            nama: true,
+            status: true,
+            deletedAt: true
+          }
+        }
       }
     });
 
-    if (guruKelas > 0) {
+    // Pisahkan kelas AKTIF dan NONAKTIF
+    const kelasAktif = kelasRelations.filter(
+      gk => gk.kelas.status === 'AKTIF' && 
+            gk.kelas.deletedAt === null &&
+            gk.isActive === true
+    );
+    
+    const kelasNonaktif = kelasRelations.filter(
+      gk => gk.kelas.status !== 'AKTIF' || 
+            gk.kelas.deletedAt !== null ||
+            gk.isActive === false
+    );
+
+    // Debug log
+    console.log('🔍 [DELETE GURU] Audit kelas:', {
+      guruId: id,
+      guruName: guru.user.name,
+      totalRelations: kelasRelations.length,
+      kelasAktifCount: kelasAktif.length,
+      kelasNonaktifCount: kelasNonaktif.length,
+      kelasAktif: kelasAktif.map(k => ({ 
+        nama: k.kelas.nama, 
+        status: k.kelas.status,
+        guruKelasActive: k.isActive 
+      })),
+      kelasNonaktif: kelasNonaktif.map(k => ({ 
+        nama: k.kelas.nama, 
+        status: k.kelas.status,
+        guruKelasActive: k.isActive,
+        deletedAt: k.kelas.deletedAt
+      }))
+    });
+
+    // VALIDASI: Hanya blok jika masih ada KELAS AKTIF
+    if (kelasAktif.length > 0) {
+      const kelasNames = kelasAktif.map(k => k.kelas.nama).join(', ');
       return NextResponse.json({
-        message: 'Tidak dapat menghapus guru yang masih aktif mengampu kelas',
-        details: 'Teacher is still assigned to active classes'
+        message: `Tidak dapat menghapus guru yang masih aktif mengampu ${kelasAktif.length} kelas aktif: ${kelasNames}`,
+        details: 'Teacher is still assigned to active classes',
+        kelasAktif: kelasAktif.map(k => k.kelas.nama)
       }, { status: 400 });
     }
 
@@ -449,9 +492,25 @@ export async function DELETE(request, { params }) {
     const guruName = guru.user.name;
     const guruNip = guru.nip;
 
-    // Delete guru (akan cascade delete user juga)
-    await prisma.guru.delete({
-      where: { id }
+    // Hapus guru dalam transaction (handle relasi kelas nonaktif)
+    await prisma.$transaction(async (tx) => {
+      // 1. Detach relasi kelas nonaktif jika ada (opsional, cascade akan handle)
+      if (kelasNonaktif.length > 0) {
+        await tx.guruKelas.deleteMany({
+          where: {
+            guruId: id,
+            id: { in: kelasNonaktif.map(k => k.id) }
+          }
+        });
+        console.log(`✅ [DELETE GURU] Detached ${kelasNonaktif.length} kelas nonaktif`);
+      }
+
+      // 2. Delete guru (cascade akan hapus guruKelas yang tersisa dan user)
+      await tx.guru.delete({
+        where: { id }
+      });
+      
+      console.log(`✅ [DELETE GURU] Guru ${guruName} berhasil dihapus`);
     });
 
     // Log activity

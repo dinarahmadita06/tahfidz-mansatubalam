@@ -434,7 +434,8 @@ export default function AdminOrangTuaPage() {
 
               {/* Action Buttons */}
               <div className="grid grid-cols-2 md:flex md:flex-nowrap gap-3 w-full md:w-auto">
-                <button
+                {/* Tombol Tambah/Hubungkan Wali disembunyikan - pembuatan akun wali dilakukan saat membuat siswa */}
+                {/* <button
                   onClick={() => {
                     resetForm();
                     setShowModal(true);
@@ -443,7 +444,7 @@ export default function AdminOrangTuaPage() {
                 >
                   <UserPlus size={18} />
                   <span>Tambah / Hubungkan Wali</span>
-                </button>
+                </button> */}
                 <button
                   onClick={() => {
                     const csvContent = [

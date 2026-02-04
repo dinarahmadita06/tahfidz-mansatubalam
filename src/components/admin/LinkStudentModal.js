@@ -93,7 +93,7 @@ export default function LinkStudentModal({ orangTuaItem, siswaList, onConfirm, o
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-gray-900">{siswa.user.name}</p>
                     <p className="text-xs text-gray-500">
-                      {siswa.nis} • {siswa.kelas?.namaKelas || 'Kelas tidak ada'}
+                      {siswa.nis} • {siswa.kelas?.nama || 'Belum ditetapkan kelas'}
                     </p>
                   </div>
                 </label>
