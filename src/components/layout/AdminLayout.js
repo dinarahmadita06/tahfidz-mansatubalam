@@ -128,10 +128,10 @@ function AdminLayout({ children }) {
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const res = await fetch('/api/admin/siswa?status=pending&limit=1');
+        const res = await fetch('/api/admin/validasi-siswa/count');
         if (res.ok) {
           const data = await res.json();
-          setPendingCount(data.pagination?.totalCount || 0);
+          setPendingCount(data.pending || 0);
         }
       } catch (error) {
         // Silently fail
@@ -140,8 +140,17 @@ function AdminLayout({ children }) {
 
     if (isMounted) {
       fetchPendingCount();
+      // Poll every 30 seconds for updates
       const interval = setInterval(fetchPendingCount, 30000);
-      return () => clearInterval(interval);
+      
+      // Listen for custom refresh event (triggered after validation)
+      const handleRefresh = () => fetchPendingCount();
+      window.addEventListener('refreshPendingCount', handleRefresh);
+      
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('refreshPendingCount', handleRefresh);
+      };
     }
   }, [isMounted]);
 
@@ -390,7 +399,7 @@ function AdminLayout({ children }) {
                       <div>
                         <button
                           onClick={() => sidebarOpen ? toggleSubmenu(item.title) : setSidebarOpen(true)}
-                          className={`w-full flex items-center justify-between gap-2 ${sidebarOpen ? 'px-3' : 'px-0'} py-1.5 lg:py-2 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 group ${
+                          className={`w-full flex items-center justify-between gap-2 ${sidebarOpen ? 'px-3' : 'px-0'} py-1.5 lg:py-2 rounded-xl min-h-[40px] lg:min-h-[44px] transition-colors duration-200 group relative ${
                             isMenuActive
                               ? 'bg-emerald-50/70 ring-1 ring-emerald-200/40 text-emerald-700 font-semibold'
                               : 'text-slate-600 hover:bg-emerald-50/50 hover:text-emerald-700'
@@ -398,10 +407,18 @@ function AdminLayout({ children }) {
                           title={!sidebarOpen ? item.title : ''}
                         >
                           <div className="flex items-center gap-2.5 lg:gap-3 shrink-0">
-                            <item.icon
-                              className={`w-[18px] h-[18px] lg:w-5 lg:h-5 shrink-0 ${isMenuActive ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}`}
-                              strokeWidth={1.5}
-                            />
+                            <div className="relative">
+                              <item.icon
+                                className={`w-[18px] h-[18px] lg:w-5 lg:h-5 shrink-0 ${isMenuActive ? 'text-emerald-600' : 'text-slate-500 group-hover:text-emerald-600'}`}
+                                strokeWidth={1.5}
+                              />
+                              {/* Badge for collapsed sidebar - show on Manajemen Pengguna if there are pending */}
+                              {!sidebarOpen && item.title === 'Manajemen Pengguna' && pendingCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                                  {pendingCount > 9 ? '9+' : pendingCount}
+                                </span>
+                              )}
+                            </div>
                             {sidebarOpen && (
                               <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis truncate text-[13px] lg:text-sm font-medium">{item.title}</span>
                             )}

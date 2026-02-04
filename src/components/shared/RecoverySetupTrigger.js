@@ -69,24 +69,40 @@ export default function RecoverySetupTrigger() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const downloadRecoveryCard = () => {
-    const content = `KARTU RECOVERY SIMTAQ
+  const downloadRecoveryCard = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/user/generate-recovery-card', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          recoveryCode,
+          username: session?.user?.username,
+          name: session?.user?.name 
+        }),
+      });
 
-Username: ${session?.user?.username || 'User'}
-Name: ${session?.user?.name || ''}
-Recovery Code: ${recoveryCode}
-
-SIMPAN KODE INI DENGAN AMAN.
-KODE INI ADALAH SATU-SATUNYA CARA UNTUK MERESET PASSWORD ANDA JIKA LUPA.`;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `RecoveryCard_${session?.user?.username || 'SIMTAQ'}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const username = session?.user?.username || 'SIMTAQ';
+        a.download = `RecoveryCard_${username}.png`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        console.error('Failed to download recovery card');
+      }
+    } catch (error) {
+      console.error('Error downloading recovery card:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleConfirm = async () => {

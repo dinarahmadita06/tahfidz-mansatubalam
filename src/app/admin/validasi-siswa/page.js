@@ -365,6 +365,8 @@ export default function ValidasiSiswaPage() {
         setShowApproveModal(false);
         setShowDetailModal(false);
         fetchSiswa();
+        // Trigger refresh pending count in sidebar
+        window.dispatchEvent(new Event('refreshPendingCount'));
       } else {
         const error = await response.json();
         setToast({ type: 'error', message: error.error || 'Gagal validasi siswa' });
@@ -397,6 +399,8 @@ export default function ValidasiSiswaPage() {
         setShowDetailModal(false);
         setRejectionReason('');
         fetchSiswa();
+        // Trigger refresh pending count in sidebar
+        window.dispatchEvent(new Event('refreshPendingCount'));
       } else {
         const error = await response.json();
         setToast({ type: 'error', message: error.error || 'Gagal menolak siswa' });
