@@ -56,6 +56,12 @@ export default function LoginPage() {
           setError('Username atau password salah.');
         } else if (result.error === 'Configuration') {
           setError('Terjadi kesalahan server. Silakan coba lagi.');
+        } else if (result.error.includes('belum divalidasi')) {
+          setError('Akun Anda belum divalidasi admin. Silakan tunggu atau hubungi pihak sekolah.');
+        } else if (result.error.includes('ditolak')) {
+          setError('Akun Anda ditolak. Silakan hubungi pihak sekolah.');
+        } else if (result.error.includes('ditangguhkan')) {
+          setError('Akun Anda ditangguhkan. Silakan hubungi pihak sekolah.');
         } else if (result.error.includes('tidak aktif')) {
           setError('Akun Anda tidak aktif.');
         } else {

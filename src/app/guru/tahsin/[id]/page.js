@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import GuruLayout from '@/components/layout/GuruLayout';
@@ -8,10 +8,127 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import {
   ArrowLeft, Save, BookOpen, Plus, Trash2,
   Eye, X, Filter, Search, Calendar, User, Users,
-  ClipboardList, CheckCircle, AlertCircle, Lightbulb, PlayCircle, Download
+  ClipboardList, CheckCircle, AlertCircle, Lightbulb, PlayCircle, Download, ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+
+// SearchableSelect Component for Siswa
+function SearchableSelect({ siswaList, value, onChange, error }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Get selected siswa display text
+  const selectedSiswa = siswaList.find(s => s.id === value);
+  const displayText = selectedSiswa ? selectedSiswa.user.name : '';
+
+  // Filter siswa based on search query
+  const filteredSiswa = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return siswaList.slice(0, 20); // Show first 20 if no search
+    }
+    const query = searchQuery.toLowerCase();
+    return siswaList.filter(s => 
+      s.user.name.toLowerCase().includes(query) ||
+      s.nis?.toLowerCase().includes(query) ||
+      s.nisn?.toLowerCase().includes(query)
+    );
+  }, [siswaList, searchQuery]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchQuery('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (siswaId) => {
+    onChange({ target: { name: 'siswaId', value: siswaId } });
+    setIsOpen(false);
+    setSearchQuery('');
+  };
+
+  const handleInputClick = () => {
+    setIsOpen(true);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div
+        className={`w-full px-4 py-3 border rounded-lg cursor-pointer transition ${
+          error ? 'border-red-500' : 'border-gray-300'
+        } ${isOpen ? 'ring-2 ring-emerald-500 border-emerald-500' : ''}`}
+        style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
+        onClick={handleInputClick}
+      >
+        <div className="flex items-center justify-between">
+          {isOpen ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nama/NIS/NISN siswa..."
+              className="w-full outline-none bg-transparent"
+              style={{ fontFamily: 'Poppins, sans-serif' }}
+            />
+          ) : (
+            <span className={displayText ? 'text-slate-900' : 'text-gray-400'}>
+              {displayText || '-- Pilih Siswa --'}
+            </span>
+          )}
+          <ChevronDown 
+            size={20} 
+            className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          />
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          {filteredSiswa.length > 0 ? (
+            filteredSiswa.map((siswa) => (
+              <div
+                key={siswa.id}
+                onClick={() => handleSelect(siswa.id)}
+                className={`px-4 py-3 cursor-pointer hover:bg-emerald-50 transition ${
+                  value === siswa.id ? 'bg-emerald-100 text-emerald-700 font-semibold' : 'text-gray-700'
+                }`}
+                style={{ fontFamily: 'Poppins, sans-serif' }}
+              >
+                <div className="font-medium">{siswa.user.name}</div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  NIS: {siswa.nis || '-'} {siswa.nisn && `• NISN: ${siswa.nisn}`}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="px-4 py-3 text-gray-500 text-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Siswa tidak ditemukan
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 // StatCard Component
 function StatCard({ label, value, icon, color }) {
@@ -82,7 +199,6 @@ export default function TahsinDetailPage() {
   const [formData, setFormData] = useState({
     siswaId: '',
     tanggal: new Date().toISOString().split('T')[0],
-    level: 'DASAR',
     materiHariIni: '',
     bacaanDipraktikkan: '',
     catatan: '',
@@ -209,7 +325,6 @@ export default function TahsinDetailPage() {
     const newErrors = {};
     if (!formData.siswaId) newErrors.siswaId = 'Pilih siswa';
     if (!formData.tanggal) newErrors.tanggal = 'Tanggal wajib diisi';
-    if (!formData.level) newErrors.level = 'Pilih level';
     if (!formData.materiHariIni.trim()) newErrors.materiHariIni = 'Materi hari ini wajib diisi';
     if (!formData.bacaanDipraktikkan.trim()) newErrors.bacaanDipraktikkan = 'Bacaan yang dipraktikkan wajib diisi';
 
@@ -239,7 +354,6 @@ export default function TahsinDetailPage() {
         siswaId: formData.siswaId,
         guruId: guruData.id,
         tanggal: new Date(formData.tanggal).toISOString(),
-        level: formData.level,
         materiHariIni: formData.materiHariIni.trim(),
         bacaanDipraktikkan: formData.bacaanDipraktikkan.trim(),
         catatan: formData.catatan.trim() || null,
@@ -288,7 +402,6 @@ export default function TahsinDetailPage() {
     setFormData({
       siswaId: '',
       tanggal: new Date().toISOString().split('T')[0],
-      level: 'DASAR',
       materiHariIni: '',
       bacaanDipraktikkan: '',
       catatan: '',
@@ -344,7 +457,7 @@ export default function TahsinDetailPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight mb-1 sm:mb-2 whitespace-normal break-words">
-                  Tahsin Al-Qur'an
+                  Tahsin Al-Qur&apos;an
                 </h1>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-white/90 text-sm sm:text-base lg:text-lg font-medium break-words">
@@ -444,27 +557,12 @@ export default function TahsinDetailPage() {
                         <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
                           Nama Siswa <span className="text-red-500">*</span>
                         </label>
-                        <select
-                          name="siswaId"
+                        <SearchableSelect
+                          siswaList={siswaList}
                           value={formData.siswaId}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                            errors.siswaId ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                        >
-                          <option value="">-- Pilih Siswa --</option>
-                          {siswaList.map((siswa) => (
-                            <option key={siswa.id} value={siswa.id}>
-                              {siswa.user.name}
-                            </option>
-                          ))}
-                        </select>
-                        {errors.siswaId && (
-                          <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            {errors.siswaId}
-                          </p>
-                        )}
+                          error={errors.siswaId}
+                        />
                       </div>
 
                       {/* Tanggal */}
@@ -488,31 +586,6 @@ export default function TahsinDetailPage() {
                           </p>
                         )}
                       </div>
-
-                      {/* Level / Tahap */}
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                          Level / Tahap <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          name="level"
-                          value={formData.level}
-                          onChange={handleInputChange}
-                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
-                            errors.level ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          style={{ borderRadius: '10px', fontFamily: 'Poppins, sans-serif' }}
-                        >
-                          <option value="DASAR">Dasar</option>
-                          <option value="MENENGAH">Menengah</option>
-                          <option value="LANJUTAN">Lanjutan</option>
-                        </select>
-                        {errors.level && (
-                          <p className="text-red-500 text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            {errors.level}
-                          </p>
-                        )}
-                      </div>
                     </div>
 
                     {/* Right Column - Content */}
@@ -532,7 +605,7 @@ export default function TahsinDetailPage() {
                           name="materiHariIni"
                           value={formData.materiHariIni}
                           onChange={handleInputChange}
-                          placeholder="Contoh: Hukum nun mati/tanwin"
+                          placeholder="Contoh: Tajwid dasar, Makharijul Huruf"
                           className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition ${
                             errors.materiHariIni ? 'border-red-500' : 'border-gray-300'
                           }`}

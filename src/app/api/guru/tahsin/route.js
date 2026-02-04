@@ -112,17 +112,20 @@ export async function POST(request) {
       statusPembelajaran,
     } = body;
 
-    // Validation
-    if (!siswaId || !guruId || !tanggal || !level || !materiHariIni || !bacaanDipraktikkan || !statusPembelajaran) {
+    // Validation - level is now optional
+    if (!siswaId || !guruId || !tanggal || !materiHariIni || !bacaanDipraktikkan || !statusPembelajaran) {
       return NextResponse.json(
         { message: 'Data tidak lengkap. Pastikan semua field wajib diisi.' },
         { status: 400 }
       );
     }
 
-    // Validate level enum
+    // Set default level if not provided
+    const tahsinLevel = level || 'DASAR';
+
+    // Validate level enum if provided
     const validLevels = ['DASAR', 'MENENGAH', 'LANJUTAN'];
-    if (!validLevels.includes(level)) {
+    if (level && !validLevels.includes(level)) {
       return NextResponse.json(
         { message: 'Level tidak valid' },
         { status: 400 }
@@ -156,7 +159,7 @@ export async function POST(request) {
         siswaId,
         guruId,
         tanggal: new Date(tanggal),
-        level,
+        level: tahsinLevel,
         materiHariIni,
         bacaanDipraktikkan,
         catatan: catatan || null,
@@ -182,13 +185,13 @@ export async function POST(request) {
       actorName: session.user.name,
       action: ACTIVITY_ACTIONS.GURU_INPUT_TAHSIN,
       title: 'Input hasil tahsin',
-      description: `Input tahsin untuk ${tahsin.siswa.user.name} - Level ${level}`,
+      description: `Input tahsin untuk ${tahsin.siswa.user.name} - Level ${tahsinLevel}`,
       targetUserId: siswaId,
       targetRole: 'SISWA',
       targetName: tahsin.siswa.user.name,
       metadata: {
         tahsinId: tahsin.id,
-        level,
+        level: tahsinLevel,
         statusPembelajaran,
         tanggal: tahsin.tanggal,
       },
