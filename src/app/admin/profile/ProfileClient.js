@@ -59,9 +59,16 @@ export default function ProfileClient({ initialData }) {
 
   const fetchProfileData = async () => {
     try {
-      const res = await fetch('/api/admin/profile');
+      // Add cache busting to ensure fresh data
+      const res = await fetch('/api/admin/profile', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       if (res.ok) {
         const data = await res.json();
+        console.log('Fetched profile data:', data.profile); // Debug log
         setProfileData(data.profile);
       }
     } catch (error) {
@@ -152,7 +159,20 @@ export default function ProfileClient({ initialData }) {
 
       if (res.ok) {
         setSuccess('Profil berhasil diperbarui!');
-        await fetchProfileData();
+        console.log('Update success, new data:', editFormData); // Debug log
+        // Update state langsung dengan data baru
+        setProfileData(prev => {
+          const updated = {
+            ...prev,
+            ...editFormData
+          };
+          console.log('Updated profileData state:', updated); // Debug log
+          return updated;
+        });
+        // Refresh full data dari server setelah delay singkat
+        setTimeout(async () => {
+          await fetchProfileData();
+        }, 500);
         setTimeout(() => {
           setShowEditModal(false);
           setSuccess('');
