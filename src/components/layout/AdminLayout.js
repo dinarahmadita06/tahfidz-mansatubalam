@@ -52,11 +52,9 @@ const menuItems = [
     ]
   },
   {
-    title: 'Laporan',
+    title: 'Laporan Hafalan & Kehadiran',
     icon: BarChart3,
-    submenu: [
-      { title: 'Laporan Hafalan & Kehadiran', href: '/admin/laporan/kehadiran', icon: BarChart3 },
-    ]
+    href: '/admin/laporan/kehadiran',
   },
   {
     title: 'Sertifikat Tasmi',

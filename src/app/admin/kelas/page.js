@@ -168,9 +168,17 @@ function DropdownMenu({ buttonRef, onEdit, onToggleStatus, onDelete, isActive, o
       <button
         onClick={(e) => {
           e.stopPropagation();
-          onDelete();
-          onClose();
+          if (isActive) {
+            // Kelas masih aktif, tampilkan pesan
+            alert('Kelas aktif tidak dapat dihapus. Silakan nonaktifkan kelas terlebih dahulu.');
+            onClose();
+          } else {
+            // Kelas sudah nonaktif, lanjutkan delete
+            onDelete();
+            onClose();
+          }
         }}
+        disabled={isActive}
         style={{
           width: '100%',
           display: 'flex',
@@ -180,19 +188,22 @@ function DropdownMenu({ buttonRef, onEdit, onToggleStatus, onDelete, isActive, o
           border: 'none',
           background: 'transparent',
           borderRadius: '8px',
-          cursor: 'pointer',
+          cursor: isActive ? 'not-allowed' : 'pointer',
           transition: 'all 0.2s ease',
           textAlign: 'left',
           fontSize: '14px',
           fontWeight: 500,
-          color: colors.text.primary,
+          color: isActive ? colors.gray[400] : colors.text.primary,
           fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
           whiteSpace: 'nowrap',
+          opacity: isActive ? 0.5 : 1,
         }}
-        onMouseEnter={(e) => e.currentTarget.style.background = '#FEE2E2'}
+        onMouseEnter={(e) => {
+          if (!isActive) e.currentTarget.style.background = '#FEE2E2';
+        }}
         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
       >
-        <Trash2 size={16} color="#DC2626" style={{ flexShrink: 0 }} />
+        <Trash2 size={16} color={isActive ? colors.gray[400] : '#DC2626'} style={{ flexShrink: 0 }} />
         <span>Hapus Kelas</span>
       </button>
     </div>,
@@ -422,10 +433,11 @@ export default function AdminKelasPage() {
       const data = await response.json();
 
       if (response.ok) {
-        alert(editingKelas ? 'Kelas berhasil diupdate' : 'Kelas berhasil ditambahkan');
+        // Refetch data dulu sebelum tutup modal
+        await fetchKelas();
         setShowKelasModal(false);
         resetKelasForm();
-        fetchKelas();
+        alert(editingKelas ? 'Kelas berhasil diupdate' : 'Kelas berhasil ditambahkan');
       } else if (response.status === 409 && data.requiresConfirmation) {
         // Guru sudah memiliki kelas lain, tampilkan konfirmasi
         setConfirmationData(data);
@@ -507,10 +519,11 @@ export default function AdminKelasPage() {
 
       if (response.ok) {
         const kelasNama = kelasToDelete.nama;
-        alert(`Kelas "${kelasNama}" berhasil dihapus`);
-        fetchKelas();
+        // Refetch data dulu sebelum tutup modal
+        await fetchKelas();
         setShowDeleteModal(false);
         setKelasToDelete(null);
+        alert(`Kelas "${kelasNama}" berhasil dihapus`);
       } else {
         // Display detailed error message from server
         let errorMessage = data.error || 'Gagal menghapus kelas';
@@ -575,9 +588,10 @@ export default function AdminKelasPage() {
 
       if (response.ok) {
         const statusText = newStatus === 'AKTIF' ? 'Aktif' : 'Nonaktif';
-        alert(`Kelas "${kelasItem.nama}" berhasil diubah menjadi ${statusText}`);
-        fetchKelas(); // Refresh kelas list
+        // Refetch data dulu sebelum tutup dropdown
+        await fetchKelas();
         setOpenMenuId(null); // Close dropdown
+        alert(`Kelas "${kelasItem.nama}" berhasil diubah menjadi ${statusText}`);
       } else {
         let errorMessage = data.error || 'Gagal mengubah status kelas';
 
@@ -2089,7 +2103,7 @@ export default function AdminKelasPage() {
             maxWidth: '480px',
             width: '100%',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-            border: `2px solid ${colors.amber[100]}`,
+            border: `2px solid ${kelasToDelete.status === 'AKTIF' ? colors.amber[100] : colors.gray[200]}`,
             animation: 'modalSlideIn 0.3s ease-out',
           }}>
             <div style={{
@@ -2102,12 +2116,16 @@ export default function AdminKelasPage() {
                 width: '64px',
                 height: '64px',
                 borderRadius: '50%',
-                background: '#FEE2E2',
+                background: kelasToDelete.status === 'AKTIF' ? colors.amber[50] : '#FEE2E2',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-                <Trash2 size={28} color="#DC2626" />
+                {kelasToDelete.status === 'AKTIF' ? (
+                  <ShieldCheck size={28} color={colors.amber[600]} />
+                ) : (
+                  <Trash2 size={28} color="#DC2626" />
+                )}
               </div>
             </div>
 
@@ -2119,79 +2137,137 @@ export default function AdminKelasPage() {
               textAlign: 'center',
               marginBottom: '12px',
             }}>
-              Hapus Kelas?
+              {kelasToDelete.status === 'AKTIF' ? 'Kelas Masih Aktif' : 'Hapus Kelas?'}
             </h2>
 
-            <p style={{
-              fontSize: '14px',
-              color: colors.text.secondary,
-              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              textAlign: 'center',
-              lineHeight: '1.6',
-              marginBottom: '8px',
-            }}>
-              Apakah Anda yakin ingin menghapus kelas <strong>{kelasToDelete.nama}</strong>?
-            </p>
-
-            <p style={{
-              fontSize: '13px',
-              color: colors.text.tertiary,
-              fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-              textAlign: 'center',
-              lineHeight: '1.6',
-              marginBottom: '24px',
-            }}>
-              Data siswa tidak akan terhapus.
-            </p>
-
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-              justifyContent: 'center',
-            }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setKelasToDelete(null);
-                }}
-                style={{
-                  padding: '12px 28px',
-                  border: `2px solid ${colors.gray[300]}`,
-                  borderRadius: '12px',
-                  background: colors.white,
+            {kelasToDelete.status === 'AKTIF' ? (
+              <>
+                <p style={{
+                  fontSize: '14px',
                   color: colors.text.secondary,
-                  fontSize: '14px',
-                  fontWeight: 600,
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                className="cancel-btn"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteKelas}
-                style={{
-                  padding: '12px 28px',
-                  border: 'none',
-                  borderRadius: '12px',
-                  background: '#DC2626',
-                  color: colors.white,
-                  fontSize: '14px',
-                  fontWeight: 600,
+                  textAlign: 'center',
+                  lineHeight: '1.6',
+                  marginBottom: '8px',
+                }}>
+                  Kelas <strong>{kelasToDelete.nama}</strong> tidak dapat dihapus karena masih berstatus <strong>Aktif</strong>.
+                </p>
+
+                <p style={{
+                  fontSize: '13px',
+                  color: colors.text.tertiary,
                   fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.2)',
-                }}
-                className="delete-confirm-btn"
-              >
-                Ya, Hapus
-              </button>
-            </div>
+                  textAlign: 'center',
+                  lineHeight: '1.6',
+                  marginBottom: '24px',
+                }}>
+                  Silakan nonaktifkan kelas terlebih dahulu sebelum menghapus.
+                </p>
+
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'center',
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setKelasToDelete(null);
+                    }}
+                    style={{
+                      padding: '12px 28px',
+                      border: 'none',
+                      borderRadius: '12px',
+                      background: colors.emerald[600],
+                      color: colors.white,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: `0 4px 12px ${colors.emerald[200]}`,
+                    }}
+                    className="ok-btn"
+                  >
+                    Mengerti
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{
+                  fontSize: '14px',
+                  color: colors.text.secondary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textAlign: 'center',
+                  lineHeight: '1.6',
+                  marginBottom: '8px',
+                }}>
+                  Apakah Anda yakin ingin menghapus kelas <strong>{kelasToDelete.nama}</strong>?
+                </p>
+
+                <p style={{
+                  fontSize: '13px',
+                  color: colors.text.tertiary,
+                  fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                  textAlign: 'center',
+                  lineHeight: '1.6',
+                  marginBottom: '24px',
+                }}>
+                  Data siswa tidak akan terhapus.
+                </p>
+
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'center',
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setKelasToDelete(null);
+                    }}
+                    style={{
+                      padding: '12px 28px',
+                      border: `2px solid ${colors.gray[300]}`,
+                      borderRadius: '12px',
+                      background: colors.white,
+                      color: colors.text.secondary,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                    className="cancel-btn"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmDeleteKelas}
+                    style={{
+                      padding: '12px 28px',
+                      border: 'none',
+                      borderRadius: '12px',
+                      background: '#DC2626',
+                      color: colors.white,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      fontFamily: '"Poppins", "Nunito", system-ui, sans-serif',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 12px rgba(220, 38, 38, 0.2)',
+                    }}
+                    className="delete-confirm-btn"
+                  >
+                    Ya, Hapus
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
