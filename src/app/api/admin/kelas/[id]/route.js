@@ -260,6 +260,17 @@ export async function DELETE(request, { params }) {
       );
     }
 
+    // Check if kelas is still active
+    if (kelas.status === 'AKTIF') {
+      return NextResponse.json(
+        {
+          error: 'Kelas aktif tidak dapat dihapus. Silakan nonaktifkan kelas terlebih dahulu.',
+          code: 'ACTIVE_CLASS_DELETE_FORBIDDEN'
+        },
+        { status: 403 }
+      );
+    }
+
     // Check if kelas has students
     if (kelas.siswa && kelas.siswa.length > 0) {
       return NextResponse.json(
