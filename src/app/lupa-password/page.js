@@ -73,25 +73,40 @@ export default function ForgotPasswordPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const downloadRecoveryCard = () => {
+  const downloadRecoveryCard = async () => {
     const formatted = newRecoveryCode.match(/.{1,3}/g).join('-');
-    const content = `KARTU RECOVERY SIMTAQ
+    setLoading(true);
+    try {
+      const response = await fetch('/api/user/generate-recovery-card', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          recoveryCode: formatted,
+          username: username,
+          name: role 
+        }),
+      });
 
-Username: ${username}
-Role: ${role}
-Recovery Code: ${formatted}
-
-SIMPAN KODE INI DENGAN AMAN.
-KODE INI ADALAH SATU-SATUNYA CARA UNTUK MERESET PASSWORD ANDA.`;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `RecoveryCard_${username}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `RecoveryCard_${username}.png`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        console.error('Failed to download recovery card');
+      }
+    } catch (error) {
+      console.error('Error downloading recovery card:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
