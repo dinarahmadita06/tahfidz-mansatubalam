@@ -274,7 +274,7 @@ export async function POST(request) {
     // ============ ATOMIC TRANSACTION ============
     const siswa = await prisma.$transaction(async (tx) => {
       // Check if username already exists
-      const existingUser = await tx.user.findUnique({
+      const existingUser = await tx.user.findFirst({
         where: { username: nis }
       });
       

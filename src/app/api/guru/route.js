@@ -148,31 +148,31 @@ export async function POST(request) {
 
     let { name, password, username, nip, jenisKelamin, tanggalLahir, kelasIds } = body;
 
-    // If username is not provided, generate one automatically
-    if (!username) {
-      console.log('🔍 Generating username for new teacher');
-      username = await generateNextTeacherUsername(prisma);
-      console.log('✅ Generated username:', username);
+    // Set default password jika tidak ada
+    if (!password || password.trim() === '') {
+      password = 'MAN1'; // Password default untuk semua guru
+      console.log('✅ Using default password: MAN1');
     }
 
-    // Validasi input - Only core credentials required (no email)
-    if (!name || !password || !jenisKelamin) {
-      console.log('❌ Validation failed:', { name, password, jenisKelamin });
+    // Validasi input - username WAJIB diisi manual, tanggalLahir OPTIONAL
+    if (!name || !username || !jenisKelamin) {
+      console.log('❌ Validation failed:', { name, username, jenisKelamin });
       return NextResponse.json({
-        error: 'Data tidak lengkap',
+        error: 'Data tidak lengkap. Nama, username (kode guru), dan jenis kelamin wajib diisi.',
         missing: {
           name: !name,
-          password: !password,
+          username: !username,
           jenisKelamin: !jenisKelamin
         }
       }, { status: 400 });
     }
 
-    if (password.length < 8) {
+    // Validasi username hanya angka (kode guru)
+    if (!/^[0-9]+$/.test(username)) {
       return NextResponse.json({ 
         success: false, 
-        code: "PASSWORD_TOO_SHORT", 
-        message: "Password minimal 8 karakter." 
+        code: "INVALID_USERNAME", 
+        message: "Username harus berupa angka (kode guru). Contoh: 94, 111, 112" 
       }, { status: 400 });
     }
 
@@ -229,7 +229,7 @@ export async function POST(request) {
     const email = `guru.${Date.now()}@internal.tahfidz`;
 
     console.log('🔍 Checking username availability...');
-    const existingUserWithUsername = await prisma.user.findUnique({
+    const existingUserWithUsername = await prisma.user.findFirst({
       where: { username }
     });
 

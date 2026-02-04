@@ -50,6 +50,7 @@ const COLUMN_ALIASES = {
   namaAyah: ['nama ayah'],
   namaIbu: ['nama ibu'],
   guru: {
+    kodeGuru: ['kode guru', 'kode guru / username', 'username', 'kode', 'user'],
     nama: ['nama lengkap', 'nama guru', 'nama'],
     nip: ['nip'],
     jenisKelamin: ['jenis kelamin', 'jk'],
@@ -181,6 +182,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
       const processedData = parsedData.map((row, index) => {
         if (type === 'guru') {
           const guruData = {
+            kodeGuru: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.kodeGuru),
             nama: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.nama),
             nip: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.nip),
             jenisKelamin: getCellValue(row, headerIndexMap, COLUMN_ALIASES.guru.jenisKelamin),
@@ -517,80 +519,6 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
               style={{ display: 'none' }}
             />
           </div>
-
-          <div style={{
-            marginTop: '24px',
-            padding: '16px',
-            background: colors.emerald[50],
-            borderRadius: '12px',
-            border: `1px solid ${colors.emerald[100]}`
-          }}>
-            <p style={{
-              fontSize: '14px',
-              fontWeight: 600,
-              color: colors.emerald[700],
-              marginBottom: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <Eye size={16} />
-              Kolom yang akan dideteksi otomatis:
-            </p>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '8px',
-              fontSize: '13px',
-              color: colors.gray[600]
-            }}>
-              {type === 'guru' ? (
-                <>
-                  <div>
-                    <strong>Data Guru:</strong>
-                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                      <li>Nama Lengkap (wajib)</li>
-                      <li>NIP (wajib)</li>
-                      <li>Jenis Kelamin (wajib)</li>
-                      <li>Tanggal Lahir (wajib)</li>
-                      <li>Kelas Binaan (opsional)</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <strong>Tambahan:</strong>
-                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                      <li>Nomor WhatsApp</li>
-                      <li>Kelas Binaan</li>
-                      <li>Alamat</li>
-                    </ul>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <strong>Data Siswa:</strong>
-                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                      <li>Nama Siswa (wajib)</li>
-                      <li>NISN & NIS (wajib)</li>
-                      <li>JK & Tgl Lahir (wajib)</li>
-                      <li>Kelas & Angkatan (wajib)</li>
-                      <li>Tahun Ajaran Masuk (wajib)</li>
-                      <li>WA Siswa & Alamat</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <strong>Data Wali:</strong>
-                    <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                      <li>Jenis Wali (wajib)</li>
-                      <li>Nama Wali (wajib)</li>
-                      <li>JK Wali (wajib)</li>
-                      <li>No HP Wali (wajib)</li>
-                    </ul>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
         </div>
       )}
 
@@ -699,112 +627,249 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                     }}>
                       No
                     </th>
-                    <th style={{
-                      padding: '12px',
-                      textAlign: 'left',
-                      fontWeight: 600,
-                      color: colors.gray[600],
-                      borderBottom: `2px solid ${colors.gray[200]}`
-                    }}>
-                      Nama Siswa
-                    </th>
-                    <th style={{
-                      padding: '12px',
-                      textAlign: 'left',
-                      fontWeight: 600,
-                      color: colors.gray[600],
-                      borderBottom: `2px solid ${colors.gray[200]}`
-                    }}>
-                      NISN
-                    </th>
-                    <th style={{
-                      padding: '12px',
-                      textAlign: 'left',
-                      fontWeight: 600,
-                      color: colors.gray[600],
-                      borderBottom: `2px solid ${colors.gray[200]}`
-                    }}>
-                      NIS
-                    </th>
-                    <th style={{
-                      padding: '12px',
-                      textAlign: 'left',
-                      fontWeight: 600,
-                      color: colors.gray[600],
-                      borderBottom: `2px solid ${colors.gray[200]}`
-                    }}>
-                      Jenis Kelamin
-                    </th>
-                    <th style={{
-                      padding: '12px',
-                      textAlign: 'left',
-                      fontWeight: 600,
-                      color: colors.gray[600],
-                      borderBottom: `2px solid ${colors.gray[200]}`
-                    }}>
-                      Kelas Saat Ini
-                    </th>
+                    {type === 'guru' ? (
+                      <>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Kode Guru / Username
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Nama Lengkap
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          NIP
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Jenis Kelamin
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Tanggal Lahir
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Kelas Binaan
+                        </th>
+                      </>
+                    ) : (
+                      <>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Nama Siswa
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          NISN
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          NIS
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Jenis Kelamin
+                        </th>
+                        <th style={{
+                          padding: '12px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: colors.gray[600],
+                          borderBottom: `2px solid ${colors.gray[200]}`
+                        }}>
+                          Kelas Saat Ini
+                        </th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {previewData.map((row, idx) => {
-                    // Get kolom berdasarkan NAMA KOLOM dari headerIndexMap
-                    const getNamaIndex = () => {
-                      for (const key of Object.keys(headerIndexMap)) {
-                        if (key.includes('nama') && !key.includes('ayah') && !key.includes('ibu') && !key.includes('wali')) {
-                          return headerIndexMap[key];
+                    if (type === 'guru') {
+                      // Preview untuk guru
+                      const getKodeGuruIndex = () => {
+                        for (const key of Object.keys(headerIndexMap)) {
+                          if (key.includes('kode guru') || key.includes('username')) {
+                            return headerIndexMap[key];
+                          }
                         }
-                      }
-                      return undefined;
-                    };
-                    
-                    const getNisnIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nisn'))];
-                    const getNisIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nis') && !k.includes('nisn'))];
-                    const getJkIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('jenis kelamin') && !k.includes('wali'))];
-                    const getKelasIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('kelas') && !k.includes('angkatan'))];
-                    
-                    return (
-                      <tr key={idx} style={{
-                        borderBottom: `1px solid ${colors.gray[100]}`
-                      }}>
-                        <td style={{
-                          padding: '12px',
-                          color: colors.gray[600]
+                        return undefined;
+                      };
+                      
+                      const getNamaIndex = () => {
+                        for (const key of Object.keys(headerIndexMap)) {
+                          if (key.includes('nama') && !key.includes('kelas')) {
+                            return headerIndexMap[key];
+                          }
+                        }
+                        return undefined;
+                      };
+                      
+                      const getNipIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nip'))];
+                      const getJkIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('jenis kelamin') || k === 'jk')];
+                      const getTglLahirIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('tanggal lahir') || k.includes('tgl lahir'))];
+                      const getKelasBinaanIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('kelas binaan'))];
+                      
+                      return (
+                        <tr key={idx} style={{
+                          borderBottom: `1px solid ${colors.gray[100]}`
                         }}>
-                          {idx + 1}
-                        </td>
-                        <td style={{
-                          padding: '12px',
-                          color: colors.gray[600]
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {idx + 1}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600],
+                            fontWeight: 600
+                          }}>
+                            {row[getKodeGuruIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getNamaIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getNipIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getJkIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getTglLahirIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getKelasBinaanIndex()] || '-'}
+                          </td>
+                        </tr>
+                      );
+                    } else {
+                      // Preview untuk siswa
+                      const getNamaIndex = () => {
+                        for (const key of Object.keys(headerIndexMap)) {
+                          if (key.includes('nama') && !key.includes('ayah') && !key.includes('ibu') && !key.includes('wali')) {
+                            return headerIndexMap[key];
+                          }
+                        }
+                        return undefined;
+                      };
+                      
+                      const getNisnIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nisn'))];
+                      const getNisIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nis') && !k.includes('nisn'))];
+                      const getJkIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('jenis kelamin') && !k.includes('wali'))];
+                      const getKelasIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('kelas') && !k.includes('angkatan'))];
+                      
+                      return (
+                        <tr key={idx} style={{
+                          borderBottom: `1px solid ${colors.gray[100]}`
                         }}>
-                          {row[getNamaIndex()] || '-'}
-                        </td>
-                        <td style={{
-                          padding: '12px',
-                          color: colors.gray[600]
-                        }}>
-                          {row[getNisnIndex()] || '-'}
-                        </td>
-                        <td style={{
-                          padding: '12px',
-                          color: colors.gray[600]
-                        }}>
-                          {row[getNisIndex()] || '-'}
-                        </td>
-                        <td style={{
-                          padding: '12px',
-                          color: colors.gray[600]
-                        }}>
-                          {row[getJkIndex()] || '-'}
-                        </td>
-                        <td style={{
-                          padding: '12px',
-                          color: colors.gray[600]
-                        }}>
-                          {row[getKelasIndex()] || '-'}
-                        </td>
-                      </tr>
-                    );
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {idx + 1}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getNamaIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getNisnIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getNisIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getJkIndex()] || '-'}
+                          </td>
+                          <td style={{
+                            padding: '12px',
+                            color: colors.gray[600]
+                          }}>
+                            {row[getKelasIndex()] || '-'}
+                          </td>
+                        </tr>
+                      );
+                    }
                   })}
                 </tbody>
               </table>

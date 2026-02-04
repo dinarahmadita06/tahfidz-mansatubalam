@@ -175,6 +175,7 @@ export async function POST(request) {
         const headers = Object.keys(row);
         
         // Find the actual column names for required fields
+        let kodeGuruCol = null;
         let namaCol = null;
         let nipCol = null;
         let jenisKelaminCol = null;
@@ -184,7 +185,9 @@ export async function POST(request) {
         for (const header of headers) {
           const normalizedHeader = header.toLowerCase().trim();
           
-          if (['nama lengkap', 'nama', 'name', 'full name'].includes(normalizedHeader)) {
+          if (['kode guru', 'kode guru / username', 'username', 'kode', 'user'].includes(normalizedHeader)) {
+            kodeGuruCol = header;
+          } else if (['nama lengkap', 'nama', 'name', 'full name'].includes(normalizedHeader)) {
             namaCol = header;
           } else if (['nip', 'nomor induk pegawai', 'pegawai id'].includes(normalizedHeader)) {
             nipCol = header;
@@ -198,6 +201,7 @@ export async function POST(request) {
         }
         
         // Extract values using found column names
+        const kodeGuru = row[kodeGuruCol];
         const nama = row[namaCol];
         const nip = row[nipCol];
         const jenisKelamin = row[jenisKelaminCol];
@@ -205,15 +209,15 @@ export async function POST(request) {
         const kelasBinaan = row[kelasBinaanCol];
         
         // Check for required fields
-        if (!nama) {
+        if (!kodeGuru) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Kolom 'Nama Lengkap' tidak ditemukan atau kosong`);
+          errors.push(`Baris ${i + 2}: Kolom 'Kode Guru / Username' tidak ditemukan atau kosong`);
           continue;
         }
         
-        if (!nip) {
+        if (!nama) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Kolom 'NIP' tidak ditemukan atau kosong`);
+          errors.push(`Baris ${i + 2}: Kolom 'Nama Lengkap' tidak ditemukan atau kosong`);
           continue;
         }
         
@@ -223,24 +227,38 @@ export async function POST(request) {
           continue;
         }
         
-        if (!tanggalLahirStr) {
+        // Validate username (kode guru) harus angka
+        const username = String(kodeGuru).trim();
+        if (!/^[0-9]+$/.test(username)) {
           failedCount++;
-          errors.push(`Baris ${i + 2}: Kolom 'Tanggal Lahir' tidak ditemukan atau kosong`);
+          errors.push(`Baris ${i + 2}: Kode Guru/Username harus berupa angka (Anda menulis: ${kodeGuru})`);
           continue;
         }
 
-        // Parse tanggal lahir using parseExcelDate helper
-        const tanggalLahirString = parseExcelDate(tanggalLahirStr);
+        // Parse tanggal lahir (OPTIONAL)
+        let tanggalLahir = null;
+        let tanggalLahirString = null;
         
-        if (!tanggalLahirString) {
-          failedCount++;
-          errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (input: ${tanggalLahirStr})`);
-          continue;
+        if (tanggalLahirStr && tanggalLahirStr.toString().trim() !== '') {
+          tanggalLahirString = parseExcelDate(tanggalLahirStr);
+          
+          if (!tanggalLahirString) {
+            failedCount++;
+            errors.push(`Baris ${i + 2}: Tanggal lahir tidak valid (input: ${tanggalLahirStr})`);
+            continue;
+          }
+          
+          // Convert YYYY-MM-DD string to Date object at UTC midnight
+          const [year, month, day] = tanggalLahirString.split('-').map(Number);
+          tanggalLahir = new Date(Date.UTC(year, month - 1, day));
+          
+          // Validate Date object is valid
+          if (isNaN(tanggalLahir.getTime())) {
+            failedCount++;
+            errors.push(`Baris ${i + 2}: Tanggal lahir tidak dapat diproses (input: ${tanggalLahirStr}, parsed: ${tanggalLahirString})`);
+            continue;
+          }
         }
-
-        // Convert YYYY-MM-DD string to Date object at UTC midnight (no timezone shift)
-        const [year, month, day] = tanggalLahirString.split('-').map(Number);
-        const tanggalLahir = new Date(Date.UTC(year, month - 1, day));
 
         // Normalize jenisKelamin
         let normalizedJenisKelamin = 'LAKI_LAKI';
@@ -256,22 +274,15 @@ export async function POST(request) {
         }
 
         let userId;
-        let rawPassword = null;
+        const rawPassword = 'MAN1'; // Password default untuk semua guru
 
-        // Build credentials using single source of truth
-        const credentials = await buildGuruCredentials({
-          tanggalLahir: tanggalLahirString, // YYYY-MM-DD string
-          lastUsernameNumber: lastNumber + i, // For batch generation
-          bcrypt
-        });
+        // Hash password MAN1
+        const passwordHash = await bcrypt.hash(rawPassword, 10);
 
-        const username = credentials.username; // G### format (uppercase)
-        rawPassword = credentials.passwordPlain; // YYYY-MM-DD
-
-        console.log(`📋 [IMPORT GURU Baris ${i + 2}] Username: ${username}, TanggalLahir: ${tanggalLahirString}, Password: ${rawPassword}`);
+        console.log(`📋 [IMPORT GURU Baris ${i + 2}] Username: ${username}, Password: MAN1`);
 
         // Generate internal email with username
-        const internalEmail = `${username.toLowerCase()}@internal.tahfidz.edu.id`;
+        const internalEmail = `guru.${username}@internal.tahfidz.edu.id`;
 
         // Check if user already exists by username (case-insensitive)
         const existingUser = await prisma.user.findFirst({
@@ -295,8 +306,8 @@ export async function POST(request) {
             data: {
               email: internalEmail,
               name: nama.trim(),
-              username: credentials.username, // UPPERCASE G###
-              password: credentials.passwordHash, // bcrypt hash
+              username: username, // Kode guru sebagai username
+              password: passwordHash, // MAN1 hash
               role: 'GURU',
               isActive: true
             }
@@ -315,7 +326,7 @@ export async function POST(request) {
             userId,
             nip: nip ? String(nip) : null,
             jenisKelamin: normalizedJenisKelamin,
-            tanggalLahir: tanggalLahir,
+            tanggalLahir: tanggalLahir, // Could be null if not provided
           }
         });
 
