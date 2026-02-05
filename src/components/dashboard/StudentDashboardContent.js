@@ -180,6 +180,7 @@ export default function StudentDashboardContent({
   const [quote, setQuote] = useState(initialData?.quote || DEFAULT_QUOTE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [warnings, setWarnings] = useState(initialData?.warnings || []);
 
   // Fetch data if not provided
   useEffect(() => {
@@ -231,6 +232,8 @@ export default function StudentDashboardContent({
         totalHari: data.stats?.totalHari || 0,
         catatanGuru: data.stats?.catatanGuru || 0,
       });
+      
+      setWarnings(data.warnings || []);
 
       setJuzProgress(data.juzProgress || []);
       setTahunAjaranAktif(data.tahunAjaranAktif);
@@ -321,6 +324,26 @@ export default function StudentDashboardContent({
         loading={pengumumanLoading} 
         variant={roleContext === 'SISWA' ? 'siswa' : 'orangtua'} 
       />
+      
+      {/* Warnings - Yellow Alert Banner */}
+      {warnings.length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 lg:p-5">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="text-yellow-600 w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm lg:text-base font-bold text-yellow-900 mb-2">Informasi Dashboard</h3>
+              <ul className="space-y-1 text-xs lg:text-sm text-yellow-800">
+                {warnings.map((warning, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-yellow-600 mt-0.5">•</span>
+                    <span>{warning}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Statistics Cards - 4 Columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

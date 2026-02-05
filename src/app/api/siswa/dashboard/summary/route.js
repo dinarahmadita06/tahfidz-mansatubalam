@@ -149,12 +149,20 @@ export async function GET() {
     ]);
 
     console.log('[DASHBOARD SUMMARY] Query results:', {
-      schoolYear: schoolYear ? { id: schoolYear.id, nama: schoolYear.nama, isActive: true } : null,
+      schoolYear: schoolYear ? { id: schoolYear.id, nama: schoolYear.nama, isActive: true, targetHafalan: schoolYear.targetHafalan } : null,
       penilaianCount: penilaianListForAvg.length,
       catatanGuruCount,
       pengumumanCount: pengumuman.length,
       activitiesCount: activitiesRaw.length
     });
+    
+    if (!schoolYear) {
+      console.log('[DASHBOARD SUMMARY] ⚠️ WARNING: No active school year found!');
+    }
+    
+    if (penilaianListForAvg.length === 0) {
+      console.log('[DASHBOARD SUMMARY] ⚠️ WARNING: No penilaian data found for siswaId:', siswaId);
+    }
 
     // 3. Calculate rata-rata nilai using SAME method as Penilaian Hafalan
     // Group by date + guru, calculate average per session, then average all sessions
@@ -236,6 +244,9 @@ export async function GET() {
           }
         })
       ]);
+      console.log('[DASHBOARD SUMMARY] Kehadiran:', kehadiranCount, 'dari', totalHariCount, 'hari');
+    } else {
+      console.log('[DASHBOARD SUMMARY] ⚠️ Skipping kehadiran query (no active school year)');
     }
 
     // 4. Data Transformation
@@ -260,11 +271,31 @@ export async function GET() {
 
     const endTime = performance.now();
     console.log(`[API/SISWA/DASHBOARD/SUMMARY] Took ${(endTime - startTime).toFixed(2)}ms`);
+    console.log(`[API/SISWA/DASHBOARD/SUMMARY] Final stats:`, {
+      hafalanSelesai: totalJuzSelesai,
+      totalHafalan: schoolYear?.targetHafalan || 0,
+      rataRataNilai,
+      kehadiranCount,
+      totalHariCount
+    });
+    
+    // Build warnings array
+    const warnings = [];
+    if (!schoolYear) {
+      warnings.push('Tahun ajaran aktif belum disetel - menampilkan progress all-time');
+    }
+    if (penilaianListForAvg.length === 0) {
+      warnings.push('Belum ada data penilaian hafalan');
+    }
+    if (totalJuzSelesai === 0) {
+      warnings.push('Belum ada hafalan yang tercatat');
+    }
 
     return NextResponse.json({
       success: true,
       siswaId,
       siswaName: siswa.user.name,
+      warnings: warnings.length > 0 ? warnings : undefined,
       stats: {
         hafalanSelesai: totalJuzSelesai,
         totalHafalan: schoolYear?.targetHafalan || 0,

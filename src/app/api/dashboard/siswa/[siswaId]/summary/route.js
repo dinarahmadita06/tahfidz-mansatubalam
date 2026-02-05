@@ -33,8 +33,17 @@ export async function GET(req, { params }) {
     const session = await auth();
     console.timeEnd('SUMMARY_GET_Auth');
     const { siswaId } = await params;
+    
+    console.log('[DASHBOARD SISWA SUMMARY] === START REQUEST ===');
+    console.log('[DASHBOARD SISWA SUMMARY] Session:', {
+      exists: !!session,
+      userId: session?.user?.id,
+      role: session?.user?.role
+    });
+    console.log('[DASHBOARD SISWA SUMMARY] Requested siswaId:', siswaId);
 
     if (!session) {
+      console.log('[DASHBOARD SISWA SUMMARY] Unauthorized - no session');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -96,11 +105,14 @@ export async function GET(req, { params }) {
     }
 
     if (!authorized) {
+      console.log('[DASHBOARD SISWA SUMMARY] Forbidden - user not authorized for this siswa');
       return NextResponse.json(
         { error: 'Forbidden - Access denied to this student data' },
         { status: 403 }
       );
     }
+    
+    console.log('[DASHBOARD SISWA SUMMARY] Authorization passed');
 
     // First get school year separately since it's needed for the presence queries
     console.time('SUMMARY_GET_SchoolYear');
@@ -116,6 +128,16 @@ export async function GET(req, { params }) {
       }
     });
     console.timeEnd('SUMMARY_GET_SchoolYear');
+    
+    console.log('[DASHBOARD SISWA SUMMARY] School year:', schoolYear ? {
+      id: schoolYear.id,
+      nama: schoolYear.nama,
+      targetHafalan: schoolYear.targetHafalan
+    } : 'NOT FOUND');
+    
+    if (!schoolYear) {
+      console.log('[DASHBOARD SISWA SUMMARY] ⚠️ WARNING: No active school year!');
+    }
 
     // Execute remaining queries in parallel for better performance
     console.time('SUMMARY_GET_ParallelQueries');
@@ -184,6 +206,18 @@ export async function GET(req, { params }) {
       })
     ]);
     console.timeEnd('SUMMARY_GET_ParallelQueries');
+    
+    console.log('[DASHBOARD SISWA SUMMARY] Query counts:', {
+      penilaianData: penilaianListForAvg.length,
+      hafalanCount: totalHafalanCount,
+      kehadiranHadir: kehadiranCount,
+      kehadiranTotal: totalHariCount,
+      catatanGuru: catatanGuruCount
+    });
+    
+    if (penilaianListForAvg.length === 0) {
+      console.log('[DASHBOARD SISWA SUMMARY] ⚠️ WARNING: No penilaian data!');
+    }
 
     // Calculate rata-rata nilai using SAME method as Penilaian Hafalan
     // Group by date + guru, calculate average per session, then average all sessions
@@ -233,6 +267,11 @@ export async function GET(req, { params }) {
     const rataRataNilai = sessionAverages.length > 0 
       ? parseFloat(avg(sessionAverages).toFixed(2))
       : 0;
+    
+    console.log('[DASHBOARD SISWA SUMMARY] Calculated rata-rata:', {
+      sessions: sessionAverages.length,
+      rataRataNilai
+    });
 
     const schoolTarget = schoolYear?.targetHafalan || 0;
     const totalJuzSelesai = progressData.totalJuz;
@@ -267,6 +306,26 @@ export async function GET(req, { params }) {
     `);
 
     console.timeEnd('SUMMARY_GET_Total');
+    
+    console.log('[DASHBOARD SISWA SUMMARY] Final stats:', {
+      hafalanSelesai: totalJuzSelesai,
+      totalHafalan: schoolTarget,
+      rataRataNilai,
+      kehadiranCount,
+      totalHariCount
+    });
+    
+    // Build warnings
+    const warnings = [];
+    if (!schoolYear) {
+      warnings.push('Tahun ajaran aktif belum disetel - menampilkan progress all-time');
+    }
+    if (penilaianListForAvg.length === 0) {
+      warnings.push('Belum ada data penilaian hafalan');
+    }
+    if (totalJuzSelesai === 0) {
+      warnings.push('Belum ada hafalan yang tercatat');
+    }
 
     const stats = {
       hafalanSelesai: totalJuzSelesai,
@@ -287,6 +346,7 @@ export async function GET(req, { params }) {
     return NextResponse.json(
       {
         stats,
+        warnings: warnings.length > 0 ? warnings : undefined,
         juzProgress: filteredJuzProgress,
         targetJuzSekolah,
         tahunAjaranAktif: schoolYear ? {
