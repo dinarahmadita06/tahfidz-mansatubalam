@@ -11,8 +11,17 @@ export async function GET() {
   const startTime = performance.now();
   try {
     const session = await auth();
+    
+    console.log('[DASHBOARD SUMMARY] === START REQUEST ===');
+    console.log('[DASHBOARD SUMMARY] Session:', {
+      exists: !!session,
+      userId: session?.user?.id,
+      role: session?.user?.role,
+      email: session?.user?.email
+    });
 
     if (!session || session.user.role !== 'SISWA') {
+      console.log('[DASHBOARD SUMMARY] Unauthorized - no session or not SISWA role');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -26,8 +35,16 @@ export async function GET() {
         user: { select: { name: true } }
       }
     });
+    
+    console.log('[DASHBOARD SUMMARY] Siswa data:', {
+      found: !!siswa,
+      siswaId: siswa?.id,
+      kelasId: siswa?.kelasId,
+      name: siswa?.user?.name
+    });
 
     if (!siswa) {
+      console.log('[DASHBOARD SUMMARY] ERROR: Siswa not found for userId:', session.user.id);
       return NextResponse.json({ error: 'Siswa not found' }, { status: 404 });
     }
 
@@ -131,6 +148,14 @@ export async function GET() {
       })
     ]);
 
+    console.log('[DASHBOARD SUMMARY] Query results:', {
+      schoolYear: schoolYear ? { id: schoolYear.id, nama: schoolYear.nama, isActive: true } : null,
+      penilaianCount: penilaianListForAvg.length,
+      catatanGuruCount,
+      pengumumanCount: pengumuman.length,
+      activitiesCount: activitiesRaw.length
+    });
+
     // 3. Calculate rata-rata nilai using SAME method as Penilaian Hafalan
     // Group by date + guru, calculate average per session, then average all sessions
     const groupedMap = new Map();
@@ -186,6 +211,11 @@ export async function GET() {
     // Progress calculation uses a service that might do multiple queries, keeping it separate for clarity
     const progressData = await calculateStudentProgress(prisma, siswaId, schoolYear?.id);
     const totalJuzSelesai = progressData.totalJuz;
+    
+    console.log('[DASHBOARD SUMMARY] Progress data:', {
+      totalJuz: totalJuzSelesai,
+      juzProgressCount: progressData.juzProgress.length
+    });
 
     // Kehadiran stats (only if school year exists)
     let kehadiranCount = 0;
