@@ -162,10 +162,22 @@ export default function PushNotificationManager({ type = 'default' }) {
   };
 
   const GuideModal = () => (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowGuide(false)}>
+    <div 
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" 
+      onClick={() => setShowGuide(false)}
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))'
+      }}
+    >
       <div 
         className="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative animate-in zoom-in-95 duration-300"
         onClick={e => e.stopPropagation()}
+        style={{
+          maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+          overflowY: 'auto',
+          wordBreak: 'break-word'
+        }}
       >
         <button 
           onClick={() => setShowGuide(false)}
@@ -186,7 +198,7 @@ export default function PushNotificationManager({ type = 'default' }) {
 
         <div className="space-y-4">
           <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
-            <p className="text-sm text-emerald-900 leading-relaxed">
+            <p className="text-sm text-emerald-900 leading-relaxed break-words">
               Agar notifikasi muncul sebagai <b>Pop-up (Heads-up)</b> dan tidak hanya di tray, ikuti langkah berikut:
             </p>
             <ul className="mt-4 space-y-3">
@@ -200,7 +212,7 @@ export default function PushNotificationManager({ type = 'default' }) {
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-200 text-emerald-700 flex items-center justify-center text-[10px] font-bold mt-0.5">
                     {i + 1}
                   </span>
-                  {step}
+                  <span className="flex-1 break-words">{step}</span>
                 </li>
               ))}
             </ul>
@@ -221,10 +233,19 @@ export default function PushNotificationManager({ type = 'default' }) {
     <div 
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
       onClick={() => setShowMainModal(false)}
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))',
+        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0.5rem))'
+      }}
     >
       <div 
         className="bg-white w-full max-w-lg rounded-t-[2.5rem] sm:rounded-[2.5rem] p-6 lg:p-10 shadow-2xl relative animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
+        style={{
+          maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+          paddingBottom: 'max(1.5rem, calc(1.5rem + env(safe-area-inset-bottom, 0px)))',
+          wordBreak: 'break-word'
+        }}
       >
         <button 
           onClick={() => setShowMainModal(false)}
@@ -285,7 +306,7 @@ export default function PushNotificationManager({ type = 'default' }) {
           {status === 'denied' && (
             <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-3">
               <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
-              <div className="text-sm text-amber-800 leading-relaxed">
+            <div className="text-sm text-amber-800 leading-relaxed break-words">
                 Izin notifikasi diblokir. Silakan aktifkan melalui pengaturan situs di browser Anda untuk menerima pemberitahuan.
               </div>
             </div>
@@ -307,12 +328,23 @@ export default function PushNotificationManager({ type = 'default' }) {
   if (status === 'unsupported') {
     if (isIOS && !isStandalone) {
       return (
-        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4 lg:p-5 mb-6">
+        <div 
+          className="bg-amber-50 rounded-2xl border border-amber-200 p-4 lg:p-5 mb-6"
+          style={{
+            paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))',
+            paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))',
+            paddingLeft: 'max(1rem, env(safe-area-inset-left, 1rem))',
+            paddingRight: 'max(1rem, env(safe-area-inset-right, 1rem))',
+            minHeight: 'auto',
+            wordBreak: 'break-word',
+            whiteSpace: 'normal'
+          }}
+        >
           <div className="flex items-start gap-3">
             <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
-            <div>
-              <h3 className="text-sm font-bold text-amber-900">Push Notifikasi di iOS</h3>
-              <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-amber-900 leading-snug">Push Notifikasi di iOS</h3>
+              <p className="text-xs text-amber-800 mt-1 leading-relaxed break-words">
                 Untuk mengaktifkan notifikasi di iPhone/iPad, silakan tambahkan aplikasi ini ke <b>Layar Utama (Home Screen)</b> terlebih dahulu melalui menu <b>Bagikan (Share)</b> di browser Safari.
               </p>
             </div>
@@ -420,7 +452,7 @@ export default function PushNotificationManager({ type = 'default' }) {
       {status === 'denied' && (
         <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2.5">
           <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={14} />
-          <div className="text-[10px] lg:text-xs text-amber-800 leading-relaxed">
+          <div className="text-[10px] lg:text-xs text-amber-800 leading-relaxed break-words flex-1">
             Izin notifikasi diblokir oleh browser. Silakan aktifkan melalui pengaturan situs di browser Anda untuk menerima pemberitahuan.
           </div>
         </div>
@@ -429,7 +461,7 @@ export default function PushNotificationManager({ type = 'default' }) {
       {status === 'unsubscribed' && (
         <div className="mt-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100/50 flex items-start gap-2.5">
           <Info className="text-emerald-600 flex-shrink-0 mt-0.5" size={14} />
-          <div className="text-[10px] lg:text-xs text-amber-800 leading-relaxed">
+          <div className="text-[10px] lg:text-xs text-amber-800 leading-relaxed break-words flex-1">
             Aktifkan notifikasi untuk mendapatkan info pengumuman terbaru secara real-time.
           </div>
         </div>
