@@ -121,32 +121,8 @@ export default function LaporanClient({ initialKelas = [] }) {
               <option value="bulanan">Bulanan</option>
               <option value="semester1">Semester 1</option>
               <option value="semester2">Semester 2</option>
-              <option value="custom">Custom</option>
             </select>
           </div>
-
-          {filters.periode === 'custom' && (
-            <>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Mulai</label>
-                <input
-                  type="date"
-                  value={filters.tanggalMulai}
-                  onChange={(e) => setFilters({ ...filters, tanggalMulai: e.target.value })}
-                  className="w-full px-4 py-2.5 border-2 border-emerald-50 rounded-xl"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Selesai</label>
-                <input
-                  type="date"
-                  value={filters.tanggalSelesai}
-                  onChange={(e) => setFilters({ ...filters, tanggalSelesai: e.target.value })}
-                  className="w-full px-4 py-2.5 border-2 border-emerald-50 rounded-xl"
-                />
-              </div>
-            </>
-          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
