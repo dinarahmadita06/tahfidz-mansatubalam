@@ -193,10 +193,10 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full bg-gradient-to-b from-white via-emerald-50/30 to-amber-50/30 shadow-xl z-40 transition-all duration-300 border-r border-emerald-100/50
+          fixed top-0 left-0 h-full bg-gradient-to-b from-white via-emerald-50/30 to-amber-50/30 shadow-xl z-40 transition-all duration-300 border-r border-emerald-100/50 flex-shrink-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${isCollapsed ? 'lg:w-20' : 'lg:w-[200px] xl:w-[220px]'}
-          w-[200px]
+          ${isCollapsed ? 'lg:w-20 lg:min-w-[80px]' : 'lg:w-[260px] lg:min-w-[260px] xl:w-[280px] xl:min-w-[280px]'}
+          w-64 min-w-[256px]
         `}
       >
         <div className="flex flex-col h-full">
@@ -256,9 +256,9 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
                         className={`w-[18px] h-[18px] lg:w-5 lg:h-5 ${isActive ? colorClasses.icon : 'text-gray-500'}`}
                       />
                       {!isCollapsed && (
-                        <div className="flex-1">
-                          <p className="text-[13px] lg:text-sm font-medium leading-tight">{item.title}</p>
-                          <p className="text-[10px] lg:text-xs text-gray-500 mt-0.5">{item.description}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] lg:text-sm font-medium leading-tight truncate">{item.title}</p>
+                          <p className="text-[10px] lg:text-xs text-gray-500 mt-0.5 line-clamp-1 leading-snug">{item.description}</p>
                         </div>
                       )}
                     </Link>
@@ -281,9 +281,9 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
             >
               <LogOut className={`w-[18px] h-[18px] lg:w-5 lg:h-5 transition-colors text-gray-500 group-hover:text-rose-600`} />
               {!isCollapsed && (
-                <div className="flex-1 text-left">
-                  <p className="text-[13px] lg:text-sm font-semibold">Logout</p>
-                  <p className="text-[10px] lg:text-xs text-gray-500 mt-0.5 group-hover:text-rose-400">Keluar dari akun</p>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-[13px] lg:text-sm font-semibold truncate">Logout</p>
+                  <p className="text-[10px] lg:text-xs text-gray-500 mt-0.5 group-hover:text-rose-400 line-clamp-1">Keluar dari akun</p>
                 </div>
               )}
             </button>

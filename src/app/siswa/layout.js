@@ -16,7 +16,7 @@ export default async function SiswaAppLayout({ children }) {
       <SiswaSidebarClient userName={session?.user?.name || "Siswa"} />
 
       {/* Main Content Area */}
-      <div className="lg:ml-[200px] xl:ml-[220px] transition-all duration-300">
+      <div className="lg:ml-[260px] xl:ml-[280px] transition-all duration-300">
         <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-20 border-b border-emerald-100/50">
           <div className="px-4 sm:px-6 lg:px-6 py-2.5">
             <div className="flex justify-end items-center gap-4 h-8 lg:h-9">
