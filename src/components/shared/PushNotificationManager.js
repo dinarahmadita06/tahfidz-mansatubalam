@@ -329,12 +329,12 @@ export default function PushNotificationManager({ type = 'default' }) {
     if (isIOS && !isStandalone) {
       return (
         <div 
-          className="bg-amber-50 rounded-2xl border border-amber-200 p-4 lg:p-5 mb-6"
+          className="bg-amber-50 rounded-2xl border border-amber-200 mb-6"
           style={{
-            paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))',
-            paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))',
-            paddingLeft: 'max(1rem, env(safe-area-inset-left, 1rem))',
-            paddingRight: 'max(1rem, env(safe-area-inset-right, 1rem))',
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
+            paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 1.25rem)',
+            paddingRight: 'calc(env(safe-area-inset-right, 0px) + 1.25rem)',
             minHeight: 'auto',
             wordBreak: 'break-word',
             whiteSpace: 'normal'
