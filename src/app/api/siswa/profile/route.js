@@ -125,8 +125,15 @@ export async function GET(request) {
       phoneWali: '-', // field noTelepon dropped
       phone: '-',     // field noTelepon dropped
     };
+    
+    console.log('[SISWA PROFILE API] Found siswa:', {
+      id: siswa.id,
+      email: siswa.user?.email,
+      kelasId: siswa.kelas?.id,
+      statusSiswa: siswa.statusSiswa
+    });
 
-    return NextResponse.json(profileData, { status: 200 });
+    return NextResponse.json({ siswa: profileData }, { status: 200 });
   } catch (error) {
     console.error('Error fetching siswa profile:', error);
     return NextResponse.json(
@@ -305,6 +312,7 @@ export async function PATCH(request) {
 
     console.log('Updated profile response:', profileData);
 
+    // Return flat for backward compatibility with ProfilClient
     return NextResponse.json(profileData, { status: 200 });
   } catch (error) {
     console.error('Error updating siswa profile:', error);
