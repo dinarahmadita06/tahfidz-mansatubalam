@@ -186,6 +186,22 @@ export const authConfig = {
             return null;
           }
 
+          // VALIDASI KHUSUS SISWA: Cek status validasi
+          if (authenticatedUser.role === 'SISWA') {
+            if (authenticatedUser.siswa?.status === 'pending') {
+              console.log('⚠️  Siswa login blocked - pending validation:', authenticatedUser.id);
+              throw new Error("Akun Anda belum divalidasi admin. Silakan tunggu atau hubungi pihak sekolah.");
+            }
+            if (authenticatedUser.siswa?.status === 'rejected') {
+              console.log('⚠️  Siswa login blocked - rejected:', authenticatedUser.id);
+              throw new Error("Akun Anda ditolak. Silakan hubungi pihak sekolah.");
+            }
+            if (authenticatedUser.siswa?.status === 'suspended') {
+              console.log('⚠️  Siswa login blocked - suspended:', authenticatedUser.id);
+              throw new Error("Akun Anda ditangguhkan. Silakan hubungi pihak sekolah.");
+            }
+          }
+
           // Check if user is active, with special handling for parent accounts
           if (!authenticatedUser.isActive) {
             // For parent accounts, check if any of their children are active
@@ -226,7 +242,8 @@ export const authConfig = {
             guruId: authenticatedUser.guru?.id,
             orangTuaId: authenticatedUser.orangTua?.id,
             rememberMe,
-            isRecoveryCodeSetup: authenticatedUser.isRecoveryCodeSetup
+            isRecoveryCodeSetup: authenticatedUser.isRecoveryCodeSetup,
+            recoveryOnboardingCompleted: authenticatedUser.recoveryOnboardingCompleted
           };
         } catch (error) {
           if (error.message.includes("tidak aktif")) {
@@ -253,6 +270,7 @@ export const authConfig = {
         token.statusSiswa = user.statusSiswa;
         token.rememberMe = user.rememberMe;
         token.isRecoveryCodeSetup = user.isRecoveryCodeSetup;
+        token.recoveryOnboardingCompleted = user.recoveryOnboardingCompleted;
 
         // Dynamic session length based on rememberMe
         // Default is 30 days if rememberMe is true, else 1 day (or session-only if possible)
@@ -282,6 +300,7 @@ export const authConfig = {
         session.user.orangTuaId = token.orangTuaId;
         session.user.statusSiswa = token.statusSiswa;
         session.user.isRecoveryCodeSetup = token.isRecoveryCodeSetup;
+        session.user.recoveryOnboardingCompleted = token.recoveryOnboardingCompleted;
       }
       return session;
     },

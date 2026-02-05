@@ -17,6 +17,7 @@ import { MoreVertical, Award, ArrowUpRight, XCircle, CheckCircle, ExternalLink }
  * - onLulus: callback for graduating student
  * - onPindah: callback for transferring student
  * - onKeluar: callback for removing student
+ * - onAssignKelas: callback for assigning class to student without class
  */
 function RowActionMenu({
   statusSiswa = 'AKTIF',
@@ -26,6 +27,7 @@ function RowActionMenu({
   onLulus,
   onPindah,
   onKeluar,
+  onAssignKelas,
 }) {
 
   const [isOpen, setIsOpen] = useState(false);
@@ -140,6 +142,16 @@ function RowActionMenu({
               <ExternalLink size={16} />
               <span>Ke Kelas {kelasNama}</span>
             </a>
+          ) : onAssignKelas ? (
+            <button
+              onClick={() => handleMenuClick(onAssignKelas)}
+              className="w-full text-left px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-2 cursor-pointer"
+              role="menuitem"
+              title="Klik untuk pilih kelas"
+            >
+              <ExternalLink size={16} />
+              <span>Belum terdaftar di kelas (Klik untuk pilih)</span>
+            </button>
           ) : (
             <div
               className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed flex items-center gap-2"

@@ -27,7 +27,12 @@ export default function RecoverySetupTrigger() {
       return;
     }
 
-    // TRIGGER: Show modal if recovery code not setup yet
+    // GUARD: Don't show if onboarding already completed
+    if (session.user.recoveryOnboardingCompleted === true) {
+      return;
+    }
+
+    // TRIGGER: Show modal if recovery code not setup yet AND onboarding not completed
     if (session.user.isRecoveryCodeSetup === false && !showModal && !recoveryCode) {
       setShowModal(true);
       generateCode();
@@ -109,26 +114,37 @@ export default function RecoverySetupTrigger() {
     setLoading(true);
 
     try {
-      // Send acknowledgement to backend
-      const res = await fetch('/api/user/recovery-ack', { 
+      // 1. Send acknowledgement to backend (marks isRecoveryCodeSetup = true)
+      const ackRes = await fetch('/api/user/recovery-ack', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
       
-      if (!res.ok) {
+      if (!ackRes.ok) {
         throw new Error('Failed to acknowledge recovery code');
       }
 
-      // Update local session state
+      // 2. Mark onboarding as completed (so modal won't show again)
+      const confirmRes = await fetch('/api/recovery/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!confirmRes.ok) {
+        throw new Error('Failed to confirm recovery onboarding');
+      }
+
+      // 3. Update local session state
       await update({
         ...session,
         user: {
           ...session.user,
-          isRecoveryCodeSetup: true
+          isRecoveryCodeSetup: true,
+          recoveryOnboardingCompleted: true
         }
       });
 
-      // Close modal after successful acknowledgement
+      // 4. Close modal after successful acknowledgement
       setShowModal(false);
     } catch (err) {
       console.error('Failed to confirm recovery setup:', err);

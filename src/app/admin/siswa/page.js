@@ -203,9 +203,13 @@ export default function AdminSiswaPage() {
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showAssignKelasModal, setShowAssignKelasModal] = useState(false);
   const [selectedSiswa, setSelectedSiswa] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [selectedSiswaForKelas, setSelectedSiswaForKelas] = useState(null);
+  const [selectedKelasId, setSelectedKelasId] = useState('');
+  const [isAssigningKelas, setIsAssigningKelas] = useState(false);
 
   const fetchError = siswaError?.message || kelasError?.message;
 
@@ -399,6 +403,49 @@ export default function AdminSiswaPage() {
     setSelectedSiswa(siswaItem);
     setNewStatus(status);
     setShowStatusModal(true);
+  };
+
+  const handleAssignKelas = (siswaItem) => {
+    setSelectedSiswaForKelas(siswaItem);
+    setSelectedKelasId('');
+    setShowAssignKelasModal(true);
+  };
+
+  const confirmAssignKelas = async () => {
+    if (!selectedSiswaForKelas || !selectedKelasId) return;
+
+    setIsAssigningKelas(true);
+    try {
+      const response = await fetch(`/api/admin/siswa/${selectedSiswaForKelas.id}/kelas`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kelasId: selectedKelasId }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Refresh data
+        await refetchSiswa();
+
+        // Get kelas name for success message
+        const assignedKelas = kelas.find(k => k.id === selectedKelasId);
+        const kelasName = assignedKelas?.nama || 'kelas';
+
+        // Close modal and show success message
+        setShowAssignKelasModal(false);
+        alert(`✅ Siswa ${selectedSiswaForKelas.user.name} berhasil dimasukkan ke ${kelasName}`);
+      } else {
+        alert(`❌ Gagal memasukkan siswa ke kelas:\n${result.error || 'Terjadi kesalahan'}`);
+      }
+    } catch (error) {
+      console.error('❌ Error assigning class:', error);
+      alert(`❌ Terjadi kesalahan saat memasukkan siswa ke kelas:\n${error.message}`);
+    } finally {
+      setIsAssigningKelas(false);
+      setSelectedSiswaForKelas(null);
+      setSelectedKelasId('');
+    }
   };
 
   const confirmStatusChange = async () => {
@@ -823,6 +870,7 @@ export default function AdminSiswaPage() {
                                 onLulus={() => handleChangeStatus(siswaItem, 'LULUS')}
                                 onPindah={() => handleChangeStatus(siswaItem, 'PINDAH')}
                                 onKeluar={() => handleChangeStatus(siswaItem, 'KELUAR')}
+                                onAssignKelas={() => handleAssignKelas(siswaItem)}
                               />
                             </td>
                           </tr>
@@ -956,6 +1004,87 @@ export default function AdminSiswaPage() {
                   'Ya, Ubah Status'
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Assign Kelas */}
+      {showAssignKelasModal && selectedSiswaForKelas && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in slide-in-from-bottom-4 duration-300">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-6 text-white">
+              <h3 className="text-xl font-bold">Pilih Kelas untuk Siswa</h3>
+              <p className="text-emerald-50 text-xs mt-1">Masukkan siswa ke kelas aktif</p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {/* Student Info */}
+              <div className="bg-emerald-50 border-2 border-emerald-100 rounded-xl p-5 mb-6">
+                <div className="flex gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg">
+                    {selectedSiswaForKelas.user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{selectedSiswaForKelas.user.name}</p>
+                    <p className="text-xs text-gray-600">NIS: {selectedSiswaForKelas.nis}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Select Kelas */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Pilih Kelas Aktif <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedKelasId}
+                  onChange={(e) => setSelectedKelasId(e.target.value)}
+                  className="w-full px-4 py-2.5 border-2 border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm"
+                  disabled={isAssigningKelas}
+                >
+                  <option value="">-- Pilih Kelas --</option>
+                  {kelas
+                    .filter(k => k.status === 'AKTIF')
+                    .map(k => (
+                      <option key={k.id} value={k.id}>
+                        {k.nama} {k.tahunAjaran ? `(${k.tahunAjaran.nama})` : ''}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+
+              {/* Info Note */}
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-xs text-blue-900 leading-relaxed">
+                  <strong>ℹ️ Info:</strong> Siswa akan langsung terdaftar di kelas yang dipilih dan dapat mengakses semua fitur kelas tersebut.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowAssignKelasModal(false)}
+                  disabled={isAssigningKelas}
+                  className="px-6 py-2.5 border-2 border-gray-200 rounded-lg bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmAssignKelas}
+                  disabled={!selectedKelasId || isAssigningKelas}
+                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isAssigningKelas ? (
+                    <LoadingIndicator size="small" text="Menyimpan..." inline className="text-white" />
+                  ) : (
+                    'Simpan'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

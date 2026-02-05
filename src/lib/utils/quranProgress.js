@@ -143,6 +143,24 @@ export function getHighestJuzAchieved(juzProgress, hafalanRecords = null) {
 }
 
 /**
+ * Count how many juz are completed (progress >= 100%)
+ * Used for Tasmi eligibility - only fully completed juz can be registered
+ * 
+ * @param {Array} juzProgress - Array from calculateJuzProgress() with progress per juz
+ * @returns {number} Number of completed juz (0-30)
+ */
+export function getCompletedJuzCount(juzProgress) {
+  if (!juzProgress || !Array.isArray(juzProgress)) {
+    return 0;
+  }
+
+  // Count only juz with progress >= 100%
+  const completedJuz = juzProgress.filter(item => item.progress >= 100).length;
+  
+  return completedJuz;
+}
+
+/**
  * Filter and sort juz progress for dashboard view
  * @param {Array} juzProgress - Array of juz progress objects
  * @param {number} limit - Maximum number of juz to show

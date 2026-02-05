@@ -29,18 +29,25 @@ export async function GET(request) {
     const period = searchParams.get('period') || 'bulanan';
     const year = parseInt(searchParams.get('year') || new Date().getFullYear());
     const month = parseInt(searchParams.get('month') || new Date().getMonth().toString()); // 0-11
+    const showAll = searchParams.get('showAll') === 'true'; // New parameter
 
-    // Calculate date range based on period
+    // Calculate date range based on period - skip if showAll
     let startDate, endDate;
 
-    if (period === 'bulanan') {
-      const range = calculateMonthRange(month, year);
-      startDate = range.startDate;
-      endDate = range.endDate;
+    if (!showAll) {
+      if (period === 'bulanan') {
+        const range = calculateMonthRange(month, year);
+        startDate = range.startDate;
+        endDate = range.endDate;
+      } else {
+        // tahunan
+        startDate = new Date(year, 0, 1);
+        endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+      }
     } else {
-      // tahunan
-      startDate = new Date(year, 0, 1);
-      endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+      // If showAll, use a very wide date range (all time)
+      startDate = new Date(2000, 0, 1); // Far past
+      endDate = new Date(2100, 11, 31); // Far future
     }
 
     // 1. Fetch ALL records up to endDate for cumulative progress calculation

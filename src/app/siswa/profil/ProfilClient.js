@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { toast, Toaster } from 'react-hot-toast';
 import {
   User,
@@ -18,6 +19,7 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
+  AlertCircle,
   RefreshCw,
 } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
@@ -70,10 +72,18 @@ function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword, onRe
           NIS: {profileData?.nis || '-'}
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
-          <Shield size={16} />
-          {profileData?.kelas || 'Siswa'}
-        </div>
+        {/* Badge Kelas */}
+        {profileData?.kelas && profileData.kelas !== '-' ? (
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
+            <BookOpen size={16} />
+            <span>Kelas: {profileData.kelas}</span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-50 text-gray-500 border border-gray-200 mb-2">
+            <BookOpen size={16} />
+            <span>Belum terdaftar di kelas</span>
+          </div>
+        )}
 
         {/* Dynamic Status Badge */}
         <span
@@ -141,7 +151,11 @@ function PersonalInfoCard({ profileData }) {
             Kelas
           </label>
           <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50">
-            <p className="font-medium text-gray-900">{profileData?.kelas || '-'}</p>
+            {profileData?.kelas && profileData.kelas !== '-' ? (
+              <p className="font-medium text-gray-900">{profileData.kelas}</p>
+            ) : (
+              <p className="font-medium text-gray-500">Belum terdaftar di kelas</p>
+            )}
           </div>
         </div>
 
@@ -219,6 +233,33 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Helper: Parse Indonesian date format to ISO (YYYY-MM-DD)
+  const parseIndonesianDateToISO = (dateStr) => {
+    if (!dateStr || dateStr === '-') return '';
+    
+    // If already ISO format (YYYY-MM-DD), return as is
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) return dateStr.split('T')[0];
+    
+    // Parse Indonesian format: "28 Maret 2009"
+    const months = {
+      'Januari': '01', 'Februari': '02', 'Maret': '03', 'April': '04',
+      'Mei': '05', 'Juni': '06', 'Juli': '07', 'Agustus': '08',
+      'September': '09', 'Oktober': '10', 'November': '11', 'Desember': '12'
+    };
+    
+    const match = dateStr.match(/(\d+)\s+(\w+)\s+(\d{4})/);
+    if (match) {
+      const [, day, monthName, year] = match;
+      const month = months[monthName];
+      if (month) {
+        const paddedDay = day.padStart(2, '0');
+        return `${year}-${month}-${paddedDay}`;
+      }
+    }
+    
+    return ''; // Invalid format
+  };
+
   // Prefill form data when modal opens
   useEffect(() => {
     if (isOpen && profileData) {
@@ -226,8 +267,9 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
         nama: profileData.nama || '',
         jenisKelamin: profileData.jenisKelamin || '',
         tanggalLahir: profileData.tanggalLahir || '',
+        tanggalLahirISO: parseIndonesianDateToISO(profileData.tanggalLahir),
         alamat: profileData.alamat || '',
-        namaWali: profileData.namaWali || '',
+        // namaWali is read-only from OrangTua relation
       });
       setError('');
       setSuccess('');
@@ -354,12 +396,21 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
                 Tanggal Lahir
               </label>
               <input
-                type="text"
-                value={formData.tanggalLahir || ''}
-                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                type="date"
+                value={formData.tanggalLahirISO || ''}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  tanggalLahirISO: e.target.value,
+                  tanggalLahir: e.target.value // Keep both for compatibility
+                })}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                placeholder="Contoh: 15 Mei 2010"
               />
+              <div className="flex items-start gap-2 mt-2">
+                <AlertCircle size={14} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Tanggal lahir tidak dapat diubah secara mandiri. Jika terdapat kesalahan data, silakan hubungi Admin untuk perbaikan.
+                </p>
+              </div>
             </div>
 
             {/* NISN - Read-only */}
@@ -410,19 +461,15 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
               />
             </div>
 
-            {/* Nama Wali - Editable */}
+            {/* Nama Wali - Read-only */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                 <User size={16} className="text-gray-400" />
-                Nama Wali
+                Nama Wali <span className="text-xs text-gray-500">(Tidak dapat diubah)</span>
               </label>
-              <input
-                type="text"
-                value={formData.namaWali || ''}
-                onChange={(e) => setFormData({ ...formData, namaWali: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                placeholder="Masukkan nama wali"
-              />
+              <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+                <p className="font-medium text-gray-900">{profileData?.namaWali || '-'}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -455,6 +502,7 @@ function EditProfileModal({ isOpen, onClose, profileData, onSave }) {
 
 export default function ProfilClient({ initialData }) {
   const [profileData, setProfileData] = useState(initialData);
+  const { data: session, update: updateSession } = useSession();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordFormData, setPasswordFormData] = useState({
@@ -483,9 +531,14 @@ export default function ProfilClient({ initialData }) {
   const handleSaveProfile = async (formData) => {
     try {
       const payload = {
-        phone: formData.phone || '',
+        nama: formData.nama || '',
+        jenisKelamin: formData.jenisKelamin || '',
+        tanggalLahir: formData.tanggalLahirISO || formData.tanggalLahir || '', // Prioritize ISO format
         alamat: formData.alamat || '',
+        // Note: namaWali is read-only from OrangTua relation, tidak bisa di-update dari sini
       };
+
+      console.log('[PROFIL CLIENT] Sending payload:', payload);
 
       const res = await fetch('/api/siswa/profile', {
         method: 'PATCH',
@@ -497,6 +550,13 @@ export default function ProfilClient({ initialData }) {
       if (res.ok) {
         const updatedData = await res.json();
         setProfileData(updatedData);
+        
+        // Refresh session if name changed (untuk update navbar/header)
+        if (formData.nama && formData.nama !== profileData?.nama) {
+          console.log('[PROFIL CLIENT] Refreshing session after name change');
+          await updateSession();
+        }
+        
         toast.success('Profil berhasil disimpan!');
         setShowEditModal(false);
         setError('');

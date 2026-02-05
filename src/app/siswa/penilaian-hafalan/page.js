@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -37,6 +37,17 @@ const fetcher = async (url) => {
     throw error;
   }
   return res.json();
+};
+
+// Auto-detect latest period with data
+const detectLatestPeriod = (penilaianData) => {
+  if (!penilaianData || penilaianData.length === 0) return null;
+  
+  const latestDate = new Date(penilaianData[0].tanggal); // Data already sorted desc
+  return {
+    month: latestDate.getMonth() + 1,
+    year: latestDate.getFullYear()
+  };
 };
 
 // ============================================================
@@ -241,15 +252,29 @@ export default function PenilaianHafalanPage() {
   const currentDate = getCurrentMonthYear();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.month);
   const [selectedYear, setSelectedYear] = useState(currentDate.year);
+  const [showAll, setShowAll] = useState(true); // Default tampilkan semua
+  const [latestPeriod, setLatestPeriod] = useState(null);
 
   // Fetch data
   const { data, error, mutate } = useSWR(
     status === 'authenticated' ? (() => {
-      const { startDateStr, endDateStr } = calculateMonthRange(selectedMonth, selectedYear);
-      return `/api/siswa/penilaian-hafalan?startDate=${startDateStr}&endDate=${endDateStr}`;
+      if (showAll) {
+        return `/api/siswa/penilaian-hafalan`; // Tanpa filter periode
+      } else {
+        const { startDateStr, endDateStr } = calculateMonthRange(selectedMonth, selectedYear);
+        return `/api/siswa/penilaian-hafalan?startDate=${startDateStr}&endDate=${endDateStr}`;
+      }
     })() : null,
     fetcher
   );
+
+  // Auto-detect latest period when data is loaded
+  useEffect(() => {
+    if (data?.penilaianData && data.penilaianData.length > 0 && !latestPeriod) {
+      const detected = detectLatestPeriod(data.penilaianData);
+      setLatestPeriod(detected);
+    }
+  }, [data, latestPeriod]);
 
   if (status === 'loading') {
     return (
@@ -364,19 +389,53 @@ export default function PenilaianHafalanPage() {
           )}
 
           {/* Filter */}
-          <MonthlyPeriodFilter
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onMonthYearChange={(m, y) => {
-              setSelectedMonth(m);
-              setSelectedYear(y);
-            }}
-          />
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60 space-y-4">
+            {/* Toggle Tampilkan Semua */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAll}
+                  onChange={(e) => setShowAll(e.target.checked)}
+                  className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                <span className="text-sm font-semibold text-gray-700">
+                  Tampilkan Semua Periode
+                </span>
+              </label>
+              
+              {!showAll && latestPeriod && (
+                <button
+                  onClick={() => {
+                    setSelectedMonth(latestPeriod.month);
+                    setSelectedYear(latestPeriod.year);
+                  }}
+                  className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-medium transition-colors"
+                >
+                  📅 Lihat Periode Terakhir ({formatMonthYear(latestPeriod.month, latestPeriod.year)})
+                </button>
+              )}
+            </div>
+
+            {/* Filter Bulan/Tahun - hanya tampil jika showAll = false */}
+            {!showAll && (
+              <MonthlyPeriodFilter
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+                onMonthYearChange={(m, y) => {
+                  setSelectedMonth(m);
+                  setSelectedYear(y);
+                }}
+              />
+            )}
+          </div>
 
           <div className="text-sm text-gray-600 -mt-4 ml-0.5 font-medium">
-            {penilaianData.length > 0 
-              ? `Menampilkan ${penilaianData.length} penilaian pada ${periodText}`
-              : `Tidak ada penilaian pada periode ${periodText}`
+            {showAll 
+              ? `Menampilkan ${penilaianData.length} penilaian (semua periode)`
+              : penilaianData.length > 0 
+                ? `Menampilkan ${penilaianData.length} penilaian pada ${periodText}`
+                : `Tidak ada penilaian pada periode ${periodText}`
             }
           </div>
 
@@ -397,11 +456,45 @@ export default function PenilaianHafalanPage() {
               ))}
             </div>
           ) : (
-            <EmptyState
-              title="Belum Ada Penilaian"
-              description={`Nilai akan muncul setelah Anda menyetorkan hafalan di periode ${periodText}.`}
-              icon={BookOpen}
-            />
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200/60 text-center">
+              <div className="max-w-md mx-auto">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="text-gray-400" size={40} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Belum Ada Penilaian</h3>
+                {!showAll ? (
+                  <>
+                    <p className="text-gray-600 mb-4">
+                      Belum ada penilaian pada periode {periodText}. <br />
+                      Coba ganti bulan/tahun atau tampilkan semua periode.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => setShowAll(true)}
+                        className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-semibold transition-colors shadow-sm"
+                      >
+                        📊 Tampilkan Semua Periode
+                      </button>
+                      {latestPeriod && (
+                        <button
+                          onClick={() => {
+                            setSelectedMonth(latestPeriod.month);
+                            setSelectedYear(latestPeriod.year);
+                          }}
+                          className="px-6 py-2.5 bg-white border-2 border-emerald-600 text-emerald-600 rounded-xl hover:bg-emerald-50 font-semibold transition-colors"
+                        >
+                          📅 Lihat Periode Terakhir
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-600">
+                    Nilai akan muncul setelah Anda menyetorkan hafalan dan dinilai oleh guru.
+                  </p>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
