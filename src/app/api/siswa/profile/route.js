@@ -36,9 +36,18 @@ const parseGenderToEnum = (genderString) => {
 export async function GET(request) {
   try {
     const session = await auth();
+    
+    console.log('[SISWA PROFILE API] === START ===');
+    console.log('[SISWA PROFILE API] Session:', {
+      exists: !!session,
+      userId: session?.user?.id,
+      role: session?.user?.role,
+      email: session?.user?.email
+    });
 
     // Check if user is authenticated
     if (!session || !session.user) {
+      console.log('[SISWA PROFILE API] Unauthorized - no session');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -47,6 +56,7 @@ export async function GET(request) {
 
     // Check if user has siswa role
     if (session.user.role !== 'SISWA') {
+      console.log('[SISWA PROFILE API] Forbidden - role is', session.user.role);
       return NextResponse.json(
         { error: 'Forbidden: Only siswa can access their profile' },
         { status: 403 }
@@ -159,11 +169,19 @@ export async function PATCH(request) {
 
     // If no siswa profile found, return 404
     if (!siswa) {
+      console.log('[SISWA PROFILE API] Siswa not found for userId:', session.user.id);
       return NextResponse.json(
         { error: 'Siswa profile not found' },
         { status: 404 }
       );
     }
+    
+    console.log('[SISWA PROFILE API] Found siswa:', {
+      id: siswa.id,
+      email: siswa.email,
+      kelasId: siswa.kelasId,
+      statusSiswa: siswa.statusSiswa
+    });
 
     // Prepare update data for Siswa table
     const siswaUpdateData = {};

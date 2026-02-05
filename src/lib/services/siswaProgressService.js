@@ -17,11 +17,15 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
   let dateFilter = {};
   let schoolYear = null;
   
+  console.log('[PROGRESS SERVICE] Calculate for siswaId:', siswaId, 'schoolYearId:', schoolYearId);
+  
   if (schoolYearId) {
     schoolYear = await prisma.tahunAjaran.findUnique({
       where: { id: schoolYearId },
       select: { id: true, tanggalMulai: true, tanggalSelesai: true, targetHafalan: true, nama: true }
     });
+    
+    console.log('[PROGRESS SERVICE] School year found:', schoolYear ? schoolYear.nama : 'NOT FOUND');
     
     if (schoolYear) {
       dateFilter = {
@@ -30,7 +34,10 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
           lte: schoolYear.tanggalSelesai
         }
       };
+      console.log('[PROGRESS SERVICE] Using date filter:', dateFilter);
     }
+  } else {
+    console.log('[PROGRESS SERVICE] No schoolYearId - calculating ALL TIME progress');
   }
 
   // Fetch records within the date range (or all if no range)
@@ -48,6 +55,8 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
       surahTambahan: true
     }
   });
+  
+  console.log('[PROGRESS SERVICE] Found hafalan records:', hafalanRecords.length);
 
   // Prepare entries for calculation
   const entries = [];
