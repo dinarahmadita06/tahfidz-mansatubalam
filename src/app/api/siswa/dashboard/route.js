@@ -47,10 +47,93 @@ export async function GET(req) {
     });
 
     // Get rata-rata nilai dari penilaian
-    const avgNilai = await prisma.penilaian.aggregate({
+    // FIXED: Hitung rata-rata menggunakan METODE YANG SAMA dengan Penilaian Hafalan
+    // Grouping by date+guru, lalu hitung rata-rata aspek per sesi
+    const penilaianList = await prisma.penilaian.findMany({
       where: { siswaId },
-      _avg: { nilaiAkhir: true }
+      select: {
+        id: true,
+        tajwid: true,
+        kelancaran: true,
+        makhraj: true,
+        adab: true,
+        nilaiAkhir: true,
+        hafalan: {
+          select: {
+            tanggal: true,
+            guruId: true
+          }
+        }
+      },
+      orderBy: {
+        hafalan: {
+          tanggal: 'desc'
+        }
+      }
     });
+    
+    console.log('[DASHBOARD] Total penilaian records:', penilaianList.length);
+    
+    // Group by date + guru (sama seperti Penilaian Hafalan)
+    const groupedMap = new Map();
+    
+    penilaianList.forEach(p => {
+      if (!p.hafalan) return;
+      
+      // FIXED: Skip penilaian yang belum dinilai (sama seperti Penilaian Hafalan)
+      const hasValidScore = p.tajwid > 0 || p.kelancaran > 0 || p.makhraj > 0 || p.adab > 0;
+      if (!hasValidScore) return;
+      
+      const dateKey = p.hafalan.tanggal.toISOString().split('T')[0];
+      const guruId = p.hafalan.guruId || 'unknown';
+      const groupKey = `${dateKey}_${guruId}`;
+      
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, {
+          scores: {
+            tajwid: [],
+            kelancaran: [],
+            makhraj: [],
+            adab: [],
+            nilaiAkhir: []
+          }
+        });
+      }
+      
+      const group = groupedMap.get(groupKey);
+      group.scores.tajwid.push(p.tajwid || 0);
+      group.scores.kelancaran.push(p.kelancaran || 0);
+      group.scores.makhraj.push(p.makhraj || 0);
+      group.scores.adab.push(p.adab || 0);
+      group.scores.nilaiAkhir.push(p.nilaiAkhir || 0);
+    });
+    
+    console.log('[DASHBOARD] Total grouped sessions:', groupedMap.size);
+    
+    // Hitung rata-rata per sesi, lalu rata-rata keseluruhan
+    const avg = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    
+    const sessionAverages = Array.from(groupedMap.values()).map(group => {
+      // Rata-rata aspek per sesi
+      const avgTajwid = avg(group.scores.tajwid);
+      const avgKelancaran = avg(group.scores.kelancaran);
+      const avgMakhraj = avg(group.scores.makhraj);
+      const avgAdab = avg(group.scores.adab);
+      
+      // nilaiTotal = rata-rata dari 4 aspek
+      const nilaiTotal = parseFloat(((avgTajwid + avgKelancaran + avgMakhraj + avgAdab) / 4).toFixed(2));
+      return nilaiTotal;
+    });
+    
+    console.log('[DASHBOARD] Session averages:', sessionAverages);
+    
+    let rataRataNilai = 0;
+    if (sessionAverages.length > 0) {
+      // Rata-rata dari semua sesi
+      rataRataNilai = parseFloat((avg(sessionAverages)).toFixed(2));
+    }
+    
+    console.log('[DASHBOARD] Final rata-rata:', rataRataNilai);
 
     const tahunAjaranAktif = await prisma.tahunAjaran.findFirst({
       where: { isActive: true }
@@ -175,7 +258,7 @@ export async function GET(req) {
     const stats = {
       hafalanSelesai: totalJuzSelesai, // ✅ Use synchronized value
       totalHafalan: tahunAjaranAktif?.targetHafalan || targetHafalan?.targetJuz || 0,
-      rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
+      rataRataNilai: rataRataNilai, // ✅ Konsisten dengan Penilaian Hafalan
       catatanGuru: catatanGuruCount || 0
     };
 

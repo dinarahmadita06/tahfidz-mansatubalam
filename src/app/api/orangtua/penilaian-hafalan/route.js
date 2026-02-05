@@ -165,6 +165,8 @@ export async function GET(request) {
         }
       })
     ]);
+    
+    console.log("[PARENT PENILAIAN] Found penilaian:", penilaianList.length);
 
     // Map attendance status by date (YYYY-MM-DD)
     const attendanceMap = new Map();

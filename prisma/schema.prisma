@@ -25,11 +25,13 @@ model User {
   isActive         Boolean          @default(true)
   jabatan          String?
   nip              String?
+  alamat           String?
   signatureUrl     String?
   ttdUrl           String?
   username         String?
   recoveryCodeHash String?
   isRecoveryCodeSetup Boolean       @default(false)
+  recoveryOnboardingCompleted Boolean @default(false)
   activityLogs     ActivityLog[]    @relation("ActivityLogActor")
   guru             Guru?
   guruActivity     GuruActivity[]
@@ -177,6 +179,7 @@ model Kelas {
   status        StatusKelas     @default(AKTIF)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
   guruTahfidzId String?
   agenda        Agenda[]
   bukuDigital   BukuDigital[]
@@ -191,6 +194,7 @@ model Kelas {
   @@index([tahunAjaranId])
   @@index([guruTahfidzId])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model GuruKelas {

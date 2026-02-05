@@ -122,7 +122,7 @@ export async function GET(req, { params }) {
     const [
       progressData,
       totalHafalanCount,
-      avgNilai,
+      penilaianListForAvg,
       [kehadiranCount, totalHariCount],
       catatanGuruCount
     ] = await Promise.all([
@@ -130,10 +130,28 @@ export async function GET(req, { params }) {
       calculateStudentProgress(prisma, siswaId, schoolYear?.id),
       // Count hafalan
       prisma.hafalan.count({ where: { siswaId } }),
-      // Aggregate nilai
-      prisma.penilaian.aggregate({
+      // FIXED: Fetch penilaian details for same calculation as Penilaian Hafalan
+      prisma.penilaian.findMany({
         where: { siswaId },
-        _avg: { nilaiAkhir: true }
+        select: {
+          id: true,
+          tajwid: true,
+          kelancaran: true,
+          makhraj: true,
+          adab: true,
+          nilaiAkhir: true,
+          hafalan: {
+            select: {
+              tanggal: true,
+              guruId: true
+            }
+          }
+        },
+        orderBy: {
+          hafalan: {
+            tanggal: 'desc'
+          }
+        }
       }),
       // Get kehadiran stats if school year exists
       (schoolYear ? Promise.all([
@@ -166,6 +184,55 @@ export async function GET(req, { params }) {
       })
     ]);
     console.timeEnd('SUMMARY_GET_ParallelQueries');
+
+    // Calculate rata-rata nilai using SAME method as Penilaian Hafalan
+    // Group by date + guru, calculate average per session, then average all sessions
+    const groupedMap = new Map();
+    
+    penilaianListForAvg.forEach(p => {
+      if (!p.hafalan) return;
+      
+      // Skip unscored assessments
+      const hasValidScore = p.tajwid > 0 || p.kelancaran > 0 || p.makhraj > 0 || p.adab > 0;
+      if (!hasValidScore) return;
+      
+      const dateKey = p.hafalan.tanggal.toISOString().split('T')[0];
+      const guruId = p.hafalan.guruId || 'unknown';
+      const groupKey = `${dateKey}_${guruId}`;
+      
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, {
+          scores: {
+            tajwid: [],
+            kelancaran: [],
+            makhraj: [],
+            adab: []
+          }
+        });
+      }
+      
+      const group = groupedMap.get(groupKey);
+      group.scores.tajwid.push(p.tajwid || 0);
+      group.scores.kelancaran.push(p.kelancaran || 0);
+      group.scores.makhraj.push(p.makhraj || 0);
+      group.scores.adab.push(p.adab || 0);
+    });
+    
+    const avg = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    
+    const sessionAverages = Array.from(groupedMap.values()).map(group => {
+      const avgTajwid = avg(group.scores.tajwid);
+      const avgKelancaran = avg(group.scores.kelancaran);
+      const avgMakhraj = avg(group.scores.makhraj);
+      const avgAdab = avg(group.scores.adab);
+      
+      // nilaiTotal per session = rata-rata 4 aspek
+      return parseFloat(((avgTajwid + avgKelancaran + avgMakhraj + avgAdab) / 4).toFixed(2));
+    });
+    
+    const rataRataNilai = sessionAverages.length > 0 
+      ? parseFloat(avg(sessionAverages).toFixed(2))
+      : 0;
 
     const schoolTarget = schoolYear?.targetHafalan || 0;
     const totalJuzSelesai = progressData.totalJuz;
@@ -204,7 +271,7 @@ export async function GET(req, { params }) {
     const stats = {
       hafalanSelesai: totalJuzSelesai,
       totalHafalan: schoolTarget, 
-      rataRataNilai: Math.round(avgNilai._avg.nilaiAkhir || 0),
+      rataRataNilai: rataRataNilai, // Using calculated value from grouped method
       kehadiran: kehadiranCount || 0,
       totalHari: totalHariCount || 0,
       catatanGuru: catatanGuruCount || 0,
