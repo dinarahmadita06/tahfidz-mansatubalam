@@ -18,6 +18,7 @@ export default function PushNotificationManager({ type = 'default' }) {
   const [isStandalone, setIsStandalone] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [showMainModal, setShowMainModal] = useState(false);
+  const [showIOSWarning, setShowIOSWarning] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -30,7 +31,20 @@ export default function PushNotificationManager({ type = 'default' }) {
     const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
     setIsStandalone(standalone);
 
-    checkStatus();
+    // Check if user already acknowledged iOS warning
+    const hasAcknowledged = localStorage.getItem('simtaq_warning_ack_v1');
+    if (ios && !standalone && !hasAcknowledged) {
+      // Will show modal after status is checked
+      setTimeout(() => {
+        checkStatus().then(state => {
+          if (state === 'unsupported') {
+            setShowIOSWarning(true);
+          }
+        });
+      }, 500);
+    } else {
+      checkStatus();
+    }
   }, []);
 
   // One-time onboarding nudge toast
@@ -325,31 +339,82 @@ export default function PushNotificationManager({ type = 'default' }) {
     </div>
   );
 
-  if (status === 'unsupported') {
-    if (isIOS && !isStandalone) {
-      return (
+  const IOSWarningModal = () => {
+    const handleAcknowledge = () => {
+      localStorage.setItem('simtaq_warning_ack_v1', '1');
+      setShowIOSWarning(false);
+    };
+
+    return (
+      <div 
+        className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={handleAcknowledge}
+        style={{
+          paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))',
+          paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))'
+        }}
+      >
         <div 
-          className="bg-amber-50 rounded-2xl border border-amber-200 mb-6"
+          className="bg-white w-full max-w-md rounded-[2rem] p-6 lg:p-8 shadow-2xl relative animate-in zoom-in-95 duration-300"
+          onClick={e => e.stopPropagation()}
           style={{
-            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)',
-            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
-            paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 1.25rem)',
-            paddingRight: 'calc(env(safe-area-inset-right, 0px) + 1.25rem)',
-            minHeight: 'auto',
-            wordBreak: 'break-word',
-            whiteSpace: 'normal'
+            maxHeight: 'calc(100vh - 32px)',
+            overflowY: 'auto',
+            wordBreak: 'break-word'
           }}
         >
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
+          {/* Close Button */}
+          <button 
+            onClick={handleAcknowledge}
+            className="absolute top-5 right-5 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
+            aria-label="Tutup"
+          >
+            <X size={20} />
+          </button>
+
+          {/* Icon & Title */}
+          <div className="flex items-start gap-4 mb-5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shadow-inner flex-shrink-0">
+              <AlertTriangle size={24} />
+            </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-amber-900 leading-snug">Push Notifikasi di iOS</h3>
-              <p className="text-xs text-amber-800 mt-1 leading-relaxed break-words">
+              <h3 className="text-lg lg:text-xl font-bold text-gray-900 leading-tight">Info Penting</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Push Notifikasi di iOS</p>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-4">
+            <div className="bg-amber-50/50 rounded-2xl p-5 border border-amber-100">
+              <p className="text-sm text-amber-900 leading-relaxed break-words">
                 Untuk mengaktifkan notifikasi di iPhone/iPad, silakan tambahkan aplikasi ini ke <b>Layar Utama (Home Screen)</b> terlebih dahulu melalui menu <b>Bagikan (Share)</b> di browser Safari.
               </p>
             </div>
+
+            <div className="flex items-center gap-2 text-gray-500 text-xs">
+              <Info size={14} className="flex-shrink-0" />
+              <span>Pesan ini hanya ditampilkan sekali.</span>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={handleAcknowledge}
+              className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-200/50"
+            >
+              Saya Mengerti
+            </button>
           </div>
         </div>
+      </div>
+    );
+  };
+
+  if (status === 'unsupported') {
+    if (isIOS && !isStandalone) {
+      return (
+        <>
+          {showIOSWarning && mounted && createPortal(<IOSWarningModal />, document.body)}
+        </>
       );
     }
     return null;
