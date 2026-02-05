@@ -28,16 +28,29 @@ export default function SiswaDashboardClient({ initialData, session }) {
     const fetchSiswaId = async () => {
       if (!siswaId && session?.user?.id) {
         try {
-          console.log('[CLIENT] Fetching siswaId for userId:', session.user.id);
+          console.log('[SISWA CLIENT] Fetching siswaId for userId:', session.user.id);
           const res = await fetch('/api/siswa/profile');
           if (res.ok) {
             const data = await res.json();
-            console.log('[CLIENT] Got siswaId:', data.siswa?.id);
-            setSiswaId(data.siswa?.id);
+            const newSiswaId = data.siswa?.id;
+            console.log('[SISWA CLIENT] Got siswaId from profile API:', newSiswaId);
+            if (newSiswaId) {
+              setSiswaId(newSiswaId);
+              console.log('[SISWA CLIENT] setSiswaId called with:', newSiswaId);
+            } else {
+              console.error('[SISWA CLIENT] Profile API returned no siswaId');
+            }
+          } else {
+            console.error('[SISWA CLIENT] Profile API failed with status:', res.status);
           }
         } catch (error) {
-          console.error('[CLIENT] Failed to fetch siswaId:', error);
+          console.error('[SISWA CLIENT] Failed to fetch siswaId:', error);
         }
+      } else {
+        console.log('[SISWA CLIENT] Skipping siswaId fetch:', {
+          hasSiswaId: !!siswaId,
+          hasSession: !!session?.user?.id
+        });
       }
     };
     fetchSiswaId();
@@ -45,14 +58,16 @@ export default function SiswaDashboardClient({ initialData, session }) {
 
   // Debug log
   useEffect(() => {
-    console.log('SiswaDashboardClient:', {
+    console.log('[SISWA CLIENT] Component state changed:', {
       hasInitialData: !!initialData,
       siswaId: siswaId,
+      siswaIdType: typeof siswaId,
       hasStats: !!initialData?.stats,
       hasQuote: !!initialData?.quote,
       hasPengumuman: !!initialData?.pengumuman,
       hasJuzProgress: !!initialData?.juzProgress,
-      quote: initialData?.quote?.substring(0, 50)
+      quote: initialData?.quote?.substring(0, 50),
+      willPassToStudentDashboard: !!siswaId
     });
   }, [initialData, siswaId]);
 
