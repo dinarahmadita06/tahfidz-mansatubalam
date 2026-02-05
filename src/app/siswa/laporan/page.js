@@ -247,6 +247,7 @@ export default function LaporanHafalanPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('bulanan');
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth()); // 0-11
+  const [showAll, setShowAll] = useState(true); // Default to show all data like Penilaian Hafalan
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -275,10 +276,10 @@ export default function LaporanHafalanPage() {
     },
   });
 
-  // Fetch data when period/year/month changes
+  // Fetch data when period/year/month or showAll changes
   useEffect(() => {
     fetchLaporanData();
-  }, [selectedPeriod, selectedYear, selectedMonth]);
+  }, [selectedPeriod, selectedYear, selectedMonth, showAll]);
 
   const fetchLaporanData = async () => {
     try {
@@ -288,7 +289,8 @@ export default function LaporanHafalanPage() {
       const params = new URLSearchParams({
         period: selectedPeriod,
         year: selectedYear,
-        month: selectedMonth
+        month: selectedMonth,
+        showAll: showAll.toString()
       });
 
       const res = await fetch(`/api/siswa/laporan-hafalan?${params}`);
@@ -411,35 +413,67 @@ export default function LaporanHafalanPage() {
                   <button
                     key={period}
                     onClick={() => handlePeriodChange(period)}
-                    disabled={loading}
+                    disabled={loading || showAll}
                     className={`px-3 py-1.5 rounded-lg font-semibold text-sm transition-all ${
-                      selectedPeriod === period
+                      selectedPeriod === period && !showAll
                         ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } disabled:opacity-50`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {period.charAt(0).toUpperCase() + period.slice(1)}
                   </button>
                 ))}
               </div>
 
+              {/* Toggle Tampilkan Semua */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAll}
+                  onChange={(e) => setShowAll(e.target.checked)}
+                  disabled={loading}
+                  className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2 disabled:opacity-50"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Tampilkan Semua Periode
+                </span>
+              </label>
+
               {/* Dropdown - Kanan */}
-              <div className="flex items-center gap-2">
-                {/* Bulanan: Bulan + Tahun */}
-                {selectedPeriod === 'bulanan' && (
-                  <>
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                      disabled={loading}
-                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
-                    >
-                      {getMonthOptions().map((month) => (
-                        <option key={month.value} value={month.value}>
-                          {month.label}
-                        </option>
-                      ))}
-                    </select>
+              {!showAll && (
+                <div className="flex items-center gap-2">
+                  {/* Bulanan: Bulan + Tahun */}
+                  {selectedPeriod === 'bulanan' && (
+                    <>
+                      <select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                        disabled={loading}
+                        className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
+                      >
+                        {getMonthOptions().map((month) => (
+                          <option key={month.value} value={month.value}>
+                            {month.label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                        disabled={loading}
+                        className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
+                      >
+                        {getYearOptions().map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
+
+                  {/* Tahunan: Tahun saja */}
+                  {selectedPeriod === 'tahunan' && (
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -452,25 +486,9 @@ export default function LaporanHafalanPage() {
                         </option>
                       ))}
                     </select>
-                  </>
-                )}
-
-                {/* Tahunan: Tahun saja */}
-                {selectedPeriod === 'tahunan' && (
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    disabled={loading}
-                    className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
-                  >
-                    {getYearOptions().map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

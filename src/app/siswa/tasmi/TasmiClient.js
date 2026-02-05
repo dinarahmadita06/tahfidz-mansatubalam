@@ -734,7 +734,7 @@ export default function TasmiClient() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed" 
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Total juz yang Anda pelajari ({highestJuzAchieved} Juz dalam progress)
+                    Total juz yang sudah diselesaikan 100% ({highestJuzAchieved} Juz)
                   </p>
                 </div>
                 <div>

@@ -1,5 +1,5 @@
 import { surahNameToNumber, parseSurahRange } from '../quranUtils';
-import { calculateJuzProgress, getHighestJuzAchieved } from '../utils/quranProgress';
+import { calculateJuzProgress, getHighestJuzAchieved, getCompletedJuzCount } from '../utils/quranProgress';
 
 /**
  * Service to handle student progress calculation and validation
@@ -93,6 +93,9 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
   // Get the highest juz achieved based on highest surah+ayah position
   // Pass the processed entries (not raw hafalanRecords) to get accurate position-based determination
   const highestJuzAchieved = getHighestJuzAchieved(juzProgress, entries);
+  
+  // Get completed juz count (progress >= 100%) for Tasmi eligibility
+  const completedJuzCount = getCompletedJuzCount(juzProgress);
 
   // Sync to Siswa table - use highest juz achieved (not float total)
   const updateData = { latestJuzAchieved: highestJuzAchieved };
@@ -103,7 +106,8 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
 
   return {
     totalJuz,
-    highestJuzAchieved, // NEW: Integer juz number (1-30 or 0) - from direct juz assignments
+    highestJuzAchieved, // Integer juz count (all juz with progress > 0%) - for general stats
+    completedJuzCount, // NEW: Integer juz count (only juz with progress >= 100%) - for Tasmi
     juzProgress,
     uniqueJuzs: juzProgress.filter(r => r.coveredAyat > 0).map(r => r.juz),
     recordCount: hafalanRecords.length,
@@ -114,26 +118,26 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
 
 /**
  * Check if student is eligible for Tasmi registration
- * CORRECTED: Using juz in progress (juz yang tersentuh/memiliki hafalan)
+ * UPDATED: Now uses completedJuzCount (juz with progress >= 100%)
  * 
- * @param {number} highestJuzAchieved - Jumlah juz dalam progress (tidak "tertinggi" tapi COUNT juz yang ada hafalannya)
+ * @param {number} completedJuzCount - Number of juz with progress >= 100%
  * @param {number} targetJuzMinimal - Target minimal dari sekolah (e.g., 1, 2, 3 juz)
  * @returns {object} { isEligible: boolean, remainingJuz: number, message: string }
  */
-export function isEligibleForTasmi(highestJuzAchieved, targetJuzMinimal) {
-  const juzInProgress = Number(highestJuzAchieved) || 0;
+export function isEligibleForTasmi(completedJuzCount, targetJuzMinimal) {
+  const completed = Number(completedJuzCount) || 0;
   const target = Number(targetJuzMinimal) || 0;
   
   if (target <= 0) return { isEligible: false, remainingJuz: target, message: 'Konfigurasi target tidak valid' };
   
-  const isEligible = juzInProgress >= target;
-  const remainingJuz = Math.max(0, target - juzInProgress);
+  const isEligible = completed >= target;
+  const remainingJuz = Math.max(0, target - completed);
   
   let message = '';
   if (isEligible) {
-    message = `Siap Mendaftar (Sudah ${juzInProgress} Juz dalam progress)`;
+    message = `Siap Mendaftar (Sudah ${completed} Juz selesai 100%)`;
   } else {
-    message = `Belum Siap. Butuh ${remainingJuz} Juz lagi (Target: ${target} Juz)`;
+    message = `Belum Siap. Butuh ${remainingJuz} Juz lagi untuk diselesaikan 100% (Target: ${target} Juz)`;
   }
   
   return {

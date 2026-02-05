@@ -115,16 +115,25 @@ export async function PUT(request, { params }) {
         where: { kelasId: id }
       });
 
-      // 3. Add guru pembina if provided
-      if (guruUtamaId && guruUtamaId.trim()) {
-        await tx.guruKelas.create({
-          data: {
-            kelasId: id,
-            guruId: guruUtamaId, // Keep as string - it's a CUID
-            peran: 'utama',
-            isActive: true,
-          },
+      // 3. Add guru pembina if provided and valid
+      if (guruUtamaId && guruUtamaId.trim() !== '') {
+        // Verify guru exists before creating relation
+        const guruExists = await tx.guru.findUnique({
+          where: { id: guruUtamaId }
         });
+
+        if (guruExists) {
+          await tx.guruKelas.create({
+            data: {
+              kelasId: id,
+              guruId: guruUtamaId, // Keep as string - it's a CUID
+              peran: 'utama',
+              isActive: true,
+            },
+          });
+        } else {
+          console.warn(`Guru with ID ${guruUtamaId} not found, skipping assignment`);
+        }
       }
 
       // 4. Removed guru pendamping handling as requested

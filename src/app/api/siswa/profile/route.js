@@ -22,6 +22,17 @@ const formatGender = (gender) => {
   return genderMap[gender] || '-';
 };
 
+// Helper: Convert UI gender string to Prisma enum
+const parseGenderToEnum = (genderString) => {
+  const genderMap = {
+    'Laki-laki': 'LAKI_LAKI',
+    'Perempuan': 'PEREMPUAN',
+    'laki-laki': 'LAKI_LAKI',
+    'perempuan': 'PEREMPUAN',
+  };
+  return genderMap[genderString] || null;
+};
+
 export async function GET(request) {
   try {
     const session = await auth();
@@ -154,20 +165,56 @@ export async function PATCH(request) {
       );
     }
 
-    // Update siswa data
-    const updateData = {};
-    // Note: noTelepon was removed from Siswa schema in recent migration
-    if (body.alamat !== undefined) {
-      updateData.alamat = body.alamat;
+    // Prepare update data for Siswa table
+    const siswaUpdateData = {};
+    
+    // Convert jenisKelamin UI string to Prisma enum
+    if (body.jenisKelamin !== undefined) {
+      const enumValue = parseGenderToEnum(body.jenisKelamin);
+      if (enumValue) {
+        siswaUpdateData.jenisKelamin = enumValue;
+      } else {
+        console.warn('[API SISWA PROFILE] Invalid jenisKelamin value:', body.jenisKelamin);
+      }
+    }
+    
+    // Convert tanggalLahir string to DateTime object
+    if (body.tanggalLahir !== undefined && body.tanggalLahir !== '') {
+      try {
+        // Accept ISO format (YYYY-MM-DD or full ISO-8601)
+        siswaUpdateData.tanggalLahir = new Date(body.tanggalLahir);
+      } catch (err) {
+        console.warn('[API SISWA PROFILE] Invalid tanggalLahir format:', body.tanggalLahir);
+      }
+    }
+    
+    if (body.alamat !== undefined) siswaUpdateData.alamat = body.alamat;
+    // Note: namaWali tidak ada di Siswa model - field ini read-only dari relasi OrangTua
+
+    // Prepare update data for User table (nama)
+    const userUpdateData = {};
+    if (body.nama !== undefined && body.nama.trim() !== '') {
+      userUpdateData.name = body.nama.trim();
     }
 
-    console.log('Update data:', updateData);
+    console.log('[API SISWA PROFILE] Siswa update data:', siswaUpdateData);
+    console.log('[API SISWA PROFILE] User update data:', userUpdateData);
 
+    // Update User table first if name changed
+    if (Object.keys(userUpdateData).length > 0) {
+      await prisma.user.update({
+        where: { id: siswa.userId },
+        data: userUpdateData,
+      });
+      console.log('[API SISWA PROFILE] User.name updated successfully');
+    }
+
+    // Update Siswa table
     const updated = await prisma.siswa.update({
       where: {
         id: siswa.id,
       },
-      data: updateData,
+      data: siswaUpdateData,
       include: {
         user: {
           select: {
@@ -198,6 +245,13 @@ export async function PATCH(request) {
     });
 
     // Log the activity
+    const fieldsUpdated = [];
+    if (body.nama !== undefined) fieldsUpdated.push('nama');
+    if (body.jenisKelamin !== undefined) fieldsUpdated.push('jenisKelamin');
+    if (body.tanggalLahir !== undefined) fieldsUpdated.push('tanggalLahir');
+    if (body.alamat !== undefined) fieldsUpdated.push('alamat');
+    // namaWali is read-only from OrangTua relation
+
     await logActivity({
       actorId: session.user.id,
       actorRole: 'SISWA',
@@ -206,9 +260,7 @@ export async function PATCH(request) {
       title: 'Mengubah Profil',
       description: 'Anda memperbarui informasi profil siswa.',
       metadata: {
-        fieldsUpdated: [
-          body.alamat !== undefined ? 'alamat' : null
-        ].filter(Boolean)
+        fieldsUpdated
       }
     });
 
