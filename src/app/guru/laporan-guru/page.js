@@ -633,10 +633,9 @@ export default function LaporanGuruPage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <option value="bulan-ini">Bulan Ini</option>
-                  <option value="bulan-lalu">Bulan Lalu</option>
-                  <option value="semester-ini">Semester Ini</option>
-                  <option value="custom">Custom Range</option>
+                  <option value="bulan-ini">Bulanan</option>
+                  <option value="semester-1">Semester 1</option>
+                  <option value="semester-2">Semester 2</option>
                 </select>
               </div>
 
