@@ -184,12 +184,22 @@ export default function StudentDashboardContent({
 
   // Fetch data if not provided
   useEffect(() => {
+    console.log('[STUDENT DASHBOARD] useEffect triggered:', {
+      hasInitialData: !!initialData,
+      targetSiswaId,
+      willFetch: !initialData && !!targetSiswaId
+    });
+    
     if (!initialData && targetSiswaId) {
+      console.log('[STUDENT DASHBOARD] Fetching dashboard data for siswaId:', targetSiswaId);
       fetchDashboardData();
       fetchPengumuman();
     } else if (initialData) {
       // If initialData is provided, still fetch fresh pengumuman
+      console.log('[STUDENT DASHBOARD] Has initialData, only fetching pengumuman');
       fetchPengumuman();
+    } else {
+      console.log('[STUDENT DASHBOARD] Skipping fetch - waiting for targetSiswaId');
     }
   }, [targetSiswaId, initialData]);
 
@@ -216,13 +226,22 @@ export default function StudentDashboardContent({
     try {
       setLoading(true);
       setError(null);
+      console.log('[STUDENT DASHBOARD] Calling API:', `/api/dashboard/siswa/${targetSiswaId}/summary`);
       const response = await fetch(`/api/dashboard/siswa/${targetSiswaId}/summary`);
 
+      console.log('[STUDENT DASHBOARD] API response status:', response.status);
+      
       if (!response.ok) {
         throw new Error('Gagal memuat data dashboard');
       }
 
       const data = await response.json();
+      console.log('[STUDENT DASHBOARD] API response data:', {
+        hasStats: !!data.stats,
+        hasWarnings: !!data.warnings,
+        warningsCount: data.warnings?.length || 0,
+        stats: data.stats
+      });
 
       setStats({
         hafalanSelesai: data.stats?.hafalanSelesai || 0,
@@ -245,8 +264,9 @@ export default function StudentDashboardContent({
       setProgressPercent(data.progressPercent);
       setQuote(data.quote || "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.");
 
+      console.log('[STUDENT DASHBOARD] State updated successfully');
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('[STUDENT DASHBOARD] Error fetching dashboard data:', error);
       setError(error.message);
     } finally {
       setLoading(false);
