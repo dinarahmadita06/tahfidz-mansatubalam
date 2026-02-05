@@ -21,19 +21,40 @@ const getFirstName = (fullName) => {
 
 export default function SiswaDashboardClient({ initialData, session }) {
   const [isHydrated, setIsHydrated] = useState(false);
+  const [siswaId, setSiswaId] = useState(initialData?.siswaId || null);
+
+  // Fetch siswaId if not in initialData
+  useEffect(() => {
+    const fetchSiswaId = async () => {
+      if (!siswaId && session?.user?.id) {
+        try {
+          console.log('[CLIENT] Fetching siswaId for userId:', session.user.id);
+          const res = await fetch('/api/siswa/profile');
+          if (res.ok) {
+            const data = await res.json();
+            console.log('[CLIENT] Got siswaId:', data.siswa?.id);
+            setSiswaId(data.siswa?.id);
+          }
+        } catch (error) {
+          console.error('[CLIENT] Failed to fetch siswaId:', error);
+        }
+      }
+    };
+    fetchSiswaId();
+  }, [siswaId, session]);
 
   // Debug log
   useEffect(() => {
-    console.log('SiswaDashboardClient initialData:', {
+    console.log('SiswaDashboardClient:', {
       hasInitialData: !!initialData,
-      siswaId: initialData?.siswaId,
+      siswaId: siswaId,
       hasStats: !!initialData?.stats,
       hasQuote: !!initialData?.quote,
       hasPengumuman: !!initialData?.pengumuman,
       hasJuzProgress: !!initialData?.juzProgress,
       quote: initialData?.quote?.substring(0, 50)
     });
-  }, [initialData]);
+  }, [initialData, siswaId]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -87,7 +108,7 @@ export default function SiswaDashboardClient({ initialData, session }) {
 
       {/* Dashboard Content */}
       <StudentDashboardContent 
-        targetSiswaId={initialData?.siswaId} 
+        targetSiswaId={siswaId} 
         roleContext="SISWA"
         initialData={initialData}
         activityWidget={<AktivitasTerkiniWidget initialData={initialData?.activities} />}
