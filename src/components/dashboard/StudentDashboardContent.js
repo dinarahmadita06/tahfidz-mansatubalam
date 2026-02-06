@@ -181,6 +181,7 @@ export default function StudentDashboardContent({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [warnings, setWarnings] = useState(initialData?.warnings || []);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch data if not provided
   useEffect(() => {
@@ -203,6 +204,53 @@ export default function StudentDashboardContent({
     }
   }, [targetSiswaId, initialData]);
 
+  // Auto-refresh polling with visibility detection
+  useEffect(() => {
+    if (!targetSiswaId) return;
+
+    let intervalId = null;
+    let isTabVisible = true;
+
+    const refreshDashboard = () => {
+      // Only refresh if tab is visible and not currently loading
+      if (isTabVisible && !loading && !isRefreshing) {
+        console.log('[DASHBOARD AUTO-REFRESH] Refreshing data at', new Date().toLocaleTimeString());
+        fetchDashboardData(true); // Pass true for silent refresh
+        fetchPengumuman();
+      }
+    };
+
+    // Handle visibility change - pause polling when tab is hidden
+    const handleVisibilityChange = () => {
+      isTabVisible = !document.hidden;
+      console.log('[DASHBOARD AUTO-REFRESH] Tab visibility changed:', isTabVisible ? 'visible' : 'hidden');
+      
+      // Refresh immediately when tab becomes visible again
+      if (isTabVisible && !loading) {
+        console.log('[DASHBOARD AUTO-REFRESH] Tab became visible, refreshing now');
+        fetchDashboardData(true);
+        fetchPengumuman();
+      }
+    };
+
+    // Start polling interval (3 minutes)
+    intervalId = setInterval(refreshDashboard, 3 * 60 * 1000);
+    
+    // Listen to visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    console.log('[DASHBOARD AUTO-REFRESH] Polling started - interval: 3 minutes');
+
+    // Cleanup on unmount
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        console.log('[DASHBOARD AUTO-REFRESH] Polling stopped (cleanup)');
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [targetSiswaId, loading, isRefreshing]);
+
   const fetchPengumuman = async () => {
     try {
       setPengumumanLoading(true);
@@ -222,11 +270,16 @@ export default function StudentDashboardContent({
     }
   };
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (silentRefresh = false) => {
     try {
-      setLoading(true);
+      // Only show loading indicator on initial load, not on background refresh
+      if (!silentRefresh) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       setError(null);
-      console.log('[STUDENT DASHBOARD] Calling API:', `/api/dashboard/siswa/${targetSiswaId}/summary`);
+      console.log('[STUDENT DASHBOARD] Calling API:', `/api/dashboard/siswa/${targetSiswaId}/summary`, silentRefresh ? '(silent)' : '');
       const response = await fetch(`/api/dashboard/siswa/${targetSiswaId}/summary`);
 
       console.log('[STUDENT DASHBOARD] API response status:', response.status);
@@ -240,7 +293,8 @@ export default function StudentDashboardContent({
         hasStats: !!data.stats,
         hasWarnings: !!data.warnings,
         warningsCount: data.warnings?.length || 0,
-        stats: data.stats
+        stats: data.stats,
+        isAutoRefresh: silentRefresh
       });
 
       setStats({
@@ -264,12 +318,19 @@ export default function StudentDashboardContent({
       setProgressPercent(data.progressPercent);
       setQuote(data.quote || "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya.");
 
-      console.log('[STUDENT DASHBOARD] State updated successfully');
+      console.log('[STUDENT DASHBOARD] State updated successfully', silentRefresh ? '(background refresh)' : '');
     } catch (error) {
       console.error('[STUDENT DASHBOARD] Error fetching dashboard data:', error);
-      setError(error.message);
+      // Only show error on initial load, not on background refresh
+      if (!silentRefresh) {
+        setError(error.message);
+      }
     } finally {
-      setLoading(false);
+      if (!silentRefresh) {
+        setLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   };
 
