@@ -414,7 +414,19 @@ export default function AdminGuruPage() {
         'Tanggal Lahir': formatDateOnly(item.tanggalLahir),
         'Kelas Binaan': aktifKelas,
         'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
-        'Tanggal Bergabung': formatDateOnly(item.user?.createdAt)
+        'Tanggal Bergabung': (() => {
+          const dateToUse = item.user?.createdAt || item.createdAt;
+          if (!dateToUse) return 'Belum tersedia';
+          try {
+            const date = new Date(dateToUse);
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const month = date.toLocaleDateString('id-ID', { month: 'short', timeZone: 'UTC' });
+            const year = date.getUTCFullYear();
+            return `${day} ${month} ${year}`;
+          } catch (error) {
+            return 'Belum tersedia';
+          }
+        })()
       };
     });
 
@@ -615,12 +627,21 @@ export default function AdminGuruPage() {
                             </span>
                           </td>
                           <td className="px-4 py-2.5 lg:px-6 lg:py-3 text-xs lg:text-sm text-gray-600">
-                            {guruItem.user.createdAt ? new Date(guruItem.user.createdAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              timeZone: 'UTC'
-                            }) : '-'}
+                            {(() => {
+                              const dateToUse = guruItem.user?.createdAt || guruItem.createdAt;
+                              if (!dateToUse) return <span className="text-gray-400 italic">Belum tersedia</span>;
+                              
+                              try {
+                                const date = new Date(dateToUse);
+                                const day = String(date.getUTCDate()).padStart(2, '0');
+                                const month = date.toLocaleDateString('id-ID', { month: 'short', timeZone: 'UTC' });
+                                const year = date.getUTCFullYear();
+                                return `${day} ${month} ${year}`;
+                              } catch (error) {
+                                console.error('Error formatting date:', error, dateToUse);
+                                return <span className="text-gray-400 italic">Belum tersedia</span>;
+                              }
+                            })()}
                           </td>
                           <td className="px-4 py-2.5 lg:px-6 lg:py-3">
                             <div className="flex items-center justify-center gap-1.5 lg:gap-2">
@@ -770,7 +791,7 @@ export default function AdminGuruPage() {
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="Masukkan kode guru (contoh: 94, 111, 112)"
+                    placeholder="Masukkan kode guru (contoh: 1,2,3)"
                     pattern="[0-9]+"
                     title="Username harus berupa angka (kode guru)"
                     className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"

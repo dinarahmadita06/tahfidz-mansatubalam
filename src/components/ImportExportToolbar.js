@@ -176,7 +176,19 @@ export default function ImportExportToolbar({
             'Kelas Binaan': aktifKelas,
             'Alamat': item.alamat || '',
             'Status': item.user?.isActive ? 'Aktif' : 'Non-Aktif',
-            'Tanggal Bergabung': item.user?.createdAt ? new Date(item.user.createdAt).toISOString().split('T')[0] : ''
+            'Tanggal Bergabung': (() => {
+              const dateToUse = item.user?.createdAt || item.createdAt;
+              if (!dateToUse) return 'Belum tersedia';
+              try {
+                const date = new Date(dateToUse);
+                const day = String(date.getUTCDate()).padStart(2, '0');
+                const month = date.toLocaleDateString('id-ID', { month: 'short', timeZone: 'UTC' });
+                const year = date.getUTCFullYear();
+                return `${day} ${month} ${year}`;
+              } catch (error) {
+                return 'Belum tersedia';
+              }
+            })()
           };
         });
       } else if (kategori === 'siswa') {
