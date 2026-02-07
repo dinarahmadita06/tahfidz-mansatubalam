@@ -40,6 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Prisma
+/src/lib/prisma-client/
+*.tmp*
+
 # Excel files (generated/temporary)
 *.xlsx
 *.xls
