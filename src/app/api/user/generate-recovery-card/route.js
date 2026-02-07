@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { createCanvas } from 'canvas';
+import { createCanvas, registerFont } from 'canvas';
+import path from 'path';
+
+// Register fonts (fallback to system fonts)
+try {
+  // Try to register custom fonts if available
+  const fontsDir = path.join(process.cwd(), 'public', 'fonts');
+  // If you have custom fonts, uncomment and adjust paths:
+  // registerFont(path.join(fontsDir, 'Arial.ttf'), { family: 'Arial' });
+} catch (error) {
+  // Gracefully handle missing fonts - will use system defaults
+  console.log('Using system default fonts');
+}
 
 export async function POST(request) {
   try {
@@ -37,50 +49,50 @@ export async function POST(request) {
 
     // SIMTAQ text
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px Arial';
+    ctx.font = 'bold 48px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('SIMTAQ', 540, 85);
 
     // Subtitle
-    ctx.font = '24px Arial';
+    ctx.font = '24px sans-serif';
     ctx.fillText('Sistem Informasi Manajemen Tahfidz Al-Qur\'an', 540, 125);
 
     // Recovery Code title
     ctx.fillStyle = '#1f2937';
-    ctx.font = 'bold 36px Arial';
+    ctx.font = 'bold 36px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Kartu Recovery', 540, 250);
 
     // User info
     ctx.fillStyle = '#4b5563';
-    ctx.font = '20px Arial';
+    ctx.font = '20px sans-serif';
     ctx.fillText(`Username: ${userUsername}`, 540, 300);
     if (userName) {
       ctx.fillText(`Nama: ${userName}`, 540, 335);
     }
 
     // Recovery code display (larger and centered)
-    ctx.font = 'bold 64px monospace';
+    ctx.font = 'bold 64px sans-serif';
     ctx.fillStyle = '#059669';
     ctx.fillText(recoveryCode, 540, 440);
 
     // Warning message
     ctx.fillStyle = '#dc2626';
-    ctx.font = 'bold 20px Arial';
+    ctx.font = 'bold 20px sans-serif';
     ctx.fillText('⚠️ SIMPAN DI TEMPAT AMAN', 540, 520);
     
-    ctx.font = '18px Arial';
+    ctx.font = '18px sans-serif';
     ctx.fillText('Kode ini hanya tampil sekali dan tidak dapat dipulihkan', 540, 555);
 
     // Instructions
     ctx.fillStyle = '#4b5563';
-    ctx.font = '16px Arial';
+    ctx.font = '16px sans-serif';
     ctx.fillText('Gunakan kode ini untuk mereset password jika lupa', 540, 610);
     ctx.fillText('Jaga kerahasiaan kode ini seperti password Anda', 540, 640);
 
     // Footer
     ctx.fillStyle = '#9ca3af';
-    ctx.font = '14px Arial';
+    ctx.font = '14px sans-serif';
     const createdDate = new Date().toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
