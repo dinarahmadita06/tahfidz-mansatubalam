@@ -710,7 +710,7 @@ export default function PenilaianHafalanPage() {
 
       {/* Popup Penilaian */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-slate-200 flex flex-col">
             {/* Sticky Header */}
             <div className="sticky top-0 z-50 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-6 sm:px-8 py-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
