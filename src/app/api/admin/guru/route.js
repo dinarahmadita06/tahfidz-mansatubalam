@@ -63,7 +63,22 @@ export async function GET(request) {
               name: true,
               email: true,
               isActive: true,
-              username: true
+              username: true,
+              createdAt: true
+            }
+          },
+          guruKelas: {
+            select: {
+              id: true,
+              peran: true,
+              isActive: true,
+              kelas: {
+                select: {
+                  id: true,
+                  nama: true,
+                  status: true
+                }
+              }
             }
           },
           _count: {

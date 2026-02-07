@@ -27,12 +27,12 @@ export function KelasSelectionCard({ kelas, onSelect, isActive }) {
         relative w-full p-6 rounded-xl border-2 transition-all duration-200
         text-left hover:shadow-lg
         ${isActive 
-          ? 'border-blue-500 bg-blue-50 shadow-md' 
+          ? 'border-teal-400 bg-cyan-50 shadow-md' 
           : butuhAksi
             ? 'border-orange-300 bg-orange-50 hover:border-orange-400'
             : isEmpty
               ? 'border-gray-200 bg-white hover:border-gray-300'
-              : 'border-green-200 bg-green-50 hover:border-green-300'
+              : 'border-emerald-200 bg-emerald-50 hover:border-emerald-300'
         }
       `}
     >
@@ -63,11 +63,11 @@ export function KelasSelectionCard({ kelas, onSelect, isActive }) {
         <div className="space-y-2">
           {/* Total Pengajuan */}
           <div className="flex items-center justify-between p-2 bg-white/50 rounded-lg">
-            <span className="text-sm text-gray-700 flex items-center gap-2">
-              <BookOpen size={16} className="text-blue-600" />
+            <span className="text-sm text-teal-700 flex items-center gap-2">
+              <BookOpen size={16} className="text-teal-600" />
               Total Pengajuan
             </span>
-            <span className="font-bold text-blue-600">{totalPengajuan}</span>
+            <span className="font-bold text-teal-600">{totalPengajuan}</span>
           </div>
 
           {/* Menunggu Jadwal */}
@@ -94,12 +94,12 @@ export function KelasSelectionCard({ kelas, onSelect, isActive }) {
 
           {/* Selesai */}
           {selesai > 0 && (
-            <div className="flex items-center justify-between p-2 bg-green-100 rounded-lg">
+            <div className="flex items-center justify-between p-2 bg-emerald-100 rounded-lg">
               <span className="text-sm text-gray-700 flex items-center gap-2">
-                <CheckCircle size={16} className="text-green-600" />
+                <CheckCircle size={16} className="text-emerald-600" />
                 Selesai
               </span>
-              <span className="font-bold text-green-600">{selesai}</span>
+              <span className="font-bold text-emerald-600">{selesai}</span>
             </div>
           )}
         </div>
@@ -107,7 +107,7 @@ export function KelasSelectionCard({ kelas, onSelect, isActive }) {
 
       {/* Tombol Aksi */}
       <div className="mt-4 pt-4 border-t border-gray-200">
-        <span className={`text-sm font-medium ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
+        <span className={`text-sm font-medium ${isActive ? 'text-teal-600' : 'text-gray-600'}`}>
           {isActive ? '✓ Kelas Aktif' : 'Lihat Kelas →'}
         </span>
       </div>
@@ -151,7 +151,7 @@ export function KelasSelectionSection({ summary, activeKelasId, onSelectKelas })
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             filter === 'all'
-              ? 'bg-blue-600 text-white'
+              ? 'bg-teal-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
@@ -176,8 +176,8 @@ export function KelasSelectionSection({ summary, activeKelasId, onSelectKelas })
             onClick={() => setFilter('ada-pengajuan')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === 'ada-pengajuan'
-                ? 'bg-green-600 text-white'
-                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
             }`}
           >
             Ada Pengajuan ({counters.adaPengajuan})

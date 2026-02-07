@@ -41,13 +41,13 @@ function StatCard({ label, value, icon, color = 'emerald' }) {
       iconText: 'text-amber-600',
       glow: 'shadow-amber-500/10'
     },
-    blue: {
-      bg: 'bg-blue-50/60',
-      border: 'border-blue-200/70',
-      text: 'text-blue-700',
-      iconBg: 'bg-blue-100/60',
-      iconText: 'text-blue-600',
-      glow: 'shadow-blue-500/10'
+    teal: {
+      bg: 'bg-cyan-50/60',
+      border: 'border-teal-200/70',
+      text: 'text-teal-700',
+      iconBg: 'bg-teal-100/60',
+      iconText: 'text-teal-600',
+      glow: 'shadow-teal-500/10'
     }
   };
   
@@ -112,7 +112,7 @@ export function TasmiStats({ tasmiList }) {
         label="Sudah Dinilai / Selesai"
         value={stats.graded}
         icon={<CheckCircle size={24} />}
-        color="blue"
+        color="teal"
       />
     </div>
   );
@@ -169,19 +169,19 @@ export function TasmiWrapper({ guruKelas, guruId, summary }) {
       {selectedKelas && (
         <>
           {/* Active Kelas Indicator */}
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center justify-between">
+          <div className="bg-cyan-50 border-2 border-teal-200 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold">
                 {selectedKelas.kelasNama.substring(0, 1)}
               </div>
               <div>
-                <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Kelas Aktif</p>
-                <p className="text-lg font-bold text-blue-900">Kelas {selectedKelas.kelasNama}</p>
+                <p className="text-xs text-teal-600 font-semibold uppercase tracking-wide">Kelas Aktif</p>
+                <p className="text-lg font-bold text-teal-900">Kelas {selectedKelas.kelasNama}</p>
               </div>
             </div>
             <button
               onClick={handleBackToKelas}
-              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-all font-semibold"
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-teal-300 text-teal-700 rounded-lg hover:bg-cyan-50 transition-all font-semibold"
             >
               <ArrowLeft size={18} />
               Ganti Kelas
@@ -631,7 +631,7 @@ export function TasmiTableSection({ initialTasmi, guruKelas, selectedKelasId, se
                         )}
                         {tasmi.statusPendaftaran === 'SELESAI' && tasmi.nilaiAkhir && (
                           <>
-                            <button onClick={() => openGradeModal(tasmi, true)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Edit size={16} /></button>
+                            <button onClick={() => openGradeModal(tasmi, true)} className="p-1.5 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100"><Edit size={16} /></button>
                             <button onClick={() => handleDownloadPDF(tasmi.id)} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100"><FileText size={16} /></button>
                           </>
                         )}
