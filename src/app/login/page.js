@@ -277,18 +277,18 @@ export default function LoginPage() {
               </div>
             </form>
 
-            {/* Divider */}
-            <div className="relative my-5">
+            {/* Divider - DISEMBUNYIKAN */}
+            {/* <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="px-3 bg-white text-gray-500">atau</span>
               </div>
-            </div>
+            </div> */}
 
-            {/* Registrasi Orang Tua Section */}
-            <div className="text-center">
+            {/* Registrasi Orang Tua Section - DISEMBUNYIKAN */}
+            {/* <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">
                 Orang Tua Belum Punya Akun?
               </p>
@@ -298,7 +298,7 @@ export default function LoginPage() {
               >
                 🔗 Daftar di sini
               </Link>
-            </div>
+            </div> */}
           </div>
 
           {/* Footer */}
