@@ -665,30 +665,48 @@ export default function BukuDigitalPage() {
               </div>
 
               {/* Viewer Body */}
-              <div className="flex-1 overflow-auto bg-gray-50 p-6">
+              <div className="flex-1 overflow-hidden bg-gray-50">
                 {selectedMateri.fileUrl ? (
-                  <div className="w-full h-full flex items-center justify-center">
-                    {/* Display loading message - user should click download to view */}
-                    <div className="bg-white rounded-lg p-8 text-center max-w-md">
-                      <div className="mb-4 flex justify-center">
-                        <div className="p-4 bg-emerald-100 rounded-full">
-                          <BookOpen className="text-emerald-600" size={48} />
+                  selectedMateri.jenisMateri === 'PDF' ? (
+                    /* PDF Preview dengan iframe */
+                    <iframe
+                      src={selectedMateri.fileUrl}
+                      className="w-full h-full border-0"
+                      title={selectedMateri.judul}
+                    />
+                  ) : selectedMateri.jenisMateri === 'YOUTUBE' && selectedMateri.youtubeUrl ? (
+                    /* YouTube Preview */
+                    <iframe
+                      src={`https://www.youtube.com/embed/${extractYouTubeId(selectedMateri.youtubeUrl)}`}
+                      className="w-full h-full border-0"
+                      title={selectedMateri.judul}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    /* Fallback untuk jenis materi lain */
+                    <div className="w-full h-full flex items-center justify-center p-6">
+                      <div className="bg-white rounded-lg p-8 text-center max-w-md">
+                        <div className="mb-4 flex justify-center">
+                          <div className="p-4 bg-emerald-100 rounded-full">
+                            <BookOpen className="text-emerald-600" size={48} />
+                          </div>
                         </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Buka File</h3>
+                        <p className="text-gray-600 mb-6">Klik tombol unduh di atas untuk membuka file.</p>
+                        <p className="text-sm text-gray-500 mb-6">Nama: {selectedMateri.fileName || selectedMateri.judul || 'Document'}</p>
+                        <button
+                          onClick={() => handleDownload(selectedMateri)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
+                        >
+                          <Download size={20} />
+                          Unduh File
+                        </button>
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">Buka PDF di Tab Baru</h3>
-                      <p className="text-gray-600 mb-6">Klik tombol unduh di bawah atau di header untuk membuka PDF di tab baru browser Anda.</p>
-                      <p className="text-sm text-gray-500 mb-6">Nama: {selectedMateri.fileName || selectedMateri.judul || 'Document'}</p>
-                      <button
-                        onClick={() => handleDownload(selectedMateri)}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
-                      >
-                        <Download size={20} />
-                        Buka PDF
-                      </button>
                     </div>
-                  </div>
+                  )
                 ) : (
-                  <div className="h-full flex items-center justify-center">
+                  <div className="h-full flex items-center justify-center p-6">
                     <div className="text-center">
                       <div className="mb-4 flex justify-center">
                         <div className="p-4 bg-gray-200 rounded-full">
