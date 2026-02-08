@@ -65,6 +65,8 @@ export async function PATCH(request, { params }) {
     invalidateCache('admin-tahun-ajaran-list');
     invalidateCache('admin-tahun-ajaran-summary');
     invalidateCache('admin-dashboard-summary'); // Dashboard cache
+    invalidateCache('kelas-list'); // Kelas list cache (affects target juz on kelas)
+    invalidateCache('tahun-ajaran-list'); // Public tahun ajaran list cache
 
     return NextResponse.json({
       success: true,

@@ -330,18 +330,38 @@ export default function AdminKelasPage() {
   useEffect(() => {
     if (editingKelas && showKelasModal) {
       console.log('SYNC EFFECT - editingKelas changed, syncing form data');
-      const guruUtama = editingKelas.guruKelas?.find(kg => kg.peran === 'utama');
-      const guruPendamping = editingKelas.guruKelas?.filter(kg => kg.peran === 'pendamping') || [];
-      const tahunAjaranId = String(editingKelas.tahunAjaranId);
       
-      const newFormData = {
-        nama: editingKelas.nama,
-        tahunAjaranId: tahunAjaranId,
-        targetJuz: editingKelas.targetJuz || 1,
-        guruUtamaId: guruUtama ? String(guruUtama.guruId) : '',
+      // Fetch latest active tahun ajaran to get up-to-date target juz
+      const syncFormData = async () => {
+        const guruUtama = editingKelas.guruKelas?.find(kg => kg.peran === 'utama');
+        const guruPendamping = editingKelas.guruKelas?.filter(kg => kg.peran === 'pendamping') || [];
+        const tahunAjaranId = String(editingKelas.tahunAjaranId);
+        
+        let targetJuz = editingKelas.targetJuz || 1; // Default fallback
+        
+        // If kelas has tahun ajaran ID, fetch the latest data
+        if (tahunAjaranId) {
+          const activeTa = await fetchActiveTahunAjaran();
+          console.log('SYNC EFFECT - Active tahun ajaran fetched:', activeTa);
+          
+          // If the kelas' tahun ajaran is the active one, use its latest target
+          if (activeTa && activeTa.id === tahunAjaranId) {
+            targetJuz = activeTa.targetHafalan || targetJuz;
+            console.log('SYNC EFFECT - Using target from active tahun ajaran:', targetJuz);
+          }
+        }
+        
+        const newFormData = {
+          nama: editingKelas.nama,
+          tahunAjaranId: tahunAjaranId,
+          targetJuz: targetJuz, // Use fetched target from active tahun ajaran
+          guruUtamaId: guruUtama ? String(guruUtama.guruId) : '',
+        };
+        console.log('SYNC EFFECT - Setting form data:', newFormData);
+        setKelasFormData(newFormData);
       };
-      console.log('SYNC EFFECT - Setting form data:', newFormData);
-      setKelasFormData(newFormData);
+      
+      syncFormData();
     }
   }, [editingKelas, showKelasModal]);
 
@@ -364,8 +384,11 @@ export default function AdminKelasPage() {
 
   const fetchTahunAjaran = async () => {
     try {
-      const response = await fetch(`/api/tahun-ajaran`, {
-        cache: 'default'
+      const response = await fetch(`/api/tahun-ajaran?noCache=true`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
       });
       const result = await response.json();
       const taList = result.data || [];
@@ -374,6 +397,26 @@ export default function AdminKelasPage() {
     } catch (error) {
       console.error('Error fetching tahun ajaran:', error);
       setTahunAjaran([]);
+    }
+  };
+
+  // Fetch active tahun ajaran (for getting latest target juz)
+  const fetchActiveTahunAjaran = async () => {
+    try {
+      const response = await fetch(`/api/tahun-ajaran?noCache=true`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
+      const result = await response.json();
+      const taList = result.data || [];
+      // Find active tahun ajaran (isActive: true)
+      const activeTa = taList.find(ta => ta.isActive);
+      return activeTa || null;
+    } catch (error) {
+      console.error('Error fetching active tahun ajaran:', error);
+      return null;
     }
   };
 
@@ -476,7 +519,7 @@ export default function AdminKelasPage() {
     await handleKelasSubmit(fakeEvent, true);
   };
 
-  const handleEditKelas = (kelasItem) => {
+  const handleEditKelas = async (kelasItem) => {
     console.log('EDIT KELAS - kelasItem received:', kelasItem);
     console.log('EDIT KELAS - tahunAjaranId:', kelasItem.tahunAjaranId, 'type:', typeof kelasItem.tahunAjaranId);
     
@@ -491,11 +534,26 @@ export default function AdminKelasPage() {
 
     console.log('EDIT KELAS - Setting form data with tahunAjaranId:', tahunAjaranId);
 
+    // Fetch latest active tahun ajaran to get up-to-date target juz
+    let targetJuz = kelasItem.targetJuz || 1; // Default fallback
+    
+    // If kelas has tahun ajaran ID, fetch the latest data
+    if (tahunAjaranId) {
+      const activeTa = await fetchActiveTahunAjaran();
+      console.log('EDIT KELAS - Active tahun ajaran fetched:', activeTa);
+      
+      // If the kelas' tahun ajaran is the active one, use its latest target
+      if (activeTa && activeTa.id === tahunAjaranId) {
+        targetJuz = activeTa.targetHafalan || targetJuz;
+        console.log('EDIT KELAS - Using target from active tahun ajaran:', targetJuz);
+      }
+    }
+
     setKelasFormData(prevState => {
       const newState = {
         nama: kelasItem.nama,
         tahunAjaranId: tahunAjaranId,
-        targetJuz: kelasItem.targetJuz || 1,
+        targetJuz: targetJuz, // Use fetched target from active tahun ajaran
         guruUtamaId: guruUtama && guruUtama.guruId ? guruUtama.guruId.toString() : '',
       };
       console.log('EDIT KELAS - Form state updated to:', newState);
