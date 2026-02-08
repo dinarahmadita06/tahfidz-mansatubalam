@@ -1,4 +1,4 @@
-import { surahNameToNumber, parseSurahRange } from '../quranUtils';
+import { getSurahNumber, parseSurahRange } from '../quranUtils';
 import { calculateJuzProgress, getHighestJuzAchieved, getCompletedJuzCount } from '../utils/quranProgress';
 
 /**
@@ -66,7 +66,7 @@ export async function calculateStudentProgress(prisma, siswaId, schoolYearId = n
     if (!sNum && item.surah) {
       const parsed = parseSurahRange(item.surah);
       if (parsed.length > 0) sNum = parsed[0].surahNumber;
-      else sNum = surahNameToNumber[item.surah];
+      else sNum = getSurahNumber(item.surah); // Case-insensitive lookup
     }
 
     if (sNum && item.ayatMulai && item.ayatSelesai) {

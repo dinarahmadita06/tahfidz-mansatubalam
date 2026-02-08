@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { calculateMonthRange } from '@/lib/utils/dateRangeHelpers';
-import { surahNameToNumber, parseSurahRange } from '@/lib/quranUtils';
+import { getSurahNumber, parseSurahRange } from '@/lib/quranUtils';
 import { calculateJuzProgress } from '@/lib/utils/quranProgress';
 
 export async function GET(request) {
@@ -124,7 +124,7 @@ export async function GET(request) {
       if (!sNum && item.surah) {
         const parsed = parseSurahRange(item.surah);
         if (parsed.length > 0) sNum = parsed[0].surahNumber;
-        else sNum = surahNameToNumber[item.surah];
+        else sNum = getSurahNumber(item.surah);
       }
       if (sNum && item.ayatMulai && item.ayatSelesai) {
         entriesForProgress.push({

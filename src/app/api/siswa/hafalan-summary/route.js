@@ -3,7 +3,7 @@ export const revalidate = 0;
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { surahNameToNumber, getJuzsFromRange } from '@/lib/quranUtils';
+import { getSurahNumber, getJuzsFromRange } from '@/lib/quranUtils';
 
 // GET - Get total juz hafalan siswa
 export async function GET(request) {
@@ -61,7 +61,7 @@ export async function GET(request) {
       if (h.juz) {
         uniqueJuz.add(h.juz);
       } else {
-        const sNum = h.surahNumber || surahNameToNumber[h.surah];
+        const sNum = h.surahNumber || getSurahNumber(h.surah);
         if (sNum && h.ayatMulai && h.ayatSelesai) {
           const juzs = getJuzsFromRange(sNum, h.ayatMulai, h.ayatSelesai);
           juzs.forEach(j => uniqueJuz.add(j));

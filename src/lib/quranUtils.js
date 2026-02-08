@@ -28,6 +28,45 @@ export const surahNameToNumber = {
 };
 
 /**
+ * Normalize surah name for case-insensitive lookup
+ * Converts "al-baqarah" → "Al-Baqarah"
+ * @param {string} surahName - Raw surah name
+ * @returns {string} Normalized surah name in Title Case
+ */
+export function normalizeSurahName(surahName) {
+  if (!surahName || typeof surahName !== 'string') return '';
+  
+  // Split by dash or space, capitalize first letter of each word
+  return surahName
+    .split(/[-\s]/)
+    .map(word => {
+      if (!word) return '';
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join('-');
+}
+
+/**
+ * Get surah number from surah name (case-insensitive)
+ * @param {string} surahName - Surah name (any case)
+ * @returns {number|null} Surah number or null if not found
+ */
+export function getSurahNumber(surahName) {
+  if (!surahName) return null;
+  
+  // Try direct lookup first
+  let num = surahNameToNumber[surahName];
+  if (num) return num;
+  
+  // Try normalized lookup
+  const normalized = normalizeSurahName(surahName);
+  num = surahNameToNumber[normalized];
+  if (num) return num;
+  
+  return null;
+}
+
+/**
  * Get Juz number from Surah and Ayah number
  */
 export function getJuzFromSurahAyah(surahNumber, ayahNumber) {
@@ -86,7 +125,7 @@ export function parseSurahRange(input) {
       const start = parseInt(match[3]);
       const end = parseInt(match[4]);
       
-      let surahNum = surahNameToNumber[name];
+      let surahNum = getSurahNumber(name);
       
       // Try to get number from the "1. Surah" prefix if name mapping fails
       if (!surahNum && match[1]) {
@@ -102,7 +141,7 @@ export function parseSurahRange(input) {
       const fallbackMatch = entry.match(fallbackRegex);
       if (fallbackMatch) {
          const name = fallbackMatch[2].trim();
-         let surahNum = surahNameToNumber[name];
+         let surahNum = getSurahNumber(name);
          if (!surahNum && fallbackMatch[1]) {
            surahNum = parseInt(fallbackMatch[1]);
          }
@@ -138,7 +177,7 @@ export async function updateSiswaLatestJuz(prisma, siswaId) {
       // ✅ Resolve surahNumber if missing (fallback for old records)
       let currentSurahNumber = record.surahNumber;
       if (!currentSurahNumber && record.surah) {
-        currentSurahNumber = surahNameToNumber[record.surah] || null;
+        currentSurahNumber = getSurahNumber(record.surah);
       }
 
       // Check primary surah
@@ -165,7 +204,7 @@ export async function updateSiswaLatestJuz(prisma, siswaId) {
           if (!sNum && item.surah) {
              const parsed = parseSurahRange(item.surah);
              if (parsed.length > 0) sNum = parsed[0].surahNumber;
-             else sNum = surahNameToNumber[item.surah];
+             else sNum = getSurahNumber(item.surah);
           }
           
           if (sNum && item.ayatMulai && item.ayatSelesai) {

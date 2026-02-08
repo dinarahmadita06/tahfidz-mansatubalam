@@ -373,8 +373,24 @@ export default function TasmiClient() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.juzYangDitasmi || !formData.jamTasmi || !formData.tanggalTasmi || !formData.guruId) {
-      toast.error('Semua field wajib diisi');
+    // More specific validation messages
+    if (!formData.guruId) {
+      toast.error('Guru pengampu wajib dipilih');
+      return;
+    }
+
+    if (!formData.juzYangDitasmi) {
+      toast.error('Juz yang ditasmi wajib diisi');
+      return;
+    }
+
+    if (!formData.jamTasmi) {
+      toast.error('Jam tasmi wajib diisi');
+      return;
+    }
+
+    if (!formData.tanggalTasmi) {
+      toast.error('Tanggal tasmi wajib diisi');
       return;
     }
 
@@ -739,11 +755,11 @@ export default function TasmiClient() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Juz yang Ditasmi' <span className="text-red-500">*</span></label>
-                  <input type="text" value={formData.juzYangDitasmi} onChange={(e) => setFormData({ ...formData, juzYangDitasmi: e.target.value })} disabled={!isSiapMendaftar || editMode} placeholder="Contoh: Juz 1, 2, 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+                  <input type="text" value={formData.juzYangDitasmi} onChange={(e) => setFormData({ ...formData, juzYangDitasmi: e.target.value })} disabled={!isSiapMendaftar && !editMode} placeholder="Contoh: Juz 1, 2, 3" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
                 </div>
               </div>              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Guru Pengampu <span className="text-red-500">*</span></label>
-                <select value={formData.guruId} onChange={(e) => setFormData({ ...formData, guruId: e.target.value })} disabled={!isSiapMendaftar || editMode} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                <select value={formData.guruId} onChange={(e) => setFormData({ ...formData, guruId: e.target.value })} disabled={!isSiapMendaftar && !editMode} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
                   <option value="">Pilih guru pengampu</option>
                   {Array.isArray(guruList) && guruList.map((guru) => <option key={guru.id} value={guru.id}>{guru.user?.name}</option>)}
                 </select>
@@ -752,11 +768,11 @@ export default function TasmiClient() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Jam Tasmi' <span className="text-red-500">*</span></label>
-                  <input type="text" value={formData.jamTasmi} onChange={(e) => setFormData({ ...formData, jamTasmi: e.target.value })} disabled={!isSiapMendaftar || editMode} placeholder="Contoh: 08:00-10:00" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+                  <input type="text" value={formData.jamTasmi} onChange={(e) => setFormData({ ...formData, jamTasmi: e.target.value })} disabled={!isSiapMendaftar && !editMode} placeholder="Contoh: 08:00-10:00" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Tasmi' <span className="text-red-500">*</span></label>
-                  <input type="date" value={formData.tanggalTasmi} onChange={(e) => setFormData({ ...formData, tanggalTasmi: e.target.value })} disabled={!isSiapMendaftar || editMode} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+                  <input type="date" value={formData.tanggalTasmi} onChange={(e) => setFormData({ ...formData, tanggalTasmi: e.target.value })} disabled={!isSiapMendaftar && !editMode} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
                 </div>
               </div>
 

@@ -98,6 +98,7 @@ export async function GET(request) {
           },
           guruPengampu: {
             select: {
+              id: true, // Add id for edit functionality
               user: {
                 select: {
                   name: true,
@@ -337,7 +338,8 @@ export async function POST(request) {
           },
         },
         guruPengampu: {
-          include: {
+          select: {
+            id: true, // Add id for edit functionality
             user: {
               select: {
                 name: true,

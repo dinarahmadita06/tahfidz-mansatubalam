@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { calcAverageScore, calcStatisticAverage, normalizeNilaiAkhir } from '@/lib/helpers/calcAverageScore';
 import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
-import { updateSiswaLatestJuz, surahNameToNumber, getJuzFromSurahAyah } from '@/lib/quranUtils';
+import { updateSiswaLatestJuz, getSurahNumber, getJuzFromSurahAyah } from '@/lib/quranUtils';
 
 export async function GET(request) {
   try {
@@ -210,7 +210,7 @@ export async function POST(request) {
       : null;
 
     // ✅ Resolve Surah Number and Juz
-    const resolvedSurahNumber = surahNameToNumber[surah] || null;
+    const resolvedSurahNumber = getSurahNumber(surah);
     const mappedJuz = resolvedSurahNumber ? getJuzFromSurahAyah(resolvedSurahNumber, ayatMulai) : null;
 
     console.log(`[DEBUG/PENILAIAN] Siswa: ${siswaId}, Surah: ${surah} (${resolvedSurahNumber}), Ayah: ${ayatMulai}-${ayatSelesai}, Mapped Juz: ${mappedJuz}`);

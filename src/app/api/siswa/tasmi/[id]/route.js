@@ -38,7 +38,8 @@ export async function GET(request, { params }) {
       },
       include: {
         guruPengampu: {
-          include: {
+          select: {
+            id: true, // Add id for edit functionality
             user: {
               select: {
                 name: true,
@@ -211,7 +212,8 @@ export async function PUT(request, { params }) {
           },
         },
         guruPengampu: {
-          include: {
+          select: {
+            id: true, // Add id for future edit operations
             user: {
               select: {
                 name: true,
