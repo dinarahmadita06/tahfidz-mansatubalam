@@ -52,7 +52,7 @@ export async function generateLaporanPDF(siswaData, setoranData, periode) {
     color: rgb(0, 0.2, 0.5)
   });
   
-  yPosition = addText('Madrasah Tahfidz Al-Qur\'an', margin, yPosition, {
+  yPosition = addText('MAN 1 Bandar Lampung', margin, yPosition, {
     fontSize: 14,
     color: rgb(0.3, 0.3, 0.3)
   });
@@ -200,7 +200,7 @@ export async function generateLaporanPDF(siswaData, setoranData, periode) {
     color: rgb(0.5, 0.5, 0.5)
   });
   
-  addText('Laporan Hafalan - Madrasah Tahfidz Al-Qur\'an', 
+  addText('Laporan Hafalan - MAN 1 Bandar Lampung', 
     width - margin - 200, footerY, {
     fontSize: 8,
     color: rgb(0.5, 0.5, 0.5)

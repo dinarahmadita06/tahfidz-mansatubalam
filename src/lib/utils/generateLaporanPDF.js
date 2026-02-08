@@ -59,7 +59,7 @@ export async function generateLaporanPDF(data) {
   // For now, hanya text header
   doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
-  doc.text('MADRASAH TAHFIDZ AL-QUR\'AN', pageWidth / 2, yPosition, { align: 'center' });
+  doc.text('MAN 1 Bandar Lampung', pageWidth / 2, yPosition, { align: 'center' });
   yPosition += 7;
 
   doc.setFontSize(9);
