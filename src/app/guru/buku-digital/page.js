@@ -309,8 +309,13 @@ export default function BukuDigitalPage() {
       return;
     }
     
-    setSelectedMateri(materi);
-    setShowViewerModal(true);
+    // Open PDF directly in new tab
+    if (materi.fileUrl) {
+      window.open(materi.fileUrl, '_blank');
+      toast.success('Membuka file...');
+    } else {
+      toast.error('File tidak tersedia');
+    }
   };
 
   const handleDownload = (materi) => {
