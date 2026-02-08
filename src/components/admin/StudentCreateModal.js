@@ -415,9 +415,7 @@ export default function StudentCreateModal({
 
   const filteredParents = parents.filter(p => 
     p.user?.name?.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
-    p.user?.email?.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
-    (p.noHP && p.noHP.includes(parentSearchTerm)) ||
-    (p.noTelepon && p.noTelepon.includes(parentSearchTerm))
+    p.user?.email?.toLowerCase().includes(parentSearchTerm.toLowerCase())
   );
 
   if (!isOpen) return null;
@@ -621,7 +619,7 @@ export default function StudentCreateModal({
                       setFormData({ ...formData, password: val });
                       setIsGeneratedStudentPw(false);
                     }}
-                    placeholder="Password"
+                    placeholder="Klik generate untuk membuat password"
                     required
                     iconOnlyGenerate={true}
                     onGenerateCustom={handleGenerateStudentPassword}
@@ -736,7 +734,7 @@ export default function StudentCreateModal({
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="text"
-                        placeholder="Cari nama atau nomor HP orang tua..."
+                        placeholder="Cari nama orang tua..."
                         value={parentSearchTerm}
                         onChange={(e) => setParentSearchTerm(e.target.value)}
                         className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all text-sm"
@@ -750,7 +748,7 @@ export default function StudentCreateModal({
                     >
                       <option value="">-- Pilih Orang Tua --</option>
                       {filteredParents.map(p => (
-                        <option key={p.id} value={p.id}>{p.user?.name} ({p.noHP || p.noTelepon || 'No HP -'})</option>
+                        <option key={p.id} value={p.id}>{p.user?.name}</option>
                       ))}
                     </select>
                   </div>
@@ -827,7 +825,7 @@ export default function StudentCreateModal({
                         setNewParentData({ ...newParentData, password: val });
                         setIsGeneratedParentPw(false);
                       }}
-                      placeholder="Password"
+                      placeholder="Klik generate untuk membuat password"
                       required={parentMode === 'create'}
                       iconOnlyGenerate={true}
                       onGenerateCustom={handleGenerateParentPassword}

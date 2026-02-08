@@ -88,6 +88,7 @@ export default function PasswordField({
             required={required}
             autoFocus={autoFocus}
             disabled={disabled}
+            autoComplete="new-password"
             style={{
               width: '100%',
               paddingLeft: '16px',
