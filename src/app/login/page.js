@@ -51,43 +51,35 @@ export default function LoginPage() {
       if (result?.error) {
         console.error('❌ [LOGIN] Login failed:', result.error);
 
-        // Parse error code and message (format: "ERROR_CODE|Message")
-        let errorCode = result.error;
-        let errorMessage = result.error;
+        // Parse error with bracket notation: [ERROR_CODE] Message
+        const bracketMatch = result.error.match(/^\[([A-Z_]+)\] (.+)$/);
         
-        if (result.error.includes('|')) {
-          const parts = result.error.split('|');
-          errorCode = parts[0];
-          errorMessage = parts.slice(1).join('|'); // In case message contains |
-        }
-
-        console.log('🔍 [LOGIN] Error code:', errorCode);
-
-        // Map error codes to user-friendly messages
-        if (errorCode === 'ACCOUNT_NOT_VERIFIED') {
+        if (bracketMatch) {
+          const errorCode = bracketMatch[1];
+          const errorMessage = bracketMatch[2];
+          
+          console.log('🔍 [LOGIN] Error code:', errorCode);
+          
+          // Display the exact error message from backend
           setError(errorMessage);
-        } else if (errorCode === 'ACCOUNT_REJECTED') {
-          setError(errorMessage);
-        } else if (errorCode === 'ACCOUNT_SUSPENDED') {
-          setError(errorMessage);
-        } else if (errorCode === 'ACCOUNT_INACTIVE') {
-          setError(errorMessage);
-        } else if (errorCode === 'CredentialsSignin' || errorCode === 'CallbackRouteError') {
+        } else if (result.error === 'CredentialsSignin' || result.error === 'CallbackRouteError') {
           setError('Username atau password salah.');
-        } else if (errorCode === 'Configuration') {
+        } else if (result.error === 'Configuration') {
           setError('Terjadi kesalahan server. Silakan coba lagi.');
-        } else if (errorMessage.includes('belum divalidasi')) {
-          // Fallback for old format error messages
-          setError('Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai.\n\nJika sudah lebih dari 1x24 jam, hubungi admin sekolah.');
-        } else if (errorMessage.includes('ditolak')) {
-          setError('Akun Anda ditolak. Silakan hubungi pihak sekolah.');
-        } else if (errorMessage.includes('ditangguhkan')) {
-          setError('Akun Anda ditangguhkan. Silakan hubungi pihak sekolah.');
-        } else if (errorMessage.includes('tidak aktif')) {
-          setError('Akun Anda tidak aktif.');
         } else {
-          // Default to credentials error for security and clean UI
-          setError('Username atau password salah.');
+          // Fallback for backward compatibility with old error messages
+          if (result.error.includes('belum divalidasi')) {
+            setError('Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai. Jika sudah lebih dari 1x24 jam, hubungi admin sekolah.');
+          } else if (result.error.includes('ditolak')) {
+            setError('Akun Anda ditolak oleh admin. Silakan hubungi pihak sekolah.');
+          } else if (result.error.includes('ditangguhkan')) {
+            setError('Akun Anda ditangguhkan. Silakan hubungi pihak sekolah.');
+          } else if (result.error.includes('tidak aktif')) {
+            setError('Akun Anda tidak aktif. Silakan hubungi admin sekolah.');
+          } else {
+            // Default to credentials error for security and clean UI
+            setError('Username atau password salah.');
+          }
         }
         setLoading(false);
         return;
@@ -202,7 +194,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm whitespace-pre-line">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
                   {error}
                 </div>
               )}
