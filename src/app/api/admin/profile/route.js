@@ -296,3 +296,52 @@ export async function PATCH(request) {
     );
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Update user - set both signatureUrl and ttdUrl to null
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        signatureUrl: null,
+        ttdUrl: null
+      }
+    });
+
+    // Log aktivitas
+    try {
+      await prisma.activityLog.create({
+        data: {
+          actorId: session.user.id,
+          actorRole: session.user.role,
+          actorName: session.user.name,
+          action: 'DELETE',
+          title: 'Hapus Tanda Tangan',
+          description: 'Menghapus tanda tangan digital admin',
+          metadata: {
+            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'Unknown',
+            device: request.headers.get('user-agent') || 'Unknown'
+          }
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to create activity log:', logError);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Tanda tangan berhasil dihapus'
+    });
+  } catch (error) {
+    console.error('Error deleting signature:', error);
+    return NextResponse.json(
+      { error: 'Gagal menghapus tanda tangan' },
+      { status: 500 }
+    );
+  }
+}

@@ -20,7 +20,8 @@ import {
   CheckCircle,
   AlertTriangle,
   X,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
@@ -56,6 +57,8 @@ export default function ProfileClient({ initialData }) {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRegenerateConfirmModal, setShowRegenerateConfirmModal] = useState(false);
   const [regenerateLoading, setRegenerateLoading] = useState(false);
+  const [showDeleteSignatureModal, setShowDeleteSignatureModal] = useState(false);
+  const [deleteSignatureLoading, setDeleteSignatureLoading] = useState(false);
 
   const fetchProfileData = async () => {
     try {
@@ -277,6 +280,33 @@ export default function ProfileClient({ initialData }) {
     }
   };
 
+  const handleDeleteSignature = async () => {
+    try {
+      setDeleteSignatureLoading(true);
+      setError('');
+      
+      const res = await fetch('/api/admin/profile', {
+        method: 'DELETE'
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success('Tanda tangan berhasil dihapus');
+        setSignaturePreviews(prev => ({ ...prev, koordinator: null }));
+        setShowDeleteSignatureModal(false);
+        await fetchProfileData();
+      } else {
+        toast.error(data.error || 'Gagal menghapus tanda tangan. Coba lagi.');
+      }
+    } catch (error) {
+      console.error('Error deleting signature:', error);
+      toast.error('Gagal menghapus tanda tangan. Coba lagi.');
+    } finally {
+      setDeleteSignatureLoading(false);
+    }
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Toast Notifications */}
@@ -468,7 +498,7 @@ export default function ProfileClient({ initialData }) {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-3">
                   <label className="flex-1 cursor-pointer">
                     <div className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200">
                       <Upload size={18} />
@@ -484,10 +514,18 @@ export default function ProfileClient({ initialData }) {
                           handleSignatureUpload('koordinator', file);
                         }
                       }}
-                      disabled={saveLoading}
+                      disabled={saveLoading || deleteSignatureLoading}
                       className="hidden"
                     />
                   </label>
+                  <button
+                    onClick={() => setShowDeleteSignatureModal(true)}
+                    disabled={deleteSignatureLoading || saveLoading}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-red-600 bg-white border-2 border-red-300 hover:bg-red-50 hover:border-red-400 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={18} />
+                    Hapus
+                  </button>
                 </div>
               </div>
             ) : (
@@ -875,6 +913,94 @@ export default function ProfileClient({ initialData }) {
                     </>
                   ) : (
                     'Ya, Reset'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Signature Confirmation Modal */}
+      {showDeleteSignatureModal && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => !deleteSignatureLoading && setShowDeleteSignatureModal(false)}
+        >
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-signature-modal-title"
+            aria-describedby="delete-signature-modal-description"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-rose-500 to-red-600 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Trash2 size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 id="delete-signature-modal-title" className="text-lg font-bold text-white">
+                      Hapus Tanda Tangan?
+                    </h3>
+                    <p className="text-rose-50 text-sm mt-1">
+                      Tindakan ini tidak dapat dibatalkan
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => !deleteSignatureLoading && setShowDeleteSignatureModal(false)}
+                  disabled={deleteSignatureLoading}
+                  className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  aria-label="Tutup modal"
+                >
+                  <X size={20} className="text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <div id="delete-signature-modal-description" className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-1.5 bg-amber-100 rounded-lg shrink-0 mt-0.5">
+                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-amber-800 leading-relaxed flex-1">
+                    Tanda tangan akan dihapus dan tidak akan tampil di laporan. Anda bisa upload lagi kapan saja.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowDeleteSignatureModal(false)}
+                  disabled={deleteSignatureLoading}
+                  autoFocus
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleDeleteSignature}
+                  disabled={deleteSignatureLoading}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center gap-2 shadow-lg shadow-rose-200"
+                >
+                  {deleteSignatureLoading ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" />
+                      Menghapus...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Ya, Hapus
+                    </>
                   )}
                 </button>
               </div>

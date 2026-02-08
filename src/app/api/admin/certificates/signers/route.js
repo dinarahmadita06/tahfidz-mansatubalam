@@ -73,3 +73,45 @@ export async function PUT(request) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type'); // SIGNER_1 or SIGNER_2
+    const field = searchParams.get('field'); // signatureData or capData
+
+    if (!type || !field) {
+      return NextResponse.json({ message: 'Missing type or field parameter' }, { status: 400 });
+    }
+
+    if (!['signatureData', 'capData'].includes(field)) {
+      return NextResponse.json({ message: 'Invalid field parameter' }, { status: 400 });
+    }
+
+    const signer = await prisma.adminSignature.findUnique({
+      where: { type }
+    });
+
+    if (!signer) {
+      return NextResponse.json({ message: 'Signer not found' }, { status: 404 });
+    }
+
+    // Update the specific field to empty string
+    const updated = await prisma.adminSignature.update({
+      where: { type },
+      data: { [field]: '', updatedAt: new Date() }
+    });
+
+    return NextResponse.json({ 
+      message: 'Signature deleted successfully',
+      signer: updated 
+    });
+  } catch (error) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+}

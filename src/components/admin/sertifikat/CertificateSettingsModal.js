@@ -19,6 +19,8 @@ export default function CertificateSettingsModal({ isOpen, onClose }) {
     { type: 'SIGNER_1', jabatan: '', nama: '', signatureData: '', capData: '', capOpacity: 0.4, capScale: 1.0, capOffsetX: 0, capOffsetY: 0 },
     { type: 'SIGNER_2', jabatan: '', nama: '', signatureData: '', capData: '', capOpacity: 0.4, capScale: 1.0, capOffsetX: 0, capOffsetY: 0 }
   ]);
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: '', field: '' });
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (isOpen) fetchSigners();
@@ -61,6 +63,30 @@ export default function CertificateSettingsModal({ isOpen, onClose }) {
       handleInputChange(type, field, reader.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleDeleteSignature = async () => {
+    const { type, field } = deleteConfirm;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/certificates/signers?type=${type}&field=${field}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        // Update local state
+        handleInputChange(type, field, '');
+        toast.success('Tanda tangan berhasil dihapus');
+        setDeleteConfirm({ show: false, type: '', field: '' });
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Gagal menghapus tanda tangan. Coba lagi.');
+      }
+    } catch (err) {
+      toast.error('Gagal menghapus tanda tangan. Coba lagi.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -165,19 +191,37 @@ export default function CertificateSettingsModal({ isOpen, onClose }) {
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Tanda Tangan Digital</label>
-                    <div className="relative group">
-                      {signer.signatureData ? (
+                    {signer.signatureData ? (
+                      <div className="space-y-3">
                         <div className="relative w-full h-32 bg-white rounded-xl border-2 border-dashed border-emerald-200 flex items-center justify-center overflow-hidden">
                           <img src={signer.signatureData} alt="TTD" className="max-h-full object-contain p-2" />
+                          <div className="absolute top-2 right-2 px-2 py-1 bg-emerald-600 text-white text-[9px] font-bold uppercase tracking-wider rounded-md shadow">
+                            Tanda Tangan Aktif
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <label className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm">
+                            <Upload size={16} />
+                            Ganti
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(signer.type, 'signatureData', e)}
+                            />
+                          </label>
                           <button
                             type="button"
-                            onClick={() => handleInputChange(signer.type, 'signatureData', '')}
-                            className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => setDeleteConfirm({ show: true, type: signer.type, field: 'signatureData' })}
+                            className="flex-1 px-4 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border-2 border-rose-300 text-xs font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
+                            Hapus
                           </button>
                         </div>
-                      ) : (
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
                         <label className="w-full h-32 bg-white rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/30 transition-all">
                           <Upload className="text-slate-400" size={24} />
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Upload TTD (PNG/JPG)</span>
@@ -188,25 +232,44 @@ export default function CertificateSettingsModal({ isOpen, onClose }) {
                             onChange={(e) => handleFileUpload(signer.type, 'signatureData', e)}
                           />
                         </label>
-                      )}
-                    </div>
+                        <p className="text-[10px] text-slate-400 italic text-center">Belum ada tanda tangan</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Cap Digital (Stempel)</label>
-                    <div className="relative group">
-                      {signer.capData ? (
+                    {signer.capData ? (
+                      <div className="space-y-3">
                         <div className="relative w-full h-32 bg-white rounded-xl border-2 border-dashed border-amber-200 flex items-center justify-center overflow-hidden">
                           <img src={signer.capData} alt="Cap" className="max-h-full object-contain p-2" />
+                          <div className="absolute top-2 right-2 px-2 py-1 bg-amber-600 text-white text-[9px] font-bold uppercase tracking-wider rounded-md shadow">
+                            Cap Aktif
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <label className="flex-1 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm">
+                            <Upload size={16} />
+                            Ganti
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/png"
+                              onChange={(e) => handleFileUpload(signer.type, 'capData', e)}
+                            />
+                          </label>
                           <button
                             type="button"
-                            onClick={() => handleInputChange(signer.type, 'capData', '')}
-                            className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => setDeleteConfirm({ show: true, type: signer.type, field: 'capData' })}
+                            className="flex-1 px-4 py-2.5 bg-white hover:bg-rose-50 text-rose-600 border-2 border-rose-300 text-xs font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
+                            Hapus
                           </button>
                         </div>
-                      ) : (
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
                         <label className="w-full h-32 bg-white rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all">
                           <Upload className="text-slate-400" size={24} />
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Upload Cap (PNG)</span>
@@ -217,8 +280,9 @@ export default function CertificateSettingsModal({ isOpen, onClose }) {
                             onChange={(e) => handleFileUpload(signer.type, 'capData', e)}
                           />
                         </label>
-                      )}
-                    </div>
+                        <p className="text-[10px] text-slate-400 italic text-center">Belum ada cap</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -229,7 +293,7 @@ export default function CertificateSettingsModal({ isOpen, onClose }) {
         {/* Footer */}
         <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center shrink-0">
           <p className="text-[10px] font-bold text-slate-400 italic max-w-sm">
-            * Tanda tangan akan muncul otomatis di setiap cetakan sertifikat (Non-Award & Award).
+            * Tanda tangan akan muncul otomatis di setiap cetakan sertifikat
           </p>
           <div className="flex gap-2">
             <button
@@ -249,6 +313,80 @@ export default function CertificateSettingsModal({ isOpen, onClose }) {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.show && (
+        <div className="absolute inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Trash2 size={24} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      Hapus Tanda Tangan?
+                    </h3>
+                    <p className="text-emerald-50 text-sm mt-1">
+                      Tindakan ini tidak dapat dibatalkan
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => !deleting && setDeleteConfirm({ show: false, type: '', field: '' })}
+                  disabled={deleting}
+                  className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  aria-label="Tutup modal"
+                >
+                  <X size={20} className="text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  {deleteConfirm.field === 'signatureData' ? 'Tanda tangan' : 'Cap'} akan dihapus dan <b>tidak akan tampil di laporan</b>. Anda bisa upload lagi kapan saja.
+                </p>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                <button
+                  onClick={() => setDeleteConfirm({ show: false, type: '', field: '' })}
+                  disabled={deleting}
+                  autoFocus
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-gray-300"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleDeleteSignature}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Menghapus...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Ya, Hapus
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
