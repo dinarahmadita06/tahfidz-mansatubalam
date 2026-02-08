@@ -568,41 +568,42 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
             </h3>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
               gap: '12px'
             }}>
               {Object.keys(headerIndexMap)
                 .sort((a, b) => headerIndexMap[a] - headerIndexMap[b])
-                .map(header => (
-                <div key={header} style={{
-                  padding: '12px',
-                  background: colors.emerald[50],
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.emerald[100]}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <CheckCircle size={16} color={colors.emerald[600]} />
-                  <div>
-                    <p style={{
-                      fontSize: '12px',
-                      color: colors.gray[400],
-                      margin: 0
-                    }}>
-                      Kolom {headerIndexMap[header] + 1}
-                    </p>
-                    <p style={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.emerald[700],
-                      margin: 0
-                    }}>
-                      {header}
-                    </p>
+                .map((header) => (
+                  <div key={header} style={{
+                    padding: '12px',
+                    background: colors.emerald[50],
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.emerald[100]}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <CheckCircle size={16} color={colors.emerald[600]} />
+                    <div>
+                      <p style={{
+                        fontSize: '12px',
+                        color: colors.gray[400],
+                        margin: 0
+                      }}>
+                        Kolom {headerIndexMap[header] + 1}
+                      </p>
+                      <p style={{
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: colors.emerald[700],
+                        margin: 0,
+                        textTransform: 'capitalize'
+                      }}>
+                        {header}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
 
@@ -632,254 +633,58 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                       textAlign: 'left',
                       fontWeight: 600,
                       color: colors.gray[600],
-                      borderBottom: `2px solid ${colors.gray[200]}`
+                      borderBottom: `2px solid ${colors.gray[200]}`,
+                      minWidth: '50px'
                     }}>
                       No
                     </th>
-                    {type === 'guru' ? (
-                      <>
-                        <th style={{
+                    {/* Tampilkan header dinamis sesuai yang terdeteksi */}
+                    {Object.keys(headerIndexMap)
+                      .sort((a, b) => headerIndexMap[a] - headerIndexMap[b])
+                      .map((header) => (
+                        <th key={header} style={{
                           padding: '12px',
                           textAlign: 'left',
                           fontWeight: 600,
                           color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
+                          borderBottom: `2px solid ${colors.gray[200]}`,
+                          minWidth: '120px',
+                          textTransform: 'capitalize'
                         }}>
-                          Kode Guru / Username
+                          {header}
                         </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          Nama Lengkap
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          NIP
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          Jenis Kelamin
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          Tanggal Lahir
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          Kelas Binaan
-                        </th>
-                      </>
-                    ) : (
-                      <>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          Nama Siswa
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          NISN
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          NIS
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          Jenis Kelamin
-                        </th>
-                        <th style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: colors.gray[600],
-                          borderBottom: `2px solid ${colors.gray[200]}`
-                        }}>
-                          Kelas Saat Ini
-                        </th>
-                      </>
-                    )}
+                      ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {previewData.map((row, idx) => {
-                    if (type === 'guru') {
-                      // Preview untuk guru
-                      const getKodeGuruIndex = () => {
-                        for (const key of Object.keys(headerIndexMap)) {
-                          if (key.includes('kode guru') || key.includes('username')) {
-                            return headerIndexMap[key];
-                          }
-                        }
-                        return undefined;
-                      };
-                      
-                      const getNamaIndex = () => {
-                        for (const key of Object.keys(headerIndexMap)) {
-                          if (key.includes('nama') && !key.includes('kelas')) {
-                            return headerIndexMap[key];
-                          }
-                        }
-                        return undefined;
-                      };
-                      
-                      const getNipIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nip'))];
-                      const getJkIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('jenis kelamin') || k === 'jk')];
-                      const getTglLahirIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('tanggal lahir') || k.includes('tgl lahir'))];
-                      const getKelasBinaanIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('kelas binaan'))];
-                      
-                      return (
-                        <tr key={idx} style={{
-                          borderBottom: `1px solid ${colors.gray[100]}`
-                        }}>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {idx + 1}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600],
-                            fontWeight: 600
-                          }}>
-                            {row[getKodeGuruIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getNamaIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getNipIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getJkIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getTglLahirIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getKelasBinaanIndex()] || '-'}
-                          </td>
-                        </tr>
-                      );
-                    } else {
-                      // Preview untuk siswa
-                      const getNamaIndex = () => {
-                        for (const key of Object.keys(headerIndexMap)) {
-                          if (key.includes('nama') && !key.includes('ayah') && !key.includes('ibu') && !key.includes('wali')) {
-                            return headerIndexMap[key];
-                          }
-                        }
-                        return undefined;
-                      };
-                      
-                      const getNisnIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nisn'))];
-                      const getNisIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('nis') && !k.includes('nisn'))];
-                      const getJkIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('jenis kelamin') && !k.includes('wali'))];
-                      const getKelasIndex = () => headerIndexMap[Object.keys(headerIndexMap).find(k => k.includes('kelas') && !k.includes('angkatan'))];
-                      
-                      return (
-                        <tr key={idx} style={{
-                          borderBottom: `1px solid ${colors.gray[100]}`
-                        }}>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {idx + 1}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getNamaIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getNisnIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getNisIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getJkIndex()] || '-'}
-                          </td>
-                          <td style={{
-                            padding: '12px',
-                            color: colors.gray[600]
-                          }}>
-                            {row[getKelasIndex()] || '-'}
-                          </td>
-                        </tr>
-                      );
-                    }
-                  })}
+                  {previewData.map((row, idx) => (
+                    <tr key={idx} style={{
+                      borderBottom: `1px solid ${colors.gray[100]}`
+                    }}>
+                      <td style={{
+                        padding: '12px',
+                        color: colors.gray[600],
+                        fontWeight: 600
+                      }}>
+                        {idx + 1}
+                      </td>
+                      {/* Tampilkan data sesuai urutan kolom */}
+                      {Object.keys(headerIndexMap)
+                        .sort((a, b) => headerIndexMap[a] - headerIndexMap[b])
+                        .map((header) => {
+                          const colIndex = headerIndexMap[header];
+                          const value = row[colIndex];
+                          return (
+                            <td key={header} style={{
+                              padding: '12px',
+                              color: colors.gray[600]
+                            }}>
+                              {value || '-'}
+                            </td>
+                          );
+                        })}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
