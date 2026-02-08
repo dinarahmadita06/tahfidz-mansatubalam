@@ -468,7 +468,7 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
         <img src="/logo-man1.png" alt="Logo MAN 1" />
       </div>
       <div class="header-center">
-        <div class="school-name">MADRASAH TAHFIDZ AL-QUR'AN</div>
+        <div class="school-name">MAN 1 Bandar Lampung</div>
         <div class="school-address">
           Jl. Letnan Kolonel Jl. Endro Suratmin, Harapan Jaya, Kec. Sukarame<br>
           Kota Bandar Lampung, Lampung 35131
