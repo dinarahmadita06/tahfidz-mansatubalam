@@ -31,6 +31,7 @@ export default async function ProfileAdminPage() {
       role: true,
       nip: true,
       jabatan: true,
+      alamat: true,
       createdAt: true,
       ttdUrl: true,
       signatureUrl: true
@@ -51,7 +52,7 @@ export default async function ProfileAdminPage() {
     phoneNumber: '0812-3456-7890',
     jabatan: admin.jabatan || 'Koordinator Tahfidz',
     nip: admin.nip || '',
-    alamat: 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
+    alamat: admin.alamat || 'MAN 1 Bandar Lampung, Jl. Raden Intan No. 12',
     tanggalBergabung: admin.createdAt ? new Date(admin.createdAt).toLocaleDateString('id-ID', {
       day: '2-digit',
       month: 'long',

@@ -421,8 +421,8 @@ export default function AwardTab() {
 
       {/* Quick Filter Bar */}
       <div className="bg-white rounded-lg border border-gray-200 p-3">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex items-center flex-wrap gap-2">
+          <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
@@ -437,7 +437,7 @@ export default function AwardTab() {
           <select
             value={candidateFilters.jenjang}
             onChange={(e) => setCandidateFilters({ ...candidateFilters, jenjang: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+            className="flex-none w-32 px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
           >
             <option value="">Jenjang</option>
             <option value="X">X</option>
@@ -448,7 +448,7 @@ export default function AwardTab() {
           <select
             value={candidateFilters.kelasId}
             onChange={(e) => setCandidateFilters({ ...candidateFilters, kelasId: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+            className="flex-none w-40 px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
           >
             <option value="">Kelas</option>
             {filteredKelasByJenjang.map((k) => <option key={k.id} value={k.id}>{k.nama}</option>)}
@@ -457,7 +457,7 @@ export default function AwardTab() {
           <select
             value={candidateFilters.periode}
             onChange={(e) => setCandidateFilters({ ...candidateFilters, periode: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
+            className="flex-none w-32 px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm cursor-pointer"
           >
             <option value="">Tahun</option>
             {Array.from({ length: 5 }).map((_, i) => {
@@ -466,39 +466,39 @@ export default function AwardTab() {
             })}
           </select>
 
-          <div className="flex items-center gap-1 px-2 py-1.5 bg-white rounded-lg border border-gray-200">
-            <Calendar size={14} className="text-gray-400" />
-            <input 
-              type="date" 
-              value={certDate}
-              onChange={(e) => setCertDate(e.target.value)}
-              className="text-xs text-gray-600 outline-none w-24"
-            />
+          <input 
+            type="date" 
+            value={certDate}
+            onChange={(e) => setCertDate(e.target.value)}
+            className="flex-none w-44 px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm"
+          />
+
+          {/* Action Buttons Group - Always stick to right */}
+          <div className="flex items-center gap-2 flex-none ml-auto">
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all border border-gray-300"
+              title="Pengaturan"
+            >
+              <Settings size={18} />
+            </button>
+
+            <button
+              onClick={() => setIsSettingsModalOpen(true)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all border border-gray-300"
+              title="TTD"
+            >
+              <FileSignature size={18} />
+            </button>
+
+            <button
+              onClick={() => fetchCandidates()}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all border border-gray-300"
+              title="Refresh"
+            >
+              <RefreshCw size={18} />
+            </button>
           </div>
-
-          <button
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-            title="Pengaturan"
-          >
-            <Settings size={18} />
-          </button>
-
-          <button
-            onClick={() => setIsSettingsModalOpen(true)}
-            className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-            title="TTD"
-          >
-            <FileSignature size={18} />
-          </button>
-
-          <button
-            onClick={() => fetchCandidates()}
-            className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw size={18} />
-          </button>
         </div>
 
         {showAdvancedFilters && (

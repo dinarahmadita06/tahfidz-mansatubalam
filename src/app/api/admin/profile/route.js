@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
-import { getCachedData, setCachedData } from '@/lib/cache';
+import { getCachedData, setCachedData, invalidateCache } from '@/lib/cache';
 
 // Force Node.js runtime
 export const runtime = 'nodejs';
@@ -148,6 +148,10 @@ export async function PUT(request) {
     });
 
     console.log('User updated successfully:', updatedAdmin.id);
+
+    // Invalidate cache
+    const cacheKey = `admin-profile-${session.user.id}`;
+    invalidateCache(cacheKey);
 
     // Log aktivitas
     try {
@@ -312,6 +316,10 @@ export async function DELETE(request) {
         ttdUrl: null
       }
     });
+
+    // Invalidate cache
+    const cacheKey = `admin-profile-${session.user.id}`;
+    invalidateCache(cacheKey);
 
     // Log aktivitas
     try {

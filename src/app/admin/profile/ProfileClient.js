@@ -936,17 +936,17 @@ export default function ProfileClient({ initialData }) {
             aria-describedby="delete-signature-modal-description"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-rose-500 to-red-600 p-6">
+            <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Trash2 size={24} className="text-white" />
+                  <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Trash2 size={24} className="text-red-600" />
                   </div>
                   <div>
                     <h3 id="delete-signature-modal-title" className="text-lg font-bold text-white">
                       Hapus Tanda Tangan?
                     </h3>
-                    <p className="text-rose-50 text-sm mt-1">
+                    <p className="text-emerald-50 text-sm mt-1">
                       Tindakan ini tidak dapat dibatalkan
                     </p>
                   </div>
@@ -965,16 +965,9 @@ export default function ProfileClient({ initialData }) {
             {/* Body */}
             <div className="p-6">
               <div id="delete-signature-modal-description" className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-1.5 bg-amber-100 rounded-lg shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm text-amber-800 leading-relaxed flex-1">
-                    Tanda tangan akan dihapus dan tidak akan tampil di laporan. Anda bisa upload lagi kapan saja.
-                  </p>
-                </div>
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  Tanda tangan akan dihapus dan <b>tidak akan tampil di laporan</b>. Anda bisa upload lagi kapan saja.
+                </p>
               </div>
 
               <div className="flex flex-col-reverse sm:flex-row gap-3">
@@ -989,7 +982,7 @@ export default function ProfileClient({ initialData }) {
                 <button
                   onClick={handleDeleteSignature}
                   disabled={deleteSignatureLoading}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center gap-2 shadow-lg shadow-rose-200"
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center gap-2"
                 >
                   {deleteSignatureLoading ? (
                     <>
