@@ -185,7 +185,8 @@ export async function POST(request) {
       }
     });
 
-    // Invalidate guru cache karena kelas binaan berubah
+    // Invalidate cache for kelas and guru
+    invalidateCache('kelas-list');
     invalidateCache('guru-list');
 
     return NextResponse.json(kelas);

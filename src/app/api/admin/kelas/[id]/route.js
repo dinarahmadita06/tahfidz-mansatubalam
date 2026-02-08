@@ -195,7 +195,8 @@ export async function PUT(request, { params }) {
       // Don't throw, just log the error
     }
 
-    // Invalidate guru cache karena kelas binaan berubah
+    // Invalidate cache for kelas and guru
+    invalidateCache('kelas-list');
     invalidateCache('guru-list');
 
     return NextResponse.json(updatedKelas);
@@ -353,7 +354,8 @@ export async function DELETE(request, { params }) {
       // Don't fail the request if logging fails
     }
 
-    // Invalidate guru cache karena kelas binaan berubah
+    // Invalidate cache for kelas and guru
+    invalidateCache('kelas-list');
     invalidateCache('guru-list');
 
     return NextResponse.json({

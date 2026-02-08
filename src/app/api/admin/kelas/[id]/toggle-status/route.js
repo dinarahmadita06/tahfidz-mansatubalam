@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 // PATCH - Toggle status kelas (AKTIF <-> NONAKTIF)
 export async function PATCH(request, { params }) {
@@ -116,6 +117,9 @@ export async function PATCH(request, { params }) {
       console.error('Error logging toggle status activity:', logError);
       // Don't fail the request if logging fails
     }
+
+    // Invalidate cache for kelas list
+    invalidateCache('kelas-list');
 
     return NextResponse.json({
       message: `Status kelas berhasil diubah menjadi ${status}`,

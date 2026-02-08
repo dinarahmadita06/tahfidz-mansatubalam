@@ -347,7 +347,12 @@ export default function AdminKelasPage() {
 
   const fetchKelas = async () => {
     try {
-      const response = await fetch('/api/kelas');
+      const response = await fetch('/api/kelas', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       const data = await response.json();
       setKelas(data);
     } catch (error) {
@@ -433,8 +438,20 @@ export default function AdminKelasPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Refetch data dulu sebelum tutup modal
+        // Update state immediately with new/updated kelas
+        if (editingKelas) {
+          // Update existing kelas in state
+          setKelas(prevKelas => 
+            prevKelas.map(k => k.id === editingKelas.id ? data : k)
+          );
+        } else {
+          // Add new kelas to state immediately
+          setKelas(prevKelas => [...prevKelas, data]);
+        }
+        
+        // Then refetch to ensure data consistency
         await fetchKelas();
+        
         setShowKelasModal(false);
         resetKelasForm();
         alert(editingKelas ? 'Kelas berhasil diupdate' : 'Kelas berhasil ditambahkan');
