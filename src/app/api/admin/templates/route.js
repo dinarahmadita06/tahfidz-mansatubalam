@@ -11,6 +11,7 @@ import {
   getAllTemplates,
   getActiveTemplate,
   setActiveTemplate,
+  deactivateTemplate,
   deleteTemplate
 } from '@/lib/template-service';
 
@@ -90,6 +91,46 @@ export async function PUT(request) {
     
     return NextResponse.json(
       { error: error.message || 'Failed to activate template' },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Deactivate template
+export async function PATCH(request) {
+  try {
+    const session = await auth();
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+    
+    const body = await request.json();
+    const { templateId } = body;
+    
+    if (!templateId) {
+      return NextResponse.json(
+        { error: 'Template ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    const template = await deactivateTemplate(templateId);
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Template deactivated successfully',
+      template: template
+    });
+    
+  } catch (error) {
+    console.error('Deactivate template error:', error);
+    
+    return NextResponse.json(
+      { error: error.message || 'Failed to deactivate template' },
       { status: 500 }
     );
   }

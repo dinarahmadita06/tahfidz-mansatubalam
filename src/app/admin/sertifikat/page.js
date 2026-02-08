@@ -24,6 +24,13 @@ export default function SertifikatPage() {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Read tab from URL query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && ['non-award', 'award', 'templates'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
   }, []);
 
   if (!mounted) return null;

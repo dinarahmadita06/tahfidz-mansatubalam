@@ -151,16 +151,49 @@ export default function TemplateManager() {
     }
   };
 
+  // Deactivate template
+  const handleDeactivate = async (templateId) => {
+    // Confirmation dialog
+    const confirmed = confirm(
+      'Nonaktifkan template ini?\n\n' +
+      'Sertifikat tidak dapat digenerate sampai ada template yang diaktifkan kembali.\n\n' +
+      'Yakin ingin melanjutkan?'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      const response = await fetch('/api/admin/templates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateId })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast.success('Template berhasil dinonaktifkan');
+        await loadTemplates(); // Auto refresh
+      } else {
+        const errorMessage = data.error || data.message || 'Gagal menonaktifkan template';
+        toast.error(errorMessage);
+        console.error('Deactivate error:', data);
+      }
+    } catch (error) {
+      toast.error('Gagal menonaktifkan template');
+      console.error('Deactivate exception:', error);
+    }
+  };
+
   // Toggle template status (activate/deactivate)
   const handleToggleStatus = async (template) => {
     if (template.isActive) {
-      // Cannot deactivate the only active template
-      toast.error('Tidak dapat menonaktifkan template yang sedang digunakan. Aktifkan template lain terlebih dahulu.');
-      return;
+      // Deactivate active template
+      await handleDeactivate(template.id);
+    } else {
+      // Activate inactive template
+      await handleSetActive(template.id);
     }
-    
-    // If not active, activate it
-    await handleSetActive(template.id);
   };
   
   // Delete template
@@ -290,15 +323,15 @@ export default function TemplateManager() {
                     SEDANG DIGUNAKAN
                   </span>
                   
-                  {/* Tombol Status */}
+                  {/* Tombol Nonaktifkan */}
                   <button
-                    disabled
-                    className="w-full h-10 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-100/60 text-emerald-800 text-sm font-medium rounded-lg border border-emerald-200/60 cursor-not-allowed"
+                    onClick={() => handleDeactivate(activeTemplate.id)}
+                    className="w-full h-10 flex items-center justify-center gap-2 px-4 py-2 bg-amber-100/80 hover:bg-amber-200/80 text-amber-800 text-sm font-medium rounded-lg border border-amber-200/60 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                     </svg>
-                    Aktif
+                    Nonaktifkan
                   </button>
                   
                   {/* Tombol Hapus */}
@@ -370,14 +403,14 @@ export default function TemplateManager() {
                       {/* Hover Overlay - Action Icons (Pojok Kanan Atas) */}
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <div className="flex gap-1 bg-white/60 backdrop-blur-sm rounded-lg p-1.5 shadow-md border border-gray-200/40">
-                          {/* Icon Nonaktifkan (hanya untuk template aktif) */}
+                          {/* Icon Toggle Status (Aktifkan/Nonaktifkan) */}
                           {template.isActive ? (
                             <button
-                              disabled
-                              className="p-1.5 bg-gray-100/80 rounded-md cursor-not-allowed opacity-60"
-                              title="Template sedang digunakan"
+                              onClick={() => handleToggleStatus(template)}
+                              className="p-1.5 bg-amber-100/80 hover:bg-amber-200/80 rounded-md transition-colors"
+                              title="Nonaktifkan template"
                             >
-                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                               </svg>
                             </button>

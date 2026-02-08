@@ -99,6 +99,11 @@ export default function NonAwardTab() {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, success: 0, failed: 0, skipped: 0 });
   const [bulkErrors, setBulkErrors] = useState([]);
   const [bulkSummary, setBulkSummary] = useState(null);
+  
+  // Template aktif states
+  const [activeTemplate, setActiveTemplate] = useState(null);
+  const [checkingTemplate, setCheckingTemplate] = useState(true);
+  const [showTemplateWarningModal, setShowTemplateWarningModal] = useState(false);
 
   // Filter kelas berdasarkan jenjang
   const filteredKelasByJenjang = React.useMemo(() => {
@@ -177,7 +182,27 @@ export default function NonAwardTab() {
 
   useEffect(() => {
     fetchKelas();
+    fetchActiveTemplate();
   }, []);
+  
+  // Fetch active template
+  const fetchActiveTemplate = async () => {
+    setCheckingTemplate(true);
+    try {
+      const res = await fetch('/api/admin/templates?active=true');
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setActiveTemplate(data.template);
+      } else {
+        setActiveTemplate(null);
+      }
+    } catch (error) {
+      console.error('Error fetching active template:', error);
+      setActiveTemplate(null);
+    } finally {
+      setCheckingTemplate(false);
+    }
+  };
 
   const handleGenerate = async (tasmiId) => {
     try {
@@ -197,6 +222,12 @@ export default function NonAwardTab() {
   };
 
   const handlePreview = async (tasmiId, download = false) => {
+    // Cek template aktif terlebih dahulu
+    if (!activeTemplate) {
+      setShowTemplateWarningModal(true);
+      return;
+    }
+    
     // Membuka PDF Preview di tab baru atau trigger download
     const url = `/api/admin/certificates/non-award/${tasmiId}/preview?date=${certDate}${download ? '&download=true' : ''}`;
     window.open(url, '_blank');
@@ -220,6 +251,12 @@ export default function NonAwardTab() {
   };
 
   const handleBulkGenerate = async () => {
+    // Cek template aktif terlebih dahulu
+    if (!activeTemplate) {
+      setShowTemplateWarningModal(true);
+      return;
+    }
+    
     setBulkGenerating(true);
     setBulkProgress({ current: 0, total: 0 });
     setBulkErrors([]);
@@ -394,6 +431,58 @@ export default function NonAwardTab() {
         </div>
       </div>
 
+      {/* WARNING BANNER - Template Tidak Aktif */}
+      {!activeTemplate && !checkingTemplate && (
+        <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-5 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex items-start gap-4">
+            {/* Icon Warning */}
+            <div className="flex-shrink-0 bg-amber-100 rounded-xl p-3">
+              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-amber-900 mb-1">
+                Template Sertifikat Belum Aktif
+              </h3>
+              <p className="text-sm text-amber-800 leading-relaxed mb-4">
+                Generate sertifikat dinonaktifkan karena belum ada template sertifikat aktif. Silakan upload & aktifkan template terlebih dahulu.
+              </p>
+              
+              {/* CTA Button */}
+              <button
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'templates');
+                  window.location.href = url.toString();
+                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-100/80 hover:bg-orange-200/80 text-orange-800 font-semibold rounded-xl border-2 border-orange-300/60 shadow-sm hover:shadow-md transition-all active:scale-95"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                OK
+              </button>
+            </div>
+
+            {/* Close button (optional) */}
+            <button
+              onClick={() => {
+                // Optional: allow user to dismiss temporarily
+              }}
+              className="flex-shrink-0 text-amber-600 hover:text-amber-800 transition-colors p-1"
+              title="Tidak bisa ditutup sampai template diaktifkan"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
 
 
       {/* Desktop: Tabel, Mobile: Card List */}
@@ -468,7 +557,13 @@ export default function NonAwardTab() {
               <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
                 <button
                   onClick={() => handlePreview(tasmi.id)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-sky-50 text-sky-700 border border-sky-200/70 rounded-lg hover:bg-sky-100 transition text-sm font-medium"
+                  disabled={!activeTemplate}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border rounded-lg transition text-sm font-medium ${
+                    !activeTemplate 
+                      ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                      : 'bg-sky-50 text-sky-700 border-sky-200/70 hover:bg-sky-100'
+                  }`}
+                  title={!activeTemplate ? 'Aktifkan template sertifikat dulu untuk generate' : 'Preview sertifikat'}
                 >
                   <Eye size={14} />
                   Preview
@@ -483,7 +578,13 @@ export default function NonAwardTab() {
                 ) : (
                   <button
                     onClick={() => handlePreview(tasmi.id, true)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200/70 rounded-lg hover:bg-emerald-100 transition text-sm font-medium"
+                    disabled={!activeTemplate}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border rounded-lg transition text-sm font-medium ${
+                      !activeTemplate
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200/70 hover:bg-emerald-100'
+                    }`}
+                    title={!activeTemplate ? 'Aktifkan template sertifikat dulu untuk generate' : 'Download sertifikat'}
                   >
                     <Printer size={14} />
                     Download
@@ -574,8 +675,13 @@ export default function NonAwardTab() {
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => handlePreview(tasmi.id)}
-                          className={actionBtnClass('preview')}
-                          title="Preview"
+                          disabled={!activeTemplate}
+                          className={`h-9 w-9 rounded-xl flex items-center justify-center transition border ${
+                            !activeTemplate
+                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                              : actionBtnClass('preview')
+                          }`}
+                          title={!activeTemplate ? 'Aktifkan template sertifikat dulu untuk generate' : 'Preview'}
                         >
                           <Eye size={14} />
                         </button>
@@ -589,8 +695,13 @@ export default function NonAwardTab() {
                         ) : (
                           <button
                             onClick={() => handlePreview(tasmi.id, true)}
-                            className={actionBtnClass('print')}
-                            title="Download"
+                            disabled={!activeTemplate}
+                            className={`h-9 w-9 rounded-xl flex items-center justify-center transition border ${
+                              !activeTemplate
+                                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                : actionBtnClass('print')
+                            }`}
+                            title={!activeTemplate ? 'Aktifkan template sertifikat dulu untuk generate' : 'Download'}
                           >
                             <Printer size={14} />
                           </button>
@@ -614,8 +725,13 @@ export default function NonAwardTab() {
             )}
             <button
               onClick={() => setShowBulkModal(true)}
-              disabled={results.length === 0}
-              className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+              disabled={results.length === 0 || !activeTemplate}
+              className={`w-full sm:w-auto px-3 py-2 sm:py-1.5 text-white text-sm font-medium rounded-lg transition-all ${
+                !activeTemplate
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600'
+              } disabled:opacity-50`}
+              title={!activeTemplate ? 'Aktifkan template sertifikat dulu untuk generate' : 'Generate semua sertifikat'}
             >
               Generate Semua
             </button>
@@ -633,8 +749,13 @@ export default function NonAwardTab() {
           )}
           <button
             onClick={() => setShowBulkModal(true)}
-            disabled={results.length === 0}
-            className="w-full px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg"
+            disabled={results.length === 0 || !activeTemplate}
+            className={`w-full px-4 py-3 text-white text-sm font-bold rounded-xl transition-all shadow-lg ${
+              !activeTemplate
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-orange-500 hover:bg-orange-600'
+            } disabled:opacity-50`}
+            title={!activeTemplate ? 'Aktifkan template sertifikat dulu untuk generate' : 'Generate semua sertifikat'}
           >
             Generate Semua Sertifikat
           </button>
@@ -769,6 +890,76 @@ export default function NonAwardTab() {
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
       />
+      
+      {/* MODAL WARNING TEMPLATE TIDAK AKTIF */}
+      {showTemplateWarningModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 p-6">
+              <div className="flex items-center gap-3 text-white">
+                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Template Sertifikat Belum Aktif</h3>
+                  <p className="text-sm text-white/90 mt-0.5">Generate sertifikat tidak dapat dilakukan</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Body */}
+            <div className="p-6">
+              <p className="text-gray-700 leading-relaxed">
+                Sertifikat tidak dapat dibuat karena <span className="font-bold text-amber-700">belum ada template sertifikat aktif</span>. 
+                Silakan upload & aktifkan template terlebih dahulu.
+              </p>
+              
+              {/* Ilustrasi */}
+              <div className="mt-4 bg-amber-50 border-2 border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="text-sm text-amber-800">
+                  <p className="font-semibold mb-1">Langkah selanjutnya:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-xs">
+                    <li>Klik tombol <span className="font-bold">"Upload Template"</span> di bawah</li>
+                    <li>Upload file template sertifikat (PNG/JPG)</li>
+                    <li>Template akan otomatis aktif setelah di-upload</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => setShowTemplateWarningModal(false)}
+                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-all active:scale-95"
+              >
+                Nanti Saja
+              </button>
+              <button
+                onClick={() => {
+                  setShowTemplateWarningModal(false);
+                  // Navigate to template tab
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'templates');
+                  window.location.href = url.toString();
+                }}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 font-semibold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Upload Template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

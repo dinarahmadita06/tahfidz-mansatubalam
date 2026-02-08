@@ -223,6 +223,34 @@ export async function setActiveTemplate(templateId) {
 }
 
 /**
+ * Deactivate template (remove active status)
+ * @param {string} templateId - Template ID to deactivate
+ * @returns {Promise<Object>} Updated template
+ */
+export async function deactivateTemplate(templateId) {
+  // Check if template exists and is active
+  const template = await prisma.templateSertifikat.findUnique({
+    where: { id: templateId }
+  });
+  
+  if (!template) {
+    throw new Error('Template not found');
+  }
+  
+  if (!template.isActive) {
+    throw new Error('Template is already inactive');
+  }
+  
+  // Deactivate the template
+  const updatedTemplate = await prisma.templateSertifikat.update({
+    where: { id: templateId },
+    data: { isActive: false }
+  });
+  
+  return updatedTemplate;
+}
+
+/**
  * Delete template
  * @param {string} templateId - Template ID to delete
  * @returns {Promise<void>}
@@ -383,6 +411,7 @@ export default {
   getActiveTemplateBuffer,
   getAllTemplates,
   setActiveTemplate,
+  deactivateTemplate,
   deleteTemplate,
   getTemplateById,
   validateTemplate
