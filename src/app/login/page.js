@@ -51,36 +51,41 @@ export default function LoginPage() {
       if (result?.error) {
         console.error('❌ [LOGIN] Login failed:', result.error);
 
-        // Parse error with bracket notation: [ERROR_CODE] Message
-        const bracketMatch = result.error.match(/^\[([A-Z_]+)\] (.+)$/);
-        
-        if (bracketMatch) {
-          const errorCode = bracketMatch[1];
-          const errorMessage = bracketMatch[2];
-          
-          console.log('🔍 [LOGIN] Error code:', errorCode);
-          
-          // Display the exact error message from backend
-          setError(errorMessage);
-        } else if (result.error === 'CredentialsSignin' || result.error === 'CallbackRouteError') {
-          setError('Username atau password salah.');
-        } else if (result.error === 'Configuration') {
-          setError('Terjadi kesalahan server. Silakan coba lagi.');
-        } else {
-          // Fallback for backward compatibility with old error messages
-          if (result.error.includes('belum divalidasi')) {
-            setError('Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai. Jika sudah lebih dari 1x24 jam, hubungi admin sekolah.');
-          } else if (result.error.includes('ditolak')) {
-            setError('Akun Anda ditolak oleh admin. Silakan hubungi pihak sekolah.');
-          } else if (result.error.includes('ditangguhkan')) {
-            setError('Akun Anda ditangguhkan. Silakan hubungi pihak sekolah.');
-          } else if (result.error.includes('tidak aktif')) {
-            setError('Akun Anda tidak aktif. Silakan hubungi admin sekolah.');
+        // Check account status via separate API to get specific error message
+        try {
+          const statusResponse = await fetch('/api/auth/check-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: identifier.trim() })
+          });
+
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json();
+            console.log('🔍 [LOGIN] Account status:', statusData.status);
+
+            // Display specific error message based on account status
+            if (statusData.status === 'pending') {
+              setError(statusData.message);
+            } else if (statusData.status === 'rejected') {
+              setError(statusData.message);
+            } else if (statusData.status === 'suspended') {
+              setError(statusData.message);
+            } else if (statusData.status === 'inactive') {
+              setError(statusData.message);
+            } else {
+              // Account is approved but login failed - wrong password
+              setError('Username atau password salah.');
+            }
           } else {
-            // Default to credentials error for security and clean UI
+            // Fallback if status check fails
             setError('Username atau password salah.');
           }
+        } catch (statusError) {
+          console.error('⚠️ [LOGIN] Failed to check status:', statusError);
+          // Fallback to generic error
+          setError('Username atau password salah.');
         }
+
         setLoading(false);
         return;
       }
@@ -194,7 +199,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm whitespace-pre-line">
                   {error}
                 </div>
               )}

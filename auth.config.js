@@ -190,15 +190,15 @@ export const authConfig = {
           if (authenticatedUser.role === 'SISWA') {
             if (authenticatedUser.siswa?.status === 'pending') {
               console.log('⚠️  [AUTH] Siswa login blocked - status: pending (not verified):', authenticatedUser.id);
-              throw new Error("[NOT_VERIFIED] Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai. Jika sudah lebih dari 1x24 jam, hubungi admin sekolah.");
+              return null; // Return null to prevent CallbackRouteError
             }
             if (authenticatedUser.siswa?.status === 'rejected') {
               console.log('⚠️  [AUTH] Siswa login blocked - status: rejected:', authenticatedUser.id);
-              throw new Error("[REJECTED] Akun Anda ditolak oleh admin. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
+              return null;
             }
             if (authenticatedUser.siswa?.status === 'suspended') {
               console.log('⚠️  [AUTH] Siswa login blocked - status: suspended:', authenticatedUser.id);
-              throw new Error("[SUSPENDED] Akun Anda ditangguhkan. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
+              return null;
             }
           }
 
@@ -206,15 +206,15 @@ export const authConfig = {
           if (authenticatedUser.role === 'ORANG_TUA') {
             if (authenticatedUser.orangTua?.status === 'pending') {
               console.log('⚠️  [AUTH] Parent login blocked - status: pending (not verified):', authenticatedUser.id);
-              throw new Error("[NOT_VERIFIED] Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai. Jika sudah lebih dari 1x24 jam, hubungi admin sekolah.");
+              return null; // Return null to prevent CallbackRouteError
             }
             if (authenticatedUser.orangTua?.status === 'rejected') {
               console.log('⚠️  [AUTH] Parent login blocked - status: rejected:', authenticatedUser.id);
-              throw new Error("[REJECTED] Akun Anda ditolak oleh admin. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
+              return null;
             }
             if (authenticatedUser.orangTua?.status === 'suspended') {
               console.log('⚠️  [AUTH] Parent login blocked - status: suspended:', authenticatedUser.id);
-              throw new Error("[SUSPENDED] Akun Anda ditangguhkan. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
+              return null;
             }
           }
 
@@ -243,7 +243,7 @@ export const authConfig = {
             } else {
               // For non-parent accounts, inactive means blocked
               console.log('⚠️  [AUTH] User account is not active:', authenticatedUser.id);
-              throw new Error("[INACTIVE] Akun Anda tidak aktif. Silakan hubungi admin sekolah.");
+              return null; // Return null to prevent CallbackRouteError
             }
           }
 
@@ -262,16 +262,8 @@ export const authConfig = {
             recoveryOnboardingCompleted: authenticatedUser.recoveryOnboardingCompleted
           };
         } catch (error) {
-          // Pass through validation errors (they start with brackets)
-          if (error.message.startsWith('[')) {
-            const match = error.message.match(/^\[([A-Z_]+)\] (.+)$/);
-            if (match) {
-              console.error('🚫 [AUTH] Validation error:', match[1], '-', match[2].substring(0, 50) + '...');
-            }
-            throw error;
-          }
           console.error('💥 [AUTH] authorize error:', error.message);
-          return null; // Return null instead of throwing to avoid CallbackRouteError
+          return null; // Always return null for any error to prevent CallbackRouteError
         }
       },
     }),
