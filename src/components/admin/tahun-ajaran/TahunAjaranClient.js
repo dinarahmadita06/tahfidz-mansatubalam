@@ -5,6 +5,7 @@ import {
   Calendar, Plus, CheckCircle2, Edit, Trash2,
   BookOpen, Users, GraduationCap, Clock, XCircle
 } from 'lucide-react';
+import { toast, Toaster } from 'react-hot-toast';
 import AdminLayout from '@/components/layout/AdminLayout';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
@@ -101,6 +102,7 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
   const [tahunAjaran, setTahunAjaran] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [summary, setSummary] = useState(initialSummary);
   const [showTahunAjaranModal, setShowTahunAjaranModal] = useState(false);
   const [showActivateModal, setShowActivateModal] = useState(false);
@@ -120,7 +122,8 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
     try {
       setSummaryLoading(true);
       const response = await fetch(`/api/tahun-ajaran/summary`, {
-        cache: 'default',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
       });
       const data = await response.json();
       setSummary(data);
@@ -136,7 +139,8 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
     try {
       setLoading(true);
       const response = await fetch(`/api/tahun-ajaran`, {
-        cache: 'default',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
       });
       const result = await response.json();
       setTahunAjaran(result.data || []);
@@ -150,6 +154,8 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
 
   const handleTahunAjaranSubmit = async (e) => {
     e.preventDefault();
+    setActionLoading(true);
+    
     try {
       const url = editingTahunAjaran ? `/api/admin/tahun-ajaran/${editingTahunAjaran.id}` : '/api/admin/tahun-ajaran';
       const method = editingTahunAjaran ? 'PUT' : 'POST';
@@ -160,18 +166,40 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
         body: JSON.stringify(tahunAjaranFormData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        alert(editingTahunAjaran ? 'Tahun ajaran berhasil diupdate' : 'Tahun ajaran berhasil ditambahkan');
+        // Optimistic update
+        if (editingTahunAjaran) {
+          // Update existing item
+          setTahunAjaran(prev => 
+            prev.map(ta => ta.id === editingTahunAjaran.id ? data : ta)
+          );
+        } else {
+          // Prepend new item
+          setTahunAjaran(prev => [data, ...prev]);
+        }
+        
+        // Close modal and reset form
         setShowTahunAjaranModal(false);
         resetTahunAjaranForm();
-        fetchTahunAjaran();
+        
+        // Show success toast
+        toast.success(
+          editingTahunAjaran ? 'Tahun ajaran berhasil diupdate' : 'Tahun ajaran berhasil ditambahkan',
+          { duration: 3000 }
+        );
+        
+        // Refetch for consistency
+        await fetchTahunAjaran();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menyimpan data tahun ajaran');
+        toast.error(data.error || 'Gagal menyimpan data tahun ajaran');
       }
     } catch (error) {
       console.error('Error saving tahun ajaran:', error);
-      alert('Gagal menyimpan data tahun ajaran');
+      toast.error('Gagal menyimpan data tahun ajaran');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -181,46 +209,78 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
   };
 
   const confirmActivate = async () => {
+    setActionLoading(true);
+    
     try {
       const response = await fetch(`/api/admin/tahun-ajaran/${selectedTahunAjaran.id}/activate`, {
         method: 'PATCH',
       });
 
+      const result = await response.json();
+
       if (response.ok) {
+        // Optimistic update: Deactivate all, activate selected
+        setTahunAjaran(prev => 
+          prev.map(ta => ({
+            ...ta,
+            isActive: ta.id === selectedTahunAjaran.id
+          }))
+        );
+        
         setShowActivateModal(false);
         setShowSuccessAnimation(true);
-        setTimeout(() => {
+        
+        // Show success toast
+        toast.success('Periode berhasil diaktifkan', { duration: 3000 });
+        
+        setTimeout(async () => {
           setShowSuccessAnimation(false);
-          fetchTahunAjaran();
-          fetchSummary();
+          // Refetch for consistency
+          await Promise.all([
+            fetchTahunAjaran(),
+            fetchSummary()
+          ]);
         }, 2000);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal mengaktifkan periode');
+        toast.error(result.error || 'Gagal mengaktifkan periode');
       }
     } catch (error) {
       console.error('Error activating period:', error);
-      alert('Gagal mengaktifkan periode');
+      toast.error('Gagal mengaktifkan periode');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleDeactivate = async (id) => {
     if (!confirm('Yakin ingin menonaktifkan tahun ajaran ini?')) return;
+    setActionLoading(true);
+    
     try {
       const response = await fetch(`/api/admin/tahun-ajaran/${id}/deactivate`, {
         method: 'PATCH',
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        alert('Tahun ajaran berhasil dinonaktifkan');
-        fetchTahunAjaran();
+        // Optimistic update: Set item to inactive
+        setTahunAjaran(prev => 
+          prev.map(ta => ta.id === id ? { ...ta, isActive: false } : ta)
+        );
+        
+        toast.success('Tahun ajaran berhasil dinonaktifkan', { duration: 3000 });
+        
+        // Refetch for consistency
+        await fetchTahunAjaran();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Gagal menonaktifkan tahun ajaran');
+        toast.error(result.error || 'Gagal menonaktifkan tahun ajaran');
       }
     } catch (error) {
       console.error('Error deactivating tahun ajaran:', error);
-      alert('Gagal menonaktifkan tahun ajaran');
+      toast.error('Gagal menonaktifkan tahun ajaran');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -241,21 +301,30 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
 
   const handleDelete = async (id) => {
     if (!confirm('Yakin ingin menghapus tahun ajaran ini? Data terkait akan terpengaruh.')) return;
+    setActionLoading(true);
+    
     try {
       const response = await fetch(`/api/admin/tahun-ajaran/${id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        alert('Tahun ajaran berhasil dihapus');
-        fetchTahunAjaran();
+        // Optimistic update: Remove item from state
+        setTahunAjaran(prev => prev.filter(ta => ta.id !== id));
+        
+        toast.success('Tahun ajaran berhasil dihapus', { duration: 3000 });
+        
+        // Refetch for consistency
+        await fetchTahunAjaran();
       } else {
         const error = await response.json();
-        alert(error.error || 'Gagal menghapus tahun ajaran');
+        toast.error(error.error || 'Gagal menghapus tahun ajaran');
       }
     } catch (error) {
       console.error('Error deleting tahun ajaran:', error);
-      alert('Gagal menghapus tahun ajaran');
+      toast.error('Gagal menghapus tahun ajaran');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -273,13 +342,13 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
     e.preventDefault();
 
     if (!stats.activeTahunAjaranId) {
-      alert('Tahun ajaran aktif tidak ditemukan');
+      toast.error('Tahun ajaran aktif tidak ditemukan');
       return;
     }
 
     const numTarget = parseInt(targetHafalanInput);
     if (isNaN(numTarget) || numTarget < 1 || numTarget > 30) {
-      alert('Target hafalan harus antara 1-30 juz');
+      toast.error('Target hafalan harus antara 1-30 juz');
       return;
     }
 
@@ -293,19 +362,30 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
       const data = await response.json();
 
       if (data.success) {
-        alert('Target hafalan berhasil diperbarui.');
+        // Optimistic update: Update targetHafalan on active tahun ajaran
+        setTahunAjaran(prev => 
+          prev.map(ta => 
+            ta.id === stats.activeTahunAjaranId 
+              ? { ...ta, targetHafalan: numTarget }
+              : ta
+          )
+        );
+        
         setShowUpdateTargetModal(false);
         setTargetHafalanInput('');
+        toast.success('Target hafalan berhasil diperbarui', { duration: 3000 });
+        
+        // Refetch for consistency
         await Promise.all([
           fetchTahunAjaran(),
           fetchSummary()
         ]);
       } else {
-        alert(data.error || 'Gagal memperbarui target hafalan');
+        toast.error(data.error || 'Gagal memperbarui target hafalan');
       }
     } catch (error) {
       console.error('Error updating target:', error);
-      alert('Gagal memperbarui target hafalan: ' + error.message);
+      toast.error('Gagal memperbarui target hafalan: ' + error.message);
     }
   };
 
@@ -805,6 +885,43 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
           }
         }
       `}</style>
+
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#1F2937',
+            padding: '16px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+
+      {/* Loading Overlay */}
+      {actionLoading && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4">
+            <LoadingIndicator />
+            <p className="text-gray-700 font-medium">Memproses...</p>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

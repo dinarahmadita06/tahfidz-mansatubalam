@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
 import { logActivity, getIpAddress, getUserAgent } from '@/lib/activityLog';
+import { invalidateCache } from '@/lib/cache';
 
 export async function PATCH(request, { params }) {
   try {
@@ -39,8 +40,19 @@ export async function PATCH(request, { params }) {
     // Deactivate the tahun ajaran
     const updatedTahunAjaran = await prisma.tahunAjaran.update({
       where: { id },
-      data: { isActive: false }
+      data: { isActive: false },
+      include: {
+        _count: {
+          select: {
+            kelas: true
+          }
+        }
+      }
     });
+
+    // Invalidate cache
+    invalidateCache('admin-tahun-ajaran-list');
+    invalidateCache('admin-tahun-ajaran-summary');
 
     // Log activity
     await logActivity({
