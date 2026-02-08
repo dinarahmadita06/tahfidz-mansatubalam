@@ -234,6 +234,12 @@ export default function AdminGuruPage() {
       return;
     }
 
+    // Validate password if provided during edit
+    if (editingGuru && formData.password && formData.password.length < 8) {
+      alert('⚠️ Password minimal 8 karakter.\n\nJika tidak ingin mengubah password, kosongkan field Password (Opsional).');
+      return;
+    }
+
     const method = editingGuru ? 'PUT' : 'POST';
 
     setIsSubmitting(true);
@@ -244,6 +250,11 @@ export default function AdminGuruPage() {
         username: formData.username, // Include username in the payload
         kelasIds: selectedKelas
       };
+
+      // Don't send password if empty (editing without changing password)
+      if (editingGuru && !formData.password) {
+        delete payload.password;
+      }
 
       const response = await fetch(url, {
         method,
@@ -305,7 +316,7 @@ export default function AdminGuruPage() {
     setEditingGuru(guruItem);
     setFormData({
       name: guruItem.user.name,
-      password: 'MAN1', // Password default
+      password: '', // Empty when editing - won't change password unless filled
       username: guruItem.user.username || '',
       nip: guruItem.nip || '',
       jenisKelamin: guruItem.jenisKelamin,
@@ -814,16 +825,21 @@ export default function AdminGuruPage() {
 
                 <div>
                   <label className="block text-[10px] lg:text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
-                    Password (Default) *
+                    Password {editingGuru ? '(Opsional)' : '(Default) *'}
                   </label>
                   <input
-                    type="text"
-                    readOnly
+                    type="password"
+                    required={!editingGuru}
                     value={formData.password}
-                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-slate-50 text-gray-700 font-semibold text-sm focus:outline-none cursor-not-allowed"
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder={editingGuru ? "Kosongkan jika tidak ingin mengubah" : "MAN1"}
+                    minLength={formData.password ? 8 : undefined}
+                    className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   />
                   <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Password default: <strong>MAN1</strong> (Guru dapat mengubahnya setelah login)
+                    {editingGuru 
+                      ? '💡 Kosongkan jika tidak ingin mengubah password. Jika diisi, minimal 8 karakter.'
+                      : 'Password default: MAN1 (Guru dapat mengubahnya setelah login)'}
                   </p>
                 </div>
               </div>
