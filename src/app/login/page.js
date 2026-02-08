@@ -51,18 +51,39 @@ export default function LoginPage() {
       if (result?.error) {
         console.error('❌ [LOGIN] Login failed:', result.error);
 
-        // Standard NextAuth error codes mapping
-        if (result.error === 'CredentialsSignin' || result.error === 'CallbackRouteError') {
+        // Parse error code and message (format: "ERROR_CODE|Message")
+        let errorCode = result.error;
+        let errorMessage = result.error;
+        
+        if (result.error.includes('|')) {
+          const parts = result.error.split('|');
+          errorCode = parts[0];
+          errorMessage = parts.slice(1).join('|'); // In case message contains |
+        }
+
+        console.log('🔍 [LOGIN] Error code:', errorCode);
+
+        // Map error codes to user-friendly messages
+        if (errorCode === 'ACCOUNT_NOT_VERIFIED') {
+          setError(errorMessage);
+        } else if (errorCode === 'ACCOUNT_REJECTED') {
+          setError(errorMessage);
+        } else if (errorCode === 'ACCOUNT_SUSPENDED') {
+          setError(errorMessage);
+        } else if (errorCode === 'ACCOUNT_INACTIVE') {
+          setError(errorMessage);
+        } else if (errorCode === 'CredentialsSignin' || errorCode === 'CallbackRouteError') {
           setError('Username atau password salah.');
-        } else if (result.error === 'Configuration') {
+        } else if (errorCode === 'Configuration') {
           setError('Terjadi kesalahan server. Silakan coba lagi.');
-        } else if (result.error.includes('belum divalidasi')) {
-          setError('Akun Anda belum divalidasi admin. Silakan tunggu atau hubungi pihak sekolah.');
-        } else if (result.error.includes('ditolak')) {
+        } else if (errorMessage.includes('belum divalidasi')) {
+          // Fallback for old format error messages
+          setError('Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai.\n\nJika sudah lebih dari 1x24 jam, hubungi admin sekolah.');
+        } else if (errorMessage.includes('ditolak')) {
           setError('Akun Anda ditolak. Silakan hubungi pihak sekolah.');
-        } else if (result.error.includes('ditangguhkan')) {
+        } else if (errorMessage.includes('ditangguhkan')) {
           setError('Akun Anda ditangguhkan. Silakan hubungi pihak sekolah.');
-        } else if (result.error.includes('tidak aktif')) {
+        } else if (errorMessage.includes('tidak aktif')) {
           setError('Akun Anda tidak aktif.');
         } else {
           // Default to credentials error for security and clean UI
@@ -181,7 +202,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm whitespace-pre-line">
                   {error}
                 </div>
               )}

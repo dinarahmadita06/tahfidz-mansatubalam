@@ -189,16 +189,32 @@ export const authConfig = {
           // VALIDASI KHUSUS SISWA: Cek status validasi
           if (authenticatedUser.role === 'SISWA') {
             if (authenticatedUser.siswa?.status === 'pending') {
-              console.log('⚠️  Siswa login blocked - pending validation:', authenticatedUser.id);
-              throw new Error("Akun Anda belum divalidasi admin. Silakan tunggu atau hubungi pihak sekolah.");
+              console.log('⚠️  [AUTH] Siswa login blocked - status: pending (not verified):', authenticatedUser.id);
+              throw new Error("ACCOUNT_NOT_VERIFIED|Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai.\n\nJika sudah lebih dari 1x24 jam, hubungi admin sekolah.");
             }
             if (authenticatedUser.siswa?.status === 'rejected') {
-              console.log('⚠️  Siswa login blocked - rejected:', authenticatedUser.id);
-              throw new Error("Akun Anda ditolak. Silakan hubungi pihak sekolah.");
+              console.log('⚠️  [AUTH] Siswa login blocked - status: rejected:', authenticatedUser.id);
+              throw new Error("ACCOUNT_REJECTED|Akun Anda ditolak oleh admin. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
             }
             if (authenticatedUser.siswa?.status === 'suspended') {
-              console.log('⚠️  Siswa login blocked - suspended:', authenticatedUser.id);
-              throw new Error("Akun Anda ditangguhkan. Silakan hubungi pihak sekolah.");
+              console.log('⚠️  [AUTH] Siswa login blocked - status: suspended:', authenticatedUser.id);
+              throw new Error("ACCOUNT_SUSPENDED|Akun Anda ditangguhkan. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
+            }
+          }
+
+          // VALIDASI KHUSUS ORANG TUA: Cek status validasi
+          if (authenticatedUser.role === 'ORANG_TUA') {
+            if (authenticatedUser.orangTua?.status === 'pending') {
+              console.log('⚠️  [AUTH] Parent login blocked - status: pending (not verified):', authenticatedUser.id);
+              throw new Error("ACCOUNT_NOT_VERIFIED|Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai.\n\nJika sudah lebih dari 1x24 jam, hubungi admin sekolah.");
+            }
+            if (authenticatedUser.orangTua?.status === 'rejected') {
+              console.log('⚠️  [AUTH] Parent login blocked - status: rejected:', authenticatedUser.id);
+              throw new Error("ACCOUNT_REJECTED|Akun Anda ditolak oleh admin. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
+            }
+            if (authenticatedUser.orangTua?.status === 'suspended') {
+              console.log('⚠️  [AUTH] Parent login blocked - status: suspended:', authenticatedUser.id);
+              throw new Error("ACCOUNT_SUSPENDED|Akun Anda ditangguhkan. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.");
             }
           }
 
@@ -226,8 +242,8 @@ export const authConfig = {
               }
             } else {
               // For non-parent accounts, inactive means blocked
-              console.log('⚠️  User account is not active:', authenticatedUser.id);
-              throw new Error("Akun Anda tidak aktif.");
+              console.log('⚠️  [AUTH] User account is not active:', authenticatedUser.id);
+              throw new Error("ACCOUNT_INACTIVE|Akun Anda tidak aktif. Silakan hubungi admin sekolah.");
             }
           }
 
@@ -246,7 +262,9 @@ export const authConfig = {
             recoveryOnboardingCompleted: authenticatedUser.recoveryOnboardingCompleted
           };
         } catch (error) {
-          if (error.message.includes("tidak aktif")) {
+          // Pass through validation errors (they contain error codes)
+          if (error.message.includes("ACCOUNT_") || error.message.includes("tidak aktif")) {
+            console.error('🚫 [AUTH] Validation error:', error.message.split('|')[0] || error.message);
             throw error;
           }
           console.error('💥 [AUTH] authorize error:', error.message);
