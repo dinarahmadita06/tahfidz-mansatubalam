@@ -344,13 +344,29 @@ export async function PUT(request, { params }) {
     // Handle Prisma-specific errors
     if (error.code === 'P2002') {
       // Unique constraint violation
-      const field = error.meta?.target?.[0] || 'field';
-      console.error(`❌ PUT /api/guru/${id} - Unique constraint violation on field: ${field}`);
+      const target = error.meta?.target;
+      let message = 'Data yang Anda masukkan sudah terdaftar dalam sistem';
+      let field = '';
+      
+      if (target) {
+        if (target.includes('username')) {
+          message = 'Username sudah digunakan oleh guru lain. Silakan gunakan username yang berbeda.';
+          field = 'username';
+        } else if (target.includes('nip')) {
+          message = 'NIP sudah terdaftar untuk guru lain. Silakan periksa kembali NIP yang dimasukkan.';
+          field = 'nip';
+        } else if (target.includes('email')) {
+          message = 'Email sudah terdaftar untuk pengguna lain.';
+          field = 'email';
+        }
+      }
+      
+      console.error(`❌ PUT /api/guru/${id} - Duplicate data detected:`, { field, target });
       return NextResponse.json({
-        message: `Nilai untuk ${field} sudah digunakan oleh pengguna lain`,
+        message: message,
         field: field,
         details: 'Unique constraint violation',
-        code: 'UNIQUE_CONSTRAINT_VIOLATION'
+        code: 'DUPLICATE_DATA'
       }, { status: 409 });
     }
     

@@ -371,9 +371,41 @@ export async function POST(request) {
   } catch (error) {
     console.error('❌ Error creating guru:', error);
     console.error('Error stack:', error.stack);
+    
+    // Handle Prisma unique constraint violations
+    if (error.code === 'P2002') {
+      const target = error.meta?.target;
+      let message = 'Data yang Anda masukkan sudah terdaftar dalam sistem';
+      let field = '';
+      
+      if (target) {
+        if (target.includes('username')) {
+          message = 'Username sudah digunakan oleh guru lain. Silakan gunakan username yang berbeda.';
+          field = 'username';
+        } else if (target.includes('nip')) {
+          message = 'NIP sudah terdaftar untuk guru lain. Silakan periksa kembali NIP yang dimasukkan.';
+          field = 'nip';
+        } else if (target.includes('email')) {
+          message = 'Email sudah terdaftar untuk pengguna lain.';
+          field = 'email';
+        }
+      }
+      
+      console.log('❌ Duplicate data detected:', { field, target });
+      return NextResponse.json(
+        {
+          error: message,
+          field: field,
+          code: 'DUPLICATE_DATA'
+        },
+        { status: 409 }
+      );
+    }
+    
+    // Handle other errors
     return NextResponse.json(
       {
-        error: 'Failed to create guru',
+        error: 'Gagal menyimpan data guru. Silakan coba lagi.',
         details: error.message,
         errorName: error.name
       },
