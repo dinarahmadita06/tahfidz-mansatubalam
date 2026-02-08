@@ -379,7 +379,7 @@ export default function AdminGuruPage() {
     const notes = [
       '',
       'PETUNJUK PENGISIAN:',
-      '1. Kode Guru/Username: Wajib diisi dengan angka (contoh: 94, 111, 112)',
+      '1. Kode Guru/Username: Wajib diisi (alfanumerik: huruf dan/atau angka, contoh: guru01, A12, 94)',
       '2. Nama Lengkap: Wajib diisi',
       '3. NIP: Boleh dikosongkan',
       '4. Jenis Kelamin: Wajib diisi dengan L (Laki-laki) atau P (Perempuan)',
@@ -791,13 +791,13 @@ export default function AdminGuruPage() {
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="Masukkan kode guru (contoh: 1,2,3)"
-                    pattern="[0-9]+"
-                    title="Username harus berupa angka (kode guru)"
+                    placeholder="Masukkan kode guru (contoh: guru01, A12, 94)"
+                    pattern="[A-Za-z0-9]+"
+                    title="Username hanya boleh mengandung huruf dan angka tanpa spasi atau simbol"
                     className="w-full px-4 py-2 lg:py-2.5 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   />
                   <p className="text-[10px] text-slate-500 mt-1 italic">
-                    Masukkan kode guru (hanya angka)
+                    Masukkan kode guru (alfanumerik: huruf dan/atau angka)
                   </p>
                 </div>
 

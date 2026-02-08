@@ -131,10 +131,10 @@ export async function POST(request) {
 
         const username = String(guruData.kodeGuru).trim();
         
-        // Validate username harus angka
-        if (!/^[0-9]+$/.test(username)) {
+        // Validate username - alfanumerik saja (huruf dan angka, tanpa spasi atau simbol)
+        if (!/^[A-Za-z0-9]+$/.test(username)) {
           stats.failed++;
-          errors.push(`Baris ${i + 2}: Kode Guru/Username harus berupa angka (Anda menulis: ${guruData.kodeGuru})`);
+          errors.push(`Baris ${i + 2}: Kode Guru/Username hanya boleh mengandung huruf dan angka tanpa spasi atau simbol (Anda menulis: ${guruData.kodeGuru})`);
           continue;
         }
 

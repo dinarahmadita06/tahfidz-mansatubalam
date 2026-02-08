@@ -167,12 +167,12 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    // Validasi username hanya angka (kode guru)
-    if (!/^[0-9]+$/.test(username)) {
+    // Validasi username alfanumerik (kode guru: huruf dan/atau angka)
+    if (!/^[A-Za-z0-9]+$/.test(username)) {
       return NextResponse.json({ 
         success: false, 
         code: "INVALID_USERNAME", 
-        message: "Username harus berupa angka (kode guru). Contoh: 94, 111, 112" 
+        message: "Username hanya boleh mengandung huruf dan angka tanpa spasi atau simbol. Contoh: guru01, A12, 94" 
       }, { status: 400 });
     }
 
