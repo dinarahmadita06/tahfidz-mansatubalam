@@ -225,7 +225,7 @@ export async function POST(request) {
     // Process each row
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
-      const { siswa: siswaData, namaAyah, namaIbu } = row;
+      const { siswa: siswaData, namaAyah, namaIbu, namaWali, jenisKelaminWali } = row;
 
       try {
         // Debug logging for first row to check mapping
@@ -233,6 +233,8 @@ export async function POST(request) {
           console.log('First row siswaData:', JSON.stringify(siswaData, null, 2));
           console.log('First row namaAyah:', namaAyah);
           console.log('First row namaIbu:', namaIbu);
+          console.log('First row namaWali:', namaWali);
+          console.log('First row jenisKelaminWali:', jenisKelaminWali);
         }
 
         // Validasi required fields siswa sesuai form terbaru
@@ -270,34 +272,62 @@ export async function POST(request) {
         }
 
         // ========== AUTOMATIC WALI DETERMINATION ==========
-        // Determine wali berdasarkan namaAyah dan namaIbu
+        // Support 2 format input:
+        // Format 1: namaAyah & namaIbu (kolom terpisah)
+        // Format 2: namaWali & jenisKelaminWali (kolom generic)
+        
         let jenisWali = null;
-        let namaWali = null;
-        let jenisKelaminWali = null;
+        let namaWaliResult = null;
+        let jenisKelaminWaliResult = null;
 
-        // Check namaAyah first
-        if (namaAyah && namaAyah.trim() && namaAyah.trim() !== '-') {
-          jenisWali = 'AYAH';
-          namaWali = namaAyah.trim();
-          jenisKelaminWali = 'LAKI_LAKI';
+        // Prioritas 1: Check format generic (namaWali + jenisKelaminWali)
+        if (namaWali && namaWali.trim() && namaWali.trim() !== '-') {
+          namaWaliResult = namaWali.trim();
+          
+          // Tentukan jenis kelamin dan jenis wali dari jenisKelaminWali
+          if (jenisKelaminWali) {
+            const jkWali = jenisKelaminWali.toString().trim().toUpperCase();
+            
+            if (['L', 'LAKI_LAKI', 'LAKI-LAKI', 'MALE', 'LAKI LAKI'].includes(jkWali)) {
+              jenisKelaminWaliResult = 'LAKI_LAKI';
+              jenisWali = 'AYAH';
+            } else if (['P', 'PEREMPUAN', 'FEMALE'].includes(jkWali)) {
+              jenisKelaminWaliResult = 'PEREMPUAN';
+              jenisWali = 'IBU';
+            } else {
+              // Default ke AYAH jika tidak jelas
+              jenisKelaminWaliResult = 'LAKI_LAKI';
+              jenisWali = 'AYAH';
+            }
+          } else {
+            // Jika tidak ada jenisKelaminWali, default ke AYAH
+            jenisKelaminWaliResult = 'LAKI_LAKI';
+            jenisWali = 'AYAH';
+          }
         }
-        // If no valid namaAyah, check namaIbu
+        // Prioritas 2: Check namaAyah
+        else if (namaAyah && namaAyah.trim() && namaAyah.trim() !== '-') {
+          jenisWali = 'AYAH';
+          namaWaliResult = namaAyah.trim();
+          jenisKelaminWaliResult = 'LAKI_LAKI';
+        }
+        // Prioritas 3: Check namaIbu
         else if (namaIbu && namaIbu.trim() && namaIbu.trim() !== '-') {
           jenisWali = 'IBU';
-          namaWali = namaIbu.trim();
-          jenisKelaminWali = 'PEREMPUAN';
+          namaWaliResult = namaIbu.trim();
+          jenisKelaminWaliResult = 'PEREMPUAN';
         }
-        // If neither exists, error
+        // Jika tidak ada satupun yang valid, error
         else {
           stats.failed++;
-          errors.push(`Baris ${i + 2}: Tidak ada Ayah atau Ibu yang valid. Kolom "Nama Ayah" dan "Nama Ibu" tidak boleh kosong atau "-".`);
+          errors.push(`Baris ${i + 2}: Tidak ada data Wali yang valid. Silakan isi kolom "Nama Wali" atau "Nama Ayah"/"Nama Ibu".`);
           continue;
         }
 
         // Build orangtuaData from determined wali
         const orangtuaData = {
-          nama: namaWali,
-          jenisKelamin: jenisKelaminWali,
+          nama: namaWaliResult,
+          jenisKelamin: jenisKelaminWaliResult,
           jenisWali: jenisWali
         };
 

@@ -49,6 +49,8 @@ const COLUMN_ALIASES = {
   },
   namaAyah: ['nama ayah'],
   namaIbu: ['nama ibu'],
+  namaWali: ['nama wali'],
+  jenisKelaminWali: ['jenis kelamin wali', 'jk wali'],
   guru: {
     kodeGuru: ['kode guru', 'kode guru / username', 'username', 'kode', 'user'],
     nama: ['nama lengkap', 'nama guru', 'nama'],
@@ -210,9 +212,14 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
           kelas: getCellValue(row, headerIndexMap, COLUMN_ALIASES.siswa.kelas),
         };
 
-        // Untuk orang tua - AMBIL DARI NAMA AYAH & NAMA IBU SECARA TERPISAH
+        // Untuk orang tua - Support dua format:
+        // Format 1: Nama Ayah & Nama Ibu (terpisah)
         const namaAyah = getCellValue(row, headerIndexMap, COLUMN_ALIASES.namaAyah);
         const namaIbu = getCellValue(row, headerIndexMap, COLUMN_ALIASES.namaIbu);
+        
+        // Format 2: Nama Wali + Jenis Kelamin Wali (generic)
+        const namaWali = getCellValue(row, headerIndexMap, COLUMN_ALIASES.namaWali);
+        const jenisKelaminWali = getCellValue(row, headerIndexMap, COLUMN_ALIASES.jenisKelaminWali);
 
         // Debug log untuk baris pertama
         if (index === 0) {
@@ -225,10 +232,12 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
           console.log('🔍 Orangtua Row 1 Mapped:', {
             namaAyah: namaAyah,
             namaIbu: namaIbu,
+            namaWali: namaWali,
+            jenisKelaminWali: jenisKelaminWali,
           });
         }
 
-        return { siswa: siswaData, namaAyah, namaIbu };
+        return { siswa: siswaData, namaAyah, namaIbu, namaWali, jenisKelaminWali };
       });
 
       console.log('Total rows to import:', processedData.length);
