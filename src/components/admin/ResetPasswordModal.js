@@ -38,8 +38,8 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
       return;
     }
     
-    // Generate password dengan format NISN-TahunLahir
-    setNewPassword(generateParentPassword(firstSiswa.nisn, firstSiswa.tanggalLahir));
+    // Generate password dengan format DDMMYYYY (dari tanggal lahir)
+    setNewPassword(generateParentPassword(firstSiswa.tanggalLahir));
   }, [orangTuaItem]);
 
   const handleCopyPassword = async () => {
@@ -64,15 +64,7 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
   const handleGenerateNew = () => {
     const firstSiswa = orangTuaItem.orangTuaSiswa?.[0]?.siswa;
     
-    if (!firstSiswa || !firstSiswa.nisn) {
-      toast.error('Tidak dapat generate password: NISN siswa belum diisi.', {
-        duration: 4000,
-        icon: '❌',
-      });
-      return;
-    }
-    
-    if (!firstSiswa.tanggalLahir) {
+    if (!firstSiswa || !firstSiswa.tanggalLahir) {
       toast.error('Tidak dapat generate password: Tanggal lahir siswa belum diisi.', {
         duration: 4000,
         icon: '❌',
@@ -80,9 +72,9 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
       return;
     }
     
-    // Generate ulang dengan format yang sama: NISN-TahunLahir
-    setNewPassword(generateParentPassword(firstSiswa.nisn, firstSiswa.tanggalLahir));
-    toast.success('Password di-generate ulang dengan format NISN-TahunLahir', {
+    // Generate ulang dengan format DDMMYYYY (dari tanggal lahir)
+    setNewPassword(generateParentPassword(firstSiswa.tanggalLahir));
+    toast.success('Password di-generate ulang dengan format DDMMYYYY', {
       duration: 3000,
       icon: '✅',
     });
@@ -124,7 +116,7 @@ export default function ResetPasswordModal({ orangTuaItem, onConfirm, onClose, i
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Format: NISN-TahunLahir (contoh: 1234567890-2009)
+            Format: DDMMYYYY (contoh: 14062009 dari tanggal lahir 2009-06-14)
           </p>
         </div>
 

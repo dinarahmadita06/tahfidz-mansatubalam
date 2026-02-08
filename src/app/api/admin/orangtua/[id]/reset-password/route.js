@@ -73,13 +73,20 @@ export async function POST(request, { params }) {
     // Standard SIMTAQ password generation if not provided
     if (!newPassword || newPassword.trim() === '') {
       const firstSiswa = orangTua.orangTuaSiswa?.[0]?.siswa;
-      if (firstSiswa && firstSiswa.nisn) {
-        const birthDate = firstSiswa.tanggalLahir ? new Date(firstSiswa.tanggalLahir) : null;
-        const birthYear = birthDate && !isNaN(birthDate.getTime()) ? birthDate.getFullYear() : null;
-        newPassword = birthYear ? `${firstSiswa.nisn}-${birthYear}` : firstSiswa.nisn;
+      if (firstSiswa && firstSiswa.tanggalLahir) {
+        const birthDate = new Date(firstSiswa.tanggalLahir);
+        if (!isNaN(birthDate.getTime())) {
+          // Format as DDMMYYYY
+          const year = birthDate.getFullYear();
+          const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+          const day = String(birthDate.getDate()).padStart(2, '0');
+          newPassword = `${day}${month}${year}`;
+        } else {
+          newPassword = firstSiswa.nisn || 'defaultPassword123';
+        }
       } else {
         return NextResponse.json(
-          { error: 'Password baru harus diisi (data siswa terhubung tidak ditemukan)' },
+          { error: 'Password baru harus diisi (data tanggal lahir siswa tidak ditemukan)' },
           { status: 400 }
         );
       }

@@ -129,9 +129,9 @@ export async function POST(request) {
         let finalEmailWali = generateOrangTuaEmail(name, nis);
 
         if (namaWali) {
-          // Default password according to SIMTAQ standard: NISN-YYYY
+          // Default password according to SIMTAQ standard: DDMMYYYY (from student birth date)
           // Parse tanggalLahir safely to avoid timezone shift
-          let bYear = null;
+          let passwordOrtu = nisn; // Fallback to NISN if date parsing fails
           try {
             const dateStr = String(tanggalLahir).trim();
             let parsedDate = null;
@@ -147,13 +147,16 @@ export async function POST(request) {
             }
             
             if (!isNaN(parsedDate.getTime())) {
-              bYear = parsedDate.getUTCFullYear();
+              // Format as DDMMYYYY
+              const year = parsedDate.getUTCFullYear();
+              const month = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
+              const day = String(parsedDate.getUTCDate()).padStart(2, '0');
+              passwordOrtu = `${day}${month}${year}`;
             }
           } catch (e) {
             console.error('Error parsing tanggalLahir for password:', e);
           }
           
-          const passwordOrtu = bYear ? `${nisn}-${bYear}` : nisn;
           const hashedPasswordOrtu = await bcrypt.hash(passwordOrtu, 10);
 
           let orangTua = await prisma.orangTua.findFirst({

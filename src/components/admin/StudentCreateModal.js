@@ -627,7 +627,7 @@ export default function StudentCreateModal({
                     helperText={
                       isGeneratedStudentPw && formData.password !== generateStudentPassword(formData.tanggalLahir)
                         ? "Klik generate ulang untuk memperbarui password."
-                        : `Set password ke default (YYYY-MM-DD): ${generateStudentPassword(formData.tanggalLahir) || 'Pilih Tgl Lahir'}`
+                        : `Password default (YYYY-MM-DD): ${generateStudentPassword(formData.tanggalLahir) || 'Pilih Tgl Lahir'}`
                     }
                   />
                 </div>
@@ -833,7 +833,7 @@ export default function StudentCreateModal({
                       helperText={
                         isGeneratedParentPw && newParentData.password !== generateParentPassword(formData.tanggalLahir)
                           ? "Klik generate ulang untuk memperbarui password."
-                          : `Set password ke default (DDMMYYYY): ${generateParentPassword(formData.tanggalLahir) || 'Pilih Tgl Lahir'}`
+                          : `Password default (DDMMYYYY): ${generateParentPassword(formData.tanggalLahir) || 'Pilih Tgl Lahir'}`
                       }
                     />
                   </div>
