@@ -407,8 +407,8 @@ export default function ProfilPage() {
 
       {/* Password Change Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white shadow-xl max-w-md w-full md:rounded-lg" style={{ borderRadius: '16px' }}>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white shadow-2xl max-w-md w-full md:rounded-lg" style={{ borderRadius: '16px' }}>
             <div className="flex items-center justify-between border-b md:p-6" style={{ padding: '20px' }}>
               <h3 className="font-semibold text-gray-900 md:text-lg" style={{ fontSize: '16px' }}>Ubah Password</h3>
               <button
