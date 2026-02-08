@@ -204,11 +204,11 @@ export function renderTable(doc, options) {
 /**
  * Render Footer & Tanda Tangan (Kanan Bawah)
  * @param {jsPDF} doc - jsPDF instance
- * @param {Object} options - { pageWidth, margin, yPos, printDate, jabatan, guruName }
+ * @param {Object} options - { pageWidth, margin, yPos, printDate, jabatan, guruName, signatureUrl }
  * @returns {number} yPos setelah footer
  */
 export function renderFooterSignature(doc, options) {
-  const { pageWidth, margin, yPos: startY, printDate, jabatan, guruName } = options;
+  const { pageWidth, margin, yPos: startY, printDate, jabatan, guruName, signatureUrl } = options;
   
   const ttdBlockX = pageWidth - margin - 70;
   let yPos = startY;
@@ -230,12 +230,42 @@ export function renderFooterSignature(doc, options) {
   doc.text(jabatan, ttdBlockX, yPos);
 
   // Ruang tanda tangan
-  yPos += 20;
-  doc.setLineWidth(0.5);
-  doc.line(ttdBlockX, yPos, ttdBlockX + 35, yPos);
+  yPos += 4;
+  
+  // Render signature image if available
+  if (signatureUrl) {
+    try {
+      console.log('[PDF] Rendering signature image...');
+      // Detect image format from base64 data URL
+      let format = 'PNG';
+      if (signatureUrl.includes('image/jpeg') || signatureUrl.includes('image/jpg')) {
+        format = 'JPEG';
+      }
+      
+      // Add signature image (30mm width, 15mm height)
+      doc.addImage(signatureUrl, format, ttdBlockX, yPos, 30, 15);
+      console.log('[PDF] Signature rendered successfully');
+      yPos += 16;
+    } catch (err) {
+      console.error('[PDF] ❌ Error loading signature:', err.message);
+      console.error('[PDF] Signature URL length:', signatureUrl?.length || 0);
+      // Fallback: draw line if image fails
+      yPos += 16;
+      doc.setLineWidth(0.5);
+      doc.line(ttdBlockX, yPos, ttdBlockX + 35, yPos);
+      yPos += 3;
+    }
+  } else {
+    console.log('[PDF] No signature URL provided, drawing line');
+    // No signature: draw line for manual signature
+    yPos += 16;
+    doc.setLineWidth(0.5);
+    doc.line(ttdBlockX, yPos, ttdBlockX + 35, yPos);
+    yPos += 3;
+  }
 
   // Nama guru
-  yPos += 7;
+  yPos += 4;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.text(guruName, ttdBlockX, yPos);
@@ -260,6 +290,7 @@ export function createMasterPDF() {
 /**
  * GENERATE PDF DENGAN MASTER TEMPLATE
  * @param {Object} config - { title, metaLeft, metaRight, tableHead, tableBody, columnStyles, summary, footerSignature, filename }
+ * @param {Object} config.footerSignature - { printDate, jabatan, guruName, signatureUrl (optional) }
  * @returns {Promise<void>} Download PDF
  */
 export async function generateReportPDF(config) {
@@ -331,6 +362,7 @@ export async function generateReportPDF(config) {
     printDate: footerSignature.printDate,
     jabatan: footerSignature.jabatan,
     guruName: footerSignature.guruName,
+    signatureUrl: footerSignature.signatureUrl || null,
   });
 
   // Save PDF

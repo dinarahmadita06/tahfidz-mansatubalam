@@ -20,6 +20,32 @@ import {
 import { formatSurahSetoran } from '@/lib/helpers/formatSurahSetoran';
 
 /**
+ * Helper: Retry Prisma query with exponential backoff
+ * Prevents "Server has closed the connection" errors
+ */
+async function retryPrismaQuery(queryFn, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await queryFn();
+    } catch (error) {
+      const isConnectionError = 
+        error.message?.includes('Server has closed the connection') ||
+        error.message?.includes('Connection closed') ||
+        error.message?.includes('ECONNRESET');
+      
+      if (isConnectionError && attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+        console.warn(`⚠️ Prisma query failed (attempt ${attempt}/${maxRetries}). Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      throw error; // Re-throw if not connection error or max retries reached
+    }
+  }
+}
+
+/**
  * GET /api/orangtua/laporan-hafalan/pdf
  * Generate PDF Laporan Perkembangan Hafalan Siswa (LANDSCAPE A4)
  * Menggunakan MASTER TEMPLATE yang sama dengan Laporan Tasmi
@@ -57,45 +83,80 @@ export async function GET(request) {
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
-    // Security: Validasi parent-child relationship
-    const siswa = await prisma.siswa.findFirst({
-      where: {
-        id: anakId,
-        orangTuaSiswa: {
-          some: {
-            orangTua: { userId: session.user.id }
+    // Security: Validasi parent-child relationship with optimized query
+    // Using select instead of include to reduce query complexity
+    // Wrapped with retry logic to handle connection issues
+    const siswa = await retryPrismaQuery(async () => {
+      return await prisma.siswa.findFirst({
+        where: {
+          id: anakId,
+          orangTuaSiswa: {
+            some: {
+              orangTua: { userId: session.user.id }
+            }
           }
-        }
-      },
-      include: {
-        user: true,
-        kelas: {
-          include: {
-            guruKelas: {
-              where: { peran: 'utama', isActive: true },
-              include: { guru: { include: { user: true } } }
+        },
+        select: {
+          id: true,
+          user: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          kelas: {
+            select: {
+              id: true,
+              nama: true,
+              guruKelas: {
+                where: { peran: 'utama', isActive: true },
+                select: { 
+                  guru: { 
+                    select: { 
+                      id: true,
+                      tandaTangan: true,
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          signatureUrl: true,
+                          ttdUrl: true
+                        }
+                      }
+                    } 
+                  } 
+                }
+              }
             }
           }
         }
-      }
+      });
     });
 
     if (!siswa) {
+      console.error('[PDF] Student not found or unauthorized for anakId:', anakId);
       return NextResponse.json(
         { error: 'Student not found or not authorized' },
         { status: 403 }
       );
     }
 
-    const guruPembina = siswa.kelas?.guruKelas[0]?.guru?.user?.name || '....................';
+    console.log('[PDF] Student data loaded successfully:', siswa.user?.name);
 
-    // Fetch Presensi (by tanggal, not createdAt)
-    const presensiList = await prisma.presensi.findMany({
-      where: {
-        siswaId: anakId,
-        tanggal: { gte: startDate, lte: endDate }
-      },
-      orderBy: { tanggal: 'asc' }
+    // Get guru pembina data (fallback)
+    const guruPembinaObj = siswa.kelas?.guruKelas[0]?.guru;
+    const guruPembinaName = guruPembinaObj?.user?.name || '....................';
+    const guruPembinaSignature = guruPembinaObj?.tandaTangan || guruPembinaObj?.user?.signatureUrl || guruPembinaObj?.user?.ttdUrl || null;
+
+    // Fetch Presensi (by tanggal, not createdAt) with retry
+    const presensiList = await retryPrismaQuery(async () => {
+      return await prisma.presensi.findMany({
+        where: {
+          siswaId: anakId,
+          tanggal: { gte: startDate, lte: endDate }
+        },
+        orderBy: { tanggal: 'asc' }
+      });
     });
 
     // Group by tanggal for display
@@ -105,38 +166,91 @@ export async function GET(request) {
       presensiMap[dateKey] = p.status; // HADIR, IZIN, SAKIT, ALFA
     });
 
-    // Fetch Penilaian (by hafalan.tanggal) - HARUS INCLUDE surahTambahan + submissionStatus
-    const penilaianList = await prisma.penilaian.findMany({
-      where: {
-        siswaId: anakId,
-        hafalan: { tanggal: { gte: startDate, lte: endDate } }
-      },
-      select: {
-        id: true,
-        tajwid: true,
-        kelancaran: true,
-        makhraj: true,
-        adab: true,
-        nilaiAkhir: true,
-        catatan: true,
-        submissionStatus: true,
-        repeatReason: true,
-        guruId: true,
-        hafalan: {
-          select: {
-            surah: true,
-            ayatMulai: true,
-            ayatSelesai: true,
-            tanggal: true,
-            surahTambahan: true  // ✅ WAJIB untuk multi-surah
+    // Fetch Penilaian (by hafalan.tanggal) - HARUS INCLUDE surahTambahan + submissionStatus + signature guru
+    // Wrapped with retry logic
+    const penilaianList = await retryPrismaQuery(async () => {
+      return await prisma.penilaian.findMany({
+        where: {
+          siswaId: anakId,
+          hafalan: { tanggal: { gte: startDate, lte: endDate } }
+        },
+        select: {
+          id: true,
+          tajwid: true,
+          kelancaran: true,
+          makhraj: true,
+          adab: true,
+          nilaiAkhir: true,
+          catatan: true,
+          submissionStatus: true,
+          repeatReason: true,
+          guruId: true,
+          hafalan: {
+            select: {
+              surah: true,
+              ayatMulai: true,
+              ayatSelesai: true,
+              tanggal: true,
+              surahTambahan: true  // ✅ WAJIB untuk multi-surah
+            }
+          },
+          guru: { 
+            select: { 
+              id: true,
+              tandaTangan: true,
+              user: { 
+                select: { 
+                  name: true,
+                  signatureUrl: true,
+                  ttdUrl: true
+                } 
+              } 
+            } 
           }
         },
-        guru: { select: { user: { select: { name: true } } } }
-      },
-      orderBy: { hafalan: { tanggal: 'asc' } }
+        orderBy: { hafalan: { tanggal: 'asc' } }
+      });
     });
 
     const monthName = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(startDate);
+
+    // ============================================
+    // DETERMINE GURU & SIGNATURE (Priority: Penilai → Pembina)
+    // ============================================
+    let guruName = guruPembinaName;
+    let guruSignature = guruPembinaSignature;
+
+    // Priority: ambil dari guru penilai pertama jika ada
+    if (penilaianList.length > 0 && penilaianList[0].guru) {
+      const guruPenilai = penilaianList[0].guru;
+      guruName = guruPenilai.user?.name || guruPembinaName;
+      guruSignature = guruPenilai.tandaTangan || guruPenilai.user?.signatureUrl || guruPenilai.user?.ttdUrl || guruPembinaSignature;
+    }
+
+    // ============================================
+    // CONVERT SIGNATURE URL TO BASE64 (if available)
+    // ============================================
+    let signatureBase64 = null;
+    if (guruSignature) {
+      try {
+        console.log('[PDF] Fetching signature from:', guruSignature);
+        const signatureResponse = await fetch(guruSignature);
+        if (signatureResponse.ok) {
+          const signatureBuffer = await signatureResponse.arrayBuffer();
+          const base64 = Buffer.from(signatureBuffer).toString('base64');
+          // Detect image type from URL or content-type
+          const contentType = signatureResponse.headers.get('content-type') || 'image/png';
+          signatureBase64 = `data:${contentType};base64,${base64}`;
+          console.log('[PDF] Signature converted to base64 successfully');
+        } else {
+          console.warn('[PDF] Failed to fetch signature:', signatureResponse.status);
+        }
+      } catch (err) {
+        console.error('[PDF] Error converting signature to base64:', err);
+      }
+    } else {
+      console.log('[PDF] No signature URL provided');
+    }
 
     // ============================================
     // CREATE PDF - LANDSCAPE A4 (MASTER TEMPLATE)
@@ -181,7 +295,7 @@ export async function GET(request) {
     const metaLeft = [
       { label: 'Nama Siswa', value: siswa.user.name },
       { label: 'Kelas', value: siswa.kelas?.nama || '-' },
-      { label: 'Guru Pembina', value: guruPembina },
+      { label: 'Guru Pembina', value: guruName },
     ];
 
     const metaRight = [
@@ -401,8 +515,9 @@ export async function GET(request) {
       margin,
       yPos: yPosFinal,
       printDate: format(new Date(), 'dd/MM/yyyy'),
-      jabatan: 'Guru Tahfidz / Guru Penguji',
-      guruName: guruPembina,
+      jabatan: 'Guru Tahfidz',
+      guruName: guruName,
+      signatureUrl: signatureBase64,  // Use base64 instead of raw URL
     });
 
     const pdfBuffer = doc.output('arraybuffer');
@@ -419,6 +534,24 @@ export async function GET(request) {
     console.error('Error stack:', error.stack);
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
+    
+    // Specific handling for Prisma connection errors
+    if (error.message?.includes('Server has closed the connection')) {
+      console.error('🔌 Database connection closed. This may be due to:');
+      console.error('   - Query timeout (query too complex or slow)');
+      console.error('   - Connection pool exhausted');
+      console.error('   - Network issues between app and database');
+      
+      return NextResponse.json(
+        { 
+          error: 'Database connection timeout', 
+          details: 'The request took too long. Please try again.',
+          technicalDetails: error.message 
+        },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Failed to generate PDF', details: error.message, stack: error.stack },
       { status: 500 }

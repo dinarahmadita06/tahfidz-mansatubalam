@@ -272,11 +272,43 @@ export async function runWhatsAppReportScheduler() {
         const totalNilai = formattedPenilaian.reduce((sum, p) => sum + (p.nilaiAkhir || 0), 0);
         const rataRataNilai = totalPenilaian > 0 ? totalNilai / totalPenilaian : 0;
 
-        // Get guru info
+        // Get guru info with signature
         const firstPenilaian = await prisma.penilaian.findFirst({
           where: { siswaId: rel.siswa.id },
-          include: { guru: { include: { user: { select: { name: true } } } } }
+          include: { 
+            guru: { 
+              select: { 
+                id: true,
+                tandaTangan: true,
+                user: { 
+                  select: { 
+                    name: true,
+                    signatureUrl: true,
+                    ttdUrl: true
+                  } 
+                }
+              } 
+            } 
+          }
         });
+
+        // Convert signature URL to base64 (if available)
+        const guruSignatureUrl = firstPenilaian?.guru?.tandaTangan || firstPenilaian?.guru?.user?.signatureUrl || firstPenilaian?.guru?.user?.ttdUrl || null;
+        let signatureBase64 = null;
+        
+        if (guruSignatureUrl) {
+          try {
+            const signatureResponse = await fetch(guruSignatureUrl);
+            if (signatureResponse.ok) {
+              const signatureBuffer = await signatureResponse.arrayBuffer();
+              const base64 = Buffer.from(signatureBuffer).toString('base64');
+              const contentType = signatureResponse.headers.get('content-type') || 'image/png';
+              signatureBase64 = `data:${contentType};base64,${base64}`;
+            }
+          } catch (err) {
+            console.error('[WhatsApp Scheduler] Error converting signature:', err);
+          }
+        }
 
         // Generate PDF
         const doc = await generateLaporanPDF({
@@ -288,7 +320,7 @@ export async function runWhatsAppReportScheduler() {
           guru: {
             id: firstPenilaian?.guru?.id,
             nama: firstPenilaian?.guru?.user?.name || 'Guru Pembina',
-            signatureUrl: firstPenilaian?.guru?.signatureUrl || null
+            signatureUrl: signatureBase64  // Use base64 instead of raw URL
           },
           penilaianList: formattedPenilaian,
           statistics: {

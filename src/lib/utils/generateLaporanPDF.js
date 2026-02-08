@@ -307,10 +307,17 @@ export async function generateLaporanPDF(data) {
   const signatureUrl = guru?.signatureUrl || guru?.ttdUrl;
   if (signatureUrl) {
     try {
-      doc.addImage(signatureUrl, 'PNG', pageWidth - margin - 50 - 15, yPosition - 5, 30, 15);
+      // Detect image format from base64 data URL
+      let format = 'PNG';
+      if (signatureUrl.includes('image/jpeg') || signatureUrl.includes('image/jpg')) {
+        format = 'JPEG';
+      }
+      doc.addImage(signatureUrl, format, pageWidth - margin - 50 - 15, yPosition - 5, 30, 15);
       yPosition += 15;
     } catch (err) {
-      console.log('⚠️  Error loading signature:', err.message);
+      console.error('⚠️  Error loading signature:', err.message);
+      // Just skip signature if error
+      yPosition += 15;
     }
   } else {
     // Empty space for manual signature

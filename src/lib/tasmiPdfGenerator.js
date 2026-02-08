@@ -81,7 +81,7 @@ export async function generateTasmiRecapPDF(data) {
   // Footer signature
   const footerSignature = {
     printDate: data.printDate,
-    jabatan: 'Guru Tahfidz / Guru Penguji',
+    jabatan: 'Guru Tahfidz',
     guruName: data.guruName,
   };
 
