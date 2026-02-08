@@ -50,6 +50,7 @@ export async function POST(request) {
 
     const newAccounts = [];
     const errors = [];
+    const successDetails = [];
     
     // Helper untuk mark duplicate
     const markDuplicate = (rowIndex, reason) => {
@@ -582,7 +583,7 @@ export async function POST(request) {
             if (relationResult.isNew) details.push('Relasi dibuat');
             else if (orangTuaResult.orangTua) details.push('Relasi sudah ada');
             
-            errors.push(`Baris ${i + 2}: ✅ ${details.join(', ')}`);
+            successDetails.push(`Baris ${i + 2}: ✅ ${details.join(', ')}`);
           } else {
             // Semua sudah ada → DUPLICATE
             markDuplicate(i, 'Siswa, wali, dan relasi sudah ada sebelumnya');
@@ -618,7 +619,8 @@ export async function POST(request) {
       message: 'Import selesai',
       stats,
       newAccounts,
-      errors: errors.slice(0, 50) // Return max 50 errors/details
+      errors: errors.slice(0, 50), // Return max 50 errors
+      successDetails: successDetails.slice(0, 50) // Return max 50 success details
     });
 
   } catch (error) {

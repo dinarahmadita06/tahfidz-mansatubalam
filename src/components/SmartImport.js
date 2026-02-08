@@ -921,7 +921,7 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
             </div>
           )}
 
-          {/* Error Messages */}
+          {/* Error Messages - Only show if there are actual errors */}
           {result?.errors && result.errors.length > 0 && (
             <div style={{
               padding: '20px',
@@ -954,6 +954,45 @@ export default function SmartImport({ onSuccess, onClose, type = 'siswa' }) {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Success Details - Optional, show if user wants to see details */}
+          {result?.successDetails && result.successDetails.length > 0 && (
+            <details style={{ marginBottom: '24px' }}>
+              <summary style={{
+                cursor: 'pointer',
+                padding: '12px',
+                background: colors.emerald[50],
+                borderRadius: '8px',
+                border: `1px solid ${colors.emerald[100]}`,
+                fontSize: '14px',
+                fontWeight: 600,
+                color: colors.emerald[700]
+              }}>
+                ✅ Lihat Detail Berhasil ({result.successDetails.length} baris)
+              </summary>
+              <div style={{
+                padding: '12px',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                marginTop: '8px'
+              }}>
+                {result.successDetails.map((detail, index) => (
+                  <div key={index} style={{
+                    padding: '6px 10px',
+                    background: 'white',
+                    borderRadius: '4px',
+                    marginBottom: '4px',
+                    fontSize: '12px',
+                    color: colors.gray[600],
+                    fontFamily: 'monospace',
+                    border: `1px solid ${colors.emerald[100]}`
+                  }}>
+                    {detail}
+                  </div>
+                ))}
+              </div>
+            </details>
           )}
 
           <button
