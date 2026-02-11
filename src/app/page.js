@@ -286,9 +286,14 @@ export default function SIMTAQLandingPage() {
       }`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 via-green-400 to-teal-400 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
-              <GraduationCap size={24} />
-            </div>
+            <img 
+              src="/logo-man1.png" 
+              alt="Logo MAN 1 Bandar Lampung" 
+              className="h-7 w-auto object-contain"
+              onError={(e) => {
+                e.target.outerHTML = '<div class="w-10 h-10 bg-gradient-to-br from-emerald-400 via-green-400 to-teal-400 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg></div>';
+              }}
+            />
             <div>
               <span className="text-xl font-bold tracking-tight text-slate-900">SIMTAQ</span>
               <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest leading-none">Portal Tahfidz</p>
@@ -370,7 +375,7 @@ export default function SIMTAQLandingPage() {
               <Smartphone size={14} />
               Portal Aplikasi Berbasis PWA
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-[1.2] mb-4 lg:mb-6 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-[1.2] mb-3 tracking-tight">
               <span className="block">SIMTAQ — Sistem Informasi</span>
               <span className="block bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
                 Manajemen Tahfidz
@@ -476,7 +481,8 @@ export default function SIMTAQLandingPage() {
       <Section id="fitur">
         <div className="text-center mb-10 lg:mb-16">
           <h2 className="text-2xl lg:text-3xl xl:text-4xl font-black text-slate-900 mb-3 lg:mb-4 tracking-tight">Kenapa SIMTAQ?</h2>
-          <p className="text-slate-600 max-w-2xl mx-auto font-medium text-sm lg:text-base">Dirancang khusus untuk ekosistem tahfidz modern dengan fitur yang memudahkan kolaborasi antara Guru, Siswa, dan Orang Tua.</p>
+          
+          <p className="text-slate-600 max-w-2xl mx-auto font-medium text-sm lg:text-base">SIMTAQ digunakan di MAN 1 Bandar Lampung untuk memudahkan kolaborasi antara Guru, Siswa, dan Orang Tua dalam monitoring tahfidz secara realtime.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <FeatureCard 
@@ -505,8 +511,8 @@ export default function SIMTAQLandingPage() {
           />
           <FeatureCard 
             icon={FileText} 
-            title="Laporan PDF & WA" 
-            description="Dapatkan rekap laporan bulanan dalam format PDF yang dikirimkan otomatis melalui WhatsApp."
+            title="Laporan PDF" 
+            description="Dapatkan rekap laporan bulanan dalam format PDF."
             index={4}
           />
           <FeatureCard 
