@@ -498,28 +498,22 @@ export default function SIMTAQLandingPage() {
             index={1}
           />
           <FeatureCard 
-            icon={Calendar} 
-            title="Rekap Aktivitas" 
-            description="Log kehadiran dan aktivitas setoran harian yang tersusun rapi untuk memantau konsistensi siswa."
-            index={2}
-          />
-          <FeatureCard 
             icon={Heart} 
             title="Feedback Guru" 
             description="Orang tua mendapatkan catatan langsung dari guru pembina mengenai perkembangan karakter anak."
-            index={3}
+            index={2}
           />
           <FeatureCard 
             icon={FileText} 
             title="Laporan PDF" 
             description="Dapatkan rekap laporan bulanan dalam format PDF."
-            index={4}
+            index={3}
           />
           <FeatureCard 
             icon={Layout} 
             title="Akses Multi-role" 
             description="Satu portal dengan antarmuka yang disesuaikan untuk kebutuhan Guru, Siswa, maupun Orang Tua."
-            index={5}
+            index={4}
           />
         </div>
       </Section>
@@ -598,7 +592,7 @@ export default function SIMTAQLandingPage() {
                 <span className="text-2xl font-black tracking-tight uppercase">SIMTAQ</span>
               </div>
               <p className="text-slate-400 leading-relaxed mb-8 font-medium max-w-sm">
-                Membentuk generasi Qur&#39;ani dengan dukungan teknologi monitoring yang handal, transparan, dan mudah diakses.
+                Membentuk generasi Qur&#39;ani dengan dukungan teknologi monitoring yang transparan dan mudah diakses.
               </p>
             </div>
 
@@ -616,9 +610,7 @@ export default function SIMTAQLandingPage() {
               <div>
                 <h4 className="font-bold text-lg mb-6 text-emerald-400">Legalitas</h4>
                 <ul className="space-y-4 text-slate-400 text-sm font-bold">
-                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Kebijakan Privasi</a></li>
-                  <li><a href="#" className="hover:text-emerald-400 transition-colors">Syarat Ketentuan</a></li>
-                  <li><a href="https://man1bandarlampung.sch.id" className="hover:text-emerald-400 transition-colors">Website Sekolah</a></li>
+                  <li><a href="https://man1balam.sch.id" className="hover:text-emerald-400 transition-colors">Website Sekolah</a></li>
                 </ul>
               </div>
             </div>
