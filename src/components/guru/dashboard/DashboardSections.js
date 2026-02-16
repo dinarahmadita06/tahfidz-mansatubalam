@@ -288,10 +288,17 @@ export async function ClassManagementSection({ userId }) {
 
 export async function RecentActivitySection({ userId }) {
   console.time(`RecentActivitySection-${userId}`);
+  
+  // Calculate 24 hours ago for backend filtering (optional optimization)
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  
   const rawActivities = await prisma.activityLog.findMany({
     where: { 
         actorId: userId,
-        actorRole: 'GURU'
+        actorRole: 'GURU',
+        createdAt: {
+          gte: twentyFourHoursAgo // Only fetch activities from last 24 hours
+        }
     },
     select: {
       id: true,
@@ -302,7 +309,7 @@ export async function RecentActivitySection({ userId }) {
       metadata: true,
     },
     orderBy: { createdAt: 'desc' },
-    take: 20 // Fetch more to allow filtering
+    take: 20 // Fetch more to allow client-side filtering
   });
 
   // Filtering: Prioritize non-auth actions and limit login/logout to max 1 total

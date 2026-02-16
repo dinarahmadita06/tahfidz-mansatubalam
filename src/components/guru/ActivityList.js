@@ -164,11 +164,36 @@ function ActivityItem({ activity }) {
 }
 
 export default function ActivityList({ activities = [] }) {
-  if (activities.length === 0) {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  
+  // State to trigger re-filtering
+  const [, setTrigger] = useState(0);
+  
+  // Filter activities: only show items from last 24 hours
+  const filtered24h = activities
+    .filter((activity) => {
+      const createdAt = new Date(activity.createdAt).getTime();
+      const now = Date.now();
+      return (now - createdAt) <= ONE_DAY_MS;
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort newest first
+    .slice(0, 10); // Limit to 10 most recent
+  
+  // Auto-refresh: Re-filter every 1 minute to remove items that exceed 24h
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTrigger(prev => prev + 1);
+    }, 60000); // Re-filter every 1 minute
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Empty state when no activities in last 24 hours
+  if (filtered24h.length === 0) {
     return (
       <EmptyState
-        title="Belum ada aktivitas terbaru"
-        description="Aktivitas Anda akan muncul di sini setelah melakukan pengisian data."
+        title="Belum ada aktivitas dalam 24 jam terakhir"
+        description="Aktivitas Anda dalam 24 jam terakhir akan muncul di sini."
         icon={<FileText size={28} />}
         className="py-6"
       />
@@ -177,7 +202,7 @@ export default function ActivityList({ activities = [] }) {
 
   return (
     <div className="space-y-1">
-      {activities.map((activity) => (
+      {filtered24h.map((activity) => (
         <ActivityItem key={activity.id} activity={activity} />
       ))}
     </div>

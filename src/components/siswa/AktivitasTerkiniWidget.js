@@ -18,6 +18,9 @@ export default function AktivitasTerkiniWidget({ initialData = null }) {
   const [activities, setActivities] = useState(initialData || []);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(null);
+  const [, setFilterTrigger] = useState(0);
+
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
   useEffect(() => {
     if (!initialData) {
@@ -25,12 +28,21 @@ export default function AktivitasTerkiniWidget({ initialData = null }) {
     }
   }, [initialData]);
 
+  // Auto-refresh filter every 1 minute to remove old activities
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFilterTrigger(prev => prev + 1);
+    }, 60000); // Re-filter every 1 minute
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchActivities = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/siswa/activity/recent?limit=5');
+      const response = await fetch('/api/siswa/activity/recent?limit=20');
 
       if (!response.ok) {
         throw new Error(`Failed to fetch activities: ${response.status}`);
@@ -46,6 +58,16 @@ export default function AktivitasTerkiniWidget({ initialData = null }) {
       setLoading(false);
     }
   };
+
+  // Filter activities: only show items from last 24 hours
+  const filtered24h = activities
+    .filter((activity) => {
+      const createdAt = new Date(activity.createdAt).getTime();
+      const now = Date.now();
+      return (now - createdAt) <= ONE_DAY_MS;
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 10);
 
   // Get CTA based on action type
   const getActivityCTA = (action) => {
@@ -93,16 +115,16 @@ export default function AktivitasTerkiniWidget({ initialData = null }) {
             <p className="text-sm text-red-600 mb-2">⚠️ Gagal memuat aktivitas</p>
             <p className="text-xs text-gray-500">{error}</p>
           </div>
-        ) : activities.length === 0 ? (
+        ) : filtered24h.length === 0 ? (
           <EmptyState
-            title="Belum ada aktivitas"
-            description="Aktivitas Anda akan muncul di sini setelah melakukan pengisian data."
+            title="Belum ada aktivitas dalam 24 jam terakhir"
+            description="Aktivitas Anda dalam 24 jam terakhir akan muncul di sini."
             icon={Clock}
             className="py-6"
           />
         ) : (
           <div className="space-y-3">
-            {activities.map((activity) => {
+            {filtered24h.map((activity) => {
               const display = getActivityDisplay(activity.action);
               const cta = getActivityCTA(activity.action);
               

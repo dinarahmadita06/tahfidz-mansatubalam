@@ -25,11 +25,17 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '5'), 20);
 
-    // Fetch recent activities for this parent
+    // Calculate 24 hours ago for backend filtering
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Fetch recent activities for this parent from last 24 hours
     const rawActivities = await prisma.activityLog.findMany({
       where: {
         actorId: session.user.id,
-        actorRole: 'ORANG_TUA'
+        actorRole: 'ORANG_TUA',
+        createdAt: {
+          gte: twentyFourHoursAgo // Only fetch activities from last 24 hours
+        }
       },
       select: {
         id: true,
