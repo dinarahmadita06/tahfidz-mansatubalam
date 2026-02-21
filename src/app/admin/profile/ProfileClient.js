@@ -59,6 +59,7 @@ export default function ProfileClient({ initialData }) {
   const [regenerateLoading, setRegenerateLoading] = useState(false);
   const [showDeleteSignatureModal, setShowDeleteSignatureModal] = useState(false);
   const [deleteSignatureLoading, setDeleteSignatureLoading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   const fetchProfileData = async () => {
     try {
@@ -194,13 +195,15 @@ export default function ProfileClient({ initialData }) {
   const handleSignatureUpload = async (type, file) => {
     if (!file) return;
     
+    setUploadError(''); // Reset upload error
+    
     if (file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/jpg') {
-      setError(`Format file harus PNG atau JPG (Anda upload: ${file.type})`);
+      setUploadError(`Format file harus PNG atau JPG (Anda upload: ${file.type})`);
       return;
     }
     
-    if (file.size > 500 * 1024) {
-      setError(`Ukuran file tidak boleh lebih dari 500 KB (File Anda: ${(file.size / 1024).toFixed(2)} KB)`);
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError(`File yang Anda upload terlalu besar (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maksimal ukuran file adalah 2 MB.`);
       return;
     }
     
@@ -223,6 +226,18 @@ export default function ProfileClient({ initialData }) {
       if (res.ok) {
         setSuccess(`Tanda tangan ${type === 'guru' ? 'Guru Tahfidz' : 'Koordinator Tahfidz'} berhasil diupload!`);
         setSignatureLoadErrors(prev => ({ ...prev, [type]: false }));
+        
+        // Langsung update preview dengan cache buster untuk menghindari browser caching
+        const cacheBuster = `?t=${Date.now()}`;
+        const newSignatureUrl = data.signatureUrl + cacheBuster;
+        
+        if (type === 'koordinator') {
+          setSignaturePreviews(prev => ({ ...prev, koordinator: newSignatureUrl }));
+        } else if (type === 'guru') {
+          setSignaturePreviews(prev => ({ ...prev, guru: newSignatureUrl }));
+        }
+        
+        // Fetch profile data untuk update data lainnya
         await fetchProfileData(); 
         setTimeout(() => setSuccess(''), 3000);
       } else {
@@ -541,7 +556,7 @@ export default function ProfileClient({ initialData }) {
                       {saveLoading ? 'Mengupload...' : 'Klik untuk Upload Tanda Tangan'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Format: PNG atau JPG • Maksimal 500 KB
+                      Format: PNG atau JPG • Maksimal 2MB
                     </p>
                   </div>
                 </div>
@@ -561,10 +576,19 @@ export default function ProfileClient({ initialData }) {
               </label>
             )}
 
+            {/* Upload Error Warning */}
+            {uploadError && (
+              <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200">
+                <p className="text-xs text-red-700 font-medium">
+                  ⚠️ {uploadError}
+                </p>
+              </div>
+            )}
+
             {/* Info Note */}
             <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-100">
               <p className="text-xs text-blue-900">
-                💡 Ukuran maksimal 500 KB. Disarankan mengupload tanda tangan dengan latar transparan.
+                💡 Ukuran maksimal 2MB. Disarankan mengupload tanda tangan dengan latar transparan.
               </p>
             </div>
           </div>

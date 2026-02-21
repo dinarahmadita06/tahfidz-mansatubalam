@@ -192,7 +192,7 @@ function PersonalInfoForm({ profileData, formatDisplayValue }) {
 }
 
 // SignatureUploader Component
-function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDelete }) {
+function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDelete, uploadError }) {
   const [signatureLoadError, setSignatureLoadError] = useState(false);
 
   // Reset error state when URL changes
@@ -300,6 +300,15 @@ function SignatureUploader({ tandaTanganUrl, uploadingSignature, onUpload, onDel
         </label>
       )}
 
+      {/* Upload Error Warning */}
+      {uploadError && (
+        <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200">
+          <p className="text-xs text-red-700 font-medium">
+            ⚠️ {uploadError}
+          </p>
+        </div>
+      )}
+
       {/* Info Note */}
       <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-100">
         <p className="text-xs text-blue-900">
@@ -336,6 +345,7 @@ export default function ProfilGuruPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [tandaTanganUrl, setTandaTanganUrl] = useState(null);
   const [uploadingSignature, setUploadingSignature] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
   const [showRegenerateConfirmModal, setShowRegenerateConfirmModal] = useState(false);
@@ -562,12 +572,16 @@ export default function ProfilGuruPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setUploadError(''); // Reset upload error
+
     if (!file.type.startsWith('image/')) {
+      setUploadError('Format file harus PNG atau JPG');
       toast.error('File harus berupa gambar (PNG/JPG)');
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
+      setUploadError(`File yang Anda upload terlalu besar (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maksimal ukuran file adalah 2 MB.`);
       toast.error('Ukuran file maksimal 2MB');
       return;
     }
@@ -585,7 +599,11 @@ export default function ProfilGuruPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setTandaTanganUrl(data.tandaTanganUrl);
+        // Tambahkan cache buster untuk menghindari browser caching
+        const cacheBuster = `?t=${Date.now()}`;
+        const newTandaTanganUrl = data.tandaTanganUrl + cacheBuster;
+        setTandaTanganUrl(newTandaTanganUrl);
+        setUploadError(''); // Clear any previous errors
         toast.success('Tanda tangan berhasil diupload!');
       } else {
         const error = await response.json();
@@ -701,6 +719,7 @@ export default function ProfilGuruPage() {
             <SignatureUploader
               tandaTanganUrl={tandaTanganUrl}
               uploadingSignature={uploadingSignature}
+              uploadError={uploadError}
               onUpload={handleUploadSignature}
               onDelete={handleDeleteSignature}
             />

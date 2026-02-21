@@ -21,32 +21,76 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Ensure database connection is alive
+    try {
+      await prisma.$connect();
+    } catch (connectError) {
+      console.error('Database connection error:', connectError);
+    }
+
     // Get siswa data first
-    const siswa = await prisma.siswa.findUnique({
-      where: { id: siswaId },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
+    let siswa;
+    try {
+      siswa = await prisma.siswa.findUnique({
+        where: { id: siswaId },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
-        },
-        kelas: {
-          select: {
-            nama: true,
+          kelas: {
+            select: {
+              nama: true,
+            },
           },
-        },
-        orangTuaSiswa: {
-          include: {
-            orangTua: {
-              include: {
-                user: true,
+          orangTuaSiswa: {
+            include: {
+              orangTua: {
+                include: {
+                  user: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
+      // Retry once if connection lost
+      if (dbError.code === 'P1017') {
+        console.log('🔄 Retrying after connection reset...');
+        await prisma.$connect();
+        siswa = await prisma.siswa.findUnique({
+          where: { id: siswaId },
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+            kelas: {
+              select: {
+                nama: true,
+              },
+            },
+            orangTuaSiswa: {
+              include: {
+                orangTua: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+      } else {
+        throw dbError;
+      }
+    }
 
     if (!siswa) {
       return NextResponse.json({ error: 'Siswa not found' }, { status: 404 });
@@ -154,6 +198,22 @@ export async function PATCH(request) {
     });
   } catch (error) {
     console.error('Error validating siswa:', error);
-    return NextResponse.json({ error: 'Failed to validate siswa' }, { status: 500 });
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P1017') {
+      return NextResponse.json({ 
+        error: 'Koneksi database terputus. Silakan coba lagi.' 
+      }, { status: 503 });
+    }
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json({ 
+        error: 'Data siswa tidak ditemukan' 
+      }, { status: 404 });
+    }
+    
+    return NextResponse.json({ 
+      error: 'Gagal memvalidasi siswa. Silakan coba lagi.' 
+    }, { status: 500 });
   }
 }

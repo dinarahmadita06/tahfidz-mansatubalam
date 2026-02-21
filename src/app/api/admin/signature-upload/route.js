@@ -11,6 +11,15 @@ function getPNGDimensions(buffer) {
     const view = new DataView(buffer);
     const width = view.getUint32(16, false);
     const height = view.getUint32(20, false);
+    
+    // Validasi: INT4 max adalah 2,147,483,647
+    // Dimensi gambar normal tidak akan melebihi ini
+    const MAX_INT4 = 2147483647;
+    
+    if (width > MAX_INT4 || height > MAX_INT4 || width <= 0 || height <= 0) {
+      return { width: 100, height: 50 }; // Default fallback untuk invalid dimensions
+    }
+    
     return { width, height };
   } catch {
     return { width: 100, height: 50 }; // Default fallback
@@ -67,12 +76,16 @@ export async function POST(request) {
 
     // Also update AdminSignature for legacy support if type is provided
     if (type) {
+      // Validasi fileSize untuk INT4 (max: 2,147,483,647)
+      const MAX_INT4 = 2147483647;
+      const safeFileSize = file.size > MAX_INT4 ? MAX_INT4 : file.size;
+      
       await prisma.adminSignature.upsert({
         where: { type },
         update: {
           signatureData: finalUrl,
           fileName: file.name,
-          fileSize: file.size,
+          fileSize: safeFileSize,
           imageWidth: dimensions.width,
           imageHeight: dimensions.height,
           updatedAt: new Date()
@@ -81,7 +94,7 @@ export async function POST(request) {
           type,
           signatureData: finalUrl,
           fileName: file.name,
-          fileSize: file.size,
+          fileSize: safeFileSize,
           imageWidth: dimensions.width,
           imageHeight: dimensions.height
         }
