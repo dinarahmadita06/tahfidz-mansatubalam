@@ -42,7 +42,14 @@ export async function GET(request) {
     // const cacheKey = `siswa-list-${status || 'all'}-${kelasId || 'all'}-${search || 'none'}-p${page}-l${limit}`;
 
     let whereClause = {};
-    if (status) whereClause.status = status;
+    if (status) {
+      // Handle special case for 'notApproved' - show pending and rejected only
+      if (status === 'notApproved') {
+        whereClause.status = { in: ['pending', 'rejected'] };
+      } else {
+        whereClause.status = status;
+      }
+    }
     if (statusSiswa) whereClause.statusSiswa = statusSiswa;
     if (kelasId) whereClause.kelasId = kelasId;
     if (search) {
@@ -72,6 +79,7 @@ export async function GET(request) {
       tanggalLahir: true,
       alamat: true,
       status: true,
+      rejectionReason: true,
       createdAt: true,
       user: {
         select: {

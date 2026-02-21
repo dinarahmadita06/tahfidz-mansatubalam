@@ -783,7 +783,13 @@ export default function TasmiClient() {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
-                <button type="submit" disabled={!isSiapMendaftar && !editMode} className={`flex-1 px-4 py-3 rounded-lg transition-all font-semibold ${!isSiapMendaftar && !editMode ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>{editMode ? 'Update Pendaftaran' : 'Daftar Sekarang'}</button>
+                <button 
+                  type="submit" 
+                  disabled={(!isSiapMendaftar && !editMode) || submitMutation.isPending} 
+                  className={`flex-1 px-4 py-3 rounded-lg transition-all font-semibold ${(!isSiapMendaftar && !editMode) || submitMutation.isPending ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                >
+                  {submitMutation.isPending ? 'Menyimpan...' : (editMode ? 'Update Pendaftaran' : 'Daftar Sekarang')}
+                </button>
               </div>
             </form>
           </motion.div>

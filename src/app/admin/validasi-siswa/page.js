@@ -139,6 +139,17 @@ function DetailModal({ siswa, onClose, onApprove, onReject }) {
 
         {/* CONTENT - Scrollable */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
+          {/* Alasan Penolakan - Jika siswa ditolak */}
+          {siswa.status === 'rejected' && siswa.rejectionReason && (
+            <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+              <h3 className="font-bold text-red-900 mb-2 flex items-center gap-2">
+                <XCircle size={18} />
+                Alasan Penolakan:
+              </h3>
+              <p className="text-red-700 text-sm">{siswa.rejectionReason}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Baris 1: Nama Lengkap | NISN */}
             <InfoFieldCard label="Nama Lengkap" value={siswa.user.name} />
@@ -183,18 +194,37 @@ function DetailModal({ siswa, onClose, onApprove, onReject }) {
 
         {/* FOOTER - Sticky */}
         <div className="sticky bottom-0 bg-white border-t border-slate-200 px-8 py-4 flex gap-3">
-          <button
-            onClick={onReject}
-            className="flex-1 px-4 py-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 hover:text-red-700 rounded-2xl font-semibold text-sm transition-all"
-          >
-            Tolak
-          </button>
-          <button
-            onClick={onApprove}
-            className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold text-sm shadow-md hover:shadow-lg transition-all"
-          >
-            Validasi
-          </button>
+          {siswa.status === 'rejected' ? (
+            <>
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-2xl font-semibold text-sm transition-all"
+              >
+                Tutup
+              </button>
+              <button
+                onClick={onApprove}
+                className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold text-sm shadow-md hover:shadow-lg transition-all"
+              >
+                Validasi Ulang
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onReject}
+                className="flex-1 px-4 py-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 hover:text-red-700 rounded-2xl font-semibold text-sm transition-all"
+              >
+                Tolak
+              </button>
+              <button
+                onClick={onApprove}
+                className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold text-sm shadow-md hover:shadow-lg transition-all"
+              >
+                Validasi
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -298,7 +328,7 @@ export default function ValidasiSiswaPage() {
   const [siswa, setSiswa] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('pending');
+  const [filterStatus, setFilterStatus] = useState('notApproved');
   const [filterKelas, setFilterKelas] = useState('all');
   const [kelas, setKelas] = useState([]);
   const [toast, setToast] = useState(null);
@@ -415,9 +445,9 @@ export default function ValidasiSiswaPage() {
 
   // Stats - Hitung berdasarkan data terbaru
   const stats = {
-    total: Array.isArray(siswa) ? siswa.length : 0,
+    total: Array.isArray(siswa) ? siswa.filter(s => s.status !== 'approved').length : 0,
     menunggu: Array.isArray(siswa) ? siswa.filter(s => s.status === 'pending').length : 0,
-    divalidasi: Array.isArray(siswa) ? siswa.filter(s => s.status === 'approved').length : 0,
+    ditolak: Array.isArray(siswa) ? siswa.filter(s => s.status === 'rejected').length : 0,
   };
 
   if (loading) {
@@ -468,12 +498,12 @@ export default function ValidasiSiswaPage() {
           <div className="space-y-6">
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <StatCard
                 icon={Users}
                 title="Total Pendaftar"
                 value={stats.total}
-                subtitle="Seluruh siswa terdaftar"
+                subtitle="Menunggu & Ditolak"
                 theme="mint"
               />
               <StatCard
@@ -482,6 +512,13 @@ export default function ValidasiSiswaPage() {
                 value={stats.menunggu}
                 subtitle="Perlu tindakan admin"
                 theme="orange"
+              />
+              <StatCard
+                icon={XCircle}
+                title="Ditolak"
+                value={stats.ditolak}
+                subtitle="Data tidak valid"
+                theme="sky"
               />
             </div>
 
@@ -525,9 +562,9 @@ export default function ValidasiSiswaPage() {
                     onChange={(e) => setFilterStatus(e.target.value)}
                     className="w-full px-4 py-2.5 border-2 border-emerald-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all cursor-pointer bg-white/50 hover:bg-white/70"
                   >
-                    <option value="all">Semua Status</option>
-                    <option value="pending">Menunggu Validasi</option>
-                    <option value="rejected">Ditolak</option>
+                    <option value="notApproved">Menunggu & Ditolak</option>
+                    <option value="pending">Hanya Menunggu</option>
+                    <option value="rejected">Hanya Ditolak</option>
                   </select>
                 </div>
 

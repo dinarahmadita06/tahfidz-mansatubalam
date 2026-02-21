@@ -187,12 +187,14 @@ export default function BukuDigitalPage() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) { // Increase to 50MB as per API
-        toast.error('Ukuran file maksimal 50MB');
+      if (file.size > 10 * 1024 * 1024) { // Max 10MB
+        toast.error('Ukuran file maksimal 10MB');
+        e.target.value = ''; // Reset file input
         return;
       }
       if (file.type !== 'application/pdf') {
         toast.error('Hanya file PDF yang diperbolehkan');
+        e.target.value = ''; // Reset file input
         return;
       }
 
@@ -592,7 +594,7 @@ export default function BukuDigitalPage() {
                 ) : (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Upload File PDF (max 50MB) <span className="text-red-500">*</span>
+                      Upload File PDF (max 10MB) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="file"

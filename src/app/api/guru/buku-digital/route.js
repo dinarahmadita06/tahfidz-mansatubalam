@@ -149,10 +149,10 @@ export async function POST(request) {
           { status: 400 }
         );
       }
-      const maxSize = 50 * 1024 * 1024;
+      const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
         return NextResponse.json(
-          { error: 'Ukuran file terlalu besar. Maksimal 50MB' },
+          { error: 'Ukuran file terlalu besar. Maksimal 10MB' },
           { status: 400 }
         );
       }
