@@ -224,7 +224,7 @@ export default function KomunikasiPage() {
                         <span className="text-3xl">{selectedChild.avatar}</span>
                         <div>
                           <p className="text-white font-bold text-lg">{selectedChild.name}</p>
-                          <p className="text-emerald-100 text-sm">Kelas {selectedChild.kelas}</p>
+                          <p className="text-emerald-100 text-sm">Kelas {selectedChild.kelas || 'Belum masuk kelas'}</p>
                         </div>
                       </div>
                     </div>
@@ -275,7 +275,7 @@ export default function KomunikasiPage() {
                             <span className="text-3xl flex-shrink-0">{child.avatar}</span>
                             <div className="text-left flex-1 min-w-0">
                               <p className="font-bold text-gray-900 truncate">{child.name}</p>
-                              <p className="text-sm text-gray-600">Kelas {child.kelas}</p>
+                              <p className="text-sm text-gray-600">Kelas {child.kelas || 'Belum masuk kelas'}</p>
                             </div>
                             {selectedChild?.id === child.id && (
                               <CheckCircle size={20} className="text-emerald-600 flex-shrink-0" />

@@ -226,7 +226,7 @@ function ChildrenConnectedCard({ children }) {
                     <div className="flex items-center gap-3 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <BookOpen size={14} />
-                        <span>{child.kelas}</span>
+                        <span>{child.kelas || 'Belum masuk kelas'}</span>
                       </div>
                     </div>
                   </div>

@@ -291,7 +291,7 @@ const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
                   <User size={20} className="text-emerald-600 flex-shrink-0" />
                   <div className="text-left flex-1">
                     <p className="font-semibold text-gray-900">{child.nama || child.namaLengkap}</p>
-                    <p className="text-xs text-gray-600">Kelas {child.kelas || child.kelas?.namaKelas}</p>
+                    <p className="text-xs text-gray-600">Kelas {child.kelas || 'Belum masuk kelas'}</p>
                   </div>
                   {selectedChild?.id === child.id && (
                     <div className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0"></div>

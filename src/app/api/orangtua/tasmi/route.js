@@ -88,7 +88,7 @@ export async function GET(request) {
       siswaId: ots.siswa.id,
       nama: ots.siswa.user.name,
       email: ots.siswa.user.email,
-      kelas: ots.siswa.kelas?.nama || '-',
+      kelas: ots.siswa.kelas?.nama || null,
       hubungan: ots.hubungan,
       tasmi: ots.siswa.tasmi,
     }));

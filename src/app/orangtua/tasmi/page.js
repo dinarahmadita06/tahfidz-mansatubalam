@@ -161,7 +161,7 @@ export default function OrangtuaTasmiPage() {
             >
               {childrenData.map((child) => (
                 <option key={child.siswaId} value={child.siswaId}>
-                  {child.nama} - {child.kelas}
+                  {child.nama} - {child.kelas || 'Belum masuk kelas'}
                 </option>
               ))}
             </select>

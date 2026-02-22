@@ -44,7 +44,8 @@ export async function GET(request) {
         children: children.map(c => ({
           id: c.id,
           namaLengkap: c.user.name,
-          kelas: { namaKelas: c.kelas?.nama }
+          nama: c.user.name,
+          kelas: c.kelas?.nama || null
         }))
       });
     }

@@ -70,7 +70,7 @@ function ChildSelector({ children, selectedChild, onSelectChild }) {
                 </div>
                 <div className="text-left flex-1 min-w-0">
                   <p className="font-bold text-gray-900 text-sm truncate">{child.namaLengkap}</p>
-                  <p className="text-[10px] lg:text-xs text-gray-600 truncate">{child.kelas || 'N/A'}</p>
+                  <p className="text-[10px] lg:text-xs text-gray-600 truncate">{child.kelas || 'Belum masuk kelas'}</p>
                 </div>
                 {selectedChild?.id === child.id && (
                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
