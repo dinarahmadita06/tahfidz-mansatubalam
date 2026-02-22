@@ -393,7 +393,7 @@ export default function SIMTAQLandingPage() {
                 href="/login"
                 className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-bold text-base lg:text-lg transition-all shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 group"
               >
-                Masuk ke Portal
+                Login Portal
                 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </Link>
               
@@ -494,13 +494,13 @@ export default function SIMTAQLandingPage() {
           <FeatureCard 
             icon={ShieldCheck} 
             title="Penilaian Standar" 
-            description="Sistem penilaian terukur meliputi Tajwid, Makharij, dan Kelancaran untuk kualitas hafalan terbaik."
+            description="Sistem penilaian terukur meliputi Tajwid, Makhraj, Kelancaran, dan nilai implementasi untuk kualitas hafalan terbaik."
             index={1}
           />
           <FeatureCard 
             icon={Heart} 
             title="Feedback Guru" 
-            description="Orang tua mendapatkan catatan langsung dari guru pembina mengenai perkembangan karakter anak."
+            description="Orang tua mendapatkan catatan langsung dari guru pembina mengenai perkembangan hafalan anak."
             index={2}
           />
           <FeatureCard 
