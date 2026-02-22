@@ -114,7 +114,7 @@ const cleanTranslation = (text) => {
     .trim();
 };
 
-export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
+export default function QuranReaderPage({ role = 'siswa', userId, noLayout = false }) {
   const [surahs, setSurahs] = useState([]);
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [expandedSurahMobile, setExpandedSurahMobile] = useState(null); // For mobile accordion
@@ -187,8 +187,9 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
   useEffect(() => {
     fetchSurahs();
 
-    // Load last read from localStorage based on role
-    const saved = localStorage.getItem(`last_read_quran_${role}`);
+    // Load last read from localStorage based on userId (fallback to role for compatibility)
+    const storageKey = userId ? `last_read_quran_${userId}` : `last_read_quran_${role}`;
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -199,11 +200,12 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
     }
 
     // Load dismiss state from localStorage
-    const dismissed = localStorage.getItem(`last_read_dismissed_${role}`);
+    const dismissKey = userId ? `last_read_dismissed_${userId}` : `last_read_dismissed_${role}`;
+    const dismissed = localStorage.getItem(dismissKey);
     if (dismissed === 'true') {
       setDismissedLastRead(true);
     }
-  }, [role]);
+  }, [role, userId]);
 
   // NOTE: Removed auto-focus on searchTerm change to prevent keyboard from appearing on mobile
   // when user is typing search. User can manually tap search bar to focus if needed.
@@ -696,8 +698,9 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
       updatedAt: new Date().toISOString(),
     };
 
-    // Save to localStorage based on role
-    localStorage.setItem(`last_read_quran_${role}`, JSON.stringify(bookmark));
+    // Save to localStorage based on userId (fallback to role for compatibility)
+    const storageKey = userId ? `last_read_quran_${userId}` : `last_read_quran_${role}`;
+    localStorage.setItem(storageKey, JSON.stringify(bookmark));
     setLastRead(bookmark);
 
     // Toast with safe fallbacks
@@ -719,7 +722,8 @@ export default function QuranReaderPage({ role = 'siswa', noLayout = false }) {
 const handleDismissLastRead = (e) => {
     e.stopPropagation();
     setDismissedLastRead(true);
-    localStorage.setItem(`last_read_dismissed_${role}`, 'true');
+    const dismissKey = userId ? `last_read_dismissed_${userId}` : `last_read_dismissed_${role}`;
+    localStorage.setItem(dismissKey, 'true');
   };
 
   const handleJumpToLastRead = () => {
