@@ -3,6 +3,7 @@
 import { useEffect, useState, memo } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import {
   LayoutDashboard,
@@ -346,28 +347,26 @@ function AdminLayout({ children }) {
                 href="/admin/dashboard"
                 className="flex items-center gap-2.5 lg:gap-3 transition-all duration-200 cursor-pointer group"
               >
-                <div
-                  className="p-2 lg:p-2.5 rounded-full shadow-lg group-hover:shadow-xl transition-all duration-200"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                  }}
-                >
-                  <BookOpen className="text-white w-5 h-5 lg:w-6 h-6" strokeWidth={2} />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl blur opacity-40 animate-pulse"></div>
+                  <div className="relative w-9 h-9 lg:w-11 lg:h-11 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5 lg:p-2">
+                    <Image src="/logo-man1.png" alt="Logo MAN 1" width={40} height={40} className="w-full h-full object-contain" priority />
+                  </div>
                 </div>
                 <span className="font-bold text-base lg:text-lg" style={{ color: '#064E3B', letterSpacing: '0.02em' }}>
                   SIMTAQ
                 </span>
               </Link>
             ) : (
-              <Link
-                href="/admin/dashboard"
-                className="p-2 lg:p-2.5 rounded-full shadow-lg hover:shadow-xl cursor-pointer transition-all duration-200 block"
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                }}
-              >
-                <BookOpen className="text-white w-5 h-5 lg:w-6 h-6" strokeWidth={2} />
-              </Link>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl blur opacity-40 animate-pulse"></div>
+                <Link
+                  href="/admin/dashboard"
+                  className="relative w-9 h-9 lg:w-11 lg:h-11 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5 lg:p-2 cursor-pointer transition-all duration-200 block"
+                >
+                  <Image src="/logo-man1.png" alt="Logo MAN 1" width={40} height={40} className="w-full h-full object-contain" priority />
+                </Link>
+              </div>
             )}
 
             {/* Toggle Button - Hidden on Mobile */}

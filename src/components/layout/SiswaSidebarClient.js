@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import useSiswaActivityTracking from '@/hooks/useSiswaActivityTracking';
@@ -207,8 +208,8 @@ export default function SiswaSidebarClient({ userName = 'Siswa' }) {
                 <div className="flex items-center gap-2.5 lg:gap-3">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl blur opacity-40 animate-pulse"></div>
-                    <div className="relative w-9 h-9 lg:w-11 lg:h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Sparkles className="text-white w-5 h-5 lg:w-6 lg:h-6" />
+                    <div className="relative w-9 h-9 lg:w-11 lg:h-11 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5 lg:p-2">
+                      <Image src="/logo-man1.png" alt="Logo MAN 1" width={40} height={40} className="w-full h-full object-contain" priority />
                     </div>
                   </div>
                   <div>

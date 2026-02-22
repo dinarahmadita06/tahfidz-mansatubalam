@@ -2,6 +2,7 @@
 
 import { useState, memo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -132,12 +133,15 @@ function Sidebar({ userName = 'Guru', onLogout }) {
             <div className="flex items-center justify-between">
               {!isCollapsed && (
                 <div className="flex items-center gap-2.5 lg:gap-3">
-                  <div className="w-9 h-9 lg:w-10 lg:h-10 bg-green-600 rounded-lg flex items-center justify-center shadow-sm">
-                    <LayoutDashboard className="text-white w-5 h-5 lg:w-6 lg:h-6" />
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl blur opacity-40 animate-pulse"></div>
+                    <div className="relative w-9 h-9 lg:w-11 lg:h-11 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5 lg:p-2">
+                      <Image src="/logo-man1.png" alt="Logo MAN 1" width={40} height={40} className="w-full h-full object-contain" priority />
+                    </div>
                   </div>
                   <div>
                     <h2 className="font-bold text-gray-900 text-base lg:text-lg" style={{ color: '#111827' }}>SIMTAQ</h2>
-                    <p className="text-[10px] lg:text-xs text-gray-600" style={{ color: '#4B5563' }}>{userName}</p>
+                    <p className="text-[10px] lg:text-xs text-emerald-600 font-medium" style={{ color: '#059669' }}>{userName}</p>
                   </div>
                 </div>
               )}
