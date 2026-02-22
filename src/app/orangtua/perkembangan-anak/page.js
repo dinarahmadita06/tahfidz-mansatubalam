@@ -236,76 +236,6 @@ const AttendanceBadge = ({ status }) => {
   );
 };
 
-// Child Selector Dropdown
-const ChildSelector = ({ children, selectedChild, onSelectChild }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!children || children.length === 0) return null;
-
-  const hasMultipleChildren = children.length > 1;
-
-  return (
-    <div className="relative flex-shrink-0">
-      <button
-        onClick={() => hasMultipleChildren && setIsOpen(!isOpen)}
-        className={`flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur rounded-xl border border-white/40 shadow-lg transition-all duration-300 ${
-          hasMultipleChildren ? 'hover:shadow-xl cursor-pointer' : 'cursor-default'
-        }`}
-      >
-        <User size={20} className="text-emerald-600 flex-shrink-0" />
-        <div className="text-left flex-1">
-          <p className="text-sm text-gray-600">Anak yang Dipilih</p>
-          <p className="font-semibold text-gray-900">{selectedChild?.nama || 'Pilih Anak'}</p>
-        </div>
-        {hasMultipleChildren && (
-          <ChevronDown
-            size={20}
-            className={`text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-          />
-        )}
-      </button>
-
-      {isOpen && hasMultipleChildren && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-[999] max-h-[300px] overflow-y-auto">
-            {children.map((child, index) => {
-              return (
-                <button
-                  key={child.id || index}
-                  onClick={() => {
-                    onSelectChild({
-                      ...child,
-                      nama: child.nama || child.namaLengkap,
-                      statusSiswa: child.statusSiswa || 'AKTIF',
-                    });
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors ${
-                    selectedChild?.id === child.id ? 'bg-emerald-50' : ''
-                  }`}
-                >
-                  <User size={20} className="text-emerald-600 flex-shrink-0" />
-                  <div className="text-left flex-1">
-                    <p className="font-semibold text-gray-900">{child.nama || child.namaLengkap}</p>
-                    <p className="text-xs text-gray-600">Kelas {child.kelas || 'Belum masuk kelas'}</p>
-                  </div>
-                  {selectedChild?.id === child.id && (
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0"></div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
 // Modal Detail Catatan Guru - SIMTAQ Glass Style
 const CatatanGuruModal = ({ isOpen, onClose, catatan }) => {
   if (!isOpen || !catatan) return null;
@@ -395,15 +325,24 @@ export default function PerkembanganAnakPage() {
     fetcher
   );
 
-  // Set initial selected child when children data loads
+  // Set initial selected child from localStorage or default to first child
   useEffect(() => {
     if (childrenData?.children && childrenData.children.length > 0 && !selectedChild) {
-      const firstChild = childrenData.children[0];
+      const savedChildId = localStorage.getItem('orangtua_selected_child_id');
+      let childToSelect = childrenData.children[0]; // default
+      
+      if (savedChildId) {
+        const savedChild = childrenData.children.find(c => c.id === savedChildId);
+        if (savedChild) {
+          childToSelect = savedChild;
+        }
+      }
+      
       setSelectedChild({
-        id: firstChild.id,
-        nama: firstChild.namaLengkap,
-        kelas: firstChild.kelas?.namaKelas || '-',
-        statusSiswa: firstChild.statusSiswa || 'AKTIF',
+        id: childToSelect.id,
+        nama: childToSelect.namaLengkap || childToSelect.nama,
+        kelas: childToSelect.kelas || '-',
+        statusSiswa: childToSelect.statusSiswa || 'AKTIF',
       });
     }
   }, [childrenData, selectedChild]);
@@ -530,25 +469,7 @@ export default function PerkembanganAnakPage() {
     }
   };
 
-  const handleSelectChild = (child) => {
-    setSelectedChild(child);
-    
-    // Log activity: Ganti Anak
-    try {
-      fetch('/api/orangtua/activity/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'ORTU_GANTI_ANAK',
-          title: 'Mengganti Anak (Perkembangan)',
-          description: `Anda memilih anak: ${child.nama}`,
-          metadata: { siswaId: child.id, nama: child.nama }
-        })
-      });
-    } catch (err) {
-      console.error('Failed to log ganti anak:', err);
-    }
-  };
+  // handleSelectChild removed - selection now managed via dashboard
 
   const handleDownloadLaporan = async () => {
     if (!selectedChild?.id) {
@@ -637,18 +558,7 @@ export default function PerkembanganAnakPage() {
                 </div>
               </div>
 
-              {childrenData?.children && selectedChild && (
-                <ChildSelector
-                  children={childrenData.children.map((c) => ({
-                    id: c.id,
-                    nama: c.namaLengkap,
-                    kelas: c.kelas?.namaKelas || '-',
-                    statusSiswa: c.statusSiswa,
-                  }))}
-                  selectedChild={selectedChild}
-                  onSelectChild={handleSelectChild}
-                />
-              )}
+              {/* Child selection now managed via dashboard dropdown */}
             </div>
           </div>
 

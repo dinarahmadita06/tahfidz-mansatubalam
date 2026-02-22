@@ -20,6 +20,13 @@ function ChildSelector({ children, selectedChild, onSelectChild }) {
     return null;
   }
 
+  const handleChildSelect = (child) => {
+    // Save to localStorage
+    localStorage.setItem('orangtua_selected_child_id', child.id);
+    onSelectChild(child);
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative">
       <button
@@ -57,10 +64,7 @@ function ChildSelector({ children, selectedChild, onSelectChild }) {
             {children.map((child) => (
               <button
                 key={child.id}
-                onClick={() => {
-                  onSelectChild(child);
-                  setIsOpen(false);
-                }}
+                onClick={() => handleChildSelect(child)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50 transition-colors ${
                   selectedChild?.id === child.id ? 'bg-emerald-50' : ''
                 }`}
@@ -161,10 +165,23 @@ export default function OrangtuaDashboardPage() {
         
         if (data.children && data.children.length > 0) {
           setChildren(data.children);
-          // Select first child by default
-          setSelectedChild(data.children[0]);
+          
+          // Check localStorage for previously selected child
+          const savedChildId = localStorage.getItem('orangtua_selected_child_id');
+          let childToSelect = data.children[0]; // default to first child
+          
+          if (savedChildId) {
+            const savedChild = data.children.find(c => c.id === savedChildId);
+            if (savedChild) {
+              childToSelect = savedChild;
+            }
+          }
+          
+          setSelectedChild(childToSelect);
+          localStorage.setItem('orangtua_selected_child_id', childToSelect.id);
         } else {
           setSelectedChild(null);
+          localStorage.removeItem('orangtua_selected_child_id');
         }
       } catch (error) {
         console.error('Error fetching parent profile:', error);
