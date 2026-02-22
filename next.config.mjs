@@ -34,7 +34,13 @@ const nextConfig = {
   // Webpack config to handle permission issues
   webpack: (config, { isServer }) => {
     config.watchOptions = {
-      ignored: ['**/node_modules', '**/.next', '**/C:/Users/**', '**/.git', '**/dist'],
+      ignored: /node_modules|\.next|\.git|Application Data|AppData|Local Settings/,
+    };
+    
+    // Prevent scanning outside project directory
+    config.snapshot = {
+      ...(config.snapshot || {}),
+      managedPaths: [/^(.+?[\\/]node_modules[\\/])/],
     };
     
     return config;

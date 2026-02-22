@@ -50,7 +50,7 @@ export async function getChildrenByParentId(userIdOrOrangTuaId) {
       id: child.id,
       namaLengkap: child.user.name,
       kelas: {
-        namaKelas: child.kelas?.nama || 'N/A'
+        namaKelas: child.kelas?.nama || null
       }
     }));
   } catch (error) {
@@ -177,7 +177,7 @@ export async function getOrangTuaProfile(userId) {
       children: orangTua.orangTuaSiswa.map(relation => ({
         id: relation.siswa.id,
         namaLengkap: relation.siswa.user.name,
-        kelas: relation.siswa.kelas?.nama || 'N/A'
+        kelas: relation.siswa.kelas?.nama || null
       }))
     };
   } catch (error) {
