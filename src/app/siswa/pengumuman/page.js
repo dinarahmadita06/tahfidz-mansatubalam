@@ -27,9 +27,6 @@ function AnnouncementEmptyState() {
       </div>
       <h3 className="text-xl font-bold text-gray-700 mb-2">Belum Ada Pengumuman</h3>
       <p className="text-gray-500 mb-1">Nantikan kabar terbaru di sini</p>
-      <p className="text-sm text-gray-400">
-        Admin akan segera mengirimkan informasi penting untuk Anda
-      </p>
     </div>
   );
 }
