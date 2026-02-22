@@ -67,7 +67,7 @@ export default function AktivitasTerkiniWidget({ initialData = null }) {
       return (now - createdAt) <= ONE_DAY_MS;
     })
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 10);
+    .slice(0, 4);
 
   // Get CTA based on action type
   const getActivityCTA = (action) => {

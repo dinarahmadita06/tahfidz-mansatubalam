@@ -59,7 +59,7 @@ export default function OrangtuaActivityWidget() {
       return (now - createdAt) <= ONE_DAY_MS;
     })
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 10);
+    .slice(0, 4);
 
   return (
     <div className={`${CARD_BASE} p-4 lg:p-6`}>

@@ -135,7 +135,7 @@ export async function GET() {
       prisma.activityLog.findMany({
         where: { targetUserId: siswaId },
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: 4,
         select: {
           id: true,
           action: true,

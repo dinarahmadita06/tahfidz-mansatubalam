@@ -325,7 +325,7 @@ export async function RecentActivitySection({ userId }) {
     } else {
       filteredActivities.push(activity);
     }
-    if (filteredActivities.length >= 5) break;
+    if (filteredActivities.length >= 4) break;
   }
 
   console.timeEnd(`RecentActivitySection-${userId}`);
