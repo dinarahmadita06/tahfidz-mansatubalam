@@ -49,57 +49,58 @@ export async function POST(request) {
 
     // SIMTAQ text
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px sans-serif';
+    ctx.font = 'bold 48px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('SIMTAQ', 540, 85);
 
     // Subtitle
-    ctx.font = '24px sans-serif';
-    ctx.fillText('Sistem Informasi Manajemen Tahfidz Al-Qur\'an', 540, 125);
+    ctx.font = '24px Arial, sans-serif';
+    ctx.fillText('Sistem Informasi Manajemen Tahfidz Al-Quran', 540, 125);
 
     // Recovery Code title
     ctx.fillStyle = '#1f2937';
-    ctx.font = 'bold 36px sans-serif';
+    ctx.font = 'bold 36px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Kartu Recovery', 540, 250);
 
     // User info
     ctx.fillStyle = '#4b5563';
-    ctx.font = '20px sans-serif';
-    ctx.fillText(`Username: ${userUsername}`, 540, 300);
+    ctx.font = '20px Arial, sans-serif';
+    ctx.fillText('Username: ' + userUsername, 540, 300);
     if (userName) {
-      ctx.fillText(`Nama: ${userName}`, 540, 335);
+      ctx.fillText('Nama: ' + userName, 540, 335);
     }
 
     // Recovery code display (larger and centered)
-    ctx.font = 'bold 64px sans-serif';
+    ctx.font = 'bold 72px monospace';
     ctx.fillStyle = '#059669';
-    ctx.fillText(recoveryCode, 540, 440);
+    ctx.fillText(recoveryCode, 540, 450);
 
-    // Warning message
+    // Warning message (no emoji to avoid encoding issues)
     ctx.fillStyle = '#dc2626';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText('⚠️ SIMPAN DI TEMPAT AMAN', 540, 520);
+    ctx.font = 'bold 24px Arial, sans-serif';
+    ctx.fillText('SIMPAN DI TEMPAT AMAN', 540, 530);
     
-    ctx.font = '18px sans-serif';
-    ctx.fillText('Kode ini hanya tampil sekali dan tidak dapat dipulihkan', 540, 555);
+    ctx.fillStyle = '#dc2626';
+    ctx.font = '18px Arial, sans-serif';
+    ctx.fillText('Kode ini hanya tampil sekali dan tidak dapat dipulihkan', 540, 565);
 
     // Instructions
     ctx.fillStyle = '#4b5563';
-    ctx.font = '16px sans-serif';
-    ctx.fillText('Gunakan kode ini untuk mereset password jika lupa', 540, 610);
-    ctx.fillText('Jaga kerahasiaan kode ini seperti password Anda', 540, 640);
+    ctx.font = '16px Arial, sans-serif';
+    ctx.fillText('Gunakan kode ini untuk mereset password jika lupa', 540, 620);
+    ctx.fillText('Jaga kerahasiaan kode ini seperti password Anda', 540, 650);
 
     // Footer
     ctx.fillStyle = '#9ca3af';
-    ctx.font = '14px sans-serif';
+    ctx.font = '14px Arial, sans-serif';
     const createdDate = new Date().toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
     ctx.fillText('Dibuat pada: ' + createdDate, 540, 740);
-    ctx.fillText('SIMTAQ - Sistem Informasi Manajemen Tahfidz Al-Qur\'an', 540, 770);
+    ctx.fillText('SIMTAQ - Sistem Informasi Manajemen Tahfidz Al-Quran', 540, 770);
 
     // Convert to buffer
     const buffer = canvas.toBuffer('image/png');
