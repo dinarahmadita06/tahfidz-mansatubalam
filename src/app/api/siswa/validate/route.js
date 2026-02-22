@@ -160,13 +160,21 @@ export async function PATCH(request) {
           },
         });
         
-        // Activate each connected parent's user account
+        // Activate each connected parent's user account AND approve their orangTua status
         for (const relation of connectedParents) {
+          // Activate user account
           await tx.user.update({
             where: { id: relation.orangTua.userId },
             data: { isActive: true },
           });
-          console.log(`✅ [VALIDATE-SISWA] Auto-activated parent: ${relation.orangTua.user.email}`);
+          
+          // Approve orangTua status (fixes auth validation)
+          await tx.orangTua.update({
+            where: { id: relation.orangTua.id },
+            data: { status: 'approved' },
+          });
+          
+          console.log(`✅ [VALIDATE-SISWA] Auto-activated parent: ${relation.orangTua.user.email} (User + OrangTua approved)`);
         }
       }
 

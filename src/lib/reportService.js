@@ -7,9 +7,11 @@
  * @param {string} periode - Period type (harian, mingguan, bulanan, semester1, semester2, custom)
  * @param {string} customStart - Custom start date (for custom period)
  * @param {string} customEnd - Custom end date (for custom period)
+ * @param {number} bulan - Specific month (1-12) for bulanan period
+ * @param {number} tahun - Specific year for bulanan period
  * @returns {Object} - { startDate, endDate }
  */
-export function calculateDateRange(periode, customStart = null, customEnd = null) {
+export function calculateDateRange(periode, customStart = null, customEnd = null, bulan = null, tahun = null) {
   const today = new Date();
   let startDate, endDate;
 
@@ -27,8 +29,11 @@ export function calculateDateRange(periode, customStart = null, customEnd = null
       endDate.setHours(23, 59, 59, 999);
       break;
     case 'bulanan':
-      startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      // Jika bulan dan tahun spesifik diberikan, gunakan itu. Jika tidak, pakai bulan/tahun sekarang
+      const targetMonth = bulan ? bulan - 1 : today.getMonth(); // bulan 1-12 -> 0-11
+      const targetYear = tahun || today.getFullYear();
+      startDate = new Date(targetYear, targetMonth, 1);
+      endDate = new Date(targetYear, targetMonth + 1, 0);
       endDate.setHours(23, 59, 59, 999);
       break;
     case 'semester1':
@@ -84,7 +89,7 @@ export async function fetchKelasGuru() {
 
 /**
  * Fetch laporan data based on filters
- * @param {Object} filters - { kelasId, periode, tanggalMulai, tanggalSelesai }
+ * @param {Object} filters - { kelasId, periode, bulan, tahun, tanggalMulai, tanggalSelesai }
  * @returns {Promise<Array>} - Report data array (can be empty)
  * @throws {Error} - Only throws on actual errors, NOT on empty data
  */
@@ -92,7 +97,9 @@ export async function fetchLaporan(filters) {
   const { startDate, endDate } = calculateDateRange(
     filters.periode,
     filters.tanggalMulai,
-    filters.tanggalSelesai
+    filters.tanggalSelesai,
+    filters.bulan, // Pass bulan parameter
+    filters.tahun  // Pass tahun parameter
   );
 
   if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {

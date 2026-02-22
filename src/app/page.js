@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import dynamic from 'next/dynamic';
+import Link from "next/link";
 import { 
   BookOpen, 
   Users, 
@@ -31,9 +31,6 @@ import {
   FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Dynamically import Link
-const Link = dynamic(() => import("next/link"), { ssr: false });
 
 // UI Preview Cards for Hero
 const UIPreviewStack = () => (
