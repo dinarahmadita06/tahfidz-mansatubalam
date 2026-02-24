@@ -52,16 +52,23 @@ async function DashboardContent() {
     redirect('/login');
   }
 
+  // Use Indonesia timezone for production consistency
   const today = new Date();
   const formattedDate = today.toLocaleDateString('id-ID', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'Asia/Jakarta', // Force Indonesia timezone
   });
 
   const greeting = (() => {
-    const hour = today.getHours();
+    // Get hour in Indonesia timezone
+    const hour = parseInt(today.toLocaleString('id-ID', { 
+      hour: 'numeric', 
+      hour12: false,
+      timeZone: 'Asia/Jakarta'
+    }));
     if (hour < 12) return 'Selamat Pagi';
     if (hour < 15) return 'Selamat Siang';
     if (hour < 18) return 'Selamat Sore';
