@@ -98,6 +98,10 @@ model Siswa {
   tahunAjaranMasukId String?
   lulusAt            DateTime?
   latestJuzAchieved  Int             @default(0)
+  namaAyah           String?         // For family grouping
+  namaIbu            String?         // For family grouping
+  namaWali           String?         // For family grouping (if not ayah/ibu)
+  familyKey          String?         // Generated key to group siblings
   hafalan            Hafalan[]
   orangTuaSiswa      OrangTuaSiswa[]
   penilaian          Penilaian[]
@@ -119,6 +123,7 @@ model Siswa {
   @@index([tahunAjaranMasukId])
   @@index([lulusAt])
   @@index([createdAt])
+  @@index([familyKey])
 }
 
 model OrangTua {

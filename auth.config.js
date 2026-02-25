@@ -116,6 +116,80 @@ export const authConfig = {
           //   - Orang Tua: DDMMYYYY (tanggal lahir siswa, reversed)
           // Auth akan mencoba semua user dengan username yang match,
           // dan distinguish berdasarkan password hash
+          const isParentPasswordFormat = /^\d{8}$/.test(String(password || '').trim());
+          if (isParentPasswordFormat && identifier && !identifier.includes('@')) {
+            try {
+              const siswaByNis = await withRetry(() =>
+                prisma.siswa.findFirst({
+                  where: { nis: identifier },
+                  include: {
+                    orangTuaSiswa: {
+                      include: {
+                        orangTua: {
+                          include: {
+                            user: true,
+                            orangTuaSiswa: {
+                              include: {
+                                siswa: {
+                                  select: { statusSiswa: true }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                })
+              );
+              if (siswaByNis && siswaByNis.tanggalLahir) {
+                const dt = new Date(siswaByNis.tanggalLahir);
+                const dd = String(dt.getDate()).padStart(2, '0');
+                const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                const yyyy = String(dt.getFullYear());
+                const expected = `${dd}${mm}${yyyy}`;
+                if (expected === String(password)) {
+                  const rels = siswaByNis.orangTuaSiswa || [];
+                  const availableParents = rels
+                    .map(r => r.orangTua)
+                    .filter(p => p && p.user);
+                  if (availableParents.length > 0) {
+                    const parent = availableParents.find(p =>
+                      (p.orangTuaSiswa || []).some(x => x.siswa?.statusSiswa === 'AKTIF')
+                    ) || availableParents[0];
+                    const parentUser = parent.user;
+                    if (parentUser) {
+                      if (parent.status === 'pending' || parent.status === 'rejected' || parent.status === 'suspended') {
+                        return null;
+                      }
+                      if (!parentUser.isActive) {
+                        const hasActiveChild = (parent.orangTuaSiswa || []).some(x => x.siswa?.statusSiswa === 'AKTIF');
+                        if (!hasActiveChild) {
+                          return null;
+                        }
+                      }
+                      return {
+                        id: parentUser.id,
+                        email: undefined,
+                        username: parentUser.username || identifier,
+                        name: parentUser.name,
+                        role: parentUser.role || 'ORANG_TUA',
+                        isActive: parentUser.isActive,
+                        siswaId: undefined,
+                        guruId: undefined,
+                        orangTuaId: parent.id,
+                        rememberMe,
+                        isRecoveryCodeSetup: parentUser.isRecoveryCodeSetup,
+                        recoveryOnboardingCompleted: parentUser.recoveryOnboardingCompleted
+                      };
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+            }
+          }
+
           const potentialUsers = await withRetry(() =>
             prisma.user.findMany({
               where: { 

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { getChildrenForParent } from '@/lib/familyContext';
 
 /**
  * Get all children (siswa) for a parent using orangTuaSiswa pivot relation
@@ -120,6 +121,7 @@ export async function getChildByParentId(siswaId, userIdOrOrangTuaId) {
 /**
  * Get parent profile data by session userId
  * SECURITY: Query by userId (from session) to ensure logged-in parent only sees their own data
+ * FAMILY KEY SUPPORT: Returns all children in the same family (siblings)
  * @param {string} userId - User ID from session.user.id
  * @returns {Promise<Object|null>} - Parent profile with user data and children list
  */
@@ -140,23 +142,6 @@ export async function getOrangTuaProfile(userId) {
             isActive: true,
             createdAt: true
           }
-        },
-        orangTuaSiswa: {
-          include: {
-            siswa: {
-              select: {
-                id: true,
-                user: {
-                  select: { name: true }
-                },
-                kelas: {
-                  select: {
-                    nama: true
-                  }
-                }
-              }
-            }
-          }
         }
       }
     });
@@ -164,6 +149,9 @@ export async function getOrangTuaProfile(userId) {
     if (!orangTua) {
       return null;
     }
+
+    // ✅ NEW: Get all children using familyKey (includes siblings from the same family)
+    const allChildren = await getChildrenForParent(prisma, orangTua.id);
 
     // Transform to frontend format
     return {
@@ -174,10 +162,12 @@ export async function getOrangTuaProfile(userId) {
       alamat: orangTua.alamat,
       status: 'Aktif', // Parent status now depends on children status
       jenisKelamin: orangTua.jenisKelamin,
-      children: orangTua.orangTuaSiswa.map(relation => ({
-        id: relation.siswa.id,
-        namaLengkap: relation.siswa.user.name,
-        kelas: relation.siswa.kelas?.nama || null
+      children: allChildren.map(child => ({
+        id: child.id,
+        namaLengkap: child.user.name,
+        kelas: child.kelas?.nama || null,
+        statusSiswa: child.statusSiswa, // Include status for filtering
+        nis: child.nis, // Include NIS for display
       }))
     };
   } catch (error) {
