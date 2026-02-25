@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { surahList, colors } from './constants';
 
@@ -29,6 +30,15 @@ export default function PopupPenilaian({
   onSave
 }) {
   if (!show) return null;
+
+  const [surahQuery, setSurahQuery] = useState('');
+  const [showSurahDropdown, setShowSurahDropdown] = useState(false);
+  const filteredSurah =
+    surahQuery.trim().length === 0
+      ? surahList
+      : surahList.filter((s) =>
+          s.toLowerCase().includes(surahQuery.toLowerCase())
+        );
 
   return (
     <div style={{
@@ -107,28 +117,81 @@ export default function PopupPenilaian({
             }}>
               Surah <span style={{ color: '#DC2626' }}>*</span>
             </label>
-            <select
-              value={form.surah}
-              onChange={(e) => onFormChange({ ...form, surah: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                fontSize: '14px',
-                border: `2px solid ${colors.emerald[200]}`,
-                borderRadius: '12px',
-                outline: 'none',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-                background: colors.white,
-                cursor: 'pointer',
-              }}
-            >
-              <option value="">Pilih Surah</option>
-              {surahList.map((surah) => (
-                <option key={surah} value={surah}>
-                  {surah}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                value={surahQuery || form.surah}
+                onChange={(e) => {
+                  setSurahQuery(e.target.value);
+                  setShowSurahDropdown(true);
+                  if (!e.target.value) {
+                    onFormChange({ ...form, surah: '' });
+                  }
+                }}
+                onFocus={() => setShowSurahDropdown(true)}
+                onBlur={() => setTimeout(() => setShowSurahDropdown(false), 120)}
+                placeholder="Ketik nama surah…"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  border: `2px solid ${colors.emerald[200]}`,
+                  borderRadius: '12px',
+                  outline: 'none',
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  background: colors.white,
+                }}
+              />
+              {showSurahDropdown && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: '6px',
+                    background: colors.white,
+                    border: `1px solid ${colors.emerald[100]}`,
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+                    maxHeight: '220px',
+                    overflowY: 'auto',
+                    zIndex: 20,
+                  }}
+                >
+                  {filteredSurah.length === 0 ? (
+                    <div style={{ padding: '10px 12px', fontSize: '13px', color: colors.text.tertiary }}>
+                      Tidak ada hasil
+                    </div>
+                  ) : (
+                    filteredSurah.slice(0, 30).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          onFormChange({ ...form, surah: s });
+                          setSurahQuery(s);
+                          setShowSurahDropdown(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 14px',
+                          fontSize: '14px',
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#ECFDF5')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        {s}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Ayat */}

@@ -111,6 +111,9 @@ export default function PenilaianHafalanPage() {
     submissionStatus: 'DINILAI', // DINILAI or MENGULANG
     repeatReason: '', // Alasan mengulang (optional)
   });
+  // Combobox Surah Utama state
+  const [surahQuery, setSurahQuery] = useState('');
+  const [showSurahDropdown, setShowSurahDropdown] = useState(false);
 
   // Fetch data siswa dan kelas
   useEffect(() => {
@@ -732,18 +735,45 @@ export default function PenilaianHafalanPage() {
                 <label className="block text-sm font-bold text-gray-700 mb-3">
                   Surah Utama <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={popupForm.surah}
-                  onChange={(e) => setPopupForm({ ...popupForm, surah: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
-                >
-                  <option value="">Pilih Surah</option>
-                  {surahList.map((surah) => (
-                    <option key={surah} value={surah}>
-                      {surah}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={surahQuery || popupForm.surah}
+                    onChange={(e) => {
+                      setSurahQuery(e.target.value);
+                      setShowSurahDropdown(true);
+                      if (!e.target.value) {
+                        setPopupForm({ ...popupForm, surah: '' });
+                      }
+                    }}
+                    onFocus={() => setShowSurahDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowSurahDropdown(false), 120)}
+                    placeholder="Ketik nama surah…"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
+                    aria-autocomplete="list"
+                    aria-expanded={showSurahDropdown}
+                  />
+                  {showSurahDropdown && (
+                    <div className="absolute z-20 left-0 right-0 mt-2 bg-white border border-emerald-100 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                      {(surahQuery.trim().length === 0 ? surahList : surahList.filter(s => s.toLowerCase().includes(surahQuery.toLowerCase())))
+                        .slice(0, 30)
+                        .map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => {
+                              setPopupForm({ ...popupForm, surah: s });
+                              setSurahQuery(s);
+                              setShowSurahDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Ayat Mulai & Selesai untuk Surah Utama */}
