@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { useState, Suspense, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, BookOpen, Mail, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -18,7 +18,21 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
+
+  // Read query reason via child wrapped by Suspense to satisfy Next.js rule
+  function LoginQuerySync({ onMessage }) {
+    const { useSearchParams } = require('next/navigation');
+    const sp = useSearchParams();
+    useEffect(() => {
+      const reason = sp?.get('reason');
+      if (reason === 'idle') {
+        onMessage('Sesi berakhir karena tidak ada aktivitas.');
+      } else if (reason === 'expired') {
+        onMessage('Sesi Anda telah kedaluwarsa. Silakan login kembali.');
+      }
+    }, [sp, onMessage]);
+    return null;
+  }
 
   // Load remembered username
   useEffect(() => {
@@ -28,16 +42,6 @@ export default function LoginPage() {
       setRememberMe(true);
     }
   }, []);
-
-  // Show idle/expired message when redirected by middleware
-  useEffect(() => {
-    const reason = searchParams?.get('reason');
-    if (reason === 'idle') {
-      setError('Sesi berakhir karena tidak ada aktivitas.');
-    } else if (reason === 'expired') {
-      setError('Sesi Anda telah kedaluwarsa. Silakan login kembali.');
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -171,6 +175,9 @@ export default function LoginPage() {
         <LoadingIndicator text="Loading..." />
       </div>
     }>
+      <Suspense fallback={null}>
+        <LoginQuerySync onMessage={setError} />
+      </Suspense>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4 relative overflow-hidden">
         {/* Islamic Geometric Pattern Background - Simplified */}
         <div className="absolute inset-0 opacity-3">
