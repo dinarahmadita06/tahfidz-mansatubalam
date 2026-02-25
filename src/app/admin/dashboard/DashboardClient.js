@@ -369,9 +369,9 @@ export default function AdminDashboardPage({ initialData }) {
 
           {/* 4. Stat Cards - Pastel Transparent + Glow */}
           {!error && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {loading ? (
-                Array(5).fill(0).map((_, i) => <SkeletonCard key={i} />)
+                Array(4).fill(0).map((_, i) => <SkeletonCard key={i} />)
               ) : (
                 <>
                   <StatCard
@@ -389,17 +389,9 @@ export default function AdminDashboardPage({ initialData }) {
                     theme="amber"
                   />
                   <StatCard
-                    icon={BookOpen}
-                    title="Juz Tertinggi"
-                    value={`${stats.juzTertinggi || 0} Juz`}
-                    subtitle="Capaian hafalan tertinggi siswa aktif"
-                    theme="purple"
-                  />
-                  <StatCard
                     icon={Award}
                     title="Rata² Nilai"
                     value={stats.rataRataNilai || 0}
-                    subtitle="Kualitas hafalan"
                     theme="blue"
                   />
                   <StatCard
