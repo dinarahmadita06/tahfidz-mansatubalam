@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload, FileSpreadsheet } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Search, Download, Users, UserCheck, UserX, GraduationCap, RefreshCw, Upload, FileSpreadsheet, Key } from 'lucide-react';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 import EmptyState from '@/components/shared/EmptyState';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -353,6 +353,25 @@ export default function AdminGuruPage() {
     }
   };
 
+  // Reset password guru ke default (MAN1)
+  const handleResetPasswordGuru = async (guruItem) => {
+    if (!confirm(`Reset password guru "${guruItem.user.name}" ke default (MAN1)?`)) return;
+    try {
+      const res = await fetch(`/api/admin/guru/${guruItem.id}/reset-password`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Password berhasil di-reset ke default.\n\nUsername: ${guruItem.user.username || '-'}\nPassword: MAN1`);
+      } else {
+        alert(data.error || 'Gagal mereset password guru');
+      }
+    } catch (err) {
+      console.error('Reset password guru error:', err);
+      alert('Terjadi kesalahan saat mereset password guru.');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -672,6 +691,13 @@ export default function AdminGuruPage() {
                                 className="p-1.5 lg:p-2 rounded-lg bg-emerald-50/70 text-emerald-600 hover:bg-emerald-100/70 hover:shadow-md transition-all"
                               >
                                 <Edit size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleResetPasswordGuru(guruItem)}
+                                title="Reset password ke default (MAN1)"
+                                className="p-1.5 lg:p-2 rounded-lg bg-blue-50/70 text-blue-600 hover:bg-blue-100/70 hover:shadow-md transition-all"
+                              >
+                                <Key size={14} />
                               </button>
                               <button
                                 onClick={() => handleDelete(guruItem.id)}
