@@ -19,27 +19,25 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Read query reason via child wrapped by Suspense to satisfy Next.js rule
-  function LoginQuerySync({ onMessage }) {
-    const { useSearchParams } = require('next/navigation');
-    const sp = useSearchParams();
-    useEffect(() => {
-      const reason = sp?.get('reason');
-      if (reason === 'idle') {
-        onMessage('Sesi berakhir karena tidak ada aktivitas.');
-      } else if (reason === 'expired') {
-        onMessage('Sesi Anda telah kedaluwarsa. Silakan login kembali.');
-      }
-    }, [sp, onMessage]);
-    return null;
-  }
-
   // Load remembered username
   useEffect(() => {
     const savedIdentifier = localStorage.getItem('remembered_identifier');
     if (savedIdentifier) {
       setIdentifier(savedIdentifier);
       setRememberMe(true);
+    }
+  }, []);
+
+  // Read ?reason from URL without useSearchParams to avoid CSR bailout during build
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      const reason = sp.get('reason');
+      if (reason === 'idle') {
+        setError('Sesi berakhir karena tidak ada aktivitas.');
+      } else if (reason === 'expired') {
+        setError('Sesi Anda telah kedaluwarsa. Silakan login kembali.');
+      }
     }
   }, []);
 
@@ -170,14 +168,6 @@ export default function LoginPage() {
   };
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4">
-        <LoadingIndicator text="Loading..." />
-      </div>
-    }>
-      <Suspense fallback={null}>
-        <LoginQuerySync onMessage={setError} />
-      </Suspense>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-amber-50 flex items-center justify-center p-4 relative overflow-hidden">
         {/* Islamic Geometric Pattern Background - Simplified */}
         <div className="absolute inset-0 opacity-3">
@@ -347,6 +337,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-    </Suspense>
+    
   );
 }
