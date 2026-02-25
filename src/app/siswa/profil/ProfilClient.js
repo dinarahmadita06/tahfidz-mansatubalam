@@ -50,6 +50,43 @@ function ProfileHeader() {
   );
 }
 
+// ParentAccountsSection - green cards like on parent profile
+function ParentAccountsSection({ parents }) {
+  return (
+    <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-white/20 shadow-sm p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-emerald-50">
+          <Shield size={20} className="text-emerald-600" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900">Akun Orang Tua Terhubung</h3>
+      </div>
+
+      {Array.isArray(parents) && parents.length > 0 ? (
+        <div className="space-y-3">
+          {parents.map((p, idx) => (
+            <div
+              key={p.id || idx}
+              className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-200"
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white flex items-center justify-center font-bold">
+                {(p.name || 'O').charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">{p.name}</p>
+                <p className="text-xs text-emerald-700 font-medium">Orang Tua / Wali Siswa</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+          <p className="text-sm text-gray-600">Belum terhubung dengan akun orang tua.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ProfileSummaryCard Component
 function ProfileSummaryCard({ profileData, onEditProfile, onChangePassword, onRegenerateRecoveryCode }) {
   const statusBadge = getStatusBadgeConfig(profileData?.statusSiswa || 'AKTIF');
@@ -704,6 +741,9 @@ export default function ProfilClient({ initialData }) {
           <PersonalInfoCard profileData={profileData} />
         </div>
       </div>
+
+      {/* Parent accounts section placed below like on parent profile */}
+      <ParentAccountsSection parents={profileData?.parents || []} />
 
       <Toaster position="top-right" />
 

@@ -57,6 +57,12 @@ async function getProfileData(userId) {
   if (!siswa) return null;
 
   const primaryGuardian = siswa.orangTuaSiswa?.[0]?.orangTua || null;
+  const parents = (siswa.orangTuaSiswa || [])
+    .map(rel => ({
+      id: rel.orangTua?.id || null,
+      name: rel.orangTua?.user?.name || null
+    }))
+    .filter(p => p && p.name);
 
   return {
     id: siswa.id,
@@ -73,6 +79,7 @@ async function getProfileData(userId) {
     namaWali: primaryGuardian?.user?.name || '-',
     phoneWali: '-',
     phone: '-',
+    parents
   };
 }
 
