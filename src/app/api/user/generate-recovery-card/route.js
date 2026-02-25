@@ -33,10 +33,8 @@ try {
 
 export async function POST(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Session is optional here because users might generate the card right after reset (not logged in yet)
+    const session = await auth().catch(() => null);
 
     const { recoveryCode, username, name } = await request.json();
 
@@ -45,8 +43,8 @@ export async function POST(request) {
     }
 
     // Get user info from session or request body
-    const userUsername = username || session.user.username || 'User';
-    const userName = name || session.user.name || '';
+    const userUsername = username || session?.user?.username || 'User';
+    const userName = name || session?.user?.name || '';
 
     // Create canvas for the recovery card (increased size for better quality)
     const canvas = createCanvas(1080, 810);
