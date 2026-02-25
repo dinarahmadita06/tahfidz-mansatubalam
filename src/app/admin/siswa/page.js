@@ -305,6 +305,8 @@ export default function AdminSiswaPage() {
     XLSX.writeFile(wb, 'Template_Import_Siswa_SIMTAQ.xlsx');
   };
 
+  // Rekonsiliasi tombol dihapus sesuai permintaan
+
   const handleExportData = () => {
     try {
       // Prepare siswa data for export (ordered columns)

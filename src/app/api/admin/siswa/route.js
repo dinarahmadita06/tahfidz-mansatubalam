@@ -65,6 +65,7 @@ export async function GET(request) {
     const selectFields = isBadgeRequest ? {
       id: true,
       status: true,
+      statusSiswa: true,
       user: {
         select: {
           id: true,
@@ -79,6 +80,7 @@ export async function GET(request) {
       tanggalLahir: true,
       alamat: true,
       status: true,
+      statusSiswa: true,
       rejectionReason: true,
       createdAt: true,
       user: {

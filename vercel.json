@@ -1,12 +1,8 @@
 {
-  "buildCommand": "npm run build",
-  "framework": "nextjs",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "crons": [
     {
-      "path": "/api/cron/whatsapp-reports",
-      "schedule": "0 9 * * 1"
+      "path": "/api/admin/siswa/auto-deactivate",
+      "schedule": "0 20 * * *"
     }
   ]
 }
