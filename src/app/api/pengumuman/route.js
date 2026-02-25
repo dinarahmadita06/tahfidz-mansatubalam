@@ -155,6 +155,16 @@ export async function GET(request) {
       meta: error.meta,
       stack: error.stack
     });
+    // Graceful fallback when DB is unreachable in local/dev
+    const isConnError =
+      error.code === 'P1001' ||
+      error.message?.includes("Can't reach database server") ||
+      error.message?.includes('ECONNRESET') ||
+      error.message?.includes('Server has closed the connection');
+    if (isConnError) {
+      console.warn('[PENGUMUMAN] DB not reachable, returning empty list to keep UI responsive');
+      return NextResponse.json({ pengumuman: [] });
+    }
     return NextResponse.json(
       { error: 'Gagal mengambil data pengumuman', details: error.message },
       { status: 500 }

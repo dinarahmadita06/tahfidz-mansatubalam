@@ -85,6 +85,17 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Error fetching parent activities:', error);
+    const isConnError =
+      error.code === 'P1001' ||
+      error.message?.includes("Can't reach database server") ||
+      error.message?.includes('ECONNRESET') ||
+      error.message?.includes('Server has closed the connection');
+    if (isConnError) {
+      return NextResponse.json(
+        { activities: [] },
+        { headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

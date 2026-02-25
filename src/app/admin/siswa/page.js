@@ -189,6 +189,10 @@ export default function AdminSiswaPage() {
   if (searchTerm) queryParams.append('search', searchTerm);
   if (filterStatus !== 'all') queryParams.append('status', filterStatus === 'active' ? 'approved' : 'pending');
   if (filterStatusSiswa !== 'all') queryParams.append('statusSiswa', filterStatusSiswa);
+  // Apply kelas filter when selected (requires jenjang selected in UI)
+  if (filterKelas && filterKelas !== 'all') {
+    queryParams.append('kelasId', filterKelas);
+  }
   
   const { data: siswaData, error: siswaError, mutate: refetchSiswa } = useSWR(`/api/admin/siswa?${queryParams.toString()}`, fetcher);
   const { data: kelasData, error: kelasError } = useSWR('/api/kelas', fetcher);
@@ -216,7 +220,7 @@ export default function AdminSiswaPage() {
   // Reset page to 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, filterStatus, filterStatusSiswa]);
+  }, [searchTerm, filterStatus, filterStatusSiswa, filterJenjang, filterKelas]);
 
   // Debounced search effect
   useEffect(() => {
@@ -308,10 +312,8 @@ export default function AdminSiswaPage() {
         'Nama Lengkap': s.user?.name || '-',
         'NISN': s.nisn || '-',
         'NIS': s.nis || '-',
-        'Tempat Lahir': s.tempatLahir || '-',
         'Tanggal Lahir': formatDateOnly(s.tanggalLahir) || '-',
         'Alamat': s.alamat || '-',
-        'No. HP': '-', // TODO: Will be added when User.phone is implemented
         'Kelas': s.kelas?.nama || '-',
         'Status': s.user?.isActive ? 'Aktif' : 'Tidak Aktif',
         'Validasi': s.status === 'approved' ? 'Tervalidasi' : s.status === 'rejected' ? 'Ditolak' : 'Pending'
@@ -361,15 +363,13 @@ export default function AdminSiswaPage() {
         { wch: 25 }, // Nama Lengkap
         { wch: 15 }, // NISN
         { wch: 12 }, // NIS
-        { wch: 20 }, // Tempat Lahir
         { wch: 15 }, // Tanggal Lahir
         { wch: 35 }, // Alamat
-        { wch: 15 }, // No HP
-        { wch: 15 }, // Kelas
-        { wch: 12 }, // Status
         { wch: 15 }  // Validasi
       ];
       XLSX.utils.book_append_sheet(wb, wsSiswa, 'Data Siswa');
+
+      // Sheet 2: Data Orang Tua (if any)
 
       // Sheet 2: Data Orang Tua (if any)
       if (exportDataOrangTua.length > 0) {

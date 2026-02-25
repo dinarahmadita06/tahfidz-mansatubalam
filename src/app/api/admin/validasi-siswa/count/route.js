@@ -23,9 +23,17 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('Error fetching pending count:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch pending count',
-      pending: 0 
-    }, { status: 500 });
+    const isConnError =
+      error.code === 'P1001' ||
+      error.message?.includes("Can't reach database server") ||
+      error.message?.includes('ECONNRESET') ||
+      error.message?.includes('Server has closed the connection');
+    if (isConnError) {
+      return NextResponse.json({ pending: 0 });
+    }
+    return NextResponse.json(
+      { error: 'Failed to fetch pending count', pending: 0 },
+      { status: 500 }
+    );
   }
 }

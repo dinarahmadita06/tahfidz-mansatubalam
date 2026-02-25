@@ -447,8 +447,8 @@ export default function AdminOrangTuaPage() {
                 </button> */}
                 <button
                   onClick={() => {
-                    const csvContent = [
-                      ['Nama Lengkap', 'NIS Anak', 'Pekerjaan', 'Anak Terhubung', 'Status Akun', 'Tanggal Pendaftaran'],
+                  const csvContent = [
+                      ['Nama Lengkap', 'NIS Anak', 'Anak Terhubung', 'Status Akun', 'Tanggal Pendaftaran'],
                       ...(Array.isArray(orangTua) ? orangTua : []).map(o => [
                         o.user.name,
                         (() => {
@@ -458,7 +458,6 @@ export default function AdminOrangTuaPage() {
                           }
                           return '-';
                         })(),
-                        o.pekerjaan || '-',
                         `${o._count?.siswa || 0} anak`,
                         (o._count?.siswa || 0) > 0 ? 'Terhubung' : 'Belum Terhubung',
                         formatTanggal(o.user.createdAt)

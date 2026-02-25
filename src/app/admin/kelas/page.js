@@ -289,12 +289,17 @@ function StatCard({ icon: Icon, title, value, subtitle, theme = 'emerald' }) {
 export default function AdminKelasPage() {
   const router = useRouter();
   const [kelas, setKelas] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [tahunAjaran, setTahunAjaran] = useState([]);
   const [guruList, setGuruList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGuru, setFilterGuru] = useState('all');
   const [filter, setFilter] = useState('all'); // all, grade_x, grade_xi, grade_xii, status_active, status_inactive
+  const [filterTahun, setFilterTahun] = useState('all');
   const [showInactiveKelas, setShowInactiveKelas] = useState(false); // Toggle untuk tampil kelas nonaktif
   const [showKelasModal, setShowKelasModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -314,7 +319,7 @@ export default function AdminKelasPage() {
   });
 
   useEffect(() => {
-    fetchKelas();
+    fetchKelasPaged();
     fetchTahunAjaran();
     fetchGuruList();
   }, []);
@@ -365,22 +370,48 @@ export default function AdminKelasPage() {
     }
   }, [editingKelas, showKelasModal]);
 
-  const fetchKelas = async () => {
+  const fetchKelasPaged = async (overrideSort) => {
     try {
-      const response = await fetch('/api/kelas', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        }
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
       });
-      const data = await response.json();
-      setKelas(data);
-    } catch (error) {
-      console.error('Error fetching kelas:', error);
+      if (searchTerm && searchTerm.trim()) params.append('search', searchTerm.trim());
+      // Map existing filter to jenjang/status for API
+      if (filter === 'grade_x') params.append('jenjang', 'X');
+      if (filter === 'grade_xi') params.append('jenjang', 'XI');
+      if (filter === 'grade_xii') params.append('jenjang', 'XII');
+      if (filter === 'status_active') params.append('status', 'AKTIF');
+      if (filter === 'status_inactive') params.append('status', 'NONAKTIF');
+      if (filterTahun !== 'all') params.append('tahun', filterTahun);
+      if (overrideSort) params.append('sort', overrideSort);
+
+      const res = await fetch(`/api/admin/kelas?${params.toString()}`, { cache: 'no-store' });
+      const json = await res.json();
+      setKelas(Array.isArray(json.data) ? json.data : []);
+      setTotal(json.total || 0);
+      setTotalPages(json.totalPages || 1);
+    } catch (err) {
+      console.error('Error fetching kelas:', err);
+      setKelas([]);
+      setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
+
+  // Reset ke halaman 1 saat filter/search berubah
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filter, filterTahun]);
+
+  // Refetch saat page/limit/filter berubah
+  useEffect(() => {
+    fetchKelasPaged();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, filter, filterTahun]);
 
   const fetchTahunAjaran = async () => {
     try {
@@ -488,12 +519,13 @@ export default function AdminKelasPage() {
             prevKelas.map(k => k.id === editingKelas.id ? data : k)
           );
         } else {
-          // Add new kelas to state immediately
-          setKelas(prevKelas => [...prevKelas, data]);
+          // Add new kelas → pindah ke halaman 1 dan tampilkan yang terbaru dulu
+          setPage(1);
+          setKelas(prevKelas => [data, ...prevKelas]);
         }
         
-        // Then refetch to ensure data consistency
-        await fetchKelas();
+        // Refetch dengan sort=newest agar kelas baru pasti muncul di depan
+        await fetchKelasPaged('newest');
         
         setShowKelasModal(false);
         resetKelasForm();
@@ -595,7 +627,7 @@ export default function AdminKelasPage() {
       if (response.ok) {
         const kelasNama = kelasToDelete.nama;
         // Refetch data dulu sebelum tutup modal
-        await fetchKelas();
+        await fetchKelasPaged();
         setShowDeleteModal(false);
         setKelasToDelete(null);
         alert(`Kelas "${kelasNama}" berhasil dihapus`);
@@ -664,7 +696,7 @@ export default function AdminKelasPage() {
       if (response.ok) {
         const statusText = newStatus === 'AKTIF' ? 'Aktif' : 'Nonaktif';
         // Refetch data dulu sebelum tutup dropdown
-        await fetchKelas();
+        await fetchKelasPaged();
         setOpenMenuId(null); // Close dropdown
         alert(`Kelas "${kelasItem.nama}" berhasil diubah menjadi ${statusText}`);
       } else {
@@ -770,8 +802,10 @@ export default function AdminKelasPage() {
       const parsedA = parseClassName(a.nama);
       const parsedB = parseClassName(b.nama);
       
-      // 1. Sort by tingkat (X < XI < XII)
+      // 1. Sort by tingkat (X < XI < XII) — non-graded (tingkat=0) diakhir
       if (parsedA.tingkat !== parsedB.tingkat) {
+        if (parsedA.tingkat === 0) return 1;   // A non-graded goes after graded
+        if (parsedB.tingkat === 0) return -1;  // B non-graded goes after graded
         return parsedA.tingkat - parsedB.tingkat;
       }
       
@@ -798,8 +832,13 @@ export default function AdminKelasPage() {
     const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = k.status === 'AKTIF';
     const hasGuru = k.guruKelas && k.guruKelas.length > 0;
-    const matchGuru = filterGuru === 'all' ||
-      (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
+    const matchGuru =
+      filterGuru === 'all' ||
+      (hasGuru &&
+        k.guruKelas.some((kg) => {
+          const id = kg?.guruId ?? kg?.guru?.id;
+          return id && String(id) === String(filterGuru);
+        }));
     
     // Apply grade filter
     let matchFilter = true;
@@ -815,8 +854,13 @@ export default function AdminKelasPage() {
     const matchSearch = k.nama.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = k.status !== 'AKTIF';
     const hasGuru = k.guruKelas && k.guruKelas.length > 0;
-    const matchGuru = filterGuru === 'all' ||
-      (hasGuru && k.guruKelas.some(kg => kg.guruId.toString() === filterGuru));
+    const matchGuru =
+      filterGuru === 'all' ||
+      (hasGuru &&
+        k.guruKelas.some((kg) => {
+          const id = kg?.guruId ?? kg?.guru?.id;
+          return id && String(id) === String(filterGuru);
+        }));
     
     // Apply grade filter
     let matchFilter = true;
@@ -838,7 +882,9 @@ export default function AdminKelasPage() {
 
   // Statistics - updated untuk gunakan real status field
   const stats = {
-    total: Array.isArray(kelas) ? kelas.length : 0,
+    // Gunakan total dari API (bukan jumlah item di halaman) agar "Total Kelas" akurat saat filter "Semua"
+    total: typeof total === 'number' ? total : (Array.isArray(kelas) ? kelas.length : 0),
+    // Aktif & tidak aktif saat ini masih dihitung dari page aktif; bisa ditingkatkan nanti dengan agregasi API
     active: activeKelas.length,
     inactive: inactiveKelas.length,
   };
@@ -1218,6 +1264,33 @@ export default function AdminKelasPage() {
                   );
                 })
               )}
+            </div>
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-gray-600">
+                {(() => {
+                  const start = total === 0 ? 0 : (page - 1) * limit + 1;
+                  const end = Math.min(page * limit, total);
+                  return `Menampilkan ${start}–${end} dari ${total}`;
+                })()}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="px-3 py-2 rounded-lg border border-emerald-200 text-emerald-700 disabled:opacity-50"
+                >
+                  Prev
+                </button>
+                <span className="text-sm text-gray-700">Halaman {page} / {totalPages}</span>
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  className="px-3 py-2 rounded-lg border border-emerald-200 text-emerald-700 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
 

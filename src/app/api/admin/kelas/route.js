@@ -212,14 +212,24 @@ export async function GET(request) {
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const perPage = parseInt(searchParams.get('perPage') || '10');
     const page = parseInt(searchParams.get('page') || '1');
-    const search = searchParams.get('search') || '';
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const search = (searchParams.get('search') || '').trim();
+    const jenjang = (searchParams.get('jenjang') || '').trim(); // 'X' | 'XI' | 'XII'
+    const tahun = (searchParams.get('tahun') || '').trim(); // e.g. '2026'
+    const status = (searchParams.get('status') || '').trim(); // 'AKTIF' | 'NONAKTIF'
+    const sort = (searchParams.get('sort') || '').trim(); // 'natural' | 'newest'
 
-    // Build cache key with pagination
-    const cacheKey = search
-      ? `kelas-list-search-${search}-page-${page}`
-      : `kelas-list-all-page-${page}`;
+    // Build cache key with pagination & filters
+    const cacheKey = [
+      'admin-kelas',
+      `p${page}`,
+      `l${limit}`,
+      `q:${search || '-'}`,
+      `j:${jenjang || '-'}`,
+      `t:${tahun || '-'}`,
+      `s:${status || '-'}`
+    ].join('|');
 
     // Check cache
     const cachedData = getCachedData(cacheKey);
@@ -228,77 +238,165 @@ export async function GET(request) {
       return NextResponse.json(cachedData);
     }
 
-    // Build where clause for search
+    // Build where clause for search & filters
     let whereClause = {};
     if (search) {
-      whereClause = {
-        OR: [
-          { nama: { contains: search, mode: 'insensitive' } },
-          { tahunAjaran: { nama: { contains: search, mode: 'insensitive' } } }
-        ]
+      whereClause.OR = [
+        { nama: { contains: search, mode: 'insensitive' } },
+        { tahunAjaran: { nama: { contains: search, mode: 'insensitive' } } }
+      ];
+    }
+    if (status && (status === 'AKTIF' || status === 'NONAKTIF')) {
+      whereClause.status = status;
+    }
+    if (jenjang && ['X', 'XI', 'XII'].includes(jenjang.toUpperCase())) {
+      whereClause.nama = {
+        startsWith: jenjang.toUpperCase() + ' ',
+        mode: 'insensitive'
       };
     }
+    if (tahun) {
+      const yearNum = parseInt(tahun, 10);
+      if (!isNaN(yearNum)) {
+        const start = new Date(yearNum, 0, 1);
+        const end = new Date(yearNum + 1, 0, 1);
+        whereClause.tahunAjaran = {
+          ...(whereClause.tahunAjaran || {}),
+          tanggalMulai: { gte: start, lt: end }
+        };
+      } else {
+        // Fallback: filter by tahun ajaran name contains keyword
+        whereClause.tahunAjaran = {
+          ...(whereClause.tahunAjaran || {}),
+          nama: { contains: tahun, mode: 'insensitive' }
+        };
+      }
+    }
 
-    // Parallel: count + findMany
-    console.time('kelas-count-query');
-    const total = await prisma.kelas.count({
-      where: whereClause
-    });
-    console.timeEnd('kelas-count-query');
+    // Helper natural sort for jenjang
+    const parseClassName = (nama) => {
+      const s = (nama || '').toUpperCase().trim();
+      let tingkat = 0;
+      let rest = s;
+      if (s.startsWith('XII ')) {
+        tingkat = 12; rest = s.substring(4);
+      } else if (s.startsWith('XI ')) {
+        tingkat = 11; rest = s.substring(3);
+      } else if (s.startsWith('X ')) {
+        tingkat = 10; rest = s.substring(2);
+      }
+      let grup = '';
+      let nomor = 0;
+      const grp = rest.match(/^F(\d+)\.(\d+)/);
+      if (grp) {
+        grup = `F${grp[1]}`;
+        nomor = parseInt(grp[2], 10);
+      } else {
+        const m = rest.match(/^(\d+)/);
+        if (m) nomor = parseInt(m[1], 10);
+      }
+      return { tingkat, grup, nomor, original: nama || '' };
+    };
+    const naturalSort = (a, b) => {
+      const A = parseClassName(a.nama);
+      const B = parseClassName(b.nama);
+      if (A.tingkat !== B.tingkat) {
+        if (A.tingkat === 0) return 1;
+        if (B.tingkat === 0) return -1;
+        return A.tingkat - B.tingkat;
+      }
+      if (A.grup !== B.grup) {
+        if (!A.grup) return -1;
+        if (!B.grup) return 1;
+        return A.grup.localeCompare(B.grup);
+      }
+      if (A.nomor !== B.nomor) {
+        return A.nomor - B.nomor;
+      }
+      return A.original.localeCompare(B.original);
+    };
 
-    // Fetch paginated kelas
-    console.time('kelas-findMany-query');
-    const kelas = await prisma.kelas.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        nama: true,
-        targetJuz: true,
-        createdAt: true,
-        tahunAjaran: {
-          select: {
-            nama: true,
-            semester: true
-          }
+    let total = 0;
+    let kelas = [];
+
+    if (sort === 'newest') {
+      // Newest first: paginate directly from DB by createdAt desc
+      console.time('kelas-count-newest');
+      total = await prisma.kelas.count({ where: whereClause });
+      console.timeEnd('kelas-count-newest');
+      console.time('kelas-findMany-newest');
+      kelas = await prisma.kelas.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          nama: true,
+          targetJuz: true,
+          createdAt: true,
+          status: true,
+          tahunAjaran: { select: { nama: true, semester: true } },
+          guruKelas: {
+            where: { isActive: true },
+            select: {
+              id: true,
+              peran: true,
+              guru: { select: { id: true, user: { select: { id: true, name: true } } } }
+            }
+          },
+          _count: { select: { siswa: true } }
         },
-        guruKelas: {
-          where: { isActive: true },
-          select: {
-            id: true,
-            guru: {
-              select: {
-                id: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true
-                  }
+        orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit
+      });
+      console.timeEnd('kelas-findMany-newest');
+    } else {
+      // Natural sort (default)
+      console.time('kelas-findAll-natural');
+      const allKelas = await prisma.kelas.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          nama: true,
+          targetJuz: true,
+          createdAt: true,
+          status: true,
+          tahunAjaran: {
+            select: { nama: true, semester: true }
+          },
+          guruKelas: {
+            where: { isActive: true },
+            select: {
+              id: true,
+              peran: true,
+              guru: {
+                select: {
+                  id: true,
+                  user: { select: { id: true, name: true } }
                 }
               }
             }
-          }
-        },
-        _count: {
-          select: {
-            siswa: true
-          }
+          },
+          _count: { select: { siswa: true } }
         }
-      },
-      skip: (page - 1) * perPage,
-      take: perPage,
-      orderBy: { createdAt: 'desc' }
-    });
-    console.timeEnd('kelas-findMany-query');
+      });
+      console.timeEnd('kelas-findAll-natural');
+      total = allKelas.length;
+      const sorted = allKelas.sort((a, b) => {
+        if (a.status !== b.status) {
+          return a.status === 'AKTIF' ? -1 : 1;
+        }
+        return naturalSort(a, b);
+      });
+      const start = (page - 1) * limit;
+      kelas = sorted.slice(start, start + limit);
+    }
 
     const responseData = {
-      success: true,
       data: kelas,
-      pagination: {
-        page,
-        perPage,
-        total,
-        totalPages: Math.ceil(total / perPage)
-      }
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
     };
 
     // Cache response
