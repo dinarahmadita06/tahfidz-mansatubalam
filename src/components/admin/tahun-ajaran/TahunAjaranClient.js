@@ -227,20 +227,18 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
           }))
         );
         
+        // Tutup modal & tampilkan animasi sukses
         setShowActivateModal(false);
         setShowSuccessAnimation(true);
         
         // Show success toast
         toast.success('Periode berhasil diaktifkan', { duration: 3000 });
         
-        setTimeout(async () => {
-          setShowSuccessAnimation(false);
-          // Refetch for consistency
-          await Promise.all([
-            fetchTahunAjaran(),
-            fetchSummary()
-          ]);
-        }, 2000);
+        // Segera sinkronkan data tanpa menunggu animasi selesai
+        Promise.all([fetchTahunAjaran(), fetchSummary()]).finally(() => {
+          // Sembunyikan animasi setelah sync
+          setTimeout(() => setShowSuccessAnimation(false), 800);
+        });
       } else {
         toast.error(result.error || 'Gagal mengaktifkan periode');
       }
