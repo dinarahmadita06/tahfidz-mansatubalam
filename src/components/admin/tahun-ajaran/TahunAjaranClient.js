@@ -271,10 +271,25 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
         
         toast.success('Tahun ajaran berhasil dinonaktifkan', { duration: 3000 });
         
-        // Refetch for consistency
-        await fetchTahunAjaran();
+        // Refetch for consistency (dan sinkronkan card ringkasan)
+        await Promise.all([fetchTahunAjaran(), fetchSummary()]);
       } else {
-        toast.error(result.error || 'Gagal menonaktifkan tahun ajaran');
+        // Jika server sudah nonaktif (mis. karena race atau refresh), tetap sinkronkan UI
+        const alreadyInactive =
+          typeof result?.error === 'string' &&
+          /sudah.*nonaktif|already.*nonaktif|already.*inactive/i.test(result.error);
+
+        if (alreadyInactive) {
+          // Paksa sinkron di UI tanpa menunggu refresh manual
+          setTahunAjaran(prev => 
+            prev.map(ta => ta.id === id ? { ...ta, isActive: false } : ta)
+          );
+          // Update ringkasan
+          await Promise.all([fetchTahunAjaran(), fetchSummary()]);
+          toast.success('Tahun ajaran sudah nonaktif dan UI disinkronkan', { duration: 3000 });
+        } else {
+          toast.error(result.error || 'Gagal menonaktifkan tahun ajaran');
+        }
       }
     } catch (error) {
       console.error('Error deactivating tahun ajaran:', error);
@@ -913,12 +928,24 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
         }}
       />
 
-      {/* Loading Overlay */}
+      {/* Loading Overlay - Enlarged modal for better visibility */}
       {actionLoading && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4">
-            <LoadingIndicator />
-            <p className="text-gray-700 font-medium">Memproses...</p>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md">
+          <div className="relative w-full max-w-md">
+            {/* Glow ring */}
+            <div className="absolute inset-0 -m-6 rounded-[2rem] bg-emerald-500/20 blur-3xl"></div>
+            <div className="relative bg-white rounded-3xl p-8 shadow-[0_20px_60px_rgba(16,185,129,0.25)] border border-emerald-100/70 flex flex-col items-center gap-5">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center ring-2 ring-emerald-100">
+                <LoadingIndicator size="large" text="" className="!m-0" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900">Memproses Perubahan</h3>
+                <p className="mt-1 text-sm text-slate-600">Mohon tunggu sebentar…</p>
+              </div>
+              <div className="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+              </div>
+            </div>
           </div>
         </div>
       )}
