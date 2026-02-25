@@ -56,7 +56,7 @@ export default function LoginPage() {
           const statusResponse = await fetch('/api/auth/check-status', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: identifier.trim() })
+            body: JSON.stringify({ username: identifier.trim(), password })
           });
 
           if (statusResponse.ok) {

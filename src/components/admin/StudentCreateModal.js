@@ -74,6 +74,7 @@ export default function StudentCreateModal({
     jenisWali: 'Ayah',
     jenisKelamin: 'LAKI_LAKI',
   });
+  const [showParentDropdown, setShowParentDropdown] = useState(false);
 
   // Student form data
   const [formData, setFormData] = useState({
@@ -729,28 +730,57 @@ export default function StudentCreateModal({
                 </div>
 
                 {parentMode === 'select' ? (
-                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-sm font-bold text-gray-700">Pilih Orang Tua</label>
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="text"
-                        placeholder="Cari nama orang tua..."
+                        placeholder="Ketik nama/email orang tua, lalu pilih…"
                         value={parentSearchTerm}
-                        onChange={(e) => setParentSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                          setParentSearchTerm(e.target.value);
+                          setShowParentDropdown(true);
+                          setSelectedParentId('');
+                        }}
+                        onFocus={() => setShowParentDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowParentDropdown(false), 150)}
                         className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all text-sm"
+                        aria-autocomplete="list"
+                        aria-expanded={showParentDropdown}
                       />
+                      {showParentDropdown && (
+                        <div className="absolute z-20 left-0 right-0 mt-2 bg-white border border-emerald-100 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+                          {filteredParents.length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-gray-500">Tidak ada hasil</div>
+                          ) : (
+                            filteredParents.slice(0, 20).map((p) => (
+                              <button
+                                type="button"
+                                key={p.id}
+                                onClick={() => {
+                                  setSelectedParentId(p.id);
+                                  setParentSearchTerm(p.user?.name || '');
+                                  setShowParentDropdown(false);
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 transition-colors ${
+                                  selectedParentId === p.id ? 'bg-emerald-50' : ''
+                                }`}
+                              >
+                                <div className="font-semibold text-gray-900">{p.user?.name || '-'}</div>
+                                <div className="text-[11px] text-gray-500">
+                                  {p.user?.email || '—'}{p._count?.siswa ? ` • ${p._count.siswa} anak` : ''}
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <select
-                      required={parentMode === 'select'}
-                      value={selectedParentId}
-                      onChange={(e) => setSelectedParentId(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 outline-none transition-all bg-white text-sm"
-                    >
-                      <option value="">-- Pilih Orang Tua --</option>
-                      {filteredParents.map(p => (
-                        <option key={p.id} value={p.id}>{p.user?.name}</option>
-                      ))}
-                    </select>
+                    <input type="hidden" name="orangTuaId" value={selectedParentId} />
+                    <p className="text-xs text-gray-500">
+                      Ketik untuk mencari, lalu pilih dari daftar. Wajib pilih salah satu.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">

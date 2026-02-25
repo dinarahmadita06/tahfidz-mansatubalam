@@ -131,7 +131,7 @@ export const authConfig = {
                             orangTuaSiswa: {
                               include: {
                                 siswa: {
-                                  select: { statusSiswa: true }
+                                  select: { status: true, statusSiswa: true }
                                 }
                               }
                             }
@@ -149,17 +149,26 @@ export const authConfig = {
                 const yyyy = String(dt.getFullYear());
                 const expected = `${dd}${mm}${yyyy}`;
                 if (expected === String(password)) {
+                  // Hanya izinkan jika NIS yang dipakai (siswaByNis) sudah approved
+                  if (siswaByNis.status !== 'approved') {
+                    return null;
+                  }
                   const rels = siswaByNis.orangTuaSiswa || [];
                   const availableParents = rels
                     .map(r => r.orangTua)
                     .filter(p => p && p.user);
                   if (availableParents.length > 0) {
                     const parent = availableParents.find(p =>
-                      (p.orangTuaSiswa || []).some(x => x.siswa?.statusSiswa === 'AKTIF')
+                      (p.orangTuaSiswa || []).some(x => x.siswa?.status === 'approved')
                     ) || availableParents[0];
                     const parentUser = parent.user;
                     if (parentUser) {
                       if (parent.status === 'pending' || parent.status === 'rejected' || parent.status === 'suspended') {
+                        return null;
+                      }
+                      // Block login jika belum ada anak yang divalidasi (approved)
+                      const hasApprovedChild = (parent.orangTuaSiswa || []).some(x => x.siswa?.status === 'approved');
+                      if (!hasApprovedChild) {
                         return null;
                       }
                       if (!parentUser.isActive) {
@@ -288,6 +297,17 @@ export const authConfig = {
             }
             if (authenticatedUser.orangTua?.status === 'suspended') {
               console.log('⚠️  [AUTH] Parent login blocked - status: suspended:', authenticatedUser.id);
+              return null;
+            }
+            // Tambahan: blokir jika belum ada anak dengan status 'approved'
+            try {
+              const rels = authenticatedUser.orangTua?.orangTuaSiswa || [];
+              const hasApprovedChild = rels.some(r => r.siswa?.status === 'approved');
+              if (!hasApprovedChild) {
+                console.log('⚠️  [AUTH] Parent login blocked - no approved child linked:', authenticatedUser.id);
+                return null;
+              }
+            } catch (e) {
               return null;
             }
           }

@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(request) {
   try {
-    const { username } = await request.json();
+    const { username, password } = await request.json();
     
     if (!username) {
       return NextResponse.json({
@@ -19,6 +19,28 @@ export async function POST(request) {
     }
 
     const identifier = username.trim().toUpperCase();
+    const isParentPasswordFormat = typeof password === 'string' && /^\d{8}$/.test(password.trim());
+
+    // Special rule for parent login using child's NIS:
+    // If the NIS refers to a student that is not approved yet,
+    // return 'pending' so the UI can show the right message.
+    try {
+      const siswaByNis = await prisma.siswa.findFirst({
+        where: { nis: identifier },
+        select: { status: true }
+      });
+      if (siswaByNis && siswaByNis.status !== 'approved') {
+        return NextResponse.json({
+          status: 'pending',
+          role: isParentPasswordFormat ? 'ORANG_TUA' : 'SISWA',
+          message: isParentPasswordFormat
+            ? 'Akun orang tua akan aktif setelah siswa dengan NIS ini disetujui (divalidasi) oleh admin.'
+            : 'Akun siswa belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai.\n\nJika sudah lebih dari 1x24 jam, hubungi admin sekolah.'
+        });
+      }
+    } catch (e) {
+      // ignore fallback to standard flow
+    }
 
     // Find user by username (case-insensitive)
     const users = await prisma.user.findMany({
@@ -34,7 +56,7 @@ export async function POST(request) {
           select: { status: true }
         },
         orangTua: {
-          select: { status: true }
+          select: { id: true, status: true }
         },
         guru: true
       }
@@ -56,21 +78,21 @@ export async function POST(request) {
           return NextResponse.json({
             status: 'pending',
             role: 'SISWA',
-            message: 'Akun Anda belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai.\n\nJika sudah lebih dari 1x24 jam, hubungi admin sekolah.'
+            message: 'Akun siswa belum divalidasi oleh admin. Silakan tunggu hingga proses validasi selesai.\n\nJika sudah lebih dari 1x24 jam, hubungi admin sekolah.'
           });
         }
         if (user.siswa.status === 'rejected') {
           return NextResponse.json({
             status: 'rejected',
             role: 'SISWA',
-            message: 'Akun Anda ditolak oleh admin. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.'
+            message: 'Akun siswa ditolak oleh admin. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.'
           });
         }
         if (user.siswa.status === 'suspended') {
           return NextResponse.json({
             status: 'suspended',
             role: 'SISWA',
-            message: 'Akun Anda ditangguhkan. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.'
+            message: 'Akun siswa ditangguhkan. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.'
           });
         }
       }
@@ -96,6 +118,31 @@ export async function POST(request) {
             status: 'suspended',
             role: 'ORANG_TUA',
             message: 'Akun Anda ditangguhkan. Silakan hubungi pihak sekolah untuk informasi lebih lanjut.'
+          });
+        }
+        // Business rule: Parent can only login if at least one linked child is approved
+        try {
+          const approvedChildCount = await prisma.orangTuaSiswa.count({
+            where: {
+              orangTuaId: user.orangTua.id,
+              siswa: {
+                status: 'approved'
+              }
+            }
+          });
+          if (approvedChildCount === 0) {
+            return NextResponse.json({
+              status: 'pending',
+              role: 'ORANG_TUA',
+              message: 'Akun orang tua akan aktif setelah minimal satu data siswa yang terhubung disetujui (divalidasi) oleh admin.'
+            });
+          }
+        } catch (e) {
+          // If query fails, fall back to safer side: block login until validated
+          return NextResponse.json({
+            status: 'pending',
+            role: 'ORANG_TUA',
+            message: 'Validasi siswa belum selesai. Akun orang tua aktif setelah siswa yang terhubung disetujui.'
           });
         }
       }
