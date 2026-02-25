@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import NotificationPopup from '@/components/NotificationPopup';
 import PageTransition from '@/components/PageTransition';
+import useIdleSession from '@/hooks/useIdleSession';
 
 const menuItems = [
   {
@@ -75,6 +76,7 @@ const menuItems = [
 ];
 
 function AdminLayout({ children }) {
+  useIdleSession('ADMIN');
   const [currentNotification, setCurrentNotification] = useState(null);
   const [notificationQueue, setNotificationQueue] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);

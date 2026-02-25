@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth';
 import { calcAverageScore, calcStatisticAverage, normalizeNilaiAkhir } from '@/lib/helpers/calcAverageScore';
 import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 import { updateSiswaLatestJuz, getSurahNumber, getJuzFromSurahAyah } from '@/lib/quranUtils';
+import { sendPushNotification } from '@/lib/push';
 
 export async function GET(request) {
   try {
@@ -364,6 +365,40 @@ export async function POST(request) {
 
     // ✅ 🎯 UPDATE SISWA PROGRESS SUMMARY
     await updateSiswaLatestJuz(prisma, siswaId);
+
+    // ✅ 🔔 Push Notification ke Orang Tua
+    try {
+      // Notify only when there is a concrete submission (both DINILAI and MENGULANG)
+      const parents = await prisma.orangTua.findMany({
+        where: {
+          orangTuaSiswa: {
+            some: { siswaId }
+          }
+        },
+        select: { userId: true }
+      });
+
+      if (parents && parents.length > 0) {
+        const parentUserIds = parents.map(p => p.userId).filter(Boolean);
+        const siswaName = siswa?.user?.name || 'Siswa';
+        const rangeText = `ayat ${ayatMulai}-${ayatSelesai}`;
+        const nilaiText = submissionStatus === 'DINILAI' && typeof nilaiAkhir === 'number'
+          ? ` • Nilai ${Number(nilaiAkhir).toFixed(1)}`
+          : '';
+
+        const payload = {
+          title: 'Setoran Hafalan',
+          body: `${siswaName} baru saja menyelesaikan setoran ${surah} ${rangeText}${nilaiText}`,
+          url: '/orangtua/perkembangan-anak'
+        };
+
+        for (const uid of parentUserIds) {
+          await sendPushNotification(uid, payload);
+        }
+      }
+    } catch (e) {
+      console.warn('[PENILAIAN-HAFALAN] Push notification skipped:', e.message);
+    }
 
     return NextResponse.json({
       success: true,

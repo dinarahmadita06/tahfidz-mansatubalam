@@ -6,10 +6,12 @@ import Sidebar from './Sidebar';
 import PageTransition from '@/components/PageTransition';
 import PushNotificationManager from '@/components/shared/PushNotificationManager';
 import { useActivityTracking } from '@/hooks/useActivityTracking';
+import useIdleSession from '@/hooks/useIdleSession';
 
 function GuruLayout({ children }) {
   const { data: session } = useSession();
   useActivityTracking('GURU');
+  useIdleSession('GURU');
 
   const handleLogout = async () => {
     try {

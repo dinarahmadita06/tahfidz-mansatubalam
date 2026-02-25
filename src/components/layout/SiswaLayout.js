@@ -1,12 +1,14 @@
 import { auth } from '@/lib/auth';
 import SiswaSidebarClient from './SiswaSidebarClient';
 import PushNotificationManager from '@/components/shared/PushNotificationManager';
+import IdleMount from './IdleMount';
 
 export default async function SiswaLayout({ children }) {
   const session = await auth();
   
   return (
     <div className="min-h-screen bg-white">
+      <IdleMount role="SISWA" />
       <SiswaSidebarClient userName={session?.user?.name || "Siswa"} />
 
       {/* Main Content Area */}

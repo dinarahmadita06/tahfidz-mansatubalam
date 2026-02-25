@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { useState, Suspense, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, BookOpen, Mail, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Load remembered username
   useEffect(() => {
@@ -25,6 +26,16 @@ export default function LoginPage() {
       setRememberMe(true);
     }
   }, []);
+
+  // Show idle/expired message when redirected by middleware
+  useEffect(() => {
+    const reason = searchParams?.get('reason');
+    if (reason === 'idle') {
+      setError('Sesi berakhir karena tidak ada aktivitas.');
+    } else if (reason === 'expired') {
+      setError('Sesi Anda telah kedaluwarsa. Silakan login kembali.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

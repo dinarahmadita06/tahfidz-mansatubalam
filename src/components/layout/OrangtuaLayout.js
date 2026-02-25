@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import PushNotificationManager from '@/components/shared/PushNotificationManager';
 import { useActivityTracking } from '@/hooks/useActivityTracking';
+import useIdleSession from '@/hooks/useIdleSession';
 
 const menuItems = [
   {
@@ -235,6 +236,7 @@ function OrangtuaSidebar({ userName = 'Orang Tua', onLogout }) {
 function OrangtuaLayout({ children }) {
   const { data: session } = useSession();
   useActivityTracking('ORANG_TUA');
+  useIdleSession('ORANG_TUA');
 
   const handleLogout = async () => {
     try {

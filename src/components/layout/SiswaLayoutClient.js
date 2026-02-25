@@ -5,10 +5,12 @@ import { useSession } from 'next-auth/react';
 import SiswaSidebarClient from './SiswaSidebarClient';
 import PushNotificationManager from '@/components/shared/PushNotificationManager';
 import { useActivityTracking } from '@/hooks/useActivityTracking';
+import useIdleSession from '@/hooks/useIdleSession';
 
 function SiswaLayoutClient({ children }) {
   const { data: session } = useSession();
   useActivityTracking('SISWA');
+  useIdleSession('SISWA');
 
   return (
     <div className="min-h-screen bg-white">

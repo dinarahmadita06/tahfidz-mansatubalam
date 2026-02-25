@@ -50,40 +50,86 @@ export async function middleware(request) {
     return NextResponse.next();
   }
 
+  // Role-aware idle timeout enforcement + absolute expiration (use token fetched above)
+
+  // Public routes and login bypass token check
+  if (isPublicRoute || isLoginPage) {
+    return NextResponse.next();
+  }
+
+  if (!token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Absolute expiration: 7 days from iat (token issued time)
+  const nowSec = Math.floor(Date.now() / 1000);
+  const iat = token.iat || nowSec;
+  const ABS_MAX_SEC = 7 * 24 * 60 * 60;
+  const absExp = (iat + ABS_MAX_SEC);
+  if (nowSec > absExp) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('reason', 'expired');
+    const resp = NextResponse.redirect(loginUrl);
+    // Best-effort: clear next-auth cookies
+    const secure = process.env.NODE_ENV === 'production';
+    resp.cookies.set('__Secure-next-auth.session-token', '', { httpOnly: true, sameSite: 'lax', secure, maxAge: 0, path: '/' });
+    resp.cookies.set('next-auth.session-token', '', { httpOnly: true, sameSite: 'lax', secure, maxAge: 0, path: '/' });
+    return resp;
+  }
+
+  // Idle timeout based on role
+  const role = token.role;
+  let idleMs = 60 * 60 * 1000; // default 60m
+  if (role === 'ADMIN' || role === 'GURU') idleMs = 30 * 60 * 1000;
+  if (role === 'SISWA' || role === 'ORANG_TUA' || role === 'ORANGTUA') idleMs = 2 * 60 * 60 * 1000;
+
+  // Read last-activity cookie (httpOnly set by /api/auth/ping)
+  const idleCookie = request.cookies.get('simtaq_idle_at');
+  const lastActivity = idleCookie ? parseInt(idleCookie.value, 10) : Date.now();
+  const nowMs = Date.now();
+
+  // If cookie missing, initialize it
+  if (!idleCookie) {
+    const res = NextResponse.next();
+    const secure = process.env.NODE_ENV === 'production';
+    res.cookies.set('simtaq_idle_at', String(nowMs), {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure,
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/'
+    });
+    return res;
+  }
+
+  if (nowMs - lastActivity > idleMs) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('reason', 'idle');
+    const resp = NextResponse.redirect(loginUrl);
+    const secure = process.env.NODE_ENV === 'production';
+    // Clear session cookies
+    resp.cookies.set('__Secure-next-auth.session-token', '', { httpOnly: true, sameSite: 'lax', secure, maxAge: 0, path: '/' });
+    resp.cookies.set('next-auth.session-token', '', { httpOnly: true, sameSite: 'lax', secure, maxAge: 0, path: '/' });
+    // Clear idle cookie
+    resp.cookies.set('simtaq_idle_at', '', { httpOnly: true, sameSite: 'lax', secure, maxAge: 0, path: '/' });
+    return resp;
+  }
+
   // If user is already logged in and trying to access login page, redirect to their dashboard
-  if (isLoginPage && token) {
+  if (isLoginPage) {
     const dashboardUrl = getDashboardUrl(token.role);
 // No log for performance
 
     return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
 
-  // Allow public routes
-  if (isPublicRoute) {
-    return NextResponse.next();
-  }
-
-  // Allow login page for non-authenticated users
-  if (isLoginPage) {
-    return NextResponse.next();
-  }
-
-  // Redirect ke login jika belum login
-  if (!token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-// No log for performance
-
-    return NextResponse.redirect(loginUrl);
-  }
-
   // Role-based access control
-  const role = token.role;
 
   // Admin routes
   if (pathname.startsWith('/admin') && role !== 'ADMIN') {
     const redirectUrl = getDashboardUrl(role);
-// No log for performance
 
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
