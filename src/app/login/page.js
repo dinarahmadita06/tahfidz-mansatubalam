@@ -9,7 +9,6 @@ import Image from 'next/image';
 import LoadingIndicator from '@/components/shared/LoadingIndicator';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
