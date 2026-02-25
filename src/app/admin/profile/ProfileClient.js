@@ -21,7 +21,9 @@ import {
   AlertTriangle,
   X,
   RefreshCw,
-  Trash2
+  Trash2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import LoadingIndicator from "@/components/shared/LoadingIndicator";
 import RecoveryCodeModal from '@/components/shared/RecoveryCodeModal';
@@ -60,6 +62,10 @@ export default function ProfileClient({ initialData }) {
   const [showDeleteSignatureModal, setShowDeleteSignatureModal] = useState(false);
   const [deleteSignatureLoading, setDeleteSignatureLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  // Password visibility states
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const fetchProfileData = async () => {
     try {
@@ -770,14 +776,24 @@ export default function ProfileClient({ initialData }) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password Lama <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Masukkan password lama"
-                  value={passwordFormData.oldPassword}
-                  onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Masukkan password lama"
+                    value={passwordFormData.oldPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
+                    className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    aria-label={showOldPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                  >
+                    {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {/* Password Baru */}
@@ -785,17 +801,27 @@ export default function ProfileClient({ initialData }) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password Baru <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  placeholder="Minimal 8 karakter"
-                  value={passwordFormData.newPassword}
-                  onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
-                    passwordFormData.newPassword && passwordFormData.newPassword.length < 8 ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                  }`}
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    minLength={8}
+                    placeholder="Minimal 8 karakter"
+                    value={passwordFormData.newPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                    className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                      passwordFormData.newPassword && passwordFormData.newPassword.length < 8 ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    aria-label={showNewPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                  >
+                    {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 {passwordFormData.newPassword && passwordFormData.newPassword.length < 8 && (
                   <p className="text-xs text-red-600 mt-1 font-medium">Password minimal 8 karakter.</p>
                 )}
@@ -806,17 +832,27 @@ export default function ProfileClient({ initialData }) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Konfirmasi Password Baru <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  placeholder="Ketik ulang password baru"
-                  value={passwordFormData.confirmPassword}
-                  onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
-                    passwordFormData.confirmPassword && passwordFormData.confirmPassword !== passwordFormData.newPassword ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                  }`}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    minLength={8}
+                    placeholder="Ketik ulang password baru"
+                    value={passwordFormData.confirmPassword}
+                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                    className={`w-full px-4 py-3 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                      passwordFormData.confirmPassword && passwordFormData.confirmPassword !== passwordFormData.newPassword ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    aria-label={showConfirmPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 {passwordFormData.confirmPassword && passwordFormData.confirmPassword !== passwordFormData.newPassword && (
                   <p className="text-xs text-red-600 mt-1 font-medium">Konfirmasi password tidak cocok.</p>
                 )}
