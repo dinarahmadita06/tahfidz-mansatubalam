@@ -138,7 +138,7 @@ export default function TahunAjaranClient({ initialData = [], initialSummary = {
   const fetchTahunAjaran = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/tahun-ajaran`, {
+      const response = await fetch(`/api/tahun-ajaran?noCache=true`, {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache' }
       });
