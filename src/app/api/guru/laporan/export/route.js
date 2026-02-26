@@ -181,6 +181,9 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
   // Get signature URL if available
   const signatureUrl = guru.tandaTangan || guru.user.signatureUrl || guru.user.ttdUrl || null;
 
+  // Derive kelas name from data if available
+  const kelasNamaFromData = Array.isArray(data) && data.length > 0 ? (data[0].kelasNama || null) : null;
+
   let html = `<!DOCTYPE html>
 <html>
 <head>
@@ -501,7 +504,7 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
     <div class="meta-column">
       <div class="meta-row">
         <div class="meta-label">Kelas:</div>
-        <div class="meta-value">Tahfidz</div>
+        <div class="meta-value">${kelasNamaFromData || 'Kelas'}</div>
       </div>
       <div class="meta-row">
         <div class="meta-label">Guru Pembina:</div>
@@ -592,7 +595,8 @@ function generatePDFTemplate(data, viewMode, guru, periode, kelasId) {
       html += `<td class="center">${formatNilai(siswa.rataRataKelancaran)}</td>`;
       html += `<td class="center">${formatNilai(siswa.rataRataMakhraj)}</td>`;
       html += `<td class="center">${formatNilai(siswa.rataRataImplementasi)}</td>`;
-      html += `<td class="center" style="background: #ECFDF5; font-weight: bold; color: #1B1B1B;">${formatNilai(siswa.rataRataNilaiBulanan)}</td>`;
+      const rataFinal = siswa.rataRataNilaiSemesteran ?? siswa.rataRataNilaiBulanan;
+      html += `<td class="center" style="background: #ECFDF5; font-weight: bold; color: #1B1B1B;">${formatNilai(rataFinal)}</td>`;
       html += `<td class="center" style="font-size: 9px;">${siswa.statusHafalan}</td>`;
     }
 

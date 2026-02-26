@@ -47,7 +47,6 @@ export default function TabelSemesteran({ data, onCatatanChange }) {
           <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Rata-rata Implementasi</th>
           <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif', background: `${colors.emerald[50]}` }}>Rata-rata Nilai Semesteran</th>
           <th style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Status Hafalan</th>
-          <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Performance Level</th>
           <th style={{ padding: '16px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: colors.text.primary, fontFamily: 'Poppins, system-ui, sans-serif' }}>Catatan</th>
         </tr>
       </thead>
@@ -84,9 +83,6 @@ export default function TabelSemesteran({ data, onCatatanChange }) {
               </td>
               <td style={{ padding: '16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: siswa.statusHafalan === 'LANJUT' ? colors.emerald[600] : colors.amber[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
                 {siswa.statusHafalan || '-'}
-              </td>
-              <td style={{ padding: '16px', fontSize: '13px', fontWeight: 600, color: colors.emerald[600], fontFamily: 'Poppins, system-ui, sans-serif' }}>
-                {siswa.performanceLevel || '-'}
               </td>
               <td style={{ padding: '16px' }}>
                 <input

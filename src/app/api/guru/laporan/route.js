@@ -168,9 +168,18 @@ export async function GET(request) {
         const rataRataMakhraj = makhrajValues.length > 0 ? makhrajValues.reduce((a, b) => a + b, 0) / makhrajValues.length : null;
         const rataRataImplementasi = adabValues.length > 0 ? adabValues.reduce((a, b) => a + b, 0) / adabValues.length : null;
         
-        // Calculate overall average
+        // Calculate overall averages
         const allNilai = [...tajwidValues, ...kelancaranValues, ...makhrajValues, ...adabValues];
         const rataRataNilaiBulanan = allNilai.length > 0 ? allNilai.reduce((a, b) => a + b, 0) / allNilai.length : null;
+        // Persemesteraan: rata-rata dari empat rata-rata aspek (dibagi 4)
+        const hasAllAspek =
+          rataRataTajwid != null &&
+          rataRataKelancaran != null &&
+          rataRataMakhraj != null &&
+          rataRataImplementasi != null;
+        const rataRataNilaiSemesteran = hasAllAspek
+          ? (rataRataTajwid + rataRataKelancaran + rataRataMakhraj + rataRataImplementasi) / 4
+          : null;
         
         // Count total hafalan entries
         const jumlahSetoran = siswaHafalanData.hafalanList.length;
@@ -202,6 +211,7 @@ export async function GET(request) {
           rataRataMakhraj: rataRataMakhraj ? Math.round(rataRataMakhraj * 10) / 10 : '-',
           rataRataImplementasi: rataRataImplementasi ? Math.round(rataRataImplementasi * 10) / 10 : '-',
           rataRataNilaiBulanan: rataRataNilaiBulanan ? Math.round(rataRataNilaiBulanan * 10) / 10 : '-',
+          rataRataNilaiSemesteran: rataRataNilaiSemesteran ? Math.round(rataRataNilaiSemesteran * 10) / 10 : '-',
           statusHafalan: jumlahSetoran > 0 ? 'LANJUT' : 'BELUM SETORAN'
         };
       });
