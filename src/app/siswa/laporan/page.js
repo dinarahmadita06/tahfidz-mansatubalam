@@ -18,6 +18,15 @@ import LoadingIndicator from '@/components/shared/LoadingIndicator';
 // SUB-COMPONENTS
 // ============================================================
 
+// ProgressSummary:
+// Menampilkan bar per Juz berdasarkan persen progres yang sudah dihitung sebelumnya.
+// Alur perhitungan hingga menjadi panjang bar (ringkas):
+// 1) Server/service mengolah semua setoran hafalan menjadi interval ayat per Juz
+//    (lihat calculateJuzProgress di src/lib/utils/quranProgress.js).
+// 2) Untuk tiap Juz: coveredAyat = gabungan interval unik; totalAyat = ayat Juz tsb.
+//    Persentase = (coveredAyat / totalAyat) * 100 → dibulatkan 1 desimal.
+// 3) Hasilnya dipetakan ke struktur { label: 'Juz N', value: persen } = juzDistribution.
+// 4) Di sini, panjang bar = value% (mis. 27 berarti 27% width).
 function ProgressSummary({ juzDistribution, totalJuzSelesai, targetJuzSekolah }) {
   const activeJuz = useMemo(() => {
     return [...juzDistribution]
@@ -99,6 +108,9 @@ function ProgressSummary({ juzDistribution, totalJuzSelesai, targetJuzSekolah })
               <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700 ease-out"
+                  // Lebar bar = persentase progres Juz (item.value) dalam satuan 0–100.
+                  // Nilai item.value berasal dari distribusi progres per Juz yang sudah dihitung di layanan,
+                  // sehingga aman dipakai langsung sebagai persentase CSS.
                   style={{ width: `${item.value}%` }}
                 ></div>
               </div>
@@ -205,6 +217,10 @@ function StatCard({ label, value, icon: Icon, color = 'emerald', subtitle }) {
 }
 
 // Bar Chart Component
+// HorizontalBarChart:
+// Setiap item.data memiliki { label, value } dengan value 0–100,
+// yang merupakan rata-rata aspek penilaian (tajwid/kelancaran/makhraj/implementasi)
+// yang sudah dihitung sebelumnya. Panjang bar = value%.
 function HorizontalBarChart({ data }) {
   if (data.every(d => d.value === 0)) {
     return (
@@ -226,6 +242,8 @@ function HorizontalBarChart({ data }) {
           <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
             <div
               className={`h-full ${item.color} rounded-full transition-all duration-500`}
+              // Lebar bar = nilai aspek dalam persen (0–100) untuk setiap item.
+              // Dipakai langsung sebagai width CSS agar panjang batang proporsional terhadap nilai.
               style={{ width: `${item.value}%` }}
             />
           </div>

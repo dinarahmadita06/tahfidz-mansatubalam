@@ -53,6 +53,9 @@ async function recordAttempt(key, success) {
   }
 }
 
+// Endpoint: POST /api/user/reset-password
+// Reset password menggunakan recovery code (username+role+recoveryCode).
+// Termasuk rate-limit percobaan dan rotasi recovery code setelah sukses.
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -66,7 +69,7 @@ export async function POST(request) {
       return NextResponse.json({ error: limitCheck.message }, { status: 429 });
     }
 
-    // 2. Validation
+    // 2. Validation (ubah 8 → 4 jika ingin menurunkan batas minimum)
     if (!username || !role || !recoveryCode || !newPassword) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
@@ -101,7 +104,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Username atau recovery code tidak valid' }, { status: 400 });
     }
 
-    // 5. Success - Rotate Code and Update Password
+    // 5. Success - Hash password & rotasi recovery code baru
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     
     // Auto-rotate: generate new recovery code

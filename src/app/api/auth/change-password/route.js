@@ -6,6 +6,12 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { logActivity, ACTIVITY_ACTIONS } from '@/lib/helpers/activityLoggerV2';
 
+// Endpoint: POST /api/auth/change-password
+// Mengganti password akun untuk user yang sedang login.
+// Alur:
+// 1) Validasi sesi; 2) Baca oldPassword & newPassword dari body;
+// 3) Validasi panjang minimum; 4) Verifikasi oldPassword (bcrypt.compare);
+// 5) Pastikan newPassword berbeda; 6) Hash & update; 7) Catat log aktivitas.
 export async function POST(request) {
   try {
     // Cek autentikasi
@@ -26,7 +32,7 @@ export async function POST(request) {
       );
     }
 
-    // Validasi panjang password
+    // Validasi panjang password (ubah angka 8 → 4 untuk eksperimen minimal 4 karakter)
     if (newPassword.length < 8) {
       return NextResponse.json({ 
         success: false, 
@@ -65,7 +71,7 @@ export async function POST(request) {
       );
     }
 
-    // Hash password baru
+    // Hash password baru menggunakan bcrypt (saltRounds=10)
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password
@@ -78,7 +84,7 @@ export async function POST(request) {
 
     console.log('✅ Password berhasil diubah untuk user ID:', user.id);
 
-    // Log the activity
+    // Log aktivitas perubahan password (RBAC-aware)
     const activityAction = session.user.role === 'ORANG_TUA' || session.user.role === 'ORANGTUA' 
       ? ACTIVITY_ACTIONS.ORANGTUA_UBAH_PASSWORD 
       : ACTIVITY_ACTIONS.SISWA_UBAH_PASSWORD;

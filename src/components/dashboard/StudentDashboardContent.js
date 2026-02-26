@@ -334,7 +334,10 @@ export default function StudentDashboardContent({
     }
   };
 
-  // Filter and limit juz progress for dashboard view
+  // Filter dan batasi daftar progres juz yang akan ditampilkan di dashboard.
+  // Sumber data 'juzProgress' berasal dari util 'calculateJuzProgress' yang
+  // menghitung persentase cakupan ayat per Juz (0–100). Fungsi ini kemudian
+  // mengurutkan dan mengambil beberapa teratas agar ringkas di UI.
   const displayJuzs = getDashboardJuzProgress(juzProgress);
 
   // Determine report links based on role context
@@ -532,6 +535,9 @@ export default function StudentDashboardContent({
                     <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
                       <div
                         className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        // Lebar bar = persentase progres per Juz.
+                        // 'item.progress' sudah dalam skala 0–100 (hasil perhitungan ayat tertutup / total ayat Juz).
+                        // Pengaman Math.min(..., 100) mencegah overflow jika rounding menghasilkan >100.
                         style={{ width: `${Math.min(item.progress, 100)}%` }}
                       />
                     </div>

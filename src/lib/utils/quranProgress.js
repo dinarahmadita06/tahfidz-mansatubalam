@@ -31,6 +31,12 @@ export function mergeIntervals(intervals) {
  * @param {Array} records - Array of hafalan records { surahNumber, ayatMulai, ayatSelesai }
  * @returns {Object} { totalJuz, juzProgress: [] }
  */
+// Hitung progres per Juz berbasis cakupan ayat.
+// Ide utama:
+// - Setiap entri hafalan (surahNumber, ayatMulai, ayatSelesai) dipetakan ke Juz terkait via JUZ_MAPPING
+// - Interval ayat yang overlap digabung (mergeIntervals) agar tidak dihitung dua kali
+// - progress (%) = coveredAyat / totalAyat_juz * 100
+// - totalJuz (float) = penjumlahan (coveredAyat / totalAyat_juz) untuk seluruh Juz
 export function calculateJuzProgress(records) {
   const juzCoverage = {};
   for (let j = 1; j <= 30; j++) {
@@ -82,6 +88,7 @@ export function calculateJuzProgress(records) {
     juzResults.push({
       juz: j,
       label: `Juz ${j}`,
+      // progress dipakai langsung untuk lebar bar di UI (0–100). Dibulatkan 1 desimal.
       progress: parseFloat(percent.toFixed(1)),
       coveredAyat,
       totalAyat

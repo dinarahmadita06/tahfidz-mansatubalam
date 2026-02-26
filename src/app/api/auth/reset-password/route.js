@@ -4,6 +4,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+// Endpoint: POST /api/auth/reset-password
+// Reset password via email/token. Validasi token, cek panjang minimum,
+// hash password baru, lalu hapus token reset.
 export async function POST(request) {
   try {
     const { token, password } = await request.json();
@@ -15,7 +18,7 @@ export async function POST(request) {
       );
     }
 
-    // Validasi panjang password
+    // Validasi panjang password (ubah 8 → 4 jika ingin menurunkan batas minimum)
     if (password.length < 8) {
       return NextResponse.json({ 
         success: false, 
@@ -41,7 +44,7 @@ export async function POST(request) {
       );
     }
 
-    // Hash password baru
+    // Hash password baru (bcrypt, saltRounds=10)
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Update password dan hapus reset token

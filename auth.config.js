@@ -30,6 +30,13 @@ export const authConfig = {
         rememberMe: { label: "Remember Me", type: "text" }
       },
       async authorize(credentials) {
+        // Alur utama authorize():
+        // - Terima identifier (username/NIS/email) & password dari form login
+        // - Tangani kasus khusus Admin (username "admin.tahfidz1" atau awalan "admin")
+        // - Untuk ORANG_TUA: izinkan pola DDMMYYYY (tanggal lahir siswa) via NIS
+        // - Untuk SISWA/GURU/ORTU umum: cari kandidat user dan verifikasi bcrypt
+        // Catatan: Validasi panjang password TIDAK dilakukan di sini,
+        // melainkan saat proses ganti/reset password (endpoint server).
         const identifier = credentials?.identifier?.trim().toUpperCase();
         const password = credentials?.password;
         const rememberMe = credentials?.rememberMe === 'true';

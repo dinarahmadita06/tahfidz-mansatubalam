@@ -199,6 +199,9 @@ export async function PUT(request) {
 }
 
 // PATCH - Update password admin
+// Alur: validasi sesi (ADMIN), cek field wajib, cocokkan konfirmasi,
+// validasi panjang minimal (ubah 8 → 4 untuk eksperimen), verifikasi oldPassword,
+// hash newPassword dan update, lalu log aktivitas.
 export async function PATCH(request) {
   try {
     const session = await auth();
@@ -225,7 +228,7 @@ export async function PATCH(request) {
       );
     }
 
-    // Validasi panjang password
+    // Validasi panjang password (turunkan 8 → 4 bila ingin minimum 4 karakter)
     if (newPassword.length < 8) {
       return NextResponse.json(
         { 
