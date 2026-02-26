@@ -447,12 +447,13 @@ export async function GET(request) {
     });
 
     // Column widths untuk landscape (contentWidth = 257mm)
+    // Lebarkan kolom "Kelancaran" agar header tidak turun baris; kompensasi dari kolom Surah/Ayat
     const columnStyles = {
       0: { cellWidth: 24, halign: 'center' },      // Tanggal
       1: { cellWidth: 22, halign: 'center' },      // Kehadiran
-      2: { cellWidth: 60 },                        // Surah/Ayat (LEBAR untuk multi-line)
+      2: { cellWidth: 58 },                        // Surah/Ayat (LEBAR untuk multi-line)
       3: { cellWidth: 18, halign: 'center' },      // Tajwid (FULL)
-      4: { cellWidth: 22, halign: 'center' },      // Kelancaran (FULL)
+      4: { cellWidth: 24, halign: 'center' },      // Kelancaran (dilebarkan)
       5: { cellWidth: 18, halign: 'center' },      // Makhraj (FULL)
       6: { cellWidth: 28, halign: 'center' },      // Implementasi (FULL)
       7: { cellWidth: 20, halign: 'center' },      // Rata-rata (FULL)

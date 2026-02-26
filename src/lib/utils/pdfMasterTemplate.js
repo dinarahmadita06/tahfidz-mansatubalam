@@ -210,8 +210,20 @@ export function renderTable(doc, options) {
 export function renderFooterSignature(doc, options) {
   const { pageWidth, margin, yPos: startY, printDate, jabatan, guruName, signatureUrl } = options;
   
+  const pageHeight = doc.internal.pageSize.getHeight();
   const ttdBlockX = pageWidth - margin - 70;
   let yPos = startY;
+
+  // Ensure the signature block is not glued to the bottom.
+  // If remaining space is too small, nudge the block up a bit.
+  const requiredBlockHeight = 42; // approx height for date + labels + image + name
+  const minBottomPadding = 18;    // keep some breathing room from bottom
+  if (yPos > pageHeight - minBottomPadding - requiredBlockHeight) {
+    yPos = pageHeight - minBottomPadding - requiredBlockHeight;
+  } else {
+    // Add a small gap from previous table content for readability
+    yPos += 6;
+  }
 
   // Tanggal kota
   doc.setFontSize(10);
@@ -219,18 +231,18 @@ export function renderFooterSignature(doc, options) {
   doc.text(`Bandar Lampung, ${printDate}`, ttdBlockX, yPos);
 
   // "Mengetahui,"
-  yPos += 14;
+  yPos += 10;
   doc.setFont('helvetica', 'bold');
   doc.text('Mengetahui,', ttdBlockX, yPos);
 
   // Jabatan
-  yPos += 14;
+  yPos += 10;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.text(jabatan, ttdBlockX, yPos);
 
   // Ruang tanda tangan
-  yPos += 4;
+  yPos += 6;
   
   // Render signature image if available
   if (signatureUrl) {
