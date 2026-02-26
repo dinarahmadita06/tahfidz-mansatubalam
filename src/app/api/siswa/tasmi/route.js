@@ -81,6 +81,8 @@ export async function GET(request) {
           jumlahHafalan: true,
           tanggalDaftar: true,
           catatan: true,
+          catatanPenolakan: true, // show rejection or approve-note to student
+          catatanPenguji: true,   // show examiner notes after grading
           // EXCLUDED FOR SECURITY: nilaiAkhir, nilaiKelancaran, nilaiAdab, nilaiTajwid, nilaiIrama, catatanPenguji, predikat, publishedAt, pdfUrl
           siswa: {
             select: {
