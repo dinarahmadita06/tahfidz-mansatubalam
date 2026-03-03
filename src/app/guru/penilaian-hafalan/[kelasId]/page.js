@@ -747,7 +747,9 @@ export default function PenilaianHafalanPage() {
                       }
                     }}
                     onFocus={() => setShowSurahDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowSurahDropdown(false), 120)}
+                    // Tambah delay agar klik item sempat diproses sebelum dropdown tertutup
+                    onBlur={() => setTimeout(() => setShowSurahDropdown(false), 200)}
+                    autoComplete="off"
                     placeholder="Ketik nama surah…"
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none font-medium"
                     aria-autocomplete="list"
@@ -761,7 +763,9 @@ export default function PenilaianHafalanPage() {
                           <button
                             key={s}
                             type="button"
-                            onClick={() => {
+                            // Gunakan onMouseDown agar pemilihan terjadi sebelum input memicu blur
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setPopupForm({ ...popupForm, surah: s });
                               setSurahQuery(s);
                               setShowSurahDropdown(false);
