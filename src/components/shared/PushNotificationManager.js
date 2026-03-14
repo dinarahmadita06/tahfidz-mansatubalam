@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, BellOff, Info, AlertTriangle, X } from 'lucide-react';
 import { getPushSubscriptionState, subscribeToPush, unsubscribeFromPush } from '@/lib/push-client';
 import toast from 'react-hot-toast';
@@ -20,8 +20,6 @@ export default function PushNotificationManager({ type = 'default' }) {
   const [showMainModal, setShowMainModal] = useState(false);
   const [showIOSWarning, setShowIOSWarning] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [showHeaderNudge, setShowHeaderNudge] = useState(false);
-  const prevStatusRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
@@ -110,28 +108,6 @@ export default function PushNotificationManager({ type = 'default' }) {
       setStatus('unsupported');
     }
   };
-
-  // Show header bubble again if user just turned notifications off during this session
-  useEffect(() => {
-    if (!mounted) return;
-    const prev = prevStatusRef.current;
-    if ((prev === 'subscribed') && (status === 'unsubscribed' || status === 'denied')) {
-      // Trigger bubble regardless of hasSeenPushNudge when state transitions from ON -> OFF
-      setTimeout(() => setShowHeaderNudge(true), 500);
-    }
-    prevStatusRef.current = status;
-  }, [status, mounted]);
-
-  // Show header bubble whenever unsubscribed/denied (always remind until user activates)
-  useEffect(() => {
-    if (!mounted) return;
-    if (status === 'unsubscribed' || status === 'denied') {
-      const timer = setTimeout(() => setShowHeaderNudge(true), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowHeaderNudge(false);
-    }
-  }, [status, mounted]);
 
   const handleToggle = async () => {
     if (isProcessing) return;
@@ -470,50 +446,6 @@ export default function PushNotificationManager({ type = 'default' }) {
             </span>
           )}
         </button>
-
-        {/* Header Nudge bubble */}
-        {mounted && (status === 'unsubscribed' || status === 'denied') && showHeaderNudge && (
-            <div className="absolute top-full mt-3 right-0 z-50">
-              <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-2xl p-3 w-72">
-                <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
-                    <Bell size={14} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[12px] font-semibold text-slate-900 leading-snug">Aktifkan notifikasi agar tidak ketinggalan pengumuman.</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() => {
-                          setShowMainModal(true);
-                          setShowHeaderNudge(false);
-                        }}
-                        className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg transition-colors"
-                      >
-                        Aktifkan
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowHeaderNudge(false);
-                        }}
-                        className="px-2 py-1 text-[11px] font-bold text-slate-400 hover:text-slate-600"
-                      >
-                        Nanti
-                      </button>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setShowHeaderNudge(false);
-                    }}
-                    className="p-1 text-slate-400 hover:text-slate-600"
-                    aria-label="Tutup"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-        )}
 
         {/* Modal Portals */}
         {showMainModal && mounted && createPortal(<MainModal />, document.body)}
