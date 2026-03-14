@@ -129,7 +129,8 @@ export default function PopupPenilaian({
                   }
                 }}
                 onFocus={() => setShowSurahDropdown(true)}
-                onBlur={() => setTimeout(() => setShowSurahDropdown(false), 120)}
+                // Tambah sedikit delay agar klik pada item tetap tertangkap sebelum dropdown ditutup
+                onBlur={() => setTimeout(() => setShowSurahDropdown(false), 180)}
                 placeholder="Ketik nama surah…"
                 style={{
                   width: '100%',
@@ -168,7 +169,9 @@ export default function PopupPenilaian({
                       <button
                         key={s}
                         type="button"
-                        onClick={() => {
+                        // Gunakan onMouseDown agar seleksi terjadi sebelum input memicu blur
+                        onMouseDown={(e) => {
+                          e.preventDefault();
                           onFormChange({ ...form, surah: s });
                           setSurahQuery(s);
                           setShowSurahDropdown(false);

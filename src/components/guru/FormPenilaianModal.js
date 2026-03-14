@@ -84,7 +84,9 @@ export default function FormPenilaianModal({
       setSurahSuggestions(filtered.slice(0, 5)); // Show max 5 suggestions
       setShowSuggestions(true);
     } else {
-      setShowSuggestions(false);
+      // Saat input kosong, tetap tampilkan daftar awal agar bisa pilih dengan sekali klik
+      setSurahSuggestions(SURAH_SUGGESTIONS.slice(0, 8));
+      setShowSuggestions(true);
     }
   };
 
@@ -238,8 +240,19 @@ export default function FormPenilaianModal({
                         type="text"
                         value={formData.surah}
                         onChange={(e) => handleSurahChange(e.target.value)}
-                        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                        onFocus={() => formData.surah && setShowSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 180)}
+                        onFocus={() => {
+                          // Selalu tampilkan suggestions saat fokus, bahkan jika field kosong
+                          setSurahSuggestions(
+                            (formData.surah
+                              ? SURAH_SUGGESTIONS.filter(s =>
+                                  s.toLowerCase().includes(formData.surah.toLowerCase())
+                                )
+                              : SURAH_SUGGESTIONS
+                            ).slice(0, 8)
+                          );
+                          setShowSuggestions(true);
+                        }}
                         className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                           errors.surah ? 'border-red-300' : 'border-gray-300'
                         }`}
@@ -256,7 +269,11 @@ export default function FormPenilaianModal({
                             <button
                               key={surah}
                               type="button"
-                              onClick={() => selectSurah(surah)}
+                              // Gunakan onMouseDown agar seleksi tetap terjadi meski input memicu blur
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                selectSurah(surah);
+                              }}
                               className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
                             >
                               {surah}
